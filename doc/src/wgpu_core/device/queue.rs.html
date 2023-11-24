@@ -1540,9 +1540,13 @@
 <a href="#1540" id="1540">1540</a>
 <a href="#1541" id="1541">1541</a>
 <a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
+    api_log,
     command::{
         extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
         ClearError, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
@@ -1927,6 +1931,7 @@
         data: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::write_buffer&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Queue::write_buffer {buffer_id:?} {}bytes&quot;</span>, data.len());
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2191,6 +2196,7 @@
         size: <span class="kw-2">&amp;</span>wgt::Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::write_texture&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Queue::write_texture {:?} {size:?}&quot;</span>, destination.texture);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2657,7 +2663,7 @@
         command_buffer_ids: <span class="kw-2">&amp;</span>[id::CommandBufferId],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;WrappedSubmissionIndex, QueueSubmitError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::submit&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Queue::submit {queue_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Queue::submit {queue_id:?}&quot;</span>);
 
         <span class="kw">let </span>(submit_index, callbacks) = {
             <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -3066,7 +3072,7 @@
         queue_id: QueueId,
         closure: SubmittedWorkDoneClosure,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidQueue&gt; {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Queue::on_submitted_work_done {queue_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Queue::on_submitted_work_done {queue_id:?}&quot;</span>);
 
         <span class="comment">//TODO: flush pending writes
         </span><span class="kw">let </span>hub = A::hub(<span class="self">self</span>);

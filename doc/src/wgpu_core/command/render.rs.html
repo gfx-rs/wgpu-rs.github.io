@@ -2808,8 +2808,10 @@
 <a href="#2808" id="2808">2808</a>
 <a href="#2809" id="2809">2809</a>
 <a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use crate</span>::{
+    api_log,
     binding_model::BindError,
     command::{
         <span class="self">self</span>,
@@ -4220,7 +4222,7 @@
                         num_dynamic_offsets,
                         bind_group_id,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_bind_group {index} {bind_group_id:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_bind_group {index} {bind_group_id:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group_id);
                         <span class="kw">let </span>max_bind_groups = device.limits.max_bind_groups;
@@ -4303,7 +4305,7 @@
                         }
                     }
                     RenderCommand::SetPipeline(pipeline_id) =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_pipeline {pipeline_id:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_pipeline {pipeline_id:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetPipelineRender(pipeline_id);
                         state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
@@ -4431,7 +4433,7 @@
                         offset,
                         size,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_index_buffer {buffer_id:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_index_buffer {buffer_id:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetIndexBuffer(buffer_id);
                         <span class="kw">let </span>buffer = info
@@ -4484,7 +4486,7 @@
                         offset,
                         size,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_vertex_buffer {slot} {buffer_id:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_vertex_buffer {slot} {buffer_id:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetVertexBuffer(buffer_id);
                         <span class="kw">let </span>buffer = info
@@ -4547,7 +4549,7 @@
                         state.vertex.update_limits();
                     }
                     RenderCommand::SetBlendConstant(<span class="kw-2">ref </span>color) =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_blend_constant&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_blend_constant&quot;</span>);
 
                         state.blend_constant = OptionalState::Set;
                         <span class="kw">let </span>array = [
@@ -4561,7 +4563,7 @@
                         }
                     }
                     RenderCommand::SetStencilReference(value) =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_stencil_reference {value}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_stencil_reference {value}&quot;</span>);
 
                         state.stencil_reference = value;
                         <span class="kw">if </span>state
@@ -4578,7 +4580,7 @@
                         depth_min,
                         depth_max,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_viewport {rect:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_viewport {rect:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetViewport;
                         <span class="kw">if </span>rect.x &lt; <span class="number">0.0
@@ -4616,7 +4618,7 @@
                         size_bytes,
                         values_offset,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_push_constants&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_push_constants&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
                         <span class="kw">let </span>values_offset = values_offset
@@ -4651,7 +4653,7 @@
                         }
                     }
                     RenderCommand::SetScissor(<span class="kw-2">ref </span>rect) =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_scissor_rect {rect:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::set_scissor_rect {rect:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetScissorRect;
                         <span class="kw">if </span>rect.x + rect.w &gt; info.extent.width
@@ -4676,7 +4678,7 @@
                         first_vertex,
                         first_instance,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(
+                        <span class="macro">api_log!</span>(
                             <span class="string">&quot;RenderPass::draw {vertex_count} {instance_count} {first_vertex} {first_instance}&quot;
                         </span>);
 
@@ -4720,7 +4722,7 @@
                         base_vertex,
                         first_instance,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::draw_indexed {index_count} {instance_count} {first_index} {base_vertex} {first_instance}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::draw_indexed {index_count} {instance_count} {first_index} {base_vertex} {first_instance}&quot;</span>);
 
                         <span class="kw">let </span>indexed = <span class="bool-val">true</span>;
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
@@ -4768,7 +4770,7 @@
                         count,
                         indexed,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::draw_indirect (indexed:{indexed}) {buffer_id:?} {offset} {count:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::draw_indirect (indexed:{indexed}) {buffer_id:?} {offset} {count:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
@@ -4842,7 +4844,7 @@
                         max_count,
                         indexed,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::multi_draw_indirect_count (indexed:{indexed}) {buffer_id:?} {offset} {count_buffer_id:?} {count_buffer_offset:?} {max_count:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::multi_draw_indirect_count (indexed:{indexed}) {buffer_id:?} {offset} {count_buffer_id:?} {count_buffer_offset:?} {max_count:?}&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
@@ -4958,7 +4960,7 @@
                             )
                             .unwrap();
 
-                            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::push_debug_group {label:?}&quot;</span>);
+                            <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::push_debug_group {label:?}&quot;</span>);
                             <span class="kw">unsafe </span>{
                                 raw.begin_debug_marker(label);
                             }
@@ -4966,7 +4968,7 @@
                         string_offset += len;
                     }
                     RenderCommand::PopDebugGroup =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::pop_debug_group&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::pop_debug_group&quot;</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::PopDebugGroup;
                         <span class="kw">if </span>state.debug_scope_depth == <span class="number">0 </span>{
@@ -4986,7 +4988,7 @@
                                 <span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len],
                             )
                             .unwrap();
-                            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::insert_debug_marker {label:?}&quot;</span>);
+                            <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::insert_debug_marker {label:?}&quot;</span>);
                             <span class="kw">unsafe </span>{
                                 raw.insert_debug_marker(label);
                             }
@@ -4997,7 +4999,7 @@
                         query_set_id,
                         query_index,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::write_timestamps {query_set_id:?} {query_index}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::write_timestamps {query_set_id:?} {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
 
                         device
@@ -5020,7 +5022,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::BeginOcclusionQuery { query_index } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::begin_occlusion_query {query_index}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::begin_occlusion_query {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::BeginOcclusionQuery;
 
                         <span class="kw">let </span>query_set_id = occlusion_query_set_id
@@ -5044,7 +5046,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndOcclusionQuery =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::end_occlusion_query&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::end_occlusion_query&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndOcclusionQuery;
 
                         end_occlusion_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
@@ -5054,7 +5056,7 @@
                         query_set_id,
                         query_index,
                     } =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::begin_pipeline_statistics_query {query_set_id:?} {query_index}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::begin_pipeline_statistics_query {query_set_id:?} {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
                         <span class="kw">let </span>query_set = tracker
@@ -5074,14 +5076,14 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndPipelineStatisticsQuery =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::end_pipeline_statistics_query&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::end_pipeline_statistics_query&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
 
                         end_pipeline_statistics_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::ExecuteBundle(bundle_id) =&gt; {
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::execute_bundle {bundle_id:?}&quot;</span>);
+                        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPass::execute_bundle {bundle_id:?}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::ExecuteBundle;
                         <span class="kw">let </span>bundle: <span class="kw-2">&amp;</span>command::RenderBundle&lt;A&gt; = tracker
                             .bundles

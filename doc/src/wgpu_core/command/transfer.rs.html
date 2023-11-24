@@ -1218,9 +1218,29 @@
 <a href="#1218" id="1218">1218</a>
 <a href="#1219" id="1219">1219</a>
 <a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
+    api_log,
     command::{clear_texture, CommandBuffer, CommandEncoderError},
     conv,
     device::{Device, MissingDownlevelFlags},
@@ -1787,6 +1807,9 @@
         size: BufferAddress,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CopyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_buffer&quot;</span>);
+        <span class="macro">api_log!</span>(
+            <span class="string">&quot;CommandEncoder::copy_buffer_to_buffer {source:?} -&gt; {destination:?} {size:?}bytes&quot;
+        </span>);
 
         <span class="kw">if </span>source == destination {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::SameSourceDestinationBuffer.into());
@@ -1947,6 +1970,11 @@
         copy_size: <span class="kw-2">&amp;</span>Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CopyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_texture&quot;</span>);
+        <span class="macro">api_log!</span>(
+            <span class="string">&quot;CommandEncoder::copy_buffer_to_texture {:?} -&gt; {:?} {copy_size:?}&quot;</span>,
+            source.buffer,
+            destination.texture
+        );
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2105,6 +2133,11 @@
         copy_size: <span class="kw-2">&amp;</span>Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CopyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_buffer&quot;</span>);
+        <span class="macro">api_log!</span>(
+            <span class="string">&quot;CommandEncoder::copy_texture_to_buffer {:?} -&gt; {:?} {copy_size:?}&quot;</span>,
+            source.texture,
+            destination.buffer
+        );
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2275,6 +2308,11 @@
         copy_size: <span class="kw-2">&amp;</span>Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CopyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_texture&quot;</span>);
+        <span class="macro">api_log!</span>(
+            <span class="string">&quot;CommandEncoder::copy_texture_to_texture {:?} -&gt; {:?} {copy_size:?}&quot;</span>,
+            source.texture,
+            destination.texture
+        );
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 

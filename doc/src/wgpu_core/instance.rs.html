@@ -1309,10 +1309,12 @@
 <a href="#1309" id="1309">1309</a>
 <a href="#1310" id="1310">1310</a>
 <a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
     any_surface::AnySurface,
+    api_log,
     device::{queue::Queue, resource::Device, DeviceDescriptor},
     global::Global,
     hal_api::HalApi,
@@ -1617,7 +1619,7 @@
         instance_flags: wgt::InstanceFlags,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device&lt;A&gt;, Queue&lt;A&gt;), RequestDeviceError&gt; {
-        <span class="macro">log::info!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
 
         <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.raw.capabilities;
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = Device::new(
@@ -2073,7 +2075,7 @@
     <span class="kw">pub fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: SurfaceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Surface::drop&quot;</span>);
 
-        <span class="macro">log::info!</span>(<span class="string">&quot;Surface::drop {id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Surface::drop {id:?}&quot;</span>);
 
         <span class="kw">fn </span>unconfigure&lt;G: GlobalIdentityHandlerFactory, A: HalApi&gt;(
             global: <span class="kw-2">&amp;</span>Global&lt;G&gt;,
@@ -2139,7 +2141,7 @@
 
     <span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, inputs: AdapterInputs&lt;Input&lt;G, AdapterId&gt;&gt;) -&gt; Vec&lt;AdapterId&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>adapters = Vec::new();
 
@@ -2195,8 +2197,8 @@
         desc: <span class="kw-2">&amp;</span>RequestAdapterOptions,
         inputs: AdapterInputs&lt;Input&lt;G, AdapterId&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;AdapterId, RequestAdapterError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::request_adapter&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Instance::request_adapter&quot;</span>);
 
         <span class="kw">fn </span>gather&lt;A: HalApi, I: Copy&gt;(
             <span class="kw">_</span>: A,
@@ -2470,7 +2472,7 @@
 
     <span class="kw">pub fn </span>adapter_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter_id: AdapterId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::drop&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::drop {adapter_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Adapter::drop {adapter_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>adapters_locked = hub.adapters.write();
@@ -2496,7 +2498,7 @@
         queue_id_in: Input&lt;G, QueueId&gt;,
     ) -&gt; (DeviceId, QueueId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>device_fid = hub.devices.prepare::&lt;G&gt;(device_id_in);
