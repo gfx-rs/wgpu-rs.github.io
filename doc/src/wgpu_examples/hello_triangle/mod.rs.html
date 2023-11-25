@@ -172,6 +172,14 @@
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>winit::{
     event::{Event, WindowEvent},
@@ -324,7 +332,24 @@
 
 <span class="kw">pub fn </span>main() {
     <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
-    <span class="kw">let </span>window = winit::window::Window::new(<span class="kw-2">&amp;</span>event_loop).unwrap();
+    <span class="attr">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+    </span>{
+        <span class="kw">use </span>wasm_bindgen::JsCast;
+        <span class="kw">use </span>winit::platform::web::WindowBuilderExtWebSys;
+        <span class="kw">let </span>canvas = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .get_element_by_id(<span class="string">&quot;canvas&quot;</span>)
+            .unwrap()
+            .dyn_into::&lt;web_sys::HtmlCanvasElement&gt;()
+            .unwrap();
+        builder = builder.with_canvas(<span class="prelude-val">Some</span>(canvas));
+    }
+    <span class="kw">let </span>window = builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
+
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
     </span>{
         env_logger::init();
@@ -334,15 +359,6 @@
     </span>{
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         console_log::init().expect(<span class="string">&quot;could not initialize logger&quot;</span>);
-        <span class="kw">use </span>winit::platform::web::WindowExtWebSys;
-        <span class="kw">let </span>canvas = window.canvas().expect(<span class="string">&quot;Couldn&#39;t get canvas&quot;</span>);
-        canvas.style().set_css_text(<span class="string">&quot;height: 100%; width: 100%;&quot;</span>);
-        <span class="comment">// On wasm, append the canvas to the document body
-        </span>web_sys::window()
-            .and_then(|win| win.document())
-            .and_then(|doc| doc.body())
-            .and_then(|body| body.append_child(<span class="kw-2">&amp;</span>canvas).ok())
-            .expect(<span class="string">&quot;couldn&#39;t append canvas to document body&quot;</span>);
         wasm_bindgen_futures::spawn_local(run(event_loop, window));
     }
 }

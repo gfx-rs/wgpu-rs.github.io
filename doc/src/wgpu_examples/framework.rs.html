@@ -619,6 +619,7 @@
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgpu::{Instance, Surface};
@@ -719,21 +720,22 @@
     <span class="kw">pub fn </span>new(title: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
-        builder = builder.with_title(title);
-        <span class="kw">let </span>window = Arc::new(builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap());
-
         <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
         </span>{
-            <span class="kw">use </span>winit::platform::web::WindowExtWebSys;
-            <span class="kw">let </span>canvas = window.canvas().expect(<span class="string">&quot;Couldn&#39;t get canvas&quot;</span>);
-            canvas.style().set_css_text(<span class="string">&quot;height: 100%; width: 100%;&quot;</span>);
-            <span class="comment">// On wasm, append the canvas to the document body
-            </span>web_sys::window()
-                .and_then(|win| win.document())
-                .and_then(|doc| doc.body())
-                .and_then(|body| body.append_child(<span class="kw-2">&amp;</span>canvas).ok())
-                .expect(<span class="string">&quot;couldn&#39;t append canvas to document body&quot;</span>);
+            <span class="kw">use </span>wasm_bindgen::JsCast;
+            <span class="kw">use </span>winit::platform::web::WindowBuilderExtWebSys;
+            <span class="kw">let </span>canvas = web_sys::window()
+                .unwrap()
+                .document()
+                .unwrap()
+                .get_element_by_id(<span class="string">&quot;canvas&quot;</span>)
+                .unwrap()
+                .dyn_into::&lt;web_sys::HtmlCanvasElement&gt;()
+                .unwrap();
+            builder = builder.with_canvas(<span class="prelude-val">Some</span>(canvas));
         }
+        builder = builder.with_title(title);
+        <span class="kw">let </span>window = Arc::new(builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap());
 
         <span class="self">Self </span>{ event_loop, window }
     }

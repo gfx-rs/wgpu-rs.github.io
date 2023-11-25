@@ -387,6 +387,17 @@
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Points of interest for seeing uniforms in action:
 //!
 //! 1. the struct for the data stored in the uniform buffer is defined.
@@ -736,11 +747,27 @@
 
 <span class="kw">pub fn </span>main() {
     <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
-    <span class="kw">let </span>window = winit::window::WindowBuilder::new()
+    <span class="attr">#[allow(unused_mut)]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new()
         .with_title(<span class="string">&quot;Remember: Use U/D to change sample count!&quot;</span>)
-        .with_inner_size(winit::dpi::LogicalSize::new(<span class="number">900</span>, <span class="number">900</span>))
-        .build(<span class="kw-2">&amp;</span>event_loop)
-        .unwrap();
+        .with_inner_size(winit::dpi::LogicalSize::new(<span class="number">900</span>, <span class="number">900</span>));
+
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+    </span>{
+        <span class="kw">use </span>wasm_bindgen::JsCast;
+        <span class="kw">use </span>winit::platform::web::WindowBuilderExtWebSys;
+        <span class="kw">let </span>canvas = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .get_element_by_id(<span class="string">&quot;canvas&quot;</span>)
+            .unwrap()
+            .dyn_into::&lt;web_sys::HtmlCanvasElement&gt;()
+            .unwrap();
+        builder = builder.with_canvas(<span class="prelude-val">Some</span>(canvas));
+    }
+    <span class="kw">let </span>window = builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
+
     <span class="kw">let </span>window = Arc::new(window);
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
     </span>{
@@ -751,16 +778,11 @@
     </span>{
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         console_log::init().expect(<span class="string">&quot;could not initialize logger&quot;</span>);
-        <span class="kw">use </span>winit::platform::web::WindowExtWebSys;
-
-        <span class="kw">let </span>canvas = window.canvas().expect(<span class="string">&quot;Couldn&#39;t get canvas&quot;</span>);
-        canvas.style().set_css_text(<span class="string">&quot;height: 100%; width: 100%;&quot;</span>);
 
         <span class="kw">let </span>document = web_sys::window()
             .and_then(|win| win.document())
             .expect(<span class="string">&quot;Failed to get document.&quot;</span>);
         <span class="kw">let </span>body = document.body().unwrap();
-        body.append_child(<span class="kw-2">&amp;</span>canvas).unwrap();
         <span class="kw">let </span>controls_text = document
             .create_element(<span class="string">&quot;p&quot;</span>)
             .expect(<span class="string">&quot;Failed to create controls text as element.&quot;</span>);
