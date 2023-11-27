@@ -3348,8 +3348,6 @@
 <a href="#3348" id="3348">3348</a>
 <a href="#3349" id="3349">3349</a>
 <a href="#3350" id="3350">3350</a>
-<a href="#3351" id="3351">3351</a>
-<a href="#3352" id="3352">3352</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3659,7 +3657,6 @@
     ///   return it to our callers.)
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>maintain&lt;<span class="lifetime">&#39;this</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;this </span><span class="self">self</span>,
-        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
         fence: <span class="kw-2">&amp;</span>A::Fence,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
@@ -3680,7 +3677,6 @@
             life_tracker.suspected_resources.extend(temp_suspected);
 
             life_tracker.triage_suspected(
-                hub,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.trackers,
                 <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
                 </span><span class="self">self</span>.trace.lock().as_mut(),
@@ -3720,7 +3716,7 @@
             last_done_index,
             <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
         );
-        <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(hub, <span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
+        <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
 
         <span class="comment">//Cleaning up resources and released all unused suspected ones
         </span>life_tracker.cleanup();

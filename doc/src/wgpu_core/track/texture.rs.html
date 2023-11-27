@@ -1492,7 +1492,6 @@
 <a href="#1492" id="1492">1492</a>
 <a href="#1493" id="1493">1493</a>
 <a href="#1494" id="1494">1494</a>
-<a href="#1495" id="1495">1495</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are signifigantly more complicated than
@@ -1896,7 +1895,7 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId, external_count: usize) -&gt; bool {
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId) -&gt; bool {
         <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
@@ -1908,10 +1907,9 @@
         <span class="kw">unsafe </span>{
             <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
                 <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
-                <span class="comment">//2 ref count if only in Device Tracker and suspected resource itself and already released from user
-                //so not appearing in Registry
-                </span><span class="kw">let </span>min_ref_count = <span class="number">1 </span>+ external_count;
-                <span class="kw">if </span>existing_ref_count &lt;= min_ref_count {
+                <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
+                //so it&#39;s already been released from user and so it&#39;s not inside Registry\Storage
+                </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
                     <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.metadata.remove(index);

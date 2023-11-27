@@ -833,7 +833,6 @@
 <a href="#833" id="833">833</a>
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -1149,7 +1148,7 @@
     /// [`Device::trackers`]: crate::device::Device
     /// [`self.metadata`]: BufferTracker::metadata
     /// [`Hub::buffers`]: crate::hub::Hub::buffers
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BufferId, external_count: usize) -&gt; bool {
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BufferId) -&gt; bool {
         <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
@@ -1161,10 +1160,9 @@
         <span class="kw">unsafe </span>{
             <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
                 <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
-                <span class="comment">//2 ref count if only in Device Tracker and suspected resource itself and already released from user
-                //so not appearing in Registry
-                </span><span class="kw">let </span>min_ref_count = <span class="number">1 </span>+ external_count;
-                <span class="kw">if </span>existing_ref_count &lt;= min_ref_count {
+                <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
+                //so it&#39;s already been released from user and so it&#39;s not inside Registry\Storage
+                </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
                     <span class="self">self</span>.metadata.remove(index);
                     <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer {:?} is not tracked anymore&quot;</span>, id,);
                     <span class="kw">return </span><span class="bool-val">true</span>;

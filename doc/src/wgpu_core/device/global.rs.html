@@ -2517,7 +2517,6 @@
 <a href="#2517" id="2517">2517</a>
 <a href="#2518" id="2518">2518</a>
 <a href="#2519" id="2519">2519</a>
-<a href="#2520" id="2520">2520</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4524,7 +4523,7 @@
                 <span class="comment">// Wait for all work to finish before configuring the surface.
                 </span><span class="kw">let </span>fence = device.fence.read();
                 <span class="kw">let </span>fence = fence.as_ref().unwrap();
-                <span class="kw">match </span>device.maintain(hub, fence, wgt::Maintain::Wait) {
+                <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Wait) {
                     <span class="prelude-val">Ok</span>((closures, <span class="kw">_</span>)) =&gt; {
                         user_callbacks = closures;
                     }
@@ -4594,7 +4593,6 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidDevice);
         }
         device.lock_life().triage_suspected(
-            hub,
             <span class="kw-2">&amp;</span>device.trackers,
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="prelude-val">None</span>,
@@ -4629,7 +4627,7 @@
                 .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
             <span class="kw">let </span>fence = device.fence.read();
             <span class="kw">let </span>fence = fence.as_ref().unwrap();
-            device.maintain(hub, fence, maintain)<span class="question-mark">?
+            device.maintain(fence, maintain)<span class="question-mark">?
         </span>};
 
         closures.fire();
@@ -4663,7 +4661,7 @@
                 };
                 <span class="kw">let </span>fence = device.fence.read();
                 <span class="kw">let </span>fence = fence.as_ref().unwrap();
-                <span class="kw">let </span>(cbs, queue_empty) = device.maintain(hub, fence, maintain)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(cbs, queue_empty) = device.maintain(fence, maintain)<span class="question-mark">?</span>;
                 all_queue_empty = all_queue_empty &amp;&amp; queue_empty;
 
                 closures.extend(cbs);
