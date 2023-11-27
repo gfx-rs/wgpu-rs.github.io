@@ -262,7 +262,6 @@
 <a href="#262" id="262">262</a>
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, ops, sync::Arc};
 
 <span class="kw">use </span>wgt::Backend;
@@ -281,7 +280,7 @@
 
     <span class="doccomment">/// Like `Occupied`, but the resource has been marked as destroyed
     /// and hasn&#39;t been dropped yet.
-    </span>Destroyed(Arc&lt;T&gt;, Epoch),
+    </span>Destroyed(Epoch),
 
     <span class="doccomment">/// Like `Occupied`, but an error occurred when creating the
     /// resource.
@@ -345,7 +344,7 @@
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="bool-val">false</span>,
             <span class="prelude-val">Some</span>(
                 <span class="kw-2">&amp;</span>Element::Occupied(<span class="kw">_</span>, storage_epoch)
-                | <span class="kw-2">&amp;</span>Element::Destroyed(<span class="kw">_</span>, storage_epoch)
+                | <span class="kw-2">&amp;</span>Element::Destroyed(storage_epoch)
                 | <span class="kw-2">&amp;</span>Element::Error(storage_epoch, <span class="kw">_</span>),
             ) =&gt; storage_epoch == epoch,
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
@@ -410,7 +409,7 @@
         }
         <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index], element) {
             Element::Vacant =&gt; {}
-            Element::Destroyed(<span class="kw">_</span>, storage_epoch) =&gt; {
+            Element::Destroyed(storage_epoch) =&gt; {
                 <span class="macro">assert_ne!</span>(
                     epoch,
                     storage_epoch,
@@ -473,20 +472,15 @@
         <span class="kw">let </span>slot = <span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize];
         <span class="comment">// borrowck dance: we have to move the element out before we can replace it
         // with another variant with the same value.
-        </span><span class="kw">if let </span><span class="kw-2">&amp;mut </span>Element::Occupied(..) = slot {
+        </span><span class="kw">if let </span><span class="kw-2">&amp;mut </span>Element::Occupied(<span class="kw">_</span>, e) = slot {
             <span class="kw">if let </span>Element::Occupied(value, storage_epoch) =
-                std::mem::replace(slot, Element::Vacant)
+                std::mem::replace(slot, Element::Destroyed(e))
             {
                 <span class="macro">debug_assert_eq!</span>(storage_epoch, epoch);
-                <span class="kw-2">*</span>slot = Element::Destroyed(value, storage_epoch);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(value);
             }
         }
-
-        <span class="kw">if let </span>Element::Destroyed(<span class="kw-2">ref </span>value, ..) = <span class="kw-2">*</span>slot {
-            <span class="prelude-val">Ok</span>(value.clone())
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(InvalidId)
-        }
+        <span class="prelude-val">Err</span>(InvalidId)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I, value: T) {
@@ -499,10 +493,14 @@
         <span class="macro">log::trace!</span>(<span class="string">&quot;User is removing {}{:?}&quot;</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Vacant) {
-            Element::Occupied(value, storage_epoch) | Element::Destroyed(value, storage_epoch) =&gt; {
+            Element::Occupied(value, storage_epoch) =&gt; {
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
                 <span class="prelude-val">Some</span>(value)
             }
+            Element::Destroyed(storage_epoch) =&gt; {
+                <span class="macro">assert_eq!</span>(epoch, storage_epoch);
+                <span class="prelude-val">None
+            </span>}
             Element::Error(..) =&gt; <span class="prelude-val">None</span>,
             Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Cannot remove a vacant resource&quot;</span>),
         }
