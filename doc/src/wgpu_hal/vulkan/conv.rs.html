@@ -841,6 +841,16 @@
 <a href="#841" id="841">841</a>
 <a href="#842" id="842">842</a>
 <a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>ash::vk;
 
 <span class="kw">impl </span><span class="kw">super</span>::PrivateCapabilities {
@@ -917,6 +927,7 @@
                 }
             }
             Tf::Depth16Unorm =&gt; F::D16_UNORM,
+            Tf::NV12 =&gt; F::G8_B8R8_2PLANE_420_UNORM,
             Tf::Rgb9e5Ufloat =&gt; F::E5B9G9R9_UFLOAT_PACK32,
             Tf::Bc1RgbaUnorm =&gt; F::BC1_RGBA_UNORM_BLOCK,
             Tf::Bc1RgbaUnormSrgb =&gt; F::BC1_RGBA_SRGB_BLOCK,
@@ -1244,10 +1255,18 @@
     }
 }
 
-<span class="kw">pub fn </span>map_aspects(aspects: <span class="kw">crate</span>::FormatAspects) -&gt; vk::ImageAspectFlags {
+<span class="kw">pub fn </span>map_aspects(aspects: <span class="kw">crate</span>::FormatAspects, plane: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; vk::ImageAspectFlags {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::ImageAspectFlags::empty();
-    <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR) {
-        flags |= vk::ImageAspectFlags::COLOR;
+    <span class="kw">match </span>plane {
+        <span class="prelude-val">Some</span>(<span class="number">0</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_0,
+        <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_1,
+        <span class="prelude-val">Some</span>(<span class="number">2</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_2,
+        <span class="prelude-val">Some</span>(plane) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected plane {}&quot;</span>, plane),
+        <span class="prelude-val">None </span>=&gt; {
+            <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR) {
+                flags |= vk::ImageAspectFlags::COLOR;
+            }
+        }
     }
     <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::DEPTH) {
         flags |= vk::ImageAspectFlags::DEPTH;
@@ -1429,9 +1448,10 @@
 <span class="kw">pub fn </span>map_subresource_range(
     range: <span class="kw-2">&amp;</span>wgt::ImageSubresourceRange,
     format: wgt::TextureFormat,
+    plane: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 ) -&gt; vk::ImageSubresourceRange {
     vk::ImageSubresourceRange {
-        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::new(format, range.aspect)),
+        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::new(format, range.aspect), plane),
         base_mip_level: range.base_mip_level,
         level_count: range.mip_level_count.unwrap_or(vk::REMAINING_MIP_LEVELS),
         base_array_layer: range.base_array_layer,
@@ -1448,7 +1468,7 @@
     format: wgt::TextureFormat,
     private_caps: <span class="kw-2">&amp;</span><span class="kw">super</span>::PrivateCapabilities,
 ) -&gt; vk::ImageSubresourceRange {
-    <span class="kw">let </span><span class="kw-2">mut </span>range = map_subresource_range(range, format);
+    <span class="kw">let </span><span class="kw-2">mut </span>range = map_subresource_range(range, format, <span class="prelude-val">None</span>);
     <span class="kw">if </span>!private_caps.texture_s8 &amp;&amp; format == wgt::TextureFormat::Stencil8 {
         range.aspect_mask |= vk::ImageAspectFlags::DEPTH;
     }
@@ -1464,7 +1484,7 @@
         z: base.origin.z <span class="kw">as </span>i32,
     };
     <span class="kw">let </span>subresource = vk::ImageSubresourceLayers {
-        aspect_mask: map_aspects(base.aspect),
+        aspect_mask: map_aspects(base.aspect, <span class="prelude-val">None</span>),
         mip_level: base.mip_level,
         base_array_layer: base.array_layer,
         layer_count: <span class="number">1</span>,

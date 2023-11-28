@@ -1802,6 +1802,23 @@
 <a href="#1802" id="1802">1802</a>
 <a href="#1803" id="1803">1803</a>
 <a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2105,6 +2122,7 @@
 
     <span class="kw">fn </span>to_wgpu(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        adapter_info: <span class="kw-2">&amp;</span>wgt::AdapterInfo,
         instance: <span class="kw-2">&amp;</span>ash::Instance,
         phd: vk::PhysicalDevice,
         caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities,
@@ -2337,6 +2355,22 @@
         features.set(
             F::BGRA8UNORM_STORAGE,
             supports_bgra8unorm_storage(instance, phd, caps.device_api_version),
+        );
+
+        features.set(
+            F::TEXTURE_FORMAT_NV12,
+            (caps.device_api_version &gt;= vk::API_VERSION_1_1
+                || caps.supports_extension(vk::KhrSamplerYcbcrConversionFn::name()))
+                &amp;&amp; supports_format(
+                    instance,
+                    phd,
+                    vk::Format::G8_B8R8_2PLANE_420_UNORM,
+                    vk::ImageTiling::OPTIMAL,
+                    vk::FormatFeatureFlags::SAMPLED_IMAGE
+                        | vk::FormatFeatureFlags::TRANSFER_SRC
+                        | vk::FormatFeatureFlags::TRANSFER_DST,
+                )
+                &amp;&amp; !adapter_info.driver.contains(<span class="string">&quot;MoltenVK&quot;</span>),
         );
 
         (features, dl_flags)
@@ -2773,7 +2807,7 @@
         };
 
         <span class="kw">let </span>(available_features, downlevel_flags) =
-            phd_features.to_wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, phd, <span class="kw-2">&amp;</span>phd_capabilities);
+            phd_features.to_wgpu(<span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, phd, <span class="kw-2">&amp;</span>phd_capabilities);
         <span class="kw">let </span><span class="kw-2">mut </span>workarounds = <span class="kw">super</span>::Workarounds::empty();
         {
             <span class="comment">// see https://github.com/gfx-rs/gfx/issues/1930
@@ -3355,14 +3389,14 @@
                 .framebuffer_stencil_sample_counts
                 .min(limits.sampled_image_stencil_sample_counts)
         } <span class="kw">else </span>{
-            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>).unwrap() {
-                wgt::TextureSampleType::Float { filterable: <span class="kw">_ </span>} =&gt; limits
+            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>) {
+                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Float { filterable: <span class="kw">_ </span>}) =&gt; limits
                     .framebuffer_color_sample_counts
                     .min(limits.sampled_image_color_sample_counts),
-                wgt::TextureSampleType::Sint | wgt::TextureSampleType::Uint =&gt; {
+                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Sint) | <span class="prelude-val">Some</span>(wgt::TextureSampleType::Uint) =&gt; {
                     limits.sampled_image_integer_sample_counts
                 }
-                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                <span class="kw">_ </span>=&gt; vk::SampleCountFlags::TYPE_1,
             }
         };
 
