@@ -6882,6 +6882,12 @@
 <a href="#6882" id="6882">6882</a>
 <a href="#6883" id="6883">6883</a>
 <a href="#6884" id="6884">6884</a>
+<a href="#6885" id="6885">6885</a>
+<a href="#6886" id="6886">6886</a>
+<a href="#6887" id="6887">6887</a>
+<a href="#6888" id="6888">6888</a>
+<a href="#6889" id="6889">6889</a>
+<a href="#6890" id="6890">6890</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -8535,12 +8541,18 @@
 </span><span class="kw">pub struct </span>DeviceDescriptor&lt;L&gt; {
     <span class="doccomment">/// Debug label for the device.
     </span><span class="kw">pub </span>label: L,
-    <span class="doccomment">/// Features that the device should support. If any feature is not supported by
-    /// the adapter, creating a device will panic.
-    </span><span class="kw">pub </span>features: Features,
-    <span class="doccomment">/// Limits that the device should support. If any limit is &quot;better&quot; than the limit exposed by
-    /// the adapter, creating a device will panic.
-    </span><span class="kw">pub </span>limits: Limits,
+    <span class="doccomment">/// Specifies the features that are required by the device request.
+    /// The request will fail if the adapter cannot provide these features.
+    ///
+    /// Exactly the specified set of features, and no more or less,
+    /// will be allowed in validation of API calls on the resulting device.
+    </span><span class="kw">pub </span>required_features: Features,
+    <span class="doccomment">/// Specifies the limits that are required by the device request.
+    /// The request will fail if the adapter cannot provide these limits.
+    ///
+    /// Exactly the specified limits, and no better or worse,
+    /// will be allowed in validation of API calls on the resulting device.
+    </span><span class="kw">pub </span>required_limits: Limits,
 }
 
 <span class="kw">impl</span>&lt;L&gt; DeviceDescriptor&lt;L&gt; {
@@ -8548,8 +8560,8 @@
     </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; DeviceDescriptor&lt;K&gt; {
         DeviceDescriptor {
             label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
-            features: <span class="self">self</span>.features,
-            limits: <span class="self">self</span>.limits.clone(),
+            required_features: <span class="self">self</span>.required_features,
+            required_limits: <span class="self">self</span>.required_limits.clone(),
         }
     }
 }

@@ -3400,6 +3400,7 @@
 <a href="#3400" id="3400">3400</a>
 <a href="#3401" id="3401">3401</a>
 <a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3594,8 +3595,6 @@
         raw_device: A::Device,
         raw_queue: <span class="kw-2">&amp;</span>A::Queue,
         adapter: <span class="kw-2">&amp;</span>Arc&lt;Adapter&lt;A&gt;&gt;,
-        alignments: hal::Alignments,
-        downlevel: wgt::DownlevelCapabilities,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
         instance_flags: wgt::InstanceFlags,
@@ -3645,6 +3644,9 @@
                 }));
         }
 
+        <span class="kw">let </span>alignments = adapter.raw.capabilities.alignments.clone();
+        <span class="kw">let </span>downlevel = adapter.raw.capabilities.downlevel.clone();
+
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             raw: <span class="prelude-val">Some</span>(raw_device),
             adapter: adapter.clone(),
@@ -3674,8 +3676,8 @@
                 </span>}
             })),
             alignments,
-            limits: desc.limits.clone(),
-            features: desc.features,
+            limits: desc.required_limits.clone(),
+            features: desc.required_features,
             downlevel,
             instance_flags,
             pending_writes: Mutex::new(<span class="prelude-val">Some</span>(pending_writes)),

@@ -1621,13 +1621,10 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device&lt;A&gt;, Queue&lt;A&gt;), RequestDeviceError&gt; {
         <span class="macro">api_log!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
 
-        <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.raw.capabilities;
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = Device::new(
             hal_device.device,
             <span class="kw-2">&amp;</span>hal_device.queue,
             <span class="self">self</span>,
-            caps.alignments.clone(),
-            caps.downlevel.clone(),
             desc,
             trace_path,
             instance_flags,
@@ -1649,9 +1646,9 @@
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device&lt;A&gt;, Queue&lt;A&gt;), RequestDeviceError&gt; {
         <span class="comment">// Verify all features were exposed by the adapter
-        </span><span class="kw">if </span>!<span class="self">self</span>.raw.features.contains(desc.features) {
+        </span><span class="kw">if </span>!<span class="self">self</span>.raw.features.contains(desc.required_features) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(RequestDeviceError::UnsupportedFeature(
-                desc.features - <span class="self">self</span>.raw.features,
+                desc.required_features - <span class="self">self</span>.raw.features,
             ));
         }
 
@@ -1670,7 +1667,7 @@
 
         <span class="comment">// Verify feature preconditions
         </span><span class="kw">if </span>desc
-            .features
+            .required_features
             .contains(wgt::Features::MAPPABLE_PRIMARY_BUFFERS)
             &amp;&amp; <span class="self">self</span>.raw.info.device_type == wgt::DeviceType::DiscreteGpu
         {
@@ -1684,17 +1681,20 @@
             <span class="comment">//TODO
         </span>}
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(failed) = check_limits(<span class="kw-2">&amp;</span>desc.limits, <span class="kw-2">&amp;</span>caps.limits).pop() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(failed) = check_limits(<span class="kw-2">&amp;</span>desc.required_limits, <span class="kw-2">&amp;</span>caps.limits).pop() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(RequestDeviceError::LimitsExceeded(failed));
         }
 
-        <span class="kw">let </span>open = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.adapter.open(desc.features, <span class="kw-2">&amp;</span>desc.limits) }.map_err(
-            |err| <span class="kw">match </span>err {
-                hal::DeviceError::Lost =&gt; RequestDeviceError::DeviceLost,
-                hal::DeviceError::OutOfMemory =&gt; RequestDeviceError::OutOfMemory,
-                hal::DeviceError::ResourceCreationFailed =&gt; RequestDeviceError::Internal,
-            },
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>open = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.raw
+                .adapter
+                .open(desc.required_features, <span class="kw-2">&amp;</span>desc.required_limits)
+        }
+        .map_err(|err| <span class="kw">match </span>err {
+            hal::DeviceError::Lost =&gt; RequestDeviceError::DeviceLost,
+            hal::DeviceError::OutOfMemory =&gt; RequestDeviceError::OutOfMemory,
+            hal::DeviceError::ResourceCreationFailed =&gt; RequestDeviceError::Internal,
+        })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.create_device_and_queue_from_hal(open, desc, instance_flags, trace_path)
     }
