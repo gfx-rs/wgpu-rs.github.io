@@ -2517,6 +2517,8 @@
 <a href="#2517" id="2517">2517</a>
 <a href="#2518" id="2518">2518</a>
 <a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4328,21 +4330,19 @@
         <span class="kw">fn </span>validate_surface_configuration(
             config: <span class="kw-2">&amp;mut </span>hal::SurfaceConfiguration,
             caps: <span class="kw-2">&amp;</span>hal::SurfaceCapabilities,
+            max_texture_dimension_2d: u32,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt; {
             <span class="kw">let </span>width = config.extent.width;
             <span class="kw">let </span>height = config.extent.height;
-            <span class="kw">if </span>width &lt; caps.extents.start().width
-                || width &gt; caps.extents.end().width
-                || height &lt; caps.extents.start().height
-                || height &gt; caps.extents.end().height
-            {
-                <span class="macro">log::warn!</span>(
-                    <span class="string">&quot;Requested size {}x{} is outside of the supported range: {:?}&quot;</span>,
+
+            <span class="kw">if </span>width &gt; max_texture_dimension_2d || height &gt; max_texture_dimension_2d {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(E::TooLarge {
                     width,
                     height,
-                    caps.extents
-                );
+                    max_texture_dimension_2d,
+                });
             }
+
             <span class="kw">if </span>!caps.present_modes.contains(<span class="kw-2">&amp;</span>config.present_mode) {
                 <span class="kw">let </span>new_mode = <span class="lifetime">&#39;b</span>: <span class="kw">loop </span>{
                     <span class="comment">// Automatic present mode checks.
@@ -4516,7 +4516,11 @@
                     view_formats: hal_view_formats,
                 };
 
-                <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(<span class="kw-2">&amp;mut </span>hal_config, <span class="kw-2">&amp;</span>caps) {
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(
+                    <span class="kw-2">&amp;mut </span>hal_config,
+                    <span class="kw-2">&amp;</span>caps,
+                    device.limits.max_texture_dimension_2d,
+                ) {
                     <span class="kw">break </span>error;
                 }
 
