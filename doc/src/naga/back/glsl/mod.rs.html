@@ -4514,6 +4514,22 @@
 <a href="#4514" id="4514">4514</a>
 <a href="#4515" id="4515">4515</a>
 <a href="#4516" id="4516">4516</a>
+<a href="#4517" id="4517">4517</a>
+<a href="#4518" id="4518">4518</a>
+<a href="#4519" id="4519">4519</a>
+<a href="#4520" id="4520">4520</a>
+<a href="#4521" id="4521">4521</a>
+<a href="#4522" id="4522">4522</a>
+<a href="#4523" id="4523">4523</a>
+<a href="#4524" id="4524">4524</a>
+<a href="#4525" id="4525">4525</a>
+<a href="#4526" id="4526">4526</a>
+<a href="#4527" id="4527">4527</a>
+<a href="#4528" id="4528">4528</a>
+<a href="#4529" id="4529">4529</a>
+<a href="#4530" id="4530">4530</a>
+<a href="#4531" id="4531">4531</a>
+<a href="#4532" id="4532">4532</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -6967,6 +6983,11 @@ to output a [`Module`](crate::Module) into glsl
                     <span class="kw">crate</span>::Literal::I64(<span class="kw">_</span>) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="string">&quot;GLSL has no 64-bit integer type&quot;</span>.into()));
                     }
+                    <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                            <span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>.into(),
+                        ));
+                    }
                 }
             }
             Expression::Constant(handle) =&gt; {
@@ -8071,6 +8092,9 @@ to output a [`Module`](crate::Module) into glsl
                             (Sk::Sint | Sk::Uint | Sk::Float, Sk::Bool, <span class="prelude-val">None</span>) =&gt; {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;bool&quot;</span>)<span class="question-mark">?
                             </span>}
+
+                            (Sk::AbstractInt | Sk::AbstractFloat, <span class="kw">_</span>, <span class="kw">_</span>)
+                            | (<span class="kw">_</span>, Sk::AbstractInt | Sk::AbstractFloat, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                         };
 
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
@@ -8633,6 +8657,11 @@ to output a [`Module`](crate::Module) into glsl
             <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;0u&quot;</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;0.0&quot;</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;0&quot;</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::ScalarKind::AbstractInt | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                    <span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>.to_string(),
+                ))
+            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -8861,6 +8890,9 @@ to output a [`Module`](crate::Module) into glsl
             prefix: <span class="string">&quot;b&quot;</span>,
             full: <span class="string">&quot;bool&quot;</span>,
         },
+        Sk::AbstractInt | Sk::AbstractFloat =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedScalar(scalar));
+        }
     })
 }
 

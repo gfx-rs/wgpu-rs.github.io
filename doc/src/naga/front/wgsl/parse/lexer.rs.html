@@ -753,6 +753,9 @@
 <a href="#753" id="753">753</a>
 <a href="#754" id="754">754</a>
 <a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
@@ -1220,13 +1223,13 @@
     </span>sub_test(
         <span class="string">&quot;0x123 0X123u 1u 123 0 0i 0x3f&quot;</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">291</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">291</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(<span class="number">291</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(<span class="number">1</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">123</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">123</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">0</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">0</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">63</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">63</span>))),
         ],
     );
     <span class="comment">// decimal floating point
@@ -1234,17 +1237,17 @@
         <span class="string">&quot;0.e+4f 01. .01 12.34 .0f 0h 1e-3 0xa.fp+2 0x1P+4f 0X.3 0x3p+2h 0X1.fp-4 0x3.2p+2h&quot;</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.01</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">12.34</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.01</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">12.34</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.</span>))),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.001</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">43.75</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.001</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">43.75</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">16.</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.1875</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.1875</span>))),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.12109375</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.12109375</span>))),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
         ],
     );
@@ -1390,7 +1393,7 @@
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">0.0625</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">0.0625</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">10.0</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">10</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">10</span>))),
             Token::Word(<span class="string">&quot;l&quot;</span>),
         ],
     )
@@ -1401,13 +1404,16 @@
     sub_test(<span class="string">&quot;id123_OK&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;id123_OK&quot;</span>)]);
     sub_test(
         <span class="string">&quot;92No&quot;</span>,
-        <span class="kw-2">&amp;</span>[Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">92</span>))), Token::Word(<span class="string">&quot;No&quot;</span>)],
+        <span class="kw-2">&amp;</span>[
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">92</span>))),
+            Token::Word(<span class="string">&quot;No&quot;</span>),
+        ],
     );
     sub_test(
         <span class="string">&quot;2u3o&quot;</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(<span class="number">2</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">3</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">3</span>))),
             Token::Word(<span class="string">&quot;o&quot;</span>),
         ],
     );
@@ -1415,7 +1421,7 @@
         <span class="string">&quot;2.4f44po&quot;</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">2.4</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">44</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">44</span>))),
             Token::Word(<span class="string">&quot;po&quot;</span>),
         ],
     );
@@ -1454,13 +1460,13 @@
         <span class="kw-2">&amp;</span>[
             <span class="comment">// The &#39;f&#39; suffixes are taken as a hex digit:
             // the fractional part is 0x2f / 256.
-            </span>Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f32 / <span class="number">256.0</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f32 / <span class="number">256.0</span>))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.125</span>))),
+            </span>Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f64 / <span class="number">256.0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f64 / <span class="number">256.0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
             Token::Word(<span class="string">&quot;h&quot;</span>),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.125</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
             Token::Word(<span class="string">&quot;H&quot;</span>),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.125</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
             Token::Word(<span class="string">&quot;lf&quot;</span>),
         ],
     )
@@ -1474,7 +1480,7 @@
             Token::Attribute,
             Token::Word(<span class="string">&quot;group&quot;</span>),
             Token::Paren(<span class="string">&#39;(&#39;</span>),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">0</span>))),
             Token::Paren(<span class="string">&#39;)&#39;</span>),
             Token::Word(<span class="string">&quot;var&quot;</span>),
             Token::Paren(<span class="string">&#39;&lt;&#39;</span>),

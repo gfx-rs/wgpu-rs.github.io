@@ -778,6 +778,25 @@
 <a href="#778" id="778">778</a>
 <a href="#779" id="779">779</a>
 <a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 [`Module`](super::Module) processing functionality.
 */
@@ -851,7 +870,11 @@
 <span class="kw">impl </span><span class="kw">super</span>::ScalarKind {
     <span class="kw">pub const fn </span>is_numeric(<span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint | <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="bool-val">true</span>,
+            <span class="kw">crate</span>::ScalarKind::Sint
+            | <span class="kw">crate</span>::ScalarKind::Uint
+            | <span class="kw">crate</span>::ScalarKind::Float
+            | <span class="kw">crate</span>::ScalarKind::AbstractInt
+            | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; <span class="bool-val">true</span>,
             <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="bool-val">false</span>,
         }
     }
@@ -881,6 +904,14 @@
     <span class="kw">pub const </span>BOOL: <span class="self">Self </span>= <span class="self">Self </span>{
         kind: <span class="kw">crate</span>::ScalarKind::Bool,
         width: <span class="kw">crate</span>::BOOL_WIDTH,
+    };
+    <span class="kw">pub const </span>ABSTRACT_INT: <span class="self">Self </span>= <span class="self">Self </span>{
+        kind: <span class="kw">crate</span>::ScalarKind::AbstractInt,
+        width: <span class="kw">crate</span>::ABSTRACT_WIDTH,
+    };
+    <span class="kw">pub const </span>ABSTRACT_FLOAT: <span class="self">Self </span>= <span class="self">Self </span>{
+        kind: <span class="kw">crate</span>::ScalarKind::AbstractFloat,
+        width: <span class="kw">crate</span>::ABSTRACT_WIDTH,
     };
 
     <span class="doccomment">/// Construct a float `Scalar` with the given width.
@@ -924,7 +955,7 @@
 <span class="kw">impl </span>std::hash::Hash <span class="kw">for </span><span class="kw">crate</span>::Literal {
     <span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, hasher: <span class="kw-2">&amp;mut </span>H) {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::F64(v) =&gt; {
+            <span class="self">Self</span>::F64(v) | <span class="self">Self</span>::AbstractFloat(v) =&gt; {
                 hasher.write_u8(<span class="number">0</span>);
                 v.to_bits().hash(hasher);
             }
@@ -944,7 +975,7 @@
                 hasher.write_u8(<span class="number">4</span>);
                 v.hash(hasher);
             }
-            <span class="self">Self</span>::I64(v) =&gt; {
+            <span class="self">Self</span>::I64(v) | <span class="self">Self</span>::AbstractInt(v) =&gt; {
                 hasher.write_u8(<span class="number">5</span>);
                 v.hash(hasher);
             }
@@ -978,7 +1009,8 @@
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::F64(<span class="kw">_</span>) | <span class="self">Self</span>::I64(<span class="kw">_</span>) =&gt; <span class="number">8</span>,
             <span class="self">Self</span>::F32(<span class="kw">_</span>) | <span class="self">Self</span>::U32(<span class="kw">_</span>) | <span class="self">Self</span>::I32(<span class="kw">_</span>) =&gt; <span class="number">4</span>,
-            <span class="self">Self</span>::Bool(<span class="kw">_</span>) =&gt; <span class="number">1</span>,
+            <span class="self">Self</span>::Bool(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::BOOL_WIDTH,
+            <span class="self">Self</span>::AbstractInt(<span class="kw">_</span>) | <span class="self">Self</span>::AbstractFloat(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::ABSTRACT_WIDTH,
         }
     }
     <span class="kw">pub const fn </span>scalar(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Scalar {
@@ -989,6 +1021,8 @@
             <span class="self">Self</span>::I32(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::I32,
             <span class="self">Self</span>::I64(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::I64,
             <span class="self">Self</span>::Bool(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::BOOL,
+            <span class="self">Self</span>::AbstractInt(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::ABSTRACT_INT,
+            <span class="self">Self</span>::AbstractFloat(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::ABSTRACT_FLOAT,
         }
     }
     <span class="kw">pub const fn </span>scalar_kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::ScalarKind {
@@ -1002,7 +1036,11 @@
 <span class="kw">pub const </span>POINTER_SPAN: u32 = <span class="number">4</span>;
 
 <span class="kw">impl </span><span class="kw">super</span>::TypeInner {
-    <span class="kw">pub const fn </span>scalar(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::Scalar&gt; {
+    <span class="doccomment">/// Return the scalar type of `self`.
+    ///
+    /// If `inner` is a scalar, vector, or matrix type, return
+    /// its scalar type. Otherwise, return `None`.
+    </span><span class="kw">pub const fn </span>scalar(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::Scalar&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="prelude-val">Some</span>(scalar),

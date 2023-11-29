@@ -2050,6 +2050,17 @@
 <a href="#2050" id="2050">2050</a>
 <a href="#2051" id="2051">2051</a>
 <a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
+<a href="#2059" id="2059">2059</a>
+<a href="#2060" id="2060">2060</a>
+<a href="#2061" id="2061">2061</a>
+<a href="#2062" id="2062">2062</a>
+<a href="#2063" id="2063">2063</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -2876,6 +2887,9 @@
                 Instruction::type_float(id, bits)
             }
             Sk::Bool =&gt; Instruction::type_bool(id),
+            Sk::AbstractInt | Sk::AbstractFloat =&gt; {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;abstract types should never reach the backend&quot;</span>);
+            }
         }
     }
 
@@ -3236,6 +3250,9 @@
             }
             <span class="kw">crate</span>::Literal::Bool(<span class="bool-val">true</span>) =&gt; Instruction::constant_true(type_id, id),
             <span class="kw">crate</span>::Literal::Bool(<span class="bool-val">false</span>) =&gt; Instruction::constant_false(type_id, id),
+            <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
+                <span class="macro">unreachable!</span>(<span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>);
+            }
         };
 
         instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
@@ -3643,6 +3660,11 @@
                         | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Uint | Sk::Sint | Sk::Bool =&gt; <span class="bool-val">true</span>,
                             Sk::Float =&gt; <span class="bool-val">false</span>,
+                            Sk::AbstractInt | Sk::AbstractFloat =&gt; {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(
+                                    <span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>,
+                                ))
+                            }
                         },
                         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                     };

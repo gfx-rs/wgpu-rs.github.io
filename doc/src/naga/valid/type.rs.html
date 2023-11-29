@@ -632,6 +632,15 @@
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
 <a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
 
@@ -777,6 +786,9 @@
 
     <span class="attr">#[error(<span class="string">&quot;64-bit integers are not yet supported&quot;</span>)]
     </span>Unsupported64Bit,
+
+    <span class="attr">#[error(<span class="string">&quot;Abstract types may only appear in constant expressions&quot;</span>)]
+    </span>Abstract,
 }
 
 <span class="comment">// Only makes sense if `flags.contains(HOST_SHAREABLE)`
@@ -882,6 +894,9 @@
                 }
                 scalar.width == <span class="number">4
             </span>}
+            <span class="kw">crate</span>::ScalarKind::AbstractInt | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WidthError::Abstract);
+            }
         };
         <span class="kw">if </span>good {
             <span class="prelude-val">Ok</span>(())
@@ -959,7 +974,10 @@
             }
             Ti::Atomic(<span class="kw">crate</span>::Scalar { kind, width }) =&gt; {
                 <span class="kw">let </span>good = <span class="kw">match </span>kind {
-                    <span class="kw">crate</span>::ScalarKind::Bool | <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="bool-val">false</span>,
+                    <span class="kw">crate</span>::ScalarKind::Bool
+                    | <span class="kw">crate</span>::ScalarKind::Float
+                    | <span class="kw">crate</span>::ScalarKind::AbstractInt
+                    | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; <span class="bool-val">false</span>,
                     <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; width == <span class="number">4</span>,
                 };
                 <span class="kw">if </span>!good {

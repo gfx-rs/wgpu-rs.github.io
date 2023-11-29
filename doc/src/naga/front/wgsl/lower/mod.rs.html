@@ -2657,6 +2657,39 @@
 <a href="#2657" id="2657">2657</a>
 <a href="#2658" id="2658">2658</a>
 <a href="#2659" id="2659">2659</a>
+<a href="#2660" id="2660">2660</a>
+<a href="#2661" id="2661">2661</a>
+<a href="#2662" id="2662">2662</a>
+<a href="#2663" id="2663">2663</a>
+<a href="#2664" id="2664">2664</a>
+<a href="#2665" id="2665">2665</a>
+<a href="#2666" id="2666">2666</a>
+<a href="#2667" id="2667">2667</a>
+<a href="#2668" id="2668">2668</a>
+<a href="#2669" id="2669">2669</a>
+<a href="#2670" id="2670">2670</a>
+<a href="#2671" id="2671">2671</a>
+<a href="#2672" id="2672">2672</a>
+<a href="#2673" id="2673">2673</a>
+<a href="#2674" id="2674">2674</a>
+<a href="#2675" id="2675">2675</a>
+<a href="#2676" id="2676">2676</a>
+<a href="#2677" id="2677">2677</a>
+<a href="#2678" id="2678">2678</a>
+<a href="#2679" id="2679">2679</a>
+<a href="#2680" id="2680">2680</a>
+<a href="#2681" id="2681">2681</a>
+<a href="#2682" id="2682">2682</a>
+<a href="#2683" id="2683">2683</a>
+<a href="#2684" id="2684">2684</a>
+<a href="#2685" id="2685">2685</a>
+<a href="#2686" id="2686">2686</a>
+<a href="#2687" id="2687">2687</a>
+<a href="#2688" id="2688">2688</a>
+<a href="#2689" id="2689">2689</a>
+<a href="#2690" id="2690">2690</a>
+<a href="#2691" id="2691">2691</a>
+<a href="#2692" id="2692">2692</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -2670,6 +2703,7 @@
 <span class="kw">use crate</span>::{Arena, FastHashMap, FastIndexMap, Handle, Span};
 
 <span class="kw">mod </span>construction;
+<span class="kw">mod </span>conversion;
 
 <span class="doccomment">/// Resolves the inner type of a given expression.
 ///
@@ -2725,6 +2759,7 @@
         <span class="kw-2">&amp;</span><span class="macro-nonterminal">$ctx</span>.typifier()[<span class="macro-nonterminal">$expr</span>]
     }};
 }
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>resolve;
 
 <span class="doccomment">/// State for constructing a `crate::Module`.
 </span><span class="kw">pub struct </span>GlobalContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;temp</span>, <span class="lifetime">&#39;out</span>&gt; {
@@ -3562,29 +3597,39 @@
                 }
                 ast::GlobalDeclKind::Const(<span class="kw-2">ref </span>c) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_const();
-                    <span class="kw">let </span>init = <span class="self">self</span>.expression(c.init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>inferred_type = ectx.register_type(init)<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>init = <span class="self">self</span>.expression_for_abstract(c.init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>explicit_ty =
-                        c.ty.map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx))
-                            .transpose()<span class="question-mark">?</span>;
-
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(explicit) = explicit_ty {
-                        <span class="kw">if </span>explicit != inferred_type {
-                            <span class="kw">let </span>gctx = ctx.module.to_ctx();
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InitializationTypeMismatch {
-                                name: c.name.span,
-                                expected: explicit.to_wgsl(<span class="kw-2">&amp;</span>gctx),
-                                got: inferred_type.to_wgsl(<span class="kw-2">&amp;</span>gctx),
-                            });
-                        }
+                    <span class="kw">let </span>ty;
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(explicit_ty) = c.ty {
+                        <span class="kw">let </span>explicit_ty =
+                            <span class="self">self</span>.resolve_ast_type(explicit_ty, <span class="kw-2">&amp;mut </span>ectx.as_global())<span class="question-mark">?</span>;
+                        <span class="kw">let </span>explicit_ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
+                        init = ectx
+                            .try_automatic_conversions(init, <span class="kw-2">&amp;</span>explicit_ty_res, c.name.span)
+                            .map_err(|error| <span class="kw">match </span>error {
+                                Error::AutoConversion {
+                                    dest_span: <span class="kw">_</span>,
+                                    dest_type,
+                                    source_span: <span class="kw">_</span>,
+                                    source_type,
+                                } =&gt; Error::InitializationTypeMismatch {
+                                    name: c.name.span,
+                                    expected: dest_type,
+                                    got: source_type,
+                                },
+                                other =&gt; other,
+                            })<span class="question-mark">?</span>;
+                        ty = explicit_ty;
+                    } <span class="kw">else </span>{
+                        init = ectx.concretize(init)<span class="question-mark">?</span>;
+                        ty = ectx.register_type(init)<span class="question-mark">?</span>;
                     }
 
                     <span class="kw">let </span>handle = ctx.module.constants.append(
                         <span class="kw">crate</span>::Constant {
                             name: <span class="prelude-val">Some</span>(c.name.name.to_string()),
                             r#override: <span class="kw">crate</span>::Override::None,
-                            ty: inferred_type,
+                            ty,
                             init,
                         },
                         span,
@@ -3609,6 +3654,11 @@
                 }
             }
         }
+
+        <span class="comment">// Constant evaluation may leave abstract-typed literals and
+        // compositions in expression arenas, so we need to compact the module
+        // to remove unused expressions and types.
+        </span><span class="kw">crate</span>::compact::compact(<span class="kw-2">&amp;mut </span>module);
 
         <span class="prelude-val">Ok</span>(module)
     }
@@ -4108,7 +4158,22 @@
     }
 
     <span class="doccomment">/// Lower `expr` and apply the Load Rule if possible.
+    ///
+    /// For the time being, this concretizes abstract values, to support
+    /// consumers that haven&#39;t been adapted to consume them yet. Consumers
+    /// prepared for abstract values can call [`expression_for_abstract`].
+    ///
+    /// [`expression_for_abstract`]: Lowerer::expression_for_abstract
     </span><span class="kw">fn </span>expression(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        expr: Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;source</span>&gt;&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+        <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, ctx)<span class="question-mark">?</span>;
+        ctx.concretize(expr)
+    }
+
+    <span class="kw">fn </span>expression_for_abstract(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
@@ -4132,8 +4197,9 @@
                     ast::Literal::Number(Number::I32(i)) =&gt; <span class="kw">crate</span>::Literal::I32(i),
                     ast::Literal::Number(Number::U32(u)) =&gt; <span class="kw">crate</span>::Literal::U32(u),
                     ast::Literal::Number(Number::F64(f)) =&gt; <span class="kw">crate</span>::Literal::F64(f),
-                    ast::Literal::Number(<span class="kw">_</span>) =&gt; {
-                        <span class="macro">unreachable!</span>(<span class="string">&quot;got abstract numeric type when not expected&quot;</span>);
+                    ast::Literal::Number(Number::AbstractInt(i)) =&gt; <span class="kw">crate</span>::Literal::AbstractInt(i),
+                    ast::Literal::Number(Number::AbstractFloat(f)) =&gt; {
+                        <span class="kw">crate</span>::Literal::AbstractFloat(f)
                     }
                     ast::Literal::Bool(b) =&gt; <span class="kw">crate</span>::Literal::Bool(b),
                 };

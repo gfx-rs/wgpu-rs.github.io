@@ -2468,7 +2468,7 @@
                     Bo::Add | Bo::Subtract =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
                         Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
-                            Sk::Bool =&gt; <span class="bool-val">false</span>,
+                            Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         Ti::Matrix { .. } =&gt; left_inner == right_inner,
                         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
@@ -2476,14 +2476,14 @@
                     Bo::Divide | Bo::Modulo =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
                         Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
-                            Sk::Bool =&gt; <span class="bool-val">false</span>,
+                            Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                     },
                     Bo::Multiply =&gt; {
                         <span class="kw">let </span>kind_allowed = <span class="kw">match </span>left_inner.scalar_kind() {
                             <span class="prelude-val">Some</span>(Sk::Uint | Sk::Sint | Sk::Float) =&gt; <span class="bool-val">true</span>,
-                            <span class="prelude-val">Some</span>(Sk::Bool) | <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
+                            <span class="prelude-val">Some</span>(Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat) | <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">let </span>types_match = <span class="kw">match </span>(left_inner, right_inner) {
                             <span class="comment">// Straight scalar and mixed scalar/vector.
@@ -2560,7 +2560,7 @@
                         <span class="kw">match </span><span class="kw-2">*</span>left_inner {
                             Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                                 Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
-                                Sk::Bool =&gt; <span class="bool-val">false</span>,
+                                Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                             },
                             <span class="kw-2">ref </span>other =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
@@ -2582,7 +2582,7 @@
                     Bo::And | Bo::InclusiveOr =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
                         Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Bool | Sk::Sint | Sk::Uint =&gt; left_inner == right_inner,
-                            Sk::Float =&gt; <span class="bool-val">false</span>,
+                            Sk::Float | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
@@ -2592,7 +2592,7 @@
                     Bo::ExclusiveOr =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
                         Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Sint | Sk::Uint =&gt; left_inner == right_inner,
-                            Sk::Bool | Sk::Float =&gt; <span class="bool-val">false</span>,
+                            Sk::Bool | Sk::Float | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
@@ -2621,7 +2621,7 @@
                         };
                         <span class="kw">match </span>base_scalar.kind {
                             Sk::Sint | Sk::Uint =&gt; base_size.is_ok() &amp;&amp; base_size == shift_size,
-                            Sk::Float | Sk::Bool =&gt; <span class="bool-val">false</span>,
+                            Sk::Float | Sk::AbstractInt | Sk::AbstractFloat | Sk::Bool =&gt; <span class="bool-val">false</span>,
                         }
                     }
                 };

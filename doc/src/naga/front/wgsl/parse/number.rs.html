@@ -441,32 +441,6 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
-<a href="#447" id="447">447</a>
-<a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a>
-<a href="#450" id="450">450</a>
-<a href="#451" id="451">451</a>
-<a href="#452" id="452">452</a>
-<a href="#453" id="453">453</a>
-<a href="#454" id="454">454</a>
-<a href="#455" id="455">455</a>
-<a href="#456" id="456">456</a>
-<a href="#457" id="457">457</a>
-<a href="#458" id="458">458</a>
-<a href="#459" id="459">459</a>
-<a href="#460" id="460">460</a>
-<a href="#461" id="461">461</a>
-<a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a>
-<a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
-<a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
-<a href="#468" id="468">468</a>
-<a href="#469" id="469">469</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
@@ -489,37 +463,11 @@
     </span>F64(f64),
 }
 
-<span class="kw">impl </span>Number {
-    <span class="doccomment">/// Convert abstract numbers to a plausible concrete counterpart.
-    ///
-    /// Return concrete numbers unchanged. If the conversion would be
-    /// lossy, return an error.
-    </span><span class="kw">fn </span>abstract_to_concrete(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Number, NumberError&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
-            Number::AbstractInt(num) =&gt; i32::try_from(num)
-                .map(Number::I32)
-                .map_err(|<span class="kw">_</span>| NumberError::NotRepresentable),
-            Number::AbstractFloat(num) =&gt; {
-                <span class="kw">let </span>num = num <span class="kw">as </span>f32;
-                <span class="kw">if </span>num.is_finite() {
-                    <span class="prelude-val">Ok</span>(Number::F32(num))
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(NumberError::NotRepresentable)
-                }
-            }
-            num =&gt; <span class="prelude-val">Ok</span>(num),
-        }
-    }
-}
-
 <span class="comment">// TODO: when implementing Creation-Time Expressions, remove the ability to match the minus sign
 
 </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>consume_number(input: <span class="kw-2">&amp;</span>str) -&gt; (Token&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw-2">&amp;</span>str) {
     <span class="kw">let </span>(result, rest) = parse(input);
-    (
-        Token::Number(result.and_then(Number::abstract_to_concrete)),
-        rest,
-    )
+    (Token::Number(result), rest)
 }
 
 <span class="kw">enum </span>Kind {
