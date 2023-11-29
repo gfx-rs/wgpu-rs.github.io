@@ -2044,6 +2044,20 @@
 <a href="#2044" id="2044">2044</a>
 <a href="#2045" id="2045">2045</a>
 <a href="#2046" id="2046">2046</a>
+<a href="#2047" id="2047">2047</a>
+<a href="#2048" id="2048">2048</a>
+<a href="#2049" id="2049">2049</a>
+<a href="#2050" id="2050">2050</a>
+<a href="#2051" id="2051">2051</a>
+<a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
+<a href="#2059" id="2059">2059</a>
+<a href="#2060" id="2060">2060</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
     ArraySize, BinaryOperator, Constant, Expression, Literal, ScalarKind, Span, Type, TypeInner,
@@ -2187,8 +2201,8 @@
     </span>InvalidAccessIndexTy,
     <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support array length expressions&quot;</span>)]
     </span>ArrayLength,
-    <span class="attr">#[error(<span class="string">&quot;Cannot cast type&quot;</span>)]
-    </span>InvalidCastArg,
+    <span class="attr">#[error(<span class="string">&quot;Cannot cast type `{from}` to `{to}`&quot;</span>)]
+    </span>InvalidCastArg { from: String, to: String },
     <span class="attr">#[error(<span class="string">&quot;Cannot apply the unary op to the argument&quot;</span>)]
     </span>InvalidUnaryOpArg,
     <span class="attr">#[error(<span class="string">&quot;Cannot apply the binary op to the arguments&quot;</span>)]
@@ -3034,6 +3048,22 @@
 
         <span class="kw">let </span>expr = <span class="self">self</span>.eval_zero_value(expr, span)<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>make_error = || -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, ConstantEvaluatorError&gt; {
+            <span class="kw">let </span>ty = <span class="self">self</span>.resolve_type(expr)<span class="question-mark">?</span>;
+
+            <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl-in&quot;</span>)]
+            </span><span class="kw">let </span>from = ty.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.to_ctx());
+            <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl-in&quot;</span>)]
+            </span><span class="kw">let </span>to = target.to_wgsl();
+
+            <span class="attr">#[cfg(not(feature = <span class="string">&quot;wgsl-in&quot;</span>))]
+            </span><span class="kw">let </span>from = <span class="macro">format!</span>(<span class="string">&quot;{ty:?}&quot;</span>);
+            <span class="attr">#[cfg(not(feature = <span class="string">&quot;wgsl-in&quot;</span>))]
+            </span><span class="kw">let </span>to = <span class="macro">format!</span>(<span class="string">&quot;{target:?}&quot;</span>);
+
+            <span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg { from, to })
+        };
+
         <span class="kw">let </span>expr = <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
             Expression::Literal(literal) =&gt; {
                 <span class="kw">let </span>literal = <span class="kw">match </span>target {
@@ -3043,7 +3073,7 @@
                         Literal::F32(v) =&gt; v <span class="kw">as </span>i32,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>i32,
                         Literal::F64(<span class="kw">_</span>) | Literal::I64(<span class="kw">_</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg)
+                            <span class="kw">return </span>make_error();
                         }
                         Literal::AbstractInt(v) =&gt; i32::try_from_abstract(v)<span class="question-mark">?</span>,
                         Literal::AbstractFloat(v) =&gt; i32::try_from_abstract(v)<span class="question-mark">?</span>,
@@ -3054,7 +3084,7 @@
                         Literal::F32(v) =&gt; v <span class="kw">as </span>u32,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>u32,
                         Literal::F64(<span class="kw">_</span>) | Literal::I64(<span class="kw">_</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg)
+                            <span class="kw">return </span>make_error();
                         }
                         Literal::AbstractInt(v) =&gt; u32::try_from_abstract(v)<span class="question-mark">?</span>,
                         Literal::AbstractFloat(v) =&gt; u32::try_from_abstract(v)<span class="question-mark">?</span>,
@@ -3065,7 +3095,7 @@
                         Literal::F32(v) =&gt; v,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>u32 <span class="kw">as </span>f32,
                         Literal::F64(<span class="kw">_</span>) | Literal::I64(<span class="kw">_</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg)
+                            <span class="kw">return </span>make_error();
                         }
                         Literal::AbstractInt(v) =&gt; f32::try_from_abstract(v)<span class="question-mark">?</span>,
                         Literal::AbstractFloat(v) =&gt; f32::try_from_abstract(v)<span class="question-mark">?</span>,
@@ -3076,7 +3106,7 @@
                         Literal::F32(v) =&gt; v <span class="kw">as </span>f64,
                         Literal::F64(v) =&gt; v,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>u32 <span class="kw">as </span>f64,
-                        Literal::I64(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
+                        Literal::I64(<span class="kw">_</span>) =&gt; <span class="kw">return </span>make_error(),
                         Literal::AbstractInt(v) =&gt; f64::try_from_abstract(v)<span class="question-mark">?</span>,
                         Literal::AbstractFloat(v) =&gt; f64::try_from_abstract(v)<span class="question-mark">?</span>,
                     }),
@@ -3089,7 +3119,7 @@
                         | Literal::I64(<span class="kw">_</span>)
                         | Literal::AbstractInt(<span class="kw">_</span>)
                         | Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg)
+                            <span class="kw">return </span>make_error();
                         }
                     }),
                     Sc::ABSTRACT_FLOAT =&gt; Literal::AbstractFloat(<span class="kw">match </span>literal {
@@ -3101,11 +3131,11 @@
                             </span>v <span class="kw">as </span>f64
                         }
                         Literal::AbstractFloat(v) =&gt; v,
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span>make_error(),
                     }),
                     <span class="kw">_ </span>=&gt; {
                         <span class="macro">log::debug!</span>(<span class="string">&quot;Constant evaluator refused to convert value to {target:?}&quot;</span>);
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg);
+                        <span class="kw">return </span>make_error();
                     }
                 };
                 Expression::Literal(literal)
@@ -3124,7 +3154,7 @@
                         rows,
                         scalar: target,
                     },
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>make_error(),
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>components = src_components.clone();
@@ -3150,7 +3180,7 @@
                     value: cast_value,
                 }
             }
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span>make_error(),
         };
 
         <span class="self">self</span>.register_evaluated_expr(expr, span)
@@ -3187,9 +3217,7 @@
             <span class="kw-2">*</span>component = <span class="self">self</span>.cast_array(<span class="kw-2">*</span>component, target, span)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let </span>first = components
-            .first()
-            .ok_or(ConstantEvaluatorError::InvalidCastArg)<span class="question-mark">?</span>;
+        <span class="kw">let </span>first = components.first().unwrap();
         <span class="kw">let </span>new_base = <span class="kw">match </span><span class="self">self</span>.resolve_type(<span class="kw-2">*</span>first)<span class="question-mark">? </span>{
             <span class="kw">crate</span>::proc::TypeResolution::Handle(ty) =&gt; ty,
             <span class="kw">crate</span>::proc::TypeResolution::Value(inner) =&gt; {
