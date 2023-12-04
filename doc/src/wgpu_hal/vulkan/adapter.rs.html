@@ -1806,6 +1806,25 @@
 <a href="#1806" id="1806">1806</a>
 <a href="#1807" id="1807">1807</a>
 <a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2344,6 +2363,10 @@
             supports_bgra8unorm_storage(instance, phd, caps.device_api_version),
         );
 
+        features.set(
+            F::FLOAT32_FILTERABLE,
+            is_float32_filterable_supported(instance, phd),
+        );
         features.set(
             F::TEXTURE_FORMAT_NV12,
             (caps.device_api_version &gt;= vk::API_VERSION_1_1
@@ -3376,8 +3399,8 @@
                 .framebuffer_stencil_sample_counts
                 .min(limits.sampled_image_stencil_sample_counts)
         } <span class="kw">else </span>{
-            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>) {
-                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Float { filterable: <span class="kw">_ </span>}) =&gt; limits
+            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
+                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Float { .. }) =&gt; limits
                     .framebuffer_color_sample_counts
                     .min(limits.sampled_image_color_sample_counts),
                 <span class="prelude-val">Some</span>(wgt::TextureSampleType::Sint) | <span class="prelude-val">Some</span>(wgt::TextureSampleType::Uint) =&gt; {
@@ -3566,6 +3589,21 @@
     );
 
     r16unorm &amp;&amp; r16snorm &amp;&amp; rg16unorm &amp;&amp; rg16snorm &amp;&amp; rgba16unorm &amp;&amp; rgba16snorm
+}
+
+<span class="kw">fn </span>is_float32_filterable_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
+    <span class="kw">let </span>tiling = vk::ImageTiling::OPTIMAL;
+    <span class="kw">let </span>features = vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR;
+    <span class="kw">let </span>r_float = supports_format(instance, phd, vk::Format::R32_SFLOAT, tiling, features);
+    <span class="kw">let </span>rg_float = supports_format(instance, phd, vk::Format::R32G32_SFLOAT, tiling, features);
+    <span class="kw">let </span>rgba_float = supports_format(
+        instance,
+        phd,
+        vk::Format::R32G32B32A32_SFLOAT,
+        tiling,
+        features,
+    );
+    r_float &amp;&amp; rg_float &amp;&amp; rgba_float
 }
 
 <span class="kw">fn </span>supports_format(

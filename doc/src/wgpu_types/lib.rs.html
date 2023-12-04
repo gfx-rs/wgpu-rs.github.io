@@ -6888,6 +6888,31 @@
 <a href="#6888" id="6888">6888</a>
 <a href="#6889" id="6889">6889</a>
 <a href="#6890" id="6890">6890</a>
+<a href="#6891" id="6891">6891</a>
+<a href="#6892" id="6892">6892</a>
+<a href="#6893" id="6893">6893</a>
+<a href="#6894" id="6894">6894</a>
+<a href="#6895" id="6895">6895</a>
+<a href="#6896" id="6896">6896</a>
+<a href="#6897" id="6897">6897</a>
+<a href="#6898" id="6898">6898</a>
+<a href="#6899" id="6899">6899</a>
+<a href="#6900" id="6900">6900</a>
+<a href="#6901" id="6901">6901</a>
+<a href="#6902" id="6902">6902</a>
+<a href="#6903" id="6903">6903</a>
+<a href="#6904" id="6904">6904</a>
+<a href="#6905" id="6905">6905</a>
+<a href="#6906" id="6906">6906</a>
+<a href="#6907" id="6907">6907</a>
+<a href="#6908" id="6908">6908</a>
+<a href="#6909" id="6909">6909</a>
+<a href="#6910" id="6910">6910</a>
+<a href="#6911" id="6911">6911</a>
+<a href="#6912" id="6912">6912</a>
+<a href="#6913" id="6913">6913</a>
+<a href="#6914" id="6914">6914</a>
+<a href="#6915" id="6915">6915</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -7227,8 +7252,19 @@
 
         <span class="comment">// ? const NORM16_FILTERABLE = 1 &lt;&lt; 17; (https://github.com/gpuweb/gpuweb/issues/3839)
         // ? const NORM16_RESOLVE = 1 &lt;&lt; 18; (https://github.com/gpuweb/gpuweb/issues/3839)
-        // TODO const FLOAT32_FILTERABLE = 1 &lt;&lt; 19;
-        // ? const FLOAT32_BLENDABLE = 1 &lt;&lt; 20; (https://github.com/gpuweb/gpuweb/issues/3556)
+
+        </span><span class="doccomment">/// Allows textures with formats &quot;r32float&quot;, &quot;rg32float&quot;, and &quot;rgba32float&quot; to be filterable.
+        ///
+        /// Supported Platforms:
+        /// - Vulkan (mainly on Desktop GPUs)
+        /// - DX12
+        /// - Metal on macOS or Apple9+ GPUs, optional on iOS/iPadOS with Apple7/8 GPUs
+        /// - GL with one of `GL_ARB_color_buffer_float`/`GL_EXT_color_buffer_float`/`OES_texture_float_linear`
+        ///
+        /// This is a web and native feature.
+        </span><span class="kw">const </span>FLOAT32_FILTERABLE = <span class="number">1 </span>&lt;&lt; <span class="number">19</span>;
+
+        <span class="comment">// ? const FLOAT32_BLENDABLE = 1 &lt;&lt; 20; (https://github.com/gpuweb/gpuweb/issues/3556)
         // ? const 32BIT_FORMAT_MULTISAMPLE = 1 &lt;&lt; 21; (https://github.com/gpuweb/gpuweb/issues/3844)
         // ? const 32BIT_FORMAT_RESOLVE = 1 &lt;&lt; 22; (https://github.com/gpuweb/gpuweb/issues/3844)
 
@@ -10108,10 +10144,16 @@
             <span class="self">Self</span>::Astc { .. } =&gt;          (        noaa,      basic),
         };
 
-        <span class="kw">let </span>is_filterable =
-            <span class="self">self</span>.sample_type(<span class="prelude-val">None</span>) == <span class="prelude-val">Some</span>(TextureSampleType::Float { filterable: <span class="bool-val">true </span>});
+        <span class="comment">// Get whether the format is filterable, taking features into account
+        </span><span class="kw">let </span>sample_type1 = <span class="self">self</span>.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(device_features));
+        <span class="kw">let </span>is_filterable = sample_type1 == <span class="prelude-val">Some</span>(TextureSampleType::Float { filterable: <span class="bool-val">true </span>});
+
+        <span class="comment">// Features that enable filtering don&#39;t affect blendability
+        </span><span class="kw">let </span>sample_type2 = <span class="self">self</span>.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let </span>is_blendable = sample_type2 == <span class="prelude-val">Some</span>(TextureSampleType::Float { filterable: <span class="bool-val">true </span>});
+
         flags.set(TextureFormatFeatureFlags::FILTERABLE, is_filterable);
-        flags.set(TextureFormatFeatureFlags::BLENDABLE, is_filterable);
+        flags.set(TextureFormatFeatureFlags::BLENDABLE, is_blendable);
 
         TextureFormatFeatures {
             allowed_usages,
@@ -10123,9 +10165,17 @@
     ///
     /// Returns `None` only if the format is combined depth-stencil
     /// and `TextureAspect::All` or no `aspect` was provided
-    </span><span class="kw">pub fn </span>sample_type(<span class="kw-2">&amp;</span><span class="self">self</span>, aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;TextureSampleType&gt; {
+    </span><span class="kw">pub fn </span>sample_type(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;,
+        device_features: <span class="prelude-ty">Option</span>&lt;Features&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;TextureSampleType&gt; {
         <span class="kw">let </span>float = TextureSampleType::Float { filterable: <span class="bool-val">true </span>};
-        <span class="kw">let </span>unfilterable_float = TextureSampleType::Float { filterable: <span class="bool-val">false </span>};
+        <span class="kw">let </span>float32_sample_type = TextureSampleType::Float {
+            filterable: device_features
+                .unwrap_or(Features::empty())
+                .contains(Features::FLOAT32_FILTERABLE),
+        };
         <span class="kw">let </span>depth = TextureSampleType::Depth;
         <span class="kw">let </span>uint = TextureSampleType::Uint;
         <span class="kw">let </span>sint = TextureSampleType::Sint;
@@ -10146,7 +10196,7 @@
             | <span class="self">Self</span>::Rgb10a2Unorm
             | <span class="self">Self</span>::Rg11b10Float =&gt; <span class="prelude-val">Some</span>(float),
 
-            <span class="self">Self</span>::R32Float | <span class="self">Self</span>::Rg32Float | <span class="self">Self</span>::Rgba32Float =&gt; <span class="prelude-val">Some</span>(unfilterable_float),
+            <span class="self">Self</span>::R32Float | <span class="self">Self</span>::Rg32Float | <span class="self">Self</span>::Rgba32Float =&gt; <span class="prelude-val">Some</span>(float32_sample_type),
 
             <span class="self">Self</span>::R8Uint
             | <span class="self">Self</span>::Rg8Uint
