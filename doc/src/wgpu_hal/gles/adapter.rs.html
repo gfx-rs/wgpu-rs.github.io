@@ -1226,6 +1226,7 @@
 <a href="#1226" id="1226">1226</a>
 <a href="#1227" id="1227">1227</a>
 <a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1447,10 +1448,7 @@
         <span class="macro">log::debug!</span>(<span class="string">"Version: {}"</span>, version);
 
         <span class="kw">let </span>full_ver = <span class="self">Self</span>::parse_full_version(<span class="kw-2">&amp;</span>version).ok();
-        <span class="kw">let </span>es_ver = full_ver
-            .is_none()
-            .then_some(())
-            .and_then(|<span class="kw">_</span>| <span class="self">Self</span>::parse_version(<span class="kw-2">&amp;</span>version).ok());
+        <span class="kw">let </span>es_ver = full_ver.map_or_else(|| <span class="self">Self</span>::parse_version(<span class="kw-2">&amp;</span>version).ok(), |<span class="kw">_</span>| <span class="prelude-val">None</span>);
         <span class="kw">let </span>web_gl = <span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(full_ver) = full_ver {
@@ -1783,6 +1781,10 @@
                 || extensions.contains(<span class="string">"GL_EXT_color_buffer_float"</span>)
                 || extensions.contains(<span class="string">"OES_texture_float_linear"</span>),
         );
+
+        <span class="kw">if </span>es_ver.is_none() {
+            features |= wgt::Features::POLYGON_MODE_LINE | wgt::Features::POLYGON_MODE_POINT;
+        }
 
         <span class="comment">// We *might* be able to emulate bgra8unorm-storage but currently don't attempt to.
 
