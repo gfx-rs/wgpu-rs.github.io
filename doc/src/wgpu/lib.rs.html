@@ -5459,48 +5459,6 @@
 <a href="#5459" id="5459">5459</a>
 <a href="#5460" id="5460">5460</a>
 <a href="#5461" id="5461">5461</a>
-<a href="#5462" id="5462">5462</a>
-<a href="#5463" id="5463">5463</a>
-<a href="#5464" id="5464">5464</a>
-<a href="#5465" id="5465">5465</a>
-<a href="#5466" id="5466">5466</a>
-<a href="#5467" id="5467">5467</a>
-<a href="#5468" id="5468">5468</a>
-<a href="#5469" id="5469">5469</a>
-<a href="#5470" id="5470">5470</a>
-<a href="#5471" id="5471">5471</a>
-<a href="#5472" id="5472">5472</a>
-<a href="#5473" id="5473">5473</a>
-<a href="#5474" id="5474">5474</a>
-<a href="#5475" id="5475">5475</a>
-<a href="#5476" id="5476">5476</a>
-<a href="#5477" id="5477">5477</a>
-<a href="#5478" id="5478">5478</a>
-<a href="#5479" id="5479">5479</a>
-<a href="#5480" id="5480">5480</a>
-<a href="#5481" id="5481">5481</a>
-<a href="#5482" id="5482">5482</a>
-<a href="#5483" id="5483">5483</a>
-<a href="#5484" id="5484">5484</a>
-<a href="#5485" id="5485">5485</a>
-<a href="#5486" id="5486">5486</a>
-<a href="#5487" id="5487">5487</a>
-<a href="#5488" id="5488">5488</a>
-<a href="#5489" id="5489">5489</a>
-<a href="#5490" id="5490">5490</a>
-<a href="#5491" id="5491">5491</a>
-<a href="#5492" id="5492">5492</a>
-<a href="#5493" id="5493">5493</a>
-<a href="#5494" id="5494">5494</a>
-<a href="#5495" id="5495">5495</a>
-<a href="#5496" id="5496">5496</a>
-<a href="#5497" id="5497">5497</a>
-<a href="#5498" id="5498">5498</a>
-<a href="#5499" id="5499">5499</a>
-<a href="#5500" id="5500">5500</a>
-<a href="#5501" id="5501">5501</a>
-<a href="#5502" id="5502">5502</a>
-<a href="#5503" id="5503">5503</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5521,7 +5479,7 @@
     error, fmt,
     future::Future,
     marker::PhantomData,
-    num::NonZeroU32,
+    num::{NonZeroU32, NonZeroU64},
     ops::{Bound, Deref, DerefMut, Range, RangeBounds},
     sync::Arc,
     thread,
@@ -10627,243 +10585,201 @@
 }
 
 <span class="doccomment">/// Opaque globally-unique identifier
-</span><span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
-#[repr(transparent)]
-</span><span class="kw">pub struct </span>Id&lt;T&gt;(::core::num::NonZeroU64, std::marker::PhantomData&lt;<span class="kw-2">*mut </span>T&gt;);
+</span><span class="attr">#[repr(transparent)]
+</span><span class="kw">pub struct </span>Id&lt;T&gt;(NonZeroU64, PhantomData&lt;<span class="kw-2">*mut </span>T&gt;);
 
 <span class="comment">// SAFETY: `Id` is a bare `NonZeroU64`, the type parameter is a marker purely to avoid confusing Ids
 // returned for different types , so `Id` can safely implement Send and Sync.
-</span><span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
 </span><span class="kw">unsafe impl</span>&lt;T&gt; Send <span class="kw">for </span>Id&lt;T&gt; {}
 
 <span class="comment">// SAFETY: See the implementation for `Send`.
-</span><span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
 </span><span class="kw">unsafe impl</span>&lt;T&gt; Sync <span class="kw">for </span>Id&lt;T&gt; {}
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Id&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Id&lt;T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw-2">*</span><span class="self">self
     </span>}
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; Copy <span class="kw">for </span>Id&lt;T&gt; {}
+<span class="kw">impl</span>&lt;T&gt; Copy <span class="kw">for </span>Id&lt;T&gt; {}
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Id&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Id&lt;T&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_tuple(<span class="string">"Id"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).finish()
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; PartialEq <span class="kw">for </span>Id&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; PartialEq <span class="kw">for </span>Id&lt;T&gt; {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Id&lt;T&gt;) -&gt; bool {
         <span class="self">self</span>.<span class="number">0 </span>== other.<span class="number">0
     </span>}
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; Eq <span class="kw">for </span>Id&lt;T&gt; {}
+<span class="kw">impl</span>&lt;T&gt; Eq <span class="kw">for </span>Id&lt;T&gt; {}
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; std::hash::Hash <span class="kw">for </span>Id&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; std::hash::Hash <span class="kw">for </span>Id&lt;T&gt; {
     <span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
         <span class="self">self</span>.<span class="number">0</span>.hash(state)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Adapter {
+<span class="kw">impl </span>Adapter {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Adapter`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Device {
+<span class="kw">impl </span>Device {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Device`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Queue {
+<span class="kw">impl </span>Queue {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Queue`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>ShaderModule {
+<span class="kw">impl </span>ShaderModule {
     <span class="doccomment">/// Returns a globally-unique identifier for this `ShaderModule`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>BindGroupLayout {
+<span class="kw">impl </span>BindGroupLayout {
     <span class="doccomment">/// Returns a globally-unique identifier for this `BindGroupLayout`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>BindGroup {
+<span class="kw">impl </span>BindGroup {
     <span class="doccomment">/// Returns a globally-unique identifier for this `BindGroup`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>TextureView {
+<span class="kw">impl </span>TextureView {
     <span class="doccomment">/// Returns a globally-unique identifier for this `TextureView`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Sampler {
+<span class="kw">impl </span>Sampler {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Sampler`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Buffer {
+<span class="kw">impl </span>Buffer {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Buffer`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Texture {
+<span class="kw">impl </span>Texture {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Texture`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>QuerySet {
+<span class="kw">impl </span>QuerySet {
     <span class="doccomment">/// Returns a globally-unique identifier for this `QuerySet`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>PipelineLayout {
+<span class="kw">impl </span>PipelineLayout {
     <span class="doccomment">/// Returns a globally-unique identifier for this `PipelineLayout`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>RenderPipeline {
+<span class="kw">impl </span>RenderPipeline {
     <span class="doccomment">/// Returns a globally-unique identifier for this `RenderPipeline`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>ComputePipeline {
+<span class="kw">impl </span>ComputePipeline {
     <span class="doccomment">/// Returns a globally-unique identifier for this `ComputePipeline`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>RenderBundle {
+<span class="kw">impl </span>RenderBundle {
     <span class="doccomment">/// Returns a globally-unique identifier for this `RenderBundle`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"expose-ids"</span>)]
-</span><span class="kw">impl </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
+<span class="kw">impl </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Surface`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"expose-ids"</span>)))]
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;Surface&lt;<span class="lifetime">'_</span>&gt;&gt; {
-        Id(<span class="self">self</span>.id.global_id(), std::marker::PhantomData)
+        Id(<span class="self">self</span>.id.global_id(), PhantomData)
     }
 }
 
