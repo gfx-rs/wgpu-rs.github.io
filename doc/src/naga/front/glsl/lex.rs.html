@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/lex.rs`."><title>lex.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/lex.rs`."><title>lex.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -325,12 +325,12 @@
     Error(PreprocessorError),
 }
 
-<span class="kw">pub struct </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    pp: Preprocessor&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">pub struct </span>Lexer&lt;<span class="lifetime">'a</span>&gt; {
+    pp: Preprocessor&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, defines: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FastHashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Lexer&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, defines: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>FastHashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>pp = Preprocessor::new(input);
         <span class="kw">for </span>(define, value) <span class="kw">in </span>defines {
             pp.add_define(define, value).unwrap(); <span class="comment">//TODO: handle error
@@ -339,7 +339,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Iterator <span class="kw">for </span>Lexer&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Item = LexerResult;
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">let </span>pp_token = <span class="kw">match </span><span class="self">self</span>.pp.next()<span class="question-mark">? </span>{
@@ -367,48 +367,48 @@
             PPTokenValue::Ident(ident) =&gt; {
                 <span class="kw">match </span>ident.as_str() {
                     <span class="comment">// Qualifiers
-                    </span><span class="string">&quot;layout&quot; </span>=&gt; TokenValue::Layout,
-                    <span class="string">&quot;in&quot; </span>=&gt; TokenValue::In,
-                    <span class="string">&quot;out&quot; </span>=&gt; TokenValue::Out,
-                    <span class="string">&quot;uniform&quot; </span>=&gt; TokenValue::Uniform,
-                    <span class="string">&quot;buffer&quot; </span>=&gt; TokenValue::Buffer,
-                    <span class="string">&quot;shared&quot; </span>=&gt; TokenValue::Shared,
-                    <span class="string">&quot;invariant&quot; </span>=&gt; TokenValue::Invariant,
-                    <span class="string">&quot;flat&quot; </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Flat),
-                    <span class="string">&quot;noperspective&quot; </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Linear),
-                    <span class="string">&quot;smooth&quot; </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Perspective),
-                    <span class="string">&quot;centroid&quot; </span>=&gt; TokenValue::Sampling(<span class="kw">crate</span>::Sampling::Centroid),
-                    <span class="string">&quot;sample&quot; </span>=&gt; TokenValue::Sampling(<span class="kw">crate</span>::Sampling::Sample),
-                    <span class="string">&quot;const&quot; </span>=&gt; TokenValue::Const,
-                    <span class="string">&quot;inout&quot; </span>=&gt; TokenValue::InOut,
-                    <span class="string">&quot;precision&quot; </span>=&gt; TokenValue::Precision,
-                    <span class="string">&quot;highp&quot; </span>=&gt; TokenValue::PrecisionQualifier(Precision::High),
-                    <span class="string">&quot;mediump&quot; </span>=&gt; TokenValue::PrecisionQualifier(Precision::Medium),
-                    <span class="string">&quot;lowp&quot; </span>=&gt; TokenValue::PrecisionQualifier(Precision::Low),
-                    <span class="string">&quot;restrict&quot; </span>=&gt; TokenValue::Restrict,
-                    <span class="string">&quot;readonly&quot; </span>=&gt; TokenValue::MemoryQualifier(StorageAccess::LOAD),
-                    <span class="string">&quot;writeonly&quot; </span>=&gt; TokenValue::MemoryQualifier(StorageAccess::STORE),
+                    </span><span class="string">"layout" </span>=&gt; TokenValue::Layout,
+                    <span class="string">"in" </span>=&gt; TokenValue::In,
+                    <span class="string">"out" </span>=&gt; TokenValue::Out,
+                    <span class="string">"uniform" </span>=&gt; TokenValue::Uniform,
+                    <span class="string">"buffer" </span>=&gt; TokenValue::Buffer,
+                    <span class="string">"shared" </span>=&gt; TokenValue::Shared,
+                    <span class="string">"invariant" </span>=&gt; TokenValue::Invariant,
+                    <span class="string">"flat" </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Flat),
+                    <span class="string">"noperspective" </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Linear),
+                    <span class="string">"smooth" </span>=&gt; TokenValue::Interpolation(<span class="kw">crate</span>::Interpolation::Perspective),
+                    <span class="string">"centroid" </span>=&gt; TokenValue::Sampling(<span class="kw">crate</span>::Sampling::Centroid),
+                    <span class="string">"sample" </span>=&gt; TokenValue::Sampling(<span class="kw">crate</span>::Sampling::Sample),
+                    <span class="string">"const" </span>=&gt; TokenValue::Const,
+                    <span class="string">"inout" </span>=&gt; TokenValue::InOut,
+                    <span class="string">"precision" </span>=&gt; TokenValue::Precision,
+                    <span class="string">"highp" </span>=&gt; TokenValue::PrecisionQualifier(Precision::High),
+                    <span class="string">"mediump" </span>=&gt; TokenValue::PrecisionQualifier(Precision::Medium),
+                    <span class="string">"lowp" </span>=&gt; TokenValue::PrecisionQualifier(Precision::Low),
+                    <span class="string">"restrict" </span>=&gt; TokenValue::Restrict,
+                    <span class="string">"readonly" </span>=&gt; TokenValue::MemoryQualifier(StorageAccess::LOAD),
+                    <span class="string">"writeonly" </span>=&gt; TokenValue::MemoryQualifier(StorageAccess::STORE),
                     <span class="comment">// values
-                    </span><span class="string">&quot;true&quot; </span>=&gt; TokenValue::BoolConstant(<span class="bool-val">true</span>),
-                    <span class="string">&quot;false&quot; </span>=&gt; TokenValue::BoolConstant(<span class="bool-val">false</span>),
+                    </span><span class="string">"true" </span>=&gt; TokenValue::BoolConstant(<span class="bool-val">true</span>),
+                    <span class="string">"false" </span>=&gt; TokenValue::BoolConstant(<span class="bool-val">false</span>),
                     <span class="comment">// jump statements
-                    </span><span class="string">&quot;continue&quot; </span>=&gt; TokenValue::Continue,
-                    <span class="string">&quot;break&quot; </span>=&gt; TokenValue::Break,
-                    <span class="string">&quot;return&quot; </span>=&gt; TokenValue::Return,
-                    <span class="string">&quot;discard&quot; </span>=&gt; TokenValue::Discard,
+                    </span><span class="string">"continue" </span>=&gt; TokenValue::Continue,
+                    <span class="string">"break" </span>=&gt; TokenValue::Break,
+                    <span class="string">"return" </span>=&gt; TokenValue::Return,
+                    <span class="string">"discard" </span>=&gt; TokenValue::Discard,
                     <span class="comment">// selection statements
-                    </span><span class="string">&quot;if&quot; </span>=&gt; TokenValue::If,
-                    <span class="string">&quot;else&quot; </span>=&gt; TokenValue::Else,
-                    <span class="string">&quot;switch&quot; </span>=&gt; TokenValue::Switch,
-                    <span class="string">&quot;case&quot; </span>=&gt; TokenValue::Case,
-                    <span class="string">&quot;default&quot; </span>=&gt; TokenValue::Default,
+                    </span><span class="string">"if" </span>=&gt; TokenValue::If,
+                    <span class="string">"else" </span>=&gt; TokenValue::Else,
+                    <span class="string">"switch" </span>=&gt; TokenValue::Switch,
+                    <span class="string">"case" </span>=&gt; TokenValue::Case,
+                    <span class="string">"default" </span>=&gt; TokenValue::Default,
                     <span class="comment">// iteration statements
-                    </span><span class="string">&quot;while&quot; </span>=&gt; TokenValue::While,
-                    <span class="string">&quot;do&quot; </span>=&gt; TokenValue::Do,
-                    <span class="string">&quot;for&quot; </span>=&gt; TokenValue::For,
+                    </span><span class="string">"while" </span>=&gt; TokenValue::While,
+                    <span class="string">"do" </span>=&gt; TokenValue::Do,
+                    <span class="string">"for" </span>=&gt; TokenValue::For,
                     <span class="comment">// types
-                    </span><span class="string">&quot;void&quot; </span>=&gt; TokenValue::Void,
-                    <span class="string">&quot;struct&quot; </span>=&gt; TokenValue::Struct,
+                    </span><span class="string">"void" </span>=&gt; TokenValue::Void,
+                    <span class="string">"struct" </span>=&gt; TokenValue::Struct,
                     word =&gt; <span class="kw">match </span>parse_type(word) {
                         <span class="prelude-val">Some</span>(t) =&gt; TokenValue::TypeName(t),
                         <span class="prelude-val">None </span>=&gt; TokenValue::Identifier(String::from(word)),
@@ -514,7 +514,7 @@
         <span class="kw">let </span>defines = <span class="kw">crate</span>::FastHashMap::default();
 
         <span class="comment">// line comments
-        </span><span class="kw">let </span><span class="kw-2">mut </span>lex = Lexer::new(<span class="string">&quot;#version 450\nvoid main () {}&quot;</span>, <span class="kw-2">&amp;</span>defines);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>lex = Lexer::new(<span class="string">"#version 450\nvoid main () {}"</span>, <span class="kw-2">&amp;</span>defines);
         <span class="kw">let </span><span class="kw-2">mut </span>location = Location::default();
         location.start = <span class="number">9</span>;
         location.end = <span class="number">12</span>;
@@ -551,7 +551,7 @@
             lex.next().unwrap(),
             LexerResult {
                 kind: LexerResultKind::Token(Token {
-                    value: TokenValue::Identifier(<span class="string">&quot;main&quot;</span>.into()),
+                    value: TokenValue::Identifier(<span class="string">"main"</span>.into()),
                     meta: Span::new(<span class="number">18</span>, <span class="number">22</span>)
                 }),
                 meta: Span::new(<span class="number">18</span>, <span class="number">22</span>)

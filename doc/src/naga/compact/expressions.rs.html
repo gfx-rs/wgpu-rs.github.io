@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/compact/expressions.rs`."><title>expressions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/compact/expressions.rs`."><title>expressions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -390,37 +390,37 @@
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
-<span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">&#39;tracer</span>&gt; {
-    <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+<span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
+    <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
 
     <span class="doccomment">/// The arena in which we are currently tracing expressions.
-    </span><span class="kw">pub </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+    </span><span class="kw">pub </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
 
     <span class="doccomment">/// The used map for `types`.
-    </span><span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
+    </span><span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
 
     <span class="doccomment">/// The used map for `constants`.
-    </span><span class="kw">pub </span>constants_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
+    </span><span class="kw">pub </span>constants_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
 
     <span class="doccomment">/// The used set for `arena`.
     ///
     /// This points to whatever arena holds the expressions we are
-    /// currently tracing: either a function&#39;s expression arena, or
-    /// the module&#39;s constant expression arena.
-    </span><span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
+    /// currently tracing: either a function's expression arena, or
+    /// the module's constant expression arena.
+    </span><span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 
-    <span class="doccomment">/// The used set for the module&#39;s `const_expressions` arena.
+    <span class="doccomment">/// The used set for the module's `const_expressions` arena.
     ///
     /// If `None`, we are already tracing the constant expressions,
     /// and `expressions_used` already refers to their handle set.
-    </span><span class="kw">pub </span>const_expressions_used: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+    </span><span class="kw">pub </span>const_expressions_used: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;tracer</span>&gt; ExpressionTracer&lt;<span class="lifetime">&#39;tracer</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'tracer</span>&gt; ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
     <span class="doccomment">/// Propagate usage through `self.expressions`, starting with `self.expressions_used`.
     ///
-    /// Treat `self.expressions_used` as the initial set of &quot;known
-    /// live&quot; expressions, and follow through to identify all
+    /// Treat `self.expressions_used` as the initial set of "known
+    /// live" expressions, and follow through to identify all
     /// transitively used expressions.
     ///
     /// Mark types, constants, and constant expressions used directly
@@ -431,26 +431,26 @@
     /// [ce]: crate::Module::const_expressions
     </span><span class="kw">pub fn </span>trace_expressions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">log::trace!</span>(
-            <span class="string">&quot;entering trace_expression of {}&quot;</span>,
+            <span class="string">"entering trace_expression of {}"</span>,
             <span class="kw">if </span><span class="self">self</span>.const_expressions_used.is_some() {
-                <span class="string">&quot;function expressions&quot;
+                <span class="string">"function expressions"
             </span>} <span class="kw">else </span>{
-                <span class="string">&quot;const expressions&quot;
+                <span class="string">"const expressions"
             </span>}
         );
 
-        <span class="comment">// We don&#39;t need recursion or a work list. Because an
+        <span class="comment">// We don't need recursion or a work list. Because an
         // expression may only refer to other expressions that precede
         // it in the arena, it suffices to make a single pass over the
         // arena from back to front, marking the referents of used
         // expressions as used themselves.
         </span><span class="kw">for </span>(handle, expr) <span class="kw">in </span><span class="self">self</span>.expressions.iter().rev() {
-            <span class="comment">// If this expression isn&#39;t used, it doesn&#39;t matter what it uses.
+            <span class="comment">// If this expression isn't used, it doesn't matter what it uses.
             </span><span class="kw">if </span>!<span class="self">self</span>.expressions_used.contains(handle) {
                 <span class="kw">continue</span>;
             }
 
-            <span class="macro">log::trace!</span>(<span class="string">&quot;tracing new expression {:?}&quot;</span>, expr);
+            <span class="macro">log::trace!</span>(<span class="string">"tracing new expression {:?}"</span>, expr);
 
             <span class="kw">use </span><span class="kw">crate</span>::Expression <span class="kw">as </span>Ex;
             <span class="kw">match </span><span class="kw-2">*</span>expr {
@@ -466,7 +466,7 @@
                     <span class="self">self</span>.constants_used.insert(handle);
                     <span class="comment">// Constants and expressions are mutually recursive, which
                     // complicates our nice one-pass algorithm. However, since
-                    // constants don&#39;t refer to each other, we can get around
+                    // constants don't refer to each other, we can get around
                     // this by looking *through* each constant and marking its
                     // initializer as used. Since `expr` refers to the constant,
                     // and the constant refers to the initializer, it must

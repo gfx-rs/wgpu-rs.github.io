@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1031,7 +1031,7 @@
     })
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::Attachment&lt;<span class="lifetime">&#39;_</span>, <span class="kw">super</span>::Api&gt; {
+<span class="kw">impl </span><span class="kw">crate</span>::Attachment&lt;<span class="lifetime">'_</span>, <span class="kw">super</span>::Api&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>make_attachment_key(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ops: <span class="kw">crate</span>::AttachmentOps,
@@ -1045,7 +1045,7 @@
     }
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::ColorAttachment&lt;<span class="lifetime">&#39;_</span>, <span class="kw">super</span>::Api&gt; {
+<span class="kw">impl </span><span class="kw">crate</span>::ColorAttachment&lt;<span class="lifetime">'_</span>, <span class="kw">super</span>::Api&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>make_vk_clear_color(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::ClearColorValue {
         <span class="kw">let </span>cv = <span class="kw-2">&amp;</span><span class="self">self</span>.clear_value;
         <span class="kw">match </span><span class="self">self
@@ -1261,7 +1261,7 @@
         <span class="prelude-val">Some</span>(<span class="number">0</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_0,
         <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_1,
         <span class="prelude-val">Some</span>(<span class="number">2</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_2,
-        <span class="prelude-val">Some</span>(plane) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected plane {}&quot;</span>, plane),
+        <span class="prelude-val">Some</span>(plane) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected plane {}"</span>, plane),
         <span class="prelude-val">None </span>=&gt; {
             <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR) {
                 flags |= vk::ImageAspectFlags::COLOR;
@@ -1300,7 +1300,7 @@
         wgt::PresentMode::Fifo =&gt; vk::PresentModeKHR::FIFO,
         wgt::PresentMode::FifoRelaxed =&gt; vk::PresentModeKHR::FIFO_RELAXED,
         wgt::PresentMode::AutoNoVsync | wgt::PresentMode::AutoVsync =&gt; {
-            <span class="macro">unreachable!</span>(<span class="string">&quot;Cannot create swapchain with Auto PresentationMode&quot;</span>)
+            <span class="macro">unreachable!</span>(<span class="string">"Cannot create swapchain with Auto PresentationMode"</span>)
         }
     }
 }
@@ -1315,7 +1315,7 @@
     } <span class="kw">else if </span>mode == vk::PresentModeKHR::FIFO_RELAXED {
         <span class="prelude-val">Some</span>(wgt::PresentMode::FifoRelaxed)
     } <span class="kw">else </span>{
-        <span class="macro">log::warn!</span>(<span class="string">&quot;Unrecognized present mode {:?}&quot;</span>, mode);
+        <span class="macro">log::warn!</span>(<span class="string">"Unrecognized present mode {:?}"</span>, mode);
         <span class="prelude-val">None
     </span>}
 }
@@ -1462,7 +1462,7 @@
 }
 
 <span class="comment">// Special subresource range mapping for dealing with barriers
-// so that we account for the &quot;hidden&quot; depth aspect in emulated Stencil8.
+// so that we account for the "hidden" depth aspect in emulated Stencil8.
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>map_subresource_range_combined_aspect(
     range: <span class="kw-2">&amp;</span>wgt::ImageSubresourceRange,
     format: wgt::TextureFormat,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/index.rs`."><title>index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/index.rs`."><title>index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -453,11 +453,11 @@ Bounds-checking for SPIR-V output.
     </span>Computed(Word),
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>&gt; BlockContext&lt;<span class="lifetime">&#39;w</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'w</span>&gt; BlockContext&lt;<span class="lifetime">'w</span>&gt; {
     <span class="doccomment">/// Emit code to compute the length of a run-time array.
     ///
     /// Given `array`, an expression referring a runtime-sized array, return the
-    /// instruction id for the array&#39;s length.
+    /// instruction id for the array's length.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_runtime_array_length(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         array: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
@@ -475,18 +475,18 @@ Bounds-checking for SPIR-V output.
                         <span class="self">self</span>.writer.global_variables[handle.index()].access_id,
                         index,
                     ),
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;array length expression&quot;</span>)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"array length expression"</span>)),
                 }
             }
             <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; {
                 <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.global_variables[handle];
                 <span class="kw">if </span>!global_needs_wrapper(<span class="self">self</span>.ir_module, global) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;array length expression&quot;</span>));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"array length expression"</span>));
                 }
 
                 (<span class="self">self</span>.writer.global_variables[handle.index()].var_id, <span class="number">0</span>)
             }
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;array length expression&quot;</span>)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"array length expression"</span>)),
         };
 
         <span class="kw">let </span>length_id = <span class="self">self</span>.gen_id();
@@ -524,8 +524,8 @@ Bounds-checking for SPIR-V output.
                 <span class="prelude-val">Ok</span>(MaybeKnown::Computed(length_id))
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Sequence length for {:?} failed: {}&quot;</span>, sequence, err);
-                <span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;indexable length&quot;</span>))
+                <span class="macro">log::error!</span>(<span class="string">"Sequence length for {:?} failed: {}"</span>, sequence, err);
+                <span class="prelude-val">Err</span>(Error::Validation(<span class="string">"indexable length"</span>))
             }
         }
     }
@@ -593,7 +593,7 @@ Bounds-checking for SPIR-V output.
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BoundsCheckResult, Error&gt; {
         <span class="kw">let </span>index_id = <span class="self">self</span>.cached[index];
 
-        <span class="comment">// Get the sequence&#39;s maximum valid index. Return early if we&#39;ve already
+        <span class="comment">// Get the sequence's maximum valid index. Return early if we've already
         // done the bounds check.
         </span><span class="kw">let </span>max_index_id = <span class="kw">match </span><span class="self">self</span>.write_sequence_max_index(sequence, block)<span class="question-mark">? </span>{
             MaybeKnown::Known(known_max_index) =&gt; {
@@ -632,7 +632,7 @@ Bounds-checking for SPIR-V output.
 
     <span class="doccomment">/// Write an index bounds comparison to `block`, if needed.
     ///
-    /// If we&#39;re able to determine statically that `index` is in bounds for
+    /// If we're able to determine statically that `index` is in bounds for
     /// `sequence`, return `KnownInBounds(value)`, where `value` is the actual
     /// value of the index. (In principle, one could know that the index is in
     /// bounds without knowing its specific value, but in our simple-minded
@@ -655,7 +655,7 @@ Bounds-checking for SPIR-V output.
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BoundsCheckResult, Error&gt; {
         <span class="kw">let </span>index_id = <span class="self">self</span>.cached[index];
 
-        <span class="comment">// Get the sequence&#39;s length. Return early if we&#39;ve already done the
+        <span class="comment">// Get the sequence's length. Return early if we've already done the
         // bounds check.
         </span><span class="kw">let </span>length_id = <span class="kw">match </span><span class="self">self</span>.write_sequence_length(sequence, block)<span class="question-mark">? </span>{
             MaybeKnown::Known(known_length) =&gt; {
@@ -673,16 +673,16 @@ Bounds-checking for SPIR-V output.
                     // thus just return `KnownInBounds` here without actually
                     // checking.
                     //
-                    // But it&#39;s also reasonable to expect that bounds check policies
+                    // But it's also reasonable to expect that bounds check policies
                     // and error reporting policies should be able to vary
                     // independently without introducing security holes. So, we should
                     // support the case where bad indices do not cause validation
                     // errors, and are handled via `ReadZeroSkipWrite`.
                     //
                     // In theory, when `known_index` is bad, we could return a new
-                    // `KnownOutOfBounds` variant here. But it&#39;s simpler just to fall
+                    // `KnownOutOfBounds` variant here. But it's simpler just to fall
                     // through and let the bounds check take place. The shader is
-                    // broken anyway, so it doesn&#39;t make sense to invest in emitting
+                    // broken anyway, so it doesn't make sense to invest in emitting
                     // the ideal code for it.
                     </span><span class="kw">if </span>known_index &lt; known_length {
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(BoundsCheckResult::KnownInBounds(known_index));
@@ -729,9 +729,9 @@ Bounds-checking for SPIR-V output.
 
         <span class="kw">let </span><span class="kw-2">mut </span>selection = Selection::start(block, result_type);
 
-        <span class="comment">// As it turns out, we don&#39;t actually need a full &#39;if-then-else&#39;
+        <span class="comment">// As it turns out, we don't actually need a full 'if-then-else'
         // structure for this: SPIR-V constants are declared up front, so the
-        // &#39;else&#39; block would have no instructions. Instead we emit something
+        // 'else' block would have no instructions. Instead we emit something
         // like this:
         //
         //     result = zero;
@@ -757,7 +757,7 @@ Bounds-checking for SPIR-V output.
     /// pointer being accessed.
     ///
     /// Return a `BoundsCheckResult` indicating how the index should be
-    /// consumed. See that type&#39;s documentation for details.
+    /// consumed. See that type's documentation for details.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_bounds_check(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,

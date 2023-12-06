@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/block.rs`."><title>block.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/block.rs`."><title>block.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2397,14 +2397,14 @@ Implementations for `BlockContext` methods.
 ///
 /// On success, `write_expression_pointer` returns one of these.
 </span><span class="kw">enum </span>ExpressionPointer {
-    <span class="doccomment">/// The pointer to the expression&#39;s value is available, as the value of the
+    <span class="doccomment">/// The pointer to the expression's value is available, as the value of the
     /// expression with the given id.
     </span>Ready { pointer_id: Word },
 
     <span class="doccomment">/// The access expression must be conditional on the value of `condition`, a boolean
     /// expression that is true if all indices are in bounds. If `condition` is true, then
     /// `access` is an `OpAccessChain` instruction that will compute a pointer to the
-    /// expression&#39;s value. If `condition` is false, then executing `access` would be
+    /// expression's value. If `condition` is false, then executing `access` would be
     /// undefined behavior.
     </span>Conditional {
         condition: Word,
@@ -2435,8 +2435,8 @@ Implementations for `BlockContext` methods.
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DebugInfoInner&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>source_code: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DebugInfoInner&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>source_code: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="kw">pub </span>source_file_id: Word,
 }
 
@@ -2561,15 +2561,15 @@ Implementations for `BlockContext` methods.
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>&gt; BlockContext&lt;<span class="lifetime">&#39;w</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'w</span>&gt; BlockContext&lt;<span class="lifetime">'w</span>&gt; {
     <span class="doccomment">/// Decide whether to put off emitting instructions for `expr_handle`.
     ///
     /// We would like to gather together chains of `Access` and `AccessIndex`
     /// Naga expressions into a single `OpAccessChain` SPIR-V instruction. To do
-    /// this, we don&#39;t generate instructions for these exprs when we first
+    /// this, we don't generate instructions for these exprs when we first
     /// encounter them. Their ids in `self.writer.cached.ids` are left as zero. Then,
     /// once we encounter a `Load` or `Store` expression that actually needs the
-    /// chain&#39;s value, we call `write_expression_pointer` to handle the whole
+    /// chain's value, we call `write_expression_pointer` to handle the whole
     /// thing in one fell swoop.
     </span><span class="kw">fn </span>is_intermediate(<span class="kw-2">&amp;</span><span class="self">self</span>, expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
         <span class="kw">match </span><span class="self">self</span>.ir_function.expressions[expr_handle] {
@@ -2585,7 +2585,7 @@ Implementations for `BlockContext` methods.
                 <span class="self">self</span>.ir_module.types[arg.ty].inner.pointer_space().is_some()
             }
 
-            <span class="comment">// The chain rule: if this `Access...`&#39;s `base` operand was
+            <span class="comment">// The chain rule: if this `Access...`'s `base` operand was
             // previously omitted, then omit this one, too.
             </span><span class="kw">_ </span>=&gt; <span class="self">self</span>.cached.ids[expr_handle.index()] == <span class="number">0</span>,
         }
@@ -2661,7 +2661,7 @@ Implementations for `BlockContext` methods.
                 }
             }
             <span class="kw">crate</span>::Expression::Access { base, index: <span class="kw">_ </span>} <span class="kw">if </span><span class="self">self</span>.is_intermediate(base) =&gt; {
-                <span class="comment">// See `is_intermediate`; we&#39;ll handle this later in
+                <span class="comment">// See `is_intermediate`; we'll handle this later in
                 // `write_expression_pointer`.
                 </span><span class="number">0
             </span>}
@@ -2694,7 +2694,7 @@ Implementations for `BlockContext` methods.
                             ExpressionPointer::Ready { pointer_id } =&gt; pointer_id,
                             ExpressionPointer::Conditional { .. } =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
-                                    <span class="string">&quot;Texture array out-of-bounds handling&quot;</span>,
+                                    <span class="string">"Texture array out-of-bounds handling"</span>,
                                 ));
                             }
                         };
@@ -2721,18 +2721,18 @@ Implementations for `BlockContext` methods.
                     }
                     <span class="kw-2">ref </span>other =&gt; {
                         <span class="macro">log::error!</span>(
-                            <span class="string">&quot;Unable to access base {:?} of type {:?}&quot;</span>,
+                            <span class="string">"Unable to access base {:?} of type {:?}"</span>,
                             <span class="self">self</span>.ir_function.expressions[base],
                             other
                         );
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(
-                            <span class="string">&quot;only vectors may be dynamically indexed by value&quot;</span>,
+                            <span class="string">"only vectors may be dynamically indexed by value"</span>,
                         ));
                     }
                 }
             }
             <span class="kw">crate</span>::Expression::AccessIndex { base, index: <span class="kw">_ </span>} <span class="kw">if </span><span class="self">self</span>.is_intermediate(base) =&gt; {
-                <span class="comment">// See `is_intermediate`; we&#39;ll handle this later in
+                <span class="comment">// See `is_intermediate`; we'll handle this later in
                 // `write_expression_pointer`.
                 </span><span class="number">0
             </span>}
@@ -2744,7 +2744,7 @@ Implementations for `BlockContext` methods.
                     | <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; {
                         <span class="comment">// We never need bounds checks here: dynamically sized arrays can
                         // only appear behind pointers, and are thus handled by the
-                        // `is_intermediate` case above. Everything else&#39;s size is
+                        // `is_intermediate` case above. Everything else's size is
                         // statically known and checked in validation.
                         </span><span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                         <span class="kw">let </span>base_id = <span class="self">self</span>.cached[base];
@@ -2779,7 +2779,7 @@ Implementations for `BlockContext` methods.
                             ExpressionPointer::Ready { pointer_id } =&gt; pointer_id,
                             ExpressionPointer::Conditional { .. } =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
-                                    <span class="string">&quot;Texture array out-of-bounds handling&quot;</span>,
+                                    <span class="string">"Texture array out-of-bounds handling"</span>,
                                 ));
                             }
                         };
@@ -2797,8 +2797,8 @@ Implementations for `BlockContext` methods.
                         load_id
                     }
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Unable to access index of {:?}&quot;</span>, other);
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(<span class="string">&quot;access index for type&quot;</span>));
+                        <span class="macro">log::error!</span>(<span class="string">"Unable to access index of {:?}"</span>, other);
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(<span class="string">"access index for type"</span>));
                     }
                 }
             }
@@ -2834,7 +2834,7 @@ Implementations for `BlockContext` methods.
                     <span class="kw">crate</span>::UnaryOperator::Negate =&gt; <span class="kw">match </span>expr_ty_inner.scalar_kind() {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FNegate,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SNegate,
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;Unexpected kind for negation&quot;</span>)),
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Unexpected kind for negation"</span>)),
                     },
                     <span class="kw">crate</span>::UnaryOperator::LogicalNot =&gt; spirv::Op::LogicalNot,
                     <span class="kw">crate</span>::UnaryOperator::BitwiseNot =&gt; spirv::Op::Not,
@@ -3090,32 +3090,32 @@ Implementations for `BlockContext` methods.
                                     arg0_id,
                                 ))
                             }
-                            other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected abs({:?})&quot;</span>, other),
+                            other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected abs({:?})"</span>, other),
                         }
                     }
                     Mf::Min =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::GLOp::FMin,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::SMin,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::UMin,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected min({:?})&quot;</span>, other),
+                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected min({:?})"</span>, other),
                     }),
                     Mf::Max =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::GLOp::FMax,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::SMax,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::UMax,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected max({:?})&quot;</span>, other),
+                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected max({:?})"</span>, other),
                     }),
                     Mf::Clamp =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::GLOp::FClamp,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::SClamp,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::UClamp,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected max({:?})&quot;</span>, other),
+                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected max({:?})"</span>, other),
                     }),
                     Mf::Saturate =&gt; {
                         <span class="kw">let </span>(maybe_size, scalar) = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; (<span class="prelude-val">Some</span>(size), scalar),
                             <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (<span class="prelude-val">None</span>, scalar),
-                            <span class="kw-2">ref </span>other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected saturate({:?})&quot;</span>, other),
+                            <span class="kw-2">ref </span>other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected saturate({:?})"</span>, other),
                         };
                         <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar::float(scalar.width);
                         <span class="kw">let </span><span class="kw-2">mut </span>arg1_id = <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, scalar)<span class="question-mark">?</span>;
@@ -3202,7 +3202,7 @@ Implementations for `BlockContext` methods.
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                         }
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(
-                            <span class="string">&quot;Correct TypeInner for dot product should be already validated&quot;
+                            <span class="string">"Correct TypeInner for dot product should be already validated"
                         </span>),
                     },
                     Mf::Outer =&gt; MathOp::Custom(Instruction::binary(
@@ -3229,7 +3229,7 @@ Implementations for `BlockContext` methods.
                     </span>Mf::Sign =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::GLOp::FSign,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::SSign,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected sign({:?})&quot;</span>, other),
+                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected sign({:?})"</span>, other),
                     }),
                     Mf::Fma =&gt; MathOp::Ext(spirv::GLOp::Fma),
                     Mf::Mix =&gt; {
@@ -3393,7 +3393,7 @@ Implementations for `BlockContext` methods.
                         <span class="kw">let </span>op = <span class="kw">match </span>arg_scalar_kind {
                             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::BitFieldUExtract,
                             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::BitFieldSExtract,
-                            other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected sign({:?})&quot;</span>, other),
+                            other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected sign({:?})"</span>, other),
                         };
                         MathOp::Custom(Instruction::ternary(
                             op,
@@ -3417,7 +3417,7 @@ Implementations for `BlockContext` methods.
                     Mf::FindMsb =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::FindUMsb,
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::FindSMsb,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected findMSB({:?})&quot;</span>, other),
+                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected findMSB({:?})"</span>, other),
                     }),
                     Mf::Pack4x8unorm =&gt; MathOp::Ext(spirv::GLOp::PackUnorm4x8),
                     Mf::Pack4x8snorm =&gt; MathOp::Ext(spirv::GLOp::PackSnorm4x8),
@@ -3517,8 +3517,8 @@ Implementations for `BlockContext` methods.
                         <span class="kw">crate</span>::TypeInner::Vector { scalar, size } =&gt; (scalar, <span class="prelude-val">Some</span>(size), <span class="bool-val">false</span>),
                         <span class="kw">crate</span>::TypeInner::Matrix { scalar, .. } =&gt; (scalar, <span class="prelude-val">None</span>, <span class="bool-val">true</span>),
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;As source {:?}&quot;</span>, other);
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;Unexpected Expression::As source&quot;</span>));
+                            <span class="macro">log::error!</span>(<span class="string">"As source {:?}"</span>, other);
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Unexpected Expression::As source"</span>));
                         }
                     };
 
@@ -3624,7 +3624,7 @@ Implementations for `BlockContext` methods.
                         (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
                             Cast::Unary(spirv::Op::UConvert)
                         }
-                        <span class="comment">// We assume it&#39;s either an identity cast, or int-uint.
+                        <span class="comment">// We assume it's either an identity cast, or int-uint.
                         </span><span class="kw">_ </span>=&gt; Cast::Unary(spirv::Op::Bitcast),
                     }
                 };
@@ -3746,7 +3746,7 @@ Implementations for `BlockContext` methods.
                 <span class="kw">match </span>ctrl {
                     Ctrl::Coarse | Ctrl::Fine =&gt; {
                         <span class="self">self</span>.writer.require_any(
-                            <span class="string">&quot;DerivativeControl&quot;</span>,
+                            <span class="string">"DerivativeControl"</span>,
                             <span class="kw-2">&amp;</span>[spirv::Capability::DerivativeControl],
                         )<span class="question-mark">?</span>;
                     }
@@ -3791,7 +3791,7 @@ Implementations for `BlockContext` methods.
             <span class="kw">crate</span>::Expression::ArrayLength(expr) =&gt; <span class="self">self</span>.write_runtime_array_length(expr, block)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Expression::RayQueryGetIntersection { query, committed } =&gt; {
                 <span class="kw">if </span>!committed {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(<span class="string">&quot;candidate intersection&quot;</span>));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(<span class="string">"candidate intersection"</span>));
                 }
                 <span class="self">self</span>.write_ray_query_get_intersection(query, block)
             }
@@ -3807,7 +3807,7 @@ Implementations for `BlockContext` methods.
     ///
     /// Some cases we need to generate a different return type than what the IR gives us.
     /// This is because pointers to binding arrays of handles (such as images or samplers)
-    /// don&#39;t exist in the IR, but we need to create them to create an access chain in SPIRV.
+    /// don't exist in the IR, but we need to create them to create an access chain in SPIRV.
     ///
     /// On success, the return value is an [`ExpressionPointer`] value; see the
     /// documentation for that type.
@@ -3830,10 +3830,10 @@ Implementations for `BlockContext` methods.
         <span class="kw">let </span>result_type_id = <span class="self">self</span>.get_type_id(result_lookup_ty);
 
         <span class="comment">// The id of the boolean `and` of all dynamic bounds checks up to this point. If
-        // `None`, then we haven&#39;t done any dynamic bounds checks yet.
+        // `None`, then we haven't done any dynamic bounds checks yet.
         //
         // When we have a chain of bounds checks, we combine them with `OpLogicalAnd`, not
-        // a short-circuit branch. This means we might do comparisons we don&#39;t need to,
+        // a short-circuit branch. This means we might do comparisons we don't need to,
         // but we expect these checks to almost always succeed, and keeping branches to a
         // minimum is essential.
         </span><span class="kw">let </span><span class="kw-2">mut </span>accumulated_checks = <span class="prelude-val">None</span>;
@@ -3914,7 +3914,7 @@ Implementations for `BlockContext` methods.
                 <span class="kw">crate</span>::Expression::FunctionArgument(index) =&gt; {
                     <span class="kw">break </span><span class="self">self</span>.function.parameter_id(index);
                 }
-                <span class="kw-2">ref </span>other =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;Unexpected pointer expression {:?}&quot;</span>, other),
+                <span class="kw-2">ref </span>other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected pointer expression {:?}"</span>, other),
             }
         };
 
@@ -4143,7 +4143,7 @@ Implementations for `BlockContext` methods.
             <span class="kw">match </span><span class="kw-2">*</span>statement {
                 <span class="kw">crate</span>::Statement::Emit(<span class="kw-2">ref </span>range) =&gt; {
                     <span class="kw">for </span>handle <span class="kw">in </span>range.clone() {
-                        <span class="comment">// omit const expressions as we&#39;ve already cached those
+                        <span class="comment">// omit const expressions as we've already cached those
                         </span><span class="kw">if </span>!<span class="self">self</span>.expression_constness.is_const(handle) {
                             <span class="self">self</span>.cache_expression_value(handle, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
                         }
@@ -4383,7 +4383,7 @@ Implementations for `BlockContext` methods.
                     <span class="kw">let </span>value_id = <span class="self">self</span>.cached[value];
                     <span class="kw">let </span>instruction = <span class="kw">match </span><span class="self">self</span>.function.entry_point_context {
                         <span class="comment">// If this is an entry point, and we need to return anything,
-                        // let&#39;s instead store the output variables and return `void`.
+                        // let's instead store the output variables and return `void`.
                         </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>context) =&gt; {
                             <span class="self">self</span>.writer.write_entry_point_return(
                                 value_id,
@@ -4453,7 +4453,7 @@ Implementations for `BlockContext` methods.
                                 .push(Instruction::store(pointer_id, value_id, <span class="prelude-val">None</span>));
 
                             <span class="comment">// Finish the in-bounds block and start the merge block. This
-                            // is the block we&#39;ll leave current on return.
+                            // is the block we'll leave current on return.
                             </span>selection.finish(<span class="self">self</span>, ());
                         }
                     };
@@ -4506,7 +4506,7 @@ Implementations for `BlockContext` methods.
                             ExpressionPointer::Ready { pointer_id } =&gt; pointer_id,
                             ExpressionPointer::Conditional { .. } =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
-                                    <span class="string">&quot;Atomics out-of-bounds handling&quot;</span>,
+                                    <span class="string">"Atomics out-of-bounds handling"</span>,
                                 ));
                             }
                         };
@@ -4717,7 +4717,7 @@ Implementations for `BlockContext` methods.
         }
 
         <span class="kw">let </span>termination = <span class="kw">match </span>exit {
-            <span class="comment">// We&#39;re generating code for the top-level Block of the function, so we
+            <span class="comment">// We're generating code for the top-level Block of the function, so we
             // need to end it with some kind of return instruction.
             </span>BlockExit::Return =&gt; <span class="kw">match </span><span class="self">self</span>.ir_function.result {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) <span class="kw">if </span><span class="self">self</span>.function.entry_point_context.is_none() =&gt; {

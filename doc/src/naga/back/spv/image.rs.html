@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/image.rs`."><title>image.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/image.rs`."><title>image.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1223,7 +1223,7 @@ Generating SPIR-V for image operations.
 ///
 /// The coordinate vectors expected by SPIR-V `OpImageRead` and `OpImageFetch`
 /// supply the array index for arrayed images as an additional component at
-/// the end, whereas Naga&#39;s `ImageLoad`, `ImageStore`, and `ImageSample` carry
+/// the end, whereas Naga's `ImageLoad`, `ImageStore`, and `ImageSample` carry
 /// the array index as a separate field.
 ///
 /// In the process of generating code to compute the combined vector, we also
@@ -1253,7 +1253,7 @@ Generating SPIR-V for image operations.
 /// The [`image`] bounds checks policy affects access coordinates, level of
 /// detail, and sample index, but never the image id, result type (if any), or
 /// the specific SPIR-V instruction used. Types that implement this trait gather
-/// together the latter category, so we don&#39;t have to plumb them through the
+/// together the latter category, so we don't have to plumb them through the
 /// bounds-checking code.
 ///
 /// [`image`]: crate::proc::BoundsCheckPolicies::index
@@ -1294,17 +1294,17 @@ Generating SPIR-V for image operations.
     /// should be `()`.
     </span><span class="kw">fn </span>result_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Output;
 
-    <span class="doccomment">/// Construct the SPIR-V &#39;zero&#39; value to be returned for an out-of-bounds
+    <span class="doccomment">/// Construct the SPIR-V 'zero' value to be returned for an out-of-bounds
     /// access under the `ReadZeroSkipWrite` policy. If the access does not
     /// produce a value, `Self::Output` should be `()`.
-    </span><span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="self">Self</span>::Output;
+    </span><span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>::Output;
 }
 
 <span class="doccomment">/// Texel access information for an [`ImageLoad`] expression.
 ///
 /// [`ImageLoad`]: crate::Expression::ImageLoad
 </span><span class="kw">struct </span>Load {
-    <span class="doccomment">/// The specific opcode we&#39;ll use to perform the fetch. Storage images
+    <span class="doccomment">/// The specific opcode we'll use to perform the fetch. Storage images
     /// require `OpImageRead`, while sampled images require `OpImageFetch`.
     </span>opcode: spirv::Op,
 
@@ -1317,7 +1317,7 @@ Generating SPIR-V for image operations.
 
 <span class="kw">impl </span>Load {
     <span class="kw">fn </span>from_image_expr(
-        ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">'_</span>&gt;,
         image_id: Word,
         image_class: <span class="kw">crate</span>::ImageClass,
         result_type_id: Word,
@@ -1384,7 +1384,7 @@ Generating SPIR-V for image operations.
                 instruction.add_operand(spirv::ImageOperands::SAMPLE.bits());
                 instruction.add_operand(sample_id);
             }
-            <span class="comment">// There&#39;s no such thing as a multi-sampled mipmap.
+            <span class="comment">// There's no such thing as a multi-sampled mipmap.
             </span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="macro">unreachable!</span>(),
         }
 
@@ -1397,7 +1397,7 @@ Generating SPIR-V for image operations.
         <span class="self">self</span>.type_id
     }
 
-    <span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Word {
+    <span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">'_</span>&gt;) -&gt; Word {
         ctx.writer.get_constant_null(<span class="self">self</span>.type_id)
     }
 }
@@ -1409,12 +1409,12 @@ Generating SPIR-V for image operations.
     <span class="doccomment">/// The id of the image being written to.
     </span>image_id: Word,
 
-    <span class="doccomment">/// The value we&#39;re going to write to the texel.
+    <span class="doccomment">/// The value we're going to write to the texel.
     </span>value_id: Word,
 }
 
 <span class="kw">impl </span>Access <span class="kw">for </span>Store {
-    <span class="doccomment">/// Stores don&#39;t generate any value.
+    <span class="doccomment">/// Stores don't generate any value.
     </span><span class="kw">type </span>Output = ();
 
     <span class="kw">fn </span>generate(
@@ -1432,14 +1432,14 @@ Generating SPIR-V for image operations.
         ));
     }
 
-    <span class="doccomment">/// Stores don&#39;t generate any value, so this just returns `()`.
+    <span class="doccomment">/// Stores don't generate any value, so this just returns `()`.
     </span><span class="kw">fn </span>result_type(<span class="kw-2">&amp;</span><span class="self">self</span>) {}
 
-    <span class="doccomment">/// Stores don&#39;t generate any value, so this just returns `()`.
-    </span><span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, _ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    <span class="doccomment">/// Stores don't generate any value, so this just returns `()`.
+    </span><span class="kw">fn </span>out_of_bounds_value(<span class="kw-2">&amp;</span><span class="self">self</span>, _ctx: <span class="kw-2">&amp;mut </span>BlockContext&lt;<span class="lifetime">'_</span>&gt;) {}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;w</span>&gt; BlockContext&lt;<span class="lifetime">&#39;w</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'w</span>&gt; BlockContext&lt;<span class="lifetime">'w</span>&gt; {
     <span class="doccomment">/// Extend image coordinates with an array index, if necessary.
     ///
     /// Whereas [`Expression::ImageLoad`] and [`ImageSample`] treat the array
@@ -1459,9 +1459,9 @@ Generating SPIR-V for image operations.
     ///
     /// If needed, this function generates code to convert the array index,
     /// always an integer scalar, to match the component type of `coordinates`.
-    /// Naga&#39;s `ImageLoad` and SPIR-V&#39;s `OpImageRead`, `OpImageFetch`, and
-    /// `OpImageWrite` all use integer coordinates, while Naga&#39;s `ImageSample`
-    /// and SPIR-V&#39;s `OpImageSample...` instructions all take floating-point
+    /// Naga's `ImageLoad` and SPIR-V's `OpImageRead`, `OpImageFetch`, and
+    /// `OpImageWrite` all use integer coordinates, while Naga's `ImageSample`
+    /// and SPIR-V's `OpImageSample...` instructions all take floating-point
     /// coordinate vectors.
     ///
     /// [`Expression::ImageLoad`]: crate::Expression::ImageLoad
@@ -1479,7 +1479,7 @@ Generating SPIR-V for image operations.
         <span class="kw">let </span>ty = <span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[coordinates].ty;
         <span class="kw">let </span>inner_ty = ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
 
-        <span class="comment">// If there&#39;s no array index, the image coordinates are exactly the
+        <span class="comment">// If there's no array index, the image coordinates are exactly the
         // `coordinate` field of the `Expression::ImageLoad`. No work is needed.
         </span><span class="kw">let </span>array_index = <span class="kw">match </span>array_index {
             <span class="prelude-val">None </span>=&gt; {
@@ -1488,7 +1488,7 @@ Generating SPIR-V for image operations.
                 <span class="kw">let </span>size = <span class="kw">match </span><span class="kw-2">*</span>inner_ty {
                     Ti::Scalar { .. } =&gt; <span class="prelude-val">None</span>,
                     Ti::Vector { size, .. } =&gt; <span class="prelude-val">Some</span>(size),
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;coordinate type&quot;</span>)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"coordinate type"</span>)),
                 };
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(ImageCoordinates {
                     value_id,
@@ -1512,11 +1512,11 @@ Generating SPIR-V for image operations.
                 size: Vs::Tri,
             } =&gt; (scalar, <span class="prelude-val">Some</span>(Vs::Quad)),
             Ti::Vector { size: Vs::Quad, .. } =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;extending vec4 coordinate&quot;</span>));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"extending vec4 coordinate"</span>));
             }
             <span class="kw-2">ref </span>other =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;wrong coordinate type {:?}&quot;</span>, other);
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;coordinate type&quot;</span>));
+                <span class="macro">log::error!</span>(<span class="string">"wrong coordinate type {:?}"</span>, other);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"coordinate type"</span>));
             }
         };
 
@@ -1531,7 +1531,7 @@ Generating SPIR-V for image operations.
                     width: <span class="number">4</span>,
                 },
             ) =&gt; scalar,
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;we only allow i32 and u32&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"we only allow i32 and u32"</span>),
         };
         <span class="kw">let </span>cast = <span class="kw">match </span>(component_scalar.kind, array_index_scalar.kind) {
             (<span class="kw">crate</span>::ScalarKind::Sint, <span class="kw">crate</span>::ScalarKind::Sint)
@@ -1540,13 +1540,13 @@ Generating SPIR-V for image operations.
             | (<span class="kw">crate</span>::ScalarKind::Uint, <span class="kw">crate</span>::ScalarKind::Sint) =&gt; <span class="prelude-val">Some</span>(spirv::Op::Bitcast),
             (<span class="kw">crate</span>::ScalarKind::Float, <span class="kw">crate</span>::ScalarKind::Sint) =&gt; <span class="prelude-val">Some</span>(spirv::Op::ConvertSToF),
             (<span class="kw">crate</span>::ScalarKind::Float, <span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Some</span>(spirv::Op::ConvertUToF),
-            (<span class="kw">crate</span>::ScalarKind::Bool, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;we don&#39;t allow bool for component&quot;</span>),
+            (<span class="kw">crate</span>::ScalarKind::Bool, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">"we don't allow bool for component"</span>),
             (<span class="kw">_</span>, <span class="kw">crate</span>::ScalarKind::Bool | <span class="kw">crate</span>::ScalarKind::Float) =&gt; {
-                <span class="macro">unreachable!</span>(<span class="string">&quot;we don&#39;t allow bool or float for array index&quot;</span>)
+                <span class="macro">unreachable!</span>(<span class="string">"we don't allow bool or float for array index"</span>)
             }
             (<span class="kw">crate</span>::ScalarKind::AbstractInt | <span class="kw">crate</span>::ScalarKind::AbstractFloat, <span class="kw">_</span>)
             | (<span class="kw">_</span>, <span class="kw">crate</span>::ScalarKind::AbstractInt | <span class="kw">crate</span>::ScalarKind::AbstractFloat) =&gt; {
-                <span class="macro">unreachable!</span>(<span class="string">&quot;abstract types should never reach backends&quot;</span>)
+                <span class="macro">unreachable!</span>(<span class="string">"abstract types should never reach backends"</span>)
             }
         };
         <span class="kw">let </span>reconciled_array_index_id = <span class="kw">if let </span><span class="prelude-val">Some</span>(cast) = cast {
@@ -1599,12 +1599,12 @@ Generating SPIR-V for image operations.
             <span class="kw">crate</span>::Expression::Access { .. } | <span class="kw">crate</span>::Expression::AccessIndex { .. } =&gt; {
                 <span class="self">self</span>.cached[expr_handle]
             }
-            <span class="kw-2">ref </span>other =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Unexpected image expression {:?}&quot;</span>, other),
+            <span class="kw-2">ref </span>other =&gt; <span class="macro">unreachable!</span>(<span class="string">"Unexpected image expression {:?}"</span>, other),
         };
 
         <span class="kw">if </span>id == <span class="number">0 </span>{
             <span class="macro">unreachable!</span>(
-                <span class="string">&quot;Image expression {:?} doesn&#39;t have a handle ID&quot;</span>,
+                <span class="string">"Image expression {:?} doesn't have a handle ID"</span>,
                 expr_handle
             );
         }
@@ -1612,7 +1612,7 @@ Generating SPIR-V for image operations.
         id
     }
 
-    <span class="doccomment">/// Generate a vector or scalar &#39;one&#39; for arithmetic on `coordinates`.
+    <span class="doccomment">/// Generate a vector or scalar 'one' for arithmetic on `coordinates`.
     ///
     /// If `coordinates` is a scalar, return a scalar one. Otherwise, return
     /// a vector of ones.
@@ -1735,7 +1735,7 @@ Generating SPIR-V for image operations.
         block: <span class="kw-2">&amp;mut </span>Block,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Word, <span class="prelude-ty">Option</span>&lt;Word&gt;, <span class="prelude-ty">Option</span>&lt;Word&gt;), Error&gt; {
         <span class="self">self</span>.writer.require_any(
-            <span class="string">&quot;the `Restrict` image bounds check policy&quot;</span>,
+            <span class="string">"the `Restrict` image bounds check policy"</span>,
             <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery],
         )<span class="question-mark">?</span>;
 
@@ -1746,7 +1746,7 @@ Generating SPIR-V for image operations.
         }));
 
         <span class="comment">// If `level` is `Some`, clamp it to fall within bounds. This must
-        // happen first, because we&#39;ll use it to query the image size for
+        // happen first, because we'll use it to query the image size for
         // clamping the actual coordinates.
         </span><span class="kw">let </span>level_id = level_id
             .map(|level_id| {
@@ -1821,7 +1821,7 @@ Generating SPIR-V for image operations.
         access: <span class="kw-2">&amp;</span>A,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;A::Output, Error&gt; {
         <span class="self">self</span>.writer.require_any(
-            <span class="string">&quot;the `ReadZeroSkipWrite` image bounds check policy&quot;</span>,
+            <span class="string">"the `ReadZeroSkipWrite` image bounds check policy"</span>,
             <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery],
         )<span class="question-mark">?</span>;
 
@@ -1837,7 +1837,7 @@ Generating SPIR-V for image operations.
         <span class="kw">let </span><span class="kw-2">mut </span>selection = Selection::start(block, access.result_type());
 
         <span class="comment">// If `level_id` is `Some`, check whether it is within bounds. This must
-        // happen first, because we&#39;ll be supplying this as an argument when we
+        // happen first, because we'll be supplying this as an argument when we
         // query the image size.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(level_id) = level_id {
             <span class="comment">// Find the number of mipmap levels in this image.
@@ -1933,7 +1933,7 @@ Generating SPIR-V for image operations.
             selection.block(),
         );
 
-        <span class="comment">// This, then, is the value of the &#39;true&#39; branch.
+        <span class="comment">// This, then, is the value of the 'true' branch.
         </span><span class="prelude-val">Ok</span>(selection.finish(<span class="self">self</span>, texel_id))
     }
 
@@ -1955,7 +1955,7 @@ Generating SPIR-V for image operations.
         <span class="kw">let </span>image_type = <span class="self">self</span>.fun_info[image].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
         <span class="kw">let </span>image_class = <span class="kw">match </span><span class="kw-2">*</span>image_type {
             <span class="kw">crate</span>::TypeInner::Image { class, .. } =&gt; class,
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;image type&quot;</span>)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"image type"</span>)),
         };
 
         <span class="kw">let </span>access = Load::from_image_expr(<span class="self">self</span>, image_id, image_class, result_type_id)<span class="question-mark">?</span>;
@@ -2038,7 +2038,7 @@ Generating SPIR-V for image operations.
         <span class="comment">// image
         </span><span class="kw">let </span>image_id = <span class="self">self</span>.get_handle_id(image);
         <span class="kw">let </span>image_type = <span class="self">self</span>.fun_info[image].ty.handle().unwrap();
-        <span class="comment">// SPIR-V doesn&#39;t know about our `Depth` class, and it returns
+        <span class="comment">// SPIR-V doesn't know about our `Depth` class, and it returns
         // `vec4&lt;f32&gt;`, so we need to grab the first component out of it.
         </span><span class="kw">let </span>needs_sub_access = <span class="kw">match </span><span class="self">self</span>.ir_module.types[image_type].inner {
             <span class="kw">crate</span>::TypeInner::Image {
@@ -2227,12 +2227,12 @@ Generating SPIR-V for image operations.
                 class,
             } =&gt; (dim, arrayed, class),
             <span class="kw">_ </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;image type&quot;</span>));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"image type"</span>));
             }
         };
 
         <span class="self">self</span>.writer
-            .require_any(<span class="string">&quot;image queries&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery])<span class="question-mark">?</span>;
+            .require_any(<span class="string">"image queries"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery])<span class="question-mark">?</span>;
 
         <span class="kw">let </span>id = <span class="kw">match </span>query {
             Iq::Size { level } =&gt; {
@@ -2382,7 +2382,7 @@ Generating SPIR-V for image operations.
                     },
                 ..
             } =&gt; <span class="self">self</span>.writer.require_any(
-                <span class="string">&quot;Bgra8Unorm storage write&quot;</span>,
+                <span class="string">"Bgra8Unorm storage write"</span>,
                 <span class="kw-2">&amp;</span>[spirv::Capability::StorageImageWriteWithoutFormat],
             )<span class="question-mark">?</span>,
             <span class="kw">_ </span>=&gt; {}

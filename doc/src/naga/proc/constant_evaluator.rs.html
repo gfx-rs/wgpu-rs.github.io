@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2088,37 +2088,37 @@
 /// [`Literal`]: Expression::Literal
 /// [`Swizzle`]: Expression::Swizzle
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ConstantEvaluator&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Which language&#39;s evaluation rules we should follow.
+</span><span class="kw">pub struct </span>ConstantEvaluator&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="doccomment">/// Which language's evaluation rules we should follow.
     </span>behavior: Behavior,
 
-    <span class="doccomment">/// The module&#39;s type arena.
+    <span class="doccomment">/// The module's type arena.
     ///
     /// Because expressions like [`Splat`] contain type handles, we need to be
     /// able to add new types to produce those expressions.
     ///
     /// [`Splat`]: Expression::Splat
-    </span>types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>UniqueArena&lt;Type&gt;,
+    </span>types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>UniqueArena&lt;Type&gt;,
 
-    <span class="doccomment">/// The module&#39;s constant arena.
-    </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;Constant&gt;,
+    <span class="doccomment">/// The module's constant arena.
+    </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;Constant&gt;,
 
     <span class="doccomment">/// The arena to which we are contributing expressions.
-    </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
+    </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
 
-    <span class="doccomment">/// When `self.expressions` refers to a function&#39;s local expression
+    <span class="doccomment">/// When `self.expressions` refers to a function's local expression
     /// arena, this needs to be populated
-    </span>function_local_data: <span class="prelude-ty">Option</span>&lt;FunctionLocalData&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    </span>function_local_data: <span class="prelude-ty">Option</span>&lt;FunctionLocalData&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>FunctionLocalData&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">struct </span>FunctionLocalData&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Global constant expressions
-    </span>const_expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;Expression&gt;,
+    </span>const_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;Expression&gt;,
     <span class="doccomment">/// Tracks the constness of expressions residing in `ConstantEvaluator.expressions`
-    </span>expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
-    emitter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
-    block: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
+    </span>expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
+    emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
+    block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -2169,101 +2169,101 @@
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>ConstantEvaluatorError {
-    <span class="attr">#[error(<span class="string">&quot;Constants cannot access function arguments&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants cannot access function arguments"</span>)]
     </span>FunctionArg,
-    <span class="attr">#[error(<span class="string">&quot;Constants cannot access global variables&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants cannot access global variables"</span>)]
     </span>GlobalVariable,
-    <span class="attr">#[error(<span class="string">&quot;Constants cannot access local variables&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants cannot access local variables"</span>)]
     </span>LocalVariable,
-    <span class="attr">#[error(<span class="string">&quot;Cannot get the array length of a non array type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot get the array length of a non array type"</span>)]
     </span>InvalidArrayLengthArg,
-    <span class="attr">#[error(<span class="string">&quot;Constants cannot get the array length of a dynamically sized array&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants cannot get the array length of a dynamically sized array"</span>)]
     </span>ArrayLengthDynamic,
-    <span class="attr">#[error(<span class="string">&quot;Constants cannot call functions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants cannot call functions"</span>)]
     </span>Call,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support workGroupUniformLoad&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support workGroupUniformLoad"</span>)]
     </span>WorkGroupUniformLoadResult,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support atomic functions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support atomic functions"</span>)]
     </span>Atomic,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support derivative functions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support derivative functions"</span>)]
     </span>Derivative,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support load expressions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support load expressions"</span>)]
     </span>Load,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support image expressions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support image expressions"</span>)]
     </span>ImageExpression,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support ray query expressions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support ray query expressions"</span>)]
     </span>RayQueryExpression,
-    <span class="attr">#[error(<span class="string">&quot;Cannot access the type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot access the type"</span>)]
     </span>InvalidAccessBase,
-    <span class="attr">#[error(<span class="string">&quot;Cannot access at the index&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot access at the index"</span>)]
     </span>InvalidAccessIndex,
-    <span class="attr">#[error(<span class="string">&quot;Cannot access with index of type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot access with index of type"</span>)]
     </span>InvalidAccessIndexTy,
-    <span class="attr">#[error(<span class="string">&quot;Constants don&#39;t support array length expressions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Constants don't support array length expressions"</span>)]
     </span>ArrayLength,
-    <span class="attr">#[error(<span class="string">&quot;Cannot cast type `{from}` to `{to}`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot cast type `{from}` to `{to}`"</span>)]
     </span>InvalidCastArg { from: String, to: String },
-    <span class="attr">#[error(<span class="string">&quot;Cannot apply the unary op to the argument&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot apply the unary op to the argument"</span>)]
     </span>InvalidUnaryOpArg,
-    <span class="attr">#[error(<span class="string">&quot;Cannot apply the binary op to the arguments&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot apply the binary op to the arguments"</span>)]
     </span>InvalidBinaryOpArgs,
-    <span class="attr">#[error(<span class="string">&quot;Cannot apply math function to type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot apply math function to type"</span>)]
     </span>InvalidMathArg,
-    <span class="attr">#[error(<span class="string">&quot;{0:?} built-in function expects {1:?} arguments but {2:?} were supplied&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"{0:?} built-in function expects {1:?} arguments but {2:?} were supplied"</span>)]
     </span>InvalidMathArgCount(<span class="kw">crate</span>::MathFunction, usize, usize),
-    <span class="attr">#[error(<span class="string">&quot;value of `low` is greater than `high` for clamp built-in function&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"value of `low` is greater than `high` for clamp built-in function"</span>)]
     </span>InvalidClamp,
-    <span class="attr">#[error(<span class="string">&quot;Splat is defined only on scalar values&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Splat is defined only on scalar values"</span>)]
     </span>SplatScalarOnly,
-    <span class="attr">#[error(<span class="string">&quot;Can only swizzle vector constants&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Can only swizzle vector constants"</span>)]
     </span>SwizzleVectorOnly,
-    <span class="attr">#[error(<span class="string">&quot;swizzle component not present in source expression&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"swizzle component not present in source expression"</span>)]
     </span>SwizzleOutOfBounds,
-    <span class="attr">#[error(<span class="string">&quot;Type is not constructible&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Type is not constructible"</span>)]
     </span>TypeNotConstructible,
-    <span class="attr">#[error(<span class="string">&quot;Subexpression(s) are not constant&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Subexpression(s) are not constant"</span>)]
     </span>SubexpressionsAreNotConstant,
-    <span class="attr">#[error(<span class="string">&quot;Not implemented as constant expression: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Not implemented as constant expression: {0}"</span>)]
     </span>NotImplemented(String),
-    <span class="attr">#[error(<span class="string">&quot;{0} operation overflowed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"{0} operation overflowed"</span>)]
     </span>Overflow(String),
     <span class="attr">#[error(
-        <span class="string">&quot;the concrete type `{to_type}` cannot represent the abstract value `{value}` accurately&quot;
+        <span class="string">"the concrete type `{to_type}` cannot represent the abstract value `{value}` accurately"
     </span>)]
     </span>AutomaticConversionLossy {
         value: String,
-        to_type: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        to_type: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
-    <span class="attr">#[error(<span class="string">&quot;abstract floating-point values cannot be automatically converted to integers&quot;</span>)]
-    </span>AutomaticConversionFloatToInt { to_type: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str },
-    <span class="attr">#[error(<span class="string">&quot;Division by zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"abstract floating-point values cannot be automatically converted to integers"</span>)]
+    </span>AutomaticConversionFloatToInt { to_type: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str },
+    <span class="attr">#[error(<span class="string">"Division by zero"</span>)]
     </span>DivisionByZero,
-    <span class="attr">#[error(<span class="string">&quot;Remainder by zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Remainder by zero"</span>)]
     </span>RemainderByZero,
-    <span class="attr">#[error(<span class="string">&quot;RHS of shift operation is greater than or equal to 32&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"RHS of shift operation is greater than or equal to 32"</span>)]
     </span>ShiftedMoreThan32Bits,
     <span class="attr">#[error(transparent)]
     </span>Literal(<span class="attr">#[from] </span><span class="kw">crate</span>::valid::LiteralError),
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ConstantEvaluator&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `module`&#39;s
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ConstantEvaluator&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `module`'s
     /// constant expression arena.
     ///
-    /// Report errors according to WGSL&#39;s rules for constant evaluation.
-    </span><span class="kw">pub fn </span>for_wgsl_module(module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
+    /// Report errors according to WGSL's rules for constant evaluation.
+    </span><span class="kw">pub fn </span>for_wgsl_module(module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_module(Behavior::Wgsl, module)
     }
 
-    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `module`&#39;s
+    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `module`'s
     /// constant expression arena.
     ///
-    /// Report errors according to GLSL&#39;s rules for constant evaluation.
-    </span><span class="kw">pub fn </span>for_glsl_module(module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
+    /// Report errors according to GLSL's rules for constant evaluation.
+    </span><span class="kw">pub fn </span>for_glsl_module(module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_module(Behavior::Glsl, module)
     }
 
-    <span class="kw">fn </span>for_module(behavior: Behavior, module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>for_module(behavior: Behavior, module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             behavior,
             types: <span class="kw-2">&amp;mut </span>module.types,
@@ -2273,16 +2273,16 @@
         }
     }
 
-    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `function`&#39;s
+    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `function`'s
     /// expression arena.
     ///
-    /// Report errors according to WGSL&#39;s rules for constant evaluation.
+    /// Report errors according to WGSL's rules for constant evaluation.
     </span><span class="kw">pub fn </span>for_wgsl_function(
-        module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
-        expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
-        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
-        emitter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
-        block: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+        expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
+        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
+        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
+        block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_function(
             Behavior::Wgsl,
@@ -2294,16 +2294,16 @@
         )
     }
 
-    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `function`&#39;s
+    <span class="doccomment">/// Return a [`ConstantEvaluator`] that will add expressions to `function`'s
     /// expression arena.
     ///
-    /// Report errors according to GLSL&#39;s rules for constant evaluation.
+    /// Report errors according to GLSL's rules for constant evaluation.
     </span><span class="kw">pub fn </span>for_glsl_function(
-        module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
-        expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
-        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
-        emitter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
-        block: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+        expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
+        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
+        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
+        block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_function(
             Behavior::Glsl,
@@ -2317,11 +2317,11 @@
 
     <span class="kw">fn </span>for_function(
         behavior: Behavior,
-        module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
-        expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
-        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
-        emitter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
-        block: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+        expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
+        expression_constness: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionConstnessTracker,
+        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
+        block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             behavior,
@@ -2351,7 +2351,7 @@
     <span class="kw">fn </span>check(<span class="kw-2">&amp;</span><span class="self">self</span>, expr: Handle&lt;Expression&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), ConstantEvaluatorError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>function_local_data) = <span class="self">self</span>.function_local_data {
             <span class="kw">if </span>!function_local_data.expression_constness.is_const(expr) {
-                <span class="macro">log::debug!</span>(<span class="string">&quot;check: SubexpressionsAreNotConstant&quot;</span>);
+                <span class="macro">log::debug!</span>(<span class="string">"check: SubexpressionsAreNotConstant"</span>);
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SubexpressionsAreNotConstant);
             }
         }
@@ -2364,16 +2364,16 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
             Expression::Constant(c) =&gt; {
-                <span class="comment">// Are we working in a function&#39;s expression arena, or the
-                // module&#39;s constant expression arena?
+                <span class="comment">// Are we working in a function's expression arena, or the
+                // module's constant expression arena?
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>function_local_data) = <span class="self">self</span>.function_local_data {
-                    <span class="comment">// Deep-copy the constant&#39;s value into our arena.
+                    <span class="comment">// Deep-copy the constant's value into our arena.
                     </span><span class="self">self</span>.copy_from(
                         <span class="self">self</span>.constants[c].init,
                         function_local_data.const_expressions,
                     )
                 } <span class="kw">else </span>{
-                    <span class="comment">// &quot;See through&quot; the constant and use its initializer.
+                    <span class="comment">// "See through" the constant and use its initializer.
                     </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.constants[c].init)
                 }
             }
@@ -2392,8 +2392,8 @@
     /// [`ZeroValue`], and [`Swizzle`] expressions - to the expression arena
     /// `self` contributes to.
     ///
-    /// If `expr`&#39;s value cannot be determined at compile time, return a an
-    /// error. If it&#39;s acceptable to evaluate `expr` at runtime, this error can
+    /// If `expr`'s value cannot be determined at compile time, return a an
+    /// error. If it's acceptable to evaluate `expr` at runtime, this error can
     /// be ignored, and the caller can append `expr` to the arena itself.
     ///
     /// We only consider `expr` itself, without recursing into its operands. Its
@@ -2410,10 +2410,10 @@
         expr: <span class="kw-2">&amp;</span>Expression,
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;try_eval_and_append: {:?}&quot;</span>, expr);
+        <span class="macro">log::trace!</span>(<span class="string">"try_eval_and_append: {:?}"</span>, expr);
         <span class="kw">match </span><span class="kw-2">*</span>expr {
             Expression::Constant(c) <span class="kw">if </span><span class="self">self</span>.function_local_data.is_none() =&gt; {
-                <span class="comment">// &quot;See through&quot; the constant and use its initializer.
+                <span class="comment">// "See through" the constant and use its initializer.
                 // This is mainly done to avoid having constants pointing to other constants.
                 </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.constants[c].init)
             }
@@ -2486,15 +2486,15 @@
                 <span class="kw">match </span>convert {
                     <span class="prelude-val">Some</span>(width) =&gt; <span class="self">self</span>.cast(expr, <span class="kw">crate</span>::Scalar { kind, width }, span),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::NotImplemented(
-                        <span class="string">&quot;bitcast built-in function&quot;</span>.into(),
+                        <span class="string">"bitcast built-in function"</span>.into(),
                     )),
                 }
             }
             Expression::Select { .. } =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::NotImplemented(
-                <span class="string">&quot;select built-in function&quot;</span>.into(),
+                <span class="string">"select built-in function"</span>.into(),
             )),
             Expression::Relational { fun, .. } =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::NotImplemented(
-                <span class="macro">format!</span>(<span class="string">&quot;{fun:?} built-in function&quot;</span>),
+                <span class="macro">format!</span>(<span class="string">"{fun:?} built-in function"</span>),
             )),
             Expression::ArrayLength(expr) =&gt; <span class="kw">match </span><span class="self">self</span>.behavior {
                 Behavior::Wgsl =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::ArrayLength),
@@ -2655,7 +2655,7 @@
             <span class="kw">crate</span>::MathFunction::Pow =&gt; <span class="self">self</span>.math_pow(arg, arg1.unwrap(), span),
             <span class="kw">crate</span>::MathFunction::Clamp =&gt; <span class="self">self</span>.math_clamp(arg, arg1.unwrap(), arg2.unwrap(), span),
             fun =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::NotImplemented(<span class="macro">format!</span>(
-                <span class="string">&quot;{fun:?} built-in function&quot;
+                <span class="string">"{fun:?} built-in function"
             </span>))),
         }
     }
@@ -3051,15 +3051,15 @@
         <span class="kw">let </span>make_error = || -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, ConstantEvaluatorError&gt; {
             <span class="kw">let </span>ty = <span class="self">self</span>.resolve_type(expr)<span class="question-mark">?</span>;
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl-in&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
             </span><span class="kw">let </span>from = ty.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.to_ctx());
-            <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl-in&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
             </span><span class="kw">let </span>to = target.to_wgsl();
 
-            <span class="attr">#[cfg(not(feature = <span class="string">&quot;wgsl-in&quot;</span>))]
-            </span><span class="kw">let </span>from = <span class="macro">format!</span>(<span class="string">&quot;{ty:?}&quot;</span>);
-            <span class="attr">#[cfg(not(feature = <span class="string">&quot;wgsl-in&quot;</span>))]
-            </span><span class="kw">let </span>to = <span class="macro">format!</span>(<span class="string">&quot;{target:?}&quot;</span>);
+            <span class="attr">#[cfg(not(feature = <span class="string">"wgsl-in"</span>))]
+            </span><span class="kw">let </span>from = <span class="macro">format!</span>(<span class="string">"{ty:?}"</span>);
+            <span class="attr">#[cfg(not(feature = <span class="string">"wgsl-in"</span>))]
+            </span><span class="kw">let </span>to = <span class="macro">format!</span>(<span class="string">"{target:?}"</span>);
 
             <span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg { from, to })
         };
@@ -3126,7 +3126,7 @@
                         Literal::AbstractInt(v) =&gt; {
                             <span class="comment">// Overflow is forbidden, but inexact conversions
                             // are fine. The range of f64 is far larger than
-                            // that of i64, so we don&#39;t have to check anything
+                            // that of i64, so we don't have to check anything
                             // here.
                             </span>v <span class="kw">as </span>f64
                         }
@@ -3134,7 +3134,7 @@
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span>make_error(),
                     }),
                     <span class="kw">_ </span>=&gt; {
-                        <span class="macro">log::debug!</span>(<span class="string">&quot;Constant evaluator refused to convert value to {target:?}&quot;</span>);
+                        <span class="macro">log::debug!</span>(<span class="string">"Constant evaluator refused to convert value to {target:?}"</span>);
                         <span class="kw">return </span>make_error();
                     }
                 };
@@ -3314,26 +3314,26 @@
                     <span class="kw">_ </span>=&gt; <span class="kw">match </span>(left_value, right_value) {
                         (Literal::I32(a), Literal::I32(b)) =&gt; Literal::I32(<span class="kw">match </span>op {
                             BinaryOperator::Add =&gt; a.checked_add(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;addition&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"addition"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Subtract =&gt; a.checked_sub(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;subtraction&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"subtraction"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Multiply =&gt; a.checked_mul(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;multiplication&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"multiplication"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Divide =&gt; a.checked_div(b).ok_or_else(|| {
                                 <span class="kw">if </span>b == <span class="number">0 </span>{
                                     ConstantEvaluatorError::DivisionByZero
                                 } <span class="kw">else </span>{
-                                    ConstantEvaluatorError::Overflow(<span class="string">&quot;division&quot;</span>.into())
+                                    ConstantEvaluatorError::Overflow(<span class="string">"division"</span>.into())
                                 }
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Modulo =&gt; a.checked_rem(b).ok_or_else(|| {
                                 <span class="kw">if </span>b == <span class="number">0 </span>{
                                     ConstantEvaluatorError::RemainderByZero
                                 } <span class="kw">else </span>{
-                                    ConstantEvaluatorError::Overflow(<span class="string">&quot;remainder&quot;</span>.into())
+                                    ConstantEvaluatorError::Overflow(<span class="string">"remainder"</span>.into())
                                 }
                             })<span class="question-mark">?</span>,
                             BinaryOperator::And =&gt; a &amp; b,
@@ -3352,13 +3352,13 @@
                         }),
                         (Literal::U32(a), Literal::U32(b)) =&gt; Literal::U32(<span class="kw">match </span>op {
                             BinaryOperator::Add =&gt; a.checked_add(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;addition&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"addition"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Subtract =&gt; a.checked_sub(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;subtraction&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"subtraction"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Multiply =&gt; a.checked_mul(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">&quot;multiplication&quot;</span>.into())
+                                ConstantEvaluatorError::Overflow(<span class="string">"multiplication"</span>.into())
                             })<span class="question-mark">?</span>,
                             BinaryOperator::Divide =&gt; a
                                 .checked_div(b)
@@ -3431,9 +3431,9 @@
     ///
     /// Return the root of the new copy.
     ///
-    /// This is used when we&#39;re evaluating expressions in a function&#39;s
+    /// This is used when we're evaluating expressions in a function's
     /// expression arena that refer to a constant: we need to copy the
-    /// constant&#39;s value into the function&#39;s arena so we can operate on it.
+    /// constant's value into the function's arena so we can operate on it.
     </span><span class="kw">fn </span>copy_from(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;Expression&gt;,
@@ -3456,7 +3456,7 @@
                 <span class="self">self</span>.register_evaluated_expr(Expression::Splat { size, value }, span)
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::debug!</span>(<span class="string">&quot;copy_from: SubexpressionsAreNotConstant&quot;</span>);
+                <span class="macro">log::debug!</span>(<span class="string">"copy_from: SubexpressionsAreNotConstant"</span>);
                 <span class="prelude-val">Err</span>(ConstantEvaluatorError::SubexpressionsAreNotConstant)
             }
         }
@@ -3661,7 +3661,7 @@
                 );
                 <span class="macro">assert!</span>(components_iter.next().is_none());
             }
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Expected vector&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Expected vector"</span>),
         }
     }
 
@@ -3860,7 +3860,7 @@
                 );
                 <span class="macro">assert!</span>(components_iter.next().is_none());
             }
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Expected vector&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Expected vector"</span>),
         }
 
         <span class="macro">assert_eq!</span>(
@@ -3945,7 +3945,7 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
         <span class="kw">if </span>!pass {
-            <span class="macro">panic!</span>(<span class="string">&quot;unexpected evaluation result&quot;</span>)
+            <span class="macro">panic!</span>(<span class="string">"unexpected evaluation result"</span>)
         }
     }
 
@@ -4025,7 +4025,7 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
         <span class="kw">if </span>!pass {
-            <span class="macro">panic!</span>(<span class="string">&quot;unexpected evaluation result&quot;</span>)
+            <span class="macro">panic!</span>(<span class="string">"unexpected evaluation result"</span>)
         }
     }
 }
@@ -4034,8 +4034,8 @@
 </span><span class="kw">trait </span>TryFromAbstract&lt;T&gt;: Sized {
     <span class="doccomment">/// Convert an abstract literal `value` to `Self`.
     ///
-    /// Since Naga&#39;s `AbstractInt` and `AbstractFloat` exist to support
-    /// WGSL, we follow WGSL&#39;s conversion rules here:
+    /// Since Naga's `AbstractInt` and `AbstractFloat` exist to support
+    /// WGSL, we follow WGSL's conversion rules here:
     ///
     /// - WGSL §6.1.2. Conversion Rank says that automatic conversions
     ///   to integers are either lossless or an error.
@@ -4053,8 +4053,8 @@
 <span class="kw">impl </span>TryFromAbstract&lt;i64&gt; <span class="kw">for </span>i32 {
     <span class="kw">fn </span>try_from_abstract(value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;i32, ConstantEvaluatorError&gt; {
         i32::try_from(value).map_err(|<span class="kw">_</span>| ConstantEvaluatorError::AutomaticConversionLossy {
-            value: <span class="macro">format!</span>(<span class="string">&quot;{value:?}&quot;</span>),
-            to_type: <span class="string">&quot;i32&quot;</span>,
+            value: <span class="macro">format!</span>(<span class="string">"{value:?}"</span>),
+            to_type: <span class="string">"i32"</span>,
         })
     }
 }
@@ -4062,8 +4062,8 @@
 <span class="kw">impl </span>TryFromAbstract&lt;i64&gt; <span class="kw">for </span>u32 {
     <span class="kw">fn </span>try_from_abstract(value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;u32, ConstantEvaluatorError&gt; {
         u32::try_from(value).map_err(|<span class="kw">_</span>| ConstantEvaluatorError::AutomaticConversionLossy {
-            value: <span class="macro">format!</span>(<span class="string">&quot;{value:?}&quot;</span>),
-            to_type: <span class="string">&quot;u32&quot;</span>,
+            value: <span class="macro">format!</span>(<span class="string">"{value:?}"</span>),
+            to_type: <span class="string">"u32"</span>,
         })
     }
 }
@@ -4072,7 +4072,7 @@
     <span class="kw">fn </span>try_from_abstract(value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ConstantEvaluatorError&gt; {
         <span class="kw">let </span>f = value <span class="kw">as </span>f32;
         <span class="comment">// The range of `i64` is roughly ±18 × 10¹⁸, whereas the range of
-        // `f32` is roughly ±3.4 × 10³⁸, so there&#39;s no opportunity for
+        // `f32` is roughly ±3.4 × 10³⁸, so there's no opportunity for
         // overflow here.
         </span><span class="prelude-val">Ok</span>(f)
     }
@@ -4083,8 +4083,8 @@
         <span class="kw">let </span>f = value <span class="kw">as </span>f32;
         <span class="kw">if </span>f.is_infinite() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::AutomaticConversionLossy {
-                value: <span class="macro">format!</span>(<span class="string">&quot;{value:?}&quot;</span>),
-                to_type: <span class="string">&quot;f32&quot;</span>,
+                value: <span class="macro">format!</span>(<span class="string">"{value:?}"</span>),
+                to_type: <span class="string">"f32"</span>,
             });
         }
         <span class="prelude-val">Ok</span>(f)
@@ -4095,7 +4095,7 @@
     <span class="kw">fn </span>try_from_abstract(value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ConstantEvaluatorError&gt; {
         <span class="kw">let </span>f = value <span class="kw">as </span>f64;
         <span class="comment">// The range of `i64` is roughly ±18 × 10¹⁸, whereas the range of
-        // `f64` is roughly ±1.8 × 10³⁰⁸, so there&#39;s no opportunity for
+        // `f64` is roughly ±1.8 × 10³⁰⁸, so there's no opportunity for
         // overflow here.
         </span><span class="prelude-val">Ok</span>(f)
     }
@@ -4109,13 +4109,13 @@
 
 <span class="kw">impl </span>TryFromAbstract&lt;f64&gt; <span class="kw">for </span>i32 {
     <span class="kw">fn </span>try_from_abstract(<span class="kw">_</span>: f64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ConstantEvaluatorError&gt; {
-        <span class="prelude-val">Err</span>(ConstantEvaluatorError::AutomaticConversionFloatToInt { to_type: <span class="string">&quot;i32&quot; </span>})
+        <span class="prelude-val">Err</span>(ConstantEvaluatorError::AutomaticConversionFloatToInt { to_type: <span class="string">"i32" </span>})
     }
 }
 
 <span class="kw">impl </span>TryFromAbstract&lt;f64&gt; <span class="kw">for </span>u32 {
     <span class="kw">fn </span>try_from_abstract(<span class="kw">_</span>: f64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ConstantEvaluatorError&gt; {
-        <span class="prelude-val">Err</span>(ConstantEvaluatorError::AutomaticConversionFloatToInt { to_type: <span class="string">&quot;u32&quot; </span>})
+        <span class="prelude-val">Err</span>(ConstantEvaluatorError::AutomaticConversionFloatToInt { to_type: <span class="string">"u32" </span>})
     }
 }
 </code></pre></div></section></main></body></html>

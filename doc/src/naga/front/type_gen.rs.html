@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/type_gen.rs`."><title>type_gen.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/type_gen.rs`."><title>type_gen.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -442,7 +442,7 @@ Type generators.
 </span><span class="kw">use crate</span>::{arena::Handle, span::Span};
 
 <span class="kw">impl </span><span class="kw">crate</span>::Module {
-    <span class="doccomment">/// Populate this module&#39;s [`SpecialTypes::ray_desc`] type.
+    <span class="doccomment">/// Populate this module's [`SpecialTypes::ray_desc`] type.
     ///
     /// [`SpecialTypes::ray_desc`] is the type of the [`descriptor`] operand of
     /// an [`Initialize`] [`RayQuery`] statement. In WGSL, it is a struct type
@@ -489,41 +489,41 @@ Type generators.
 
         <span class="kw">let </span>handle = <span class="self">self</span>.types.insert(
             <span class="kw">crate</span>::Type {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;RayDesc&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"RayDesc"</span>.to_string()),
                 inner: <span class="kw">crate</span>::TypeInner::Struct {
                     members: <span class="macro">vec!</span>[
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;flags&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"flags"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">0</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;cull_mask&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"cull_mask"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">4</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;tmin&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"tmin"</span>.to_string()),
                             ty: ty_scalar,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">8</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;tmax&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"tmax"</span>.to_string()),
                             ty: ty_scalar,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">12</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;origin&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"origin"</span>.to_string()),
                             ty: ty_vector,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">16</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;dir&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"dir"</span>.to_string()),
                             ty: ty_vector,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">32</span>,
@@ -539,7 +539,7 @@ Type generators.
         handle
     }
 
-    <span class="doccomment">/// Populate this module&#39;s [`SpecialTypes::ray_intersection`] type.
+    <span class="doccomment">/// Populate this module's [`SpecialTypes::ray_intersection`] type.
     ///
     /// [`SpecialTypes::ray_intersection`] is the type of a
     /// `RayQueryGetIntersection` expression. In WGSL, it is a struct type
@@ -547,7 +547,7 @@ Type generators.
     ///
     /// Backends construct values of this type based on platform APIs, so if you
     /// change any its fields, you must update the backends to match. Look for
-    /// the backend&#39;s handling for [`Expression::RayQueryGetIntersection`].
+    /// the backend's handling for [`Expression::RayQueryGetIntersection`].
     ///
     /// [`SpecialTypes::ray_intersection`]: crate::SpecialTypes::ray_intersection
     /// [`Expression::RayQueryGetIntersection`]: crate::Expression::RayQueryGetIntersection
@@ -601,71 +601,71 @@ Type generators.
 
         <span class="kw">let </span>handle = <span class="self">self</span>.types.insert(
             <span class="kw">crate</span>::Type {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;RayIntersection&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"RayIntersection"</span>.to_string()),
                 inner: <span class="kw">crate</span>::TypeInner::Struct {
                     members: <span class="macro">vec!</span>[
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;kind&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"kind"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">0</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;t&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"t"</span>.to_string()),
                             ty: ty_scalar,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">4</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;instance_custom_index&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"instance_custom_index"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">8</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;instance_id&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"instance_id"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">12</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;sbt_record_offset&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"sbt_record_offset"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">16</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;geometry_index&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"geometry_index"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">20</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;primitive_index&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"primitive_index"</span>.to_string()),
                             ty: ty_flag,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">24</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;barycentrics&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"barycentrics"</span>.to_string()),
                             ty: ty_barycentrics,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">28</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;front_face&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"front_face"</span>.to_string()),
                             ty: ty_bool,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">36</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;object_to_world&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"object_to_world"</span>.to_string()),
                             ty: ty_transform,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">48</span>,
                         },
                         <span class="kw">crate</span>::StructMember {
-                            name: <span class="prelude-val">Some</span>(<span class="string">&quot;world_to_object&quot;</span>.to_string()),
+                            name: <span class="prelude-val">Some</span>(<span class="string">"world_to_object"</span>.to_string()),
                             ty: ty_transform,
                             binding: <span class="prelude-val">None</span>,
                             offset: <span class="number">112</span>,
@@ -681,7 +681,7 @@ Type generators.
         handle
     }
 
-    <span class="doccomment">/// Populate this module&#39;s [`SpecialTypes::predeclared_types`] type and return the handle.
+    <span class="doccomment">/// Populate this module's [`SpecialTypes::predeclared_types`] type and return the handle.
     ///
     /// [`SpecialTypes::predeclared_types`]: crate::SpecialTypes::predeclared_types
     </span><span class="kw">pub fn </span>generate_predeclared_type(
@@ -713,19 +713,19 @@ Type generators.
 
                 <span class="kw">crate</span>::Type {
                     name: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;__atomic_compare_exchange_result&lt;{:?},{}&gt;&quot;</span>,
+                        <span class="string">"__atomic_compare_exchange_result&lt;{:?},{}&gt;"</span>,
                         scalar.kind, scalar.width,
                     )),
                     inner: <span class="kw">crate</span>::TypeInner::Struct {
                         members: <span class="macro">vec!</span>[
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;old_value&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"old_value"</span>.to_string()),
                                 ty: scalar_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: <span class="number">0</span>,
                             },
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;exchanged&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"exchanged"</span>.to_string()),
                                 ty: bool_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: <span class="number">4</span>,
@@ -760,24 +760,24 @@ Type generators.
                     (float_ty, width <span class="kw">as </span>u32)
                 };
 
-                <span class="kw">let </span><span class="kw-2">mut </span>type_name = <span class="string">&quot;__modf_result_&quot;</span>.to_string();
+                <span class="kw">let </span><span class="kw-2">mut </span>type_name = <span class="string">"__modf_result_"</span>.to_string();
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-                    <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">&quot;vec{}_&quot;</span>, size <span class="kw">as </span>u8);
+                    <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">"vec{}_"</span>, size <span class="kw">as </span>u8);
                 }
-                <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">&quot;f{}&quot;</span>, width * <span class="number">8</span>);
+                <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">"f{}"</span>, width * <span class="number">8</span>);
 
                 <span class="kw">crate</span>::Type {
                     name: <span class="prelude-val">Some</span>(type_name),
                     inner: <span class="kw">crate</span>::TypeInner::Struct {
                         members: <span class="macro">vec!</span>[
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;fract&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"fract"</span>.to_string()),
                                 ty: member_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: <span class="number">0</span>,
                             },
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;whole&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"whole"</span>.to_string()),
                                 ty: member_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: second_offset,
@@ -836,24 +836,24 @@ Type generators.
                     (float_ty, int_ty, width <span class="kw">as </span>u32)
                 };
 
-                <span class="kw">let </span><span class="kw-2">mut </span>type_name = <span class="string">&quot;__frexp_result_&quot;</span>.to_string();
+                <span class="kw">let </span><span class="kw-2">mut </span>type_name = <span class="string">"__frexp_result_"</span>.to_string();
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-                    <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">&quot;vec{}_&quot;</span>, size <span class="kw">as </span>u8);
+                    <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">"vec{}_"</span>, size <span class="kw">as </span>u8);
                 }
-                <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">&quot;f{}&quot;</span>, width * <span class="number">8</span>);
+                <span class="kw">let _ </span>= <span class="macro">write!</span>(type_name, <span class="string">"f{}"</span>, width * <span class="number">8</span>);
 
                 <span class="kw">crate</span>::Type {
                     name: <span class="prelude-val">Some</span>(type_name),
                     inner: <span class="kw">crate</span>::TypeInner::Struct {
                         members: <span class="macro">vec!</span>[
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;fract&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"fract"</span>.to_string()),
                                 ty: fract_member_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: <span class="number">0</span>,
                             },
                             <span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">Some</span>(<span class="string">&quot;exp&quot;</span>.to_string()),
+                                name: <span class="prelude-val">Some</span>(<span class="string">"exp"</span>.to_string()),
                                 ty: exp_member_ty,
                                 binding: <span class="prelude-val">None</span>,
                                 offset: second_offset,

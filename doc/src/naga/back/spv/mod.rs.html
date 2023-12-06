@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -808,16 +808,16 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>Error {
-    <span class="attr">#[error(<span class="string">&quot;The requested entry point couldn&#39;t be found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The requested entry point couldn't be found"</span>)]
     </span>EntryPointNotFound,
-    <span class="attr">#[error(<span class="string">&quot;target SPIRV-{0}.{1} is not supported&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"target SPIRV-{0}.{1} is not supported"</span>)]
     </span>UnsupportedVersion(u8, u8),
-    <span class="attr">#[error(<span class="string">&quot;using {0} requires at least one of the capabilities {1:?}, but none are available&quot;</span>)]
-    </span>MissingCapabilities(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Vec&lt;Capability&gt;),
-    <span class="attr">#[error(<span class="string">&quot;unimplemented {0}&quot;</span>)]
-    </span>FeatureNotImplemented(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
-    <span class="attr">#[error(<span class="string">&quot;module is not validated properly: {0}&quot;</span>)]
-    </span>Validation(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
+    <span class="attr">#[error(<span class="string">"using {0} requires at least one of the capabilities {1:?}, but none are available"</span>)]
+    </span>MissingCapabilities(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Vec&lt;Capability&gt;),
+    <span class="attr">#[error(<span class="string">"unimplemented {0}"</span>)]
+    </span>FeatureNotImplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+    <span class="attr">#[error(<span class="string">"module is not validated properly: {0}"</span>)]
+    </span>Validation(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
 }
 
 <span class="attr">#[derive(Default)]
@@ -831,9 +831,9 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>DebugInfo&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>source_code: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-    <span class="kw">pub </span>file_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>std::path::Path,
+</span><span class="kw">pub struct </span>DebugInfo&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>source_code: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+    <span class="kw">pub </span>file_name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>std::path::Path,
 }
 
 <span class="doccomment">/// A SPIR-V block to which we are still adding instructions.
@@ -915,7 +915,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 <span class="doccomment">/// Characteristics of a SPIR-V `OpTypeImage` type.
 ///
 /// SPIR-V requires non-composite types to be unique, including images. Since we
-/// use `LocalType` for this deduplication, it&#39;s essential that `LocalImageType`
+/// use `LocalType` for this deduplication, it's essential that `LocalImageType`
 /// be equal whenever the corresponding `OpTypeImage`s would be. To reduce the
 /// likelihood of mistakes, we use fields that correspond exactly to the
 /// operands of an `OpTypeImage` instruction, using the actual SPIR-V types
@@ -997,14 +997,14 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 ///
 /// The definition of `Eq` on `LocalType` is carefully chosen to help us follow
 /// certain SPIR-V rules. SPIR-V §2.8 requires some classes of `OpType...`
-/// instructions to be unique; for example, you can&#39;t have two `OpTypeInt 32 1`
+/// instructions to be unique; for example, you can't have two `OpTypeInt 32 1`
 /// instructions in the same module. All 32-bit signed integers must use the
 /// same type id.
 ///
 /// All SPIR-V types that must be unique can be represented as a `LocalType`,
 /// and two `LocalType`s are always `Eq` if SPIR-V would require them to use the
 /// same `OpType...` instruction. This lets us avoid duplicates by recording the
-/// ids of the type instructions we&#39;ve already generated in a hash table,
+/// ids of the type instructions we've already generated in a hash table,
 /// [`Writer::lookup_type`], keyed by `LocalType`.
 ///
 /// As another example, [`LocalImageType`], stored in the `LocalType::Image`
@@ -1043,7 +1043,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     },
     Sampler,
     <span class="doccomment">/// Equivalent to a [`LocalType::Pointer`] whose `base` is a Naga IR [`BindingArray`]. SPIR-V
-    /// permits duplicated `OpTypePointer` ids, so it&#39;s fine to have two different [`LocalType`]
+    /// permits duplicated `OpTypePointer` ids, so it's fine to have two different [`LocalType`]
     /// representations for pointer types.
     ///
     /// [`BindingArray`]: crate::TypeInner::BindingArray
@@ -1064,13 +1064,13 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 ///
 /// In the process of writing SPIR-V, we need to synthesize various types for
 /// intermediate results and such: pointer types, vector/matrix component types,
-/// or even booleans, which usually appear in SPIR-V code even when they&#39;re not
+/// or even booleans, which usually appear in SPIR-V code even when they're not
 /// used by the module source.
 ///
-/// However, we can&#39;t use `crate::Type` or `crate::TypeInner` for these, as the
+/// However, we can't use `crate::Type` or `crate::TypeInner` for these, as the
 /// type arena may not contain what we need (it only contains types used
 /// directly by other parts of the IR), and the IR module is immutable, so we
-/// can&#39;t add anything to it.
+/// can't add anything to it.
 ///
 /// So for local use in the SPIR-V writer, we use this type, which holds either
 /// a handle into the arena, or a [`LocalType`] containing something synthesized
@@ -1178,7 +1178,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, h: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span>Word {
         <span class="kw">let </span>id = <span class="kw-2">&amp;</span><span class="self">self</span>.ids[h.index()];
         <span class="kw">if </span><span class="kw-2">*</span>id == <span class="number">0 </span>{
-            <span class="macro">unreachable!</span>(<span class="string">&quot;Expression {:?} is not cached!&quot;</span>, h);
+            <span class="macro">unreachable!</span>(<span class="string">"Expression {:?} is not cached!"</span>, h);
         }
         id
     }
@@ -1187,7 +1187,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, h: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;mut </span>Word {
         <span class="kw">let </span>id = <span class="kw-2">&amp;mut </span><span class="self">self</span>.ids[h.index()];
         <span class="kw">if </span><span class="kw-2">*</span>id != <span class="number">0 </span>{
-            <span class="macro">unreachable!</span>(<span class="string">&quot;Expression {:?} is already cached!&quot;</span>, h);
+            <span class="macro">unreachable!</span>(<span class="string">"Expression {:?} is already cached!"</span>, h);
         }
         id
     }
@@ -1214,11 +1214,11 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 </span><span class="kw">struct </span>GlobalVariable {
     <span class="doccomment">/// ID of the OpVariable that declares the global.
     ///
-    /// If you need the variable&#39;s value, use [`access_id`] instead of this
-    /// field. If we wrapped the Naga IR `GlobalVariable`&#39;s type in a struct to
-    /// comply with Vulkan&#39;s requirements, then this points to the `OpVariable`
+    /// If you need the variable's value, use [`access_id`] instead of this
+    /// field. If we wrapped the Naga IR `GlobalVariable`'s type in a struct to
+    /// comply with Vulkan's requirements, then this points to the `OpVariable`
     /// with the synthesized struct type, whereas `access_id` points to the
-    /// field of said struct that holds the variable&#39;s actual value.
+    /// field of said struct that holds the variable's actual value.
     ///
     /// This is used to compute the `access_id` pointer in function prologues,
     /// and used for `ArrayLength` expressions, which do need the struct.
@@ -1276,34 +1276,34 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 }
 
 <span class="doccomment">/// General information needed to emit SPIR-V for Naga statements.
-</span><span class="kw">struct </span>BlockContext&lt;<span class="lifetime">&#39;w</span>&gt; {
+</span><span class="kw">struct </span>BlockContext&lt;<span class="lifetime">'w</span>&gt; {
     <span class="doccomment">/// The writer handling the module to which this code belongs.
-    </span>writer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw-2">mut </span>Writer,
+    </span>writer: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw-2">mut </span>Writer,
 
-    <span class="doccomment">/// The [`Module`](crate::Module) for which we&#39;re generating code.
-    </span>ir_module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw">crate</span>::Module,
+    <span class="doccomment">/// The [`Module`](crate::Module) for which we're generating code.
+    </span>ir_module: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw">crate</span>::Module,
 
-    <span class="doccomment">/// The [`Function`](crate::Function) for which we&#39;re generating code.
-    </span>ir_function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw">crate</span>::Function,
+    <span class="doccomment">/// The [`Function`](crate::Function) for which we're generating code.
+    </span>ir_function: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw">crate</span>::Function,
 
     <span class="doccomment">/// Information module validation produced about
     /// [`ir_function`](BlockContext::ir_function).
-    </span>fun_info: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw">crate</span>::valid::FunctionInfo,
+    </span>fun_info: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw">crate</span>::valid::FunctionInfo,
 
     <span class="doccomment">/// The [`spv::Function`](Function) to which we are contributing SPIR-V instructions.
-    </span>function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span><span class="kw-2">mut </span>Function,
+    </span>function: <span class="kw-2">&amp;</span><span class="lifetime">'w </span><span class="kw-2">mut </span>Function,
 
-    <span class="doccomment">/// SPIR-V ids for expressions we&#39;ve evaluated.
+    <span class="doccomment">/// SPIR-V ids for expressions we've evaluated.
     </span>cached: CachedExpressions,
 
-    <span class="doccomment">/// The `Writer`&#39;s temporary vector, for convenience.
+    <span class="doccomment">/// The `Writer`'s temporary vector, for convenience.
     </span>temp_list: Vec&lt;Word&gt;,
 
     <span class="doccomment">/// Tracks the constness of `Expression`s residing in `self.ir_function.expressions`
     </span>expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker,
 }
 
-<span class="kw">impl </span>BlockContext&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>gen_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
         <span class="self">self</span>.writer.id_gen.next()
     }
@@ -1349,7 +1349,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     </span>capabilities_used: <span class="kw">crate</span>::FastIndexSet&lt;Capability&gt;,
 
     <span class="doccomment">/// The set of spirv extensions used.
-    </span>extensions_used: <span class="kw">crate</span>::FastIndexSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
+    </span>extensions_used: <span class="kw">crate</span>::FastIndexSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
 
     debugs: Vec&lt;Instruction&gt;,
     annotations: Vec&lt;Instruction&gt;,
@@ -1397,8 +1397,8 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 }
 
 <span class="attr">#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>BindingInfo {
     <span class="doccomment">/// If the binding is an unsized binding array, this overrides the size.
     </span><span class="kw">pub </span>binding_array_size: <span class="prelude-ty">Option</span>&lt;u32&gt;,
@@ -1417,7 +1417,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>Options&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Options&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// (Major, Minor) target version of the SPIR-V.
     </span><span class="kw">pub </span>lang_version: (u8, u8),
 
@@ -1440,10 +1440,10 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     <span class="doccomment">/// Dictates the way workgroup variables should be zero initialized
     </span><span class="kw">pub </span>zero_initialize_workgroup_memory: ZeroInitializeWorkgroupMemoryMode,
 
-    <span class="kw">pub </span>debug_info: <span class="prelude-ty">Option</span>&lt;DebugInfo&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    <span class="kw">pub </span>debug_info: <span class="prelude-ty">Option</span>&lt;DebugInfo&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Default <span class="kw">for </span>Options&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Default <span class="kw">for </span>Options&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>flags = WriterFlags::ADJUST_COORDINATE_SPACE
             | WriterFlags::LABEL_VARYINGS
@@ -1465,8 +1465,8 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 <span class="comment">// A subset of options meant to be changed per pipeline.
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>PipelineOptions {
     <span class="doccomment">/// The stage of the entry point.
     </span><span class="kw">pub </span>shader_stage: <span class="kw">crate</span>::ShaderStage,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/validation.rs`."><title>validation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/validation.rs`."><title>validation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1248,9 +1248,9 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>NumericDimension {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Scalar =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;&quot;</span>),
-            <span class="self">Self</span>::Vector(size) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;x{}&quot;</span>, size <span class="kw">as </span>u8),
-            <span class="self">Self</span>::Matrix(columns, rows) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;x{}{}&quot;</span>, columns <span class="kw">as </span>u8, rows <span class="kw">as </span>u8),
+            <span class="self">Self</span>::Scalar =&gt; <span class="macro">write!</span>(f, <span class="string">""</span>),
+            <span class="self">Self</span>::Vector(size) =&gt; <span class="macro">write!</span>(f, <span class="string">"x{}"</span>, size <span class="kw">as </span>u8),
+            <span class="self">Self</span>::Matrix(columns, rows) =&gt; <span class="macro">write!</span>(f, <span class="string">"x{}{}"</span>, columns <span class="kw">as </span>u8, rows <span class="kw">as </span>u8),
         }
     }
 }
@@ -1275,7 +1275,7 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;{:?}{}{}&quot;</span>,
+            <span class="string">"{:?}{}{}"</span>,
             <span class="self">self</span>.scalar.kind,
             <span class="self">self</span>.scalar.width * <span class="number">8</span>,
             <span class="self">self</span>.dim
@@ -1304,7 +1304,7 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;{} interpolated as {:?} with sampling {:?}&quot;</span>,
+            <span class="string">"{} interpolated as {:?} with sampling {:?}"</span>,
             <span class="self">self</span>.ty, <span class="self">self</span>.interpolation, <span class="self">self</span>.sampling
         )
     }
@@ -1344,7 +1344,7 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;Buffer usage is {actual:?} which does not contain required usage {expected:?}&quot;</span>)]
+#[error(<span class="string">"Buffer usage is {actual:?} which does not contain required usage {expected:?}"</span>)]
 </span><span class="kw">pub struct </span>MissingBufferUsageError {
     <span class="kw">pub</span>(<span class="kw">crate</span>) actual: wgt::BufferUsages,
     <span class="kw">pub</span>(<span class="kw">crate</span>) expected: wgt::BufferUsages,
@@ -1364,7 +1364,7 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;Texture usage is {actual:?} which does not contain required usage {expected:?}&quot;</span>)]
+#[error(<span class="string">"Texture usage is {actual:?} which does not contain required usage {expected:?}"</span>)]
 </span><span class="kw">pub struct </span>MissingTextureUsageError {
     <span class="kw">pub</span>(<span class="kw">crate</span>) actual: wgt::TextureUsages,
     <span class="kw">pub</span>(<span class="kw">crate</span>) expected: wgt::TextureUsages,
@@ -1386,38 +1386,38 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>BindingError {
-    <span class="attr">#[error(<span class="string">&quot;Binding is missing from the pipeline layout&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding is missing from the pipeline layout"</span>)]
     </span>Missing,
-    <span class="attr">#[error(<span class="string">&quot;Visibility flags don&#39;t include the shader stage&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Visibility flags don't include the shader stage"</span>)]
     </span>Invisible,
-    <span class="attr">#[error(<span class="string">&quot;Type on the shader side does not match the pipeline binding&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Type on the shader side does not match the pipeline binding"</span>)]
     </span>WrongType,
-    <span class="attr">#[error(<span class="string">&quot;Storage class {binding:?} doesn&#39;t match the shader {shader:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Storage class {binding:?} doesn't match the shader {shader:?}"</span>)]
     </span>WrongAddressSpace {
         binding: naga::AddressSpace,
         shader: naga::AddressSpace,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer structure size {0}, added to one element of an unbound array, if it&#39;s the last field, ended up greater than the given `min_binding_size`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer structure size {0}, added to one element of an unbound array, if it's the last field, ended up greater than the given `min_binding_size`"</span>)]
     </span>WrongBufferSize(wgt::BufferSize),
-    <span class="attr">#[error(<span class="string">&quot;View dimension {dim:?} (is array: {is_array}) doesn&#39;t match the binding {binding:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"View dimension {dim:?} (is array: {is_array}) doesn't match the binding {binding:?}"</span>)]
     </span>WrongTextureViewDimension {
         dim: naga::ImageDimension,
         is_array: bool,
         binding: BindingType,
     },
-    <span class="attr">#[error(<span class="string">&quot;Texture class {binding:?} doesn&#39;t match the shader {shader:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture class {binding:?} doesn't match the shader {shader:?}"</span>)]
     </span>WrongTextureClass {
         binding: naga::ImageClass,
         shader: naga::ImageClass,
     },
-    <span class="attr">#[error(<span class="string">&quot;Comparison flag doesn&#39;t match the shader&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Comparison flag doesn't match the shader"</span>)]
     </span>WrongSamplerComparison,
-    <span class="attr">#[error(<span class="string">&quot;Derived bind group layout type is not consistent between stages&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Derived bind group layout type is not consistent between stages"</span>)]
     </span>InconsistentlyDerivedType,
-    <span class="attr">#[error(<span class="string">&quot;Texture format {0:?} is not supported for storage use&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture format {0:?} is not supported for storage use"</span>)]
     </span>BadStorageFormat(wgt::TextureFormat),
     <span class="attr">#[error(
-        <span class="string">&quot;Storage texture with access {0:?} doesn&#39;t have a matching supported `StorageTextureAccess`&quot;
+        <span class="string">"Storage texture with access {0:?} doesn't have a matching supported `StorageTextureAccess`"
     </span>)]
     </span>UnsupportedTextureStorageAccess(naga::StorageAccess),
 }
@@ -1425,22 +1425,22 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>FilteringError {
-    <span class="attr">#[error(<span class="string">&quot;Integer textures can&#39;t be sampled with a filtering sampler&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Integer textures can't be sampled with a filtering sampler"</span>)]
     </span>Integer,
-    <span class="attr">#[error(<span class="string">&quot;Non-filterable float textures can&#39;t be sampled with a filtering sampler&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Non-filterable float textures can't be sampled with a filtering sampler"</span>)]
     </span>Float,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>InputError {
-    <span class="attr">#[error(<span class="string">&quot;Input is not provided by the earlier stage in the pipeline&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Input is not provided by the earlier stage in the pipeline"</span>)]
     </span>Missing,
-    <span class="attr">#[error(<span class="string">&quot;Input type is not compatible with the provided {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Input type is not compatible with the provided {0}"</span>)]
     </span>WrongType(NumericType),
-    <span class="attr">#[error(<span class="string">&quot;Input interpolation doesn&#39;t match provided {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Input interpolation doesn't match provided {0:?}"</span>)]
     </span>InterpolationMismatch(<span class="prelude-ty">Option</span>&lt;naga::Interpolation&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Input sampling doesn&#39;t match provided {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Input sampling doesn't match provided {0:?}"</span>)]
     </span>SamplingMismatch(<span class="prelude-ty">Option</span>&lt;naga::Sampling&gt;),
 }
 
@@ -1448,10 +1448,10 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>StageError {
-    <span class="attr">#[error(<span class="string">&quot;Shader module is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Shader module is invalid"</span>)]
     </span>InvalidModule,
     <span class="attr">#[error(
-        <span class="string">&quot;Shader entry point&#39;s workgroup size {current:?} ({current_total} total invocations) must be less or equal to the per-dimension limit {limit:?} and the total invocation limit {total}&quot;
+        <span class="string">"Shader entry point's workgroup size {current:?} ({current_total} total invocations) must be less or equal to the per-dimension limit {limit:?} and the total invocation limit {total}"
     </span>)]
     </span>InvalidWorkgroupSize {
         current: [u32; <span class="number">3</span>],
@@ -1459,27 +1459,27 @@
         limit: [u32; <span class="number">3</span>],
         total: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Shader uses {used} inter-stage components above the limit of {limit}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Shader uses {used} inter-stage components above the limit of {limit}"</span>)]
     </span>TooManyVaryings { used: u32, limit: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Unable to find entry point &#39;{0}&#39;&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to find entry point '{0}'"</span>)]
     </span>MissingEntryPoint(String),
-    <span class="attr">#[error(<span class="string">&quot;Shader global {0:?} is not available in the layout pipeline layout&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Shader global {0:?} is not available in the layout pipeline layout"</span>)]
     </span>Binding(naga::ResourceBinding, <span class="attr">#[source] </span>BindingError),
-    <span class="attr">#[error(<span class="string">&quot;Unable to filter the texture ({texture:?}) by the sampler ({sampler:?})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to filter the texture ({texture:?}) by the sampler ({sampler:?})"</span>)]
     </span>Filtering {
         texture: naga::ResourceBinding,
         sampler: naga::ResourceBinding,
         <span class="attr">#[source]
         </span>error: FilteringError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Location[{location}] {var} is not provided by the previous stage outputs&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Location[{location}] {var} is not provided by the previous stage outputs"</span>)]
     </span>Input {
         location: wgt::ShaderLocation,
         var: InterfaceVar,
         <span class="attr">#[source]
         </span>error: InputError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Location[{location}] is provided by the previous stage output but is not consumed as input by this stage.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Location[{location}] is provided by the previous stage output but is not consumed as input by this stage."</span>)]
     </span>InputNotConsumed { location: wgt::ShaderLocation },
 }
 
@@ -1853,7 +1853,7 @@
         NumericType {
             dim,
             <span class="comment">//Note: Shader always sees data as int, uint, or float.
-            // It doesn&#39;t know if the original is normalized in a tighter form.
+            // It doesn't know if the original is normalized in a tighter form.
             </span>scalar,
         }
     }
@@ -1901,9 +1901,9 @@
             | Tf::Depth32FloatStencil8
             | Tf::Depth24Plus
             | Tf::Depth24PlusStencil8 =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected depth format&quot;</span>)
+                <span class="macro">panic!</span>(<span class="string">"Unexpected depth format"</span>)
             }
-            Tf::NV12 =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected nv12 format&quot;</span>),
+            Tf::NV12 =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected nv12 format"</span>),
             Tf::Rgb9e5Ufloat =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::F32),
             Tf::Bc1RgbaUnorm
             | Tf::Bc1RgbaUnormSrgb
@@ -1935,7 +1935,7 @@
         NumericType {
             dim,
             <span class="comment">//Note: Shader always sees data as int, uint, or float.
-            // It doesn&#39;t know if the original is normalized in a tighter form.
+            // It doesn't know if the original is normalized in a tighter form.
             </span>scalar,
         }
     }
@@ -2022,7 +2022,7 @@
                 // the reality is - every shader coming from `glslc` outputs an array
                 // of clip distances and hits this path :(
                 // So we lower it to `log::warn` to be less annoying.
-                </span><span class="macro">log::warn!</span>(<span class="string">&quot;Unexpected varying type: {:?}&quot;</span>, other);
+                </span><span class="macro">log::warn!</span>(<span class="string">"Unexpected varying type: {:?}"</span>, other);
                 <span class="kw">return</span>;
             }
         };
@@ -2043,7 +2043,7 @@
             },
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>naga::Binding::BuiltIn(built_in)) =&gt; Varying::BuiltIn(built_in),
             <span class="prelude-val">None </span>=&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Missing binding for a varying&quot;</span>);
+                <span class="macro">log::error!</span>(<span class="string">"Missing binding for a varying"</span>);
                 <span class="kw">return</span>;
             }
         };
@@ -2301,7 +2301,7 @@
                                     <span class="comment">// For vertex attributes, there are defaults filled out
                                     // by the driver if data is not provided.
                                     </span>naga::ShaderStage::Vertex =&gt; {
-                                        <span class="comment">// vertex inputs don&#39;t count towards inter-stage
+                                        <span class="comment">// vertex inputs don't count towards inter-stage
                                         </span>(iv.ty.is_compatible_with(<span class="kw-2">&amp;</span>provided.ty), <span class="number">0</span>)
                                     }
                                     naga::ShaderStage::Fragment =&gt; {
@@ -2381,10 +2381,10 @@
                     <span class="kw">if let </span>Varying::BuiltIn(naga::BuiltIn::Position { invariant: <span class="bool-val">false </span>}) = <span class="kw-2">*</span>output
                     {
                         <span class="macro">log::warn!</span>(
-                            <span class="string">&quot;Vertex shader with entry point {entry_point_name} outputs a @builtin(position) without the @invariant \
+                            <span class="string">"Vertex shader with entry point {entry_point_name} outputs a @builtin(position) without the @invariant \
                             attribute and is used in a pipeline with {cmp:?}. On some machines, this can cause bad artifacting as {cmp:?} assumes \
                             the values output from the vertex shader exactly match the value in the depth buffer. The @invariant attribute on the \
-                            @builtin(position) vertex output ensures that the exact same pixel depths are used every render.&quot;
+                            @builtin(position) vertex output ensures that the exact same pixel depths are used every render."
                         </span>);
                     }
                 }

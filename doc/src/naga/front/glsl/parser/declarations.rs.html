@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser/declarations.rs`."><title>declarations.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser/declarations.rs`."><title>declarations.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -729,19 +729,19 @@
         ),
         <span class="comment">// The child type of an array is the base type of the array
         </span>TypeInner::Array { base, .. } =&gt; base,
-        <span class="comment">// The child type of a struct at index `i` is the type of it&#39;s
+        <span class="comment">// The child type of a struct at index `i` is the type of it's
         // member at that same index.
         //
         // In case the index is out of bounds the same type is returned
         </span>TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
             members.get(i).map(|member| member.ty).unwrap_or(ty)
         }
-        <span class="comment">// The type isn&#39;t indexable, the same type is returned
+        <span class="comment">// The type isn't indexable, the same type is returned
         </span><span class="kw">_ </span>=&gt; ty,
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;source</span>&gt; ParsingContext&lt;<span class="lifetime">&#39;source</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'source</span>&gt; ParsingContext&lt;<span class="lifetime">'source</span>&gt; {
     <span class="kw">pub fn </span>parse_external_declaration(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         frontend: <span class="kw-2">&amp;mut </span>Frontend,
@@ -839,7 +839,7 @@
 
     <span class="comment">// Note: caller preparsed the type and qualifiers
     // Note: caller skips this if the fallthrough token is not expected to be consumed here so this
-    // produced Error::InvalidToken if it isn&#39;t consumed
+    // produced Error::InvalidToken if it isn't consumed
     </span><span class="kw">pub fn </span>parse_init_declarator_list(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         frontend: <span class="kw-2">&amp;mut </span>Frontend,
@@ -890,7 +890,7 @@
             // EQUAL initializer
 
             // parse an array specifier if it exists
-            // NOTE: unlike other parse methods this one doesn&#39;t expect an array specifier and
+            // NOTE: unlike other parse methods this one doesn't expect an array specifier and
             // returns Ok(None) rather than an error if there is not one
             </span><span class="self">self</span>.parse_array_specifier(frontend, ctx.ctx, <span class="kw-2">&amp;mut </span>meta, <span class="kw-2">&amp;mut </span>ty)<span class="question-mark">?</span>;
 
@@ -1080,7 +1080,7 @@
                     <span class="self">self</span>.parse_init_declarator_list(frontend, ty, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     frontend.errors.push(Error {
-                        kind: ErrorKind::SemanticError(<span class="string">&quot;Declaration cannot have void type&quot;</span>.into()),
+                        kind: ErrorKind::SemanticError(<span class="string">"Declaration cannot have void type"</span>.into()),
                         meta,
                     })
                 }
@@ -1116,30 +1116,30 @@
                             // type_qualifier IDENTIFIER SEMICOLON
                             // type_qualifier IDENTIFIER identifier_list SEMICOLON
                             </span><span class="prelude-val">Err</span>(Error {
-                                kind: ErrorKind::NotImplemented(<span class="string">&quot;variable qualifier&quot;</span>),
+                                kind: ErrorKind::NotImplemented(<span class="string">"variable qualifier"</span>),
                                 meta: token.meta,
                             })
                         }
                     }
                     TokenValue::Semicolon =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) =
-                            qualifiers.uint_layout_qualifier(<span class="string">&quot;local_size_x&quot;</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
+                            qualifiers.uint_layout_qualifier(<span class="string">"local_size_x"</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
                         {
                             frontend.meta.workgroup_size[<span class="number">0</span>] = value;
                         }
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) =
-                            qualifiers.uint_layout_qualifier(<span class="string">&quot;local_size_y&quot;</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
+                            qualifiers.uint_layout_qualifier(<span class="string">"local_size_y"</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
                         {
                             frontend.meta.workgroup_size[<span class="number">1</span>] = value;
                         }
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) =
-                            qualifiers.uint_layout_qualifier(<span class="string">&quot;local_size_z&quot;</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
+                            qualifiers.uint_layout_qualifier(<span class="string">"local_size_z"</span>, <span class="kw-2">&amp;mut </span>frontend.errors)
                         {
                             frontend.meta.workgroup_size[<span class="number">2</span>] = value;
                         }
 
                         frontend.meta.early_fragment_tests |= qualifiers
-                            .none_layout_qualifier(<span class="string">&quot;early_fragment_tests&quot;</span>, <span class="kw-2">&amp;mut </span>frontend.errors);
+                            .none_layout_qualifier(<span class="string">"early_fragment_tests"</span>, <span class="kw-2">&amp;mut </span>frontend.errors);
 
                         qualifiers.unused_errors(<span class="kw-2">&amp;mut </span>frontend.errors);
 
@@ -1187,7 +1187,7 @@
                         }) =&gt; {}
                         <span class="kw">_ </span>=&gt; frontend.errors.push(Error {
                             kind: ErrorKind::SemanticError(
-                                <span class="string">&quot;Precision statement can only work on floats and ints&quot;</span>.into(),
+                                <span class="string">"Precision statement can only work on floats and ints"</span>.into(),
                             ),
                             meta,
                         }),

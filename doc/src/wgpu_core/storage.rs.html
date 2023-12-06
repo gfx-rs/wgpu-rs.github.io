@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -279,13 +279,13 @@
     </span>Occupied(Arc&lt;T&gt;, Epoch),
 
     <span class="doccomment">/// Like `Occupied`, but the resource has been marked as destroyed
-    /// and hasn&#39;t been dropped yet.
+    /// and hasn't been dropped yet.
     </span>Destroyed(Epoch),
 
     <span class="doccomment">/// Like `Occupied`, but an error occurred when creating the
     /// resource.
     ///
-    /// The given `String` is the resource&#39;s descriptor label.
+    /// The given `String` is the resource's descriptor label.
     </span>Error(Epoch, String),
 }
 
@@ -294,7 +294,7 @@
 
 <span class="doccomment">/// A table of `T` values indexed by the id type `I`.
 ///
-/// The table is represented as a vector indexed by the ids&#39; index
+/// The table is represented as a vector indexed by the ids' index
 /// values, so you should use an id allocator like `IdentityManager`
 /// that keeps the index values dense and close to zero.
 </span><span class="attr">#[derive(Debug)]
@@ -304,7 +304,7 @@
     I: id::TypedId,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) map: Vec&lt;Element&lt;T&gt;&gt;,
-    kind: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     _phantom: PhantomData&lt;I&gt;,
 }
 
@@ -370,7 +370,7 @@
         };
         <span class="macro">assert_eq!</span>(
             epoch, storage_epoch,
-            <span class="string">&quot;{}[{:?}] is no longer alive&quot;</span>,
+            <span class="string">"{}[{:?}] is no longer alive"</span>,
             <span class="self">self</span>.kind, id
         );
         result
@@ -382,14 +382,14 @@
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (<span class="prelude-val">Ok</span>(v), epoch),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}[{:?}] does not exist&quot;</span>, <span class="self">self</span>.kind, id),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="macro">panic!</span>(<span class="string">"{}[{:?}] does not exist"</span>, <span class="self">self</span>.kind, id),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(epoch, ..)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Destroyed(.., epoch)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidId),
         };
         <span class="macro">assert_eq!</span>(
             epoch, storage_epoch,
-            <span class="string">&quot;{}[{:?}] is no longer alive&quot;</span>,
+            <span class="string">"{}[{:?}] is no longer alive"</span>,
             <span class="self">self</span>.kind, id
         );
         result
@@ -399,7 +399,7 @@
         <span class="kw">let </span>(index, <span class="kw">_</span>, <span class="kw">_</span>) = id.unzip();
         <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(<span class="kw">_</span>, <span class="kw-2">ref </span>label)) =&gt; label,
-            <span class="kw">_ </span>=&gt; <span class="string">&quot;&quot;</span>,
+            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
         }
     }
 
@@ -413,7 +413,7 @@
                 <span class="macro">assert_ne!</span>(
                     epoch,
                     storage_epoch,
-                    <span class="string">&quot;Index {index:?} of {} is already occupied&quot;</span>,
+                    <span class="string">"Index {index:?} of {} is already occupied"</span>,
                     T::TYPE
                 );
             }
@@ -421,7 +421,7 @@
                 <span class="macro">assert_ne!</span>(
                     epoch,
                     storage_epoch,
-                    <span class="string">&quot;Index {index:?} of {} is already occupied&quot;</span>,
+                    <span class="string">"Index {index:?} of {} is already occupied"</span>,
                     T::TYPE
                 );
             }
@@ -429,7 +429,7 @@
                 <span class="macro">assert_ne!</span>(
                     epoch,
                     storage_epoch,
-                    <span class="string">&quot;Index {index:?} of {} is already occupied with Error&quot;</span>,
+                    <span class="string">"Index {index:?} of {} is already occupied with Error"</span>,
                     T::TYPE
                 );
             }
@@ -437,13 +437,13 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I, value: Arc&lt;T&gt;) {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;User is inserting {}{:?}&quot;</span>, T::TYPE, id);
+        <span class="macro">log::trace!</span>(<span class="string">"User is inserting {}{:?}"</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
         <span class="self">self</span>.insert_impl(index <span class="kw">as </span>usize, epoch, Element::Occupied(value, epoch))
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I, label: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;User is insering as error {}{:?}&quot;</span>, T::TYPE, id);
+        <span class="macro">log::trace!</span>(<span class="string">"User is insering as error {}{:?}"</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="self">self</span>.insert_impl(
             index <span class="kw">as </span>usize,
@@ -458,7 +458,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize],
             Element::Error(epoch, String::new()),
         ) {
-            Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Cannot access vacant resource&quot;</span>),
+            Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">"Cannot access vacant resource"</span>),
             Element::Occupied(value, storage_epoch) =&gt; {
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
                 <span class="prelude-val">Ok</span>(value)
@@ -484,13 +484,13 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I, value: T) {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;User is replacing {}{:?}&quot;</span>, T::TYPE, id);
+        <span class="macro">log::trace!</span>(<span class="string">"User is replacing {}{:?}"</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="self">self</span>.map[index <span class="kw">as </span>usize] = Element::Occupied(Arc::new(value), epoch);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;User is removing {}{:?}&quot;</span>, T::TYPE, id);
+        <span class="macro">log::trace!</span>(<span class="string">"User is removing {}{:?}"</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Vacant) {
             Element::Occupied(value, storage_epoch) =&gt; {
@@ -502,7 +502,7 @@
                 <span class="prelude-val">None
             </span>}
             Element::Error(..) =&gt; <span class="prelude-val">None</span>,
-            Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Cannot remove a vacant resource&quot;</span>),
+            Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">"Cannot remove a vacant resource"</span>),
         }
     }
 

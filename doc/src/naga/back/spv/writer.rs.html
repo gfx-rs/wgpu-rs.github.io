@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/spv/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2078,8 +2078,8 @@
 <span class="kw">use </span>spirv::Word;
 <span class="kw">use </span>std::collections::hash_map::Entry;
 
-<span class="kw">struct </span>FunctionInterface&lt;<span class="lifetime">&#39;a</span>&gt; {
-    varying_ids: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;Word&gt;,
+<span class="kw">struct </span>FunctionInterface&lt;<span class="lifetime">'a</span>&gt; {
+    varying_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;Word&gt;,
     stage: <span class="kw">crate</span>::ShaderStage,
 }
 
@@ -2206,7 +2206,7 @@
     /// explain what provoked the requirement. (If no available capabilities were
     /// given, assume everything is available.)
     ///
-    /// The first acceptable capability will be added to this `Writer`&#39;s
+    /// The first acceptable capability will be added to this `Writer`'s
     /// [`capabilities_used`] table, and an `OpCapability` emitted for it in the
     /// result. For this reason, more specific capabilities should be listed
     /// before more general.
@@ -2214,7 +2214,7 @@
     /// [`capabilities_used`]: Writer::capabilities_used
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>require_any(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        what: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        what: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         capabilities: <span class="kw-2">&amp;</span>[spirv::Capability],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="kw">match </span><span class="kw-2">*</span>capabilities {
@@ -2240,7 +2240,7 @@
     }
 
     <span class="doccomment">/// Indicate that the code uses the given extension.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>use_extension(<span class="kw-2">&amp;mut </span><span class="self">self</span>, extension: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>use_extension(<span class="kw-2">&amp;mut </span><span class="self">self</span>, extension: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
         <span class="self">self</span>.extensions_used.insert(extension);
     }
 
@@ -2249,7 +2249,7 @@
             Entry::Occupied(e) =&gt; <span class="kw-2">*</span>e.get(),
             Entry::Vacant(e) =&gt; {
                 <span class="kw">let </span>local = <span class="kw">match </span>lookup_ty {
-                    LookupType::Handle(_handle) =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Handles are populated at start&quot;</span>),
+                    LookupType::Handle(_handle) =&gt; <span class="macro">unreachable!</span>(<span class="string">"Handles are populated at start"</span>),
                     LookupType::Local(local) =&gt; local,
                 };
 
@@ -2474,7 +2474,7 @@
                     ));
                     struct_id
                 } <span class="kw">else </span>{
-                    <span class="macro">unreachable!</span>(<span class="string">&quot;Missing argument binding on an entry point&quot;</span>);
+                    <span class="macro">unreachable!</span>(<span class="string">"Missing argument binding on an entry point"</span>);
                 };
                 ep_context.argument_ids.push(id);
             } <span class="kw">else </span>{
@@ -2552,7 +2552,7 @@
                             });
                         }
                     } <span class="kw">else </span>{
-                        <span class="macro">unreachable!</span>(<span class="string">&quot;Missing result binding on an entry point&quot;</span>);
+                        <span class="macro">unreachable!</span>(<span class="string">"Missing result binding on an entry point"</span>);
                     }
 
                     <span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::FORCE_POINT_SIZE)
@@ -2663,7 +2663,7 @@
             </span><span class="self">self</span>.global_variables[handle.index()] = gv;
         }
 
-        <span class="comment">// Create a `BlockContext` for generating SPIR-V for the function&#39;s
+        <span class="comment">// Create a `BlockContext` for generating SPIR-V for the function's
         // body.
         </span><span class="kw">let </span><span class="kw-2">mut </span>context = BlockContext {
             ir_module,
@@ -2673,7 +2673,7 @@
             <span class="comment">// Re-use the cached expression table from prior functions.
             </span>cached: std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached),
 
-            <span class="comment">// Steal the Writer&#39;s temp list for a bit.
+            <span class="comment">// Steal the Writer's temp list for a bit.
             </span>temp_list: std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list),
             writer: <span class="self">self</span>,
             expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker::from_arena(
@@ -2888,7 +2888,7 @@
             }
             Sk::Bool =&gt; Instruction::type_bool(id),
             Sk::AbstractInt | Sk::AbstractFloat =&gt; {
-                <span class="macro">unreachable!</span>(<span class="string">&quot;abstract types should never reach the backend&quot;</span>);
+                <span class="macro">unreachable!</span>(<span class="string">"abstract types should never reach the backend"</span>);
             }
         }
     }
@@ -2912,20 +2912,20 @@
                 <span class="kw">match </span>dim {
                     <span class="kw">crate</span>::ImageDimension::D1 =&gt; {
                         <span class="kw">if </span>sampled {
-                            <span class="self">self</span>.require_any(<span class="string">&quot;sampled 1D images&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::Sampled1D])<span class="question-mark">?</span>;
+                            <span class="self">self</span>.require_any(<span class="string">"sampled 1D images"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::Sampled1D])<span class="question-mark">?</span>;
                         } <span class="kw">else </span>{
-                            <span class="self">self</span>.require_any(<span class="string">&quot;1D storage images&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::Image1D])<span class="question-mark">?</span>;
+                            <span class="self">self</span>.require_any(<span class="string">"1D storage images"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::Image1D])<span class="question-mark">?</span>;
                         }
                     }
                     <span class="kw">crate</span>::ImageDimension::Cube <span class="kw">if </span>arrayed =&gt; {
                         <span class="kw">if </span>sampled {
                             <span class="self">self</span>.require_any(
-                                <span class="string">&quot;sampled cube array images&quot;</span>,
+                                <span class="string">"sampled cube array images"</span>,
                                 <span class="kw-2">&amp;</span>[spirv::Capability::SampledCubeArray],
                             )<span class="question-mark">?</span>;
                         } <span class="kw">else </span>{
                             <span class="self">self</span>.require_any(
-                                <span class="string">&quot;cube array storage images&quot;</span>,
+                                <span class="string">"cube array storage images"</span>,
                                 <span class="kw-2">&amp;</span>[spirv::Capability::ImageCubeArray],
                             )<span class="question-mark">?</span>;
                         }
@@ -2934,10 +2934,10 @@
                 }
             }
             <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; {
-                <span class="self">self</span>.require_any(<span class="string">&quot;Acceleration Structure&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
+                <span class="self">self</span>.require_any(<span class="string">"Acceleration Structure"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::RayQuery =&gt; {
-                <span class="self">self</span>.require_any(<span class="string">&quot;Ray Query&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
+                <span class="self">self</span>.require_any(<span class="string">"Ray Query"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; {}
         }
@@ -3032,21 +3032,21 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
         <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>arena[handle];
         <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(local) = make_local(<span class="kw-2">&amp;</span>ty.inner) {
-            <span class="comment">// This type can be represented as a `LocalType`, so check if we&#39;ve
+            <span class="comment">// This type can be represented as a `LocalType`, so check if we've
             // already written an instruction for it. If not, do so now, with
             // `write_type_declaration_local`.
             </span><span class="kw">match </span><span class="self">self</span>.lookup_type.entry(LookupType::Local(local)) {
                 <span class="comment">// We already have an id for this `LocalType`.
                 </span>Entry::Occupied(e) =&gt; <span class="kw-2">*</span>e.get(),
 
-                <span class="comment">// It&#39;s a type we haven&#39;t seen before.
+                <span class="comment">// It's a type we haven't seen before.
                 </span>Entry::Vacant(e) =&gt; {
                     <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
                     e.insert(id);
 
                     <span class="self">self</span>.write_type_declaration_local(id, local);
 
-                    <span class="comment">// If it&#39;s a type that needs SPIR-V capabilities, request them now,
+                    <span class="comment">// If it's a type that needs SPIR-V capabilities, request them now,
                     // so write_type_declaration_local can stay infallible.
                     </span><span class="self">self</span>.request_type_capabilities(<span class="kw-2">&amp;</span>ty.inner)<span class="question-mark">?</span>;
 
@@ -3170,11 +3170,11 @@
             | If::Rg8ui
             | If::R16ui
             | If::R8ui =&gt; <span class="self">self</span>.require_any(
-                <span class="string">&quot;storage image format&quot;</span>,
+                <span class="string">"storage image format"</span>,
                 <span class="kw-2">&amp;</span>[spirv::Capability::StorageImageExtendedFormats],
             ),
             If::R64ui | If::R64i =&gt; <span class="self">self</span>.require_any(
-                <span class="string">&quot;64-bit integer storage image format&quot;</span>,
+                <span class="string">"64-bit integer storage image format"</span>,
                 <span class="kw-2">&amp;</span>[spirv::Capability::Int64ImageEXT],
             ),
             If::Unknown
@@ -3205,7 +3205,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
         <span class="prelude-val">Ok</span>(
             <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::new(value, scalar).ok_or(
-                Error::Validation(<span class="string">&quot;Unexpected kind and/or width for Literal&quot;</span>),
+                Error::Validation(<span class="string">"Unexpected kind and/or width for Literal"</span>),
             )<span class="question-mark">?</span>),
         )
     }
@@ -3251,7 +3251,7 @@
             <span class="kw">crate</span>::Literal::Bool(<span class="bool-val">true</span>) =&gt; Instruction::constant_true(type_id, id),
             <span class="kw">crate</span>::Literal::Bool(<span class="bool-val">false</span>) =&gt; Instruction::constant_false(type_id, id),
             <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
-                <span class="macro">unreachable!</span>(<span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>);
+                <span class="macro">unreachable!</span>(<span class="string">"Abstract types should not appear in IR presented to backends"</span>);
             }
         };
 
@@ -3394,9 +3394,9 @@
                 !info[handle].is_empty() &amp;&amp; var.space == <span class="kw">crate</span>::AddressSpace::WorkGroup
             })
             .map(|(handle, var)| {
-                <span class="comment">// It&#39;s safe to use `var_id` here, not `access_id`, because only
+                <span class="comment">// It's safe to use `var_id` here, not `access_id`, because only
                 // variables in the `Uniform` and `StorageBuffer` address spaces
-                // get wrapped, and we&#39;re initializing `WorkGroup` variables.
+                // get wrapped, and we're initializing `WorkGroup` variables.
                 </span><span class="kw">let </span>var_id = <span class="self">self</span>.global_variables[handle.index()].var_id;
                 <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
                 <span class="kw">let </span>init_word = <span class="self">self</span>.get_constant_null(var_type_id);
@@ -3485,9 +3485,9 @@
         <span class="prelude-val">Some</span>(next_id)
     }
 
-    <span class="doccomment">/// Generate an `OpVariable` for one value in an [`EntryPoint`]&#39;s IO interface.
+    <span class="doccomment">/// Generate an `OpVariable` for one value in an [`EntryPoint`]'s IO interface.
     ///
-    /// The [`Binding`]s of the arguments and result of an [`EntryPoint`]&#39;s
+    /// The [`Binding`]s of the arguments and result of an [`EntryPoint`]'s
     /// [`Function`] describe a SPIR-V shader interface. In SPIR-V, the
     /// interface is represented by global variables in the `Input` and `Output`
     /// storage classes, with decorations indicating which builtin or location
@@ -3496,7 +3496,7 @@
     /// This function emits a single global `OpVariable` for a single value from
     /// the interface, and adds appropriate decorations to indicate which
     /// builtin or location it represents, how it should be interpolated, and so
-    /// on. The `class` argument gives the variable&#39;s SPIR-V storage class,
+    /// on. The `class` argument gives the variable's SPIR-V storage class,
     /// which should be either [`Input`] or [`Output`].
     ///
     /// [`Binding`]: crate::Binding
@@ -3567,7 +3567,7 @@
                         }
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Sampling::Sample) =&gt; {
                             <span class="self">self</span>.require_any(
-                                <span class="string">&quot;per-sample interpolation&quot;</span>,
+                                <span class="string">"per-sample interpolation"</span>,
                                 <span class="kw-2">&amp;</span>[spirv::Capability::SampleRateShading],
                             )<span class="question-mark">?</span>;
                             <span class="self">self</span>.decorate(id, Decoration::Sample, <span class="kw-2">&amp;</span>[]);
@@ -3593,7 +3593,7 @@
                         }
                     }
                     Bi::ViewIndex =&gt; {
-                        <span class="self">self</span>.require_any(<span class="string">&quot;`view_index` built-in&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::MultiView])<span class="question-mark">?</span>;
+                        <span class="self">self</span>.require_any(<span class="string">"`view_index` built-in"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::MultiView])<span class="question-mark">?</span>;
                         BuiltIn::ViewIndex
                     }
                     <span class="comment">// vertex
@@ -3601,14 +3601,14 @@
                     Bi::BaseVertex =&gt; BuiltIn::BaseVertex,
                     Bi::ClipDistance =&gt; {
                         <span class="self">self</span>.require_any(
-                            <span class="string">&quot;`clip_distance` built-in&quot;</span>,
+                            <span class="string">"`clip_distance` built-in"</span>,
                             <span class="kw-2">&amp;</span>[spirv::Capability::ClipDistance],
                         )<span class="question-mark">?</span>;
                         BuiltIn::ClipDistance
                     }
                     Bi::CullDistance =&gt; {
                         <span class="self">self</span>.require_any(
-                            <span class="string">&quot;`cull_distance` built-in&quot;</span>,
+                            <span class="string">"`cull_distance` built-in"</span>,
                             <span class="kw-2">&amp;</span>[spirv::Capability::CullDistance],
                         )<span class="question-mark">?</span>;
                         BuiltIn::CullDistance
@@ -3622,14 +3622,14 @@
                     Bi::FrontFacing =&gt; BuiltIn::FrontFacing,
                     Bi::PrimitiveIndex =&gt; {
                         <span class="self">self</span>.require_any(
-                            <span class="string">&quot;`primitive_index` built-in&quot;</span>,
+                            <span class="string">"`primitive_index` built-in"</span>,
                             <span class="kw-2">&amp;</span>[spirv::Capability::Geometry],
                         )<span class="question-mark">?</span>;
                         BuiltIn::PrimitiveId
                     }
                     Bi::SampleIndex =&gt; {
                         <span class="self">self</span>.require_any(
-                            <span class="string">&quot;`sample_index` built-in&quot;</span>,
+                            <span class="string">"`sample_index` built-in"</span>,
                             <span class="kw-2">&amp;</span>[spirv::Capability::SampleRateShading],
                         )<span class="question-mark">?</span>;
 
@@ -3662,7 +3662,7 @@
                             Sk::Float =&gt; <span class="bool-val">false</span>,
                             Sk::AbstractInt | Sk::AbstractFloat =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(
-                                    <span class="string">&quot;Abstract types should not appear in IR presented to backends&quot;</span>,
+                                    <span class="string">"Abstract types should not appear in IR presented to backends"</span>,
                                 ))
                             }
                         },
@@ -3806,7 +3806,7 @@
 
     <span class="doccomment">/// Write the necessary decorations for a struct member.
     ///
-    /// Emit decorations for the `index`&#39;th member of the struct type
+    /// Emit decorations for the `index`'th member of the struct type
     /// designated by `struct_id`, described by `member`.
     </span><span class="kw">fn </span>decorate_struct_member(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -3832,7 +3832,7 @@
         }
 
         <span class="comment">// Matrices and arrays of matrices both require decorations,
-        // so &quot;see through&quot; an array to determine if they&#39;re needed.
+        // so "see through" an array to determine if they're needed.
         </span><span class="kw">let </span>member_array_subty_inner = <span class="kw">match </span>arena[member.ty].inner {
             <span class="kw">crate</span>::TypeInner::Array { base, .. } =&gt; <span class="kw-2">&amp;</span>arena[base].inner,
             <span class="kw-2">ref </span>other =&gt; other,
@@ -3923,19 +3923,19 @@
 
         <span class="kw">if </span><span class="self">self</span>.physical_layout.version &lt; <span class="number">0x10300 </span>&amp;&amp; has_storage_buffers {
             <span class="comment">// enable the storage buffer class on &lt; SPV-1.3
-            </span>Instruction::extension(<span class="string">&quot;SPV_KHR_storage_buffer_storage_class&quot;</span>)
+            </span>Instruction::extension(<span class="string">"SPV_KHR_storage_buffer_storage_class"</span>)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions);
         }
         <span class="kw">if </span>has_view_index {
-            Instruction::extension(<span class="string">&quot;SPV_KHR_multiview&quot;</span>)
+            Instruction::extension(<span class="string">"SPV_KHR_multiview"</span>)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions)
         }
         <span class="kw">if </span>has_ray_query {
-            Instruction::extension(<span class="string">&quot;SPV_KHR_ray_query&quot;</span>)
+            Instruction::extension(<span class="string">"SPV_KHR_ray_query"</span>)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions)
         }
         Instruction::type_void(<span class="self">self</span>.void_type).to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
-        Instruction::ext_inst_import(<span class="self">self</span>.gl450_ext_inst_id, <span class="string">&quot;GLSL.std.450&quot;</span>)
+        Instruction::ext_inst_import(<span class="self">self</span>.gl450_ext_inst_id, <span class="string">"GLSL.std.450"</span>)
             .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.ext_inst_imports);
 
         <span class="kw">let </span><span class="kw-2">mut </span>debug_info_inner = <span class="prelude-val">None</span>;
@@ -4005,14 +4005,14 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = ep_index {
                 <span class="kw">let </span>ep_info = mod_info.get_entry_point(index);
                 <span class="comment">// If this function uses globals that we omitted from the SPIR-V
-                // because the entry point and its callees didn&#39;t use them,
+                // because the entry point and its callees didn't use them,
                 // then we must skip it.
                 </span><span class="kw">if </span>!ep_info.dominates_global_use(info) {
-                    <span class="macro">log::info!</span>(<span class="string">&quot;Skip function {:?}&quot;</span>, ir_function.name);
+                    <span class="macro">log::info!</span>(<span class="string">"Skip function {:?}"</span>, ir_function.name);
                     <span class="kw">continue</span>;
                 }
 
-                <span class="comment">// Skip functions that that are not compatible with this entry point&#39;s stage.
+                <span class="comment">// Skip functions that that are not compatible with this entry point's stage.
                 //
                 // When validation is enabled, it rejects modules whose entry points try to call
                 // incompatible functions, so if we got this far, then any functions incompatible
@@ -4047,7 +4047,7 @@
             Instruction::extension(extension).to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions);
         }
         <span class="kw">if </span>ir_module.entry_points.is_empty() {
-            <span class="comment">// SPIR-V doesn&#39;t like modules without entry points
+            <span class="comment">// SPIR-V doesn't like modules without entry points
             </span>Instruction::capability(spirv::Capability::Linkage)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.capabilities);
         }
@@ -4110,8 +4110,8 @@
     }
 
     <span class="kw">pub fn </span>decorate_non_uniform_binding_array_access(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="self">self</span>.require_any(<span class="string">&quot;NonUniformEXT&quot;</span>, <span class="kw-2">&amp;</span>[spirv::Capability::ShaderNonUniform])<span class="question-mark">?</span>;
-        <span class="self">self</span>.use_extension(<span class="string">&quot;SPV_EXT_descriptor_indexing&quot;</span>);
+        <span class="self">self</span>.require_any(<span class="string">"NonUniformEXT"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::ShaderNonUniform])<span class="question-mark">?</span>;
+        <span class="self">self</span>.use_extension(<span class="string">"SPV_EXT_descriptor_indexing"</span>);
         <span class="self">self</span>.decorate(id, spirv::Decoration::NonUniform, <span class="kw-2">&amp;</span>[]);
         <span class="prelude-val">Ok</span>(())
     }

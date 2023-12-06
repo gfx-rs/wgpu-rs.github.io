@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/to_wgsl.rs`."><title>to_wgsl.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/to_wgsl.rs`."><title>to_wgsl.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -313,8 +313,8 @@
     ///
     /// For example `vec3&lt;f32&gt;`.
     ///
-    /// Note: `TypeInner::Struct` doesn&#39;t include the name of the
-    /// struct type. Therefore this method will simply return &quot;struct&quot;
+    /// Note: `TypeInner::Struct` doesn't include the name of the
+    /// struct type. Therefore this method will simply return "struct"
     /// for them.
     </span><span class="kw">pub fn </span>to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>, gctx: <span class="kw-2">&amp;</span>GlobalCtx) -&gt; String {
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
@@ -322,7 +322,7 @@
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             Ti::Scalar(scalar) =&gt; scalar.to_wgsl(),
             Ti::Vector { size, scalar } =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;vec{}&lt;{}&gt;&quot;</span>, size <span class="kw">as </span>u32, scalar.to_wgsl())
+                <span class="macro">format!</span>(<span class="string">"vec{}&lt;{}&gt;"</span>, size <span class="kw">as </span>u32, scalar.to_wgsl())
             }
             Ti::Matrix {
                 columns,
@@ -330,32 +330,32 @@
                 scalar,
             } =&gt; {
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;mat{}x{}&lt;{}&gt;&quot;</span>,
+                    <span class="string">"mat{}x{}&lt;{}&gt;"</span>,
                     columns <span class="kw">as </span>u32,
                     rows <span class="kw">as </span>u32,
                     scalar.to_wgsl(),
                 )
             }
             Ti::Atomic(scalar) =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;atomic&lt;{}&gt;&quot;</span>, scalar.to_wgsl())
+                <span class="macro">format!</span>(<span class="string">"atomic&lt;{}&gt;"</span>, scalar.to_wgsl())
             }
             Ti::Pointer { base, .. } =&gt; {
                 <span class="kw">let </span>name = base.to_wgsl(gctx);
-                <span class="macro">format!</span>(<span class="string">&quot;ptr&lt;{name}&gt;&quot;</span>)
+                <span class="macro">format!</span>(<span class="string">"ptr&lt;{name}&gt;"</span>)
             }
             Ti::ValuePointer { scalar, .. } =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;ptr&lt;{}&gt;&quot;</span>, scalar.to_wgsl())
+                <span class="macro">format!</span>(<span class="string">"ptr&lt;{}&gt;"</span>, scalar.to_wgsl())
             }
             Ti::Array { base, size, .. } =&gt; {
                 <span class="kw">let </span>base = base.to_wgsl(gctx);
                 <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; <span class="macro">format!</span>(<span class="string">&quot;array&lt;{base}, {size}&gt;&quot;</span>),
-                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="macro">format!</span>(<span class="string">&quot;array&lt;{base}&gt;&quot;</span>),
+                    <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; <span class="macro">format!</span>(<span class="string">"array&lt;{base}, {size}&gt;"</span>),
+                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="macro">format!</span>(<span class="string">"array&lt;{base}&gt;"</span>),
                 }
             }
             Ti::Struct { .. } =&gt; {
                 <span class="comment">// TODO: Actually output the struct?
-                </span><span class="string">&quot;struct&quot;</span>.to_string()
+                </span><span class="string">"struct"</span>.to_string()
             }
             Ti::Image {
                 dim,
@@ -363,19 +363,19 @@
                 class,
             } =&gt; {
                 <span class="kw">let </span>dim_suffix = <span class="kw">match </span>dim {
-                    <span class="kw">crate</span>::ImageDimension::D1 =&gt; <span class="string">&quot;_1d&quot;</span>,
-                    <span class="kw">crate</span>::ImageDimension::D2 =&gt; <span class="string">&quot;_2d&quot;</span>,
-                    <span class="kw">crate</span>::ImageDimension::D3 =&gt; <span class="string">&quot;_3d&quot;</span>,
-                    <span class="kw">crate</span>::ImageDimension::Cube =&gt; <span class="string">&quot;_cube&quot;</span>,
+                    <span class="kw">crate</span>::ImageDimension::D1 =&gt; <span class="string">"_1d"</span>,
+                    <span class="kw">crate</span>::ImageDimension::D2 =&gt; <span class="string">"_2d"</span>,
+                    <span class="kw">crate</span>::ImageDimension::D3 =&gt; <span class="string">"_3d"</span>,
+                    <span class="kw">crate</span>::ImageDimension::Cube =&gt; <span class="string">"_cube"</span>,
                 };
-                <span class="kw">let </span>array_suffix = <span class="kw">if </span>arrayed { <span class="string">&quot;_array&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>};
+                <span class="kw">let </span>array_suffix = <span class="kw">if </span>arrayed { <span class="string">"_array" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
 
                 <span class="kw">let </span>class_suffix = <span class="kw">match </span>class {
-                    <span class="kw">crate</span>::ImageClass::Sampled { multi: <span class="bool-val">true</span>, .. } =&gt; <span class="string">&quot;_multisampled&quot;</span>,
-                    <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>} =&gt; <span class="string">&quot;_depth&quot;</span>,
-                    <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">true </span>} =&gt; <span class="string">&quot;_depth_multisampled&quot;</span>,
+                    <span class="kw">crate</span>::ImageClass::Sampled { multi: <span class="bool-val">true</span>, .. } =&gt; <span class="string">"_multisampled"</span>,
+                    <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>} =&gt; <span class="string">"_depth"</span>,
+                    <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">true </span>} =&gt; <span class="string">"_depth_multisampled"</span>,
                     <span class="kw">crate</span>::ImageClass::Sampled { multi: <span class="bool-val">false</span>, .. }
-                    | <span class="kw">crate</span>::ImageClass::Storage { .. } =&gt; <span class="string">&quot;&quot;</span>,
+                    | <span class="kw">crate</span>::ImageClass::Storage { .. } =&gt; <span class="string">""</span>,
                 };
 
                 <span class="kw">let </span>type_in_brackets = <span class="kw">match </span>class {
@@ -384,29 +384,29 @@
                         // The lexer has already verified this, so we can safely assume it here.
                         // https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
                         </span><span class="kw">let </span>element_type = <span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>}.to_wgsl();
-                        <span class="macro">format!</span>(<span class="string">&quot;&lt;{element_type}&gt;&quot;</span>)
+                        <span class="macro">format!</span>(<span class="string">"&lt;{element_type}&gt;"</span>)
                     }
                     <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="kw">_ </span>} =&gt; String::new(),
                     <span class="kw">crate</span>::ImageClass::Storage { format, access } =&gt; {
                         <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::STORE) {
-                            <span class="macro">format!</span>(<span class="string">&quot;&lt;{},write&gt;&quot;</span>, format.to_wgsl())
+                            <span class="macro">format!</span>(<span class="string">"&lt;{},write&gt;"</span>, format.to_wgsl())
                         } <span class="kw">else </span>{
-                            <span class="macro">format!</span>(<span class="string">&quot;&lt;{}&gt;&quot;</span>, format.to_wgsl())
+                            <span class="macro">format!</span>(<span class="string">"&lt;{}&gt;"</span>, format.to_wgsl())
                         }
                     }
                 };
 
-                <span class="macro">format!</span>(<span class="string">&quot;texture{class_suffix}{dim_suffix}{array_suffix}{type_in_brackets}&quot;</span>)
+                <span class="macro">format!</span>(<span class="string">"texture{class_suffix}{dim_suffix}{array_suffix}{type_in_brackets}"</span>)
             }
-            Ti::Sampler { .. } =&gt; <span class="string">&quot;sampler&quot;</span>.to_string(),
-            Ti::AccelerationStructure =&gt; <span class="string">&quot;acceleration_structure&quot;</span>.to_string(),
-            Ti::RayQuery =&gt; <span class="string">&quot;ray_query&quot;</span>.to_string(),
+            Ti::Sampler { .. } =&gt; <span class="string">"sampler"</span>.to_string(),
+            Ti::AccelerationStructure =&gt; <span class="string">"acceleration_structure"</span>.to_string(),
+            Ti::RayQuery =&gt; <span class="string">"ray_query"</span>.to_string(),
             Ti::BindingArray { base, size, .. } =&gt; {
                 <span class="kw">let </span>member_type = <span class="kw-2">&amp;</span>gctx.types[base];
-                <span class="kw">let </span>base = member_type.name.as_deref().unwrap_or(<span class="string">&quot;unknown&quot;</span>);
+                <span class="kw">let </span>base = member_type.name.as_deref().unwrap_or(<span class="string">"unknown"</span>);
                 <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; <span class="macro">format!</span>(<span class="string">&quot;binding_array&lt;{base}, {size}&gt;&quot;</span>),
-                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="macro">format!</span>(<span class="string">&quot;binding_array&lt;{base}&gt;&quot;</span>),
+                    <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; <span class="macro">format!</span>(<span class="string">"binding_array&lt;{base}, {size}&gt;"</span>),
+                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="macro">format!</span>(<span class="string">"binding_array&lt;{base}&gt;"</span>),
                 }
             }
         }
@@ -419,61 +419,61 @@
     /// Examples: `f32`, `u64`, `bool`.
     </span><span class="kw">pub fn </span>to_wgsl(<span class="self">self</span>) -&gt; String {
         <span class="kw">let </span>prefix = <span class="kw">match </span><span class="self">self</span>.kind {
-            <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="string">&quot;i&quot;</span>,
-            <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="string">&quot;u&quot;</span>,
-            <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="string">&quot;f&quot;</span>,
-            <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="kw">return </span><span class="string">&quot;bool&quot;</span>.to_string(),
-            <span class="kw">crate</span>::ScalarKind::AbstractInt =&gt; <span class="kw">return </span><span class="string">&quot;{AbstractInt}&quot;</span>.to_string(),
-            <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; <span class="kw">return </span><span class="string">&quot;{AbstractFloat}&quot;</span>.to_string(),
+            <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="string">"i"</span>,
+            <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="string">"u"</span>,
+            <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="string">"f"</span>,
+            <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="kw">return </span><span class="string">"bool"</span>.to_string(),
+            <span class="kw">crate</span>::ScalarKind::AbstractInt =&gt; <span class="kw">return </span><span class="string">"{AbstractInt}"</span>.to_string(),
+            <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; <span class="kw">return </span><span class="string">"{AbstractFloat}"</span>.to_string(),
         };
-        <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, prefix, <span class="self">self</span>.width * <span class="number">8</span>)
+        <span class="macro">format!</span>(<span class="string">"{}{}"</span>, prefix, <span class="self">self</span>.width * <span class="number">8</span>)
     }
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::StorageFormat {
-    <span class="kw">pub const fn </span>to_wgsl(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>to_wgsl(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">use </span><span class="kw">crate</span>::StorageFormat <span class="kw">as </span>Sf;
         <span class="kw">match </span><span class="self">self </span>{
-            Sf::R8Unorm =&gt; <span class="string">&quot;r8unorm&quot;</span>,
-            Sf::R8Snorm =&gt; <span class="string">&quot;r8snorm&quot;</span>,
-            Sf::R8Uint =&gt; <span class="string">&quot;r8uint&quot;</span>,
-            Sf::R8Sint =&gt; <span class="string">&quot;r8sint&quot;</span>,
-            Sf::R16Uint =&gt; <span class="string">&quot;r16uint&quot;</span>,
-            Sf::R16Sint =&gt; <span class="string">&quot;r16sint&quot;</span>,
-            Sf::R16Float =&gt; <span class="string">&quot;r16float&quot;</span>,
-            Sf::Rg8Unorm =&gt; <span class="string">&quot;rg8unorm&quot;</span>,
-            Sf::Rg8Snorm =&gt; <span class="string">&quot;rg8snorm&quot;</span>,
-            Sf::Rg8Uint =&gt; <span class="string">&quot;rg8uint&quot;</span>,
-            Sf::Rg8Sint =&gt; <span class="string">&quot;rg8sint&quot;</span>,
-            Sf::R32Uint =&gt; <span class="string">&quot;r32uint&quot;</span>,
-            Sf::R32Sint =&gt; <span class="string">&quot;r32sint&quot;</span>,
-            Sf::R32Float =&gt; <span class="string">&quot;r32float&quot;</span>,
-            Sf::Rg16Uint =&gt; <span class="string">&quot;rg16uint&quot;</span>,
-            Sf::Rg16Sint =&gt; <span class="string">&quot;rg16sint&quot;</span>,
-            Sf::Rg16Float =&gt; <span class="string">&quot;rg16float&quot;</span>,
-            Sf::Rgba8Unorm =&gt; <span class="string">&quot;rgba8unorm&quot;</span>,
-            Sf::Rgba8Snorm =&gt; <span class="string">&quot;rgba8snorm&quot;</span>,
-            Sf::Rgba8Uint =&gt; <span class="string">&quot;rgba8uint&quot;</span>,
-            Sf::Rgba8Sint =&gt; <span class="string">&quot;rgba8sint&quot;</span>,
-            Sf::Bgra8Unorm =&gt; <span class="string">&quot;bgra8unorm&quot;</span>,
-            Sf::Rgb10a2Uint =&gt; <span class="string">&quot;rgb10a2uint&quot;</span>,
-            Sf::Rgb10a2Unorm =&gt; <span class="string">&quot;rgb10a2unorm&quot;</span>,
-            Sf::Rg11b10Float =&gt; <span class="string">&quot;rg11b10float&quot;</span>,
-            Sf::Rg32Uint =&gt; <span class="string">&quot;rg32uint&quot;</span>,
-            Sf::Rg32Sint =&gt; <span class="string">&quot;rg32sint&quot;</span>,
-            Sf::Rg32Float =&gt; <span class="string">&quot;rg32float&quot;</span>,
-            Sf::Rgba16Uint =&gt; <span class="string">&quot;rgba16uint&quot;</span>,
-            Sf::Rgba16Sint =&gt; <span class="string">&quot;rgba16sint&quot;</span>,
-            Sf::Rgba16Float =&gt; <span class="string">&quot;rgba16float&quot;</span>,
-            Sf::Rgba32Uint =&gt; <span class="string">&quot;rgba32uint&quot;</span>,
-            Sf::Rgba32Sint =&gt; <span class="string">&quot;rgba32sint&quot;</span>,
-            Sf::Rgba32Float =&gt; <span class="string">&quot;rgba32float&quot;</span>,
-            Sf::R16Unorm =&gt; <span class="string">&quot;r16unorm&quot;</span>,
-            Sf::R16Snorm =&gt; <span class="string">&quot;r16snorm&quot;</span>,
-            Sf::Rg16Unorm =&gt; <span class="string">&quot;rg16unorm&quot;</span>,
-            Sf::Rg16Snorm =&gt; <span class="string">&quot;rg16snorm&quot;</span>,
-            Sf::Rgba16Unorm =&gt; <span class="string">&quot;rgba16unorm&quot;</span>,
-            Sf::Rgba16Snorm =&gt; <span class="string">&quot;rgba16snorm&quot;</span>,
+            Sf::R8Unorm =&gt; <span class="string">"r8unorm"</span>,
+            Sf::R8Snorm =&gt; <span class="string">"r8snorm"</span>,
+            Sf::R8Uint =&gt; <span class="string">"r8uint"</span>,
+            Sf::R8Sint =&gt; <span class="string">"r8sint"</span>,
+            Sf::R16Uint =&gt; <span class="string">"r16uint"</span>,
+            Sf::R16Sint =&gt; <span class="string">"r16sint"</span>,
+            Sf::R16Float =&gt; <span class="string">"r16float"</span>,
+            Sf::Rg8Unorm =&gt; <span class="string">"rg8unorm"</span>,
+            Sf::Rg8Snorm =&gt; <span class="string">"rg8snorm"</span>,
+            Sf::Rg8Uint =&gt; <span class="string">"rg8uint"</span>,
+            Sf::Rg8Sint =&gt; <span class="string">"rg8sint"</span>,
+            Sf::R32Uint =&gt; <span class="string">"r32uint"</span>,
+            Sf::R32Sint =&gt; <span class="string">"r32sint"</span>,
+            Sf::R32Float =&gt; <span class="string">"r32float"</span>,
+            Sf::Rg16Uint =&gt; <span class="string">"rg16uint"</span>,
+            Sf::Rg16Sint =&gt; <span class="string">"rg16sint"</span>,
+            Sf::Rg16Float =&gt; <span class="string">"rg16float"</span>,
+            Sf::Rgba8Unorm =&gt; <span class="string">"rgba8unorm"</span>,
+            Sf::Rgba8Snorm =&gt; <span class="string">"rgba8snorm"</span>,
+            Sf::Rgba8Uint =&gt; <span class="string">"rgba8uint"</span>,
+            Sf::Rgba8Sint =&gt; <span class="string">"rgba8sint"</span>,
+            Sf::Bgra8Unorm =&gt; <span class="string">"bgra8unorm"</span>,
+            Sf::Rgb10a2Uint =&gt; <span class="string">"rgb10a2uint"</span>,
+            Sf::Rgb10a2Unorm =&gt; <span class="string">"rgb10a2unorm"</span>,
+            Sf::Rg11b10Float =&gt; <span class="string">"rg11b10float"</span>,
+            Sf::Rg32Uint =&gt; <span class="string">"rg32uint"</span>,
+            Sf::Rg32Sint =&gt; <span class="string">"rg32sint"</span>,
+            Sf::Rg32Float =&gt; <span class="string">"rg32float"</span>,
+            Sf::Rgba16Uint =&gt; <span class="string">"rgba16uint"</span>,
+            Sf::Rgba16Sint =&gt; <span class="string">"rgba16sint"</span>,
+            Sf::Rgba16Float =&gt; <span class="string">"rgba16float"</span>,
+            Sf::Rgba32Uint =&gt; <span class="string">"rgba32uint"</span>,
+            Sf::Rgba32Sint =&gt; <span class="string">"rgba32sint"</span>,
+            Sf::Rgba32Float =&gt; <span class="string">"rgba32float"</span>,
+            Sf::R16Unorm =&gt; <span class="string">"r16unorm"</span>,
+            Sf::R16Snorm =&gt; <span class="string">"r16snorm"</span>,
+            Sf::Rg16Unorm =&gt; <span class="string">"rg16unorm"</span>,
+            Sf::Rg16Snorm =&gt; <span class="string">"rg16snorm"</span>,
+            Sf::Rgba16Unorm =&gt; <span class="string">"rgba16unorm"</span>,
+            Sf::Rgba16Snorm =&gt; <span class="string">"rgba16snorm"</span>,
         }
     }
 }
@@ -487,7 +487,7 @@
 
         <span class="kw">let </span>mytype1 = types.insert(
             <span class="kw">crate</span>::Type {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;MyType1&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"MyType1"</span>.to_string()),
                 inner: <span class="kw">crate</span>::TypeInner::Struct {
                     members: <span class="macro">vec!</span>[],
                     span: <span class="number">0</span>,
@@ -497,7 +497,7 @@
         );
         <span class="kw">let </span>mytype2 = types.insert(
             <span class="kw">crate</span>::Type {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;MyType2&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"MyType2"</span>.to_string()),
                 inner: <span class="kw">crate</span>::TypeInner::Struct {
                     members: <span class="macro">vec!</span>[],
                     span: <span class="number">0</span>,
@@ -516,14 +516,14 @@
             stride: <span class="number">4</span>,
             size: <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">unsafe </span>{ NonZeroU32::new_unchecked(<span class="number">32</span>) }),
         };
-        <span class="macro">assert_eq!</span>(array.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;array&lt;MyType1, 32&gt;&quot;</span>);
+        <span class="macro">assert_eq!</span>(array.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"array&lt;MyType1, 32&gt;"</span>);
 
         <span class="kw">let </span>mat = <span class="kw">crate</span>::TypeInner::Matrix {
             rows: <span class="kw">crate</span>::VectorSize::Quad,
             columns: <span class="kw">crate</span>::VectorSize::Bi,
             scalar: <span class="kw">crate</span>::Scalar::F64,
         };
-        <span class="macro">assert_eq!</span>(mat.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;mat2x4&lt;f64&gt;&quot;</span>);
+        <span class="macro">assert_eq!</span>(mat.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"mat2x4&lt;f64&gt;"</span>);
 
         <span class="kw">let </span>ptr = <span class="kw">crate</span>::TypeInner::Pointer {
             base: mytype2,
@@ -531,7 +531,7 @@
                 access: <span class="kw">crate</span>::StorageAccess::default(),
             },
         };
-        <span class="macro">assert_eq!</span>(ptr.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;ptr&lt;MyType2&gt;&quot;</span>);
+        <span class="macro">assert_eq!</span>(ptr.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"ptr&lt;MyType2&gt;"</span>);
 
         <span class="kw">let </span>img1 = <span class="kw">crate</span>::TypeInner::Image {
             dim: <span class="kw">crate</span>::ImageDimension::D2,
@@ -541,27 +541,27 @@
                 multi: <span class="bool-val">true</span>,
             },
         };
-        <span class="macro">assert_eq!</span>(img1.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;texture_multisampled_2d&lt;f32&gt;&quot;</span>);
+        <span class="macro">assert_eq!</span>(img1.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"texture_multisampled_2d&lt;f32&gt;"</span>);
 
         <span class="kw">let </span>img2 = <span class="kw">crate</span>::TypeInner::Image {
             dim: <span class="kw">crate</span>::ImageDimension::Cube,
             arrayed: <span class="bool-val">true</span>,
             class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>},
         };
-        <span class="macro">assert_eq!</span>(img2.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;texture_depth_cube_array&quot;</span>);
+        <span class="macro">assert_eq!</span>(img2.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"texture_depth_cube_array"</span>);
 
         <span class="kw">let </span>img3 = <span class="kw">crate</span>::TypeInner::Image {
             dim: <span class="kw">crate</span>::ImageDimension::D2,
             arrayed: <span class="bool-val">false</span>,
             class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">true </span>},
         };
-        <span class="macro">assert_eq!</span>(img3.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;texture_depth_multisampled_2d&quot;</span>);
+        <span class="macro">assert_eq!</span>(img3.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"texture_depth_multisampled_2d"</span>);
 
         <span class="kw">let </span>array = <span class="kw">crate</span>::TypeInner::BindingArray {
             base: mytype1,
             size: <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">unsafe </span>{ NonZeroU32::new_unchecked(<span class="number">32</span>) }),
         };
-        <span class="macro">assert_eq!</span>(array.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">&quot;binding_array&lt;MyType1, 32&gt;&quot;</span>);
+        <span class="macro">assert_eq!</span>(array.to_wgsl(<span class="kw-2">&amp;</span>gctx), <span class="string">"binding_array&lt;MyType1, 32&gt;"</span>);
     }
 }
 </code></pre></div></section></main></body></html>

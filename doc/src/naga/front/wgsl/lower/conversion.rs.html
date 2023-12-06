@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/lower/conversion.rs`."><title>conversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/lower/conversion.rs`."><title>conversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -363,12 +363,12 @@
 <a href="#363" id="363">363</a>
 <a href="#364" id="364">364</a>
 <a href="#365" id="365">365</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! WGSL&#39;s automatic conversions for abstract types.
+</pre></div><pre class="rust"><code><span class="doccomment">//! WGSL's automatic conversions for abstract types.
 
 </span><span class="kw">use crate</span>::{Handle, Span};
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;temp</span>, <span class="lifetime">&#39;out</span>&gt; <span class="kw">super</span>::ExpressionContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;temp</span>, <span class="lifetime">&#39;out</span>&gt; {
-    <span class="doccomment">/// Try to use WGSL&#39;s automatic conversions to convert `expr` to `goal_ty`.
+<span class="kw">impl</span>&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; <span class="kw">super</span>::ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
+    <span class="doccomment">/// Try to use WGSL's automatic conversions to convert `expr` to `goal_ty`.
     ///
     /// If no conversions are necessary, return `expr` unchanged.
     ///
@@ -385,7 +385,7 @@
         expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         goal_ty: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::TypeResolution,
         goal_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw">super</span>::Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw">super</span>::Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span>expr_span = <span class="self">self</span>.get_expression_span(expr);
         <span class="comment">// Keep the TypeResolution so we can get type names for
         // structs in error messages.
@@ -394,7 +394,7 @@
         <span class="kw">let </span>expr_inner = expr_resolution.inner_with(types);
         <span class="kw">let </span>goal_inner = goal_ty.inner_with(types);
 
-        <span class="comment">// If `expr` already has the requested type, we&#39;re done.
+        <span class="comment">// If `expr` already has the requested type, we're done.
         </span><span class="kw">if </span>expr_inner.equivalent(goal_inner, types) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(expr);
         }
@@ -433,13 +433,13 @@
         <span class="prelude-val">Ok</span>(converted)
     }
 
-    <span class="doccomment">/// Try to convert `exprs` to `goal_ty` using WGSL&#39;s automatic conversions.
+    <span class="doccomment">/// Try to convert `exprs` to `goal_ty` using WGSL's automatic conversions.
     </span><span class="kw">pub fn </span>try_automatic_conversions_slice(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         exprs: <span class="kw-2">&amp;mut </span>[Handle&lt;<span class="kw">crate</span>::Expression&gt;],
         goal_ty: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::TypeResolution,
         goal_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">for </span>expr <span class="kw">in </span>exprs.iter_mut() {
             <span class="kw-2">*</span>expr = <span class="self">self</span>.try_automatic_conversions(<span class="kw-2">*</span>expr, goal_ty, goal_span)<span class="question-mark">?</span>;
         }
@@ -447,20 +447,20 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Apply WGSL&#39;s automatic conversions to a vector constructor&#39;s arguments.
+    <span class="doccomment">/// Apply WGSL's automatic conversions to a vector constructor's arguments.
     ///
     /// When calling a vector constructor like `vec3&lt;f32&gt;(...)`, the parameters
     /// can be a mix of scalars and vectors, with the latter being spread out to
     /// contribute each of their components as a component of the new value.
     /// When the element type is explicit, as with `&lt;f32&gt;` in the example above,
-    /// WGSL&#39;s automatic conversions should convert abstract scalar and vector
-    /// parameters to the constructor&#39;s required scalar type.
+    /// WGSL's automatic conversions should convert abstract scalar and vector
+    /// parameters to the constructor's required scalar type.
     </span><span class="kw">pub fn </span>try_automatic_conversions_for_vector(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         exprs: <span class="kw-2">&amp;mut </span>[Handle&lt;<span class="kw">crate</span>::Expression&gt;],
         goal_scalar: <span class="kw">crate</span>::Scalar,
         goal_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::proc::TypeResolution <span class="kw">as </span>Tr;
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
         <span class="kw">let </span>goal_scalar_res = Tr::Value(Ti::Scalar(goal_scalar));
@@ -509,11 +509,11 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         exprs: <span class="kw-2">&amp;mut </span>[Handle&lt;<span class="kw">crate</span>::Expression&gt;],
         goal: <span class="kw">crate</span>::Scalar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">for </span>expr <span class="kw">in </span>exprs.iter_mut() {
             <span class="kw">let </span>inner = <span class="macro">super::resolve_inner!</span>(<span class="self">self</span>, <span class="kw-2">*</span>expr);
-            <span class="comment">// Do nothing if `inner` doesn&#39;t even have leaf scalars;
-            // it&#39;s a type error that validation will catch.
+            <span class="comment">// Do nothing if `inner` doesn't even have leaf scalars;
+            // it's a type error that validation will catch.
             </span><span class="kw">if </span>inner.scalar() != <span class="prelude-val">Some</span>(goal) {
                 <span class="kw">let </span>cast = <span class="kw">crate</span>::Expression::As {
                     expr: <span class="kw-2">*</span>expr,
@@ -534,7 +534,7 @@
     </span><span class="kw">pub fn </span>concretize(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         <span class="kw-2">mut </span>expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw">super</span>::Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw">super</span>::Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span>inner = <span class="macro">super::resolve_inner!</span>(<span class="self">self</span>, expr);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = inner.automatically_convertible_scalar(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
             <span class="kw">let </span>concretized = scalar.concretize();
@@ -554,7 +554,7 @@
 <span class="kw">impl </span><span class="kw">crate</span>::TypeInner {
     <span class="doccomment">/// Determine whether `self` automatically converts to `goal`.
     ///
-    /// If WGSL&#39;s automatic conversions (excluding the Load Rule) will
+    /// If WGSL's automatic conversions (excluding the Load Rule) will
     /// convert `self` to `goal`, then return a pair `(from, to)`,
     /// where `from` and `to` are the scalar types of the leaf values
     /// of `self` and `goal`.
@@ -573,7 +573,7 @@
         <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
 
-        <span class="comment">// Automatic conversions only change the scalar type of a value&#39;s leaves
+        <span class="comment">// Automatic conversions only change the scalar type of a value's leaves
         // (e.g., `vec4&lt;AbstractFloat&gt;` to `vec4&lt;f32&gt;`), never the type
         // constructors applied to those scalar types (e.g., never scalar to
         // `vec4`, or `vec2` to `vec3`). So first we check that the type
@@ -638,7 +638,7 @@
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         }
 
-        <span class="macro">log::trace!</span>(<span class="string">&quot;      okay: expr {expr_scalar:?}, goal {goal_scalar:?}&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">"      okay: expr {expr_scalar:?}, goal {goal_scalar:?}"</span>);
         <span class="prelude-val">Some</span>((expr_scalar, goal_scalar))
     }
 
@@ -666,10 +666,10 @@
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::Scalar {
-    <span class="doccomment">/// Find the common type of `self` and `other` under WGSL&#39;s
+    <span class="doccomment">/// Find the common type of `self` and `other` under WGSL's
     /// automatic conversions.
     ///
-    /// If there are any scalars to which WGSL&#39;s automatic conversions
+    /// If there are any scalars to which WGSL's automatic conversions
     /// will convert both `self` and `other`, return the best such
     /// scalar. Otherwise, return `None`.
     </span><span class="kw">pub const fn </span>automatic_conversion_combine(<span class="self">self</span>, other: <span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Scalar&gt; {
@@ -706,7 +706,7 @@
             </span>(Sk::AbstractInt, Sk::Uint | Sk::Sint | Sk::Float) =&gt; <span class="prelude-val">Some</span>(other),
             (Sk::Uint | Sk::Sint | Sk::Float, Sk::AbstractInt) =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>),
 
-            <span class="comment">// AbstractFloat can&#39;t be reconciled with concrete integer types.
+            <span class="comment">// AbstractFloat can't be reconciled with concrete integer types.
             </span>(Sk::AbstractFloat, Sk::Uint | Sk::Sint) | (Sk::Uint | Sk::Sint, Sk::AbstractFloat) =&gt; {
                 <span class="prelude-val">None
             </span>}

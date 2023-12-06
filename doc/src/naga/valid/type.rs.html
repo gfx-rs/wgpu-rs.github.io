@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/type.rs`."><title>type.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/type.rs`."><title>type.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -649,8 +649,8 @@
     ///
     /// [`Type`]: crate::Type
     /// [`Validator`]: crate::valid::Validator
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-    #[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+    #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     </span><span class="kw">pub struct </span>TypeFlags: u8 {
@@ -707,59 +707,59 @@
 
 <span class="attr">#[derive(Clone, Copy, Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>Disalignment {
-    <span class="attr">#[error(<span class="string">&quot;The array stride {stride} is not a multiple of the required alignment {alignment}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The array stride {stride} is not a multiple of the required alignment {alignment}"</span>)]
     </span>ArrayStride { stride: u32, alignment: Alignment },
-    <span class="attr">#[error(<span class="string">&quot;The struct span {span}, is not a multiple of the required alignment {alignment}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The struct span {span}, is not a multiple of the required alignment {alignment}"</span>)]
     </span>StructSpan { span: u32, alignment: Alignment },
-    <span class="attr">#[error(<span class="string">&quot;The struct member[{index}] offset {offset} is not a multiple of the required alignment {alignment}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The struct member[{index}] offset {offset} is not a multiple of the required alignment {alignment}"</span>)]
     </span>MemberOffset {
         index: u32,
         offset: u32,
         alignment: Alignment,
     },
-    <span class="attr">#[error(<span class="string">&quot;The struct member[{index}] offset {offset} must be at least {expected}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The struct member[{index}] offset {offset} must be at least {expected}"</span>)]
     </span>MemberOffsetAfterStruct {
         index: u32,
         offset: u32,
         expected: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;The struct member[{index}] is not statically sized&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The struct member[{index}] is not statically sized"</span>)]
     </span>UnsizedMember { index: u32 },
-    <span class="attr">#[error(<span class="string">&quot;The type is not host-shareable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The type is not host-shareable"</span>)]
     </span>NonHostShareable,
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>TypeError {
-    <span class="attr">#[error(<span class="string">&quot;Capability {0:?} is required&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Capability {0:?} is required"</span>)]
     </span>MissingCapability(Capabilities),
-    <span class="attr">#[error(<span class="string">&quot;The {0:?} scalar width {1} is not supported for an atomic&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The {0:?} scalar width {1} is not supported for an atomic"</span>)]
     </span>InvalidAtomicWidth(<span class="kw">crate</span>::ScalarKind, <span class="kw">crate</span>::Bytes),
-    <span class="attr">#[error(<span class="string">&quot;Invalid type for pointer target {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid type for pointer target {0:?}"</span>)]
     </span>InvalidPointerBase(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Unsized types like {base:?} must be in the `Storage` address space, not `{space:?}`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unsized types like {base:?} must be in the `Storage` address space, not `{space:?}`"</span>)]
     </span>InvalidPointerToUnsized {
         base: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         space: <span class="kw">crate</span>::AddressSpace,
     },
-    <span class="attr">#[error(<span class="string">&quot;Expected data type, found {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Expected data type, found {0:?}"</span>)]
     </span>InvalidData(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Base type {0:?} for the array is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Base type {0:?} for the array is invalid"</span>)]
     </span>InvalidArrayBaseType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Matrix elements must always be floating-point types&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Matrix elements must always be floating-point types"</span>)]
     </span>MatrixElementNotFloat,
-    <span class="attr">#[error(<span class="string">&quot;The constant {0:?} is specialized, and cannot be used as an array size&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The constant {0:?} is specialized, and cannot be used as an array size"</span>)]
     </span>UnsupportedSpecializedArrayLength(Handle&lt;<span class="kw">crate</span>::Constant&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Array stride {stride} does not match the expected {expected}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Array stride {stride} does not match the expected {expected}"</span>)]
     </span>InvalidArrayStride { stride: u32, expected: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Field &#39;{0}&#39; can&#39;t be dynamically-sized, has type {1:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Field '{0}' can't be dynamically-sized, has type {1:?}"</span>)]
     </span>InvalidDynamicArray(String, Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The base handle {0:?} has to be a struct&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The base handle {0:?} has to be a struct"</span>)]
     </span>BindingArrayBaseTypeNotStruct(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Structure member[{index}] at {offset} overlaps the previous member&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Structure member[{index}] at {offset} overlaps the previous member"</span>)]
     </span>MemberOverlap { index: u32, offset: u32 },
     <span class="attr">#[error(
-        <span class="string">&quot;Structure member[{index}] at {offset} and size {size} crosses the structure boundary of size {span}&quot;
+        <span class="string">"Structure member[{index}] at {offset} and size {size} crosses the structure boundary of size {span}"
     </span>)]
     </span>MemberOutOfBounds {
         index: u32,
@@ -767,7 +767,7 @@
         size: u32,
         span: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Structure types must have at least one member&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Structure types must have at least one member"</span>)]
     </span>EmptyStruct,
     <span class="attr">#[error(transparent)]
     </span>WidthError(<span class="attr">#[from] </span>WidthError),
@@ -776,18 +776,18 @@
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>WidthError {
-    <span class="attr">#[error(<span class="string">&quot;The {0:?} scalar width {1} is not supported&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The {0:?} scalar width {1} is not supported"</span>)]
     </span>Invalid(<span class="kw">crate</span>::ScalarKind, <span class="kw">crate</span>::Bytes),
-    <span class="attr">#[error(<span class="string">&quot;Using `{name}` values requires the `naga::valid::Capabilities::{flag}` flag&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Using `{name}` values requires the `naga::valid::Capabilities::{flag}` flag"</span>)]
     </span>MissingCapability {
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
-        flag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        flag: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
 
-    <span class="attr">#[error(<span class="string">&quot;64-bit integers are not yet supported&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"64-bit integers are not yet supported"</span>)]
     </span>Unsupported64Bit,
 
-    <span class="attr">#[error(<span class="string">&quot;Abstract types may only appear in constant expressions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Abstract types may only appear in constant expressions"</span>)]
     </span>Abstract,
 }
 
@@ -879,8 +879,8 @@
                 <span class="kw">if </span>scalar.width == <span class="number">8 </span>{
                     <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::FLOAT64) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(WidthError::MissingCapability {
-                            name: <span class="string">&quot;f64&quot;</span>,
-                            flag: <span class="string">&quot;FLOAT64&quot;</span>,
+                            name: <span class="string">"f64"</span>,
+                            flag: <span class="string">"FLOAT64"</span>,
                         });
                     }
                     <span class="bool-val">true
@@ -997,7 +997,7 @@
                 }
 
                 <span class="comment">// Runtime-sized values can only live in the `Storage` address
-                // space, so it&#39;s useless to have a pointer to such a type in
+                // space, so it's useless to have a pointer to such a type in
                 // any other space.
                 //
                 // Detecting this problem here prevents the definition of
@@ -1036,7 +1036,7 @@
             } =&gt; {
                 <span class="comment">// ValuePointer should be treated the same way as the equivalent
                 // Pointer / Scalar / Vector combination, so each step in those
-                // variants&#39; match arms should have a counterpart here.
+                // variants' match arms should have a counterpart here.
                 //
                 // However, some cases are trivial: All our implicit base types
                 // are DATA and SIZED, so we can never return

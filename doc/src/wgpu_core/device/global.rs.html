@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/global.rs`."><title>global.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/global.rs`."><title>global.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2517,7 +2517,7 @@
 <a href="#2517" id="2517">2517</a>
 <a href="#2518" id="2518">2518</a>
 <a href="#2519" id="2519">2519</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     api_log, binding_model, command, conv,
@@ -2571,7 +2571,7 @@
         surface_id: SurfaceId,
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::SurfaceCapabilities, instance::GetSurfaceSupportError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Surface::get_capabilities&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Surface::get_capabilities"</span>);
         <span class="self">self</span>.fetch_adapter_and_surface::&lt;A, <span class="kw">_</span>, <span class="kw">_</span>&gt;(surface_id, adapter_id, |adapter, surface| {
             <span class="kw">let </span><span class="kw-2">mut </span>hal_caps = surface.get_capabilities(adapter)<span class="question-mark">?</span>;
 
@@ -2660,7 +2660,7 @@
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
         id_in: Input&lt;G, id::BufferId&gt;,
     ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_buffer&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
@@ -2685,7 +2685,7 @@
                 );
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 <span class="kw">let </span><span class="kw-2">mut </span>desc = desc.clone();
                 <span class="kw">let </span>mapped_at_creation = std::mem::replace(<span class="kw-2">&amp;mut </span>desc.mapped_at_creation, <span class="bool-val">false</span>);
@@ -2704,7 +2704,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(buffer);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_buffer({desc:?}) -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer({desc:?}) -&gt; {id:?}"</span>);
 
             <span class="kw">let </span>buffer_use = <span class="kw">if </span>!desc.mapped_at_creation {
                 hal::BufferUses::empty()
@@ -2737,7 +2737,7 @@
                 <span class="comment">// buffer needs staging area for initialization only
                 </span><span class="kw">let </span>stage_desc = wgt::BufferDescriptor {
                     label: <span class="prelude-val">Some</span>(Cow::Borrowed(
-                        <span class="string">&quot;(wgpu internal) initializing unmappable buffer&quot;</span>,
+                        <span class="string">"(wgpu internal) initializing unmappable buffer"</span>,
                     )),
                     size: desc.size,
                     usage: wgt::BufferUsages::MAP_WRITE | wgt::BufferUsages::COPY_SRC,
@@ -2776,7 +2776,7 @@
 
                 <span class="macro">assert_eq!</span>(resource.size % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
                 <span class="comment">// Zero initialize memory and then mark both staging and buffer as initialized
-                // (it&#39;s guaranteed that this is the case by the time the buffer is usable)
+                // (it's guaranteed that this is the case by the time the buffer is usable)
                 </span><span class="kw">unsafe </span>{ ptr::write_bytes(mapping.ptr.as_ptr(), <span class="number">0</span>, resource.size <span class="kw">as </span>usize) };
                 resource
                     .initialization_status
@@ -2808,7 +2808,7 @@
     <span class="doccomment">/// Assign `id_in` an error with the given `label`.
     ///
     /// Ensure that future attempts to use `id_in` as a buffer ID will propagate
-    /// the error, following the WebGPU [&quot;contagious invalidity&quot;] style.
+    /// the error, following the WebGPU ["contagious invalidity"] style.
     ///
     /// Firefox uses this function to comply strictly with the WebGPU spec,
     /// which requires [`GPUBufferDescriptor`] validation to be generated on the
@@ -2817,8 +2817,8 @@
     /// Ideally, we would simply let [`device_create_buffer`] take care of all
     /// of this, but some errors must be detected before we can even construct a
     /// [`wgpu_types::BufferDescriptor`] to give it. For example, the WebGPU API
-    /// allows a `GPUBufferDescriptor`&#39;s [`usage`] property to be any WebIDL
-    /// `unsigned long` value, but we can&#39;t construct a
+    /// allows a `GPUBufferDescriptor`'s [`usage`] property to be any WebIDL
+    /// `unsigned long` value, but we can't construct a
     /// [`wgpu_types::BufferUsages`] value from values with unassigned bits
     /// set. This means we must validate `usage` before we can call
     /// `device_create_buffer`.
@@ -2826,7 +2826,7 @@
     /// When that validation fails, we must arrange for the buffer id to be
     /// considered invalid. This method provides the means to do so.
     ///
-    /// [&quot;contagious invalidity&quot;]: https://www.w3.org/TR/webgpu/#invalidity
+    /// ["contagious invalidity"]: https://www.w3.org/TR/webgpu/#invalidity
     /// [`GPUBufferDescriptor`]: https://www.w3.org/TR/webgpu/#dictdef-gpubufferdescriptor
     /// [`GPUBuffer`]: https://www.w3.org/TR/webgpu/#gpubuffer
     /// [`wgpu_types::BufferDescriptor`]: wgt::BufferDescriptor
@@ -2861,7 +2861,7 @@
         fid.assign_error(label.borrow_or_default());
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;replay&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
     </span><span class="kw">pub fn </span>device_wait_for_buffer&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
@@ -2891,7 +2891,7 @@
         offset: BufferAddress,
         data: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; BufferAccessResult {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::set_buffer_sub_data&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::set_buffer_sub_data"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2908,11 +2908,11 @@
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
         check_buffer_usage(buffer.usage, wgt::BufferUsages::MAP_WRITE)<span class="question-mark">?</span>;
-        <span class="comment">//assert!(buffer isn&#39;t used by the GPU);
+        <span class="comment">//assert!(buffer isn't used by the GPU);
 
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            <span class="kw">let </span>data_path = trace.make_binary(<span class="string">&quot;bin&quot;</span>, data);
+            <span class="kw">let </span>data_path = trace.make_binary(<span class="string">"bin"</span>, data);
             trace.add(trace::Action::WriteBuffer {
                 id: buffer_id,
                 data: data_path,
@@ -2950,7 +2950,7 @@
         offset: BufferAddress,
         data: <span class="kw-2">&amp;mut </span>[u8],
     ) -&gt; BufferAccessResult {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::get_buffer_sub_data&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::get_buffer_sub_data"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -2967,7 +2967,7 @@
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
         check_buffer_usage(buffer.usage, wgt::BufferUsages::MAP_READ)<span class="question-mark">?</span>;
-        <span class="comment">//assert!(buffer isn&#39;t used by the GPU);
+        <span class="comment">//assert!(buffer isn't used by the GPU);
 
         </span><span class="kw">let </span>raw_buf = buffer.raw();
         <span class="kw">unsafe </span>{
@@ -2999,8 +2999,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer_id: id::BufferId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::destroy&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Buffer::destroy {buffer_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::destroy"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::destroy {buffer_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3012,8 +3012,8 @@
     }
 
     <span class="kw">pub fn </span>buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId, wait: bool) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Buffer::drop {buffer_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::drop {buffer_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3045,7 +3045,7 @@
             <span class="kw">if </span>wait {
                 <span class="kw">match </span>device.wait_for_submit(last_submit_index) {
                     <span class="prelude-val">Ok</span>(()) =&gt; (),
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;Failed to wait for buffer {:?}: {}&quot;</span>, buffer_id, e),
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">"Failed to wait for buffer {:?}: {}"</span>, buffer_id, e),
                 }
             }
         }
@@ -3057,7 +3057,7 @@
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
         id_in: Input&lt;G, id::TextureId&gt;,
     ) -&gt; (id::TextureId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_texture&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_texture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3071,7 +3071,7 @@
             <span class="kw">if </span>!device.is_valid() {
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateTexture(fid.id(), desc.clone()));
             }
@@ -3082,7 +3082,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_texture({desc:?}) -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
 
             device.trackers.lock().textures.insert_single(
                 id,
@@ -3093,7 +3093,7 @@
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_texture error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_texture error: {error}"</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3111,7 +3111,7 @@
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
         id_in: Input&lt;G, id::TextureId&gt;,
     ) -&gt; (id::TextureId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_texture_from_hal&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_texture_from_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3128,7 +3128,7 @@
 
             <span class="comment">// NB: Any change done through the raw texture handle will not be
             // recorded in the replay
-            </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateTexture(fid.id(), desc.clone()));
             }
@@ -3156,7 +3156,7 @@
                 RwLock::new(TextureInitTracker::new(desc.mip_level_count, <span class="number">0</span>));
 
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_texture -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_texture -&gt; {id:?}"</span>);
 
             device.trackers.lock().textures.insert_single(
                 id,
@@ -3167,7 +3167,7 @@
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_texture error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_texture error: {error}"</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3185,7 +3185,7 @@
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
         id_in: Input&lt;G, id::BufferId&gt;,
     ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_buffer&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
@@ -3202,7 +3202,7 @@
 
             <span class="comment">// NB: Any change done through the raw buffer handle will not be
             // recorded in the replay
-            </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(trace) = device.trace.lock().as_mut() {
                 trace.add(trace::Action::CreateBuffer(fid.id(), desc.clone()));
             }
@@ -3210,7 +3210,7 @@
             <span class="kw">let </span>buffer = device.create_buffer_from_hal(hal_buffer, desc);
 
             <span class="kw">let </span>(id, buffer) = fid.assign(buffer);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_buffer -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer -&gt; {id:?}"</span>);
 
             device
                 .trackers
@@ -3221,7 +3221,7 @@
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_buffer error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_buffer error: {error}"</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3235,8 +3235,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture_id: id::TextureId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::destroy&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Texture::destroy {texture_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Texture::destroy"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Texture::destroy {texture_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3247,7 +3247,7 @@
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>texture.device;
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             trace.add(trace::Action::FreeTexture(texture_id));
         }
@@ -3276,8 +3276,8 @@
     }
 
     <span class="kw">pub fn </span>texture_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId, wait: bool) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Texture::drop {texture_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Texture::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Texture::drop {texture_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3309,7 +3309,7 @@
             <span class="kw">if </span>wait {
                 <span class="kw">match </span>device.wait_for_submit(last_submit_index) {
                     <span class="prelude-val">Ok</span>(()) =&gt; (),
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;Failed to wait for texture {texture_id:?}: {e}&quot;</span>),
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">"Failed to wait for texture {texture_id:?}: {e}"</span>),
                 }
             }
         }
@@ -3322,7 +3322,7 @@
         desc: <span class="kw-2">&amp;</span>resource::TextureViewDescriptor,
         id_in: Input&lt;G, id::TextureViewId&gt;,
     ) -&gt; (id::TextureViewId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureViewError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::create_view&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Texture::create_view"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3334,7 +3334,7 @@
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>resource::CreateTextureViewError::InvalidTexture,
             };
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>texture.device;
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateTextureView {
                     id: fid.id(),
@@ -3349,12 +3349,12 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(view);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Texture::create_view({texture_id:?}) -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Texture::create_view({texture_id:?}) -&gt; {id:?}"</span>);
             device.trackers.lock().views.insert_single(id, resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Texture::create_view({texture_id:?}) error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Texture::create_view({texture_id:?}) error: {error}"</span>);
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -3368,8 +3368,8 @@
         texture_view_id: id::TextureViewId,
         wait: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::TextureViewDestroyError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;TextureView::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;TextureView::drop {texture_view_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"TextureView::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"TextureView::drop {texture_view_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3385,7 +3385,7 @@
                 <span class="kw">match </span>view.device.wait_for_submit(last_submit_index) {
                     <span class="prelude-val">Ok</span>(()) =&gt; (),
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Failed to wait for texture view {texture_view_id:?}: {e}&quot;</span>)
+                        <span class="macro">log::error!</span>(<span class="string">"Failed to wait for texture view {texture_view_id:?}: {e}"</span>)
                     }
                 }
             }
@@ -3399,7 +3399,7 @@
         desc: <span class="kw-2">&amp;</span>resource::SamplerDescriptor,
         id_in: Input&lt;G, id::SamplerId&gt;,
     ) -&gt; (id::SamplerId, <span class="prelude-ty">Option</span>&lt;resource::CreateSamplerError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_sampler&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_sampler"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.samplers.prepare::&lt;G&gt;(id_in);
@@ -3413,7 +3413,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateSampler(fid.id(), desc.clone()));
             }
@@ -3424,7 +3424,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(sampler);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_sampler -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_sampler -&gt; {id:?}"</span>);
             device.trackers.lock().samplers.insert_single(id, resource);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
@@ -3439,8 +3439,8 @@
     }
 
     <span class="kw">pub fn </span>sampler_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler_id: id::SamplerId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Sampler::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Sampler::drop {sampler_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Sampler::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Sampler::drop {sampler_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3462,12 +3462,12 @@
         id::BindGroupLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::CreateBindGroupLayoutError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_bind_group_layout&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group_layout"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.bind_group_layouts.prepare::&lt;G&gt;(id_in);
 
-        <span class="kw">let </span>error = <span class="lifetime">&#39;outer</span>: <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'outer</span>: <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
@@ -3476,7 +3476,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateBindGroupLayout(fid.id(), desc.clone()));
             }
@@ -3484,13 +3484,13 @@
             <span class="kw">let </span><span class="kw-2">mut </span>entry_map = FastHashMap::default();
             <span class="kw">for </span>entry <span class="kw">in </span>desc.entries.iter() {
                 <span class="kw">if </span>entry.binding &gt; device.limits.max_bindings_per_bind_group {
-                    <span class="kw">break </span><span class="lifetime">&#39;outer </span>binding_model::CreateBindGroupLayoutError::InvalidBindingIndex {
+                    <span class="kw">break </span><span class="lifetime">'outer </span>binding_model::CreateBindGroupLayoutError::InvalidBindingIndex {
                         binding: entry.binding,
                         maximum: device.limits.max_bindings_per_bind_group,
                     };
                 }
                 <span class="kw">if </span>entry_map.insert(entry.binding, <span class="kw-2">*</span>entry).is_some() {
-                    <span class="kw">break </span><span class="lifetime">&#39;outer </span>binding_model::CreateBindGroupLayoutError::ConflictBinding(
+                    <span class="kw">break </span><span class="lifetime">'outer </span>binding_model::CreateBindGroupLayoutError::ConflictBinding(
                         entry.binding,
                     );
                 }
@@ -3500,7 +3500,7 @@
                 <span class="kw">let </span>bgl_guard = hub.bind_group_layouts.read();
                 device.deduplicate_bind_group_layout(<span class="kw-2">&amp;</span>entry_map, <span class="kw-2">&amp;*</span>bgl_guard)
             } {
-                <span class="macro">api_log!</span>(<span class="string">&quot;Reusing BindGroupLayout {layout:?} -&gt; {:?}&quot;</span>, id);
+                <span class="macro">api_log!</span>(<span class="string">"Reusing BindGroupLayout {layout:?} -&gt; {:?}"</span>, id);
                 <span class="kw">let </span>id = fid.assign_existing(<span class="kw-2">&amp;</span>layout);
                 <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
             }
@@ -3511,7 +3511,7 @@
             };
 
             <span class="kw">let </span>(id, _layout) = fid.assign(layout);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_bind_group_layout -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_bind_group_layout -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3525,8 +3525,8 @@
     }
 
     <span class="kw">pub fn </span>bind_group_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_layout_id: id::BindGroupLayoutId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroupLayout::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;BindGroupLayout::drop {bind_group_layout_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"BindGroupLayout::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"BindGroupLayout::drop {bind_group_layout_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3548,7 +3548,7 @@
         id::PipelineLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::CreatePipelineLayoutError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_pipeline_layout&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_pipeline_layout"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.pipeline_layouts.prepare::&lt;G&gt;(id_in);
@@ -3562,7 +3562,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreatePipelineLayout(fid.id(), desc.clone()));
             }
@@ -3576,7 +3576,7 @@
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(layout);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_pipeline_layout -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_pipeline_layout -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3589,8 +3589,8 @@
     }
 
     <span class="kw">pub fn </span>pipeline_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout_id: id::PipelineLayoutId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;PipelineLayout::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;PipelineLayout::drop {pipeline_layout_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"PipelineLayout::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"PipelineLayout::drop {pipeline_layout_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(layout) = hub.pipeline_layouts.unregister(pipeline_layout_id) {
@@ -3608,7 +3608,7 @@
         desc: <span class="kw-2">&amp;</span>binding_model::BindGroupDescriptor,
         id_in: Input&lt;G, id::BindGroupId&gt;,
     ) -&gt; (id::BindGroupId, <span class="prelude-ty">Option</span>&lt;binding_model::CreateBindGroupError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_bind_group&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.bind_groups.prepare::&lt;G&gt;(id_in);
@@ -3622,7 +3622,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateBindGroup(fid.id(), desc.clone()));
             }
@@ -3643,7 +3643,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(bind_group);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_bind_group -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_bind_group -&gt; {id:?}"</span>);
 
             device
                 .trackers
@@ -3662,8 +3662,8 @@
     }
 
     <span class="kw">pub fn </span>bind_group_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_id: id::BindGroupId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroup::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;BindGroup::drop {bind_group_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"BindGroup::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"BindGroup::drop {bind_group_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3686,7 +3686,7 @@
         id::ShaderModuleId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateShaderModuleError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_shader_module&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G&gt;(id_in);
@@ -3700,21 +3700,21 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 <span class="kw">let </span>data = <span class="kw">match </span>source {
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
+                    <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
                     </span>pipeline::ShaderModuleSource::Wgsl(<span class="kw-2">ref </span>code) =&gt; {
-                        trace.make_binary(<span class="string">&quot;wgsl&quot;</span>, code.as_bytes())
+                        trace.make_binary(<span class="string">"wgsl"</span>, code.as_bytes())
                     }
                     pipeline::ShaderModuleSource::Naga(<span class="kw-2">ref </span>module) =&gt; {
                         <span class="kw">let </span>string =
                             ron::ser::to_string_pretty(module, ron::ser::PrettyConfig::default())
                                 .unwrap();
-                        trace.make_binary(<span class="string">&quot;ron&quot;</span>, string.as_bytes())
+                        trace.make_binary(<span class="string">"ron"</span>, string.as_bytes())
                     }
                     pipeline::ShaderModuleSource::Dummy(<span class="kw">_</span>) =&gt; {
-                        <span class="macro">panic!</span>(<span class="string">&quot;found `ShaderModuleSource::Dummy`&quot;</span>)
+                        <span class="macro">panic!</span>(<span class="string">"found `ShaderModuleSource::Dummy`"</span>)
                     }
                 };
                 trace.add(trace::Action::CreateShaderModule {
@@ -3730,11 +3730,11 @@
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_shader_module -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_shader_module -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_shader_module error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_shader_module error: {error}"</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3756,7 +3756,7 @@
         id::ShaderModuleId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateShaderModuleError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_shader_module&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G&gt;(id_in);
@@ -3770,9 +3770,9 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-                <span class="kw">let </span>data = trace.make_binary(<span class="string">&quot;spv&quot;</span>, <span class="kw">unsafe </span>{
+                <span class="kw">let </span>data = trace.make_binary(<span class="string">"spv"</span>, <span class="kw">unsafe </span>{
                     std::slice::from_raw_parts(source.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, source.len() * <span class="number">4</span>)
                 });
                 trace.add(trace::Action::CreateShaderModule {
@@ -3787,11 +3787,11 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_shader_module_spirv -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_shader_module_spirv -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_shader_module_spirv error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_shader_module_spirv error: {error}"</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3802,8 +3802,8 @@
     }
 
     <span class="kw">pub fn </span>shader_module_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, shader_module_id: id::ShaderModuleId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;ShaderModule::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;ShaderModule::drop {shader_module_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"ShaderModule::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"ShaderModule::drop {shader_module_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         hub.shader_modules.unregister(shader_module_id);
@@ -3815,7 +3815,7 @@
         desc: <span class="kw-2">&amp;</span>wgt::CommandEncoderDescriptor&lt;Label&gt;,
         id_in: Input&lt;G, id::CommandEncoderId&gt;,
     ) -&gt; (id::CommandEncoderId, <span class="prelude-ty">Option</span>&lt;DeviceError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_command_encoder&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_command_encoder"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.command_buffers.prepare::&lt;G&gt;(id_in);
@@ -3845,7 +3845,7 @@
             <span class="kw">let </span>command_buffer = command::CommandBuffer::new(
                 encoder,
                 <span class="kw-2">&amp;</span>device,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span>device.trace.lock().is_some(),
                 desc.label
                     .to_hal(device.instance_flags)
@@ -3853,7 +3853,7 @@
             );
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(command_buffer);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_command_encoder -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_command_encoder -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3866,8 +3866,8 @@
     }
 
     <span class="kw">pub fn </span>command_encoder_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_encoder_id: id::CommandEncoderId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;CommandEncoder::drop {command_encoder_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"CommandEncoder::drop {command_encoder_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3879,8 +3879,8 @@
     }
 
     <span class="kw">pub fn </span>command_buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_buffer_id: id::CommandBufferId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandBuffer::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;CommandBuffer::drop {command_buffer_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"CommandBuffer::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"CommandBuffer::drop {command_buffer_id:?}"</span>);
         <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id)
     }
 
@@ -3892,8 +3892,8 @@
         id::RenderBundleEncoderId,
         <span class="prelude-ty">Option</span>&lt;command::CreateRenderBundleError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_render_bundle_encoder&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::device_create_render_bundle_encoder&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_render_bundle_encoder"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::device_create_render_bundle_encoder"</span>);
         <span class="kw">let </span>(encoder, error) = <span class="kw">match </span>command::RenderBundleEncoder::new(desc, device_id, <span class="prelude-val">None</span>) {
             <span class="prelude-val">Ok</span>(encoder) =&gt; (encoder, <span class="prelude-val">None</span>),
             <span class="prelude-val">Err</span>(e) =&gt; (command::RenderBundleEncoder::dummy(device_id), <span class="prelude-val">Some</span>(e)),
@@ -3907,7 +3907,7 @@
         desc: <span class="kw-2">&amp;</span>command::RenderBundleDescriptor,
         id_in: Input&lt;G, id::RenderBundleId&gt;,
     ) -&gt; (id::RenderBundleId, <span class="prelude-ty">Option</span>&lt;command::RenderBundleError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderBundleEncoder::finish&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"RenderBundleEncoder::finish"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3922,7 +3922,7 @@
                 <span class="kw">break </span>command::RenderBundleError::INVALID_DEVICE;
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateRenderBundle {
                     id: fid.id(),
@@ -3942,7 +3942,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(render_bundle);
-            <span class="macro">api_log!</span>(<span class="string">&quot;RenderBundleEncoder::finish -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"RenderBundleEncoder::finish -&gt; {id:?}"</span>);
             device.trackers.lock().bundles.insert_single(id, resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3956,8 +3956,8 @@
     }
 
     <span class="kw">pub fn </span>render_bundle_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_bundle_id: id::RenderBundleId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderBundle::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;RenderBundle::drop {render_bundle_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"RenderBundle::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"RenderBundle::drop {render_bundle_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3976,7 +3976,7 @@
         desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
         id_in: Input&lt;G, id::QuerySetId&gt;,
     ) -&gt; (id::QuerySetId, <span class="prelude-ty">Option</span>&lt;resource::CreateQuerySetError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_query_set&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_query_set"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.query_sets.prepare::&lt;G&gt;(id_in);
@@ -3990,7 +3990,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateQuerySet {
                     id: fid.id(),
@@ -4004,7 +4004,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(query_set);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_query_set -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_query_set -&gt; {id:?}"</span>);
             device
                 .trackers
                 .lock()
@@ -4014,20 +4014,20 @@
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>id = fid.assign_error(<span class="string">&quot;&quot;</span>);
+        <span class="kw">let </span>id = fid.assign_error(<span class="string">""</span>);
         (id, <span class="prelude-val">Some</span>(error))
     }
 
     <span class="kw">pub fn </span>query_set_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query_set_id: id::QuerySetId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;QuerySet::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;QuerySet::drop {query_set_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"QuerySet::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"QuerySet::drop {query_set_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(query_set) = hub.query_sets.unregister(query_set_id) {
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>query_set.device;
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::DestroyQuerySet(query_set_id));
             }
@@ -4053,7 +4053,7 @@
         id::RenderPipelineId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateRenderPipelineError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_render_pipeline&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_render_pipeline"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4069,7 +4069,7 @@
             <span class="kw">if </span>!device.is_valid() {
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateRenderPipeline {
                     id: fid.id(),
@@ -4085,7 +4085,7 @@
                 };
 
             <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_render_pipeline -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_render_pipeline -&gt; {id:?}"</span>);
 
             device
                 .trackers
@@ -4115,7 +4115,7 @@
             }
         }
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_render_pipeline error: {error}&quot;</span>);
+        <span class="macro">log::error!</span>(<span class="string">"Device::create_render_pipeline error: {error}"</span>);
 
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -4151,7 +4151,7 @@
         <span class="kw">let </span>id = hub
             .bind_group_layouts
             .prepare::&lt;G&gt;(id_in)
-            .assign_error(<span class="string">&quot;&lt;derived&gt;&quot;</span>);
+            .assign_error(<span class="string">"&lt;derived&gt;"</span>);
         (id, <span class="prelude-val">Some</span>(error))
     }
 
@@ -4160,8 +4160,8 @@
     }
 
     <span class="kw">pub fn </span>render_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_pipeline_id: id::RenderPipelineId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderPipeline::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;RenderPipeline::drop {render_pipeline_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"RenderPipeline::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"RenderPipeline::drop {render_pipeline_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4189,7 +4189,7 @@
         id::ComputePipelineId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateComputePipelineError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_compute_pipeline&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_compute_pipeline"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4206,7 +4206,7 @@
                 <span class="kw">break </span>DeviceError::Lost.into();
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateComputePipeline {
                     id: fid.id(),
@@ -4220,7 +4220,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
-            <span class="macro">api_log!</span>(<span class="string">&quot;Device::create_compute_pipeline -&gt; {id:?}&quot;</span>);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_compute_pipeline -&gt; {id:?}"</span>);
 
             device
                 .trackers
@@ -4286,7 +4286,7 @@
         <span class="kw">let </span>id = hub
             .bind_group_layouts
             .prepare::&lt;G&gt;(id_in)
-            .assign_error(<span class="string">&quot;&lt;derived&gt;&quot;</span>);
+            .assign_error(<span class="string">"&lt;derived&gt;"</span>);
         (id, <span class="prelude-val">Some</span>(error))
     }
 
@@ -4295,8 +4295,8 @@
     }
 
     <span class="kw">pub fn </span>compute_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, compute_pipeline_id: id::ComputePipelineId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;ComputePipeline::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;ComputePipeline::drop {compute_pipeline_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"ComputePipeline::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"ComputePipeline::drop {compute_pipeline_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4321,7 +4321,7 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;present::ConfigureSurfaceError&gt; {
         <span class="kw">use </span>hal::{Adapter <span class="kw">as _</span>, Surface <span class="kw">as _</span>};
         <span class="kw">use </span>present::ConfigureSurfaceError <span class="kw">as </span>E;
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;surface_configure&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"surface_configure"</span>);
 
         <span class="kw">fn </span>validate_surface_configuration(
             config: <span class="kw-2">&amp;mut </span>hal::SurfaceConfiguration,
@@ -4340,15 +4340,15 @@
             }
 
             <span class="kw">if </span>!caps.present_modes.contains(<span class="kw-2">&amp;</span>config.present_mode) {
-                <span class="kw">let </span>new_mode = <span class="lifetime">&#39;b</span>: <span class="kw">loop </span>{
+                <span class="kw">let </span>new_mode = <span class="lifetime">'b</span>: <span class="kw">loop </span>{
                     <span class="comment">// Automatic present mode checks.
                     //
-                    // The &quot;Automatic&quot; modes are never supported by the backends.
+                    // The "Automatic" modes are never supported by the backends.
                     </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.present_mode {
                         wgt::PresentMode::AutoVsync =&gt; {
                             <span class="kw-2">&amp;</span>[wgt::PresentMode::FifoRelaxed, wgt::PresentMode::Fifo][..]
                         }
-                        <span class="comment">// Always end in FIFO to make sure it&#39;s always supported
+                        <span class="comment">// Always end in FIFO to make sure it's always supported
                         </span>wgt::PresentMode::AutoNoVsync =&gt; <span class="kw-2">&amp;</span>[
                             wgt::PresentMode::Immediate,
                             wgt::PresentMode::Mailbox,
@@ -4364,15 +4364,15 @@
 
                     <span class="kw">for </span><span class="kw-2">&amp;</span>fallback <span class="kw">in </span>fallbacks {
                         <span class="kw">if </span>caps.present_modes.contains(<span class="kw-2">&amp;</span>fallback) {
-                            <span class="kw">break </span><span class="lifetime">&#39;b </span>fallback;
+                            <span class="kw">break </span><span class="lifetime">'b </span>fallback;
                         }
                     }
 
-                    <span class="macro">unreachable!</span>(<span class="string">&quot;Fallback system failed to choose present mode. This is a bug. Mode: {:?}, Options: {:?}&quot;</span>, config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes);
+                    <span class="macro">unreachable!</span>(<span class="string">"Fallback system failed to choose present mode. This is a bug. Mode: {:?}, Options: {:?}"</span>, config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes);
                 };
 
                 <span class="macro">api_log!</span>(
-                    <span class="string">&quot;Automatically choosing presentation mode by rule {:?}. Chose {new_mode:?}&quot;</span>,
+                    <span class="string">"Automatically choosing presentation mode by rule {:?}. Chose {new_mode:?}"</span>,
                     config.present_mode
                 );
                 config.present_mode = new_mode;
@@ -4387,7 +4387,7 @@
                 .composite_alpha_modes
                 .contains(<span class="kw-2">&amp;</span>config.composite_alpha_mode)
             {
-                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">&#39;alpha</span>: <span class="kw">loop </span>{
+                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">'alpha</span>: <span class="kw">loop </span>{
                     <span class="comment">// Automatic alpha mode checks.
                     </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.composite_alpha_mode {
                         wgt::CompositeAlphaMode::Auto =&gt; <span class="kw-2">&amp;</span>[
@@ -4404,19 +4404,19 @@
 
                     <span class="kw">for </span><span class="kw-2">&amp;</span>fallback <span class="kw">in </span>fallbacks {
                         <span class="kw">if </span>caps.composite_alpha_modes.contains(<span class="kw-2">&amp;</span>fallback) {
-                            <span class="kw">break </span><span class="lifetime">&#39;alpha </span>fallback;
+                            <span class="kw">break </span><span class="lifetime">'alpha </span>fallback;
                         }
                     }
 
                     <span class="macro">unreachable!</span>(
-                        <span class="string">&quot;Fallback system failed to choose alpha mode. This is a bug. \
-                                  AlphaMode: {:?}, Options: {:?}&quot;</span>,
+                        <span class="string">"Fallback system failed to choose alpha mode. This is a bug. \
+                                  AlphaMode: {:?}, Options: {:?}"</span>,
                         config.composite_alpha_mode, <span class="kw-2">&amp;</span>caps.composite_alpha_modes
                     );
                 };
 
                 <span class="macro">api_log!</span>(
-                    <span class="string">&quot;Automatically choosing alpha mode by rule {:?}. Chose {new_alpha_mode:?}&quot;</span>,
+                    <span class="string">"Automatically choosing alpha mode by rule {:?}. Chose {new_alpha_mode:?}"</span>,
                     config.composite_alpha_mode
                 );
                 config.composite_alpha_mode = new_alpha_mode;
@@ -4430,9 +4430,9 @@
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;configuring surface with {:?}&quot;</span>, config);
+        <span class="macro">log::debug!</span>(<span class="string">"configuring surface with {:?}"</span>, config);
 
-        <span class="kw">let </span>error = <span class="lifetime">&#39;outer</span>: <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'outer</span>: <span class="kw">loop </span>{
             <span class="comment">// User callbacks must not be called while we are holding locks.
             </span><span class="kw">let </span>user_callbacks;
             {
@@ -4448,7 +4448,7 @@
                     <span class="kw">break </span>DeviceError::Lost.into();
                 }
 
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                     trace.add(trace::Action::ConfigureSurface(surface_id, config.clone()));
                 }
@@ -4477,13 +4477,13 @@
                         <span class="kw">continue</span>;
                     }
                     <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
-                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::UnsupportedFormat {
+                        <span class="kw">break </span><span class="lifetime">'outer </span>E::UnsupportedFormat {
                             requested: config.format,
                             available: caps.formats,
                         };
                     }
                     <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
-                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+                        <span class="kw">break </span><span class="lifetime">'outer </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
                     }
                     hal_view_formats.push(<span class="kw-2">*</span>format);
                 }
@@ -4492,7 +4492,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
                         device.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
                     {
-                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::MissingDownlevelFlags(missing_flag);
+                        <span class="kw">break </span><span class="lifetime">'outer </span>E::MissingDownlevelFlags(missing_flag);
                     }
                 }
 
@@ -4559,7 +4559,7 @@
                             }
                             hal::SurfaceError::Device(error) =&gt; E::Device(error.into()),
                             hal::SurfaceError::Other(message) =&gt; {
-                                <span class="macro">log::error!</span>(<span class="string">&quot;surface configuration failed: {}&quot;</span>, message);
+                                <span class="macro">log::error!</span>(<span class="string">"surface configuration failed: {}"</span>, message);
                                 E::InvalidSurface
                             }
                         }
@@ -4582,7 +4582,7 @@
         <span class="prelude-val">Some</span>(error)
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;replay&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
     </span><span class="doccomment">/// Only triange suspected resource IDs. This helps us to avoid ID collisions
     /// upon creating new resources when re-playing a trace.
     </span><span class="kw">pub fn </span>device_maintain_ids&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidDevice&gt; {
@@ -4594,7 +4594,7 @@
         }
         device.lock_life().triage_suspected(
             <span class="kw-2">&amp;</span>device.trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="prelude-val">None</span>,
         );
         <span class="prelude-val">Ok</span>(())
@@ -4608,7 +4608,7 @@
         device_id: DeviceId,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::poll&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::poll"</span>);
 
         <span class="kw">let </span>(closures, queue_empty) = {
             <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
@@ -4646,7 +4646,7 @@
         force_wait: bool,
         closures: <span class="kw-2">&amp;mut </span>UserClosures,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;poll_device&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"poll_device"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>all_queue_empty = <span class="bool-val">true</span>;
@@ -4678,31 +4678,31 @@
     /// Return `all_queue_empty` indicating whether there are more queue
     /// submissions still in flight.
     </span><span class="kw">pub fn </span>poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
-        <span class="macro">api_log!</span>(<span class="string">&quot;poll_all_devices&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"poll_all_devices"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>closures = UserClosures::default();
         <span class="kw">let </span><span class="kw-2">mut </span>all_queue_empty = <span class="bool-val">true</span>;
 
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+        <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
         </span>{
             all_queue_empty =
                 <span class="self">self</span>.poll_device::&lt;hal::api::Vulkan&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+        <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
         </span>{
             all_queue_empty =
                 <span class="self">self</span>.poll_device::&lt;hal::api::Metal&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+        <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
         </span>{
             all_queue_empty =
                 <span class="self">self</span>.poll_device::&lt;hal::api::Dx12&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+        <span class="attr">#[cfg(all(feature = <span class="string">"dx11"</span>, windows))]
         </span>{
             all_queue_empty =
                 <span class="self">self</span>.poll_device::&lt;hal::api::Dx11&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
         }
-        <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
         </span>{
             all_queue_empty =
                 <span class="self">self</span>.poll_device::&lt;hal::api::Gles&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
@@ -4718,7 +4718,7 @@
     }
 
     <span class="kw">pub fn </span>device_start_capture&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: DeviceId) {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::start_capture&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::start_capture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4731,7 +4731,7 @@
     }
 
     <span class="kw">pub fn </span>device_stop_capture&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: DeviceId) {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::stop_capture&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::stop_capture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4744,13 +4744,13 @@
     }
 
     <span class="kw">pub fn </span>device_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::drop {device_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::drop {device_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(device) = hub.devices.unregister(device_id) {
             <span class="comment">// The things `Device::prepare_to_die` takes care are mostly
-            // unnecessary here. We know our queue is empty, so we don&#39;t
+            // unnecessary here. We know our queue is empty, so we don't
             // need to wait for submissions or triage them. We know we were
             // just polled, so `life_tracker.free_resources` is empty.
             </span><span class="macro">debug_assert!</span>(device.lock_life().queue_empty());
@@ -4778,33 +4778,33 @@
     }
 
     <span class="kw">pub fn </span>device_destroy&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::destroy {device_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::destroy {device_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(device_id) {
             <span class="comment">// Follow the steps at
             // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
-            // It&#39;s legal to call destroy multiple times, but if the device
-            // is already invalid, there&#39;s nothing more to do. There&#39;s also
+            // It's legal to call destroy multiple times, but if the device
+            // is already invalid, there's nothing more to do. There's also
             // no need to return an error.
             </span><span class="kw">if </span>!device.is_valid() {
                 <span class="kw">return</span>;
             }
 
             <span class="comment">// The last part of destroy is to lose the device. The spec says
-            // delay that until all &quot;currently-enqueued operations on any
-            // queue on this device are completed.&quot; This is accomplished by
+            // delay that until all "currently-enqueued operations on any
+            // queue on this device are completed." This is accomplished by
             // setting valid to false, and then relying upon maintain to
             // check for empty queues and a DeviceLostClosure. At that time,
-            // the DeviceLostClosure will be called with &quot;destroyed&quot; as the
+            // the DeviceLostClosure will be called with "destroyed" as the
             // reason.
             </span>device.valid.store(<span class="bool-val">false</span>, Ordering::Relaxed);
         }
     }
 
     <span class="kw">pub fn </span>device_mark_lost&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId, message: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Device::mark_lost {device_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::mark_lost {device_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4814,8 +4814,8 @@
     }
 
     <span class="kw">pub fn </span>queue_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, queue_id: QueueId) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::drop&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Queue::drop {queue_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Queue::drop"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Queue::drop {queue_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = hub.queues.unregister(queue_id) {
@@ -4829,16 +4829,16 @@
         range: Range&lt;BufferAddress&gt;,
         op: BufferMapOperation,
     ) -&gt; BufferAccessResult {
-        <span class="macro">api_log!</span>(<span class="string">&quot;Buffer::map_async {buffer_id:?}&quot;</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::map_async {buffer_id:?}"</span>);
 
-        <span class="comment">// User callbacks must not be called while holding buffer_map_async_inner&#39;s locks, so we
+        <span class="comment">// User callbacks must not be called while holding buffer_map_async_inner's locks, so we
         // defer the error callback if it needs to be called immediately (typically when running
         // into errors).
         </span><span class="kw">if let </span><span class="prelude-val">Err</span>((<span class="kw-2">mut </span>operation, err)) = <span class="self">self</span>.buffer_map_async_inner::&lt;A&gt;(buffer_id, range, op) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
                 callback.call(<span class="prelude-val">Err</span>(err.clone()));
             }
-            <span class="macro">log::error!</span>(<span class="string">&quot;Buffer::map_async error: {err}&quot;</span>);
+            <span class="macro">log::error!</span>(<span class="string">"Buffer::map_async error: {err}"</span>);
             <span class="kw">return </span><span class="prelude-val">Err</span>(err);
         }
 
@@ -4853,7 +4853,7 @@
         range: Range&lt;BufferAddress&gt;,
         op: BufferMapOperation,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), (BufferMapOperation, BufferAccessError)&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::map_async&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::map_async"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4947,8 +4947,8 @@
         offset: BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">*mut </span>u8, u64), BufferAccessError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::get_mapped_range&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Buffer::get_mapped_range {buffer_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::get_mapped_range"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::get_mapped_range {buffer_id:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -5009,8 +5009,8 @@
         }
     }
     <span class="kw">pub fn </span>buffer_unmap&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId) -&gt; BufferAccessResult {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;unmap&quot;</span>, <span class="string">&quot;Buffer&quot;</span>);
-        <span class="macro">api_log!</span>(<span class="string">&quot;Buffer::unmap {buffer_id:?}&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"unmap"</span>, <span class="string">"Buffer"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::unmap {buffer_id:?}"</span>);
 
         <span class="kw">let </span>closure;
         {

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2235,7 +2235,7 @@
                     <span class="macro">assert!</span>(multiview.get() &gt; <span class="number">1</span>);
 
                     <span class="comment">// Right now we enable all bits on the view masks and correlation masks.
-                    // This means we&#39;re rendering to all views in the subpass, and that all views
+                    // This means we're rendering to all views in the subpass, and that all views
                     // can be rendered concurrently.
                     </span>mask = [(<span class="number">1 </span>&lt;&lt; multiview.get()) - <span class="number">1</span>];
 
@@ -2334,11 +2334,11 @@
         })
     }
 
-    <span class="kw">fn </span>make_memory_ranges&lt;<span class="lifetime">&#39;a</span>, I: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = <span class="kw">crate</span>::MemoryRange&gt;&gt;(
+    <span class="kw">fn </span>make_memory_ranges&lt;<span class="lifetime">'a</span>, I: <span class="lifetime">'a </span>+ Iterator&lt;Item = <span class="kw">crate</span>::MemoryRange&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">super</span>::Buffer,
+        buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">super</span>::Buffer,
         ranges: I,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span><span class="lifetime">&#39;a </span>+ Iterator&lt;Item = vk::MappedMemoryRange&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span><span class="lifetime">'a </span>+ Iterator&lt;Item = vk::MappedMemoryRange&gt;&gt; {
         <span class="kw">let </span>block = buffer.block.as_ref()<span class="question-mark">?</span>.lock();
         <span class="kw">let </span>mask = <span class="self">self</span>.private_caps.non_coherent_map_mask;
         <span class="prelude-val">Some</span>(ranges.map(<span class="kw">move </span>|range| {
@@ -2390,8 +2390,8 @@
             <span class="prelude-val">Err</span>(vk::Result::ERROR_OUT_OF_HOST_MEMORY) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_alloc::OutOfMemory::OutOfHostMemory)
             }
-            <span class="prelude-val">Err</span>(vk::Result::ERROR_TOO_MANY_OBJECTS) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Too many objects&quot;</span>),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected Vulkan error: `{err}`&quot;</span>),
+            <span class="prelude-val">Err</span>(vk::Result::ERROR_TOO_MANY_OBJECTS) =&gt; <span class="macro">panic!</span>(<span class="string">"Too many objects"</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected Vulkan error: `{err}`"</span>),
         }
     }
 
@@ -2410,7 +2410,7 @@
                 .map_memory(<span class="kw-2">*</span>memory, offset, size, vk::MemoryMapFlags::empty())
         } {
             <span class="prelude-val">Ok</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr::NonNull::new(ptr <span class="kw">as </span><span class="kw-2">*mut </span>u8)
-                .expect(<span class="string">&quot;Pointer to memory mapping must not be null&quot;</span>)),
+                .expect(<span class="string">"Pointer to memory mapping must not be null"</span>)),
             <span class="prelude-val">Err</span>(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::OutOfDeviceMemory)
             }
@@ -2418,7 +2418,7 @@
                 <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::OutOfHostMemory)
             }
             <span class="prelude-val">Err</span>(vk::Result::ERROR_MEMORY_MAP_FAILED) =&gt; <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::MapFailed),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected Vulkan error: `{err}`&quot;</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected Vulkan error: `{err}`"</span>),
         }
     }
 
@@ -2428,7 +2428,7 @@
 
     <span class="kw">unsafe fn </span>invalidate_memory_ranges(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _ranges: <span class="kw-2">&amp;</span>[gpu_alloc::MappedMemoryRange&lt;<span class="lifetime">&#39;_</span>, vk::DeviceMemory&gt;],
+        _ranges: <span class="kw-2">&amp;</span>[gpu_alloc::MappedMemoryRange&lt;<span class="lifetime">'_</span>, vk::DeviceMemory&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), gpu_alloc::OutOfMemory&gt; {
         <span class="comment">// should never be called
         </span><span class="macro">unimplemented!</span>()
@@ -2436,7 +2436,7 @@
 
     <span class="kw">unsafe fn </span>flush_memory_ranges(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _ranges: <span class="kw-2">&amp;</span>[gpu_alloc::MappedMemoryRange&lt;<span class="lifetime">&#39;_</span>, vk::DeviceMemory&gt;],
+        _ranges: <span class="kw-2">&amp;</span>[gpu_alloc::MappedMemoryRange&lt;<span class="lifetime">'_</span>, vk::DeviceMemory&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), gpu_alloc::OutOfMemory&gt; {
         <span class="comment">// should never be called
         </span><span class="macro">unimplemented!</span>()
@@ -2453,7 +2453,7 @@
         max_sets: u32,
         flags: gpu_descriptor::DescriptorPoolCreateFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;vk::DescriptorPool, gpu_descriptor::CreatePoolError&gt; {
-        <span class="comment">//Note: ignoring other types, since they can&#39;t appear here
+        <span class="comment">//Note: ignoring other types, since they can't appear here
         </span><span class="kw">let </span>unfiltered_counts = [
             (vk::DescriptorType::SAMPLER, descriptor_count.sampler),
             (
@@ -2519,7 +2519,7 @@
                 <span class="prelude-val">Err</span>(gpu_descriptor::CreatePoolError::Fragmentation)
             }
             <span class="prelude-val">Err</span>(other) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;create_descriptor_pool: {:?}&quot;</span>, other);
+                <span class="macro">log::error!</span>(<span class="string">"create_descriptor_pool: {:?}"</span>, other);
                 <span class="prelude-val">Err</span>(gpu_descriptor::CreatePoolError::OutOfHostMemory)
             }
         }
@@ -2529,10 +2529,10 @@
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.destroy_descriptor_pool(pool, <span class="prelude-val">None</span>) }
     }
 
-    <span class="kw">unsafe fn </span>alloc_descriptor_sets&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">unsafe fn </span>alloc_descriptor_sets&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pool: <span class="kw-2">&amp;mut </span>vk::DescriptorPool,
-        layouts: <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>vk::DescriptorSetLayout&gt;,
+        layouts: <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>vk::DescriptorSetLayout&gt;,
         sets: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;vk::DescriptorSet&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), gpu_descriptor::DeviceAllocationError&gt; {
         <span class="kw">let </span>result = <span class="kw">unsafe </span>{
@@ -2564,13 +2564,13 @@
                 <span class="prelude-val">Err</span>(gpu_descriptor::DeviceAllocationError::FragmentedPool)
             }
             <span class="prelude-val">Err</span>(other) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;allocate_descriptor_sets: {:?}&quot;</span>, other);
+                <span class="macro">log::error!</span>(<span class="string">"allocate_descriptor_sets: {:?}"</span>, other);
                 <span class="prelude-val">Err</span>(gpu_descriptor::DeviceAllocationError::OutOfHostMemory)
             }
         }
     }
 
-    <span class="kw">unsafe fn </span>dealloc_descriptor_sets&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">unsafe fn </span>dealloc_descriptor_sets&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pool: <span class="kw-2">&amp;mut </span>vk::DescriptorPool,
         sets: <span class="kw">impl </span>Iterator&lt;Item = vk::DescriptorSet&gt;,
@@ -2583,7 +2583,7 @@
         };
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(()) =&gt; {}
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;free_descriptor_sets: {:?}&quot;</span>, err),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">log::error!</span>(<span class="string">"free_descriptor_sets: {:?}"</span>, err),
         }
     }
 }
@@ -2601,7 +2601,7 @@
         config: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SurfaceConfiguration,
         provided_old_swapchain: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::Swapchain&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Swapchain, <span class="kw">crate</span>::SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_swapchain&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_swapchain"</span>);
         <span class="kw">let </span>functor = khr::Swapchain::new(<span class="kw-2">&amp;</span>surface.instance.raw, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
 
         <span class="kw">let </span>old_swapchain = <span class="kw">match </span>provided_old_swapchain {
@@ -2660,7 +2660,7 @@
         }
 
         <span class="kw">let </span>result = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateSwapchainKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateSwapchainKHR"</span>);
             <span class="kw">unsafe </span>{ functor.create_swapchain(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }
         };
 
@@ -2675,7 +2675,7 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">match </span>error {
                     vk::Result::ERROR_SURFACE_LOST_KHR =&gt; <span class="kw">crate</span>::SurfaceError::Lost,
                     vk::Result::ERROR_NATIVE_WINDOW_IN_USE_KHR =&gt; {
-                        <span class="kw">crate</span>::SurfaceError::Other(<span class="string">&quot;Native window is in use&quot;</span>)
+                        <span class="kw">crate</span>::SurfaceError::Other(<span class="string">"Native window is in use"</span>)
                     }
                     other =&gt; <span class="kw">crate</span>::DeviceError::from(other).into(),
                 })
@@ -2740,8 +2740,8 @@
 
     <span class="doccomment">/// # Safety
     ///
-    /// - `vk_buffer`&#39;s memory must be managed by the caller
-    /// - Externally imported buffers can&#39;t be mapped by `wgpu`
+    /// - `vk_buffer`'s memory must be managed by the caller
+    /// - Externally imported buffers can't be mapped by `wgpu`
     </span><span class="kw">pub unsafe fn </span>buffer_from_raw(vk_buffer: vk::Buffer) -&gt; <span class="kw">super</span>::Buffer {
         <span class="kw">super</span>::Buffer {
             raw: vk_buffer,
@@ -2758,7 +2758,7 @@
             .code(spv);
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateShaderModule&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateShaderModule"</span>);
             <span class="self">self</span>.shared.raw.create_shader_module(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">?
         </span>};
         <span class="prelude-val">Ok</span>(raw)
@@ -2812,7 +2812,7 @@
                     <span class="kw-2">&amp;</span><span class="self">self</span>.naga_options
                 };
                 <span class="kw">let </span>spv = {
-                    <span class="macro">profiling::scope!</span>(<span class="string">&quot;naga::spv::write_vec&quot;</span>);
+                    <span class="macro">profiling::scope!</span>(<span class="string">"naga::spv::write_vec"</span>);
                     naga::back::spv::write_vec(
                         <span class="kw-2">&amp;</span>naga_shader.module,
                         <span class="kw-2">&amp;</span>naga_shader.info,
@@ -2820,7 +2820,7 @@
                         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_options),
                     )
                 }
-                .map_err(|e| <span class="kw">crate</span>::PipelineError::Linkage(stage_flags, <span class="macro">format!</span>(<span class="string">&quot;{e}&quot;</span>)))<span class="question-mark">?</span>;
+                .map_err(|e| <span class="kw">crate</span>::PipelineError::Linkage(stage_flags, <span class="macro">format!</span>(<span class="string">"{e}"</span>)))<span class="question-mark">?</span>;
                 <span class="self">self</span>.create_shader_module_impl(<span class="kw-2">&amp;</span>spv)<span class="question-mark">?
             </span>}
         };
@@ -2842,7 +2842,7 @@
         })
     }
 
-    <span class="doccomment">/// Returns the queue family index of the device&#39;s internal queue.
+    <span class="doccomment">/// Returns the queue family index of the device's internal queue.
     ///
     /// This is useful for constructing memory barriers needed for queue family ownership transfer when
     /// external memory is involved (from/to `VK_QUEUE_FAMILY_EXTERNAL_KHR` and `VK_QUEUE_FAMILY_FOREIGN_EXT`
@@ -2867,7 +2867,7 @@
         <span class="self">self</span>.shared.raw_queue
     }
 
-    <span class="kw">pub fn </span>enabled_device_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr] {
+    <span class="kw">pub fn </span>enabled_device_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.shared.enabled_extensions
     }
 
@@ -3128,7 +3128,7 @@
             .format(<span class="self">self</span>.shared.private_caps.map_texture_format(desc.format))
             .subresource_range(subresource_range);
         <span class="kw">let </span>layers =
-            NonZeroU32::new(subresource_range.layer_count).expect(<span class="string">&quot;Unexpected zero layer count&quot;</span>);
+            NonZeroU32::new(subresource_range.layer_count).expect(<span class="string">"Unexpected zero layer count"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>image_view_info;
         <span class="kw">let </span>view_usage = <span class="kw">if </span><span class="self">self</span>.shared.private_caps.image_view_usage &amp;&amp; !desc.usage.is_empty() {
@@ -3258,8 +3258,8 @@
     <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, cmd_encoder: <span class="kw">super</span>::CommandEncoder) {
         <span class="kw">unsafe </span>{
             <span class="comment">// `vkDestroyCommandPool` also frees any command buffers allocated
-            // from that pool, so there&#39;s no need to explicitly call
-            // `vkFreeCommandBuffers` on `cmd_encoder`&#39;s `free` and `discarded`
+            // from that pool, so there's no need to explicitly call
+            // `vkFreeCommandBuffers` on `cmd_encoder`'s `free` and `discarded`
             // fields.
             </span><span class="self">self</span>.shared.raw.destroy_command_pool(cmd_encoder.raw, <span class="prelude-val">None</span>);
         }
@@ -3317,7 +3317,7 @@
             }
         }
 
-        <span class="comment">//Note: not bothering with on stack array here as it&#39;s low frequency
+        <span class="comment">//Note: not bothering with on stack array here as it's low frequency
         </span><span class="kw">let </span>vk_bindings = desc
             .entries
             .iter()
@@ -3401,7 +3401,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::Api&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineLayout, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="comment">//Note: not bothering with on stack array here as it&#39;s low frequency
+        <span class="comment">//Note: not bothering with on stack array here as it's low frequency
         </span><span class="kw">let </span>vk_set_layouts = desc
             .bind_group_layouts
             .iter()
@@ -3423,7 +3423,7 @@
             .push_constant_ranges(<span class="kw-2">&amp;</span>vk_push_constant_ranges);
 
         <span class="kw">let </span>raw = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreatePipelineLayout&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreatePipelineLayout"</span>);
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_pipeline_layout(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>}
         };
 
@@ -3605,7 +3605,7 @@
                         <span class="kw-2">&amp;</span>naga_options,
                         <span class="prelude-val">None</span>,
                     )
-                    .map_err(|e| <span class="kw">crate</span>::ShaderError::Compilation(<span class="macro">format!</span>(<span class="string">&quot;{e}&quot;</span>)))<span class="question-mark">?</span>,
+                    .map_err(|e| <span class="kw">crate</span>::ShaderError::Compilation(<span class="macro">format!</span>(<span class="string">"{e}"</span>)))<span class="question-mark">?</span>,
                 )
             }
             <span class="kw">crate</span>::ShaderInput::SpirV(spv) =&gt; Cow::Borrowed(spv),
@@ -3835,7 +3835,7 @@
         }];
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw_vec = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateGraphicsPipelines&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateGraphicsPipelines"</span>);
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.shared
                     .raw
@@ -3887,7 +3887,7 @@
         }];
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw_vec = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateComputePipelines&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateComputePipelines"</span>);
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.shared
                     .raw
@@ -4044,7 +4044,7 @@
                             }
                         }
                         <span class="prelude-val">None </span>=&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;No signals reached value {}&quot;</span>, wait_value);
+                            <span class="macro">log::error!</span>(<span class="string">"No signals reached value {}"</span>, wait_value);
                             <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost)
                         }
                     }
@@ -4054,7 +4054,7 @@
     }
 
     <span class="kw">unsafe fn </span>start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
         </span>{
             <span class="comment">// Renderdoc requires us to give us the pointer that vkInstance _points to_.
             </span><span class="kw">let </span>raw_vk_instance =
@@ -4065,11 +4065,11 @@
                     .start_frame_capture(raw_vk_instance_dispatch_table, ptr::null_mut())
             }
         }
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;renderdoc&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">"renderdoc"</span>))]
         </span><span class="bool-val">false
     </span>}
     <span class="kw">unsafe fn </span>stop_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
         </span>{
             <span class="comment">// Renderdoc requires us to give us the pointer that vkInstance _points to_.
             </span><span class="kw">let </span>raw_vk_instance =
@@ -4090,7 +4090,7 @@
         <span class="kw">match </span>error {
             Ae::OutOfDeviceMemory | Ae::OutOfHostMemory =&gt; <span class="self">Self</span>::OutOfMemory,
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;memory allocation: {:?}&quot;</span>, error);
+                <span class="macro">log::error!</span>(<span class="string">"memory allocation: {:?}"</span>, error);
                 <span class="self">Self</span>::Lost
             }
         }
@@ -4102,7 +4102,7 @@
         <span class="kw">match </span>error {
             Me::OutOfDeviceMemory | Me::OutOfHostMemory =&gt; <span class="self">Self</span>::OutOfMemory,
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;memory mapping: {:?}&quot;</span>, error);
+                <span class="macro">log::error!</span>(<span class="string">"memory mapping: {:?}"</span>, error);
                 <span class="self">Self</span>::Lost
             }
         }
@@ -4110,7 +4110,7 @@
 }
 <span class="kw">impl </span>From&lt;gpu_descriptor::AllocationError&gt; <span class="kw">for </span><span class="kw">crate</span>::DeviceError {
     <span class="kw">fn </span>from(error: gpu_descriptor::AllocationError) -&gt; <span class="self">Self </span>{
-        <span class="macro">log::error!</span>(<span class="string">&quot;descriptor allocation: {:?}&quot;</span>, error);
+        <span class="macro">log::error!</span>(<span class="string">"descriptor allocation: {:?}"</span>, error);
         <span class="self">Self</span>::OutOfMemory
     }
 }

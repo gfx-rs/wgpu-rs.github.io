@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/query.rs`."><title>query.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/query.rs`."><title>query.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -492,7 +492,7 @@
 <a href="#492" id="492">492</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     command::{CommandBuffer, CommandEncoderError},
@@ -549,24 +549,24 @@
 
             <span class="macro">debug_assert_eq!</span>(state.len(), query_set.desc.count <span class="kw">as </span>usize);
 
-            <span class="comment">// Need to find all &quot;runs&quot; of values which need resets. If the state vector is:
+            <span class="comment">// Need to find all "runs" of values which need resets. If the state vector is:
             // [false, true, true, false, true], we want to reset [1..3, 4..5]. This minimizes
             // the amount of resets needed.
             </span><span class="kw">let </span><span class="kw-2">mut </span>run_start: <span class="prelude-ty">Option</span>&lt;u32&gt; = <span class="prelude-val">None</span>;
             <span class="kw">for </span>(idx, value) <span class="kw">in </span>state.into_iter().chain(iter::once(<span class="bool-val">false</span>)).enumerate() {
                 <span class="kw">match </span>(run_start, value) {
-                    <span class="comment">// We&#39;re inside of a run, do nothing
+                    <span class="comment">// We're inside of a run, do nothing
                     </span>(<span class="prelude-val">Some</span>(..), <span class="bool-val">true</span>) =&gt; {}
-                    <span class="comment">// We&#39;ve hit the end of a run, dispatch a reset
+                    <span class="comment">// We've hit the end of a run, dispatch a reset
                     </span>(<span class="prelude-val">Some</span>(start), <span class="bool-val">false</span>) =&gt; {
                         run_start = <span class="prelude-val">None</span>;
                         <span class="kw">unsafe </span>{ raw_encoder.reset_queries(query_set.raw(), start..idx <span class="kw">as </span>u32) };
                     }
-                    <span class="comment">// We&#39;re starting a run
+                    <span class="comment">// We're starting a run
                     </span>(<span class="prelude-val">None</span>, <span class="bool-val">true</span>) =&gt; {
                         run_start = <span class="prelude-val">Some</span>(idx <span class="kw">as </span>u32);
                     }
-                    <span class="comment">// We&#39;re in a run of falses, do nothing.
+                    <span class="comment">// We're in a run of falses, do nothing.
                     </span>(<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
                 }
             }
@@ -598,13 +598,13 @@
 </span><span class="kw">pub enum </span>QueryError {
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
-    <span class="attr">#[error(<span class="string">&quot;Error encountered while trying to use queries&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Error encountered while trying to use queries"</span>)]
     </span>Use(<span class="attr">#[from] </span>QueryUseError),
-    <span class="attr">#[error(<span class="string">&quot;Error encountered while trying to resolve a query&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Error encountered while trying to resolve a query"</span>)]
     </span>Resolve(<span class="attr">#[from] </span>ResolveError),
-    <span class="attr">#[error(<span class="string">&quot;Buffer {0:?} is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
     </span>InvalidBuffer(id::BufferId),
-    <span class="attr">#[error(<span class="string">&quot;QuerySet {0:?} is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid or destroyed"</span>)]
     </span>InvalidQuerySet(id::QuerySetId),
 }
 
@@ -624,21 +624,21 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueryUseError {
-    <span class="attr">#[error(<span class="string">&quot;Query {query_index} is out of bounds for a query set of size {query_set_size}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Query {query_index} is out of bounds for a query set of size {query_set_size}"</span>)]
     </span>OutOfBounds {
         query_index: u32,
         query_set_size: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Query {query_index} has already been used within the same renderpass. Queries must only be used once per renderpass&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Query {query_index} has already been used within the same renderpass. Queries must only be used once per renderpass"</span>)]
     </span>UsedTwiceInsideRenderpass { query_index: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Query {new_query_index} was started while query {active_query_index} was already active. No more than one statistic or occlusion query may be active at once&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Query {new_query_index} was started while query {active_query_index} was already active. No more than one statistic or occlusion query may be active at once"</span>)]
     </span>AlreadyStarted {
         active_query_index: u32,
         new_query_index: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Query was stopped while there was no active query&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Query was stopped while there was no active query"</span>)]
     </span>AlreadyStopped,
-    <span class="attr">#[error(<span class="string">&quot;A query of type {query_type:?} was started using a query set of type {set_type:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"A query of type {query_type:?} was started using a query set of type {set_type:?}"</span>)]
     </span>IncompatibleType {
         set_type: SimplifiedQueryType,
         query_type: SimplifiedQueryType,
@@ -649,17 +649,17 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ResolveError {
-    <span class="attr">#[error(<span class="string">&quot;Queries can only be resolved to buffers that contain the QUERY_RESOLVE usage&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Queries can only be resolved to buffers that contain the QUERY_RESOLVE usage"</span>)]
     </span>MissingBufferUsage,
-    <span class="attr">#[error(<span class="string">&quot;Resolve buffer offset has to be aligned to `QUERY_RESOLVE_BUFFER_ALIGNMENT&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resolve buffer offset has to be aligned to `QUERY_RESOLVE_BUFFER_ALIGNMENT"</span>)]
     </span>BufferOffsetAlignment,
-    <span class="attr">#[error(<span class="string">&quot;Resolving queries {start_query}..{end_query} would overrun the query set of size {query_set_size}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resolving queries {start_query}..{end_query} would overrun the query set of size {query_set_size}"</span>)]
     </span>QueryOverrun {
         start_query: u32,
         end_query: u32,
         query_set_size: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Resolving queries {start_query}..{end_query} ({stride} byte queries) will end up overrunning the bounds of the destination buffer of size {buffer_size} using offsets {buffer_start_offset}..{buffer_end_offset}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resolving queries {start_query}..{end_query} ({stride} byte queries) will end up overrunning the bounds of the destination buffer of size {buffer_size} using offsets {buffer_start_offset}..{buffer_end_offset}"</span>)]
     </span>BufferOverrun {
         start_query: u32,
         end_query: u32,
@@ -721,7 +721,7 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">unsafe </span>{
-            <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
+            <span class="comment">// If we don't have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
                 raw_encoder.reset_queries(<span class="self">self</span>.raw(), query_index..(query_index + <span class="number">1</span>));
             }
@@ -755,7 +755,7 @@
         }
 
         <span class="kw">unsafe </span>{
-            <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
+            <span class="comment">// If we don't have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
                 raw_encoder
                     .reset_queries(<span class="self">self</span>.raw.as_ref().unwrap(), query_index..(query_index + <span class="number">1</span>));
@@ -790,7 +790,7 @@
         }
 
         <span class="kw">unsafe </span>{
-            <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
+            <span class="comment">// If we don't have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
                 raw_encoder.reset_queries(<span class="self">self</span>.raw(), query_index..(query_index + <span class="number">1</span>));
             }
@@ -848,7 +848,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(TraceCommand::WriteTimestamp {
                 query_set_id,
@@ -887,7 +887,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(TraceCommand::ResolveQuerySet {
                 query_set_id,

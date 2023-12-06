@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/ast.rs`."><title>ast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/ast.rs`."><title>ast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -495,37 +495,37 @@
 <span class="kw">use </span>std::hash::Hash;
 
 <span class="attr">#[derive(Debug, Default)]
-</span><span class="kw">pub struct </span>TranslationUnit&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>decls: Arena&lt;GlobalDecl&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>TranslationUnit&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>decls: Arena&lt;GlobalDecl&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="doccomment">/// The common expressions arena for the entire translation unit.
     ///
     /// All functions, global initializers, array lengths, etc. store their
     /// expressions here. We apportion these out to individual Naga
-    /// [`Function`]s&#39; expression arenas at lowering time. Keeping them all in a
+    /// [`Function`]s' expression arenas at lowering time. Keeping them all in a
     /// single arena simplifies handling of things like array lengths (which are
-    /// effectively global and thus don&#39;t clearly belong to any function) and
+    /// effectively global and thus don't clearly belong to any function) and
     /// initializers (which can appear in both function-local and module-scope
     /// contexts).
     ///
     /// [`Function`]: crate::Function
-    </span><span class="kw">pub </span>expressions: Arena&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    </span><span class="kw">pub </span>expressions: Arena&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
 
     <span class="doccomment">/// Non-user-defined types, like `vec4&lt;f32&gt;` or `array&lt;i32, 10&gt;`.
     ///
-    /// These are referred to by `Handle&lt;ast::Type&lt;&#39;a&gt;&gt;` values.
+    /// These are referred to by `Handle&lt;ast::Type&lt;'a&gt;&gt;` values.
     /// User-defined types are referred to by name until lowering.
-    </span><span class="kw">pub </span>types: Arena&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    </span><span class="kw">pub </span>types: Arena&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
-</span><span class="kw">pub struct </span>Ident&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+</span><span class="kw">pub struct </span>Ident&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="kw">pub </span>span: Span,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>IdentExpr&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Unresolved(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+</span><span class="kw">pub enum </span>IdentExpr&lt;<span class="lifetime">'a</span>&gt; {
+    Unresolved(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str),
     Local(Handle&lt;Local&gt;),
 }
 
@@ -536,89 +536,89 @@
 /// `Hash` on a `Dependency` value consider only the name, not the
 /// source location at which the reference occurs.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Dependency&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Dependency&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The name referred to.
-    </span><span class="kw">pub </span>ident: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    </span><span class="kw">pub </span>ident: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
 
     <span class="doccomment">/// The location at which the reference to that name occurs.
     </span><span class="kw">pub </span>usage: Span,
 }
 
-<span class="kw">impl </span>Hash <span class="kw">for </span>Dependency&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Hash <span class="kw">for </span>Dependency&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
         <span class="self">self</span>.ident.hash(state);
     }
 }
 
-<span class="kw">impl </span>PartialEq <span class="kw">for </span>Dependency&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>Dependency&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="self">self</span>.ident == other.ident
     }
 }
 
-<span class="kw">impl </span>Eq <span class="kw">for </span>Dependency&lt;<span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>Eq <span class="kw">for </span>Dependency&lt;<span class="lifetime">'_</span>&gt; {}
 
 <span class="doccomment">/// A module-scope declaration.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>GlobalDecl&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>kind: GlobalDeclKind&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>GlobalDecl&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>kind: GlobalDeclKind&lt;<span class="lifetime">'a</span>&gt;,
 
     <span class="doccomment">/// Names of all module-scope or predeclared objects this
     /// declaration uses.
-    </span><span class="kw">pub </span>dependencies: FastIndexSet&lt;Dependency&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    </span><span class="kw">pub </span>dependencies: FastIndexSet&lt;Dependency&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>GlobalDeclKind&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Fn(Function&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Var(GlobalVariable&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Const(Const&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Struct(Struct&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Type(TypeAlias&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">pub enum </span>GlobalDeclKind&lt;<span class="lifetime">'a</span>&gt; {
+    Fn(Function&lt;<span class="lifetime">'a</span>&gt;),
+    Var(GlobalVariable&lt;<span class="lifetime">'a</span>&gt;),
+    Const(Const&lt;<span class="lifetime">'a</span>&gt;),
+    Struct(Struct&lt;<span class="lifetime">'a</span>&gt;),
+    Type(TypeAlias&lt;<span class="lifetime">'a</span>&gt;),
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>FunctionArgument&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>FunctionArgument&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="kw">pub </span>handle: Handle&lt;Local&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>FunctionResult&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>FunctionResult&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>EntryPoint&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>EntryPoint&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>stage: <span class="kw">crate</span>::ShaderStage,
     <span class="kw">pub </span>early_depth_test: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::EarlyDepthTest&gt;,
-    <span class="kw">pub </span>workgroup_size: <span class="prelude-ty">Option</span>&lt;[<span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;; <span class="number">3</span>]&gt;,
+    <span class="kw">pub </span>workgroup_size: <span class="prelude-ty">Option</span>&lt;[<span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;; <span class="number">3</span>]&gt;,
 }
 
 <span class="attr">#[cfg(doc)]
 </span><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::lower::{RuntimeExpressionContext, StatementContext};
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Function&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;EntryPoint&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>arguments: Vec&lt;FunctionArgument&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>result: <span class="prelude-ty">Option</span>&lt;FunctionResult&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>Function&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;EntryPoint&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>arguments: Vec&lt;FunctionArgument&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>result: <span class="prelude-ty">Option</span>&lt;FunctionResult&lt;<span class="lifetime">'a</span>&gt;&gt;,
 
     <span class="doccomment">/// Local variable and function argument arena.
     ///
     /// Note that the `Local` here is actually a zero-sized type. The AST keeps
     /// all the detailed information about locals - names, types, etc. - in
     /// [`LocalDecl`] statements. For arguments, that information is kept in
-    /// [`arguments`]. This `Arena`&#39;s only role is to assign a unique `Handle`
-    /// to each of them, and track their definitions&#39; spans for use in
+    /// [`arguments`]. This `Arena`'s only role is to assign a unique `Handle`
+    /// to each of them, and track their definitions' spans for use in
     /// diagnostics.
     ///
     /// In the AST, when an [`Ident`] expression refers to a local variable or
-    /// argument, its [`IdentExpr`] holds the referent&#39;s `Handle&lt;Local&gt;` in this
+    /// argument, its [`IdentExpr`] holds the referent's `Handle&lt;Local&gt;` in this
     /// arena.
     ///
     /// During lowering, [`LocalDecl`] statements add entries to a per-function
@@ -634,14 +634,14 @@
     /// [`RuntimeExpressionContext::local_table`]: RuntimeExpressionContext::local_table
     </span><span class="kw">pub </span>locals: Arena&lt;Local&gt;,
 
-    <span class="kw">pub </span>body: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
+    <span class="kw">pub </span>body: Block&lt;<span class="lifetime">'a</span>&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>Binding&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>Binding&lt;<span class="lifetime">'a</span>&gt; {
     BuiltIn(<span class="kw">crate</span>::BuiltIn),
     Location {
-        location: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        location: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
         second_blend_source: bool,
         interpolation: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Interpolation&gt;,
         sampling: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Sampling&gt;,
@@ -649,46 +649,46 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ResourceBinding&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>group: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>binding: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>ResourceBinding&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>group: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>binding: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>GlobalVariable&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>GlobalVariable&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>space: <span class="kw">crate</span>::AddressSpace,
-    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;ResourceBinding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;ResourceBinding&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>StructMember&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    <span class="kw">pub </span>align: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
-    <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+</span><span class="kw">pub struct </span>StructMember&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>binding: <span class="prelude-ty">Option</span>&lt;Binding&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    <span class="kw">pub </span>align: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+    <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Struct&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>members: Vec&lt;StructMember&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>Struct&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>members: Vec&lt;StructMember&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>TypeAlias&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>TypeAlias&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Const&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
-    <span class="kw">pub </span>init: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>Const&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+    <span class="kw">pub </span>init: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="doccomment">/// The size of an [`Array`] or [`BindingArray`].
@@ -696,14 +696,14 @@
 /// [`Array`]: Type::Array
 /// [`BindingArray`]: Type::BindingArray
 </span><span class="attr">#[derive(Debug, Copy, Clone)]
-</span><span class="kw">pub enum </span>ArraySize&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>ArraySize&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The length as a constant expression.
-    </span>Constant(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
+    </span>Constant(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
     Dynamic,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>Type&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>Type&lt;<span class="lifetime">'a</span>&gt; {
     Scalar(Scalar),
     Vector {
         size: <span class="kw">crate</span>::VectorSize,
@@ -716,12 +716,12 @@
     },
     Atomic(Scalar),
     Pointer {
-        base: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        base: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
         space: <span class="kw">crate</span>::AddressSpace,
     },
     Array {
-        base: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        size: ArraySize&lt;<span class="lifetime">&#39;a</span>&gt;,
+        base: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        size: ArraySize&lt;<span class="lifetime">'a</span>&gt;,
     },
     Image {
         dim: <span class="kw">crate</span>::ImageDimension,
@@ -736,73 +736,73 @@
     RayDesc,
     RayIntersection,
     BindingArray {
-        base: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        size: ArraySize&lt;<span class="lifetime">&#39;a</span>&gt;,
+        base: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        size: ArraySize&lt;<span class="lifetime">'a</span>&gt;,
     },
 
     <span class="doccomment">/// A user-defined type, like a struct or a type alias.
-    </span>User(Ident&lt;<span class="lifetime">&#39;a</span>&gt;),
+    </span>User(Ident&lt;<span class="lifetime">'a</span>&gt;),
 }
 
 <span class="attr">#[derive(Debug, Default)]
-</span><span class="kw">pub struct </span>Block&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>stmts: Vec&lt;Statement&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>Block&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>stmts: Vec&lt;Statement&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Statement&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>kind: StatementKind&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>Statement&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>kind: StatementKind&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>span: Span,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>StatementKind&lt;<span class="lifetime">&#39;a</span>&gt; {
-    LocalDecl(LocalDecl&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Block(Block&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">pub enum </span>StatementKind&lt;<span class="lifetime">'a</span>&gt; {
+    LocalDecl(LocalDecl&lt;<span class="lifetime">'a</span>&gt;),
+    Block(Block&lt;<span class="lifetime">'a</span>&gt;),
     If {
-        condition: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        accept: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-        reject: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
+        condition: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        accept: Block&lt;<span class="lifetime">'a</span>&gt;,
+        reject: Block&lt;<span class="lifetime">'a</span>&gt;,
     },
     Switch {
-        selector: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        cases: Vec&lt;SwitchCase&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        selector: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        cases: Vec&lt;SwitchCase&lt;<span class="lifetime">'a</span>&gt;&gt;,
     },
     Loop {
-        body: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-        continuing: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-        break_if: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        body: Block&lt;<span class="lifetime">'a</span>&gt;,
+        continuing: Block&lt;<span class="lifetime">'a</span>&gt;,
+        break_if: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     },
     Break,
     Continue,
     Return {
-        value: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        value: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     },
     Kill,
     Call {
-        function: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-        arguments: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        function: Ident&lt;<span class="lifetime">'a</span>&gt;,
+        arguments: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     },
     Assign {
-        target: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        target: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
         op: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::BinaryOperator&gt;,
-        value: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        value: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
     },
-    Increment(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
-    Decrement(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
-    Ignore(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
+    Increment(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
+    Decrement(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
+    Ignore(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>SwitchValue&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Expr(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
+</span><span class="kw">pub enum </span>SwitchValue&lt;<span class="lifetime">'a</span>&gt; {
+    Expr(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
     Default,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>SwitchCase&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>value: SwitchValue&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>body: Block&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>SwitchCase&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>value: SwitchValue&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>body: Block&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>fall_through: bool,
 }
 
@@ -827,7 +827,7 @@
 /// [`type constructor expressions`]: https://gpuweb.github.io/gpuweb/wgsl/#type-constructor-expr
 /// [`Call`]: Expression::Call
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>ConstructorType&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>ConstructorType&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// A scalar type or conversion: `f32(1)`.
     </span>Scalar(Scalar),
 
@@ -864,8 +864,8 @@
     <span class="doccomment">/// An array whose component type and size are written out:
     /// `array&lt;u32, 4&gt;(3,4,5)`.
     </span>Array {
-        base: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        size: ArraySize&lt;<span class="lifetime">&#39;a</span>&gt;,
+        base: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        size: ArraySize&lt;<span class="lifetime">'a</span>&gt;,
     },
 
     <span class="doccomment">/// Constructing a value of a known Naga IR type.
@@ -885,9 +885,9 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::lower::Lowerer;
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>Expression&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>Expression&lt;<span class="lifetime">'a</span>&gt; {
     Literal(Literal),
-    Ident(IdentExpr&lt;<span class="lifetime">&#39;a</span>&gt;),
+    Ident(IdentExpr&lt;<span class="lifetime">'a</span>&gt;),
 
     <span class="doccomment">/// A type constructor expression.
     ///
@@ -896,37 +896,37 @@
     /// `vec3`. These keywords cannot be shadowed by user definitions, so we can
     /// tell that such an expression is a construction immediately.
     ///
-    /// For ordinary identifiers, we can&#39;t tell whether an expression like
+    /// For ordinary identifiers, we can't tell whether an expression like
     /// `IDENTIFIER(EXPR, ...)` is a construction expression or a function call
-    /// until we know `IDENTIFIER`&#39;s definition, so we represent those as
+    /// until we know `IDENTIFIER`'s definition, so we represent those as
     /// [`Call`] expressions.
     ///
     /// [type-defining keyword]: https://gpuweb.github.io/gpuweb/wgsl/#type-defining-keywords
     /// [`Call`]: Expression::Call
     </span>Construct {
-        ty: ConstructorType&lt;<span class="lifetime">&#39;a</span>&gt;,
+        ty: ConstructorType&lt;<span class="lifetime">'a</span>&gt;,
         ty_span: Span,
-        components: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        components: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     },
     Unary {
         op: <span class="kw">crate</span>::UnaryOperator,
-        expr: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        expr: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
     },
-    AddrOf(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
-    Deref(Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;),
+    AddrOf(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
+    Deref(Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;),
     Binary {
         op: <span class="kw">crate</span>::BinaryOperator,
-        left: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        right: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        left: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        right: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
     },
 
     <span class="doccomment">/// A function call or type constructor expression.
     ///
-    /// We can&#39;t tell whether an expression like `IDENTIFIER(EXPR, ...)` is a
-    /// construction expression or a function call until we know `IDENTIFIER`&#39;s
+    /// We can't tell whether an expression like `IDENTIFIER(EXPR, ...)` is a
+    /// construction expression or a function call until we know `IDENTIFIER`'s
     /// definition, so we represent everything of that form as one of these
     /// expressions until lowering. At that point, [`Lowerer::call`] has
-    /// everything&#39;s definition in hand, and can decide whether to emit a Naga
+    /// everything's definition in hand, and can decide whether to emit a Naga
     /// [`Constant`], [`As`], [`Splat`], or [`Compose`] expression.
     ///
     /// [`Lowerer::call`]: Lowerer::call
@@ -935,44 +935,44 @@
     /// [`Splat`]: crate::Expression::Splat
     /// [`Compose`]: crate::Expression::Compose
     </span>Call {
-        function: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-        arguments: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+        function: Ident&lt;<span class="lifetime">'a</span>&gt;,
+        arguments: Vec&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     },
     Index {
-        base: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        index: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        base: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        index: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
     },
     Member {
-        base: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        field: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
+        base: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        field: Ident&lt;<span class="lifetime">'a</span>&gt;,
     },
     Bitcast {
-        expr: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-        to: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        expr: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        to: Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;,
         ty_span: Span,
     },
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>LocalVariable&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
-    <span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+</span><span class="kw">pub struct </span>LocalVariable&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+    <span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     <span class="kw">pub </span>handle: Handle&lt;Local&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Let&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
-    <span class="kw">pub </span>init: Handle&lt;Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>Let&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: Ident&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+    <span class="kw">pub </span>init: Handle&lt;Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="kw">pub </span>handle: Handle&lt;Local&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>LocalDecl&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Var(LocalVariable&lt;<span class="lifetime">&#39;a</span>&gt;),
-    Let(Let&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">pub enum </span>LocalDecl&lt;<span class="lifetime">'a</span>&gt; {
+    Var(LocalVariable&lt;<span class="lifetime">'a</span>&gt;),
+    Let(Let&lt;<span class="lifetime">'a</span>&gt;),
 }
 
 <span class="attr">#[derive(Debug)]

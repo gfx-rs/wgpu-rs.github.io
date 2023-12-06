@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/error.rs`."><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/error.rs`."><title>error.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -750,12 +750,12 @@
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>ParseError {
     message: String,
-    labels: Vec&lt;(Span, Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;)&gt;,
+    labels: Vec&lt;(Span, Cow&lt;<span class="lifetime">'static</span>, str&gt;)&gt;,
     notes: Vec&lt;String&gt;,
 }
 
 <span class="kw">impl </span>ParseError {
-    <span class="kw">pub fn </span>labels(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = (Span, <span class="kw-2">&amp;</span>str)&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">pub fn </span>labels(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = (Span, <span class="kw-2">&amp;</span>str)&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.labels
             .iter()
             .map(|<span class="kw-2">&amp;</span>(span, <span class="kw-2">ref </span>msg)| (span, msg.as_ref()))
@@ -780,7 +780,7 @@
             .with_notes(
                 <span class="self">self</span>.notes
                     .iter()
-                    .map(|note| <span class="macro">format!</span>(<span class="string">&quot;note: {note}&quot;</span>))
+                    .map(|note| <span class="macro">format!</span>(<span class="string">"note: {note}"</span>))
                     .collect(),
             );
         diagnostic
@@ -788,7 +788,7 @@
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
     </span><span class="kw">pub fn </span>emit_to_stderr(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) {
-        <span class="self">self</span>.emit_to_stderr_with_path(source, <span class="string">&quot;wgsl&quot;</span>)
+        <span class="self">self</span>.emit_to_stderr_with_path(source, <span class="string">"wgsl"</span>)
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
@@ -801,12 +801,12 @@
         <span class="kw">let </span>config = codespan_reporting::term::Config::default();
         <span class="kw">let </span>writer = StandardStream::stderr(ColorChoice::Auto);
         term::emit(<span class="kw-2">&amp;mut </span>writer.lock(), <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic())
-            .expect(<span class="string">&quot;cannot write error&quot;</span>);
+            .expect(<span class="string">"cannot write error"</span>);
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
     </span><span class="kw">pub fn </span>emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; String {
-        <span class="self">self</span>.emit_to_string_with_path(source, <span class="string">&quot;wgsl&quot;</span>)
+        <span class="self">self</span>.emit_to_string_with_path(source, <span class="string">"wgsl"</span>)
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
@@ -818,7 +818,7 @@
         <span class="kw">let </span>files = SimpleFile::new(path, source);
         <span class="kw">let </span>config = codespan_reporting::term::Config::default();
         <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
-        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic()).expect(<span class="string">&quot;cannot write error&quot;</span>);
+        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic()).expect(<span class="string">"cannot write error"</span>);
         String::from_utf8(writer.into_inner()).unwrap()
     }
 
@@ -829,30 +829,30 @@
 }
 
 <span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ParseError {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.message)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.message)
     }
 }
 
 <span class="kw">impl </span>std::error::Error <span class="kw">for </span>ParseError {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">&#39;static</span>)&gt; {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">None
     </span>}
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
-</span><span class="kw">pub enum </span>ExpectedToken&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Token(Token&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">pub enum </span>ExpectedToken&lt;<span class="lifetime">'a</span>&gt; {
+    Token(Token&lt;<span class="lifetime">'a</span>&gt;),
     Identifier,
     <span class="doccomment">/// Expected: constant, parenthesized expression, identifier
     </span>PrimaryExpression,
     <span class="doccomment">/// Expected: assignment, increment/decrement expression
     </span>Assignment,
-    <span class="doccomment">/// Expected: &#39;case&#39;, &#39;default&#39;, &#39;}&#39;
+    <span class="doccomment">/// Expected: 'case', 'default', '}'
     </span>SwitchItem,
-    <span class="doccomment">/// Expected: &#39;,&#39;, &#39;)&#39;
+    <span class="doccomment">/// Expected: ',', ')'
     </span>WorkgroupSizeSeparator,
-    <span class="doccomment">/// Expected: &#39;struct&#39;, &#39;let&#39;, &#39;var&#39;, &#39;type&#39;, &#39;;&#39;, &#39;fn&#39;, eof
+    <span class="doccomment">/// Expected: 'struct', 'let', 'var', 'type', ';', 'fn', eof
     </span>GlobalItem,
     <span class="doccomment">/// Expected a type.
     </span>Type,
@@ -864,11 +864,11 @@
 
 <span class="attr">#[derive(Clone, Copy, Debug, Error, PartialEq)]
 </span><span class="kw">pub enum </span>NumberError {
-    <span class="attr">#[error(<span class="string">&quot;invalid numeric literal format&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"invalid numeric literal format"</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">&quot;numeric literal not representable by target type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"numeric literal not representable by target type"</span>)]
     </span>NotRepresentable,
-    <span class="attr">#[error(<span class="string">&quot;unimplemented f16 type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"unimplemented f16 type"</span>)]
     </span>UnimplementedF16,
 }
 
@@ -880,8 +880,8 @@
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub enum </span>Error&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Unexpected(Span, ExpectedToken&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">pub enum </span>Error&lt;<span class="lifetime">'a</span>&gt; {
+    Unexpected(Span, ExpectedToken&lt;<span class="lifetime">'a</span>&gt;),
     UnexpectedComponents(Span),
     UnexpectedOperationInConstContext(Span),
     BadNumber(Span, NumberError),
@@ -911,7 +911,7 @@
     UnknownAttribute(Span),
     UnknownBuiltin(Span),
     UnknownAccess(Span),
-    UnknownIdent(Span, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+    UnknownIdent(Span, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str),
     UnknownScalarType(Span),
     UnknownType(Span),
     UnknownStorageFormat(Span),
@@ -928,13 +928,13 @@
         got: String,
     },
     MissingType(Span),
-    MissingAttribute(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Span),
+    MissingAttribute(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
     InvalidRayQueryPointer(Span),
-    Pointer(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Span),
+    Pointer(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Span),
     NotPointer(Span),
-    NotReference(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Span),
+    NotReference(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Span),
     InvalidAssignment {
         span: Span,
         ty: InvalidAssignmentType,
@@ -966,7 +966,7 @@
         ///
         /// Each `(decl, reference)` pair indicates that the declaration whose
         /// name is `decl` has an identifier at `reference` whose definition is
-        /// the next declaration in the cycle. The last pair&#39;s `reference` is
+        /// the next declaration in the cycle. The last pair's `reference` is
         /// the same identifier as `ident`, above.
         </span>path: Vec&lt;(Span, Span)&gt;,
     },
@@ -982,7 +982,7 @@
     },
     FunctionReturnsVoid(Span),
     InvalidWorkGroupUniformLoad(Span),
-    Internal(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
+    Internal(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
     ExpectedConstExprConcreteIntegerScalar(Span),
     ExpectedNonNegative(Span),
     ExpectedPositiveArrayLength(Span),
@@ -996,109 +996,109 @@
     },
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Error&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_parse_error(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; ParseError {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Error&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_parse_error(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; ParseError {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             Error::Unexpected(unexpected_span, expected) =&gt; {
                 <span class="kw">let </span>expected_str = <span class="kw">match </span>expected {
                     ExpectedToken::Token(token) =&gt; {
                         <span class="kw">match </span>token {
-                            Token::Separator(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;&#39;{c}&#39;&quot;</span>),
-                            Token::Paren(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;&#39;{c}&#39;&quot;</span>),
-                            Token::Attribute =&gt; <span class="string">&quot;@&quot;</span>.to_string(),
-                            Token::Number(<span class="kw">_</span>) =&gt; <span class="string">&quot;number&quot;</span>.to_string(),
+                            Token::Separator(c) =&gt; <span class="macro">format!</span>(<span class="string">"'{c}'"</span>),
+                            Token::Paren(c) =&gt; <span class="macro">format!</span>(<span class="string">"'{c}'"</span>),
+                            Token::Attribute =&gt; <span class="string">"@"</span>.to_string(),
+                            Token::Number(<span class="kw">_</span>) =&gt; <span class="string">"number"</span>.to_string(),
                             Token::Word(s) =&gt; s.to_string(),
-                            Token::Operation(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;operation (&#39;{c}&#39;)&quot;</span>),
-                            Token::LogicalOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;logical operation (&#39;{c}&#39;)&quot;</span>),
-                            Token::ShiftOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;bitshift (&#39;{c}{c}&#39;)&quot;</span>),
-                            Token::AssignmentOperation(c) <span class="kw">if </span>c==<span class="string">&#39;&lt;&#39; </span>|| c==<span class="string">&#39;&gt;&#39; </span>=&gt; <span class="macro">format!</span>(<span class="string">&quot;bitshift (&#39;{c}{c}=&#39;)&quot;</span>),
-                            Token::AssignmentOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;operation (&#39;{c}=&#39;)&quot;</span>),
-                            Token::IncrementOperation =&gt; <span class="string">&quot;increment operation&quot;</span>.to_string(),
-                            Token::DecrementOperation =&gt; <span class="string">&quot;decrement operation&quot;</span>.to_string(),
-                            Token::Arrow =&gt; <span class="string">&quot;-&gt;&quot;</span>.to_string(),
-                            Token::Unknown(c) =&gt; <span class="macro">format!</span>(<span class="string">&quot;unknown (&#39;{c}&#39;)&quot;</span>),
-                            Token::Trivia =&gt; <span class="string">&quot;trivia&quot;</span>.to_string(),
-                            Token::End =&gt; <span class="string">&quot;end&quot;</span>.to_string(),
+                            Token::Operation(c) =&gt; <span class="macro">format!</span>(<span class="string">"operation ('{c}')"</span>),
+                            Token::LogicalOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">"logical operation ('{c}')"</span>),
+                            Token::ShiftOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">"bitshift ('{c}{c}')"</span>),
+                            Token::AssignmentOperation(c) <span class="kw">if </span>c==<span class="string">'&lt;' </span>|| c==<span class="string">'&gt;' </span>=&gt; <span class="macro">format!</span>(<span class="string">"bitshift ('{c}{c}=')"</span>),
+                            Token::AssignmentOperation(c) =&gt; <span class="macro">format!</span>(<span class="string">"operation ('{c}=')"</span>),
+                            Token::IncrementOperation =&gt; <span class="string">"increment operation"</span>.to_string(),
+                            Token::DecrementOperation =&gt; <span class="string">"decrement operation"</span>.to_string(),
+                            Token::Arrow =&gt; <span class="string">"-&gt;"</span>.to_string(),
+                            Token::Unknown(c) =&gt; <span class="macro">format!</span>(<span class="string">"unknown ('{c}')"</span>),
+                            Token::Trivia =&gt; <span class="string">"trivia"</span>.to_string(),
+                            Token::End =&gt; <span class="string">"end"</span>.to_string(),
                         }
                     }
-                    ExpectedToken::Identifier =&gt; <span class="string">&quot;identifier&quot;</span>.to_string(),
-                    ExpectedToken::PrimaryExpression =&gt; <span class="string">&quot;expression&quot;</span>.to_string(),
-                    ExpectedToken::Assignment =&gt; <span class="string">&quot;assignment or increment/decrement&quot;</span>.to_string(),
-                    ExpectedToken::SwitchItem =&gt; <span class="string">&quot;switch item (&#39;case&#39; or &#39;default&#39;) or a closing curly bracket to signify the end of the switch statement (&#39;}&#39;)&quot;</span>.to_string(),
-                    ExpectedToken::WorkgroupSizeSeparator =&gt; <span class="string">&quot;workgroup size separator (&#39;,&#39;) or a closing parenthesis&quot;</span>.to_string(),
-                    ExpectedToken::GlobalItem =&gt; <span class="string">&quot;global item (&#39;struct&#39;, &#39;const&#39;, &#39;var&#39;, &#39;alias&#39;, &#39;;&#39;, &#39;fn&#39;) or the end of the file&quot;</span>.to_string(),
-                    ExpectedToken::Type =&gt; <span class="string">&quot;type&quot;</span>.to_string(),
-                    ExpectedToken::Variable =&gt; <span class="string">&quot;variable access&quot;</span>.to_string(),
-                    ExpectedToken::Function =&gt; <span class="string">&quot;function name&quot;</span>.to_string(),
+                    ExpectedToken::Identifier =&gt; <span class="string">"identifier"</span>.to_string(),
+                    ExpectedToken::PrimaryExpression =&gt; <span class="string">"expression"</span>.to_string(),
+                    ExpectedToken::Assignment =&gt; <span class="string">"assignment or increment/decrement"</span>.to_string(),
+                    ExpectedToken::SwitchItem =&gt; <span class="string">"switch item ('case' or 'default') or a closing curly bracket to signify the end of the switch statement ('}')"</span>.to_string(),
+                    ExpectedToken::WorkgroupSizeSeparator =&gt; <span class="string">"workgroup size separator (',') or a closing parenthesis"</span>.to_string(),
+                    ExpectedToken::GlobalItem =&gt; <span class="string">"global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file"</span>.to_string(),
+                    ExpectedToken::Type =&gt; <span class="string">"type"</span>.to_string(),
+                    ExpectedToken::Variable =&gt; <span class="string">"variable access"</span>.to_string(),
+                    ExpectedToken::Function =&gt; <span class="string">"function name"</span>.to_string(),
                 };
                 ParseError {
                     message: <span class="macro">format!</span>(
-                        <span class="string">&quot;expected {}, found &#39;{}&#39;&quot;</span>,
+                        <span class="string">"expected {}, found '{}'"</span>,
                         expected_str, <span class="kw-2">&amp;</span>source[unexpected_span],
                     ),
-                    labels: <span class="macro">vec!</span>[(unexpected_span, <span class="macro">format!</span>(<span class="string">&quot;expected {expected_str}&quot;</span>).into())],
+                    labels: <span class="macro">vec!</span>[(unexpected_span, <span class="macro">format!</span>(<span class="string">"expected {expected_str}"</span>).into())],
                     notes: <span class="macro">vec!</span>[],
                 }
             }
             Error::UnexpectedComponents(bad_span) =&gt; ParseError {
-                message: <span class="string">&quot;unexpected components&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unexpected components&quot;</span>.into())],
+                message: <span class="string">"unexpected components"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unexpected components"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnexpectedOperationInConstContext(span) =&gt; ParseError {
-                message: <span class="string">&quot;this operation is not supported in a const context&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;operation not supported here&quot;</span>.into())],
+                message: <span class="string">"this operation is not supported in a const context"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"operation not supported here"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadNumber(bad_span, <span class="kw-2">ref </span>err) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;{}: `{}`&quot;</span>, err, <span class="kw-2">&amp;</span>source[bad_span],),
+                message: <span class="macro">format!</span>(<span class="string">"{}: `{}`"</span>, err, <span class="kw-2">&amp;</span>source[bad_span],),
                 labels: <span class="macro">vec!</span>[(bad_span, err.to_string().into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadMatrixScalarKind(span, scalar) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;matrix scalar type must be floating-point, but found `{}`&quot;</span>,
+                    <span class="string">"matrix scalar type must be floating-point, but found `{}`"</span>,
                     scalar.to_wgsl()
                 ),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be floating-point (e.g. `f32`)&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must be floating-point (e.g. `f32`)"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadAccessor(accessor_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;invalid field accessor `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[accessor_span],),
-                labels: <span class="macro">vec!</span>[(accessor_span, <span class="string">&quot;invalid accessor&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"invalid field accessor `{}`"</span>, <span class="kw-2">&amp;</span>source[accessor_span],),
+                labels: <span class="macro">vec!</span>[(accessor_span, <span class="string">"invalid accessor"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownIdent(ident_span, ident) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;no definition in scope for identifier: &#39;{ident}&#39;&quot;</span>),
-                labels: <span class="macro">vec!</span>[(ident_span, <span class="string">&quot;unknown identifier&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"no definition in scope for identifier: '{ident}'"</span>),
+                labels: <span class="macro">vec!</span>[(ident_span, <span class="string">"unknown identifier"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownScalarType(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown scalar type: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown scalar type&quot;</span>.into())],
-                notes: <span class="macro">vec!</span>[<span class="string">&quot;Valid scalar types are f32, f64, i32, u32, bool&quot;</span>.into()],
+                message: <span class="macro">format!</span>(<span class="string">"unknown scalar type: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown scalar type"</span>.into())],
+                notes: <span class="macro">vec!</span>[<span class="string">"Valid scalar types are f32, f64, i32, u32, bool"</span>.into()],
             },
             Error::BadTextureSampleType { span, scalar } =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;texture sample type must be one of f32, i32 or u32, but found {}&quot;</span>,
+                    <span class="string">"texture sample type must be one of f32, i32 or u32, but found {}"</span>,
                     scalar.to_wgsl()
                 ),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be one of f32, i32 or u32&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must be one of f32, i32 or u32"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadIncrDecrReferenceType(span) =&gt; ParseError {
                 message:
-                    <span class="string">&quot;increment/decrement operation requires reference type to be one of i32 or u32&quot;
+                    <span class="string">"increment/decrement operation requires reference type to be one of i32 or u32"
                         </span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be a reference type of i32 or u32&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must be a reference type of i32 or u32"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadTexture(bad_span) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;expected an image, but found &#39;{}&#39; which is not an image&quot;</span>,
+                    <span class="string">"expected an image, but found '{}' which is not an image"</span>,
                     <span class="kw-2">&amp;</span>source[bad_span]
                 ),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;not an image&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"not an image"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::BadTypeCast {
@@ -1106,7 +1106,7 @@
                 <span class="kw-2">ref </span>from_type,
                 <span class="kw-2">ref </span>to_type,
             } =&gt; {
-                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;cannot cast a {from_type} to a {to_type}&quot;</span>);
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">"cannot cast a {from_type} to a {to_type}"</span>);
                 ParseError {
                     message: msg.clone(),
                     labels: <span class="macro">vec!</span>[(span, msg.into())],
@@ -1120,171 +1120,171 @@
             },
             Error::InvalidForInitializer(bad_span) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;for(;;) initializer is not an assignment or a function call: &#39;{}&#39;&quot;</span>,
+                    <span class="string">"for(;;) initializer is not an assignment or a function call: '{}'"</span>,
                     <span class="kw-2">&amp;</span>source[bad_span]
                 ),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;not an assignment or function call&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"not an assignment or function call"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidBreakIf(bad_span) =&gt; ParseError {
-                message: <span class="string">&quot;A break if is only allowed in a continuing block&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;not in a continuing block&quot;</span>.into())],
+                message: <span class="string">"A break if is only allowed in a continuing block"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"not in a continuing block"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidGatherComponent(bad_span) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;textureGather component &#39;{}&#39; doesn&#39;t exist, must be 0, 1, 2, or 3&quot;</span>,
+                    <span class="string">"textureGather component '{}' doesn't exist, must be 0, 1, 2, or 3"</span>,
                     <span class="kw-2">&amp;</span>source[bad_span]
                 ),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;invalid component&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"invalid component"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidConstructorComponentType(bad_span, component) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;invalid type for constructor component at index [{component}]&quot;</span>),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;invalid component type&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"invalid type for constructor component at index [{component}]"</span>),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"invalid component type"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidIdentifierUnderscore(bad_span) =&gt; ParseError {
-                message: <span class="string">&quot;Identifier can&#39;t be &#39;_&#39;&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;invalid identifier&quot;</span>.into())],
+                message: <span class="string">"Identifier can't be '_'"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"invalid identifier"</span>.into())],
                 notes: <span class="macro">vec!</span>[
-                    <span class="string">&quot;Use phony assignment instead (&#39;_ =&#39; notice the absence of &#39;let&#39; or &#39;var&#39;)&quot;
+                    <span class="string">"Use phony assignment instead ('_ =' notice the absence of 'let' or 'var')"
                         </span>.to_string(),
                 ],
             },
             Error::ReservedIdentifierPrefix(bad_span) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;Identifier starts with a reserved prefix: &#39;{}&#39;&quot;</span>,
+                    <span class="string">"Identifier starts with a reserved prefix: '{}'"</span>,
                     <span class="kw-2">&amp;</span>source[bad_span]
                 ),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;invalid identifier&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"invalid identifier"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownAddressSpace(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown address space: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown address space&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown address space: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown address space"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::RepeatedAttribute(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;repeated attribute: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;repeated attribute&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"repeated attribute: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"repeated attribute"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownAttribute(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown attribute: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown attribute&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown attribute: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown attribute"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownBuiltin(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown builtin: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown builtin&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown builtin: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown builtin"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownAccess(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown access: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown access&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown access: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown access"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownStorageFormat(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown storage format: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown storage format&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown storage format: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown storage format"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownConservativeDepth(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown conservative depth: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown conservative depth&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown conservative depth: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown conservative depth"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::UnknownType(bad_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;unknown type: &#39;{}&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[bad_span]),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown type&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"unknown type: '{}'"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown type"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::SizeAttributeTooLow(bad_span, min_size) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;struct member size must be at least {min_size}&quot;</span>),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="macro">format!</span>(<span class="string">&quot;must be at least {min_size}&quot;</span>).into())],
+                message: <span class="macro">format!</span>(<span class="string">"struct member size must be at least {min_size}"</span>),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="macro">format!</span>(<span class="string">"must be at least {min_size}"</span>).into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::AlignAttributeTooLow(bad_span, min_align) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;struct member alignment must be at least {min_align}&quot;</span>),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="macro">format!</span>(<span class="string">&quot;must be at least {min_align}&quot;</span>).into())],
+                message: <span class="macro">format!</span>(<span class="string">"struct member alignment must be at least {min_align}"</span>),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="macro">format!</span>(<span class="string">"must be at least {min_align}"</span>).into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::NonPowerOfTwoAlignAttribute(bad_span) =&gt; ParseError {
-                message: <span class="string">&quot;struct member alignment must be a power of 2&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;must be a power of 2&quot;</span>.into())],
+                message: <span class="string">"struct member alignment must be a power of 2"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"must be a power of 2"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InconsistentBinding(span) =&gt; ParseError {
-                message: <span class="string">&quot;input/output binding is not consistent&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;input/output binding is not consistent&quot;</span>.into())],
+                message: <span class="string">"input/output binding is not consistent"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"input/output binding is not consistent"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::TypeNotConstructible(span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;type `{}` is not constructible&quot;</span>, <span class="kw-2">&amp;</span>source[span]),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;type is not constructible&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"type `{}` is not constructible"</span>, <span class="kw-2">&amp;</span>source[span]),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"type is not constructible"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::TypeNotInferrable(span) =&gt; ParseError {
-                message: <span class="string">&quot;type can&#39;t be inferred&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;type can&#39;t be inferred&quot;</span>.into())],
+                message: <span class="string">"type can't be inferred"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"type can't be inferred"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InitializationTypeMismatch { name, <span class="kw-2">ref </span>expected, <span class="kw-2">ref </span>got } =&gt; {
                 ParseError {
                     message: <span class="macro">format!</span>(
-                        <span class="string">&quot;the type of `{}` is expected to be `{}`, but got `{}`&quot;</span>,
+                        <span class="string">"the type of `{}` is expected to be `{}`, but got `{}`"</span>,
                         <span class="kw-2">&amp;</span>source[name], expected, got,
                     ),
                     labels: <span class="macro">vec!</span>[(
                         name,
-                        <span class="macro">format!</span>(<span class="string">&quot;definition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[name]).into(),
+                        <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name]).into(),
                     )],
                     notes: <span class="macro">vec!</span>[],
                 }
             }
             Error::MissingType(name_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;variable `{}` needs a type&quot;</span>, <span class="kw-2">&amp;</span>source[name_span]),
+                message: <span class="macro">format!</span>(<span class="string">"variable `{}` needs a type"</span>, <span class="kw-2">&amp;</span>source[name_span]),
                 labels: <span class="macro">vec!</span>[(
                     name_span,
-                    <span class="macro">format!</span>(<span class="string">&quot;definition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
+                    <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
                 )],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::MissingAttribute(name, name_span) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;variable `{}` needs a &#39;{}&#39; attribute&quot;</span>,
+                    <span class="string">"variable `{}` needs a '{}' attribute"</span>,
                     <span class="kw-2">&amp;</span>source[name_span], name
                 ),
                 labels: <span class="macro">vec!</span>[(
                     name_span,
-                    <span class="macro">format!</span>(<span class="string">&quot;definition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
+                    <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
                 )],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidAtomicPointer(span) =&gt; ParseError {
-                message: <span class="string">&quot;atomic operation is done on a pointer to a non-atomic&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;atomic pointer is invalid&quot;</span>.into())],
+                message: <span class="string">"atomic operation is done on a pointer to a non-atomic"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"atomic pointer is invalid"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidAtomicOperandType(span) =&gt; ParseError {
-                message: <span class="string">&quot;atomic operand type is inconsistent with the operation&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;atomic operand type is invalid&quot;</span>.into())],
+                message: <span class="string">"atomic operand type is inconsistent with the operation"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"atomic operand type is invalid"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidRayQueryPointer(span) =&gt; ParseError {
-                message: <span class="string">&quot;ray query operation is done on a pointer to a non-ray-query&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;ray query pointer is invalid&quot;</span>.into())],
+                message: <span class="string">"ray query operation is done on a pointer to a non-ray-query"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"ray query pointer is invalid"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::NotPointer(span) =&gt; ParseError {
-                message: <span class="string">&quot;the operand of the `*` operator must be a pointer&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;expression is not a pointer&quot;</span>.into())],
+                message: <span class="string">"the operand of the `*` operator must be a pointer"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"expression is not a pointer"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::NotReference(what, span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;{what} must be a reference&quot;</span>),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;expression is not a reference&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"{what} must be a reference"</span>),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"expression is not a reference"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidAssignment { span, ty } =&gt; {
@@ -1292,14 +1292,14 @@
                     InvalidAssignmentType::Swizzle =&gt; (
                         <span class="prelude-val">None</span>,
                         <span class="macro">vec!</span>[
-                            <span class="string">&quot;WGSL does not support assignments to swizzles&quot;</span>.into(),
-                            <span class="string">&quot;consider assigning each component individually&quot;</span>.into(),
+                            <span class="string">"WGSL does not support assignments to swizzles"</span>.into(),
+                            <span class="string">"consider assigning each component individually"</span>.into(),
                         ],
                     ),
                     InvalidAssignmentType::ImmutableBinding(binding_span) =&gt; (
-                        <span class="prelude-val">Some</span>((binding_span, <span class="string">&quot;this is an immutable binding&quot;</span>.into())),
+                        <span class="prelude-val">Some</span>((binding_span, <span class="string">"this is an immutable binding"</span>.into())),
                         <span class="macro">vec!</span>[<span class="macro">format!</span>(
-                            <span class="string">&quot;consider declaring &#39;{}&#39; with `var` instead of `let`&quot;</span>,
+                            <span class="string">"consider declaring '{}' with `var` instead of `let`"</span>,
                             <span class="kw-2">&amp;</span>source[binding_span]
                         )],
                     ),
@@ -1307,59 +1307,59 @@
                 };
 
                 ParseError {
-                    message: <span class="string">&quot;invalid left-hand side of assignment&quot;</span>.into(),
-                    labels: std::iter::once((span, <span class="string">&quot;cannot assign to this expression&quot;</span>.into()))
+                    message: <span class="string">"invalid left-hand side of assignment"</span>.into(),
+                    labels: std::iter::once((span, <span class="string">"cannot assign to this expression"</span>.into()))
                         .chain(extra_label)
                         .collect(),
                     notes,
                 }
             }
             Error::Pointer(what, span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;{what} must not be a pointer&quot;</span>),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;expression is a pointer&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"{what} must not be a pointer"</span>),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"expression is a pointer"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::ReservedKeyword(name_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;name `{}` is a reserved keyword&quot;</span>, <span class="kw-2">&amp;</span>source[name_span]),
+                message: <span class="macro">format!</span>(<span class="string">"name `{}` is a reserved keyword"</span>, <span class="kw-2">&amp;</span>source[name_span]),
                 labels: <span class="macro">vec!</span>[(
                     name_span,
-                    <span class="macro">format!</span>(<span class="string">&quot;definition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
+                    <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
                 )],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::Redefinition { previous, current } =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;redefinition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[current]),
+                message: <span class="macro">format!</span>(<span class="string">"redefinition of `{}`"</span>, <span class="kw-2">&amp;</span>source[current]),
                 labels: <span class="macro">vec!</span>[
                     (
                         current,
-                        <span class="macro">format!</span>(<span class="string">&quot;redefinition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[current]).into(),
+                        <span class="macro">format!</span>(<span class="string">"redefinition of `{}`"</span>, <span class="kw-2">&amp;</span>source[current]).into(),
                     ),
                     (
                         previous,
-                        <span class="macro">format!</span>(<span class="string">&quot;previous definition of `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[previous]).into(),
+                        <span class="macro">format!</span>(<span class="string">"previous definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[previous]).into(),
                     ),
                 ],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::RecursiveDeclaration { ident, usage } =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;declaration of `{}` is recursive&quot;</span>, <span class="kw-2">&amp;</span>source[ident]),
-                labels: <span class="macro">vec!</span>[(ident, <span class="string">&quot;&quot;</span>.into()), (usage, <span class="string">&quot;uses itself here&quot;</span>.into())],
+                message: <span class="macro">format!</span>(<span class="string">"declaration of `{}` is recursive"</span>, <span class="kw-2">&amp;</span>source[ident]),
+                labels: <span class="macro">vec!</span>[(ident, <span class="string">""</span>.into()), (usage, <span class="string">"uses itself here"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::CyclicDeclaration { ident, <span class="kw-2">ref </span>path } =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;declaration of `{}` is cyclic&quot;</span>, <span class="kw-2">&amp;</span>source[ident]),
+                message: <span class="macro">format!</span>(<span class="string">"declaration of `{}` is cyclic"</span>, <span class="kw-2">&amp;</span>source[ident]),
                 labels: path
                     .iter()
                     .enumerate()
                     .flat_map(|(i, <span class="kw-2">&amp;</span>(ident, usage))| {
                         [
-                            (ident, <span class="string">&quot;&quot;</span>.into()),
+                            (ident, <span class="string">""</span>.into()),
                             (
                                 usage,
                                 <span class="kw">if </span>i == path.len() - <span class="number">1 </span>{
-                                    <span class="string">&quot;ending the cycle&quot;</span>.into()
+                                    <span class="string">"ending the cycle"</span>.into()
                                 } <span class="kw">else </span>{
-                                    <span class="macro">format!</span>(<span class="string">&quot;uses `{}`&quot;</span>, <span class="kw-2">&amp;</span>source[ident]).into()
+                                    <span class="macro">format!</span>(<span class="string">"uses `{}`"</span>, <span class="kw-2">&amp;</span>source[ident]).into()
                                 },
                             ),
                         ]
@@ -1368,29 +1368,29 @@
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidSwitchValue { uint, span } =&gt; ParseError {
-                message: <span class="string">&quot;invalid switch value&quot;</span>.to_string(),
+                message: <span class="string">"invalid switch value"</span>.to_string(),
                 labels: <span class="macro">vec!</span>[(
                     span,
                     <span class="kw">if </span>uint {
-                        <span class="string">&quot;expected unsigned integer&quot;
+                        <span class="string">"expected unsigned integer"
                     </span>} <span class="kw">else </span>{
-                        <span class="string">&quot;expected signed integer&quot;
+                        <span class="string">"expected signed integer"
                     </span>}
                     .into(),
                 )],
                 notes: <span class="macro">vec!</span>[<span class="kw">if </span>uint {
-                    <span class="macro">format!</span>(<span class="string">&quot;suffix the integer with a `u`: &#39;{}u&#39;&quot;</span>, <span class="kw-2">&amp;</span>source[span])
+                    <span class="macro">format!</span>(<span class="string">"suffix the integer with a `u`: '{}u'"</span>, <span class="kw-2">&amp;</span>source[span])
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>span = span.to_range().unwrap();
                     <span class="macro">format!</span>(
-                        <span class="string">&quot;remove the `u` suffix: &#39;{}&#39;&quot;</span>,
+                        <span class="string">"remove the `u` suffix: '{}'"</span>,
                         <span class="kw-2">&amp;</span>source[span.start..span.end - <span class="number">1</span>]
                     )
                 }],
             },
             Error::CalledEntryPoint(span) =&gt; ParseError {
-                message: <span class="string">&quot;entry point cannot be called&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;entry point cannot be called&quot;</span>.into())],
+                message: <span class="string">"entry point cannot be called"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"entry point cannot be called"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::WrongArgumentCount {
@@ -1399,72 +1399,72 @@
                 found,
             } =&gt; ParseError {
                 message: <span class="macro">format!</span>(
-                    <span class="string">&quot;wrong number of arguments: expected {}, found {}&quot;</span>,
+                    <span class="string">"wrong number of arguments: expected {}, found {}"</span>,
                     <span class="kw">if </span>expected.len() &lt; <span class="number">2 </span>{
-                        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, expected.start)
+                        <span class="macro">format!</span>(<span class="string">"{}"</span>, expected.start)
                     } <span class="kw">else </span>{
-                        <span class="macro">format!</span>(<span class="string">&quot;{}..{}&quot;</span>, expected.start, expected.end)
+                        <span class="macro">format!</span>(<span class="string">"{}..{}"</span>, expected.start, expected.end)
                     },
                     found
                 ),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;wrong number of arguments&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"wrong number of arguments"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::FunctionReturnsVoid(span) =&gt; ParseError {
-                message: <span class="string">&quot;function does not return any value&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;&quot;</span>.into())],
+                message: <span class="string">"function does not return any value"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">""</span>.into())],
                 notes: <span class="macro">vec!</span>[
-                    <span class="string">&quot;perhaps you meant to call the function in a separate statement?&quot;</span>.into(),
+                    <span class="string">"perhaps you meant to call the function in a separate statement?"</span>.into(),
                 ],
             },
             Error::InvalidWorkGroupUniformLoad(span) =&gt; ParseError {
-                message: <span class="string">&quot;incorrect type passed to workgroupUniformLoad&quot;</span>.into(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;&quot;</span>.into())],
-                notes: <span class="macro">vec!</span>[<span class="string">&quot;passed type must be a workgroup pointer&quot;</span>.into()],
+                message: <span class="string">"incorrect type passed to workgroupUniformLoad"</span>.into(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">""</span>.into())],
+                notes: <span class="macro">vec!</span>[<span class="string">"passed type must be a workgroup pointer"</span>.into()],
             },
             Error::Internal(message) =&gt; ParseError {
-                message: <span class="string">&quot;internal WGSL front end error&quot;</span>.to_string(),
+                message: <span class="string">"internal WGSL front end error"</span>.to_string(),
                 labels: <span class="macro">vec!</span>[],
                 notes: <span class="macro">vec!</span>[message.into()],
             },
             Error::ExpectedConstExprConcreteIntegerScalar(span) =&gt; ParseError {
-                message: <span class="string">&quot;must be a const-expression that resolves to a concrete integer scalar (u32 or i32)&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must resolve to u32 or i32&quot;</span>.into())],
+                message: <span class="string">"must be a const-expression that resolves to a concrete integer scalar (u32 or i32)"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must resolve to u32 or i32"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::ExpectedNonNegative(span) =&gt; ParseError {
-                message: <span class="string">&quot;must be non-negative (&gt;= 0)&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be non-negative&quot;</span>.into())],
+                message: <span class="string">"must be non-negative (&gt;= 0)"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must be non-negative"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::ExpectedPositiveArrayLength(span) =&gt; ParseError {
-                message: <span class="string">&quot;array element count must be positive (&gt; 0)&quot;</span>.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be positive&quot;</span>.into())],
+                message: <span class="string">"array element count must be positive (&gt; 0)"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"must be positive"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::ConstantEvaluatorError(<span class="kw-2">ref </span>e, span) =&gt; ParseError {
                 message: e.to_string(),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;see msg&quot;</span>.into())],
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"see msg"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::MissingWorkgroupSize(span) =&gt; ParseError {
-                message: <span class="string">&quot;workgroup size is missing on compute shader entry point&quot;</span>.to_string(),
+                message: <span class="string">"workgroup size is missing on compute shader entry point"</span>.to_string(),
                 labels: <span class="macro">vec!</span>[(
                     span,
-                    <span class="string">&quot;must be paired with a @workgroup_size attribute&quot;</span>.into(),
+                    <span class="string">"must be paired with a @workgroup_size attribute"</span>.into(),
                 )],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::AutoConversion { dest_span, <span class="kw-2">ref </span>dest_type, source_span, <span class="kw-2">ref </span>source_type } =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">&quot;automatic conversions cannot convert `{source_type}` to `{dest_type}`&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"automatic conversions cannot convert `{source_type}` to `{dest_type}`"</span>),
                 labels: <span class="macro">vec!</span>[
                     (
                         dest_span,
-                        <span class="macro">format!</span>(<span class="string">&quot;a value of type {dest_type} is required here&quot;</span>).into(),
+                        <span class="macro">format!</span>(<span class="string">"a value of type {dest_type} is required here"</span>).into(),
                     ),
                     (
                         source_span,
-                        <span class="macro">format!</span>(<span class="string">&quot;this expression has type {source_type}&quot;</span>).into(),
+                        <span class="macro">format!</span>(<span class="string">"this expression has type {source_type}"</span>).into(),
                     )
                 ],
                 notes: <span class="macro">vec!</span>[],

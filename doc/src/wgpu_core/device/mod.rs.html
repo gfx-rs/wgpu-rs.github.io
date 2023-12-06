@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -476,7 +476,7 @@
 <span class="kw">mod </span>life;
 <span class="kw">pub mod </span>queue;
 <span class="kw">pub mod </span>resource;
-<span class="attr">#[cfg(any(feature = <span class="string">&quot;trace&quot;</span>, feature = <span class="string">&quot;replay&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"trace"</span>, feature = <span class="string">"replay"</span>))]
 </span><span class="kw">pub mod </span>trace;
 <span class="kw">pub use </span>{life::WaitIdleError, resource::Device};
 
@@ -487,22 +487,22 @@
 
 <span class="kw">const </span>CLEANUP_WAIT_MS: u32 = <span class="number">5000</span>;
 
-<span class="kw">const </span>IMPLICIT_FAILURE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;failed implicit&quot;</span>;
-<span class="kw">const </span>EP_FAILURE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;EP is invalid&quot;</span>;
+<span class="kw">const </span>IMPLICIT_FAILURE: <span class="kw-2">&amp;</span>str = <span class="string">"failed implicit"</span>;
+<span class="kw">const </span>EP_FAILURE: <span class="kw-2">&amp;</span>str = <span class="string">"EP is invalid"</span>;
 
-<span class="kw">pub type </span>DeviceDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::DeviceDescriptor&lt;Label&lt;<span class="lifetime">&#39;a</span>&gt;&gt;;
+<span class="kw">pub type </span>DeviceDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::DeviceDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 
 <span class="attr">#[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub enum </span>HostMap {
     Read,
     Write,
 }
 
 <span class="attr">#[derive(Clone, Debug, Hash, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AttachmentData&lt;T&gt; {
     <span class="kw">pub </span>colors: ArrayVec&lt;<span class="prelude-ty">Option</span>&lt;T&gt;, { hal::MAX_COLOR_ATTACHMENTS }&gt;,
     <span class="kw">pub </span>resolves: ArrayVec&lt;T, { hal::MAX_COLOR_ATTACHMENTS }&gt;,
@@ -526,7 +526,7 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Hash, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderPassContext {
     <span class="kw">pub </span>attachments: AttachmentData&lt;TextureFormat&gt;,
     <span class="kw">pub </span>sample_count: u32,
@@ -536,7 +536,7 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>RenderPassCompatibilityError {
     <span class="attr">#[error(
-        <span class="string">&quot;Incompatible color attachments at indices {indices:?}: the RenderPass uses textures with formats {expected:?} but the {ty:?} uses attachments with formats {actual:?}&quot;</span>,
+        <span class="string">"Incompatible color attachments at indices {indices:?}: the RenderPass uses textures with formats {expected:?} but the {ty:?} uses attachments with formats {actual:?}"</span>,
     )]
     </span>IncompatibleColorAttachment {
         indices: Vec&lt;usize&gt;,
@@ -545,7 +545,7 @@
         ty: RenderPassCompatibilityCheckType,
     },
     <span class="attr">#[error(
-        <span class="string">&quot;Incompatible depth-stencil attachment format: the RenderPass uses a texture with format {expected:?} but the {ty:?} uses an attachment with format {actual:?}&quot;</span>,
+        <span class="string">"Incompatible depth-stencil attachment format: the RenderPass uses a texture with format {expected:?} but the {ty:?} uses an attachment with format {actual:?}"</span>,
     )]
     </span>IncompatibleDepthStencilAttachment {
         expected: <span class="prelude-ty">Option</span>&lt;TextureFormat&gt;,
@@ -553,14 +553,14 @@
         ty: RenderPassCompatibilityCheckType,
     },
     <span class="attr">#[error(
-        <span class="string">&quot;Incompatible sample count: the RenderPass uses textures with sample count {expected:?} but the {ty:?} uses attachments with format {actual:?}&quot;</span>,
+        <span class="string">"Incompatible sample count: the RenderPass uses textures with sample count {expected:?} but the {ty:?} uses attachments with format {actual:?}"</span>,
     )]
     </span>IncompatibleSampleCount {
         expected: u32,
         actual: u32,
         ty: RenderPassCompatibilityCheckType,
     },
-    <span class="attr">#[error(<span class="string">&quot;Incompatible multiview setting: the RenderPass uses setting {expected:?} but the {ty:?} uses setting {actual:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Incompatible multiview setting: the RenderPass uses setting {expected:?} but the {ty:?} uses setting {actual:?}"</span>)]
     </span>IncompatibleMultiview {
         expected: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
         actual: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
@@ -658,33 +658,33 @@
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
-</span><span class="kw">pub type </span>DeviceLostCallback = Box&lt;<span class="kw">dyn </span>FnOnce(DeviceLostReason, String) + Send + <span class="lifetime">&#39;static</span>&gt;;
+</span><span class="kw">pub type </span>DeviceLostCallback = Box&lt;<span class="kw">dyn </span>FnOnce(DeviceLostReason, String) + Send + <span class="lifetime">'static</span>&gt;;
 <span class="attr">#[cfg(not(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 )))]
-</span><span class="kw">pub type </span>DeviceLostCallback = Box&lt;<span class="kw">dyn </span>FnOnce(DeviceLostReason, String) + <span class="lifetime">&#39;static</span>&gt;;
+</span><span class="kw">pub type </span>DeviceLostCallback = Box&lt;<span class="kw">dyn </span>FnOnce(DeviceLostReason, String) + <span class="lifetime">'static</span>&gt;;
 
 <span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DeviceLostClosureC {
-    <span class="kw">pub </span>callback: <span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(user_data: <span class="kw-2">*mut </span>u8, reason: u8, message: <span class="kw-2">*const </span>c_char),
+    <span class="kw">pub </span>callback: <span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn</span>(user_data: <span class="kw-2">*mut </span>u8, reason: u8, message: <span class="kw-2">*const </span>c_char),
     <span class="kw">pub </span>user_data: <span class="kw-2">*mut </span>u8,
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>DeviceLostClosureC {}
@@ -718,7 +718,7 @@
     /// - The callback pointer must be valid to call with the provided `user_data`
     ///   pointer.
     ///
-    /// - Both pointers must point to `&#39;static` data, as the callback may happen at
+    /// - Both pointers must point to `'static` data, as the callback may happen at
     ///   an unspecified time.
     </span><span class="kw">pub unsafe fn </span>from_c(inner: DeviceLostClosureC) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -770,7 +770,7 @@
     // before reading the data from GPU (i.e. `invalidate_range`). However, this
     // would require us to kick off and wait for a command buffer or piggy back
     // on an existing one (the later is likely the only worthwhile option). As
-    // reading uninitialized memory isn&#39;t a particular important path to
+    // reading uninitialized memory isn't a particular important path to
     // support, we instead just initialize the memory here and make sure it is
     // GPU visible, so this happens at max only once for every buffer region.
     //
@@ -787,8 +787,8 @@
         .write()
         .drain(offset..(size + offset))
     {
-        <span class="comment">// The mapping&#39;s pointer is already offset, however we track the
-        // uninitialized range relative to the buffer&#39;s start.
+        <span class="comment">// The mapping's pointer is already offset, however we track the
+        // uninitialized range relative to the buffer's start.
         </span><span class="kw">let </span>fill_range =
             (uninitialized.start - offset) <span class="kw">as </span>usize..(uninitialized.end - offset) <span class="kw">as </span>usize;
         mapped[fill_range].fill(<span class="number">0</span>);
@@ -826,7 +826,7 @@
 
     <span class="kw">fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) {
         <span class="macro">resource_log!</span>(
-            <span class="string">&quot;CommandAllocator::dispose encoders {}&quot;</span>,
+            <span class="string">"CommandAllocator::dispose encoders {}"</span>,
             <span class="self">self</span>.free_encoders.len()
         );
         <span class="kw">for </span>cmd_encoder <span class="kw">in </span><span class="self">self</span>.free_encoders {
@@ -838,23 +838,23 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;Device is invalid&quot;</span>)]
+#[error(<span class="string">"Device is invalid"</span>)]
 </span><span class="kw">pub struct </span>InvalidDevice;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DeviceError {
-    <span class="attr">#[error(<span class="string">&quot;Parent device is invalid.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Parent device is invalid."</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">&quot;Parent device is lost&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Parent device is lost"</span>)]
     </span>Lost,
-    <span class="attr">#[error(<span class="string">&quot;Not enough memory left.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Not enough memory left."</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">&quot;Creation of a resource failed for a reason other than running out of memory.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Creation of a resource failed for a reason other than running out of memory."</span>)]
     </span>ResourceCreationFailed,
-    <span class="attr">#[error(<span class="string">&quot;QueueId is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"QueueId is invalid"</span>)]
     </span>InvalidQueueId,
-    <span class="attr">#[error(<span class="string">&quot;Attempt to use a resource with a different device from the one that created it&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Attempt to use a resource with a different device from the one that created it"</span>)]
     </span>WrongDevice,
 }
 
@@ -869,30 +869,30 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;Features {0:?} are required but not enabled on the device&quot;</span>)]
+#[error(<span class="string">"Features {0:?} are required but not enabled on the device"</span>)]
 </span><span class="kw">pub struct </span>MissingFeatures(<span class="kw">pub </span>wgt::Features);
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[error(
-    <span class="string">&quot;Downlevel flags {0:?} are required but not supported on the device.\n{}&quot;</span>,
+    <span class="string">"Downlevel flags {0:?} are required but not supported on the device.\n{}"</span>,
     DOWNLEVEL_ERROR_MESSAGE
 )]
 </span><span class="kw">pub struct </span>MissingDownlevelFlags(<span class="kw">pub </span>wgt::DownlevelFlags);
 
 <span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>ImplicitPipelineContext {
     <span class="kw">pub </span>root_id: id::PipelineLayoutId,
     <span class="kw">pub </span>group_ids: ArrayVec&lt;id::BindGroupLayoutId, { hal::MAX_BIND_GROUPS }&gt;,
 }
 
-<span class="kw">pub struct </span>ImplicitPipelineIds&lt;<span class="lifetime">&#39;a</span>, G: GlobalIdentityHandlerFactory&gt; {
+<span class="kw">pub struct </span>ImplicitPipelineIds&lt;<span class="lifetime">'a</span>, G: GlobalIdentityHandlerFactory&gt; {
     <span class="kw">pub </span>root_id: Input&lt;G, id::PipelineLayoutId&gt;,
-    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Input&lt;G, id::BindGroupLayoutId&gt;],
+    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Input&lt;G, id::BindGroupLayoutId&gt;],
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; ImplicitPipelineIds&lt;<span class="lifetime">&#39;_</span>, G&gt; {
+<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; ImplicitPipelineIds&lt;<span class="lifetime">'_</span>, G&gt; {
     <span class="kw">fn </span>prepare&lt;A: HalApi&gt;(<span class="self">self</span>, hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;) -&gt; ImplicitPipelineContext {
         ImplicitPipelineContext {
             root_id: hub.pipeline_layouts.prepare::&lt;G&gt;(<span class="self">self</span>.root_id).into_id(),

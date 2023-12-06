@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -227,11 +227,11 @@
 <span class="kw">use </span><span class="kw">super</span>::Error;
 
 <span class="kw">impl </span><span class="kw">crate</span>::ScalarKind {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_hlsl_cast(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_hlsl_cast(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Float =&gt; <span class="string">&quot;asfloat&quot;</span>,
-            <span class="self">Self</span>::Sint =&gt; <span class="string">&quot;asint&quot;</span>,
-            <span class="self">Self</span>::Uint =&gt; <span class="string">&quot;asuint&quot;</span>,
+            <span class="self">Self</span>::Float =&gt; <span class="string">"asfloat"</span>,
+            <span class="self">Self</span>::Sint =&gt; <span class="string">"asint"</span>,
+            <span class="self">Self</span>::Uint =&gt; <span class="string">"asuint"</span>,
             <span class="self">Self</span>::Bool | <span class="self">Self</span>::AbstractInt | <span class="self">Self</span>::AbstractFloat =&gt; <span class="macro">unreachable!</span>(),
         }
     }
@@ -241,17 +241,17 @@
     <span class="doccomment">/// Helper function that returns scalar related strings
     ///
     /// &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-scalar&gt;
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Error&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
         <span class="kw">match </span><span class="self">self</span>.kind {
-            <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;int&quot;</span>),
-            <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;uint&quot;</span>),
+            <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="prelude-val">Ok</span>(<span class="string">"int"</span>),
+            <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="prelude-val">Ok</span>(<span class="string">"uint"</span>),
             <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="kw">match </span><span class="self">self</span>.width {
-                <span class="number">2 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;half&quot;</span>),
-                <span class="number">4 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;float&quot;</span>),
-                <span class="number">8 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;double&quot;</span>),
+                <span class="number">2 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">"half"</span>),
+                <span class="number">4 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">"float"</span>),
+                <span class="number">8 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">"double"</span>),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnsupportedScalar(<span class="self">self</span>)),
             },
-            <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;bool&quot;</span>),
+            <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="prelude-val">Ok</span>(<span class="string">"bool"</span>),
             <span class="kw">crate</span>::ScalarKind::AbstractInt | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; {
                 <span class="prelude-val">Err</span>(Error::UnsupportedScalar(<span class="self">self</span>))
             }
@@ -292,15 +292,15 @@
     }
 
     <span class="doccomment">/// Used to generate the name of the wrapped type constructor
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>hlsl_type_id&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>hlsl_type_id&lt;<span class="lifetime">'a</span>&gt;(
         base: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Type&gt;,
         gctx: <span class="kw">crate</span>::proc::GlobalCtx,
-        names: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::FastHashMap&lt;<span class="kw">crate</span>::proc::NameKey, String&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;, Error&gt; {
+        names: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::FastHashMap&lt;<span class="kw">crate</span>::proc::NameKey, String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;, Error&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>gctx.types[base].inner {
             <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; Cow::Borrowed(scalar.to_hlsl_str()<span class="question-mark">?</span>),
             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; Cow::Owned(<span class="macro">format!</span>(
-                <span class="string">&quot;{}{}&quot;</span>,
+                <span class="string">"{}{}"</span>,
                 scalar.to_hlsl_str()<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::back::vector_size_str(size)
             )),
@@ -309,7 +309,7 @@
                 rows,
                 scalar,
             } =&gt; Cow::Owned(<span class="macro">format!</span>(
-                <span class="string">&quot;{}{}x{}&quot;</span>,
+                <span class="string">"{}{}x{}"</span>,
                 scalar.to_hlsl_str()<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::back::vector_size_str(columns),
                 <span class="kw">crate</span>::back::vector_size_str(rows),
@@ -319,7 +319,7 @@
                 size: <span class="kw">crate</span>::ArraySize::Constant(size),
                 ..
             } =&gt; Cow::Owned(<span class="macro">format!</span>(
-                <span class="string">&quot;array{size}_{}_&quot;</span>,
+                <span class="string">"array{size}_{}_"</span>,
                 <span class="self">Self</span>::hlsl_type_id(base, gctx, names)<span class="question-mark">?
             </span>)),
             <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; {
@@ -331,73 +331,73 @@
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::StorageFormat {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::R16Float =&gt; <span class="string">&quot;float&quot;</span>,
-            <span class="self">Self</span>::R8Unorm | <span class="self">Self</span>::R16Unorm =&gt; <span class="string">&quot;unorm float&quot;</span>,
-            <span class="self">Self</span>::R8Snorm | <span class="self">Self</span>::R16Snorm =&gt; <span class="string">&quot;snorm float&quot;</span>,
-            <span class="self">Self</span>::R8Uint | <span class="self">Self</span>::R16Uint =&gt; <span class="string">&quot;uint&quot;</span>,
-            <span class="self">Self</span>::R8Sint | <span class="self">Self</span>::R16Sint =&gt; <span class="string">&quot;int&quot;</span>,
+            <span class="self">Self</span>::R16Float =&gt; <span class="string">"float"</span>,
+            <span class="self">Self</span>::R8Unorm | <span class="self">Self</span>::R16Unorm =&gt; <span class="string">"unorm float"</span>,
+            <span class="self">Self</span>::R8Snorm | <span class="self">Self</span>::R16Snorm =&gt; <span class="string">"snorm float"</span>,
+            <span class="self">Self</span>::R8Uint | <span class="self">Self</span>::R16Uint =&gt; <span class="string">"uint"</span>,
+            <span class="self">Self</span>::R8Sint | <span class="self">Self</span>::R16Sint =&gt; <span class="string">"int"</span>,
 
-            <span class="self">Self</span>::Rg16Float =&gt; <span class="string">&quot;float2&quot;</span>,
-            <span class="self">Self</span>::Rg8Unorm | <span class="self">Self</span>::Rg16Unorm =&gt; <span class="string">&quot;unorm float2&quot;</span>,
-            <span class="self">Self</span>::Rg8Snorm | <span class="self">Self</span>::Rg16Snorm =&gt; <span class="string">&quot;snorm float2&quot;</span>,
+            <span class="self">Self</span>::Rg16Float =&gt; <span class="string">"float2"</span>,
+            <span class="self">Self</span>::Rg8Unorm | <span class="self">Self</span>::Rg16Unorm =&gt; <span class="string">"unorm float2"</span>,
+            <span class="self">Self</span>::Rg8Snorm | <span class="self">Self</span>::Rg16Snorm =&gt; <span class="string">"snorm float2"</span>,
 
-            <span class="self">Self</span>::Rg8Sint | <span class="self">Self</span>::Rg16Sint =&gt; <span class="string">&quot;int2&quot;</span>,
-            <span class="self">Self</span>::Rg8Uint | <span class="self">Self</span>::Rg16Uint =&gt; <span class="string">&quot;uint2&quot;</span>,
+            <span class="self">Self</span>::Rg8Sint | <span class="self">Self</span>::Rg16Sint =&gt; <span class="string">"int2"</span>,
+            <span class="self">Self</span>::Rg8Uint | <span class="self">Self</span>::Rg16Uint =&gt; <span class="string">"uint2"</span>,
 
-            <span class="self">Self</span>::Rg11b10Float =&gt; <span class="string">&quot;float3&quot;</span>,
+            <span class="self">Self</span>::Rg11b10Float =&gt; <span class="string">"float3"</span>,
 
-            <span class="self">Self</span>::Rgba16Float | <span class="self">Self</span>::R32Float | <span class="self">Self</span>::Rg32Float | <span class="self">Self</span>::Rgba32Float =&gt; <span class="string">&quot;float4&quot;</span>,
+            <span class="self">Self</span>::Rgba16Float | <span class="self">Self</span>::R32Float | <span class="self">Self</span>::Rg32Float | <span class="self">Self</span>::Rgba32Float =&gt; <span class="string">"float4"</span>,
             <span class="self">Self</span>::Rgba8Unorm | <span class="self">Self</span>::Bgra8Unorm | <span class="self">Self</span>::Rgba16Unorm | <span class="self">Self</span>::Rgb10a2Unorm =&gt; {
-                <span class="string">&quot;unorm float4&quot;
+                <span class="string">"unorm float4"
             </span>}
-            <span class="self">Self</span>::Rgba8Snorm | <span class="self">Self</span>::Rgba16Snorm =&gt; <span class="string">&quot;snorm float4&quot;</span>,
+            <span class="self">Self</span>::Rgba8Snorm | <span class="self">Self</span>::Rgba16Snorm =&gt; <span class="string">"snorm float4"</span>,
 
             <span class="self">Self</span>::Rgba8Uint
             | <span class="self">Self</span>::Rgba16Uint
             | <span class="self">Self</span>::R32Uint
             | <span class="self">Self</span>::Rg32Uint
             | <span class="self">Self</span>::Rgba32Uint
-            | <span class="self">Self</span>::Rgb10a2Uint =&gt; <span class="string">&quot;uint4&quot;</span>,
+            | <span class="self">Self</span>::Rgb10a2Uint =&gt; <span class="string">"uint4"</span>,
             <span class="self">Self</span>::Rgba8Sint
             | <span class="self">Self</span>::Rgba16Sint
             | <span class="self">Self</span>::R32Sint
             | <span class="self">Self</span>::Rg32Sint
-            | <span class="self">Self</span>::Rgba32Sint =&gt; <span class="string">&quot;int4&quot;</span>,
+            | <span class="self">Self</span>::Rgba32Sint =&gt; <span class="string">"int4"</span>,
         }
     }
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::BuiltIn {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Error&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Position { .. } =&gt; <span class="string">&quot;SV_Position&quot;</span>,
+            <span class="self">Self</span>::Position { .. } =&gt; <span class="string">"SV_Position"</span>,
             <span class="comment">// vertex
-            </span><span class="self">Self</span>::ClipDistance =&gt; <span class="string">&quot;SV_ClipDistance&quot;</span>,
-            <span class="self">Self</span>::CullDistance =&gt; <span class="string">&quot;SV_CullDistance&quot;</span>,
-            <span class="self">Self</span>::InstanceIndex =&gt; <span class="string">&quot;SV_InstanceID&quot;</span>,
-            <span class="self">Self</span>::VertexIndex =&gt; <span class="string">&quot;SV_VertexID&quot;</span>,
+            </span><span class="self">Self</span>::ClipDistance =&gt; <span class="string">"SV_ClipDistance"</span>,
+            <span class="self">Self</span>::CullDistance =&gt; <span class="string">"SV_CullDistance"</span>,
+            <span class="self">Self</span>::InstanceIndex =&gt; <span class="string">"SV_InstanceID"</span>,
+            <span class="self">Self</span>::VertexIndex =&gt; <span class="string">"SV_VertexID"</span>,
             <span class="comment">// fragment
-            </span><span class="self">Self</span>::FragDepth =&gt; <span class="string">&quot;SV_Depth&quot;</span>,
-            <span class="self">Self</span>::FrontFacing =&gt; <span class="string">&quot;SV_IsFrontFace&quot;</span>,
-            <span class="self">Self</span>::PrimitiveIndex =&gt; <span class="string">&quot;SV_PrimitiveID&quot;</span>,
-            <span class="self">Self</span>::SampleIndex =&gt; <span class="string">&quot;SV_SampleIndex&quot;</span>,
-            <span class="self">Self</span>::SampleMask =&gt; <span class="string">&quot;SV_Coverage&quot;</span>,
+            </span><span class="self">Self</span>::FragDepth =&gt; <span class="string">"SV_Depth"</span>,
+            <span class="self">Self</span>::FrontFacing =&gt; <span class="string">"SV_IsFrontFace"</span>,
+            <span class="self">Self</span>::PrimitiveIndex =&gt; <span class="string">"SV_PrimitiveID"</span>,
+            <span class="self">Self</span>::SampleIndex =&gt; <span class="string">"SV_SampleIndex"</span>,
+            <span class="self">Self</span>::SampleMask =&gt; <span class="string">"SV_Coverage"</span>,
             <span class="comment">// compute
-            </span><span class="self">Self</span>::GlobalInvocationId =&gt; <span class="string">&quot;SV_DispatchThreadID&quot;</span>,
-            <span class="self">Self</span>::LocalInvocationId =&gt; <span class="string">&quot;SV_GroupThreadID&quot;</span>,
-            <span class="self">Self</span>::LocalInvocationIndex =&gt; <span class="string">&quot;SV_GroupIndex&quot;</span>,
-            <span class="self">Self</span>::WorkGroupId =&gt; <span class="string">&quot;SV_GroupID&quot;</span>,
-            <span class="comment">// The specific semantic we use here doesn&#39;t matter, because references
+            </span><span class="self">Self</span>::GlobalInvocationId =&gt; <span class="string">"SV_DispatchThreadID"</span>,
+            <span class="self">Self</span>::LocalInvocationId =&gt; <span class="string">"SV_GroupThreadID"</span>,
+            <span class="self">Self</span>::LocalInvocationIndex =&gt; <span class="string">"SV_GroupIndex"</span>,
+            <span class="self">Self</span>::WorkGroupId =&gt; <span class="string">"SV_GroupID"</span>,
+            <span class="comment">// The specific semantic we use here doesn't matter, because references
             // to this field will get replaced with references to `SPECIAL_CBUF_VAR`
             // in `Writer::write_expr`.
-            </span><span class="self">Self</span>::NumWorkGroups =&gt; <span class="string">&quot;SV_GroupID&quot;</span>,
+            </span><span class="self">Self</span>::NumWorkGroups =&gt; <span class="string">"SV_GroupID"</span>,
             <span class="self">Self</span>::BaseInstance | <span class="self">Self</span>::BaseVertex | <span class="self">Self</span>::WorkGroupSize =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">&quot;builtin {self:?}&quot;</span>)))
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"builtin {self:?}"</span>)))
             }
             <span class="self">Self</span>::PointSize | <span class="self">Self</span>::ViewIndex | <span class="self">Self</span>::PointCoord =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="macro">format!</span>(<span class="string">&quot;Unsupported builtin {self:?}&quot;</span>)))
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="macro">format!</span>(<span class="string">"Unsupported builtin {self:?}"</span>)))
             }
         })
     }
@@ -405,40 +405,40 @@
 
 <span class="kw">impl </span><span class="kw">crate</span>::Interpolation {
     <span class="doccomment">/// Return the string corresponding to the HLSL interpolation qualifier.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="comment">// Would be &quot;linear&quot;, but it&#39;s the default interpolation in SM4 and up
+            <span class="comment">// Would be "linear", but it's the default interpolation in SM4 and up
             // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-struct#interpolation-modifiers-introduced-in-shader-model-4
             </span><span class="self">Self</span>::Perspective =&gt; <span class="prelude-val">None</span>,
-            <span class="self">Self</span>::Linear =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;noperspective&quot;</span>),
-            <span class="self">Self</span>::Flat =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;nointerpolation&quot;</span>),
+            <span class="self">Self</span>::Linear =&gt; <span class="prelude-val">Some</span>(<span class="string">"noperspective"</span>),
+            <span class="self">Self</span>::Flat =&gt; <span class="prelude-val">Some</span>(<span class="string">"nointerpolation"</span>),
         }
     }
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::Sampling {
     <span class="doccomment">/// Return the HLSL auxiliary qualifier for the given sampling value.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_str(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Center =&gt; <span class="prelude-val">None</span>,
-            <span class="self">Self</span>::Centroid =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;centroid&quot;</span>),
-            <span class="self">Self</span>::Sample =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;sample&quot;</span>),
+            <span class="self">Self</span>::Centroid =&gt; <span class="prelude-val">Some</span>(<span class="string">"centroid"</span>),
+            <span class="self">Self</span>::Sample =&gt; <span class="prelude-val">Some</span>(<span class="string">"sample"</span>),
         }
     }
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
     <span class="doccomment">/// Return the HLSL suffix for the `InterlockedXxx` method.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_suffix(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>to_hlsl_suffix(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Add | <span class="self">Self</span>::Subtract =&gt; <span class="string">&quot;Add&quot;</span>,
-            <span class="self">Self</span>::And =&gt; <span class="string">&quot;And&quot;</span>,
-            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">&quot;Or&quot;</span>,
-            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">&quot;Xor&quot;</span>,
-            <span class="self">Self</span>::Min =&gt; <span class="string">&quot;Min&quot;</span>,
-            <span class="self">Self</span>::Max =&gt; <span class="string">&quot;Max&quot;</span>,
-            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">&quot;Exchange&quot;</span>,
-            <span class="self">Self</span>::Exchange { .. } =&gt; <span class="string">&quot;&quot;</span>, <span class="comment">//TODO
+            <span class="self">Self</span>::Add | <span class="self">Self</span>::Subtract =&gt; <span class="string">"Add"</span>,
+            <span class="self">Self</span>::And =&gt; <span class="string">"And"</span>,
+            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">"Or"</span>,
+            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">"Xor"</span>,
+            <span class="self">Self</span>::Min =&gt; <span class="string">"Min"</span>,
+            <span class="self">Self</span>::Max =&gt; <span class="string">"Max"</span>,
+            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"Exchange"</span>,
+            <span class="self">Self</span>::Exchange { .. } =&gt; <span class="string">""</span>, <span class="comment">//TODO
         </span>}
     }
 }

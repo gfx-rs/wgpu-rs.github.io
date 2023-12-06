@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/span.rs`."><title>span.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/span.rs`."><title>span.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -504,7 +504,7 @@
 
 <span class="doccomment">/// A source code span, used for error reporting.
 </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Default)]
-#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
 </span><span class="kw">pub struct </span>Span {
     start: u32,
     end: u32,
@@ -514,7 +514,7 @@
     <span class="kw">pub const </span>UNDEFINED: <span class="self">Self </span>= <span class="self">Self </span>{ start: <span class="number">0</span>, end: <span class="number">0 </span>};
     <span class="doccomment">/// Creates a new `Span` from a range of byte indices
     ///
-    /// Note: end is exclusive, it doesn&#39;t belong to the `Span`
+    /// Note: end is exclusive, it doesn't belong to the `Span`
     </span><span class="kw">pub const fn </span>new(start: u32, end: u32) -&gt; <span class="self">Self </span>{
         Span { start, end }
     }
@@ -531,10 +531,10 @@
     /// contains both `self` and `other`
     </span><span class="kw">pub fn </span>subsume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="self">Self</span>) {
         <span class="kw-2">*</span><span class="self">self </span>= <span class="kw">if </span>!<span class="self">self</span>.is_defined() {
-            <span class="comment">// self isn&#39;t defined so use other
+            <span class="comment">// self isn't defined so use other
             </span>other
         } <span class="kw">else if </span>!other.is_defined() {
-            <span class="comment">// other isn&#39;t defined so don&#39;t try to subsume
+            <span class="comment">// other isn't defined so don't try to subsume
             </span><span class="kw-2">*</span><span class="self">self
         </span>} <span class="kw">else </span>{
             <span class="comment">// Both self and other are defined so calculate the span that contains them both
@@ -572,8 +572,8 @@
     <span class="doccomment">/// Return a [`SourceLocation`] for this span in the provided source.
     </span><span class="kw">pub fn </span>location(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; SourceLocation {
         <span class="kw">let </span>prefix = <span class="kw-2">&amp;</span>source[..<span class="self">self</span>.start <span class="kw">as </span>usize];
-        <span class="kw">let </span>line_number = prefix.matches(<span class="string">&#39;\n&#39;</span>).count() <span class="kw">as </span>u32 + <span class="number">1</span>;
-        <span class="kw">let </span>line_start = prefix.rfind(<span class="string">&#39;\n&#39;</span>).map(|pos| pos + <span class="number">1</span>).unwrap_or(<span class="number">0</span>);
+        <span class="kw">let </span>line_number = prefix.matches(<span class="string">'\n'</span>).count() <span class="kw">as </span>u32 + <span class="number">1</span>;
+        <span class="kw">let </span>line_start = prefix.rfind(<span class="string">'\n'</span>).map(|pos| pos + <span class="number">1</span>).unwrap_or(<span class="number">0</span>);
         <span class="kw">let </span>line_position = source[line_start..<span class="self">self</span>.start <span class="kw">as </span>usize].chars().count() <span class="kw">as </span>u32 + <span class="number">1</span>;
 
         SourceLocation {
@@ -622,7 +622,7 @@
     </span><span class="kw">pub </span>length: u32,
 }
 
-<span class="doccomment">/// A source code span together with &quot;context&quot;, a user-readable description of what part of the error it refers to.
+<span class="doccomment">/// A source code span together with "context", a user-readable description of what part of the error it refers to.
 </span><span class="kw">pub type </span>SpanContext = (Span, String);
 
 <span class="doccomment">/// Wrapper class for [`Error`], augmenting it with a list of [`SpanContext`]s.
@@ -636,7 +636,7 @@
 <span class="kw">where
     </span>E: fmt::Display,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="self">self</span>.inner.fmt(f)
     }
 }
@@ -655,7 +655,7 @@
 <span class="kw">where
     </span>E: Error,
 {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">&#39;static</span>)&gt; {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; {
         <span class="self">self</span>.inner.source()
     }
 }
@@ -769,7 +769,7 @@
     <span class="kw">where
         </span>E: Error,
     {
-        <span class="self">self</span>.emit_to_stderr_with_path(source, <span class="string">&quot;wgsl&quot;</span>)
+        <span class="self">self</span>.emit_to_stderr_with_path(source, <span class="string">"wgsl"</span>)
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
@@ -784,7 +784,7 @@
         <span class="kw">let </span>config = term::Config::default();
         <span class="kw">let </span>writer = StandardStream::stderr(ColorChoice::Auto);
         term::emit(<span class="kw-2">&amp;mut </span>writer.lock(), <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic())
-            .expect(<span class="string">&quot;cannot write error&quot;</span>);
+            .expect(<span class="string">"cannot write error"</span>);
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
@@ -792,7 +792,7 @@
     <span class="kw">where
         </span>E: Error,
     {
-        <span class="self">self</span>.emit_to_string_with_path(source, <span class="string">&quot;wgsl&quot;</span>)
+        <span class="self">self</span>.emit_to_string_with_path(source, <span class="string">"wgsl"</span>)
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
@@ -806,7 +806,7 @@
         <span class="kw">let </span>files = files::SimpleFile::new(path, source);
         <span class="kw">let </span>config = codespan_reporting::term::Config::default();
         <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
-        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic()).expect(<span class="string">&quot;cannot write error&quot;</span>);
+        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic()).expect(<span class="string">"cannot write error"</span>);
         String::from_utf8(writer.into_inner()).unwrap()
     }
 }
@@ -817,7 +817,7 @@
     <span class="doccomment">/// See [`WithSpan::new`].
     </span><span class="kw">fn </span>with_span(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// See [`WithSpan::with_span`].
-    </span><span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self</span>::Output;
+    </span><span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// See [`WithSpan::with_context`].
     </span><span class="kw">fn </span>with_span_context(<span class="self">self</span>, span_context: SpanContext) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// See [`WithSpan::with_handle`].
@@ -829,10 +829,10 @@
     <span class="kw">fn </span>get_span(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; Span;
     <span class="kw">fn </span>get_span_context(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; SpanContext {
         <span class="kw">match </span><span class="self">self</span>.get_span(handle) {
-            x <span class="kw">if </span>!x.is_defined() =&gt; (Default::default(), <span class="string">&quot;&quot;</span>.to_string()),
+            x <span class="kw">if </span>!x.is_defined() =&gt; (Default::default(), <span class="string">""</span>.to_string()),
             known =&gt; (
                 known,
-                <span class="macro">format!</span>(<span class="string">&quot;{} {:?}&quot;</span>, std::any::type_name::&lt;T&gt;(), handle),
+                <span class="macro">format!</span>(<span class="string">"{} {:?}"</span>, std::any::type_name::&lt;T&gt;(), handle),
             ),
         }
     }
@@ -859,7 +859,7 @@
         WithSpan::new(<span class="self">self</span>)
     }
 
-    <span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
         WithSpan::new(<span class="self">self</span>).with_span(span, description)
     }
 
@@ -899,7 +899,7 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>span_location() {
-    <span class="kw">let </span>source = <span class="string">&quot;12\n45\n\n89\n&quot;</span>;
+    <span class="kw">let </span>source = <span class="string">"12\n45\n\n89\n"</span>;
     <span class="macro">assert_eq!</span>(
         Span { start: <span class="number">0</span>, end: <span class="number">1 </span>}.location(source),
         SourceLocation {

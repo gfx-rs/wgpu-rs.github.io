@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1872,10 +1872,10 @@
 
 <span class="kw">impl </span>PhysicalDeviceFeatures {
     <span class="doccomment">/// Add the members of `self` into `info.enabled_features` and its `p_next` chain.
-    </span><span class="kw">pub fn </span>add_to_device_create_builder&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
-        <span class="kw-2">mut </span>info: vk::DeviceCreateInfoBuilder&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; vk::DeviceCreateInfoBuilder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">pub fn </span>add_to_device_create_builder&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
+        <span class="kw-2">mut </span>info: vk::DeviceCreateInfoBuilder&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; vk::DeviceCreateInfoBuilder&lt;<span class="lifetime">'a</span>&gt; {
         info = info.enabled_features(<span class="kw-2">&amp;</span><span class="self">self</span>.core);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.descriptor_indexing {
             info = info.push_next(feature);
@@ -1910,7 +1910,7 @@
     /// `requested_features` should be the same as what was used to generate `enabled_extensions`.
     </span><span class="kw">fn </span>from_extensions_and_requested_features(
         device_api_version: u32,
-        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr],
+        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr],
         requested_features: wgt::Features,
         downlevel_flags: wgt::DownlevelFlags,
         private_caps: <span class="kw-2">&amp;</span><span class="kw">super</span>::PrivateCapabilities,
@@ -1937,7 +1937,7 @@
             requested_features.intersects(wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY);
 
         <span class="self">Self </span>{
-            <span class="comment">// vk::PhysicalDeviceFeatures is a struct composed of Bool32&#39;s while
+            <span class="comment">// vk::PhysicalDeviceFeatures is a struct composed of Bool32's while
             // Features is a bitfield so we need to map everything manually
             </span>core: vk::PhysicalDeviceFeatures::builder()
                 .robust_buffer_access(private_caps.robust_buffer_access)
@@ -2065,7 +2065,7 @@
                 <span class="prelude-val">None
             </span>},
             robustness2: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::ExtRobustness2Fn::name()) {
-                <span class="comment">// Note: enabling `robust_buffer_access2` isn&#39;t requires, strictly speaking
+                <span class="comment">// Note: enabling `robust_buffer_access2` isn't requires, strictly speaking
                 // since we can enable `robust_buffer_access` all the time. But it improves
                 // program portability, so we opt into it if they are supported.
                 </span><span class="prelude-val">Some</span>(
@@ -2380,7 +2380,7 @@
                         | vk::FormatFeatureFlags::TRANSFER_SRC
                         | vk::FormatFeatureFlags::TRANSFER_DST,
                 )
-                &amp;&amp; !adapter_info.driver.contains(<span class="string">&quot;MoltenVK&quot;</span>),
+                &amp;&amp; !adapter_info.driver.contains(<span class="string">"MoltenVK"</span>),
         );
 
         (features, dl_flags)
@@ -2429,7 +2429,7 @@
     }
 
     <span class="doccomment">/// Map `requested_features` to the list of Vulkan extension strings required to create the logical device.
-    </span><span class="kw">fn </span>get_required_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>, requested_features: wgt::Features) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; {
+    </span><span class="kw">fn </span>get_required_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>, requested_features: wgt::Features) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>extensions = Vec::new();
 
         <span class="comment">// Note that quite a few extensions depend on the `VK_KHR_get_physical_device_properties2` instance extension.
@@ -2539,7 +2539,7 @@
         }
 
         <span class="comment">// Require `VK_KHR_portability_subset` on macOS/iOS
-        </span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
+        </span><span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>))]
         </span>extensions.push(vk::KhrPortabilitySubsetFn::name());
 
         <span class="comment">// Require `VK_EXT_texture_compression_astc_hdr` if the associated feature was requested
@@ -2561,7 +2561,7 @@
         <span class="comment">// Prevent very large buffers on mesa and most android devices.
         </span><span class="kw">let </span>is_nvidia = <span class="self">self</span>.properties.vendor_id == <span class="kw">crate</span>::auxil::db::nvidia::VENDOR;
         <span class="kw">let </span>max_buffer_size =
-            <span class="kw">if </span>(<span class="macro">cfg!</span>(target_os = <span class="string">&quot;linux&quot;</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">&quot;android&quot;</span>)) &amp;&amp; !is_nvidia {
+            <span class="kw">if </span>(<span class="macro">cfg!</span>(target_os = <span class="string">"linux"</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">"android"</span>)) &amp;&amp; !is_nvidia {
                 i32::MAX <span class="kw">as </span>u64
             } <span class="kw">else </span>{
                 u64::MAX
@@ -2782,7 +2782,7 @@
             name: {
                 cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>phd_capabilities.properties.device_name)
                     .and_then(|info| info.to_str().ok())
-                    .unwrap_or(<span class="string">&quot;?&quot;</span>)
+                    .unwrap_or(<span class="string">"?"</span>)
                     .to_owned()
             },
             vendor: phd_capabilities.properties.vendor_id,
@@ -2801,7 +2801,7 @@
                     .as_ref()
                     .and_then(|driver| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>driver.driver_name))
                     .and_then(|name| name.to_str().ok())
-                    .unwrap_or(<span class="string">&quot;?&quot;</span>)
+                    .unwrap_or(<span class="string">"?"</span>)
                     .to_owned()
             },
             driver_info: {
@@ -2810,7 +2810,7 @@
                     .as_ref()
                     .and_then(|driver| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>driver.driver_info))
                     .and_then(|name| name.to_str().ok())
-                    .unwrap_or(<span class="string">&quot;?&quot;</span>)
+                    .unwrap_or(<span class="string">"?"</span>)
                     .to_owned()
             },
             backend: wgt::Backend::Vulkan,
@@ -2842,16 +2842,16 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
             <span class="kw">if </span>driver.conformance_version.major == <span class="number">0 </span>{
                 <span class="kw">if </span>driver.driver_id == ash::vk::DriverId::MOLTENVK {
-                    <span class="macro">log::debug!</span>(<span class="string">&quot;Adapter is not Vulkan compliant, but is MoltenVK, continuing&quot;</span>);
+                    <span class="macro">log::debug!</span>(<span class="string">"Adapter is not Vulkan compliant, but is MoltenVK, continuing"</span>);
                 } <span class="kw">else if </span><span class="self">self
                     </span>.shared
                     .flags
                     .contains(wgt::InstanceFlags::ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER)
                 {
-                    <span class="macro">log::warn!</span>(<span class="string">&quot;Adapter is not Vulkan compliant: {}&quot;</span>, info.name);
+                    <span class="macro">log::warn!</span>(<span class="string">"Adapter is not Vulkan compliant: {}"</span>, info.name);
                 } <span class="kw">else </span>{
                     <span class="macro">log::warn!</span>(
-                        <span class="string">&quot;Adapter is not Vulkan compliant, hiding adapter: {}&quot;</span>,
+                        <span class="string">"Adapter is not Vulkan compliant, hiding adapter: {}"</span>,
                         info.name
                     );
                     <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -2862,7 +2862,7 @@
             &amp;&amp; !phd_capabilities.supports_extension(vk::KhrStorageBufferStorageClassFn::name())
         {
             <span class="macro">log::warn!</span>(
-                <span class="string">&quot;SPIR-V storage buffer class is not supported, hiding adapter: {}&quot;</span>,
+                <span class="string">"SPIR-V storage buffer class is not supported, hiding adapter: {}"</span>,
                 info.name
             );
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -2872,7 +2872,7 @@
             &amp;&amp; phd_capabilities.device_api_version &lt; vk::API_VERSION_1_1
         {
             <span class="macro">log::warn!</span>(
-                <span class="string">&quot;viewport Y-flip is not supported, hiding adapter: {}&quot;</span>,
+                <span class="string">"viewport Y-flip is not supported, hiding adapter: {}"</span>,
                 info.name
             );
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -2885,7 +2885,7 @@
         };
         <span class="kw">let </span>queue_flags = queue_families.first()<span class="question-mark">?</span>.queue_flags;
         <span class="kw">if </span>!queue_flags.contains(vk::QueueFlags::GRAPHICS) {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;The first queue only exposes {:?}&quot;</span>, queue_flags);
+            <span class="macro">log::warn!</span>(<span class="string">"The first queue only exposes {:?}"</span>, queue_flags);
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
@@ -3003,7 +3003,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.instance
     }
 
-    <span class="kw">pub fn </span>required_device_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>, features: wgt::Features) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; {
+    <span class="kw">pub fn </span>required_device_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>, features: wgt::Features) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt; {
         <span class="kw">let </span>(supported_extensions, unsupported_extensions) = <span class="self">self
             </span>.phd_capabilities
             .get_required_extensions(features)
@@ -3013,17 +3013,17 @@
             });
 
         <span class="kw">if </span>!unsupported_extensions.is_empty() {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Missing extensions: {:?}&quot;</span>, unsupported_extensions);
+            <span class="macro">log::warn!</span>(<span class="string">"Missing extensions: {:?}"</span>, unsupported_extensions);
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Supported extensions: {:?}&quot;</span>, supported_extensions);
+        <span class="macro">log::debug!</span>(<span class="string">"Supported extensions: {:?}"</span>, supported_extensions);
         supported_extensions
     }
 
     <span class="doccomment">/// `features` must be the same features used to create `enabled_extensions`.
     </span><span class="kw">pub fn </span>physical_device_features(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr],
+        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr],
         features: wgt::Features,
     ) -&gt; PhysicalDeviceFeatures {
         PhysicalDeviceFeatures::from_extensions_and_requested_features(
@@ -3045,13 +3045,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         raw_device: ash::Device,
         handle_is_owned: bool,
-        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr],
+        enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr],
         features: wgt::Features,
         family_index: u32,
         queue_index: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>mem_properties = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceMemoryProperties&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetPhysicalDeviceMemoryProperties"</span>);
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.instance
                     .raw
@@ -3185,7 +3185,7 @@
         };
 
         <span class="kw">let </span>raw_queue = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetDeviceQueue&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetDeviceQueue"</span>);
             <span class="kw">unsafe </span>{ raw_device.get_device_queue(family_index, queue_index) }
         };
 
@@ -3273,7 +3273,7 @@
             desc_allocator: Mutex::new(desc_allocator),
             valid_ash_memory_types,
             naga_options,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
             </span>render_doc: Default::default(),
         };
 
@@ -3312,7 +3312,7 @@
             .add_to_device_create_builder(pre_info)
             .build();
         <span class="kw">let </span>raw_device = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateDevice&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateDevice"</span>);
             <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.raw.create_device(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>}
         };
 
@@ -3439,7 +3439,7 @@
         }
         <span class="kw">let </span>queue_family_index = <span class="number">0</span>; <span class="comment">//TODO
         </span>{
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceSurfaceSupportKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetPhysicalDeviceSurfaceSupportKHR"</span>);
             <span class="kw">match unsafe </span>{
                 surface.functor.get_physical_device_surface_support(
                     <span class="self">self</span>.raw,
@@ -3450,14 +3450,14 @@
                 <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) =&gt; (),
                 <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;get_physical_device_surface_support: {}&quot;</span>, e);
+                    <span class="macro">log::error!</span>(<span class="string">"get_physical_device_surface_support: {}"</span>, e);
                     <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
         }
 
         <span class="kw">let </span>caps = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceSurfaceCapabilitiesKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetPhysicalDeviceSurfaceCapabilitiesKHR"</span>);
             <span class="kw">match unsafe </span>{
                 surface
                     .functor
@@ -3465,7 +3465,7 @@
             } {
                 <span class="prelude-val">Ok</span>(caps) =&gt; caps,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;get_physical_device_surface_capabilities: {}&quot;</span>, e);
+                    <span class="macro">log::error!</span>(<span class="string">"get_physical_device_surface_capabilities: {}"</span>, e);
                     <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
@@ -3491,7 +3491,7 @@
         </span>};
 
         <span class="kw">let </span>raw_present_modes = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceSurfacePresentModesKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetPhysicalDeviceSurfacePresentModesKHR"</span>);
             <span class="kw">match unsafe </span>{
                 surface
                     .functor
@@ -3499,14 +3499,14 @@
             } {
                 <span class="prelude-val">Ok</span>(present_modes) =&gt; present_modes,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;get_physical_device_surface_present_modes: {}&quot;</span>, e);
+                    <span class="macro">log::error!</span>(<span class="string">"get_physical_device_surface_present_modes: {}"</span>, e);
                     Vec::new()
                 }
             }
         };
 
         <span class="kw">let </span>raw_surface_formats = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceSurfaceFormatsKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkGetPhysicalDeviceSurfaceFormatsKHR"</span>);
             <span class="kw">match unsafe </span>{
                 surface
                     .functor
@@ -3514,7 +3514,7 @@
             } {
                 <span class="prelude-val">Ok</span>(formats) =&gt; formats,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;get_physical_device_surface_formats: {}&quot;</span>, e);
+                    <span class="macro">log::error!</span>(<span class="string">"get_physical_device_surface_formats: {}"</span>, e);
                     Vec::new()
                 }
             }
@@ -3540,7 +3540,7 @@
     <span class="kw">unsafe fn </span>get_presentation_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::PresentationTimestamp {
         <span class="comment">// VK_GOOGLE_display_timing is the only way to get presentation
         // timestamps on vulkan right now and it is only ever available
-        // on android and linux. This includes mac, but there&#39;s no alternative
+        // on android and linux. This includes mac, but there's no alternative
         // on mac, so this is fine.
         </span><span class="attr">#[cfg(unix)]
         </span>{

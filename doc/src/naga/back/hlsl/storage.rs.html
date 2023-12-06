@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -497,7 +497,7 @@ Generating accesses to [`ByteAddressBuffer`] contents.
 
 Naga IR globals in the [`Storage`] address space are rendered as
 [`ByteAddressBuffer`]s or [`RWByteAddressBuffer`]s in HLSL. These
-buffers don&#39;t have HLSL types (structs, arrays, etc.); instead, they
+buffers don't have HLSL types (structs, arrays, etc.); instead, they
 are just raw blocks of bytes, with methods to load and store values of
 specific types at particular byte offsets. This means that Naga must
 translate chains of [`Access`] and [`AccessIndex`] expressions into
@@ -523,7 +523,7 @@ temporarily push and pop additional steps on
 elements/members.
 
 The [`temp_access_chain`] field is a member of [`Writer`] solely to
-allow re-use of the `Vec`&#39;s dynamic allocation. Its value is no longer
+allow re-use of the `Vec`'s dynamic allocation. Its value is no longer
 needed once HLSL for the access has been generated.
 
 [`Storage`]: crate::AddressSpace::Storage
@@ -546,9 +546,9 @@ needed once HLSL for the access has been generated.
 
 <span class="kw">use </span>std::{fmt, mem};
 
-<span class="kw">const </span>STORE_TEMP_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;_value&quot;</span>;
+<span class="kw">const </span>STORE_TEMP_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"_value"</span>;
 
-<span class="doccomment">/// One step in accessing a [`Storage`] global&#39;s component or element.
+<span class="doccomment">/// One step in accessing a [`Storage`] global's component or element.
 ///
 /// [`Writer::temp_access_chain`] holds a series of these structures,
 /// describing how to compute the byte offset of a particular element
@@ -587,7 +587,7 @@ needed once HLSL for the access has been generated.
     },
 }
 
-<span class="kw">impl</span>&lt;W: fmt::Write&gt; <span class="kw">super</span>::Writer&lt;<span class="lifetime">&#39;_</span>, W&gt; {
+<span class="kw">impl</span>&lt;W: fmt::Write&gt; <span class="kw">super</span>::Writer&lt;<span class="lifetime">'_</span>, W&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_storage_address(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
@@ -595,19 +595,19 @@ needed once HLSL for the access has been generated.
         func_ctx: <span class="kw-2">&amp;</span>FunctionCtx,
     ) -&gt; BackendResult {
         <span class="kw">if </span>chain.is_empty() {
-            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;0&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"0"</span>)<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>(i, access) <span class="kw">in </span>chain.iter().enumerate() {
             <span class="kw">if </span>i != <span class="number">0 </span>{
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;+&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"+"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">match </span><span class="kw-2">*</span>access {
                 SubAccess::Offset(offset) =&gt; {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{offset}&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{offset}"</span>)<span class="question-mark">?</span>;
                 }
                 SubAccess::Index { value, stride } =&gt; {
                     <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;*{stride}&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"*{stride}"</span>)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -625,7 +625,7 @@ needed once HLSL for the access has been generated.
             <span class="comment">// add the index temporarily
             </span><span class="self">self</span>.temp_access_chain.push(SubAccess::Offset(offset));
             <span class="kw">if </span>i != <span class="number">0 </span>{
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
             };
             <span class="self">self</span>.write_storage_load(module, var_handle, ty_resolution, func_ctx)<span class="question-mark">?</span>;
             <span class="self">self</span>.temp_access_chain.pop();
@@ -633,12 +633,12 @@ needed once HLSL for the access has been generated.
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Emit code to access a [`Storage`] global&#39;s component.
+    <span class="doccomment">/// Emit code to access a [`Storage`] global's component.
     ///
     /// Emit HLSL to access the component of `var_handle`, a global
     /// variable in the [`Storage`] address space, whose type is
     /// `result_ty` and whose location within the global is given by
-    /// [`self.temp_access_chain`]. See the [`storage`] module&#39;s
+    /// [`self.temp_access_chain`]. See the [`storage`] module's
     /// documentation for background.
     ///
     /// [`Storage`]: crate::AddressSpace::Storage
@@ -656,9 +656,9 @@ needed once HLSL for the access has been generated.
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
                 <span class="kw">let </span>cast = scalar.kind.to_hlsl_cast();
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{cast}({var_name}.Load(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{cast}({var_name}.Load("</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;))&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.temp_access_chain = chain;
             }
             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
@@ -666,9 +666,9 @@ needed once HLSL for the access has been generated.
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
                 <span class="kw">let </span>cast = scalar.kind.to_hlsl_cast();
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}({}.Load{}(&quot;</span>, cast, var_name, size <span class="kw">as </span>u8)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}({}.Load{}("</span>, cast, var_name, size <span class="kw">as </span>u8)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;))&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.temp_access_chain = chain;
             }
             <span class="kw">crate</span>::TypeInner::Matrix {
@@ -678,7 +678,7 @@ needed once HLSL for the access has been generated.
             } =&gt; {
                 <span class="macro">write!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">&quot;{}{}x{}(&quot;</span>,
+                    <span class="string">"{}{}x{}("</span>,
                     scalar.to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
                     rows <span class="kw">as </span>u8,
@@ -691,7 +691,7 @@ needed once HLSL for the access has been generated.
                     (TypeResolution::Value(ty_inner), i * row_stride)
                 });
                 <span class="self">self</span>.write_storage_load_sequence(module, var_handle, iter, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::Array {
                 base,
@@ -702,22 +702,22 @@ needed once HLSL for the access has been generated.
                     ty: result_ty.handle().unwrap(),
                 };
                 <span class="self">self</span>.write_wrapped_constructor_function_name(module, constructor)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>iter = (<span class="number">0</span>..size.get()).map(|i| (TypeResolution::Handle(base), stride * i));
                 <span class="self">self</span>.write_storage_load_sequence(module, var_handle, iter, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                 <span class="kw">let </span>constructor = <span class="kw">super</span>::help::WrappedConstructor {
                     ty: result_ty.handle().unwrap(),
                 };
                 <span class="self">self</span>.write_wrapped_constructor_function_name(module, constructor)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>iter = members
                     .iter()
                     .map(|m| (TypeResolution::Handle(m.ty), m.offset));
                 <span class="self">self</span>.write_storage_load_sequence(module, var_handle, iter, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
@@ -736,14 +736,14 @@ needed once HLSL for the access has been generated.
                 depth,
                 index,
                 ty: <span class="kw">_</span>,
-            } =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{STORE_TEMP_NAME}{depth}[{index}]&quot;</span>)<span class="question-mark">?</span>,
+            } =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{STORE_TEMP_NAME}{depth}[{index}]"</span>)<span class="question-mark">?</span>,
             StoreValue::TempAccess {
                 depth,
                 base,
                 member_index,
             } =&gt; {
                 <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::StructMember(base, member_index)];
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{STORE_TEMP_NAME}{depth}.{name}&quot;</span>)<span class="question-mark">?
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{STORE_TEMP_NAME}{depth}.{name}"</span>)<span class="question-mark">?
             </span>}
         }
         <span class="prelude-val">Ok</span>(())
@@ -786,22 +786,22 @@ needed once HLSL for the access has been generated.
                 <span class="comment">// working around the borrow checker in `self.write_expr`
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}{var_name}.Store(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}{var_name}.Store("</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, asuint(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", asuint("</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_store_value(module, <span class="kw-2">&amp;</span>value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;));&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"));"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.temp_access_chain = chain;
             }
             <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
                 <span class="comment">// working around the borrow checker in `self.write_expr`
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}{}.Store{}(&quot;</span>, level, var_name, size <span class="kw">as </span>u8)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{}.Store{}("</span>, level, var_name, size <span class="kw">as </span>u8)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, asuint(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", asuint("</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_store_value(module, <span class="kw-2">&amp;</span>value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;));&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"));"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.temp_access_chain = chain;
             }
             <span class="kw">crate</span>::TypeInner::Matrix {
@@ -810,11 +810,11 @@ needed once HLSL for the access has been generated.
                 scalar,
             } =&gt; {
                 <span class="comment">// first, assign the value to a temporary
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}{{&quot;</span>)<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{{"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>depth = level.<span class="number">0 </span>+ <span class="number">1</span>;
                 <span class="macro">write!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">&quot;{}{}{}x{} {}{} = &quot;</span>,
+                    <span class="string">"{}{}{}x{} {}{} = "</span>,
                     level.next(),
                     scalar.to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
@@ -823,7 +823,7 @@ needed once HLSL for the access has been generated.
                     depth,
                 )<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_store_value(module, <span class="kw-2">&amp;</span>value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
 
                 <span class="comment">// Note: Matrices containing vec3s, due to padding, act like they contain vec4s.
                 </span><span class="kw">let </span>row_stride = Alignment::from(rows) * scalar.width <span class="kw">as </span>u32;
@@ -842,7 +842,7 @@ needed once HLSL for the access has been generated.
                     <span class="self">self</span>.temp_access_chain.pop();
                 }
                 <span class="comment">// done
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}}}&quot;</span>)<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::Array {
                 base,
@@ -850,15 +850,15 @@ needed once HLSL for the access has been generated.
                 stride,
             } =&gt; {
                 <span class="comment">// first, assign the value to a temporary
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}{{&quot;</span>)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}&quot;</span>, level.next())<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{{"</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, level.next())<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_value_type(module, <span class="kw-2">&amp;</span>module.types[base].inner)<span class="question-mark">?</span>;
                 <span class="kw">let </span>depth = level.next().<span class="number">0</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot; {STORE_TEMP_NAME}{depth}&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {STORE_TEMP_NAME}{depth}"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_array_size(module, base, <span class="kw">crate</span>::ArraySize::Constant(size))<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot; = &quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_store_value(module, <span class="kw-2">&amp;</span>value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
                 <span class="comment">// then iterate the stores
                 </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..size.get() {
                     <span class="self">self</span>.temp_access_chain.push(SubAccess::Offset(i * stride));
@@ -871,24 +871,24 @@ needed once HLSL for the access has been generated.
                     <span class="self">self</span>.temp_access_chain.pop();
                 }
                 <span class="comment">// done
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}}}&quot;</span>)<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                 <span class="comment">// first, assign the value to a temporary
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}{{&quot;</span>)<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{{"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>depth = level.next().<span class="number">0</span>;
                 <span class="kw">let </span>struct_ty = ty_resolution.handle().unwrap();
                 <span class="kw">let </span>struct_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(struct_ty)];
                 <span class="macro">write!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">&quot;{}{} {}{} = &quot;</span>,
+                    <span class="string">"{}{} {}{} = "</span>,
                     level.next(),
                     struct_name,
                     STORE_TEMP_NAME,
                     depth
                 )<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_store_value(module, <span class="kw-2">&amp;</span>value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
                 <span class="comment">// then iterate the stores
                 </span><span class="kw">for </span>(i, member) <span class="kw">in </span>members.iter().enumerate() {
                     <span class="self">self</span>.temp_access_chain
@@ -902,7 +902,7 @@ needed once HLSL for the access has been generated.
                     <span class="self">self</span>.temp_access_chain.pop();
                 }
                 <span class="comment">// done
-                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}}}&quot;</span>)<span class="question-mark">?</span>;
+                </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
@@ -930,9 +930,9 @@ needed once HLSL for the access has been generated.
             Expression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
             Constant(u32),
         }
-        <span class="kw">enum </span>Parent&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">enum </span>Parent&lt;<span class="lifetime">'a</span>&gt; {
             Array { stride: u32 },
-            Struct(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[<span class="kw">crate</span>::StructMember]),
+            Struct(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw">crate</span>::StructMember]),
         }
         <span class="self">self</span>.temp_access_chain.clear();
 
@@ -944,7 +944,7 @@ needed once HLSL for the access has been generated.
                     (base, AccessIndex::Constant(index))
                 }
                 <span class="kw-2">ref </span>other =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">&quot;Pointer access of {other:?}&quot;</span>)))
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"Pointer access of {other:?}"</span>)))
                 }
             };
 

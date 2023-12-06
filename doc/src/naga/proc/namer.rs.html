@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/namer.rs`."><title>namer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/namer.rs`."><title>namer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -284,7 +284,7 @@
 <span class="kw">use </span>std::hash::{Hash, Hasher};
 
 <span class="kw">pub type </span>EntryPointIndex = u16;
-<span class="kw">const </span>SEPARATOR: char = <span class="string">&#39;_&#39;</span>;
+<span class="kw">const </span>SEPARATOR: char = <span class="string">'_'</span>;
 
 <span class="attr">#[derive(Debug, Eq, Hash, PartialEq)]
 </span><span class="kw">pub enum </span>NameKey {
@@ -304,11 +304,11 @@
 /// that may need identifiers in a textual backend.
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Namer {
-    <span class="doccomment">/// The last numeric suffix used for each base name. Zero means &quot;no suffix&quot;.
+    <span class="doccomment">/// The last numeric suffix used for each base name. Zero means "no suffix".
     </span>unique: FastHashMap&lt;String, u32&gt;,
-    keywords: FastHashSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
-    keywords_case_insensitive: FastHashSet&lt;AsciiUniCase&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;&gt;,
-    reserved_prefixes: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
+    keywords: FastHashSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
+    keywords_case_insensitive: FastHashSet&lt;AsciiUniCase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;&gt;,
+    reserved_prefixes: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
 }
 
 <span class="kw">impl </span>Namer {
@@ -319,27 +319,27 @@
     /// - Avoid prefixes in [`Namer::reserved_prefixes`].
     /// - Replace consecutive `_` characters with a single `_` character.
     ///
-    /// The return value is a valid identifier prefix in all of Naga&#39;s output languages,
+    /// The return value is a valid identifier prefix in all of Naga's output languages,
     /// and it never ends with a `SEPARATOR` character.
     /// It is used as a key into the unique table.
-    </span><span class="kw">fn </span>sanitize&lt;<span class="lifetime">&#39;s</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, string: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span>str) -&gt; Cow&lt;<span class="lifetime">&#39;s</span>, str&gt; {
+    </span><span class="kw">fn </span>sanitize&lt;<span class="lifetime">'s</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, string: <span class="kw-2">&amp;</span><span class="lifetime">'s </span>str) -&gt; Cow&lt;<span class="lifetime">'s</span>, str&gt; {
         <span class="kw">let </span>string = string
             .trim_start_matches(|c: char| c.is_numeric())
             .trim_end_matches(SEPARATOR);
 
         <span class="kw">let </span>base = <span class="kw">if </span>!string.is_empty()
-            &amp;&amp; !string.contains(<span class="string">&quot;__&quot;</span>)
+            &amp;&amp; !string.contains(<span class="string">"__"</span>)
             &amp;&amp; string
                 .chars()
-                .all(|c: char| c.is_ascii_alphanumeric() || c == <span class="string">&#39;_&#39;</span>)
+                .all(|c: char| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>)
         {
             Cow::Borrowed(string)
         } <span class="kw">else </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>filtered = string
                 .chars()
-                .filter(|<span class="kw-2">&amp;</span>c| c.is_ascii_alphanumeric() || c == <span class="string">&#39;_&#39;</span>)
+                .filter(|<span class="kw-2">&amp;</span>c| c.is_ascii_alphanumeric() || c == <span class="string">'_'</span>)
                 .fold(String::new(), |<span class="kw-2">mut </span>s, c| {
-                    <span class="kw">if </span>s.ends_with(<span class="string">&#39;_&#39;</span>) &amp;&amp; c == <span class="string">&#39;_&#39; </span>{
+                    <span class="kw">if </span>s.ends_with(<span class="string">'_'</span>) &amp;&amp; c == <span class="string">'_' </span>{
                         <span class="kw">return </span>s;
                     }
                     s.push(c);
@@ -348,14 +348,14 @@
             <span class="kw">let </span>stripped_len = filtered.trim_end_matches(SEPARATOR).len();
             filtered.truncate(stripped_len);
             <span class="kw">if </span>filtered.is_empty() {
-                filtered.push_str(<span class="string">&quot;unnamed&quot;</span>);
+                filtered.push_str(<span class="string">"unnamed"</span>);
             }
             Cow::Owned(filtered)
         };
 
         <span class="kw">for </span>prefix <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.reserved_prefixes {
             <span class="kw">if </span>base.starts_with(prefix) {
-                <span class="kw">return </span><span class="macro">format!</span>(<span class="string">&quot;gen_{base}&quot;</span>).into();
+                <span class="kw">return </span><span class="macro">format!</span>(<span class="string">"gen_{base}"</span>).into();
             }
         }
 
@@ -379,16 +379,16 @@
         <span class="macro">debug_assert!</span>(!base.is_empty() &amp;&amp; !base.ends_with(SEPARATOR));
 
         <span class="comment">// This would seem to be a natural place to use `HashMap::entry`. However, `entry`
-        // requires an owned key, and we&#39;d like to avoid heap-allocating strings we&#39;re
+        // requires an owned key, and we'd like to avoid heap-allocating strings we're
         // just going to throw away. The approach below double-hashes only when we create
         // a new entry, in which case the heap allocation of the owned key was more
         // expensive anyway.
         </span><span class="kw">match </span><span class="self">self</span>.unique.get_mut(base.as_ref()) {
             <span class="prelude-val">Some</span>(count) =&gt; {
                 <span class="kw-2">*</span>count += <span class="number">1</span>;
-                <span class="comment">// Add the suffix. This may fit in base&#39;s existing allocation.
+                <span class="comment">// Add the suffix. This may fit in base's existing allocation.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>suffixed = base.into_owned();
-                <span class="macro">write!</span>(suffixed, <span class="string">&quot;{}{}&quot;</span>, SEPARATOR, <span class="kw-2">*</span>count).unwrap();
+                <span class="macro">write!</span>(suffixed, <span class="string">"{}{}"</span>, SEPARATOR, <span class="kw-2">*</span>count).unwrap();
                 suffixed
             }
             <span class="prelude-val">None </span>=&gt; {
@@ -402,7 +402,7 @@
                     suffixed.push(SEPARATOR);
                 }
                 <span class="macro">debug_assert!</span>(!<span class="self">self</span>.keywords.contains::&lt;str&gt;(<span class="kw-2">&amp;</span>suffixed));
-                <span class="comment">// `self.unique` wants to own its keys. This allocates only if we haven&#39;t
+                <span class="comment">// `self.unique` wants to own its keys. This allocates only if we haven't
                 // already done so earlier.
                 </span><span class="self">self</span>.unique.insert(base.into_owned(), <span class="number">0</span>);
                 suffixed
@@ -432,10 +432,10 @@
     <span class="kw">pub fn </span>reset(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-        reserved_keywords: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str],
-        extra_reserved_keywords: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str],
-        reserved_keywords_case_insensitive: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str],
-        reserved_prefixes: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str],
+        reserved_keywords: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str],
+        extra_reserved_keywords: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str],
+        reserved_keywords_case_insensitive: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str],
+        reserved_prefixes: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str],
         output: <span class="kw-2">&amp;mut </span>FastHashMap&lt;NameKey, String&gt;,
     ) {
         <span class="self">self</span>.reserved_prefixes.clear();
@@ -459,14 +459,14 @@
         <span class="kw">let </span><span class="kw-2">mut </span>temp = String::new();
 
         <span class="kw">for </span>(ty_handle, ty) <span class="kw">in </span>module.types.iter() {
-            <span class="kw">let </span>ty_name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>ty.name, <span class="string">&quot;type&quot;</span>);
+            <span class="kw">let </span>ty_name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>ty.name, <span class="string">"type"</span>);
             output.insert(NameKey::Type(ty_handle), ty_name);
 
             <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } = ty.inner {
                 <span class="comment">// struct members have their own namespace, because access is always prefixed
                 </span><span class="self">self</span>.namespace(members.len(), |namer| {
                     <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
-                        <span class="kw">let </span>name = namer.call_or(<span class="kw-2">&amp;</span>member.name, <span class="string">&quot;member&quot;</span>);
+                        <span class="kw">let </span>name = namer.call_or(<span class="kw-2">&amp;</span>member.name, <span class="string">"member"</span>);
                         output.insert(NameKey::StructMember(ty_handle, index <span class="kw">as </span>u32), name);
                     }
                 })
@@ -477,33 +477,33 @@
             <span class="kw">let </span>ep_name = <span class="self">self</span>.call(<span class="kw-2">&amp;</span>ep.name);
             output.insert(NameKey::EntryPoint(ep_index <span class="kw">as _</span>), ep_name);
             <span class="kw">for </span>(index, arg) <span class="kw">in </span>ep.function.arguments.iter().enumerate() {
-                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>arg.name, <span class="string">&quot;param&quot;</span>);
+                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>arg.name, <span class="string">"param"</span>);
                 output.insert(
                     NameKey::EntryPointArgument(ep_index <span class="kw">as _</span>, index <span class="kw">as </span>u32),
                     name,
                 );
             }
             <span class="kw">for </span>(handle, var) <span class="kw">in </span>ep.function.local_variables.iter() {
-                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">&quot;local&quot;</span>);
+                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">"local"</span>);
                 output.insert(NameKey::EntryPointLocal(ep_index <span class="kw">as _</span>, handle), name);
             }
         }
 
         <span class="kw">for </span>(fun_handle, fun) <span class="kw">in </span>module.functions.iter() {
-            <span class="kw">let </span>fun_name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>fun.name, <span class="string">&quot;function&quot;</span>);
+            <span class="kw">let </span>fun_name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>fun.name, <span class="string">"function"</span>);
             output.insert(NameKey::Function(fun_handle), fun_name);
             <span class="kw">for </span>(index, arg) <span class="kw">in </span>fun.arguments.iter().enumerate() {
-                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>arg.name, <span class="string">&quot;param&quot;</span>);
+                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>arg.name, <span class="string">"param"</span>);
                 output.insert(NameKey::FunctionArgument(fun_handle, index <span class="kw">as </span>u32), name);
             }
             <span class="kw">for </span>(handle, var) <span class="kw">in </span>fun.local_variables.iter() {
-                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">&quot;local&quot;</span>);
+                <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">"local"</span>);
                 output.insert(NameKey::FunctionLocal(fun_handle, handle), name);
             }
         }
 
         <span class="kw">for </span>(handle, var) <span class="kw">in </span>module.global_variables.iter() {
-            <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">&quot;global&quot;</span>);
+            <span class="kw">let </span>name = <span class="self">self</span>.call_or(<span class="kw-2">&amp;</span>var.name, <span class="string">"global"</span>);
             output.insert(NameKey::GlobalVariable(handle), name);
         }
 
@@ -514,7 +514,7 @@
                     <span class="kw">use </span>std::fmt::Write;
                     <span class="comment">// Try to be more descriptive about the constant values
                     </span>temp.clear();
-                    <span class="macro">write!</span>(temp, <span class="string">&quot;const_{}&quot;</span>, output[<span class="kw-2">&amp;</span>NameKey::Type(constant.ty)]).unwrap();
+                    <span class="macro">write!</span>(temp, <span class="string">"const_{}"</span>, output[<span class="kw-2">&amp;</span>NameKey::Type(constant.ty)]).unwrap();
                     <span class="kw-2">&amp;</span>temp
                 }
             };
@@ -554,10 +554,10 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test() {
     <span class="kw">let </span><span class="kw-2">mut </span>namer = Namer::default();
-    <span class="macro">assert_eq!</span>(namer.call(<span class="string">&quot;x&quot;</span>), <span class="string">&quot;x&quot;</span>);
-    <span class="macro">assert_eq!</span>(namer.call(<span class="string">&quot;x&quot;</span>), <span class="string">&quot;x_1&quot;</span>);
-    <span class="macro">assert_eq!</span>(namer.call(<span class="string">&quot;x1&quot;</span>), <span class="string">&quot;x1_&quot;</span>);
-    <span class="macro">assert_eq!</span>(namer.call(<span class="string">&quot;__x&quot;</span>), <span class="string">&quot;_x&quot;</span>);
-    <span class="macro">assert_eq!</span>(namer.call(<span class="string">&quot;1___x&quot;</span>), <span class="string">&quot;_x_1&quot;</span>);
+    <span class="macro">assert_eq!</span>(namer.call(<span class="string">"x"</span>), <span class="string">"x"</span>);
+    <span class="macro">assert_eq!</span>(namer.call(<span class="string">"x"</span>), <span class="string">"x_1"</span>);
+    <span class="macro">assert_eq!</span>(namer.call(<span class="string">"x1"</span>), <span class="string">"x1_"</span>);
+    <span class="macro">assert_eq!</span>(namer.call(<span class="string">"__x"</span>), <span class="string">"_x"</span>);
+    <span class="macro">assert_eq!</span>(namer.call(<span class="string">"1___x"</span>), <span class="string">"_x_1"</span>);
 }
 </code></pre></div></section></main></body></html>

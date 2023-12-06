@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/present.rs`."><title>present.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/present.rs`."><title>present.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -447,7 +447,7 @@
 
 Whenever a submission detects the use of any surface texture, it adds it to the device
 tracker for the duration of the submission (temporarily, while recording).
-It&#39;s added with `UNINITIALIZED` state and transitioned into `empty()` state.
+It's added with `UNINITIALIZED` state and transitioned into `empty()` state.
 When this texture is presented, we remove it from the device tracker as well as
 extract it from the hub.
 !*/
@@ -457,7 +457,7 @@ extract it from the hub.
     sync::atomic::{AtomicBool, Ordering},
 };
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
     conv,
@@ -493,15 +493,15 @@ extract it from the hub.
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>SurfaceError {
-    <span class="attr">#[error(<span class="string">&quot;Surface is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Surface is invalid"</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">&quot;Surface is not configured for presentation&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Surface is not configured for presentation"</span>)]
     </span>NotConfigured,
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Surface image is already acquired&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Surface image is already acquired"</span>)]
     </span>AlreadyAcquired,
-    <span class="attr">#[error(<span class="string">&quot;Acquired frame is still referenced&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Acquired frame is still referenced"</span>)]
     </span>StillReferenced,
 }
 
@@ -510,42 +510,42 @@ extract it from the hub.
 </span><span class="kw">pub enum </span>ConfigureSurfaceError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Invalid surface&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid surface"</span>)]
     </span>InvalidSurface,
-    <span class="attr">#[error(<span class="string">&quot;The view format {0:?} is not compatible with texture format {1:?}, only changing srgb-ness is allowed.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The view format {0:?} is not compatible with texture format {1:?}, only changing srgb-ness is allowed."</span>)]
     </span>InvalidViewFormat(wgt::TextureFormat, wgt::TextureFormat),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
-    <span class="attr">#[error(<span class="string">&quot;`SurfaceOutput` must be dropped before a new `Surface` is made&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"`SurfaceOutput` must be dropped before a new `Surface` is made"</span>)]
     </span>PreviousOutputExists,
-    <span class="attr">#[error(<span class="string">&quot;Both `Surface` width and height must be non-zero. Wait to recreate the `Surface` until the window has non-zero area.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Both `Surface` width and height must be non-zero. Wait to recreate the `Surface` until the window has non-zero area."</span>)]
     </span>ZeroArea,
-    <span class="attr">#[error(<span class="string">&quot;`Surface` width and height must be within the maximum supported texture size. Requested was ({width}, height), maximum extent is {max_texture_dimension_2d}.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"`Surface` width and height must be within the maximum supported texture size. Requested was ({width}, height), maximum extent is {max_texture_dimension_2d}."</span>)]
     </span>TooLarge {
         width: u32,
         height: u32,
         max_texture_dimension_2d: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Surface does not support the adapter&#39;s queue family&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Surface does not support the adapter's queue family"</span>)]
     </span>UnsupportedQueueFamily,
-    <span class="attr">#[error(<span class="string">&quot;Requested format {requested:?} is not in list of supported formats: {available:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requested format {requested:?} is not in list of supported formats: {available:?}"</span>)]
     </span>UnsupportedFormat {
         requested: wgt::TextureFormat,
         available: Vec&lt;wgt::TextureFormat&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;Requested present mode {requested:?} is not in the list of supported present modes: {available:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requested present mode {requested:?} is not in the list of supported present modes: {available:?}"</span>)]
     </span>UnsupportedPresentMode {
         requested: wgt::PresentMode,
         available: Vec&lt;wgt::PresentMode&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;Requested alpha mode {requested:?} is not in the list of supported alpha modes: {available:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requested alpha mode {requested:?} is not in the list of supported alpha modes: {available:?}"</span>)]
     </span>UnsupportedAlphaMode {
         requested: wgt::CompositeAlphaMode,
         available: Vec&lt;wgt::CompositeAlphaMode&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;Requested usage is not supported&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requested usage is not supported"</span>)]
     </span>UnsupportedUsage,
-    <span class="attr">#[error(<span class="string">&quot;Gpu got stuck :(&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Gpu got stuck :("</span>)]
     </span>StuckGpu,
 }
 
@@ -572,7 +572,7 @@ extract it from the hub.
         surface_id: SurfaceId,
         texture_id_in: Input&lt;G, TextureId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceOutput, SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;SwapChain::get_next_texture&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::get_next_texture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -597,14 +597,14 @@ extract it from the hub.
             <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::NotConfigured);
         };
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             trace.add(Action::GetSurfaceTexture {
                 id: fid.id(),
                 parent_id: surface_id,
             });
         }
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;trace&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">"trace"</span>))]
         </span><span class="kw">let _ </span>= device;
 
         <span class="kw">let </span>suf = A::get_surface(surface.as_ref());
@@ -638,7 +638,7 @@ extract it from the hub.
                 };
                 <span class="kw">let </span>clear_view_desc = hal::TextureViewDescriptor {
                     label: hal_label(
-                        <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) clear surface texture view&quot;</span>),
+                        <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear surface texture view"</span>),
                         <span class="self">self</span>.instance.flags,
                     ),
                     format: config.format,
@@ -673,14 +673,14 @@ extract it from the hub.
                         layers: <span class="number">0</span>..<span class="number">1</span>,
                         mips: <span class="number">0</span>..<span class="number">1</span>,
                     },
-                    info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+                    info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
                     clear_mode: RwLock::new(resource::TextureClearMode::Surface {
                         clear_view: <span class="prelude-val">Some</span>(clear_view),
                     }),
                 };
 
                 <span class="kw">let </span>(id, resource) = fid.assign(texture);
-                <span class="macro">log::debug!</span>(<span class="string">&quot;Created CURRENT Surface Texture {:?}&quot;</span>, id);
+                <span class="macro">log::debug!</span>(<span class="string">"Created CURRENT Surface Texture {:?}"</span>, id);
 
                 {
                     <span class="comment">// register it in the device tracker as uninitialized
@@ -712,7 +712,7 @@ extract it from the hub.
                     }
                     hal::SurfaceError::Outdated =&gt; Status::Outdated,
                     hal::SurfaceError::Other(msg) =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;acquire error: {}&quot;</span>, msg);
+                        <span class="macro">log::error!</span>(<span class="string">"acquire error: {}"</span>, msg);
                         Status::Lost
                     }
                 },
@@ -726,7 +726,7 @@ extract it from the hub.
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface_id: SurfaceId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;SwapChain::present&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::present"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -748,7 +748,7 @@ extract it from the hub.
         <span class="kw">let </span>queue_id = device.queue_id.read().unwrap();
         <span class="kw">let </span>queue = hub.queues.get(queue_id).unwrap();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             trace.add(Action::Present(surface_id));
         }
@@ -762,7 +762,7 @@ extract it from the hub.
             <span class="comment">// The texture ID got added to the device tracker by `submit()`,
             // and now we are moving it away.
             </span><span class="macro">log::debug!</span>(
-                <span class="string">&quot;Removing swapchain texture {:?} from the device tracker&quot;</span>,
+                <span class="string">"Removing swapchain texture {:?} from the device tracker"</span>,
                 texture_id
             );
             device.trackers.lock().textures.remove(texture_id);
@@ -780,10 +780,10 @@ extract it from the hub.
                         <span class="kw-2">ref </span>has_work,
                     } =&gt; {
                         <span class="kw">if </span>surface_id != <span class="kw-2">*</span>parent_id {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Presented frame is from a different surface&quot;</span>);
+                            <span class="macro">log::error!</span>(<span class="string">"Presented frame is from a different surface"</span>);
                             <span class="prelude-val">Err</span>(hal::SurfaceError::Lost)
                         } <span class="kw">else if </span>!has_work.load(Ordering::Relaxed) {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;No work has been submitted for this frame&quot;</span>);
+                            <span class="macro">log::error!</span>(<span class="string">"No work has been submitted for this frame"</span>);
                             <span class="kw">unsafe </span>{ suf.unwrap().raw.discard_texture(raw.take().unwrap()) };
                             <span class="prelude-val">Err</span>(hal::SurfaceError::Outdated)
                         } <span class="kw">else </span>{
@@ -803,7 +803,7 @@ extract it from the hub.
             </span>}
         };
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Presented. End of Frame&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">"Presented. End of Frame"</span>);
 
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(Status::Good),
@@ -812,7 +812,7 @@ extract it from the hub.
                 hal::SurfaceError::Device(err) =&gt; <span class="prelude-val">Err</span>(SurfaceError::from(DeviceError::from(err))),
                 hal::SurfaceError::Outdated =&gt; <span class="prelude-val">Ok</span>(Status::Outdated),
                 hal::SurfaceError::Other(msg) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;acquire error: {}&quot;</span>, msg);
+                    <span class="macro">log::error!</span>(<span class="string">"acquire error: {}"</span>, msg);
                     <span class="prelude-val">Err</span>(SurfaceError::Invalid)
                 }
             },
@@ -823,7 +823,7 @@ extract it from the hub.
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface_id: SurfaceId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;SwapChain::discard&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::discard"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -842,7 +842,7 @@ extract it from the hub.
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             trace.add(Action::DiscardSurfaceTexture(surface_id));
         }
@@ -856,7 +856,7 @@ extract it from the hub.
             <span class="comment">// The texture ID got added to the device tracker by `submit()`,
             // and now we are moving it away.
             </span><span class="macro">log::debug!</span>(
-                <span class="string">&quot;Removing swapchain texture {:?} from the device tracker&quot;</span>,
+                <span class="string">"Removing swapchain texture {:?} from the device tracker"</span>,
                 texture_id
             );
             device.trackers.lock().textures.remove(texture_id);
@@ -873,7 +873,7 @@ extract it from the hub.
                         <span class="kw">if </span>surface_id == <span class="kw-2">*</span>parent_id {
                             <span class="kw">unsafe </span>{ suf.unwrap().raw.discard_texture(raw.take().unwrap()) };
                         } <span class="kw">else </span>{
-                            <span class="macro">log::warn!</span>(<span class="string">&quot;Surface texture is outdated&quot;</span>);
+                            <span class="macro">log::warn!</span>(<span class="string">"Surface texture is outdated"</span>);
                         }
                     }
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/arena.rs`."><title>arena.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/arena.rs`."><title>arena.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -773,16 +773,16 @@
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 
 <span class="doccomment">/// An unique index in the arena array that a handle points to.
-/// The &quot;non-zero&quot; part ensures that an `Option&lt;Handle&lt;T&gt;&gt;` has
+/// The "non-zero" part ensures that an `Option&lt;Handle&lt;T&gt;&gt;` has
 /// the same size and representation as `Handle&lt;T&gt;`.
 </span><span class="kw">type </span>Index = NonZeroU32;
 
 <span class="kw">use crate</span>::{FastIndexSet, Span};
 
 <span class="attr">#[derive(Clone, Copy, Debug, thiserror::Error, PartialEq)]
-#[error(<span class="string">&quot;Handle {index} of {kind} is either not present, or inaccessible yet&quot;</span>)]
+#[error(<span class="string">"Handle {index} of {kind} is either not present, or inaccessible yet"</span>)]
 </span><span class="kw">pub struct </span>BadHandle {
-    <span class="kw">pub </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    <span class="kw">pub </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     <span class="kw">pub </span>index: usize,
 }
 
@@ -798,16 +798,16 @@
 <span class="doccomment">/// A strongly typed reference to an arena item.
 ///
 /// A `Handle` value can be used as an index into an [`Arena`] or [`UniqueArena`].
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 #[cfg_attr(
-    any(feature = <span class="string">&quot;serialize&quot;</span>, feature = <span class="string">&quot;deserialize&quot;</span>),
+    any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>),
     serde(transparent)
 )]
-#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
 </span><span class="kw">pub struct </span>Handle&lt;T&gt; {
     index: Index,
-    <span class="attr">#[cfg_attr(any(feature = <span class="string">&quot;serialize&quot;</span>, feature = <span class="string">&quot;deserialize&quot;</span>), serde(skip))]
+    <span class="attr">#[cfg_attr(any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>), serde(skip))]
     </span>marker: PhantomData&lt;T&gt;,
 }
 
@@ -841,7 +841,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Handle&lt;T&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="macro">write!</span>(formatter, <span class="string">&quot;[{}]&quot;</span>, <span class="self">self</span>.index)
+        <span class="macro">write!</span>(formatter, <span class="string">"[{}]"</span>, <span class="self">self</span>.index)
     }
 }
 
@@ -876,7 +876,7 @@
         <span class="kw">let </span>handle_index = u32::try_from(index + <span class="number">1</span>)
             .ok()
             .and_then(Index::new)
-            .expect(<span class="string">&quot;Failed to insert into arena. Handle overflows&quot;</span>);
+            .expect(<span class="string">"Failed to insert into arena. Handle overflows"</span>);
         Handle::new(handle_index)
     }
 
@@ -887,16 +887,16 @@
 }
 
 <span class="doccomment">/// A strongly typed range of handles.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 #[cfg_attr(
-    any(feature = <span class="string">&quot;serialize&quot;</span>, feature = <span class="string">&quot;deserialize&quot;</span>),
+    any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>),
     serde(transparent)
 )]
-#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
 </span><span class="kw">pub struct </span>Range&lt;T&gt; {
     inner: ops::Range&lt;u32&gt;,
-    <span class="attr">#[cfg_attr(any(feature = <span class="string">&quot;serialize&quot;</span>, feature = <span class="string">&quot;deserialize&quot;</span>), serde(skip))]
+    <span class="attr">#[cfg_attr(any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>), serde(skip))]
     </span>marker: PhantomData&lt;T&gt;,
 }
 
@@ -912,11 +912,11 @@
 
 <span class="comment">// NOTE: Keep this diagnostic in sync with that of [`BadHandle`].
 </span><span class="attr">#[derive(Clone, Debug, thiserror::Error)]
-#[error(<span class="string">&quot;Handle range {range:?} of {kind} is either not present, or inaccessible yet&quot;</span>)]
+#[error(<span class="string">"Handle range {range:?} of {kind} is either not present, or inaccessible yet"</span>)]
 </span><span class="kw">pub struct </span>BadRangeError {
-    <span class="comment">// This error is used for many `Handle` types, but there&#39;s no point in making this generic, so
+    <span class="comment">// This error is used for many `Handle` types, but there's no point in making this generic, so
     // we just flatten them all to `Handle&lt;()&gt;` here.
-    </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     range: Range&lt;()&gt;,
 }
 
@@ -940,7 +940,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Range&lt;T&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="macro">write!</span>(formatter, <span class="string">&quot;[{}..{}]&quot;</span>, <span class="self">self</span>.inner.start + <span class="number">1</span>, <span class="self">self</span>.inner.end)
+        <span class="macro">write!</span>(formatter, <span class="string">"[{}..{}]"</span>, <span class="self">self</span>.inner.start + <span class="number">1</span>, <span class="self">self</span>.inner.end)
     }
 }
 
@@ -1011,15 +1011,15 @@
 /// Adding new items to the arena produces a strongly-typed [`Handle`].
 /// The arena can be indexed using the given handle to obtain
 /// a reference to the stored item.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;clone&quot;</span>, derive(Clone))]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(transparent))]
-#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, serde(transparent))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub struct </span>Arena&lt;T&gt; {
     <span class="doccomment">/// Values of this arena.
     </span>data: Vec&lt;T&gt;,
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, serde(skip))]
     </span>span_info: Vec&lt;Span&gt;,
 }
 
@@ -1061,7 +1061,7 @@
     }
 
     <span class="doccomment">/// Returns an iterator over the items stored in this arena, returning both
-    /// the item&#39;s handle and a reference to it.
+    /// the item's handle and a reference to it.
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, <span class="kw-2">&amp;</span>T)&gt; {
         <span class="self">self</span>.data
             .iter()
@@ -1070,7 +1070,7 @@
     }
 
     <span class="doccomment">/// Returns a iterator over the items stored in this arena,
-    /// returning both the item&#39;s handle and a mutable reference to it.
+    /// returning both the item's handle and a mutable reference to it.
     </span><span class="kw">pub fn </span>iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, <span class="kw-2">&amp;mut </span>T)&gt; {
         <span class="self">self</span>.data
             .iter_mut()
@@ -1183,7 +1183,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"compact"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>retain_mut&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>predicate: P)
     <span class="kw">where
         </span>P: FnMut(Handle&lt;T&gt;, <span class="kw-2">&amp;mut </span>T) -&gt; bool,
@@ -1195,7 +1195,7 @@
             <span class="kw">let </span>keep = predicate(handle, elt);
 
             <span class="comment">// Since `predicate` needs mutable access to each element,
-            // we can&#39;t feasibly call it twice, so we have to compact
+            // we can't feasibly call it twice, so we have to compact
             // spans by hand in parallel as part of this iteration.
             </span><span class="kw">if </span>keep {
                 <span class="self">self</span>.span_info[retained] = <span class="self">self</span>.span_info[index];
@@ -1210,14 +1210,14 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;deserialize&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; serde::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Arena&lt;T&gt;
+<span class="attr">#[cfg(feature = <span class="string">"deserialize"</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'de</span>, T&gt; serde::Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>Arena&lt;T&gt;
 <span class="kw">where
-    </span>T: serde::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
+    </span>T: serde::Deserialize&lt;<span class="lifetime">'de</span>&gt;,
 {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
-        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">let </span>data = Vec::deserialize(deserializer)<span class="question-mark">?</span>;
         <span class="kw">let </span>span_info = std::iter::repeat(Span::default())
@@ -1303,15 +1303,15 @@
 ///
 /// `UniqueArena` is similar to [`Arena`]: If `Arena` is vector-like,
 /// `UniqueArena` is `HashSet`-like.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;clone&quot;</span>, derive(Clone))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
 </span><span class="kw">pub struct </span>UniqueArena&lt;T&gt; {
     set: FastIndexSet&lt;T&gt;,
 
     <span class="doccomment">/// Spans for the elements, indexed by handle.
     ///
     /// The length of this vector is always equal to `set.len()`. `FastIndexSet`
-    /// promises that its elements &quot;are indexed in a compact range, without
-    /// holes in the range 0..set.len()&quot;, so we can always use the indices
+    /// promises that its elements "are indexed in a compact range, without
+    /// holes in the range 0..set.len()", so we can always use the indices
     /// returned by insertion as indices into this vector.
     </span>span_info: Vec&lt;Span&gt;,
 }
@@ -1352,7 +1352,7 @@
             .unwrap_or(<span class="kw-2">&amp;</span>Span::default())
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"compact"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; UniqueArenaDrain&lt;T&gt; {
         UniqueArenaDrain {
             inner_elts: <span class="self">self</span>.set.drain(..),
@@ -1362,15 +1362,15 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>UniqueArenaDrain&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    inner_elts: indexmap::set::Drain&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-    inner_spans: std::vec::Drain&lt;<span class="lifetime">&#39;a</span>, Span&gt;,
+<span class="attr">#[cfg(feature = <span class="string">"compact"</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>UniqueArenaDrain&lt;<span class="lifetime">'a</span>, T&gt; {
+    inner_elts: indexmap::set::Drain&lt;<span class="lifetime">'a</span>, T&gt;,
+    inner_spans: std::vec::Drain&lt;<span class="lifetime">'a</span>, Span&gt;,
     index: Index,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>UniqueArenaDrain&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+<span class="attr">#[cfg(feature = <span class="string">"compact"</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Iterator <span class="kw">for </span>UniqueArenaDrain&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">type </span>Item = (Handle&lt;T&gt;, T, Span);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
@@ -1388,7 +1388,7 @@
 
 <span class="kw">impl</span>&lt;T: Eq + hash::Hash&gt; UniqueArena&lt;T&gt; {
     <span class="doccomment">/// Returns an iterator over the items stored in this arena, returning both
-    /// the item&#39;s handle and a reference to it.
+    /// the item's handle and a reference to it.
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, <span class="kw-2">&amp;</span>T)&gt; {
         <span class="self">self</span>.set.iter().enumerate().map(|(i, v)| {
             <span class="kw">let </span>position = i + <span class="number">1</span>;
@@ -1406,7 +1406,7 @@
     /// return a `Handle` to the existing element, and drop `value`.
     ///
     /// If `value` is inserted into the arena, associate `span` with
-    /// it. An element&#39;s span can be retrieved with the [`get_span`]
+    /// it. An element's span can be retrieved with the [`get_span`]
     /// method.
     ///
     /// [`Handle&lt;T&gt;`]: Handle
@@ -1437,7 +1437,7 @@
         <span class="self">self</span>.set.swap_remove_index(old.index()).unwrap();
     }
 
-    <span class="doccomment">/// Return this arena&#39;s handle for `value`, if present.
+    <span class="doccomment">/// Return this arena's handle for `value`, if present.
     ///
     /// If this arena already contains an element equal to `value`,
     /// return its handle. Otherwise, return `None`.
@@ -1447,7 +1447,7 @@
             .map(|index| <span class="kw">unsafe </span>{ Handle::from_usize_unchecked(index) })
     }
 
-    <span class="doccomment">/// Return this arena&#39;s value at `handle`, if that is a valid handle.
+    <span class="doccomment">/// Return this arena's value at `handle`, if that is a valid handle.
     </span><span class="kw">pub fn </span>get_handle(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, BadHandle&gt; {
         <span class="self">self</span>.set
             .get_index(handle.index())
@@ -1483,7 +1483,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serialize"</span>)]
 </span><span class="kw">impl</span>&lt;T&gt; serde::Serialize <span class="kw">for </span>UniqueArena&lt;T&gt;
 <span class="kw">where
     </span>T: Eq + hash::Hash + serde::Serialize,
@@ -1496,14 +1496,14 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;deserialize&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; serde::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>UniqueArena&lt;T&gt;
+<span class="attr">#[cfg(feature = <span class="string">"deserialize"</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'de</span>, T&gt; serde::Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>UniqueArena&lt;T&gt;
 <span class="kw">where
-    </span>T: Eq + hash::Hash + serde::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
+    </span>T: Eq + hash::Hash + serde::Deserialize&lt;<span class="lifetime">'de</span>&gt;,
 {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
-        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">let </span>set = FastIndexSet::deserialize(deserializer)<span class="question-mark">?</span>;
         <span class="kw">let </span>span_info = std::iter::repeat(Span::default()).take(set.len()).collect();
@@ -1513,12 +1513,12 @@
 }
 
 <span class="comment">//Note: largely borrowed from `HashSet` implementation
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary&quot;</span>)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; arbitrary::Arbitrary&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>UniqueArena&lt;T&gt;
+</span><span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; arbitrary::Arbitrary&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>UniqueArena&lt;T&gt;
 <span class="kw">where
-    </span>T: Eq + hash::Hash + arbitrary::Arbitrary&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span>T: Eq + hash::Hash + arbitrary::Arbitrary&lt;<span class="lifetime">'a</span>&gt;,
 {
-    <span class="kw">fn </span>arbitrary(u: <span class="kw-2">&amp;mut </span>arbitrary::Unstructured&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; arbitrary::Result&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">fn </span>arbitrary(u: <span class="kw-2">&amp;mut </span>arbitrary::Unstructured&lt;<span class="lifetime">'a</span>&gt;) -&gt; arbitrary::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>arena = <span class="self">Self</span>::default();
         <span class="kw">for </span>elem <span class="kw">in </span>u.arbitrary_iter()<span class="question-mark">? </span>{
             arena.set.insert(elem<span class="question-mark">?</span>);
@@ -1527,7 +1527,7 @@
         <span class="prelude-val">Ok</span>(arena)
     }
 
-    <span class="kw">fn </span>arbitrary_take_rest(u: arbitrary::Unstructured&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; arbitrary::Result&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">fn </span>arbitrary_take_rest(u: arbitrary::Unstructured&lt;<span class="lifetime">'a</span>&gt;) -&gt; arbitrary::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>arena = <span class="self">Self</span>::default();
         <span class="kw">for </span>elem <span class="kw">in </span>u.arbitrary_take_rest_iter()<span class="question-mark">? </span>{
             arena.set.insert(elem<span class="question-mark">?</span>);

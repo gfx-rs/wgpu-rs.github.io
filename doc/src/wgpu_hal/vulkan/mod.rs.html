@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -709,7 +709,7 @@
 
 ## Stack memory
 
-Ash expects slices, which we don&#39;t generally have available.
+Ash expects slices, which we don't generally have available.
 We cope with this requirement by the combination of the following ways:
   - temporarily allocating `Vec` on heap, where overhead is permitted
   - growing temporary local storage
@@ -819,13 +819,13 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     </span>validation_layer_spec_version: u32,
 
     <span class="doccomment">/// If the OBS layer is present. OBS never increments the version of their layer,
-    /// so there&#39;s no reason to have the version.
+    /// so there's no reason to have the version.
     </span>has_obs_layer: bool,
 }
 
 <span class="kw">pub struct </span>InstanceShared {
     raw: ash::Instance,
-    extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
+    extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
     drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
     flags: wgt::InstanceFlags,
     debug_utils: <span class="prelude-ty">Option</span>&lt;DebugUtils&gt;,
@@ -888,11 +888,11 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     workarounds: Workarounds,
 }
 
-<span class="comment">// TODO there&#39;s no reason why this can&#39;t be unified--the function pointers should all be the same--it&#39;s not clear how to do this with `ash`.
+<span class="comment">// TODO there's no reason why this can't be unified--the function pointers should all be the same--it's not clear how to do this with `ash`.
 </span><span class="kw">enum </span>ExtensionFn&lt;T&gt; {
     <span class="doccomment">/// The loaded function pointer struct for an extension.
     </span>Extension(T),
-    <span class="doccomment">/// The extension was promoted to a core version of Vulkan and the functions on `ash`&#39;s `DeviceV1_x` traits should be used.
+    <span class="doccomment">/// The extension was promoted to a core version of Vulkan and the functions on `ash`'s `DeviceV1_x` traits should be used.
     </span>Promoted,
 }
 
@@ -901,7 +901,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     timeline_semaphore: <span class="prelude-ty">Option</span>&lt;ExtensionFn&lt;khr::TimelineSemaphore&gt;&gt;,
 }
 
-<span class="doccomment">/// Set of internal capabilities, which don&#39;t show up in the exposed
+<span class="doccomment">/// Set of internal capabilities, which don't show up in the exposed
 /// device geometry, but affect the code paths taken internally.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">struct </span>PrivateCapabilities {
@@ -1023,7 +1023,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     handle_is_owned: bool,
     instance: Arc&lt;InstanceShared&gt;,
     physical_device: ash::vk::PhysicalDevice,
-    enabled_extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
+    enabled_extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
     extension_fns: DeviceExtensionFunctions,
     vendor_id: u32,
     timestamp_period: f32,
@@ -1039,8 +1039,8 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     desc_allocator:
         Mutex&lt;gpu_descriptor::DescriptorAllocator&lt;vk::DescriptorPool, vk::DescriptorSet&gt;&gt;,
     valid_ash_memory_types: u32,
-    naga_options: naga::back::spv::Options&lt;<span class="lifetime">&#39;static</span>&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]
+    naga_options: naga::back::spv::Options&lt;<span class="lifetime">'static</span>&gt;,
+    <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
     </span>render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
 }
 
@@ -1050,7 +1050,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     device: Arc&lt;DeviceShared&gt;,
     family_index: u32,
     <span class="doccomment">/// We use a redundant chain of semaphores to pass on the signal
-    /// from submissions to the last present, since it&#39;s required by the
+    /// from submissions to the last present, since it's required by the
     /// specification.
     /// It would be correct to use a single semaphore there, but
     /// [Intel hangs in `anv_queue_finish`](https://gitlab.freedesktop.org/mesa/mesa/-/issues/5508).
@@ -1161,9 +1161,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>CommandEncoder {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;CommandEncoder&quot;</span>)
-            .field(<span class="string">&quot;raw&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.raw)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"CommandEncoder"</span>)
+            .field(<span class="string">"raw"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.raw)
             .finish()
     }
 }
@@ -1340,7 +1340,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         </span>};
         vk_info = vk_info.signal_semaphores(<span class="kw-2">&amp;</span>signal_semaphores[..signal_count]);
 
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkQueueSubmit&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"vkQueueSubmit"</span>);
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.device
                 .raw
@@ -1371,7 +1371,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         }
 
         <span class="kw">let </span>suboptimal = {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkQueuePresentKHR&quot;</span>);
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkQueuePresentKHR"</span>);
             <span class="kw">unsafe </span>{ <span class="self">self</span>.swapchain_fn.queue_present(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>vk_info) }.map_err(|error| {
                 <span class="kw">match </span>error {
                     vk::Result::ERROR_OUT_OF_DATE_KHR =&gt; <span class="kw">crate</span>::SurfaceError::Outdated,
@@ -1382,11 +1382,11 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         </span>};
         <span class="kw">if </span>suboptimal {
             <span class="comment">// We treat `VK_SUBOPTIMAL_KHR` as `VK_SUCCESS` on Android.
-            // On Android 10+, libvulkan&#39;s `vkQueuePresentKHR` implementation returns `VK_SUBOPTIMAL_KHR` if not doing pre-rotation
+            // On Android 10+, libvulkan's `vkQueuePresentKHR` implementation returns `VK_SUBOPTIMAL_KHR` if not doing pre-rotation
             // (i.e `VkSwapchainCreateInfoKHR::preTransform` not being equal to the current device orientation).
             // This is always the case when the device orientation is anything other than the identity one, as we unconditionally use `VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR`.
-            </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;android&quot;</span>))]
-            </span><span class="macro">log::warn!</span>(<span class="string">&quot;Suboptimal present of frame {}&quot;</span>, texture.index);
+            </span><span class="attr">#[cfg(not(target_os = <span class="string">"android"</span>))]
+            </span><span class="macro">log::warn!</span>(<span class="string">"Suboptimal present of frame {}"</span>, texture.index);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1404,7 +1404,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             }
             vk::Result::ERROR_DEVICE_LOST =&gt; <span class="self">Self</span>::Lost,
             <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Unrecognized device error {:?}&quot;</span>, result);
+                <span class="macro">log::warn!</span>(<span class="string">"Unrecognized device error {:?}"</span>, result);
                 <span class="self">Self</span>::Lost
             }
         }

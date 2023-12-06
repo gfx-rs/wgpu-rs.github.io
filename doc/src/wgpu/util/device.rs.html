@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/util/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/util/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -189,12 +189,12 @@
 <a href="#189" id="189">189</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/// Describes a [Buffer](crate::Buffer) when allocating.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-</span><span class="kw">pub struct </span>BufferInitDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>BufferInitDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of a buffer. This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: <span class="kw">crate</span>::Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: <span class="kw">crate</span>::Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Contents of a buffer on creation.
-    </span><span class="kw">pub </span>contents: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8],
-    <span class="doccomment">/// Usages of a buffer. If the buffer is used in any way that isn&#39;t specified here, the operation
+    </span><span class="kw">pub </span>contents: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
+    <span class="doccomment">/// Usages of a buffer. If the buffer is used in any way that isn't specified here, the operation
     /// will panic.
     </span><span class="kw">pub </span>usage: <span class="kw">crate</span>::BufferUsages,
 }
@@ -230,7 +230,7 @@
 <span class="doccomment">/// Utility methods not meant to be in the main API.
 </span><span class="kw">pub trait </span>DeviceExt {
     <span class="doccomment">/// Creates a [Buffer](crate::Buffer) with data to initialize it.
-    </span><span class="kw">fn </span>create_buffer_init(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>BufferInitDescriptor&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="kw">crate</span>::Buffer;
+    </span><span class="kw">fn </span>create_buffer_init(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>BufferInitDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="kw">crate</span>::Buffer;
 
     <span class="doccomment">/// Upload an entire texture and its mipmaps from a source buffer.
     ///
@@ -243,14 +243,14 @@
     </span><span class="kw">fn </span>create_texture_with_data(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Queue,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor&lt;<span class="lifetime">&#39;_</span>&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor&lt;<span class="lifetime">'_</span>&gt;,
         order: TextureDataOrder,
         data: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="kw">crate</span>::Texture;
 }
 
 <span class="kw">impl </span>DeviceExt <span class="kw">for </span><span class="kw">crate</span>::Device {
-    <span class="kw">fn </span>create_buffer_init(<span class="kw-2">&amp;</span><span class="self">self</span>, descriptor: <span class="kw-2">&amp;</span>BufferInitDescriptor&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="kw">crate</span>::Buffer {
+    <span class="kw">fn </span>create_buffer_init(<span class="kw-2">&amp;</span><span class="self">self</span>, descriptor: <span class="kw-2">&amp;</span>BufferInitDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="kw">crate</span>::Buffer {
         <span class="comment">// Skip mapping if the buffer is zero sized
         </span><span class="kw">if </span>descriptor.contents.is_empty() {
             <span class="kw">let </span>wgt_descriptor = <span class="kw">crate</span>::BufferDescriptor {
@@ -266,7 +266,7 @@
             <span class="comment">// Valid vulkan usage is
             // 1. buffer size must be a multiple of COPY_BUFFER_ALIGNMENT.
             // 2. buffer size must be greater than 0.
-            // Therefore we round the value up to the nearest multiple, and ensure it&#39;s at least COPY_BUFFER_ALIGNMENT.
+            // Therefore we round the value up to the nearest multiple, and ensure it's at least COPY_BUFFER_ALIGNMENT.
             </span><span class="kw">let </span>align_mask = <span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT - <span class="number">1</span>;
             <span class="kw">let </span>padded_size =
                 ((unpadded_size + align_mask) &amp; !align_mask).max(<span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT);
@@ -291,7 +291,7 @@
     <span class="kw">fn </span>create_texture_with_data(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Queue,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor&lt;<span class="lifetime">&#39;_</span>&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor&lt;<span class="lifetime">'_</span>&gt;,
         order: TextureDataOrder,
         data: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="kw">crate</span>::Texture {
@@ -300,7 +300,7 @@
         desc.usage |= <span class="kw">crate</span>::TextureUsages::COPY_DST;
         <span class="kw">let </span>texture = <span class="self">self</span>.create_texture(<span class="kw-2">&amp;</span>desc);
 
-        <span class="comment">// Will return None only if it&#39;s a combined depth-stencil format
+        <span class="comment">// Will return None only if it's a combined depth-stencil format
         // If so, default to 4, validation will fail later anyway since the depth or stencil
         // aspect needs to be written to individually
         </span><span class="kw">let </span>block_size = desc.format.block_copy_size(<span class="prelude-val">None</span>).unwrap_or(<span class="number">4</span>);
@@ -335,11 +335,11 @@
                 }
 
                 <span class="comment">// When uploading mips of compressed textures and the mip is supposed to be
-                // a size that isn&#39;t a multiple of the block size, the mip needs to be uploaded
-                // as its &quot;physical size&quot; which is the size rounded up to the nearest block size.
+                // a size that isn't a multiple of the block size, the mip needs to be uploaded
+                // as its "physical size" which is the size rounded up to the nearest block size.
                 </span><span class="kw">let </span>mip_physical = mip_size.physical_size(desc.format);
 
-                <span class="comment">// All these calculations are performed on the physical size as that&#39;s the
+                <span class="comment">// All these calculations are performed on the physical size as that's the
                 // data that exists in the buffer.
                 </span><span class="kw">let </span>width_blocks = mip_physical.width / block_width;
                 <span class="kw">let </span>height_blocks = mip_physical.height / block_height;

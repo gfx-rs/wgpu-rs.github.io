@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/buffer.rs`."><title>buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/buffer.rs`."><title>buffer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -904,7 +904,7 @@
 
     <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
     </span><span class="attr">#[allow(clippy::pattern_type_mismatch)]
-    </span><span class="kw">pub fn </span>used_ids(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferId&gt; + <span class="lifetime">&#39;_ </span>{
+    </span><span class="kw">pub fn </span>used_ids(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferId&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">let </span>buffers = <span class="self">self</span>.buffers.lock();
         buffers
             .iter()
@@ -914,7 +914,7 @@
     }
 
     <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
-    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
         buffers
             .drain(..)
@@ -924,12 +924,12 @@
     }
 
     <span class="doccomment">/// Adds the given resource with the given state.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Storage&lt;Buffer&lt;A&gt;, BufferId&gt;,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;, BufferId&gt;,
         id: BufferId,
         state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
         <span class="kw">let </span>buffer = storage.get(id).ok()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
@@ -978,7 +978,7 @@
     }
 
     <span class="doccomment">/// Drains all buffers tracked.
-    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">let </span>resources = <span class="self">self</span>.metadata.drain_resources();
         <span class="self">self</span>.state.clear();
         resources.into_iter()
@@ -1080,12 +1080,12 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>merge_single&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">pub fn </span>merge_single&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Storage&lt;Buffer&lt;A&gt;, BufferId&gt;,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;, BufferId&gt;,
         id: BufferId,
         new_state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arc&lt;Buffer&lt;A&gt;&gt;, UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Buffer&lt;A&gt;&gt;, UsageConflict&gt; {
         <span class="kw">let </span>buffer = storage
             .get(id)
             .map_err(|<span class="kw">_</span>| UsageConflict::BufferInvalid { id })<span class="question-mark">?</span>;
@@ -1130,7 +1130,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker&lt;BufferId, Buffer&lt;A&gt;&gt; <span class="kw">for </span>BufferTracker&lt;A&gt; {
     <span class="doccomment">/// Try to remove the buffer `id` from this tracker if it is otherwise unused.
     ///
-    /// A buffer is &#39;otherwise unused&#39; when the only references to it are:
+    /// A buffer is 'otherwise unused' when the only references to it are:
     ///
     /// 1) the `Arc` that our caller, `LifetimeTracker::triage_suspected`, has just
     ///    drained from `LifetimeTracker::suspected_resources`,
@@ -1161,14 +1161,14 @@
             <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
                 <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
                 <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
-                //so it&#39;s already been released from user and so it&#39;s not inside Registry\Storage
+                //so it's already been released from user and so it's not inside Registry\Storage
                 </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
                     <span class="self">self</span>.metadata.remove(index);
-                    <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer {:?} is not tracked anymore&quot;</span>, id,);
+                    <span class="macro">log::trace!</span>(<span class="string">"Buffer {:?} is not tracked anymore"</span>, id,);
                     <span class="kw">return </span><span class="bool-val">true</span>;
                 } <span class="kw">else </span>{
                     <span class="macro">log::trace!</span>(
-                        <span class="string">&quot;Buffer {:?} is still referenced from {}&quot;</span>,
+                        <span class="string">"Buffer {:?} is still referenced from {}"</span>,
                         id,
                         existing_ref_count
                     );
@@ -1217,7 +1217,7 @@
     }
 
     <span class="doccomment">/// Returns a list of all buffers tracked.
-    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.metadata.owned_resources()
     }
 
@@ -1247,7 +1247,7 @@
             <span class="kw">let </span>currently_owned = <span class="self">self</span>.metadata.contains_unchecked(index);
 
             <span class="kw">if </span>currently_owned {
-                <span class="macro">panic!</span>(<span class="string">&quot;Tried to insert buffer already tracked&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"Tried to insert buffer already tracked"</span>);
             }
 
             insert(
@@ -1448,13 +1448,13 @@
 
 <span class="doccomment">/// Source of Buffer State.
 </span><span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">enum </span>BufferStateProvider&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">enum </span>BufferStateProvider&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Get a state that was provided directly.
     </span>Direct { state: BufferUses },
     <span class="doccomment">/// Get a state from an an array of states.
-    </span>Indirect { state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[BufferUses] },
+    </span>Indirect { state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[BufferUses] },
 }
-<span class="kw">impl </span>BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>BufferStateProvider&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Gets the state from the provider, given a resource ID index.
     ///
     /// # Safety
@@ -1472,7 +1472,7 @@
     }
 }
 
-<span class="doccomment">/// Does an insertion operation if the index isn&#39;t tracked
+<span class="doccomment">/// Does an insertion operation if the index isn't tracked
 /// in the current metadata, otherwise merges the given state
 /// with the current state. If the merging would cause
 /// a conflict, returns that usage conflict.
@@ -1488,8 +1488,8 @@
     resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, BufferId, Buffer&lt;A&gt;&gt;,
     index32: u32,
     index: usize,
-    state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
+    state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
 
@@ -1519,7 +1519,7 @@
     }
 }
 
-<span class="doccomment">/// If the resource isn&#39;t tracked
+<span class="doccomment">/// If the resource isn't tracked
 /// - Inserts the given resource.
 /// - Uses the `start_state_provider` to populate `start_states`
 /// - Uses either `end_state_provider` or `start_state_provider`
@@ -1542,9 +1542,9 @@
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
     resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, BufferId, Buffer&lt;A&gt;&gt;,
     index: usize,
-    start_state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
+    start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+    end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
 ) {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
@@ -1576,20 +1576,20 @@
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
     resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, BufferId, Buffer&lt;A&gt;&gt;,
     index: usize,
-    start_state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
+    start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+    end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
 ) {
     <span class="kw">let </span>new_start_state = <span class="kw">unsafe </span>{ start_state_provider.get_state(index) };
     <span class="kw">let </span>new_end_state =
         end_state_provider.map_or(new_start_state, |p| <span class="kw">unsafe </span>{ p.get_state(index) });
 
-    <span class="comment">// This should only ever happen with a wgpu bug, but let&#39;s just double
-    // check that resource states don&#39;t have any conflicts.
+    <span class="comment">// This should only ever happen with a wgpu bug, but let's just double
+    // check that resource states don't have any conflicts.
     </span><span class="macro">strict_assert_eq!</span>(invalid_resource_state(new_start_state), <span class="bool-val">false</span>);
     <span class="macro">strict_assert_eq!</span>(invalid_resource_state(new_end_state), <span class="bool-val">false</span>);
 
-    <span class="macro">log::trace!</span>(<span class="string">&quot;\tbuf {index}: insert {new_start_state:?}..{new_end_state:?}&quot;</span>);
+    <span class="macro">log::trace!</span>(<span class="string">"\tbuf {index}: insert {new_start_state:?}..{new_end_state:?}"</span>);
 
     <span class="kw">unsafe </span>{
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut ref mut </span>start_state) = start_states {
@@ -1607,8 +1607,8 @@
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
     index32: u32,
     index: usize,
-    state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
+    state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, BufferId, Buffer&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
     <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_states.get_unchecked_mut(index) };
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(index) };
@@ -1627,7 +1627,7 @@
         ));
     }
 
-    <span class="macro">log::trace!</span>(<span class="string">&quot;\tbuf {index32}: merge {current_state:?} + {new_state:?}&quot;</span>);
+    <span class="macro">log::trace!</span>(<span class="string">"\tbuf {index32}: merge {current_state:?} + {new_state:?}"</span>);
 
     <span class="kw-2">*</span>current_state = merged_state;
 
@@ -1638,7 +1638,7 @@
 </span><span class="kw">unsafe fn </span>barrier(
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
     index: usize,
-    state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
+    state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
 ) {
     <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ <span class="kw-2">*</span>current_states.get_unchecked(index) };
@@ -1654,14 +1654,14 @@
         usage: current_state..new_state,
     });
 
-    <span class="macro">log::trace!</span>(<span class="string">&quot;\tbuf {index}: transition {current_state:?} -&gt; {new_state:?}&quot;</span>);
+    <span class="macro">log::trace!</span>(<span class="string">"\tbuf {index}: transition {current_state:?} -&gt; {new_state:?}"</span>);
 }
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>update(
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
     index: usize,
-    state_provider: BufferStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
+    state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
 ) {
     <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_states.get_unchecked_mut(index) };
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(index) };

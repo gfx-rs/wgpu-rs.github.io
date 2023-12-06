@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1304,7 +1304,7 @@
 <a href="#1304" id="1304">1304</a>
 <a href="#1305" id="1305">1305</a>
 <a href="#1306" id="1306">1306</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     device::{
@@ -1354,7 +1354,7 @@
 ///
 /// - The user may hold a reference to it (via a `wgpu::Buffer`, say).
 ///
-/// - Other resources may depend on it (a texture view&#39;s backing
+/// - Other resources may depend on it (a texture view's backing
 ///   texture, for example).
 ///
 /// - It may be used by commands sent to the GPU that have not yet
@@ -1409,10 +1409,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>label = String::new();
         <span class="attr">#[cfg(debug_assertions)]
         </span>{
-            label = <span class="macro">format!</span>(<span class="string">&quot;[{}] &quot;</span>, <span class="self">self</span>.label);
+            label = <span class="macro">format!</span>(<span class="string">"[{}] "</span>, <span class="self">self</span>.label);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.id.as_ref() {
-            label.push_str(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, id).as_str());
+            label.push_str(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, id).as_str());
         }
         label
     }
@@ -1438,9 +1438,9 @@
     </span>}
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>ResourceType = <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>ResourceType = <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
 
-<span class="kw">pub trait </span>Resource&lt;Id: TypedId&gt;: <span class="lifetime">&#39;static </span>+ WasmNotSendSync {
+<span class="kw">pub trait </span>Resource&lt;Id: TypedId&gt;: <span class="lifetime">'static </span>+ WasmNotSendSync {
     <span class="kw">const </span>TYPE: ResourceType;
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;Id&gt;;
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;Id&gt;;
@@ -1486,9 +1486,9 @@
     </span>ContextLost,
     <span class="doccomment">/// The buffer is in an invalid state.
     </span>Invalid,
-    <span class="doccomment">/// The range isn&#39;t fully contained in the buffer.
+    <span class="doccomment">/// The range isn't fully contained in the buffer.
     </span>InvalidRange,
-    <span class="doccomment">/// The range isn&#39;t properly aligned.
+    <span class="doccomment">/// The range isn't properly aligned.
     </span>InvalidAlignment,
     <span class="doccomment">/// Incompatible usage flags.
     </span>InvalidUsageFlags,
@@ -1515,33 +1515,33 @@
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Send <span class="kw">for </span>BufferMapState&lt;A&gt; {}
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Sync <span class="kw">for </span>BufferMapState&lt;A&gt; {}
 
 <span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>BufferMapCallbackC {
-    <span class="kw">pub </span>callback: <span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(status: BufferMapAsyncStatus, user_data: <span class="kw-2">*mut </span>u8),
+    <span class="kw">pub </span>callback: <span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn</span>(status: BufferMapAsyncStatus, user_data: <span class="kw-2">*mut </span>u8),
     <span class="kw">pub </span>user_data: <span class="kw-2">*mut </span>u8,
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>BufferMapCallbackC {}
@@ -1554,21 +1554,21 @@
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
-</span><span class="kw">type </span>BufferMapCallbackCallback = Box&lt;<span class="kw">dyn </span>FnOnce(BufferAccessResult) + Send + <span class="lifetime">&#39;static</span>&gt;;
+</span><span class="kw">type </span>BufferMapCallbackCallback = Box&lt;<span class="kw">dyn </span>FnOnce(BufferAccessResult) + Send + <span class="lifetime">'static</span>&gt;;
 <span class="attr">#[cfg(not(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 )))]
-</span><span class="kw">type </span>BufferMapCallbackCallback = Box&lt;<span class="kw">dyn </span>FnOnce(BufferAccessResult) + <span class="lifetime">&#39;static</span>&gt;;
+</span><span class="kw">type </span>BufferMapCallbackCallback = Box&lt;<span class="kw">dyn </span>FnOnce(BufferAccessResult) + <span class="lifetime">'static</span>&gt;;
 
 <span class="kw">enum </span>BufferMapCallbackInner {
     Rust { callback: BufferMapCallbackCallback },
@@ -1576,10 +1576,10 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>BufferMapCallbackInner {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            BufferMapCallbackInner::Rust { callback: <span class="kw">_ </span>} =&gt; f.debug_struct(<span class="string">&quot;Rust&quot;</span>).finish(),
-            BufferMapCallbackInner::C { inner: <span class="kw">_ </span>} =&gt; f.debug_struct(<span class="string">&quot;C&quot;</span>).finish(),
+            BufferMapCallbackInner::Rust { callback: <span class="kw">_ </span>} =&gt; f.debug_struct(<span class="string">"Rust"</span>).finish(),
+            BufferMapCallbackInner::C { inner: <span class="kw">_ </span>} =&gt; f.debug_struct(<span class="string">"C"</span>).finish(),
         }
     }
 }
@@ -1654,46 +1654,46 @@
 </span><span class="kw">pub enum </span>BufferAccessError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Buffer map failed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer map failed"</span>)]
     </span>Failed,
-    <span class="attr">#[error(<span class="string">&quot;Buffer is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer is invalid"</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">&quot;Buffer is destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer is destroyed"</span>)]
     </span>Destroyed,
-    <span class="attr">#[error(<span class="string">&quot;Buffer is already mapped&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer is already mapped"</span>)]
     </span>AlreadyMapped,
-    <span class="attr">#[error(<span class="string">&quot;Buffer map is pending&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer map is pending"</span>)]
     </span>MapAlreadyPending,
     <span class="attr">#[error(transparent)]
     </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
-    <span class="attr">#[error(<span class="string">&quot;Buffer is not mapped&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer is not mapped"</span>)]
     </span>NotMapped,
     <span class="attr">#[error(
-        <span class="string">&quot;Buffer map range must start aligned to `MAP_ALIGNMENT` and end to `COPY_BUFFER_ALIGNMENT`&quot;
+        <span class="string">"Buffer map range must start aligned to `MAP_ALIGNMENT` and end to `COPY_BUFFER_ALIGNMENT`"
     </span>)]
     </span>UnalignedRange,
-    <span class="attr">#[error(<span class="string">&quot;Buffer offset invalid: offset {offset} must be multiple of 8&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer offset invalid: offset {offset} must be multiple of 8"</span>)]
     </span>UnalignedOffset { offset: wgt::BufferAddress },
-    <span class="attr">#[error(<span class="string">&quot;Buffer range size invalid: range_size {range_size} must be multiple of 4&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer range size invalid: range_size {range_size} must be multiple of 4"</span>)]
     </span>UnalignedRangeSize { range_size: wgt::BufferAddress },
-    <span class="attr">#[error(<span class="string">&quot;Buffer access out of bounds: index {index} would underrun the buffer (limit: {min})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer access out of bounds: index {index} would underrun the buffer (limit: {min})"</span>)]
     </span>OutOfBoundsUnderrun {
         index: wgt::BufferAddress,
         min: wgt::BufferAddress,
     },
     <span class="attr">#[error(
-        <span class="string">&quot;Buffer access out of bounds: last index {index} would overrun the buffer (limit: {max})&quot;
+        <span class="string">"Buffer access out of bounds: last index {index} would overrun the buffer (limit: {max})"
     </span>)]
     </span>OutOfBoundsOverrun {
         index: wgt::BufferAddress,
         max: wgt::BufferAddress,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer map range start {start} is greater than end {end}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer map range start {start} is greater than end {end}"</span>)]
     </span>NegativeRange {
         start: wgt::BufferAddress,
         end: wgt::BufferAddress,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer map aborted&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer map aborted"</span>)]
     </span>MapAborted,
 }
 
@@ -1707,7 +1707,7 @@
     </span><span class="kw">pub </span>_parent_buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
 }
 
-<span class="kw">pub type </span>BufferDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::BufferDescriptor&lt;Label&lt;<span class="lifetime">&#39;a</span>&gt;&gt;;
+<span class="kw">pub type </span>BufferDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::BufferDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Buffer&lt;A: HalApi&gt; {
@@ -1724,7 +1724,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Buffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw Buffer {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -1745,16 +1745,16 @@
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
         <span class="kw">let </span>buffer_id = <span class="self">self</span>.info.id();
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Idle&quot;</span>, buffer_id);
+        <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Idle"</span>, buffer_id);
         <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), resource::BufferMapState::Idle) {
             resource::BufferMapState::Init {
                 ptr,
                 stage_buffer,
                 needs_flush,
             } =&gt; {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-                    <span class="kw">let </span>data = trace.make_binary(<span class="string">&quot;bin&quot;</span>, <span class="kw">unsafe </span>{
+                    <span class="kw">let </span>data = trace.make_binary(<span class="string">"bin"</span>, <span class="kw">unsafe </span>{
                         std::slice::from_raw_parts(ptr.as_ptr(), <span class="self">self</span>.size <span class="kw">as </span>usize)
                     });
                     trace.add(trace::Action::WriteBuffer {
@@ -1816,10 +1816,10 @@
             }
             resource::BufferMapState::Active { ptr, range, host } =&gt; {
                 <span class="kw">if </span>host == HostMap::Write {
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                         <span class="kw">let </span>size = range.end - range.start;
-                        <span class="kw">let </span>data = trace.make_binary(<span class="string">&quot;bin&quot;</span>, <span class="kw">unsafe </span>{
+                        <span class="kw">let </span>data = trace.make_binary(<span class="string">"bin"</span>, <span class="kw">unsafe </span>{
                             std::slice::from_raw_parts(ptr.as_ptr(), size <span class="kw">as </span>usize)
                         });
                         trace.add(trace::Action::WriteBuffer {
@@ -1851,7 +1851,7 @@
 
             map_closure = <span class="self">self</span>.buffer_unmap_inner().unwrap_or(<span class="prelude-val">None</span>);
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::FreeBuffer(buffer_id));
             }
@@ -1888,22 +1888,22 @@
 </span><span class="kw">pub enum </span>CreateBufferError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Failed to map buffer while creating: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to map buffer while creating: {0}"</span>)]
     </span>AccessError(<span class="attr">#[from] </span>BufferAccessError),
-    <span class="attr">#[error(<span class="string">&quot;Buffers that are mapped at creation have to be aligned to `COPY_BUFFER_ALIGNMENT`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffers that are mapped at creation have to be aligned to `COPY_BUFFER_ALIGNMENT`"</span>)]
     </span>UnalignedSize,
-    <span class="attr">#[error(<span class="string">&quot;Invalid usage flags {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid usage flags {0:?}"</span>)]
     </span>InvalidUsage(wgt::BufferUsages),
-    <span class="attr">#[error(<span class="string">&quot;`MAP` usage can only be combined with the opposite `COPY`, requested {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"`MAP` usage can only be combined with the opposite `COPY`, requested {0:?}"</span>)]
     </span>UsageMismatch(wgt::BufferUsages),
-    <span class="attr">#[error(<span class="string">&quot;Buffer size {requested} is greater than the maximum buffer size ({maximum})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer size {requested} is greater than the maximum buffer size ({maximum})"</span>)]
     </span>MaxBufferSize { requested: u64, maximum: u64 },
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BufferId&gt; <span class="kw">for </span>Buffer&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Buffer&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Buffer"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BufferId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1923,10 +1923,10 @@
 /// [`StagingBuffer`]s can be created with [`queue_create_staging_buffer`] and
 /// used with [`queue_write_staging_buffer`]. They are also used internally by
 /// operations like [`queue_write_texture`] that need to upload data to the GPU,
-/// but that don&#39;t belong to any particular wgpu command buffer.
+/// but that don't belong to any particular wgpu command buffer.
 ///
 /// Used `StagingBuffer`s are accumulated in [`Device::pending_writes`], to be
-/// freed once their associated operation&#39;s queue submission has finished
+/// freed once their associated operation's queue submission has finished
 /// execution.
 ///
 /// [`queue_create_staging_buffer`]: Global::queue_create_staging_buffer
@@ -1945,7 +1945,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.lock().take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw StagingBuffer {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw StagingBuffer {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -1955,7 +1955,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;StagingBufferId&gt; <span class="kw">for </span>StagingBuffer&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;StagingBuffer&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"StagingBuffer"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;StagingBufferId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1966,11 +1966,11 @@
     }
 
     <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        String::from(<span class="string">&quot;&lt;StagingBuffer&gt;&quot;</span>)
+        String::from(<span class="string">"&lt;StagingBuffer&gt;"</span>)
     }
 }
 
-<span class="kw">pub type </span>TextureDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::TextureDescriptor&lt;Label&lt;<span class="lifetime">&#39;a</span>&gt;, Vec&lt;wgt::TextureFormat&gt;&gt;;
+<span class="kw">pub type </span>TextureDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;, Vec&lt;wgt::TextureFormat&gt;&gt;;
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>TextureInner&lt;A: HalApi&gt; {
@@ -2007,7 +2007,7 @@
     Surface {
         clear_view: <span class="prelude-ty">Option</span>&lt;A::TextureView&gt;,
     },
-    <span class="comment">// Texture can&#39;t be cleared, attempting to do so will cause panic.
+    <span class="comment">// Texture can't be cleared, attempting to do so will cause panic.
     // (either because it is impossible for the type of texture or it is being destroyed)
     </span><span class="prelude-val">None</span>,
 }
@@ -2027,7 +2027,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Texture&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw Texture {}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture {}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">use </span>hal::Device;
         <span class="kw">let </span><span class="kw-2">mut </span>clear_mode = <span class="self">self</span>.clear_mode.write();
         <span class="kw">let </span>clear_mode = <span class="kw-2">&amp;mut *</span>clear_mode;
@@ -2068,24 +2068,24 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Texture&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
         <span class="self">self</span>.inner.read()
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
         <span class="self">self</span>.inner.write()
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_clear_view&lt;<span class="lifetime">&#39;a</span>&gt;(
-        clear_mode: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TextureClearMode&lt;A&gt;,
-        desc: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_clear_view&lt;<span class="lifetime">'a</span>&gt;(
+        clear_mode: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TextureClearMode&lt;A&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
         mip_level: u32,
         depth_or_layer: u32,
-    ) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A::TextureView {
+    ) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::TextureView {
         <span class="kw">match </span><span class="kw-2">*</span>clear_mode {
             TextureClearMode::BufferCopy =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;Given texture is cleared with buffer copies, not render passes&quot;</span>)
+                <span class="macro">panic!</span>(<span class="string">"Given texture is cleared with buffer copies, not render passes"</span>)
             }
             TextureClearMode::None =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;Given texture can&#39;t be cleared&quot;</span>)
+                <span class="macro">panic!</span>(<span class="string">"Given texture can't be cleared"</span>)
             }
             TextureClearMode::Surface { <span class="kw-2">ref </span>clear_view, .. } =&gt; clear_view.as_ref().unwrap(),
             TextureClearMode::RenderPass {
@@ -2113,7 +2113,7 @@
         id: TextureId,
         hal_texture_callback: F,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::as_hal&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Texture::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>texture = { hub.textures.try_get(id).ok().flatten() };
@@ -2131,7 +2131,7 @@
         id: AdapterId,
         hal_adapter_callback: F,
     ) -&gt; R {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::as_hal&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Adapter::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>adapter = hub.adapters.try_get(id).ok().flatten();
@@ -2148,7 +2148,7 @@
         id: DeviceId,
         hal_device_callback: F,
     ) -&gt; R {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::as_hal&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>device = hub.devices.try_get(id).ok().flatten();
@@ -2164,7 +2164,7 @@
         id: SurfaceId,
         hal_surface_callback: F,
     ) -&gt; R {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Surface::as_hal&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Surface::as_hal"</span>);
 
         <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(id).ok();
         <span class="kw">let </span>hal_surface = surface
@@ -2186,29 +2186,29 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TextureDimensionError {
-    <span class="attr">#[error(<span class="string">&quot;Dimension {0:?} is zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Dimension {0:?} is zero"</span>)]
     </span>Zero(TextureErrorDimension),
-    <span class="attr">#[error(<span class="string">&quot;Dimension {dim:?} value {given} exceeds the limit of {limit}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Dimension {dim:?} value {given} exceeds the limit of {limit}"</span>)]
     </span>LimitExceeded {
         dim: TextureErrorDimension,
         given: u32,
         limit: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Sample count {0} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample count {0} is invalid"</span>)]
     </span>InvalidSampleCount(u32),
-    <span class="attr">#[error(<span class="string">&quot;Width {width} is not a multiple of {format:?}&#39;s block width ({block_width})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Width {width} is not a multiple of {format:?}'s block width ({block_width})"</span>)]
     </span>NotMultipleOfBlockWidth {
         width: u32,
         block_width: u32,
         format: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Height {height} is not a multiple of {format:?}&#39;s block height ({block_height})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Height {height} is not a multiple of {format:?}'s block height ({block_height})"</span>)]
     </span>NotMultipleOfBlockHeight {
         height: u32,
         block_height: u32,
         format: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Multisampled texture depth or array layers must be 1, got {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Multisampled texture depth or array layers must be 1, got {0}"</span>)]
     </span>MultisampledDepthOrArrayLayer(u32),
 }
 
@@ -2219,43 +2219,43 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>CreateTextureView(<span class="attr">#[from] </span>CreateTextureViewError),
-    <span class="attr">#[error(<span class="string">&quot;Invalid usage flags {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid usage flags {0:?}"</span>)]
     </span>InvalidUsage(wgt::TextureUsages),
     <span class="attr">#[error(transparent)]
     </span>InvalidDimension(<span class="attr">#[from] </span>TextureDimensionError),
-    <span class="attr">#[error(<span class="string">&quot;Depth texture ({1:?}) can&#39;t be created as {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Depth texture ({1:?}) can't be created as {0:?}"</span>)]
     </span>InvalidDepthDimension(wgt::TextureDimension, wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Compressed texture ({1:?}) can&#39;t be created as {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Compressed texture ({1:?}) can't be created as {0:?}"</span>)]
     </span>InvalidCompressedDimension(wgt::TextureDimension, wgt::TextureFormat),
     <span class="attr">#[error(
-        <span class="string">&quot;Texture descriptor mip level count {requested} is invalid, maximum allowed is {maximum}&quot;
+        <span class="string">"Texture descriptor mip level count {requested} is invalid, maximum allowed is {maximum}"
     </span>)]
     </span>InvalidMipLevelCount { requested: u32, maximum: u32 },
     <span class="attr">#[error(
-        <span class="string">&quot;Texture usages {0:?} are not allowed on a texture of type {1:?}{}&quot;</span>,
-        <span class="kw">if </span><span class="kw-2">*</span>.<span class="number">2 </span>{ <span class="string">&quot; due to downlevel restrictions&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>}
+        <span class="string">"Texture usages {0:?} are not allowed on a texture of type {1:?}{}"</span>,
+        <span class="kw">if </span><span class="kw-2">*</span>.<span class="number">2 </span>{ <span class="string">" due to downlevel restrictions" </span>} <span class="kw">else </span>{ <span class="string">"" </span>}
     )]
     </span>InvalidFormatUsages(wgt::TextureUsages, wgt::TextureFormat, bool),
-    <span class="attr">#[error(<span class="string">&quot;The view format {0:?} is not compatible with texture format {1:?}, only changing srgb-ness is allowed.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The view format {0:?} is not compatible with texture format {1:?}, only changing srgb-ness is allowed."</span>)]
     </span>InvalidViewFormat(wgt::TextureFormat, wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Texture usages {0:?} are not allowed on a texture of dimensions {1:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture usages {0:?} are not allowed on a texture of dimensions {1:?}"</span>)]
     </span>InvalidDimensionUsages(wgt::TextureUsages, wgt::TextureDimension),
-    <span class="attr">#[error(<span class="string">&quot;Texture usage STORAGE_BINDING is not allowed for multisampled textures&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture usage STORAGE_BINDING is not allowed for multisampled textures"</span>)]
     </span>InvalidMultisampledStorageBinding,
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} does not support multisampling&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} does not support multisampling"</span>)]
     </span>InvalidMultisampledFormat(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}."</span>)]
     </span>InvalidSampleCount(u32, wgt::TextureFormat, Vec&lt;u32&gt;, Vec&lt;u32&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Multisampled textures must have RENDER_ATTACHMENT usage&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Multisampled textures must have RENDER_ATTACHMENT usage"</span>)]
     </span>MultisampledNotRenderAttachment,
-    <span class="attr">#[error(<span class="string">&quot;Texture format {0:?} can&#39;t be used due to missing features&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture format {0:?} can't be used due to missing features"</span>)]
     </span>MissingFeatures(wgt::TextureFormat, <span class="attr">#[source] </span>MissingFeatures),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;TextureId&gt; <span class="kw">for </span>Texture&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Texture&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Texture"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;TextureId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -2274,13 +2274,13 @@
 
 <span class="doccomment">/// Describes a [`TextureView`].
 </span><span class="attr">#[derive(Clone, Debug, Default, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize), serde(default))]
-</span><span class="kw">pub struct </span>TextureViewDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize), serde(default))]
+</span><span class="kw">pub struct </span>TextureViewDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the texture view.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Format of the texture view, or `None` for the same format as the texture
     /// itself.
     ///
@@ -2313,16 +2313,16 @@
 
 <span class="attr">#[derive(Debug, Copy, Clone, Error)]
 </span><span class="kw">pub enum </span>TextureViewNotRenderableReason {
-    <span class="attr">#[error(<span class="string">&quot;The texture this view references doesn&#39;t include the RENDER_ATTACHMENT usage. Provided usages: {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The texture this view references doesn't include the RENDER_ATTACHMENT usage. Provided usages: {0:?}"</span>)]
     </span>Usage(wgt::TextureUsages),
-    <span class="attr">#[error(<span class="string">&quot;The dimension of this texture view is not 2D. View dimension: {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The dimension of this texture view is not 2D. View dimension: {0:?}"</span>)]
     </span>Dimension(wgt::TextureViewDimension),
-    <span class="attr">#[error(<span class="string">&quot;This texture view has more than one mipmap level. View mipmap levels: {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"This texture view has more than one mipmap level. View mipmap levels: {0:?}"</span>)]
     </span>MipLevelCount(u32),
-    <span class="attr">#[error(<span class="string">&quot;This texture view has more than one array layer. View array layers: {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"This texture view has more than one array layer. View array layers: {0:?}"</span>)]
     </span>ArrayLayerCount(u32),
     <span class="attr">#[error(
-        <span class="string">&quot;The aspects of this texture view are a subset of the aspects in the original texture. Aspects: {0:?}&quot;
+        <span class="string">"The aspects of this texture view are a subset of the aspects in the original texture. Aspects: {0:?}"
     </span>)]
     </span>Aspects(hal::FormatAspects),
 }
@@ -2330,7 +2330,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>TextureView&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::TextureView&gt;,
-    <span class="comment">// if it&#39;s a surface texture - it&#39;s none
+    <span class="comment">// if it's a surface texture - it's none
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) parent: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;Texture&lt;A&gt;&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="comment">//TODO: store device_id for quick access?
@@ -2346,7 +2346,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>TextureView&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw TextureView {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_texture_view(raw);
@@ -2364,54 +2364,54 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateTextureViewError {
-    <span class="attr">#[error(<span class="string">&quot;Parent texture is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Parent texture is invalid or destroyed"</span>)]
     </span>InvalidTexture,
-    <span class="attr">#[error(<span class="string">&quot;Not enough memory left to create texture view&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Not enough memory left to create texture view"</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture view dimension `{view:?}` with texture of dimension `{texture:?}`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture view dimension `{view:?}` with texture of dimension `{texture:?}`"</span>)]
     </span>InvalidTextureViewDimension {
         view: wgt::TextureViewDimension,
         texture: wgt::TextureDimension,
     },
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture view dimension `{0:?}` of a multisampled texture&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture view dimension `{0:?}` of a multisampled texture"</span>)]
     </span>InvalidMultisampledTextureViewDimension(wgt::TextureViewDimension),
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture depth `{depth}` for texture view of dimension `Cubemap`. Cubemap views must use images of size 6.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture depth `{depth}` for texture view of dimension `Cubemap`. Cubemap views must use images of size 6."</span>)]
     </span>InvalidCubemapTextureDepth { depth: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture depth `{depth}` for texture view of dimension `CubemapArray`. Cubemap views must use images with sizes which are a multiple of 6.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture depth `{depth}` for texture view of dimension `CubemapArray`. Cubemap views must use images with sizes which are a multiple of 6."</span>)]
     </span>InvalidCubemapArrayTextureDepth { depth: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Source texture width and height must be equal for a texture view of dimension `Cube`/`CubeArray`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Source texture width and height must be equal for a texture view of dimension `Cube`/`CubeArray`"</span>)]
     </span>InvalidCubeTextureViewSize,
-    <span class="attr">#[error(<span class="string">&quot;Mip level count is 0&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Mip level count is 0"</span>)]
     </span>ZeroMipLevelCount,
-    <span class="attr">#[error(<span class="string">&quot;Array layer count is 0&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Array layer count is 0"</span>)]
     </span>ZeroArrayLayerCount,
     <span class="attr">#[error(
-        <span class="string">&quot;TextureView mip level count + base mip level {requested} must be &lt;= Texture mip level count {total}&quot;
+        <span class="string">"TextureView mip level count + base mip level {requested} must be &lt;= Texture mip level count {total}"
     </span>)]
     </span>TooManyMipLevels { requested: u32, total: u32 },
-    <span class="attr">#[error(<span class="string">&quot;TextureView array layer count + base array layer {requested} must be &lt;= Texture depth/array layer count {total}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"TextureView array layer count + base array layer {requested} must be &lt;= Texture depth/array layer count {total}"</span>)]
     </span>TooManyArrayLayers { requested: u32, total: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Requested array layer count {requested} is not valid for the target view dimension {dim:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requested array layer count {requested} is not valid for the target view dimension {dim:?}"</span>)]
     </span>InvalidArrayLayerCount {
         requested: u32,
         dim: wgt::TextureViewDimension,
     },
-    <span class="attr">#[error(<span class="string">&quot;Aspect {requested_aspect:?} is not in the source texture format {texture_format:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Aspect {requested_aspect:?} is not in the source texture format {texture_format:?}"</span>)]
     </span>InvalidAspect {
         texture_format: wgt::TextureFormat,
         requested_aspect: wgt::TextureAspect,
     },
-    <span class="attr">#[error(<span class="string">&quot;Unable to view texture {texture:?} as {view:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to view texture {texture:?} as {view:?}"</span>)]
     </span>FormatReinterpretation {
         texture: wgt::TextureFormat,
         view: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture view plane `{plane:?}` with view format `{view_format:?}`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture view plane `{plane:?}` with view format `{view_format:?}`"</span>)]
     </span>InvalidTextureViewPlane {
         plane: <span class="prelude-ty">Option</span>&lt;u32&gt;,
         view_format: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Invalid texture view plane `{plane:?}` on non-planar texture `{texture_format:?}`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid texture view plane `{plane:?}` on non-planar texture `{texture_format:?}`"</span>)]
     </span>InvalidTextureViewPlaneOnNonplanarTexture {
         plane: <span class="prelude-ty">Option</span>&lt;u32&gt;,
         texture_format: wgt::TextureFormat,
@@ -2423,7 +2423,7 @@
 </span><span class="kw">pub enum </span>TextureViewDestroyError {}
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;TextureViewId&gt; <span class="kw">for </span>TextureView&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;TextureView&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"TextureView"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;TextureViewId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -2436,13 +2436,13 @@
 
 <span class="doccomment">/// Describes a [`Sampler`]
 </span><span class="attr">#[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>SamplerDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>SamplerDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the sampler.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// How to deal with out of bounds accesses in the u (i.e. x) direction
     </span><span class="kw">pub </span>address_modes: [wgt::AddressMode; <span class="number">3</span>],
     <span class="doccomment">/// How to filter the texture when it needs to be magnified (made larger)
@@ -2477,7 +2477,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Sampler&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw Sampler {}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Sampler {}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
@@ -2501,11 +2501,11 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>SamplerFilterErrorType {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            SamplerFilterErrorType::MagFilter =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;magFilter&quot;</span>),
-            SamplerFilterErrorType::MinFilter =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;minFilter&quot;</span>),
-            SamplerFilterErrorType::MipmapFilter =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;mipmapFilter&quot;</span>),
+            SamplerFilterErrorType::MagFilter =&gt; <span class="macro">write!</span>(f, <span class="string">"magFilter"</span>),
+            SamplerFilterErrorType::MinFilter =&gt; <span class="macro">write!</span>(f, <span class="string">"minFilter"</span>),
+            SamplerFilterErrorType::MipmapFilter =&gt; <span class="macro">write!</span>(f, <span class="string">"mipmapFilter"</span>),
         }
     }
 }
@@ -2515,22 +2515,22 @@
 </span><span class="kw">pub enum </span>CreateSamplerError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Invalid lodMinClamp: {0}. Must be greater or equal to 0.0&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid lodMinClamp: {0}. Must be greater or equal to 0.0"</span>)]
     </span>InvalidLodMinClamp(f32),
-    <span class="attr">#[error(<span class="string">&quot;Invalid lodMaxClamp: {lod_max_clamp}. Must be greater or equal to lodMinClamp (which is {lod_min_clamp}).&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid lodMaxClamp: {lod_max_clamp}. Must be greater or equal to lodMinClamp (which is {lod_min_clamp})."</span>)]
     </span>InvalidLodMaxClamp {
         lod_min_clamp: f32,
         lod_max_clamp: f32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Invalid anisotropic clamp: {0}. Must be at least 1.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid anisotropic clamp: {0}. Must be at least 1."</span>)]
     </span>InvalidAnisotropy(u16),
-    <span class="attr">#[error(<span class="string">&quot;Invalid filter mode for {filter_type:?}: {filter_mode:?}. When anistropic clamp is not 1 (it is {anisotropic_clamp}), all filter modes must be linear.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid filter mode for {filter_type:?}: {filter_mode:?}. When anistropic clamp is not 1 (it is {anisotropic_clamp}), all filter modes must be linear."</span>)]
     </span>InvalidFilterModeWithAnisotropy {
         filter_type: SamplerFilterErrorType,
         filter_mode: wgt::FilterMode,
         anisotropic_clamp: u16,
     },
-    <span class="attr">#[error(<span class="string">&quot;Cannot create any more samplers&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot create any more samplers"</span>)]
     </span>TooManyObjects,
     <span class="doccomment">/// AddressMode::ClampToBorder requires feature ADDRESS_MODE_CLAMP_TO_BORDER.
     </span><span class="attr">#[error(transparent)]
@@ -2538,7 +2538,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;SamplerId&gt; <span class="kw">for </span>Sampler&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Sampler&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Sampler"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;SamplerId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -2554,15 +2554,15 @@
 </span><span class="kw">pub enum </span>CreateQuerySetError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;QuerySets cannot be made with zero queries&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"QuerySets cannot be made with zero queries"</span>)]
     </span>ZeroCount,
-    <span class="attr">#[error(<span class="string">&quot;{count} is too many queries for a single QuerySet. QuerySets cannot be made more than {maximum} queries.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"{count} is too many queries for a single QuerySet. QuerySets cannot be made more than {maximum} queries."</span>)]
     </span>TooManyQueries { count: u32, maximum: u32 },
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 }
 
-<span class="kw">pub type </span>QuerySetDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::QuerySetDescriptor&lt;Label&lt;<span class="lifetime">&#39;a</span>&gt;&gt;;
+<span class="kw">pub type </span>QuerySetDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::QuerySetDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>QuerySet&lt;A: HalApi&gt; {
@@ -2574,7 +2574,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>QuerySet&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw QuerySet {}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw QuerySet {}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
@@ -2585,7 +2585,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;QuerySetId&gt; <span class="kw">for </span>QuerySet&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;QuerySet&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"QuerySet"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;QuerySetId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -2605,9 +2605,9 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DestroyError {
-    <span class="attr">#[error(<span class="string">&quot;Resource is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resource is invalid"</span>)]
     </span>Invalid,
-    <span class="attr">#[error(<span class="string">&quot;Resource is already destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resource is already destroyed"</span>)]
     </span>AlreadyDestroyed,
 }
 </code></pre></div></section></main></body></html>

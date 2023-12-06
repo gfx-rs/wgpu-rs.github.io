@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1545,7 +1545,7 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Context&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Context&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>expressions: Arena&lt;Expression&gt;,
     <span class="kw">pub </span>locals: Arena&lt;LocalVariable&gt;,
 
@@ -1561,7 +1561,7 @@
 
     <span class="doccomment">/// The parameter types given in the source code.
     ///
-    /// The `out` and `inout` qualifiers don&#39;t affect the types that appear
+    /// The `out` and `inout` qualifiers don't affect the types that appear
     /// here. For example, an `inout vec2 a` argument would simply be a
     /// [`Vector`], not a pointer to one.
     ///
@@ -1577,14 +1577,14 @@
     emitter: Emitter,
     stmt_ctx: <span class="prelude-ty">Option</span>&lt;StmtContext&gt;,
     <span class="kw">pub </span>body: Block,
-    <span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+    <span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
     <span class="kw">pub </span>is_const: bool,
     <span class="doccomment">/// Tracks the constness of `Expression`s residing in `self.expressions`
     </span><span class="kw">pub </span>expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Context&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(frontend: <span class="kw-2">&amp;</span>Frontend, module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module, is_const: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Context&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(frontend: <span class="kw-2">&amp;</span>Frontend, module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module, is_const: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>this = Context {
             expressions: Arena::new(),
             locals: Arena::new(),
@@ -1903,7 +1903,7 @@
     /// # Panics
     ///
     /// - If more than one [`StmtContext`] are active at the same time or if the
-    /// previous call didn&#39;t use it in lowering.
+    /// previous call didn't use it in lowering.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>stmt_ctx(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; StmtContext {
         <span class="self">self</span>.stmt_ctx.take().unwrap()
@@ -1929,7 +1929,7 @@
     }
 
     <span class="doccomment">/// Similar to [`lower`](Self::lower) but returns an error if the expression
-    /// returns void (ie. doesn&#39;t produce a [`Expression`]).
+    /// returns void (ie. doesn't produce a [`Expression`]).
     ///
     /// consumes a [`StmtContext`] returning it to the context so that it can be
     /// used again later.
@@ -1950,9 +1950,9 @@
 
     <span class="doccomment">/// internal implementation of [`lower_expect`](Self::lower_expect)
     ///
-    /// this method is only public because it&#39;s used in
+    /// this method is only public because it's used in
     /// [`function_call`](Frontend::function_call), unless you know what
-    /// you&#39;re doing use [`lower_expect`](Self::lower_expect)
+    /// you're doing use [`lower_expect`](Self::lower_expect)
     </span><span class="kw">pub fn </span>lower_expect_inner(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         stmt: <span class="kw-2">&amp;</span>StmtContext,
@@ -1966,7 +1966,7 @@
             <span class="prelude-val">Some</span>(e) =&gt; e,
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error {
-                    kind: ErrorKind::SemanticError(<span class="string">&quot;Expression returns void&quot;</span>.into()),
+                    kind: ErrorKind::SemanticError(<span class="string">"Expression returns void"</span>.into()),
                     meta,
                 })
             }
@@ -2045,14 +2045,14 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;, Span)&gt; {
         <span class="kw">let </span>HirExpr { <span class="kw-2">ref </span>kind, meta } = stmt.hir_exprs[expr];
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Lowering {:?} (kind {:?}, pos {:?})&quot;</span>, expr, kind, pos);
+        <span class="macro">log::debug!</span>(<span class="string">"Lowering {:?} (kind {:?}, pos {:?})"</span>, expr, kind, pos);
 
         <span class="kw">let </span>handle = <span class="kw">match </span><span class="kw-2">*</span>kind {
             HirExprKind::Access { base, index } =&gt; {
                 <span class="kw">let </span>(index, <span class="kw">_</span>) = <span class="self">self</span>.lower_expect_inner(stmt, frontend, index, ExprPos::Rhs)<span class="question-mark">?</span>;
                 <span class="kw">let </span>maybe_constant_index = <span class="kw">match </span>pos {
-                    <span class="comment">// Don&#39;t try to generate `AccessIndex` if in a LHS position, since it
-                    // wouldn&#39;t produce a pointer.
+                    <span class="comment">// Don't try to generate `AccessIndex` if in a LHS position, since it
+                    // wouldn't produce a pointer.
                     </span>ExprPos::Lhs =&gt; <span class="prelude-val">None</span>,
                     <span class="kw">_ </span>=&gt; <span class="self">self
                         </span>.module
@@ -2140,7 +2140,7 @@
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
-                                        <span class="string">&quot;Cannot apply operation to {left_inner:?} and {right_inner:?}&quot;
+                                        <span class="string">"Cannot apply operation to {left_inner:?} and {right_inner:?}"
                                     </span>)
                                     .into(),
                                 ),
@@ -2150,7 +2150,7 @@
 
                         <span class="kw">match </span>op {
                             BinaryOperator::Divide =&gt; {
-                                <span class="comment">// Naga IR doesn&#39;t support matrix division so we need to
+                                <span class="comment">// Naga IR doesn't support matrix division so we need to
                                 // divide the columns individually and reassemble the matrix
                                 </span><span class="kw">let </span><span class="kw-2">mut </span>components = Vec::with_capacity(left_columns <span class="kw">as </span>usize);
 
@@ -2194,7 +2194,7 @@
                                 </span><span class="self">self</span>.add_expression(Expression::Compose { ty, components }, meta)<span class="question-mark">?
                             </span>}
                             BinaryOperator::Equal | BinaryOperator::NotEqual =&gt; {
-                                <span class="comment">// Naga IR doesn&#39;t support matrix comparisons so we need to
+                                <span class="comment">// Naga IR doesn't support matrix comparisons so we need to
                                 // compare the columns individually and then fold them together
                                 //
                                 // The folding is done using a logical and for equality and
@@ -2338,7 +2338,7 @@
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
-                                        <span class="string">&quot;Cannot apply operation to {left_inner:?} and {right_inner:?}&quot;
+                                        <span class="string">"Cannot apply operation to {left_inner:?} and {right_inner:?}"
                                     </span>)
                                     .into(),
                                 ),
@@ -2350,7 +2350,7 @@
                             BinaryOperator::Divide
                             | BinaryOperator::Add
                             | BinaryOperator::Subtract =&gt; {
-                                <span class="comment">// Naga IR doesn&#39;t support all matrix by scalar operations so
+                                <span class="comment">// Naga IR doesn't support all matrix by scalar operations so
                                 // we need for some to turn the scalar into a vector by
                                 // splatting it and then for each column vector apply the
                                 // operation and finally reconstruct the matrix
@@ -2418,7 +2418,7 @@
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
-                                        <span class="string">&quot;Cannot apply operation to {left_inner:?} and {right_inner:?}&quot;
+                                        <span class="string">"Cannot apply operation to {left_inner:?} and {right_inner:?}"
                                     </span>)
                                     .into(),
                                 ),
@@ -2430,7 +2430,7 @@
                             BinaryOperator::Divide
                             | BinaryOperator::Add
                             | BinaryOperator::Subtract =&gt; {
-                                <span class="comment">// Naga IR doesn&#39;t support all matrix by scalar operations so
+                                <span class="comment">// Naga IR doesn't support all matrix by scalar operations so
                                 // we need for some to turn the scalar into a vector by
                                 // splatting it and then for each column vector apply the
                                 // operation and finally reconstruct the matrix
@@ -2501,7 +2501,7 @@
                     <span class="kw">if </span>!var.mutable {
                         frontend.errors.push(Error {
                             kind: ErrorKind::SemanticError(
-                                <span class="string">&quot;Variable cannot be used in LHS position&quot;</span>.into(),
+                                <span class="string">"Variable cannot be used in LHS position"</span>.into(),
                             ),
                             meta,
                         })
@@ -2510,7 +2510,7 @@
                     var.expr
                 }
                 ExprPos::AccessBase { constant_index } =&gt; {
-                    <span class="comment">// If the index isn&#39;t constant all accesses backed by a constant base need
+                    <span class="comment">// If the index isn't constant all accesses backed by a constant base need
                     // to be done through a proxy local variable, since constants have a non
                     // pointer type which is required for dynamic indexing
                     </span><span class="kw">if </span>!constant_index {
@@ -2558,8 +2558,8 @@
             <span class="comment">// `HirExprKind::Conditional` represents the ternary operator in glsl (`:?`)
             //
             // The ternary operator is defined to only evaluate one of the two possible
-            // expressions which means that it&#39;s behavior is that of an `if` statement,
-            // and it&#39;s merely syntatic sugar for it.
+            // expressions which means that it's behavior is that of an `if` statement,
+            // and it's merely syntatic sugar for it.
             </span>HirExprKind::Conditional {
                 condition,
                 accept,
@@ -2666,7 +2666,7 @@
                     meta,
                 );
 
-                <span class="comment">// Note: `Expression::Load` must be emited before it&#39;s used so make
+                <span class="comment">// Note: `Expression::Load` must be emited before it's used so make
                 // sure the emitter is active here.
                 </span><span class="self">self</span>.add_expression(
                     Expression::Load {
@@ -2730,7 +2730,7 @@
                     <span class="prelude-val">None </span>=&gt; {
                         frontend.errors.push(Error {
                             kind: ErrorKind::SemanticError(
-                                <span class="string">&quot;Increment/decrement only works on scalar/vector/matrix&quot;</span>.into(),
+                                <span class="string">"Increment/decrement only works on scalar/vector/matrix"</span>.into(),
                             ),
                             meta,
                         });
@@ -2786,11 +2786,11 @@
                     .map(|e| <span class="self">self</span>.lower_expect_inner(stmt, frontend, <span class="kw-2">*</span>e, ExprPos::Rhs))
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
                 <span class="kw">match </span>name.as_ref() {
-                    <span class="string">&quot;length&quot; </span>=&gt; {
+                    <span class="string">"length" </span>=&gt; {
                         <span class="kw">if </span>!args.is_empty() {
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
-                                    <span class="string">&quot;.length() doesn&#39;t take any arguments&quot;</span>.into(),
+                                    <span class="string">".length() doesn't take any arguments"</span>.into(),
                                 ),
                                 meta,
                             });
@@ -2810,7 +2810,7 @@
                                 <span class="self">self</span>.forced_conversion(<span class="kw-2">&amp;mut </span>array_length, meta, Scalar::I32)<span class="question-mark">?</span>;
                                 array_length
                             }
-                            <span class="comment">// let the error be handled in type checking if it&#39;s not a dynamic array
+                            <span class="comment">// let the error be handled in type checking if it's not a dynamic array
                             </span><span class="kw">_ </span>=&gt; {
                                 <span class="kw">let </span><span class="kw-2">mut </span>array_length = <span class="self">self
                                     </span>.add_expression(Expression::ArrayLength(lowered_array), meta)<span class="question-mark">?</span>;
@@ -2822,7 +2822,7 @@
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error {
                             kind: ErrorKind::SemanticError(
-                                <span class="macro">format!</span>(<span class="string">&quot;unknown method &#39;{name}&#39;&quot;</span>).into(),
+                                <span class="macro">format!</span>(<span class="string">"unknown method '{name}'"</span>).into(),
                             ),
                             meta,
                         });
@@ -2832,7 +2832,7 @@
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error {
                     kind: ErrorKind::SemanticError(
-                        <span class="macro">format!</span>(<span class="string">&quot;{:?} cannot be in the left hand side&quot;</span>, stmt.hir_exprs[expr])
+                        <span class="macro">format!</span>(<span class="string">"{:?} cannot be in the left hand side"</span>, stmt.hir_exprs[expr])
                             .into(),
                     ),
                     meta,
@@ -2841,7 +2841,7 @@
         };
 
         <span class="macro">log::trace!</span>(
-            <span class="string">&quot;Lowered {:?}\n\tKind = {:?}\n\tPos = {:?}\n\tResult = {:?}&quot;</span>,
+            <span class="string">"Lowered {:?}\n\tKind = {:?}\n\tPos = {:?}\n\tResult = {:?}"</span>,
             expr,
             kind,
             pos,
@@ -2976,7 +2976,7 @@
     }
 }
 
-<span class="kw">impl </span>Index&lt;Handle&lt;Expression&gt;&gt; <span class="kw">for </span>Context&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Index&lt;Handle&lt;Expression&gt;&gt; <span class="kw">for </span>Context&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">type </span>Output = Expression;
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: Handle&lt;Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
@@ -2991,7 +2991,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>StmtContext {
     <span class="doccomment">/// A arena of high level expressions which can be lowered through a
-    /// [`Context`] to Naga&#39;s [`Expression`]s
+    /// [`Context`] to Naga's [`Expression`]s
     </span><span class="kw">pub </span>hir_exprs: Arena&lt;HirExpr&gt;,
 }
 

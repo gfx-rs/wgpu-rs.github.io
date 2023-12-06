@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser/functions.rs`."><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser/functions.rs`."><title>functions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -669,7 +669,7 @@
     Block, Expression, Statement, SwitchCase, UnaryOperator,
 };
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;source</span>&gt; ParsingContext&lt;<span class="lifetime">&#39;source</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'source</span>&gt; ParsingContext&lt;<span class="lifetime">'source</span>&gt; {
     <span class="kw">pub fn </span>peek_parameter_qualifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, frontend: <span class="kw-2">&amp;mut </span>Frontend) -&gt; bool {
         <span class="self">self</span>.peek(frontend).map_or(<span class="bool-val">false</span>, |t| <span class="kw">match </span>t.value {
             TokenValue::In | TokenValue::Out | TokenValue::InOut | TokenValue::Const =&gt; <span class="bool-val">true</span>,
@@ -709,8 +709,8 @@
         </span><span class="kw">if </span><span class="self">self</span>.peek_type_name(frontend) {
             <span class="comment">// Start by consuming the type name so that we can peek the token after it
             </span><span class="kw">let </span>token = <span class="self">self</span>.bump(frontend)<span class="question-mark">?</span>;
-            <span class="comment">// Peek the next token and check if it&#39;s a `(` (LeftParen) if so the statement
-            // is a constructor, otherwise it&#39;s a declaration. We need to do the check
+            <span class="comment">// Peek the next token and check if it's a `(` (LeftParen) if so the statement
+            // is a constructor, otherwise it's a declaration. We need to do the check
             // beforehand and not in the if since we will backtrack before the if
             </span><span class="kw">let </span>declaration = TokenValue::LeftParen != <span class="self">self</span>.expect_peek(frontend)<span class="question-mark">?</span>.value;
 
@@ -853,11 +853,11 @@
 
                             <span class="kw">match </span>ctx.module.const_expressions[const_expr] {
                                 Expression::Literal(Literal::I32(value)) =&gt; <span class="kw">match </span>uint {
-                                    <span class="comment">// This unchecked cast isn&#39;t good, but since
+                                    <span class="comment">// This unchecked cast isn't good, but since
                                     // we only reach this code when the selector
                                     // is unsigned but the case label is signed,
                                     // verification will reject the module
-                                    // anyway (which also matches GLSL&#39;s rules).
+                                    // anyway (which also matches GLSL's rules).
                                     </span><span class="bool-val">true </span>=&gt; <span class="kw">crate</span>::SwitchValue::U32(value <span class="kw">as </span>u32),
                                     <span class="bool-val">false </span>=&gt; <span class="kw">crate</span>::SwitchValue::I32(value),
                                 },
@@ -867,7 +867,7 @@
                                 <span class="kw">_ </span>=&gt; {
                                     frontend.errors.push(Error {
                                         kind: ErrorKind::SemanticError(
-                                            <span class="string">&quot;Case values can only be integers&quot;</span>.into(),
+                                            <span class="string">"Case values can only be integers"</span>.into(),
                                         ),
                                         meta,
                                     });
@@ -944,32 +944,32 @@
 
                 meta.subsume(end_meta);
 
-                <span class="comment">// NOTE: do not unwrap here since a switch statement isn&#39;t required
+                <span class="comment">// NOTE: do not unwrap here since a switch statement isn't required
                 // to have any cases.
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(case) = cases.last_mut() {
                     <span class="comment">// GLSL requires that the last case not be empty, so we check
                     // that here and produce an error otherwise (fall_through must
                     // also be checked because `break`s count as statements but
-                    // they aren&#39;t added to the body)
+                    // they aren't added to the body)
                     </span><span class="kw">if </span>case.body.is_empty() &amp;&amp; case.fall_through {
                         frontend.errors.push(Error {
                             kind: ErrorKind::SemanticError(
-                                <span class="string">&quot;last case/default label must be followed by statements&quot;</span>.into(),
+                                <span class="string">"last case/default label must be followed by statements"</span>.into(),
                             ),
                             meta,
                         })
                     }
 
                     <span class="comment">// GLSL allows the last case to not have any `break` statement,
-                    // this would mark it as fall through but naga&#39;s IR requires that
+                    // this would mark it as fall through but naga's IR requires that
                     // the last case must not be fall through, so we mark need to mark
                     // the last case as not fall through always.
                     </span>case.fall_through = <span class="bool-val">false</span>;
                 }
 
                 <span class="comment">// Add an empty default case in case non was present, this is needed because
-                // naga&#39;s IR requires that all switch statements must have a default case but
-                // GLSL doesn&#39;t require that, so we might need to add an empty default case.
+                // naga's IR requires that all switch statements must have a default case but
+                // GLSL doesn't require that, so we might need to add an empty default case.
                 </span><span class="kw">if </span>!default_present {
                     cases.push(SwitchCase {
                         value: <span class="kw">crate</span>::SwitchValue::Default,

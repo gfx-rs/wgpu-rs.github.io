@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/conv.rs`."><title>conv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -256,104 +256,104 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::Span;
 
-<span class="kw">pub fn </span>map_address_space(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::AddressSpace, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_address_space(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::AddressSpace, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="kw">match </span>word {
-        <span class="string">&quot;private&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Private),
-        <span class="string">&quot;workgroup&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::WorkGroup),
-        <span class="string">&quot;uniform&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Uniform),
-        <span class="string">&quot;storage&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Storage {
+        <span class="string">"private" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Private),
+        <span class="string">"workgroup" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::WorkGroup),
+        <span class="string">"uniform" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Uniform),
+        <span class="string">"storage" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Storage {
             access: <span class="kw">crate</span>::StorageAccess::default(),
         }),
-        <span class="string">&quot;push_constant&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::PushConstant),
-        <span class="string">&quot;function&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Function),
+        <span class="string">"push_constant" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::PushConstant),
+        <span class="string">"function" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Function),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAddressSpace(span)),
     }
 }
 
-<span class="kw">pub fn </span>map_built_in(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::BuiltIn, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_built_in(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::BuiltIn, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
-        <span class="string">&quot;position&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">false </span>},
+        <span class="string">"position" </span>=&gt; <span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">false </span>},
         <span class="comment">// vertex
-        </span><span class="string">&quot;vertex_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::VertexIndex,
-        <span class="string">&quot;instance_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::InstanceIndex,
-        <span class="string">&quot;view_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::ViewIndex,
+        </span><span class="string">"vertex_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::VertexIndex,
+        <span class="string">"instance_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::InstanceIndex,
+        <span class="string">"view_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::ViewIndex,
         <span class="comment">// fragment
-        </span><span class="string">&quot;front_facing&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::FrontFacing,
-        <span class="string">&quot;frag_depth&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::FragDepth,
-        <span class="string">&quot;primitive_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::PrimitiveIndex,
-        <span class="string">&quot;sample_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::SampleIndex,
-        <span class="string">&quot;sample_mask&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::SampleMask,
+        </span><span class="string">"front_facing" </span>=&gt; <span class="kw">crate</span>::BuiltIn::FrontFacing,
+        <span class="string">"frag_depth" </span>=&gt; <span class="kw">crate</span>::BuiltIn::FragDepth,
+        <span class="string">"primitive_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::PrimitiveIndex,
+        <span class="string">"sample_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::SampleIndex,
+        <span class="string">"sample_mask" </span>=&gt; <span class="kw">crate</span>::BuiltIn::SampleMask,
         <span class="comment">// compute
-        </span><span class="string">&quot;global_invocation_id&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::GlobalInvocationId,
-        <span class="string">&quot;local_invocation_id&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::LocalInvocationId,
-        <span class="string">&quot;local_invocation_index&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::LocalInvocationIndex,
-        <span class="string">&quot;workgroup_id&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::WorkGroupId,
-        <span class="string">&quot;num_workgroups&quot; </span>=&gt; <span class="kw">crate</span>::BuiltIn::NumWorkGroups,
+        </span><span class="string">"global_invocation_id" </span>=&gt; <span class="kw">crate</span>::BuiltIn::GlobalInvocationId,
+        <span class="string">"local_invocation_id" </span>=&gt; <span class="kw">crate</span>::BuiltIn::LocalInvocationId,
+        <span class="string">"local_invocation_index" </span>=&gt; <span class="kw">crate</span>::BuiltIn::LocalInvocationIndex,
+        <span class="string">"workgroup_id" </span>=&gt; <span class="kw">crate</span>::BuiltIn::WorkGroupId,
+        <span class="string">"num_workgroups" </span>=&gt; <span class="kw">crate</span>::BuiltIn::NumWorkGroups,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownBuiltin(span)),
     })
 }
 
-<span class="kw">pub fn </span>map_interpolation(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Interpolation, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_interpolation(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Interpolation, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="kw">match </span>word {
-        <span class="string">&quot;linear&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Linear),
-        <span class="string">&quot;flat&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Flat),
-        <span class="string">&quot;perspective&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Perspective),
+        <span class="string">"linear" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Linear),
+        <span class="string">"flat" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Flat),
+        <span class="string">"perspective" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Perspective),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAttribute(span)),
     }
 }
 
-<span class="kw">pub fn </span>map_sampling(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Sampling, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_sampling(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Sampling, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="kw">match </span>word {
-        <span class="string">&quot;center&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Center),
-        <span class="string">&quot;centroid&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Centroid),
-        <span class="string">&quot;sample&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Sample),
+        <span class="string">"center" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Center),
+        <span class="string">"centroid" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Centroid),
+        <span class="string">"sample" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Sample),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAttribute(span)),
     }
 }
 
-<span class="kw">pub fn </span>map_storage_format(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageFormat, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_storage_format(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageFormat, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::StorageFormat <span class="kw">as </span>Sf;
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
-        <span class="string">&quot;r8unorm&quot; </span>=&gt; Sf::R8Unorm,
-        <span class="string">&quot;r8snorm&quot; </span>=&gt; Sf::R8Snorm,
-        <span class="string">&quot;r8uint&quot; </span>=&gt; Sf::R8Uint,
-        <span class="string">&quot;r8sint&quot; </span>=&gt; Sf::R8Sint,
-        <span class="string">&quot;r16unorm&quot; </span>=&gt; Sf::R16Unorm,
-        <span class="string">&quot;r16snorm&quot; </span>=&gt; Sf::R16Snorm,
-        <span class="string">&quot;r16uint&quot; </span>=&gt; Sf::R16Uint,
-        <span class="string">&quot;r16sint&quot; </span>=&gt; Sf::R16Sint,
-        <span class="string">&quot;r16float&quot; </span>=&gt; Sf::R16Float,
-        <span class="string">&quot;rg8unorm&quot; </span>=&gt; Sf::Rg8Unorm,
-        <span class="string">&quot;rg8snorm&quot; </span>=&gt; Sf::Rg8Snorm,
-        <span class="string">&quot;rg8uint&quot; </span>=&gt; Sf::Rg8Uint,
-        <span class="string">&quot;rg8sint&quot; </span>=&gt; Sf::Rg8Sint,
-        <span class="string">&quot;r32uint&quot; </span>=&gt; Sf::R32Uint,
-        <span class="string">&quot;r32sint&quot; </span>=&gt; Sf::R32Sint,
-        <span class="string">&quot;r32float&quot; </span>=&gt; Sf::R32Float,
-        <span class="string">&quot;rg16unorm&quot; </span>=&gt; Sf::Rg16Unorm,
-        <span class="string">&quot;rg16snorm&quot; </span>=&gt; Sf::Rg16Snorm,
-        <span class="string">&quot;rg16uint&quot; </span>=&gt; Sf::Rg16Uint,
-        <span class="string">&quot;rg16sint&quot; </span>=&gt; Sf::Rg16Sint,
-        <span class="string">&quot;rg16float&quot; </span>=&gt; Sf::Rg16Float,
-        <span class="string">&quot;rgba8unorm&quot; </span>=&gt; Sf::Rgba8Unorm,
-        <span class="string">&quot;rgba8snorm&quot; </span>=&gt; Sf::Rgba8Snorm,
-        <span class="string">&quot;rgba8uint&quot; </span>=&gt; Sf::Rgba8Uint,
-        <span class="string">&quot;rgba8sint&quot; </span>=&gt; Sf::Rgba8Sint,
-        <span class="string">&quot;rgb10a2uint&quot; </span>=&gt; Sf::Rgb10a2Uint,
-        <span class="string">&quot;rgb10a2unorm&quot; </span>=&gt; Sf::Rgb10a2Unorm,
-        <span class="string">&quot;rg11b10float&quot; </span>=&gt; Sf::Rg11b10Float,
-        <span class="string">&quot;rg32uint&quot; </span>=&gt; Sf::Rg32Uint,
-        <span class="string">&quot;rg32sint&quot; </span>=&gt; Sf::Rg32Sint,
-        <span class="string">&quot;rg32float&quot; </span>=&gt; Sf::Rg32Float,
-        <span class="string">&quot;rgba16unorm&quot; </span>=&gt; Sf::Rgba16Unorm,
-        <span class="string">&quot;rgba16snorm&quot; </span>=&gt; Sf::Rgba16Snorm,
-        <span class="string">&quot;rgba16uint&quot; </span>=&gt; Sf::Rgba16Uint,
-        <span class="string">&quot;rgba16sint&quot; </span>=&gt; Sf::Rgba16Sint,
-        <span class="string">&quot;rgba16float&quot; </span>=&gt; Sf::Rgba16Float,
-        <span class="string">&quot;rgba32uint&quot; </span>=&gt; Sf::Rgba32Uint,
-        <span class="string">&quot;rgba32sint&quot; </span>=&gt; Sf::Rgba32Sint,
-        <span class="string">&quot;rgba32float&quot; </span>=&gt; Sf::Rgba32Float,
-        <span class="string">&quot;bgra8unorm&quot; </span>=&gt; Sf::Bgra8Unorm,
+        <span class="string">"r8unorm" </span>=&gt; Sf::R8Unorm,
+        <span class="string">"r8snorm" </span>=&gt; Sf::R8Snorm,
+        <span class="string">"r8uint" </span>=&gt; Sf::R8Uint,
+        <span class="string">"r8sint" </span>=&gt; Sf::R8Sint,
+        <span class="string">"r16unorm" </span>=&gt; Sf::R16Unorm,
+        <span class="string">"r16snorm" </span>=&gt; Sf::R16Snorm,
+        <span class="string">"r16uint" </span>=&gt; Sf::R16Uint,
+        <span class="string">"r16sint" </span>=&gt; Sf::R16Sint,
+        <span class="string">"r16float" </span>=&gt; Sf::R16Float,
+        <span class="string">"rg8unorm" </span>=&gt; Sf::Rg8Unorm,
+        <span class="string">"rg8snorm" </span>=&gt; Sf::Rg8Snorm,
+        <span class="string">"rg8uint" </span>=&gt; Sf::Rg8Uint,
+        <span class="string">"rg8sint" </span>=&gt; Sf::Rg8Sint,
+        <span class="string">"r32uint" </span>=&gt; Sf::R32Uint,
+        <span class="string">"r32sint" </span>=&gt; Sf::R32Sint,
+        <span class="string">"r32float" </span>=&gt; Sf::R32Float,
+        <span class="string">"rg16unorm" </span>=&gt; Sf::Rg16Unorm,
+        <span class="string">"rg16snorm" </span>=&gt; Sf::Rg16Snorm,
+        <span class="string">"rg16uint" </span>=&gt; Sf::Rg16Uint,
+        <span class="string">"rg16sint" </span>=&gt; Sf::Rg16Sint,
+        <span class="string">"rg16float" </span>=&gt; Sf::Rg16Float,
+        <span class="string">"rgba8unorm" </span>=&gt; Sf::Rgba8Unorm,
+        <span class="string">"rgba8snorm" </span>=&gt; Sf::Rgba8Snorm,
+        <span class="string">"rgba8uint" </span>=&gt; Sf::Rgba8Uint,
+        <span class="string">"rgba8sint" </span>=&gt; Sf::Rgba8Sint,
+        <span class="string">"rgb10a2uint" </span>=&gt; Sf::Rgb10a2Uint,
+        <span class="string">"rgb10a2unorm" </span>=&gt; Sf::Rgb10a2Unorm,
+        <span class="string">"rg11b10float" </span>=&gt; Sf::Rg11b10Float,
+        <span class="string">"rg32uint" </span>=&gt; Sf::Rg32Uint,
+        <span class="string">"rg32sint" </span>=&gt; Sf::Rg32Sint,
+        <span class="string">"rg32float" </span>=&gt; Sf::Rg32Float,
+        <span class="string">"rgba16unorm" </span>=&gt; Sf::Rgba16Unorm,
+        <span class="string">"rgba16snorm" </span>=&gt; Sf::Rgba16Snorm,
+        <span class="string">"rgba16uint" </span>=&gt; Sf::Rgba16Uint,
+        <span class="string">"rgba16sint" </span>=&gt; Sf::Rgba16Sint,
+        <span class="string">"rgba16float" </span>=&gt; Sf::Rgba16Float,
+        <span class="string">"rgba32uint" </span>=&gt; Sf::Rgba32Uint,
+        <span class="string">"rgba32sint" </span>=&gt; Sf::Rgba32Sint,
+        <span class="string">"rgba32float" </span>=&gt; Sf::Rgba32Float,
+        <span class="string">"bgra8unorm" </span>=&gt; Sf::Bgra8Unorm,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownStorageFormat(span)),
     })
 }
@@ -361,24 +361,24 @@
 <span class="kw">pub fn </span>get_scalar_type(word: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Scalar&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
     <span class="kw">match </span>word {
-        <span class="comment">// &quot;f16&quot; =&gt; Some(Scalar { kind: Sk::Float, width: 2 }),
-        </span><span class="string">&quot;f32&quot; </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
+        <span class="comment">// "f16" =&gt; Some(Scalar { kind: Sk::Float, width: 2 }),
+        </span><span class="string">"f32" </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
             kind: Sk::Float,
             width: <span class="number">4</span>,
         }),
-        <span class="string">&quot;f64&quot; </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
+        <span class="string">"f64" </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
             kind: Sk::Float,
             width: <span class="number">8</span>,
         }),
-        <span class="string">&quot;i32&quot; </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
+        <span class="string">"i32" </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
             kind: Sk::Sint,
             width: <span class="number">4</span>,
         }),
-        <span class="string">&quot;u32&quot; </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
+        <span class="string">"u32" </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
             kind: Sk::Uint,
             width: <span class="number">4</span>,
         }),
-        <span class="string">&quot;bool&quot; </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
+        <span class="string">"bool" </span>=&gt; <span class="prelude-val">Some</span>(Scalar {
             kind: Sk::Bool,
             width: <span class="kw">crate</span>::BOOL_WIDTH,
         }),
@@ -389,23 +389,23 @@
 <span class="kw">pub fn </span>map_derivative(word: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw">crate</span>::DerivativeAxis, <span class="kw">crate</span>::DerivativeControl)&gt; {
     <span class="kw">use crate</span>::{DerivativeAxis <span class="kw">as </span>Axis, DerivativeControl <span class="kw">as </span>Ctrl};
     <span class="kw">match </span>word {
-        <span class="string">&quot;dpdxCoarse&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::Coarse)),
-        <span class="string">&quot;dpdyCoarse&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::Coarse)),
-        <span class="string">&quot;fwidthCoarse&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::Coarse)),
-        <span class="string">&quot;dpdxFine&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::Fine)),
-        <span class="string">&quot;dpdyFine&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::Fine)),
-        <span class="string">&quot;fwidthFine&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::Fine)),
-        <span class="string">&quot;dpdx&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::None)),
-        <span class="string">&quot;dpdy&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::None)),
-        <span class="string">&quot;fwidth&quot; </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::None)),
+        <span class="string">"dpdxCoarse" </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::Coarse)),
+        <span class="string">"dpdyCoarse" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::Coarse)),
+        <span class="string">"fwidthCoarse" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::Coarse)),
+        <span class="string">"dpdxFine" </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::Fine)),
+        <span class="string">"dpdyFine" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::Fine)),
+        <span class="string">"fwidthFine" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::Fine)),
+        <span class="string">"dpdx" </span>=&gt; <span class="prelude-val">Some</span>((Axis::X, Ctrl::None)),
+        <span class="string">"dpdy" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Y, Ctrl::None)),
+        <span class="string">"fwidth" </span>=&gt; <span class="prelude-val">Some</span>((Axis::Width, Ctrl::None)),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="kw">pub fn </span>map_relational_fun(word: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::RelationalFunction&gt; {
     <span class="kw">match </span>word {
-        <span class="string">&quot;any&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::RelationalFunction::Any),
-        <span class="string">&quot;all&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::RelationalFunction::All),
+        <span class="string">"any" </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::RelationalFunction::Any),
+        <span class="string">"all" </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::RelationalFunction::All),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
@@ -414,82 +414,82 @@
     <span class="kw">use </span><span class="kw">crate</span>::MathFunction <span class="kw">as </span>Mf;
     <span class="prelude-val">Some</span>(<span class="kw">match </span>word {
         <span class="comment">// comparison
-        </span><span class="string">&quot;abs&quot; </span>=&gt; Mf::Abs,
-        <span class="string">&quot;min&quot; </span>=&gt; Mf::Min,
-        <span class="string">&quot;max&quot; </span>=&gt; Mf::Max,
-        <span class="string">&quot;clamp&quot; </span>=&gt; Mf::Clamp,
-        <span class="string">&quot;saturate&quot; </span>=&gt; Mf::Saturate,
+        </span><span class="string">"abs" </span>=&gt; Mf::Abs,
+        <span class="string">"min" </span>=&gt; Mf::Min,
+        <span class="string">"max" </span>=&gt; Mf::Max,
+        <span class="string">"clamp" </span>=&gt; Mf::Clamp,
+        <span class="string">"saturate" </span>=&gt; Mf::Saturate,
         <span class="comment">// trigonometry
-        </span><span class="string">&quot;cos&quot; </span>=&gt; Mf::Cos,
-        <span class="string">&quot;cosh&quot; </span>=&gt; Mf::Cosh,
-        <span class="string">&quot;sin&quot; </span>=&gt; Mf::Sin,
-        <span class="string">&quot;sinh&quot; </span>=&gt; Mf::Sinh,
-        <span class="string">&quot;tan&quot; </span>=&gt; Mf::Tan,
-        <span class="string">&quot;tanh&quot; </span>=&gt; Mf::Tanh,
-        <span class="string">&quot;acos&quot; </span>=&gt; Mf::Acos,
-        <span class="string">&quot;acosh&quot; </span>=&gt; Mf::Acosh,
-        <span class="string">&quot;asin&quot; </span>=&gt; Mf::Asin,
-        <span class="string">&quot;asinh&quot; </span>=&gt; Mf::Asinh,
-        <span class="string">&quot;atan&quot; </span>=&gt; Mf::Atan,
-        <span class="string">&quot;atanh&quot; </span>=&gt; Mf::Atanh,
-        <span class="string">&quot;atan2&quot; </span>=&gt; Mf::Atan2,
-        <span class="string">&quot;radians&quot; </span>=&gt; Mf::Radians,
-        <span class="string">&quot;degrees&quot; </span>=&gt; Mf::Degrees,
+        </span><span class="string">"cos" </span>=&gt; Mf::Cos,
+        <span class="string">"cosh" </span>=&gt; Mf::Cosh,
+        <span class="string">"sin" </span>=&gt; Mf::Sin,
+        <span class="string">"sinh" </span>=&gt; Mf::Sinh,
+        <span class="string">"tan" </span>=&gt; Mf::Tan,
+        <span class="string">"tanh" </span>=&gt; Mf::Tanh,
+        <span class="string">"acos" </span>=&gt; Mf::Acos,
+        <span class="string">"acosh" </span>=&gt; Mf::Acosh,
+        <span class="string">"asin" </span>=&gt; Mf::Asin,
+        <span class="string">"asinh" </span>=&gt; Mf::Asinh,
+        <span class="string">"atan" </span>=&gt; Mf::Atan,
+        <span class="string">"atanh" </span>=&gt; Mf::Atanh,
+        <span class="string">"atan2" </span>=&gt; Mf::Atan2,
+        <span class="string">"radians" </span>=&gt; Mf::Radians,
+        <span class="string">"degrees" </span>=&gt; Mf::Degrees,
         <span class="comment">// decomposition
-        </span><span class="string">&quot;ceil&quot; </span>=&gt; Mf::Ceil,
-        <span class="string">&quot;floor&quot; </span>=&gt; Mf::Floor,
-        <span class="string">&quot;round&quot; </span>=&gt; Mf::Round,
-        <span class="string">&quot;fract&quot; </span>=&gt; Mf::Fract,
-        <span class="string">&quot;trunc&quot; </span>=&gt; Mf::Trunc,
-        <span class="string">&quot;modf&quot; </span>=&gt; Mf::Modf,
-        <span class="string">&quot;frexp&quot; </span>=&gt; Mf::Frexp,
-        <span class="string">&quot;ldexp&quot; </span>=&gt; Mf::Ldexp,
+        </span><span class="string">"ceil" </span>=&gt; Mf::Ceil,
+        <span class="string">"floor" </span>=&gt; Mf::Floor,
+        <span class="string">"round" </span>=&gt; Mf::Round,
+        <span class="string">"fract" </span>=&gt; Mf::Fract,
+        <span class="string">"trunc" </span>=&gt; Mf::Trunc,
+        <span class="string">"modf" </span>=&gt; Mf::Modf,
+        <span class="string">"frexp" </span>=&gt; Mf::Frexp,
+        <span class="string">"ldexp" </span>=&gt; Mf::Ldexp,
         <span class="comment">// exponent
-        </span><span class="string">&quot;exp&quot; </span>=&gt; Mf::Exp,
-        <span class="string">&quot;exp2&quot; </span>=&gt; Mf::Exp2,
-        <span class="string">&quot;log&quot; </span>=&gt; Mf::Log,
-        <span class="string">&quot;log2&quot; </span>=&gt; Mf::Log2,
-        <span class="string">&quot;pow&quot; </span>=&gt; Mf::Pow,
+        </span><span class="string">"exp" </span>=&gt; Mf::Exp,
+        <span class="string">"exp2" </span>=&gt; Mf::Exp2,
+        <span class="string">"log" </span>=&gt; Mf::Log,
+        <span class="string">"log2" </span>=&gt; Mf::Log2,
+        <span class="string">"pow" </span>=&gt; Mf::Pow,
         <span class="comment">// geometry
-        </span><span class="string">&quot;dot&quot; </span>=&gt; Mf::Dot,
-        <span class="string">&quot;cross&quot; </span>=&gt; Mf::Cross,
-        <span class="string">&quot;distance&quot; </span>=&gt; Mf::Distance,
-        <span class="string">&quot;length&quot; </span>=&gt; Mf::Length,
-        <span class="string">&quot;normalize&quot; </span>=&gt; Mf::Normalize,
-        <span class="string">&quot;faceForward&quot; </span>=&gt; Mf::FaceForward,
-        <span class="string">&quot;reflect&quot; </span>=&gt; Mf::Reflect,
-        <span class="string">&quot;refract&quot; </span>=&gt; Mf::Refract,
+        </span><span class="string">"dot" </span>=&gt; Mf::Dot,
+        <span class="string">"cross" </span>=&gt; Mf::Cross,
+        <span class="string">"distance" </span>=&gt; Mf::Distance,
+        <span class="string">"length" </span>=&gt; Mf::Length,
+        <span class="string">"normalize" </span>=&gt; Mf::Normalize,
+        <span class="string">"faceForward" </span>=&gt; Mf::FaceForward,
+        <span class="string">"reflect" </span>=&gt; Mf::Reflect,
+        <span class="string">"refract" </span>=&gt; Mf::Refract,
         <span class="comment">// computational
-        </span><span class="string">&quot;sign&quot; </span>=&gt; Mf::Sign,
-        <span class="string">&quot;fma&quot; </span>=&gt; Mf::Fma,
-        <span class="string">&quot;mix&quot; </span>=&gt; Mf::Mix,
-        <span class="string">&quot;step&quot; </span>=&gt; Mf::Step,
-        <span class="string">&quot;smoothstep&quot; </span>=&gt; Mf::SmoothStep,
-        <span class="string">&quot;sqrt&quot; </span>=&gt; Mf::Sqrt,
-        <span class="string">&quot;inverseSqrt&quot; </span>=&gt; Mf::InverseSqrt,
-        <span class="string">&quot;transpose&quot; </span>=&gt; Mf::Transpose,
-        <span class="string">&quot;determinant&quot; </span>=&gt; Mf::Determinant,
+        </span><span class="string">"sign" </span>=&gt; Mf::Sign,
+        <span class="string">"fma" </span>=&gt; Mf::Fma,
+        <span class="string">"mix" </span>=&gt; Mf::Mix,
+        <span class="string">"step" </span>=&gt; Mf::Step,
+        <span class="string">"smoothstep" </span>=&gt; Mf::SmoothStep,
+        <span class="string">"sqrt" </span>=&gt; Mf::Sqrt,
+        <span class="string">"inverseSqrt" </span>=&gt; Mf::InverseSqrt,
+        <span class="string">"transpose" </span>=&gt; Mf::Transpose,
+        <span class="string">"determinant" </span>=&gt; Mf::Determinant,
         <span class="comment">// bits
-        </span><span class="string">&quot;countTrailingZeros&quot; </span>=&gt; Mf::CountTrailingZeros,
-        <span class="string">&quot;countLeadingZeros&quot; </span>=&gt; Mf::CountLeadingZeros,
-        <span class="string">&quot;countOneBits&quot; </span>=&gt; Mf::CountOneBits,
-        <span class="string">&quot;reverseBits&quot; </span>=&gt; Mf::ReverseBits,
-        <span class="string">&quot;extractBits&quot; </span>=&gt; Mf::ExtractBits,
-        <span class="string">&quot;insertBits&quot; </span>=&gt; Mf::InsertBits,
-        <span class="string">&quot;firstTrailingBit&quot; </span>=&gt; Mf::FindLsb,
-        <span class="string">&quot;firstLeadingBit&quot; </span>=&gt; Mf::FindMsb,
+        </span><span class="string">"countTrailingZeros" </span>=&gt; Mf::CountTrailingZeros,
+        <span class="string">"countLeadingZeros" </span>=&gt; Mf::CountLeadingZeros,
+        <span class="string">"countOneBits" </span>=&gt; Mf::CountOneBits,
+        <span class="string">"reverseBits" </span>=&gt; Mf::ReverseBits,
+        <span class="string">"extractBits" </span>=&gt; Mf::ExtractBits,
+        <span class="string">"insertBits" </span>=&gt; Mf::InsertBits,
+        <span class="string">"firstTrailingBit" </span>=&gt; Mf::FindLsb,
+        <span class="string">"firstLeadingBit" </span>=&gt; Mf::FindMsb,
         <span class="comment">// data packing
-        </span><span class="string">&quot;pack4x8snorm&quot; </span>=&gt; Mf::Pack4x8snorm,
-        <span class="string">&quot;pack4x8unorm&quot; </span>=&gt; Mf::Pack4x8unorm,
-        <span class="string">&quot;pack2x16snorm&quot; </span>=&gt; Mf::Pack2x16snorm,
-        <span class="string">&quot;pack2x16unorm&quot; </span>=&gt; Mf::Pack2x16unorm,
-        <span class="string">&quot;pack2x16float&quot; </span>=&gt; Mf::Pack2x16float,
+        </span><span class="string">"pack4x8snorm" </span>=&gt; Mf::Pack4x8snorm,
+        <span class="string">"pack4x8unorm" </span>=&gt; Mf::Pack4x8unorm,
+        <span class="string">"pack2x16snorm" </span>=&gt; Mf::Pack2x16snorm,
+        <span class="string">"pack2x16unorm" </span>=&gt; Mf::Pack2x16unorm,
+        <span class="string">"pack2x16float" </span>=&gt; Mf::Pack2x16float,
         <span class="comment">// data unpacking
-        </span><span class="string">&quot;unpack4x8snorm&quot; </span>=&gt; Mf::Unpack4x8snorm,
-        <span class="string">&quot;unpack4x8unorm&quot; </span>=&gt; Mf::Unpack4x8unorm,
-        <span class="string">&quot;unpack2x16snorm&quot; </span>=&gt; Mf::Unpack2x16snorm,
-        <span class="string">&quot;unpack2x16unorm&quot; </span>=&gt; Mf::Unpack2x16unorm,
-        <span class="string">&quot;unpack2x16float&quot; </span>=&gt; Mf::Unpack2x16float,
+        </span><span class="string">"unpack4x8snorm" </span>=&gt; Mf::Unpack4x8snorm,
+        <span class="string">"unpack4x8unorm" </span>=&gt; Mf::Unpack4x8unorm,
+        <span class="string">"unpack2x16snorm" </span>=&gt; Mf::Unpack2x16snorm,
+        <span class="string">"unpack2x16unorm" </span>=&gt; Mf::Unpack2x16unorm,
+        <span class="string">"unpack2x16float" </span>=&gt; Mf::Unpack2x16float,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     })
 }
@@ -497,12 +497,12 @@
 <span class="kw">pub fn </span>map_conservative_depth(
     word: <span class="kw-2">&amp;</span>str,
     span: Span,
-) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::ConservativeDepth, Error&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::ConservativeDepth, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::ConservativeDepth <span class="kw">as </span>Cd;
     <span class="kw">match </span>word {
-        <span class="string">&quot;greater_equal&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Cd::GreaterEqual),
-        <span class="string">&quot;less_equal&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Cd::LessEqual),
-        <span class="string">&quot;unchanged&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Cd::Unchanged),
+        <span class="string">"greater_equal" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::GreaterEqual),
+        <span class="string">"less_equal" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::LessEqual),
+        <span class="string">"unchanged" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::Unchanged),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownConservativeDepth(span)),
     }
 }

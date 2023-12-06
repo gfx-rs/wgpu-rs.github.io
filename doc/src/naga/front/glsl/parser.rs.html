@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -449,15 +449,15 @@
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>types;
 
-<span class="kw">pub struct </span>ParsingContext&lt;<span class="lifetime">&#39;source</span>&gt; {
-    lexer: Peekable&lt;Lexer&lt;<span class="lifetime">&#39;source</span>&gt;&gt;,
+<span class="kw">pub struct </span>ParsingContext&lt;<span class="lifetime">'source</span>&gt; {
+    lexer: Peekable&lt;Lexer&lt;<span class="lifetime">'source</span>&gt;&gt;,
     <span class="doccomment">/// Used to store tokens already consumed by the parser but that need to be backtracked
     </span>backtracked_token: <span class="prelude-ty">Option</span>&lt;Token&gt;,
     last_meta: Span,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;source</span>&gt; ParsingContext&lt;<span class="lifetime">&#39;source</span>&gt; {
-    <span class="kw">pub fn </span>new(lexer: Lexer&lt;<span class="lifetime">&#39;source</span>&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'source</span>&gt; ParsingContext&lt;<span class="lifetime">'source</span>&gt; {
+    <span class="kw">pub fn </span>new(lexer: Lexer&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="self">Self </span>{
         ParsingContext {
             lexer: lexer.peekable(),
             backtracked_token: <span class="prelude-val">None</span>,
@@ -468,7 +468,7 @@
     <span class="doccomment">/// Helper method for backtracking from a consumed token
     ///
     /// This method should always be used instead of assigning to `backtracked_token` since
-    /// it validates that backtracking hasn&#39;t occurred more than one time in a row
+    /// it validates that backtracking hasn't occurred more than one time in a row
     ///
     /// # Panics
     /// - If the parser already backtracked without bumping in between
@@ -476,7 +476,7 @@
         <span class="comment">// This should never happen
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>prev_token) = <span class="self">self</span>.backtracked_token {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error {
-                kind: ErrorKind::InternalError(<span class="string">&quot;The parser tried to backtrack twice in a row&quot;</span>),
+                kind: ErrorKind::InternalError(<span class="string">"The parser tried to backtrack twice in a row"</span>),
                 meta: prev_token.meta,
             });
         }
@@ -604,8 +604,8 @@
         }
 
         <span class="comment">// Add an `EntryPoint` to `parser.module` for `main`, if a
-        // suitable overload exists. Error out if we can&#39;t find one.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(declaration) = frontend.lookup_function.get(<span class="string">&quot;main&quot;</span>) {
+        // suitable overload exists. Error out if we can't find one.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(declaration) = frontend.lookup_function.get(<span class="string">"main"</span>) {
             <span class="kw">for </span>decl <span class="kw">in </span>declaration.overloads.iter() {
                 <span class="kw">if let </span>FunctionKind::Call(handle) = decl.kind {
                     <span class="kw">if </span>decl.defined &amp;&amp; decl.parameters.is_empty() {
@@ -617,7 +617,7 @@
         }
 
         <span class="prelude-val">Err</span>(Error {
-            kind: ErrorKind::SemanticError(<span class="string">&quot;Missing entry point&quot;</span>.into()),
+            kind: ErrorKind::SemanticError(<span class="string">"Missing entry point"</span>.into()),
             meta: Span::default(),
         })
     }
@@ -634,11 +634,11 @@
         <span class="kw">let </span>int = <span class="kw">match </span>res {
             <span class="prelude-val">Ok</span>(value) =&gt; <span class="prelude-val">Ok</span>(value),
             <span class="prelude-val">Err</span>(U32EvalError::Negative) =&gt; <span class="prelude-val">Err</span>(Error {
-                kind: ErrorKind::SemanticError(<span class="string">&quot;int constant overflows&quot;</span>.into()),
+                kind: ErrorKind::SemanticError(<span class="string">"int constant overflows"</span>.into()),
                 meta,
             }),
             <span class="prelude-val">Err</span>(U32EvalError::NonConst) =&gt; <span class="prelude-val">Err</span>(Error {
-                kind: ErrorKind::SemanticError(<span class="string">&quot;Expected a uint constant&quot;</span>.into()),
+                kind: ErrorKind::SemanticError(<span class="string">"Expected a uint constant"</span>.into()),
                 meta,
             }),
         }<span class="question-mark">?</span>;
@@ -670,7 +670,7 @@
                 <span class="kw">if </span>!is_first_directive {
                     <span class="self">self</span>.errors.push(Error {
                         kind: ErrorKind::SemanticError(
-                            <span class="string">&quot;#version must occur first in shader&quot;</span>.into(),
+                            <span class="string">"#version must occur first in shader"</span>.into(),
                         ),
                         meta,
                     })
@@ -704,7 +704,7 @@
                         value: PPTokenValue::Ident(name),
                         location,
                     }) =&gt; <span class="kw">match </span>name.as_str() {
-                        <span class="string">&quot;core&quot; </span>=&gt; <span class="self">self</span>.meta.profile = Profile::Core,
+                        <span class="string">"core" </span>=&gt; <span class="self">self</span>.meta.profile = Profile::Core,
                         <span class="kw">_ </span>=&gt; <span class="self">self</span>.errors.push(Error {
                             kind: ErrorKind::InvalidProfile(name),
                             meta: location.into(),
@@ -782,7 +782,7 @@
                         value: PPTokenValue::Ident(behavior),
                         location,
                     }) =&gt; <span class="kw">match </span>behavior.as_str() {
-                        <span class="string">&quot;require&quot; </span>| <span class="string">&quot;enable&quot; </span>| <span class="string">&quot;warn&quot; </span>| <span class="string">&quot;disable&quot; </span>=&gt; {
+                        <span class="string">"require" </span>| <span class="string">"enable" </span>| <span class="string">"warn" </span>| <span class="string">"disable" </span>=&gt; {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = name {
                                 <span class="self">self</span>.meta.extensions.insert(name);
                             }
@@ -822,15 +822,15 @@
     }
 }
 
-<span class="kw">pub struct </span>DeclarationContext&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;qualifiers</span>, <span class="lifetime">&#39;a</span>&gt; {
-    qualifiers: TypeQualifiers&lt;<span class="lifetime">&#39;qualifiers</span>&gt;,
+<span class="kw">pub struct </span>DeclarationContext&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'qualifiers</span>, <span class="lifetime">'a</span>&gt; {
+    qualifiers: TypeQualifiers&lt;<span class="lifetime">'qualifiers</span>&gt;,
     <span class="doccomment">/// Indicates a global declaration
     </span>external: bool,
     is_inside_loop: bool,
-    ctx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;ctx </span><span class="kw-2">mut </span>Context&lt;<span class="lifetime">&#39;a</span>&gt;,
+    ctx: <span class="kw-2">&amp;</span><span class="lifetime">'ctx </span><span class="kw-2">mut </span>Context&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;qualifiers</span>, <span class="lifetime">&#39;a</span>&gt; DeclarationContext&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;qualifiers</span>, <span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'qualifiers</span>, <span class="lifetime">'a</span>&gt; DeclarationContext&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'qualifiers</span>, <span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>add_var(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         frontend: <span class="kw-2">&amp;mut </span>Frontend,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/pipeline.rs`."><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/pipeline.rs`."><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -521,7 +521,7 @@
 <a href="#521" id="521">521</a>
 <a href="#522" id="522">522</a>
 <a href="#523" id="523">523</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError, PipelineLayout},
@@ -546,22 +546,22 @@
 }
 
 <span class="attr">#[allow(clippy::large_enum_variant)]
-</span><span class="kw">pub enum </span>ShaderModuleSource&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
-    </span>Wgsl(Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;),
-    Naga(Cow&lt;<span class="lifetime">&#39;static</span>, naga::Module&gt;),
-    <span class="doccomment">/// Dummy variant because `Naga` doesn&#39;t have a lifetime and without enough active features it
+</span><span class="kw">pub enum </span>ShaderModuleSource&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
+    </span>Wgsl(Cow&lt;<span class="lifetime">'a</span>, str&gt;),
+    Naga(Cow&lt;<span class="lifetime">'static</span>, naga::Module&gt;),
+    <span class="doccomment">/// Dummy variant because `Naga` doesn't have a lifetime and without enough active features it
     /// could be the last one active.
     </span><span class="attr">#[doc(hidden)]
-    </span>Dummy(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>()&gt;),
+    </span>Dummy(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>()&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>ShaderModuleDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(default))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>ShaderModuleDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
     </span><span class="kw">pub </span>shader_bound_checks: wgt::ShaderBoundChecks,
 }
 
@@ -578,8 +578,8 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ShaderModule&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw ShaderModule {}&quot;</span>, <span class="self">self</span>.info.label());
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw ShaderModule {}"</span>, <span class="self">self</span>.info.label());
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span><span class="self">self</span>.device.trace.lock() {
                 trace.add(trace::Action::DestroyShaderModule(<span class="self">self</span>.info.id()));
             }
@@ -592,7 +592,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;ShaderModuleId&gt; <span class="kw">for </span>ShaderModule&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;ShaderModule&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"ShaderModule"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;ShaderModuleId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -622,16 +622,16 @@
     <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="kw">pub </span>inner: Box&lt;E&gt;,
 }
-<span class="attr">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
 </span><span class="kw">impl </span>fmt::Display <span class="kw">for </span>ShaderError&lt;naga::front::wgsl::ParseError&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>label = <span class="self">self</span>.label.as_deref().unwrap_or_default();
         <span class="kw">let </span>string = <span class="self">self</span>.inner.emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>.source);
-        <span class="macro">write!</span>(f, <span class="string">&quot;\nShader &#39;{label}&#39; parsing {string}&quot;</span>)
+        <span class="macro">write!</span>(f, <span class="string">"\nShader '{label}' parsing {string}"</span>)
     }
 }
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>ShaderError&lt;naga::WithSpan&lt;naga::valid::ValidationError&gt;&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">use </span>codespan_reporting::{
             diagnostic::{Diagnostic, Label},
             files::SimpleFile,
@@ -652,11 +652,11 @@
                 .collect(),
         );
 
-        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span>diagnostic).expect(<span class="string">&quot;cannot write error&quot;</span>);
+        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span>diagnostic).expect(<span class="string">"cannot write error"</span>);
 
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;\nShader validation {}&quot;</span>,
+            <span class="string">"\nShader validation {}"</span>,
             String::from_utf8_lossy(<span class="kw-2">&amp;</span>writer.into_inner())
         )
     }
@@ -664,9 +664,9 @@
 <span class="kw">impl</span>&lt;E&gt; Error <span class="kw">for </span>ShaderError&lt;E&gt;
 <span class="kw">where
     </span>ShaderError&lt;E&gt;: fmt::Display,
-    E: Error + <span class="lifetime">&#39;static</span>,
+    E: Error + <span class="lifetime">'static</span>,
 {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">&#39;static</span>)&gt; {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.inner)
     }
 }
@@ -675,10 +675,10 @@
 </span><span class="attr">#[derive(Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateShaderModuleError {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
     #[error(transparent)]
     </span>Parsing(<span class="attr">#[from] </span>ShaderError&lt;naga::front::wgsl::ParseError&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Failed to generate the backend-specific code&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to generate the backend-specific code"</span>)]
     </span>Generation,
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
@@ -687,7 +687,7 @@
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(
-        <span class="string">&quot;Shader global {bind:?} uses a group index {group} that exceeds the max_bind_groups limit of {limit}.&quot;
+        <span class="string">"Shader global {bind:?} uses a group index {group} that exceeds the max_bind_groups limit of {limit}."
     </span>)]
     </span>InvalidGroupIndex {
         bind: naga::ResourceBinding,
@@ -699,7 +699,7 @@
 <span class="kw">impl </span>CreateShaderModuleError {
     <span class="kw">pub fn </span>location(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;naga::SourceLocation&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="attr">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
             </span>CreateShaderModuleError::Parsing(<span class="kw-2">ref </span>err) =&gt; err.inner.location(source),
             CreateShaderModuleError::Validation(<span class="kw-2">ref </span>err) =&gt; err.inner.location(source),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -709,14 +709,14 @@
 
 <span class="doccomment">/// Describes a programmable pipeline stage.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>ProgrammableStageDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The compiled shader module for this stage.
     </span><span class="kw">pub </span>module: ShaderModuleId,
     <span class="doccomment">/// The name of the entry point in the compiled shader. There must be a function with this name
     /// in the shader.
-    </span><span class="kw">pub </span>entry_point: Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;,
+    </span><span class="kw">pub </span>entry_point: Cow&lt;<span class="lifetime">'a</span>, str&gt;,
 }
 
 <span class="doccomment">/// Number of implicit bind groups derived at pipeline creation.
@@ -725,9 +725,9 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ImplicitLayoutError {
-    <span class="attr">#[error(<span class="string">&quot;Missing IDs for deriving {0} bind groups&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Missing IDs for deriving {0} bind groups"</span>)]
     </span>MissingIds(ImplicitBindGroupCount),
-    <span class="attr">#[error(<span class="string">&quot;Unable to reflect the shader {0:?} interface&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to reflect the shader {0:?} interface"</span>)]
     </span>ReflectionError(wgt::ShaderStages),
     <span class="attr">#[error(transparent)]
     </span>BindGroup(<span class="attr">#[from] </span>CreateBindGroupLayoutError),
@@ -737,14 +737,14 @@
 
 <span class="doccomment">/// Describes a compute pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
     </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
     <span class="doccomment">/// The compiled compute stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -752,13 +752,13 @@
 </span><span class="kw">pub enum </span>CreateComputePipelineError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Pipeline layout is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
     </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">&quot;Unable to derive an implicit layout&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
-    <span class="attr">#[error(<span class="string">&quot;Error matching shader requirements against the pipeline&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Error matching shader requirements against the pipeline"</span>)]
     </span>Stage(<span class="attr">#[from] </span>validation::StageError),
-    <span class="attr">#[error(<span class="string">&quot;Internal error: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Internal error: {0}"</span>)]
     </span>Internal(String),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
@@ -777,7 +777,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ComputePipeline&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw ComputePipeline {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw ComputePipeline {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_compute_pipeline(raw);
@@ -787,7 +787,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;ComputePipelineId&gt; <span class="kw">for </span>ComputePipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;ComputePipeline&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"ComputePipeline"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;ComputePipelineId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -806,61 +806,61 @@
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename_all = <span class="string">&quot;camelCase&quot;</span>))]
-</span><span class="kw">pub struct </span>VertexBufferLayout&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"camelCase"</span>))]
+</span><span class="kw">pub struct </span>VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The stride, in bytes, between elements of this buffer.
     </span><span class="kw">pub </span>array_stride: wgt::BufferAddress,
-    <span class="doccomment">/// How often this vertex buffer is &quot;stepped&quot; forward.
+    <span class="doccomment">/// How often this vertex buffer is "stepped" forward.
     </span><span class="kw">pub </span>step_mode: wgt::VertexStepMode,
     <span class="doccomment">/// The list of attributes which comprise a single vertex.
-    </span><span class="kw">pub </span>attributes: Cow&lt;<span class="lifetime">&#39;a</span>, [wgt::VertexAttribute]&gt;,
+    </span><span class="kw">pub </span>attributes: Cow&lt;<span class="lifetime">'a</span>, [wgt::VertexAttribute]&gt;,
 }
 
 <span class="doccomment">/// Describes the vertex process in a render pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>VertexState&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>VertexState&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The compiled vertex stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
-    </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">&#39;a</span>, [VertexBufferLayout&lt;<span class="lifetime">&#39;a</span>&gt;]&gt;,
+    </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">'a</span>, [VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;]&gt;,
 }
 
 <span class="doccomment">/// Describes fragment processing in a render pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>FragmentState&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>FragmentState&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The compiled fragment stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
-    </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">&#39;a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
+    </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
 }
 
 <span class="doccomment">/// Describes a render (graphics) pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
     </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
     <span class="doccomment">/// The vertex processing state for this pipeline.
-    </span><span class="kw">pub </span>vertex: VertexState&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>vertex: VertexState&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.
-    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">&quot;replay&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>), serde(default))]
+    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">"replay"</span>, feature = <span class="string">"trace"</span>), serde(default))]
     </span><span class="kw">pub </span>primitive: wgt::PrimitiveState,
     <span class="doccomment">/// The effect of draw calls on the depth and stencil aspects of the output target, if any.
-    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">&quot;replay&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>), serde(default))]
+    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">"replay"</span>, feature = <span class="string">"trace"</span>), serde(default))]
     </span><span class="kw">pub </span>depth_stencil: <span class="prelude-ty">Option</span>&lt;wgt::DepthStencilState&gt;,
     <span class="doccomment">/// The multi-sampling properties of the pipeline.
-    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">&quot;replay&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>), serde(default))]
+    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">"replay"</span>, feature = <span class="string">"trace"</span>), serde(default))]
     </span><span class="kw">pub </span>multisample: wgt::MultisampleState,
     <span class="doccomment">/// The fragment processing state for this pipeline.
-    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;FragmentState&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;FragmentState&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
     /// layers the attachments will have.
     </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
@@ -869,35 +869,35 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ColorStateError {
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} is not renderable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} is not renderable"</span>)]
     </span>FormatNotRenderable(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} is not blendable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} is not blendable"</span>)]
     </span>FormatNotBlendable(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} does not have a color aspect&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} does not have a color aspect"</span>)]
     </span>FormatNotColor(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}."</span>)]
     </span>InvalidSampleCount(u32, wgt::TextureFormat, Vec&lt;u32&gt;, Vec&lt;u32&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Output format {pipeline} is incompatible with the shader {shader}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Output format {pipeline} is incompatible with the shader {shader}"</span>)]
     </span>IncompatibleFormat {
         pipeline: validation::NumericType,
         shader: validation::NumericType,
     },
-    <span class="attr">#[error(<span class="string">&quot;Blend factors for {0:?} must be `One`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Blend factors for {0:?} must be `One`"</span>)]
     </span>InvalidMinMaxBlendFactors(wgt::BlendComponent),
-    <span class="attr">#[error(<span class="string">&quot;Invalid write mask {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid write mask {0:?}"</span>)]
     </span>InvalidWriteMask(wgt::ColorWrites),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DepthStencilStateError {
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} is not renderable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} is not renderable"</span>)]
     </span>FormatNotRenderable(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} does not have a depth aspect, but depth test/write is enabled&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} does not have a depth aspect, but depth test/write is enabled"</span>)]
     </span>FormatNotDepth(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Format {0:?} does not have a stencil aspect, but stencil test/write is enabled&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Format {0:?} does not have a stencil aspect, but stencil test/write is enabled"</span>)]
     </span>FormatNotStencil(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">&quot;Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample count {0} is not supported by format {1:?} on this device. The WebGPU spec guarentees {2:?} samples are supported by this format. With the TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES feature your device supports {3:?}."</span>)]
     </span>InvalidSampleCount(u32, wgt::TextureFormat, Vec&lt;u32&gt;, Vec&lt;u32&gt;),
 }
 
@@ -908,66 +908,66 @@
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Pipeline layout is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
     </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">&quot;Unable to derive an implicit layout&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
-    <span class="attr">#[error(<span class="string">&quot;Color state [{0}] is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Color state [{0}] is invalid"</span>)]
     </span>ColorState(u8, <span class="attr">#[source] </span>ColorStateError),
-    <span class="attr">#[error(<span class="string">&quot;Depth/stencil state is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Depth/stencil state is invalid"</span>)]
     </span>DepthStencilState(<span class="attr">#[from] </span>DepthStencilStateError),
-    <span class="attr">#[error(<span class="string">&quot;Invalid sample count {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid sample count {0}"</span>)]
     </span>InvalidSampleCount(u32),
-    <span class="attr">#[error(<span class="string">&quot;The number of vertex buffers {given} exceeds the limit {limit}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The number of vertex buffers {given} exceeds the limit {limit}"</span>)]
     </span>TooManyVertexBuffers { given: u32, limit: u32 },
-    <span class="attr">#[error(<span class="string">&quot;The total number of vertex attributes {given} exceeds the limit {limit}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The total number of vertex attributes {given} exceeds the limit {limit}"</span>)]
     </span>TooManyVertexAttributes { given: u32, limit: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Vertex buffer {index} stride {given} exceeds the limit {limit}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Vertex buffer {index} stride {given} exceeds the limit {limit}"</span>)]
     </span>VertexStrideTooLarge { index: u32, given: u32, limit: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Vertex buffer {index} stride {stride} does not respect `VERTEX_STRIDE_ALIGNMENT`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Vertex buffer {index} stride {stride} does not respect `VERTEX_STRIDE_ALIGNMENT`"</span>)]
     </span>UnalignedVertexStride {
         index: u32,
         stride: wgt::BufferAddress,
     },
-    <span class="attr">#[error(<span class="string">&quot;Vertex attribute at location {location} has invalid offset {offset}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Vertex attribute at location {location} has invalid offset {offset}"</span>)]
     </span>InvalidVertexAttributeOffset {
         location: wgt::ShaderLocation,
         offset: wgt::BufferAddress,
     },
-    <span class="attr">#[error(<span class="string">&quot;Two or more vertex attributes were assigned to the same location in the shader: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Two or more vertex attributes were assigned to the same location in the shader: {0}"</span>)]
     </span>ShaderLocationClash(u32),
-    <span class="attr">#[error(<span class="string">&quot;Strip index format was not set to None but to {strip_index_format:?} while using the non-strip topology {topology:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Strip index format was not set to None but to {strip_index_format:?} while using the non-strip topology {topology:?}"</span>)]
     </span>StripIndexFormatForNonStripTopology {
         strip_index_format: <span class="prelude-ty">Option</span>&lt;wgt::IndexFormat&gt;,
         topology: wgt::PrimitiveTopology,
     },
-    <span class="attr">#[error(<span class="string">&quot;Conservative Rasterization is only supported for wgt::PolygonMode::Fill&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Conservative Rasterization is only supported for wgt::PolygonMode::Fill"</span>)]
     </span>ConservativeRasterizationNonFillPolygonMode,
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
-    <span class="attr">#[error(<span class="string">&quot;Error matching {stage:?} shader requirements against the pipeline&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Error matching {stage:?} shader requirements against the pipeline"</span>)]
     </span>Stage {
         stage: wgt::ShaderStages,
         <span class="attr">#[source]
         </span>error: validation::StageError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Internal error in {stage:?} shader: {error}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Internal error in {stage:?} shader: {error}"</span>)]
     </span>Internal {
         stage: wgt::ShaderStages,
         error: String,
     },
-    <span class="attr">#[error(<span class="string">&quot;In the provided shader, the type given for group {group} binding {binding} has a size of {size}. As the device does not support `DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED`, the type must have a size that is a multiple of 16 bytes.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"In the provided shader, the type given for group {group} binding {binding} has a size of {size}. As the device does not support `DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED`, the type must have a size that is a multiple of 16 bytes."</span>)]
     </span>UnalignedShader { group: u32, binding: u32, size: u64 },
-    <span class="attr">#[error(<span class="string">&quot;Using the blend factor {factor:?} for render target {target} is not possible. Only the first render target may be used when dual-source blending.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Using the blend factor {factor:?} for render target {target} is not possible. Only the first render target may be used when dual-source blending."</span>)]
     </span>BlendFactorOnUnsupportedTarget {
         factor: wgt::BlendFactor,
         target: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Pipeline expects the shader entry point to make use of dual-source blending.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pipeline expects the shader entry point to make use of dual-source blending."</span>)]
     </span>PipelineExpectsShaderToUseDualSourceBlending,
-    <span class="attr">#[error(<span class="string">&quot;Shader entry point expects the pipeline to make use of dual-source blending.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Shader entry point expects the pipeline to make use of dual-source blending."</span>)]
     </span>ShaderExpectsPipelineToUseDualSourceBlending,
 }
 
@@ -1018,7 +1018,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>RenderPipeline&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw RenderPipeline {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw RenderPipeline {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_render_pipeline(raw);
@@ -1028,7 +1028,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;RenderPipelineId&gt; <span class="kw">for </span>RenderPipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;RenderPipeline&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"RenderPipeline"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;RenderPipelineId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info

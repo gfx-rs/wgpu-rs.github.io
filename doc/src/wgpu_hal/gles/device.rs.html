@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/device.rs`."><title>device.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1483,25 +1483,25 @@
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+<span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 
-<span class="kw">type </span>ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt; = (
+<span class="kw">type </span>ShaderStage&lt;<span class="lifetime">'a</span>&gt; = (
     naga::ShaderStage,
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="lifetime">&#39;a</span>, <span class="kw">super</span>::Api&gt;,
+    <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
 );
 <span class="kw">type </span>NameBindingMap = rustc_hash::FxHashMap&lt;String, (<span class="kw">super</span>::BindingRegister, u8)&gt;;
 
-<span class="kw">struct </span>CompilationContext&lt;<span class="lifetime">&#39;a</span>&gt; {
-    layout: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">super</span>::PipelineLayout,
-    sampler_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::SamplerBindMap,
-    name_binding_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>NameBindingMap,
-    push_constant_items: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;naga::back::glsl::PushConstantItem&gt;,
+<span class="kw">struct </span>CompilationContext&lt;<span class="lifetime">'a</span>&gt; {
+    layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">super</span>::PipelineLayout,
+    sampler_map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::SamplerBindMap,
+    name_binding_map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>NameBindingMap,
+    push_constant_items: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;naga::back::glsl::PushConstantItem&gt;,
     multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
 }
 
-<span class="kw">impl </span>CompilationContext&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>CompilationContext&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>consume_reflection(
         <span class="self">self</span>,
         gl: <span class="kw-2">&amp;</span>glow::Context,
@@ -1529,7 +1529,7 @@
                 <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
             };
             <span class="macro">log::trace!</span>(
-                <span class="string">&quot;Rebind buffer: {:?} -&gt; {}, register={:?}, slot={}&quot;</span>,
+                <span class="string">"Rebind buffer: {:?} -&gt; {}, register={:?}, slot={}"</span>,
                 var.name.as_ref(),
                 <span class="kw-2">&amp;</span>name,
                 register,
@@ -1589,7 +1589,7 @@
     /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the texture. If `drop_guard` is
     ///   [`Some`], the texture must be valid until the drop implementation
     ///   of the drop guard is called.
-    </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), target_os = <span class="string">"emscripten"</span>))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: std::num::NonZeroU32,
@@ -1617,7 +1617,7 @@
     /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the renderbuffer. If `drop_guard` is
     ///   [`Some`], the renderbuffer must be valid until the drop implementation
     ///   of the drop guard is called.
-    </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), target_os = <span class="string">"emscripten"</span>))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw_renderbuffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: std::num::NonZeroU32,
@@ -1641,7 +1641,7 @@
         gl: <span class="kw-2">&amp;</span>glow::Context,
         shader: <span class="kw-2">&amp;</span>str,
         naga_stage: naga::ShaderStage,
-        <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;glow::Shader, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>target = <span class="kw">match </span>naga_stage {
             naga::ShaderStage::Vertex =&gt; glow::VERTEX_SHADER,
@@ -1650,7 +1650,7 @@
         };
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ gl.create_shader(target) }.unwrap();
-        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
         </span><span class="kw">if </span>gl.supports_debug() {
             <span class="comment">//TODO: remove all transmutes from `object_label`
             // https://github.com/grovesNL/glow/issues/186
@@ -1661,17 +1661,17 @@
         <span class="kw">unsafe </span>{ gl.shader_source(raw, shader) };
         <span class="kw">unsafe </span>{ gl.compile_shader(raw) };
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;\tCompiled shader {:?}&quot;</span>, raw);
+        <span class="macro">log::debug!</span>(<span class="string">"\tCompiled shader {:?}"</span>, raw);
 
         <span class="kw">let </span>compiled_ok = <span class="kw">unsafe </span>{ gl.get_shader_compile_status(raw) };
         <span class="kw">let </span>msg = <span class="kw">unsafe </span>{ gl.get_shader_info_log(raw) };
         <span class="kw">if </span>compiled_ok {
             <span class="kw">if </span>!msg.is_empty() {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;\tCompile: {}&quot;</span>, msg);
+                <span class="macro">log::warn!</span>(<span class="string">"\tCompile: {}"</span>, msg);
             }
             <span class="prelude-val">Ok</span>(raw)
         } <span class="kw">else </span>{
-            <span class="macro">log::error!</span>(<span class="string">&quot;\tShader compilation failed: {}&quot;</span>, msg);
+            <span class="macro">log::error!</span>(<span class="string">"\tShader compilation failed: {}"</span>, msg);
             <span class="kw">unsafe </span>{ gl.delete_shader(raw) };
             <span class="prelude-val">Err</span>(<span class="kw">crate</span>::PipelineError::Linkage(
                 map_naga_stage(naga_stage),
@@ -1730,16 +1730,16 @@
             policies,
         )
         .map_err(|e| {
-            <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;{e}&quot;</span>);
+            <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">"{e}"</span>);
             <span class="kw">crate</span>::PipelineError::Linkage(map_naga_stage(naga_stage), msg)
         })<span class="question-mark">?</span>;
 
         <span class="kw">let </span>reflection_info = writer.write().map_err(|e| {
-            <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;{e}&quot;</span>);
+            <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">"{e}"</span>);
             <span class="kw">crate</span>::PipelineError::Linkage(map_naga_stage(naga_stage), msg)
         })<span class="question-mark">?</span>;
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Naga generated shader:\n{}&quot;</span>, output);
+        <span class="macro">log::debug!</span>(<span class="string">"Naga generated shader:\n{}"</span>, output);
 
         context.consume_reflection(
             gl,
@@ -1753,12 +1753,12 @@
         <span class="kw">unsafe </span>{ <span class="self">Self</span>::compile_shader(gl, <span class="kw-2">&amp;</span>output, naga_stage, stage.module.label.as_deref()) }
     }
 
-    <span class="kw">unsafe fn </span>create_pipeline&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">unsafe fn </span>create_pipeline&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         gl: <span class="kw-2">&amp;</span>glow::Context,
-        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
+        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">'a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
-        <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">super</span>::PipelineInner&gt;, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>program_stages = ArrayVec::new();
@@ -1777,8 +1777,8 @@
             </span>.shared
             .program_cache
             .try_lock()
-            .expect(<span class="string">&quot;Couldn&#39;t acquire program_cache lock&quot;</span>);
-        <span class="comment">// This guard ensures that we can&#39;t accidentally destroy a program whilst we&#39;re about to reuse it
+            .expect(<span class="string">"Couldn't acquire program_cache lock"</span>);
+        <span class="comment">// This guard ensures that we can't accidentally destroy a program whilst we're about to reuse it
         // The only place that destroys a pipeline is also locking on `program_cache`
         </span><span class="kw">let </span>program = guard
             .entry(<span class="kw">super</span>::ProgramCacheKey {
@@ -1802,21 +1802,21 @@
         <span class="prelude-val">Ok</span>(program)
     }
 
-    <span class="kw">unsafe fn </span>create_program&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">unsafe fn </span>create_program&lt;<span class="lifetime">'a</span>&gt;(
         gl: <span class="kw-2">&amp;</span>glow::Context,
-        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
+        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">'a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
-        <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
         glsl_version: naga::back::glsl::Version,
         private_caps: PrivateCapabilities,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">super</span>::PipelineInner&gt;, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>glsl_version = <span class="kw">match </span>glsl_version {
-            naga::back::glsl::Version::Embedded { version, .. } =&gt; <span class="macro">format!</span>(<span class="string">&quot;{version} es&quot;</span>),
-            naga::back::glsl::Version::Desktop(version) =&gt; <span class="macro">format!</span>(<span class="string">&quot;{version}&quot;</span>),
+            naga::back::glsl::Version::Embedded { version, .. } =&gt; <span class="macro">format!</span>(<span class="string">"{version} es"</span>),
+            naga::back::glsl::Version::Desktop(version) =&gt; <span class="macro">format!</span>(<span class="string">"{version}"</span>),
         };
         <span class="kw">let </span>program = <span class="kw">unsafe </span>{ gl.create_program() }.unwrap();
-        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
             <span class="kw">if </span>gl.supports_debug() {
                 <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(program) };
@@ -1850,14 +1850,14 @@
 
         <span class="comment">// Create empty fragment shader if only vertex shader is present
         </span><span class="kw">if </span>has_stages == wgt::ShaderStages::VERTEX {
-            <span class="kw">let </span>shader_src = <span class="macro">format!</span>(<span class="string">&quot;#version {glsl_version}\n void main(void) {{}}&quot;</span>,);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Only vertex shader is present. Creating an empty fragment shader&quot;</span>,);
+            <span class="kw">let </span>shader_src = <span class="macro">format!</span>(<span class="string">"#version {glsl_version}\n void main(void) {{}}"</span>,);
+            <span class="macro">log::info!</span>(<span class="string">"Only vertex shader is present. Creating an empty fragment shader"</span>,);
             <span class="kw">let </span>shader = <span class="kw">unsafe </span>{
                 <span class="self">Self</span>::compile_shader(
                     gl,
                     <span class="kw-2">&amp;</span>shader_src,
                     naga::ShaderStage::Fragment,
-                    <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) dummy fragment shader&quot;</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) dummy fragment shader"</span>),
                 )
             }<span class="question-mark">?</span>;
             shaders_to_delete.push(shader);
@@ -1872,7 +1872,7 @@
             <span class="kw">unsafe </span>{ gl.delete_shader(shader) };
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;\tLinked program {:?}&quot;</span>, program);
+        <span class="macro">log::debug!</span>(<span class="string">"\tLinked program {:?}"</span>, program);
 
         <span class="kw">let </span>linked_ok = <span class="kw">unsafe </span>{ gl.get_program_link_status(program) };
         <span class="kw">let </span>msg = <span class="kw">unsafe </span>{ gl.get_program_info_log(program) };
@@ -1880,26 +1880,26 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::PipelineError::Linkage(has_stages, msg));
         }
         <span class="kw">if </span>!msg.is_empty() {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;\tLink: {}&quot;</span>, msg);
+            <span class="macro">log::warn!</span>(<span class="string">"\tLink: {}"</span>, msg);
         }
 
         <span class="kw">if </span>!private_caps.contains(<span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT) {
-            <span class="comment">// This remapping is only needed if we aren&#39;t able to put the binding layout
-            // in the shader. We can&#39;t remap storage buffers this way.
+            <span class="comment">// This remapping is only needed if we aren't able to put the binding layout
+            // in the shader. We can't remap storage buffers this way.
             </span><span class="kw">unsafe </span>{ gl.use_program(<span class="prelude-val">Some</span>(program)) };
             <span class="kw">for </span>(<span class="kw-2">ref </span>name, (register, slot)) <span class="kw">in </span>name_binding_map {
-                <span class="macro">log::trace!</span>(<span class="string">&quot;Get binding {:?} from program {:?}&quot;</span>, name, program);
+                <span class="macro">log::trace!</span>(<span class="string">"Get binding {:?} from program {:?}"</span>, name, program);
                 <span class="kw">match </span>register {
                     <span class="kw">super</span>::BindingRegister::UniformBuffers =&gt; {
                         <span class="kw">let </span>index = <span class="kw">unsafe </span>{ gl.get_uniform_block_index(program, name) }.unwrap();
-                        <span class="macro">log::trace!</span>(<span class="string">&quot;\tBinding slot {slot} to block index {index}&quot;</span>);
+                        <span class="macro">log::trace!</span>(<span class="string">"\tBinding slot {slot} to block index {index}"</span>);
                         <span class="kw">unsafe </span>{ gl.uniform_block_binding(program, index, slot <span class="kw">as _</span>) };
                     }
                     <span class="kw">super</span>::BindingRegister::StorageBuffers =&gt; {
                         <span class="kw">let </span>index =
                             <span class="kw">unsafe </span>{ gl.get_shader_storage_block_index(program, name) }.unwrap();
                         <span class="macro">log::error!</span>(
-                            <span class="string">&quot;Unable to re-map shader storage block {} to {}&quot;</span>,
+                            <span class="string">"Unable to re-map shader storage block {} to {}"</span>,
                             name,
                             index
                         );
@@ -1923,7 +1923,7 @@
                 <span class="kw">let </span>location = <span class="kw">unsafe </span>{ gl.get_uniform_location(program, <span class="kw-2">&amp;</span>item.access_path) };
 
                 <span class="macro">log::trace!</span>(
-                    <span class="string">&quot;push constant item: name={}, ty={:?}, offset={}, location={:?}&quot;</span>,
+                    <span class="string">"push constant item: name={}, ty={:?}, offset={}, location={:?}"</span>,
                     item.access_path,
                     type_inner,
                     item.offset,
@@ -1942,7 +1942,7 @@
         }
 
         <span class="kw">let </span>first_instance_location = <span class="kw">if </span>has_stages.contains(wgt::ShaderStages::VERTEX) {
-            <span class="comment">// If this returns none (the uniform isn&#39;t active), that&#39;s fine, we just won&#39;t set it.
+            <span class="comment">// If this returns none (the uniform isn't active), that's fine, we just won't set it.
             </span><span class="kw">unsafe </span>{ gl.get_uniform_location(program, naga::back::glsl::FIRST_INSTANCE_BINDING) }
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -2050,7 +2050,7 @@
                     glow::DYNAMIC_DRAW
                 }
             } <span class="kw">else </span>{
-                <span class="comment">// Even if the usage doesn&#39;t contain SRC_READ, we update it internally at least once
+                <span class="comment">// Even if the usage doesn't contain SRC_READ, we update it internally at least once
                 // Some vendors take usage very literally and STATIC_DRAW will freeze us with an empty buffer
                 // https://github.com/gfx-rs/wgpu/issues/3371
                 </span>glow::DYNAMIC_DRAW
@@ -2065,7 +2065,7 @@
         }
         <span class="comment">//TODO: do we need `glow::MAP_UNSYNCHRONIZED_BIT`?
 
-        </span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        </span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">if </span>gl.supports_debug() {
                 <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
@@ -2204,7 +2204,7 @@
                 };
             }
 
-            <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+            <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
                 <span class="kw">if </span>gl.supports_debug() {
                     <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
@@ -2368,7 +2368,7 @@
                 };
             }
 
-            <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+            <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
                 <span class="kw">if </span>gl.supports_debug() {
                     <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
@@ -2401,7 +2401,7 @@
                 <span class="kw">super</span>::TextureInner::Texture { raw, .. } =&gt; {
                     <span class="kw">unsafe </span>{ gl.delete_texture(raw) };
                 }
-                <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+                <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(target_os = <span class="string">"emscripten"</span>)))]
                 </span><span class="kw">super</span>::TextureInner::ExternalFramebuffer { .. } =&gt; {}
             }
         }
@@ -2507,7 +2507,7 @@
             };
         }
 
-        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">if </span>gl.supports_debug() {
                 <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
@@ -2570,7 +2570,7 @@
                 .private_caps
                 .contains(<span class="kw">super</span>::PrivateCapabilities::FULLY_FEATURED_INSTANCING),
         );
-        <span class="comment">// We always force point size to be written and it will be ignored by the driver if it&#39;s not a point list primitive.
+        <span class="comment">// We always force point size to be written and it will be ignored by the driver if it's not a point list primitive.
         // https://github.com/gfx-rs/wgpu/pull/3440/files#r1095726950
         </span>writer_flags.set(glsl::WriterFlags::FORCE_POINT_SIZE, <span class="bool-val">true</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>binding_map = glsl::BindingMap::default();
@@ -2654,8 +2654,8 @@
                 wgt::BindingType::Texture { .. } =&gt; {
                     <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
                     <span class="kw">if </span>view.array_layers.start != <span class="number">0 </span>{
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Unable to create a sampled texture binding for non-zero array layer.\n{}&quot;</span>,
-                            <span class="string">&quot;This is an implementation problem of wgpu-hal/gles backend.&quot;</span>)
+                        <span class="macro">log::error!</span>(<span class="string">"Unable to create a sampled texture binding for non-zero array layer.\n{}"</span>,
+                            <span class="string">"This is an implementation problem of wgpu-hal/gles backend."</span>)
                     }
                     <span class="kw">let </span>(raw, target) = view.inner.as_native();
                     <span class="kw">super</span>::RawBinding::Texture {
@@ -2703,7 +2703,7 @@
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule {
             naga: <span class="kw">match </span>shader {
                 <span class="kw">crate</span>::ShaderInput::SpirV(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">panic!</span>(<span class="string">&quot;`Features::SPIRV_SHADER_PASSTHROUGH` is not enabled&quot;</span>)
+                    <span class="macro">panic!</span>(<span class="string">"`Features::SPIRV_SHADER_PASSTHROUGH` is not enabled"</span>)
                 }
                 <span class="kw">crate</span>::ShaderInput::Naga(naga) =&gt; naga,
             },
@@ -2784,9 +2784,9 @@
     }
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
         <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
-        <span class="comment">// If the pipeline only has 2 strong references remaining, they&#39;re `pipeline` and `program_cache`
+        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache`
         // This is safe to assume as long as:
-        // - `RenderPipeline` can&#39;t be cloned
+        // - `RenderPipeline` can't be cloned
         // - The only place that we can get a new reference is during `program_cache.lock()`
         </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
             program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
@@ -2811,9 +2811,9 @@
     }
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
         <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
-        <span class="comment">// If the pipeline only has 2 strong references remaining, they&#39;re `pipeline` and `program_cache``
+        <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache``
         // This is safe to assume as long as:
-        // - `ComputePipeline` can&#39;t be cloned
+        // - `ComputePipeline` can't be cloned
         // - The only place that we can get a new reference is during `program_cache.lock()`
         </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
             program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
@@ -2825,7 +2825,7 @@
         }
     }
 
-    <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))]
+    <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))]
     </span><span class="kw">unsafe fn </span>create_query_set(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>wgt::QuerySetDescriptor&lt;<span class="kw">crate</span>::Label&gt;,
@@ -2837,11 +2837,11 @@
             <span class="kw">let </span>query =
                 <span class="kw">unsafe </span>{ gl.create_query() }.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
 
-            <span class="comment">// We aren&#39;t really able to, in general, label queries.
+            <span class="comment">// We aren't really able to, in general, label queries.
             //
-            // We could take a timestamp here to &quot;initialize&quot; the query,
-            // but that&#39;s a bit of a hack, and we don&#39;t want to insert
-            // random timestamps into the command stream of we don&#39;t have to.
+            // We could take a timestamp here to "initialize" the query,
+            // but that's a bit of a hack, and we don't want to insert
+            // random timestamps into the command stream of we don't have to.
 
             </span>queries.push(query);
         }
@@ -2877,7 +2877,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(clippy::needless_borrow))]
+        <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(clippy::needless_borrow))]
         </span><span class="prelude-val">Ok</span>(fence.get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock()))
     }
     <span class="kw">unsafe fn </span>wait(
@@ -2888,7 +2888,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">if </span>fence.last_completed &lt; wait_value {
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-            <span class="kw">let </span>timeout_ns = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
+            <span class="kw">let </span>timeout_ns = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) {
                 <span class="number">0
             </span>} <span class="kw">else </span>{
                 (timeout_ms <span class="kw">as </span>u64 * <span class="number">1_000_000</span>).min(!<span class="number">0u32 </span><span class="kw">as </span>u64)
@@ -2902,9 +2902,9 @@
                     gl.client_wait_sync(sync, glow::SYNC_FLUSH_COMMANDS_BIT, timeout_ns <span class="kw">as </span>i32)
                 } {
                     <span class="comment">// for some reason firefox returns WAIT_FAILED, to investigate
-                    </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+                    </span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
                     </span>glow::WAIT_FAILED =&gt; {
-                        <span class="macro">log::warn!</span>(<span class="string">&quot;wait failed!&quot;</span>);
+                        <span class="macro">log::warn!</span>(<span class="string">"wait failed!"</span>);
                         <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
                     }
                     glow::TIMEOUT_EXPIRED =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
@@ -2917,7 +2917,7 @@
     }
 
     <span class="kw">unsafe fn </span>start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="attr">#[cfg(all(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;renderdoc&quot;</span>))]
+        <span class="attr">#[cfg(all(not(target_arch = <span class="string">"wasm32"</span>), feature = <span class="string">"renderdoc"</span>))]
         </span><span class="kw">return unsafe </span>{
             <span class="self">self</span>.render_doc
                 .start_frame_capture(<span class="self">self</span>.shared.context.raw_context(), ptr::null_mut())
@@ -2926,7 +2926,7 @@
         </span><span class="bool-val">false
     </span>}
     <span class="kw">unsafe fn </span>stop_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="attr">#[cfg(all(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;renderdoc&quot;</span>))]
+        <span class="attr">#[cfg(all(not(target_arch = <span class="string">"wasm32"</span>), feature = <span class="string">"renderdoc"</span>))]
         </span><span class="kw">unsafe </span>{
             <span class="self">self</span>.render_doc
                 .end_frame_capture(ptr::null_mut(), ptr::null_mut())
@@ -2935,15 +2935,15 @@
 }
 
 <span class="attr">#[cfg(all(
-    target_arch = <span class="string">&quot;wasm32&quot;</span>,
-    feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-    not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    target_arch = <span class="string">"wasm32"</span>,
+    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+    not(target_feature = <span class="string">"atomics"</span>)
 ))]
 </span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Device {}
 <span class="attr">#[cfg(all(
-    target_arch = <span class="string">&quot;wasm32&quot;</span>,
-    feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-    not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    target_arch = <span class="string">"wasm32"</span>,
+    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+    not(target_feature = <span class="string">"atomics"</span>)
 ))]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Device {}
 </code></pre></div></section></main></body></html>

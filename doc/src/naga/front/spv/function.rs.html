@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/spv/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -814,7 +814,7 @@
         <span class="comment">// Scan the blocks and add them as nodes
         </span><span class="kw">loop </span>{
             <span class="kw">let </span>fun_inst = <span class="self">self</span>.next_inst()<span class="question-mark">?</span>;
-            <span class="macro">log::debug!</span>(<span class="string">&quot;{:?}&quot;</span>, fun_inst.op);
+            <span class="macro">log::debug!</span>(<span class="string">"{:?}"</span>, fun_inst.op);
             <span class="kw">match </span>fun_inst.op {
                 spirv::Op::Line =&gt; {
                     fun_inst.expect(<span class="number">4</span>)<span class="question-mark">?</span>;
@@ -841,13 +841,13 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>prefix) = <span class="self">self</span>.options.block_ctx_dump_prefix {
             <span class="kw">let </span>dump_suffix = <span class="kw">match </span><span class="self">self</span>.lookup_entry_point.get(<span class="kw-2">&amp;</span>fun_id) {
-                <span class="prelude-val">Some</span>(ep) =&gt; <span class="macro">format!</span>(<span class="string">&quot;block_ctx.{:?}-{}.txt&quot;</span>, ep.stage, ep.name),
-                <span class="prelude-val">None </span>=&gt; <span class="macro">format!</span>(<span class="string">&quot;block_ctx.Fun-{}.txt&quot;</span>, module.functions.len()),
+                <span class="prelude-val">Some</span>(ep) =&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.{:?}-{}.txt"</span>, ep.stage, ep.name),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.Fun-{}.txt"</span>, module.functions.len()),
             };
             <span class="kw">let </span>dest = prefix.join(dump_suffix);
-            <span class="kw">let </span>dump = <span class="macro">format!</span>(<span class="string">&quot;{block_ctx:#?}&quot;</span>);
+            <span class="kw">let </span>dump = <span class="macro">format!</span>(<span class="string">"{block_ctx:#?}"</span>);
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = std::fs::write(<span class="kw-2">&amp;</span>dest, dump) {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Unable to dump the block context into {:?}: {}&quot;</span>, dest, e);
+                <span class="macro">log::error!</span>(<span class="string">"Unable to dump the block context into {:?}: {}"</span>, dest, e);
             }
         }
 
@@ -857,14 +857,14 @@
         // Note that get_expr_handle also contributes slightly odd entries to this table,
         // to get the spill.
         </span><span class="kw">for </span>phi <span class="kw">in </span>block_ctx.phis.iter() {
-            <span class="comment">// Get a pointer to the local variable for the phi&#39;s value.
+            <span class="comment">// Get a pointer to the local variable for the phi's value.
             </span><span class="kw">let </span>phi_pointer = block_ctx.expressions.append(
                 <span class="kw">crate</span>::Expression::LocalVariable(phi.local),
                 <span class="kw">crate</span>::Span::default(),
             );
 
-            <span class="comment">// At the end of each of `phi`&#39;s predecessor blocks, store the corresponding
-            // source value in the phi&#39;s local variable.
+            <span class="comment">// At the end of each of `phi`'s predecessor blocks, store the corresponding
+            // source value in the phi's local variable.
             </span><span class="kw">for </span><span class="kw-2">&amp;</span>(source, predecessor) <span class="kw">in </span>phi.expressions.iter() {
                 <span class="kw">let </span>source_lexp = <span class="kw-2">&amp;</span><span class="self">self</span>.lookup_expression[<span class="kw-2">&amp;</span>source];
                 <span class="kw">let </span>predecessor_body_idx = block_ctx.body_for_label[<span class="kw-2">&amp;</span>predecessor];
@@ -877,17 +877,17 @@
                     .unwrap_or(<span class="number">0</span>);
 
                 <span class="comment">// If the Naga `Expression` generated for `source` is in scope, then we
-                // can simply store that in the phi&#39;s local variable.
+                // can simply store that in the phi's local variable.
                 //
                 // Otherwise, spill the source value to a local variable in the block that
                 // defines it. (We know this store dominates the predecessor; otherwise,
-                // the phi wouldn&#39;t have been able to refer to that source expression in
+                // the phi wouldn't have been able to refer to that source expression in
                 // the first place.) Then, the predecessor block can count on finding the
-                // source&#39;s value in that local variable.
+                // source's value in that local variable.
                 </span><span class="kw">let </span>value = <span class="kw">if </span><span class="kw">super</span>::is_parent(predecessor_body_idx, source_body_idx, <span class="kw-2">&amp;</span>block_ctx) {
                     source_lexp.handle
                 } <span class="kw">else </span>{
-                    <span class="comment">// The source SPIR-V expression is not defined in the phi&#39;s
+                    <span class="comment">// The source SPIR-V expression is not defined in the phi's
                     // predecessor block, nor is it a globally available expression. So it
                     // must be defined off in some other block that merely dominates the
                     // predecessor. This means that the corresponding Naga `Expression`
@@ -925,7 +925,7 @@
                         .push(<span class="kw">crate</span>::Statement::Emit(range), <span class="kw">crate</span>::Span::default());
 
                     <span class="comment">// At the end of the block that defines it, spill the source
-                    // expression&#39;s value.
+                    // expression's value.
                     </span>block_ctx
                         .blocks
                         .get_mut(<span class="kw-2">&amp;</span>source_lexp.block_id)
@@ -942,7 +942,7 @@
                 };
 
                 <span class="comment">// At the end of the phi predecessor block, store the source
-                // value in the phi&#39;s value.
+                // value in the phi's value.
                 </span>block_ctx.blocks.get_mut(<span class="kw-2">&amp;</span>predecessor).unwrap().push(
                     <span class="kw">crate</span>::Statement::Store {
                         pointer: phi_pointer,
@@ -968,7 +968,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ep) = <span class="self">self</span>.lookup_entry_point.remove(<span class="kw-2">&amp;</span>fun_id) {
             <span class="comment">// create a wrapping function
             </span><span class="kw">let </span><span class="kw-2">mut </span>function = <span class="kw">crate</span>::Function {
-                name: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;{}_wrap&quot;</span>, ep.name)),
+                name: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}_wrap"</span>, ep.name)),
                 arguments: Vec::new(),
                 result: <span class="prelude-val">None</span>,
                 local_variables: Arena::new(),
@@ -1024,7 +1024,7 @@
                 }
             }
             <span class="comment">// 2. call the wrapped function
-            </span><span class="kw">let </span>fake_id = !(module.entry_points.len() <span class="kw">as </span>u32); <span class="comment">// doesn&#39;t matter, as long as it&#39;s not a collision
+            </span><span class="kw">let </span>fake_id = !(module.entry_points.len() <span class="kw">as </span>u32); <span class="comment">// doesn't matter, as long as it's not a collision
             </span><span class="kw">let </span>dummy_handle = <span class="self">self</span>.add_call(fake_id, fun_id);
             function.body.push(
                 <span class="kw">crate</span>::Statement::Call {
@@ -1054,7 +1054,7 @@
                             <span class="kw">crate</span>::TypeInner::Struct {
                                 members: <span class="kw-2">ref </span>original_members,
                                 span,
-                            } <span class="kw">if </span>ty.name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">&quot;gl_PerVertex&quot;</span>) =&gt; {
+                            } <span class="kw">if </span>ty.name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"gl_PerVertex"</span>) =&gt; {
                                 <span class="kw">let </span><span class="kw-2">mut </span>new_members = original_members.clone();
                                 <span class="kw">for </span>member <span class="kw">in </span><span class="kw-2">&amp;mut </span>new_members {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(built_in)) = member.binding
@@ -1210,7 +1210,7 @@
                             name: <span class="prelude-val">None</span>,
                             inner: <span class="kw">crate</span>::TypeInner::Struct {
                                 members,
-                                span: <span class="number">0xFFFF</span>, <span class="comment">// shouldn&#39;t matter
+                                span: <span class="number">0xFFFF</span>, <span class="comment">// shouldn't matter
                             </span>},
                         },
                         span,
@@ -1242,7 +1242,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;function</span>&gt; BlockContext&lt;<span class="lifetime">&#39;function</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'function</span>&gt; BlockContext&lt;<span class="lifetime">'function</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>gctx(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::proc::GlobalCtx {
         <span class="kw">crate</span>::proc::GlobalCtx {
             types: <span class="self">self</span>.type_arena,

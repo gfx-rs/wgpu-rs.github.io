@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/sampler.rs`."><title>sampler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/sampler.rs`."><title>sampler.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -174,15 +174,15 @@
 <a href="#174" id="174">174</a>
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;deserialize&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"deserialize"</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serialize"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 <span class="kw">use </span>std::{num::NonZeroU32, ops::Range};
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub enum </span>Coord {
     Normalized,
     Pixel,
@@ -195,17 +195,17 @@
 }
 
 <span class="kw">impl </span>Coord {
-    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Normalized =&gt; <span class="string">&quot;normalized&quot;</span>,
-            <span class="self">Self</span>::Pixel =&gt; <span class="string">&quot;pixel&quot;</span>,
+            <span class="self">Self</span>::Normalized =&gt; <span class="string">"normalized"</span>,
+            <span class="self">Self</span>::Pixel =&gt; <span class="string">"pixel"</span>,
         }
     }
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub enum </span>Address {
     Repeat,
     MirroredRepeat,
@@ -221,20 +221,20 @@
 }
 
 <span class="kw">impl </span>Address {
-    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Repeat =&gt; <span class="string">&quot;repeat&quot;</span>,
-            <span class="self">Self</span>::MirroredRepeat =&gt; <span class="string">&quot;mirrored_repeat&quot;</span>,
-            <span class="self">Self</span>::ClampToEdge =&gt; <span class="string">&quot;clamp_to_edge&quot;</span>,
-            <span class="self">Self</span>::ClampToZero =&gt; <span class="string">&quot;clamp_to_zero&quot;</span>,
-            <span class="self">Self</span>::ClampToBorder =&gt; <span class="string">&quot;clamp_to_border&quot;</span>,
+            <span class="self">Self</span>::Repeat =&gt; <span class="string">"repeat"</span>,
+            <span class="self">Self</span>::MirroredRepeat =&gt; <span class="string">"mirrored_repeat"</span>,
+            <span class="self">Self</span>::ClampToEdge =&gt; <span class="string">"clamp_to_edge"</span>,
+            <span class="self">Self</span>::ClampToZero =&gt; <span class="string">"clamp_to_zero"</span>,
+            <span class="self">Self</span>::ClampToBorder =&gt; <span class="string">"clamp_to_border"</span>,
         }
     }
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub enum </span>BorderColor {
     TransparentBlack,
     OpaqueBlack,
@@ -248,28 +248,28 @@
 }
 
 <span class="kw">impl </span>BorderColor {
-    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::TransparentBlack =&gt; <span class="string">&quot;transparent_black&quot;</span>,
-            <span class="self">Self</span>::OpaqueBlack =&gt; <span class="string">&quot;opaque_black&quot;</span>,
-            <span class="self">Self</span>::OpaqueWhite =&gt; <span class="string">&quot;opaque_white&quot;</span>,
+            <span class="self">Self</span>::TransparentBlack =&gt; <span class="string">"transparent_black"</span>,
+            <span class="self">Self</span>::OpaqueBlack =&gt; <span class="string">"opaque_black"</span>,
+            <span class="self">Self</span>::OpaqueWhite =&gt; <span class="string">"opaque_white"</span>,
         }
     }
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub enum </span>Filter {
     Nearest,
     Linear,
 }
 
 <span class="kw">impl </span>Filter {
-    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Nearest =&gt; <span class="string">&quot;nearest&quot;</span>,
-            <span class="self">Self</span>::Linear =&gt; <span class="string">&quot;linear&quot;</span>,
+            <span class="self">Self</span>::Nearest =&gt; <span class="string">"nearest"</span>,
+            <span class="self">Self</span>::Linear =&gt; <span class="string">"linear"</span>,
         }
     }
 }
@@ -281,8 +281,8 @@
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub enum </span>CompareFunc {
     Never,
     Less,
@@ -301,23 +301,23 @@
 }
 
 <span class="kw">impl </span>CompareFunc {
-    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">pub const fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Never =&gt; <span class="string">&quot;never&quot;</span>,
-            <span class="self">Self</span>::Less =&gt; <span class="string">&quot;less&quot;</span>,
-            <span class="self">Self</span>::LessEqual =&gt; <span class="string">&quot;less_equal&quot;</span>,
-            <span class="self">Self</span>::Greater =&gt; <span class="string">&quot;greater&quot;</span>,
-            <span class="self">Self</span>::GreaterEqual =&gt; <span class="string">&quot;greater_equal&quot;</span>,
-            <span class="self">Self</span>::Equal =&gt; <span class="string">&quot;equal&quot;</span>,
-            <span class="self">Self</span>::NotEqual =&gt; <span class="string">&quot;not_equal&quot;</span>,
-            <span class="self">Self</span>::Always =&gt; <span class="string">&quot;always&quot;</span>,
+            <span class="self">Self</span>::Never =&gt; <span class="string">"never"</span>,
+            <span class="self">Self</span>::Less =&gt; <span class="string">"less"</span>,
+            <span class="self">Self</span>::LessEqual =&gt; <span class="string">"less_equal"</span>,
+            <span class="self">Self</span>::Greater =&gt; <span class="string">"greater"</span>,
+            <span class="self">Self</span>::GreaterEqual =&gt; <span class="string">"greater_equal"</span>,
+            <span class="self">Self</span>::Equal =&gt; <span class="string">"equal"</span>,
+            <span class="self">Self</span>::NotEqual =&gt; <span class="string">"not_equal"</span>,
+            <span class="self">Self</span>::Always =&gt; <span class="string">"always"</span>,
         }
     }
 }
 
 <span class="attr">#[derive(Clone, Debug, Default, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 </span><span class="kw">pub struct </span>InlineSampler {
     <span class="kw">pub </span>coord: Coord,
     <span class="kw">pub </span>address: [Address; <span class="number">3</span>],

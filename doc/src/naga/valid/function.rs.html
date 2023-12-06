@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1071,145 +1071,145 @@
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>CallError {
-    <span class="attr">#[error(<span class="string">&quot;Argument {index} expression is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Argument {index} expression is invalid"</span>)]
     </span>Argument {
         index: usize,
         source: ExpressionError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Result expression {0:?} has already been introduced earlier&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Result expression {0:?} has already been introduced earlier"</span>)]
     </span>ResultAlreadyInScope(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Result value is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Result value is invalid"</span>)]
     </span>ResultValue(<span class="attr">#[source] </span>ExpressionError),
-    <span class="attr">#[error(<span class="string">&quot;Requires {required} arguments, but {seen} are provided&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Requires {required} arguments, but {seen} are provided"</span>)]
     </span>ArgumentCount { required: usize, seen: usize },
-    <span class="attr">#[error(<span class="string">&quot;Argument {index} value {seen_expression:?} doesn&#39;t match the type {required:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Argument {index} value {seen_expression:?} doesn't match the type {required:?}"</span>)]
     </span>ArgumentType {
         index: usize,
         required: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         seen_expression: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;The emitted expression doesn&#39;t match the call&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The emitted expression doesn't match the call"</span>)]
     </span>ExpressionMismatch(<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>AtomicError {
-    <span class="attr">#[error(<span class="string">&quot;Pointer {0:?} to atomic is invalid.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pointer {0:?} to atomic is invalid."</span>)]
     </span>InvalidPointer(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Operand {0:?} has invalid type.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Operand {0:?} has invalid type."</span>)]
     </span>InvalidOperand(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Result type for {0:?} doesn&#39;t match the statement&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Result type for {0:?} doesn't match the statement"</span>)]
     </span>ResultTypeMismatch(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>LocalVariableError {
-    <span class="attr">#[error(<span class="string">&quot;Local variable has a type {0:?} that can&#39;t be stored in a local variable.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Local variable has a type {0:?} that can't be stored in a local variable."</span>)]
     </span>InvalidType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Initializer doesn&#39;t match the variable type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Initializer doesn't match the variable type"</span>)]
     </span>InitializerType,
-    <span class="attr">#[error(<span class="string">&quot;Initializer is not const&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Initializer is not const"</span>)]
     </span>NonConstInitializer,
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>FunctionError {
-    <span class="attr">#[error(<span class="string">&quot;Expression {handle:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Expression {handle:?} is invalid"</span>)]
     </span>Expression {
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         source: ExpressionError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Expression {0:?} can&#39;t be introduced - it&#39;s already in scope&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Expression {0:?} can't be introduced - it's already in scope"</span>)]
     </span>ExpressionAlreadyInScope(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Local variable {handle:?} &#39;{name}&#39; is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Local variable {handle:?} '{name}' is invalid"</span>)]
     </span>LocalVariable {
         handle: Handle&lt;<span class="kw">crate</span>::LocalVariable&gt;,
         name: String,
         source: LocalVariableError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Argument &#39;{name}&#39; at index {index} has a type that can&#39;t be passed into functions.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Argument '{name}' at index {index} has a type that can't be passed into functions."</span>)]
     </span>InvalidArgumentType { index: usize, name: String },
-    <span class="attr">#[error(<span class="string">&quot;The function&#39;s given return type cannot be returned from functions&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The function's given return type cannot be returned from functions"</span>)]
     </span>NonConstructibleReturnType,
-    <span class="attr">#[error(<span class="string">&quot;Argument &#39;{name}&#39; at index {index} is a pointer of space {space:?}, which can&#39;t be passed into functions.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Argument '{name}' at index {index} is a pointer of space {space:?}, which can't be passed into functions."</span>)]
     </span>InvalidArgumentPointerSpace {
         index: usize,
         name: String,
         space: <span class="kw">crate</span>::AddressSpace,
     },
-    <span class="attr">#[error(<span class="string">&quot;There are instructions after `return`/`break`/`continue`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"There are instructions after `return`/`break`/`continue`"</span>)]
     </span>InstructionsAfterReturn,
-    <span class="attr">#[error(<span class="string">&quot;The `break` is used outside of a `loop` or `switch` context&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `break` is used outside of a `loop` or `switch` context"</span>)]
     </span>BreakOutsideOfLoopOrSwitch,
-    <span class="attr">#[error(<span class="string">&quot;The `continue` is used outside of a `loop` context&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `continue` is used outside of a `loop` context"</span>)]
     </span>ContinueOutsideOfLoop,
-    <span class="attr">#[error(<span class="string">&quot;The `return` is called within a `continuing` block&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `return` is called within a `continuing` block"</span>)]
     </span>InvalidReturnSpot,
-    <span class="attr">#[error(<span class="string">&quot;The `return` value {0:?} does not match the function return value&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `return` value {0:?} does not match the function return value"</span>)]
     </span>InvalidReturnType(<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The `if` condition {0:?} is not a boolean scalar&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `if` condition {0:?} is not a boolean scalar"</span>)]
     </span>InvalidIfType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The `switch` value {0:?} is not an integer scalar&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `switch` value {0:?} is not an integer scalar"</span>)]
     </span>InvalidSwitchType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Multiple `switch` cases for {0:?} are present&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Multiple `switch` cases for {0:?} are present"</span>)]
     </span>ConflictingSwitchCase(<span class="kw">crate</span>::SwitchValue),
-    <span class="attr">#[error(<span class="string">&quot;The `switch` contains cases with conflicting types&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `switch` contains cases with conflicting types"</span>)]
     </span>ConflictingCaseType,
-    <span class="attr">#[error(<span class="string">&quot;The `switch` is missing a `default` case&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The `switch` is missing a `default` case"</span>)]
     </span>MissingDefaultCase,
-    <span class="attr">#[error(<span class="string">&quot;Multiple `default` cases are present&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Multiple `default` cases are present"</span>)]
     </span>MultipleDefaultCases,
-    <span class="attr">#[error(<span class="string">&quot;The last `switch` case contains a `falltrough`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The last `switch` case contains a `falltrough`"</span>)]
     </span>LastCaseFallTrough,
-    <span class="attr">#[error(<span class="string">&quot;The pointer {0:?} doesn&#39;t relate to a valid destination for a store&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The pointer {0:?} doesn't relate to a valid destination for a store"</span>)]
     </span>InvalidStorePointer(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The value {0:?} can not be stored&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The value {0:?} can not be stored"</span>)]
     </span>InvalidStoreValue(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The type of {value:?} doesn&#39;t match the type stored in {pointer:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The type of {value:?} doesn't match the type stored in {pointer:?}"</span>)]
     </span>InvalidStoreTypes {
         pointer: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;Image store parameters are invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Image store parameters are invalid"</span>)]
     </span>InvalidImageStore(<span class="attr">#[source] </span>ExpressionError),
-    <span class="attr">#[error(<span class="string">&quot;Call to {function:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Call to {function:?} is invalid"</span>)]
     </span>InvalidCall {
         function: Handle&lt;<span class="kw">crate</span>::Function&gt;,
         <span class="attr">#[source]
         </span>error: CallError,
     },
-    <span class="attr">#[error(<span class="string">&quot;Atomic operation is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Atomic operation is invalid"</span>)]
     </span>InvalidAtomic(<span class="attr">#[from] </span>AtomicError),
-    <span class="attr">#[error(<span class="string">&quot;Ray Query {0:?} is not a local variable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Ray Query {0:?} is not a local variable"</span>)]
     </span>InvalidRayQueryExpression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Acceleration structure {0:?} is not a matching expression&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Acceleration structure {0:?} is not a matching expression"</span>)]
     </span>InvalidAccelerationStructure(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Ray descriptor {0:?} is not a matching expression&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Ray descriptor {0:?} is not a matching expression"</span>)]
     </span>InvalidRayDescriptor(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Ray Query {0:?} does not have a matching type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Ray Query {0:?} does not have a matching type"</span>)]
     </span>InvalidRayQueryType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(
-        <span class="string">&quot;Required uniformity of control flow for {0:?} in {1:?} is not fulfilled because of {2:?}&quot;
+        <span class="string">"Required uniformity of control flow for {0:?} in {1:?} is not fulfilled because of {2:?}"
     </span>)]
     </span>NonUniformControlFlow(
         UniformityRequirements,
         Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         UniformityDisruptor,
     ),
-    <span class="attr">#[error(<span class="string">&quot;Functions that are not entry points cannot have `@location` or `@builtin` attributes on their arguments: \&quot;{name}\&quot; has attributes&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Functions that are not entry points cannot have `@location` or `@builtin` attributes on their arguments: \"{name}\" has attributes"</span>)]
     </span>PipelineInputRegularFunction { name: String },
-    <span class="attr">#[error(<span class="string">&quot;Functions that are not entry points cannot have `@location` or `@builtin` attributes on their return value types&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Functions that are not entry points cannot have `@location` or `@builtin` attributes on their return value types"</span>)]
     </span>PipelineOutputRegularFunction,
-    <span class="attr">#[error(<span class="string">&quot;Required uniformity for WorkGroupUniformLoad is not fulfilled because of {0:?}&quot;</span>)]
-    </span><span class="comment">// The actual load statement will be &quot;pointed to&quot; by the span
+    <span class="attr">#[error(<span class="string">"Required uniformity for WorkGroupUniformLoad is not fulfilled because of {0:?}"</span>)]
+    </span><span class="comment">// The actual load statement will be "pointed to" by the span
     </span>NonUniformWorkgroupUniformLoad(UniformityDisruptor),
     <span class="comment">// This is only possible with a misbehaving frontend
-    </span><span class="attr">#[error(<span class="string">&quot;The expression {0:?} for a WorkGroupUniformLoad isn&#39;t a WorkgroupUniformLoadResult&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"The expression {0:?} for a WorkGroupUniformLoad isn't a WorkgroupUniformLoadResult"</span>)]
     </span>WorkgroupUniformLoadExpressionMismatch(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;The expression {0:?} is not valid as a WorkGroupUniformLoad argument. It should be a Pointer in Workgroup address space&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The expression {0:?} is not valid as a WorkGroupUniformLoad argument. It should be a Pointer in Workgroup address space"</span>)]
     </span>WorkgroupUniformLoadInvalidPointer(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
 }
 
@@ -1231,25 +1231,25 @@
     finished: bool,
 }
 
-<span class="kw">struct </span>BlockContext&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">struct </span>BlockContext&lt;<span class="lifetime">'a</span>&gt; {
     abilities: ControlFlowAbility,
-    info: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FunctionInfo,
-    expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
-    types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
-    local_vars: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;<span class="kw">crate</span>::LocalVariable&gt;,
-    global_vars: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
-    functions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arena&lt;<span class="kw">crate</span>::Function&gt;,
-    special_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::SpecialTypes,
-    prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[FunctionInfo],
+    info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>FunctionInfo,
+    expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+    types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
+    local_vars: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::LocalVariable&gt;,
+    global_vars: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
+    functions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::Function&gt;,
+    special_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::SpecialTypes,
+    prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[FunctionInfo],
     return_type: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BlockContext&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BlockContext&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>new(
-        fun: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Function,
-        module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Module,
-        info: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FunctionInfo,
-        prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[FunctionInfo],
+        fun: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Function,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Module,
+        info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>FunctionInfo,
+        prev_infos: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[FunctionInfo],
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             abilities: ControlFlowAbility::RETURN,
@@ -1269,7 +1269,7 @@
         BlockContext { abilities, ..<span class="kw-2">*</span><span class="self">self </span>}
     }
 
-    <span class="kw">fn </span>get_expression(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Expression {
+    <span class="kw">fn </span>get_expression(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Expression {
         <span class="kw-2">&amp;</span><span class="self">self</span>.expressions[handle]
     }
 
@@ -1395,14 +1395,14 @@
             <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>context.types[base].inner {
                 <span class="kw">crate</span>::TypeInner::Atomic(scalar) =&gt; scalar,
                 <span class="kw-2">ref </span>other =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;Atomic pointer to type {:?}&quot;</span>, other);
+                    <span class="macro">log::error!</span>(<span class="string">"Atomic pointer to type {:?}"</span>, other);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidPointer(pointer)
                         .with_span_handle(pointer, context.expressions)
                         .into_other());
                 }
             },
             <span class="kw-2">ref </span>other =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Atomic on type {:?}&quot;</span>, other);
+                <span class="macro">log::error!</span>(<span class="string">"Atomic on type {:?}"</span>, other);
                 <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidPointer(pointer)
                     .with_span_handle(pointer, context.expressions)
                     .into_other());
@@ -1413,7 +1413,7 @@
         <span class="kw">match </span><span class="kw-2">*</span>value_inner {
             <span class="kw">crate</span>::TypeInner::Scalar(scalar) <span class="kw">if </span>scalar == ptr_scalar =&gt; {}
             <span class="kw-2">ref </span>other =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Atomic operand type {:?}&quot;</span>, other);
+                <span class="macro">log::error!</span>(<span class="string">"Atomic operand type {:?}"</span>, other);
                 <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidOperand(value)
                     .with_span_handle(value, context.expressions)
                     .into_other());
@@ -1422,7 +1422,7 @@
 
         <span class="kw">if let </span><span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } = <span class="kw-2">*</span>fun {
             <span class="kw">if </span>context.resolve_type(cmp, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">? </span>!= value_inner {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Atomic exchange comparison has a different type from the value&quot;</span>);
+                <span class="macro">log::error!</span>(<span class="string">"Atomic exchange comparison has a different type from the value"</span>);
                 <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidOperand(cmp)
                     .with_span_handle(cmp, context.expressions)
                     .into_other());
@@ -1467,7 +1467,7 @@
         <span class="kw">for </span>(statement, <span class="kw-2">&amp;</span>span) <span class="kw">in </span>statements.span_iter() {
             <span class="kw">if </span>finished {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InstructionsAfterReturn
-                    .with_span_static(span, <span class="string">&quot;instructions after return&quot;</span>));
+                    .with_span_static(span, <span class="string">"instructions after return"</span>));
             }
             <span class="kw">match </span><span class="kw-2">*</span>statement {
                 S::Emit(<span class="kw-2">ref </span>range) =&gt; {
@@ -1525,7 +1525,7 @@
                                         .span_iter()
                                         .next()
                                         .map_or(Default::default(), |(<span class="kw">_</span>, s)| <span class="kw-2">*</span>s),
-                                    <span class="string">&quot;conflicting switch arm here&quot;</span>,
+                                    <span class="string">"conflicting switch arm here"</span>,
                                 ));
                             }
                         };
@@ -1537,7 +1537,7 @@
                                             .span_iter()
                                             .next()
                                             .map_or(Default::default(), |(<span class="kw">_</span>, s)| <span class="kw-2">*</span>s),
-                                        <span class="string">&quot;duplicated switch arm here&quot;</span>,
+                                        <span class="string">"duplicated switch arm here"</span>,
                                     ),
                                 <span class="kw">_ </span>=&gt; FunctionError::ConflictingSwitchCase(case.value)
                                     .with_span_static(
@@ -1545,14 +1545,14 @@
                                             .span_iter()
                                             .next()
                                             .map_or(Default::default(), |(<span class="kw">_</span>, s)| <span class="kw-2">*</span>s),
-                                        <span class="string">&quot;conflicting switch arm here&quot;</span>,
+                                        <span class="string">"conflicting switch arm here"</span>,
                                     ),
                             });
                         }
                     }
                     <span class="kw">if </span>!<span class="self">self</span>.switch_values.contains(<span class="kw-2">&amp;</span><span class="kw">crate</span>::SwitchValue::Default) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::MissingDefaultCase
-                            .with_span_static(span, <span class="string">&quot;missing default case&quot;</span>));
+                            .with_span_static(span, <span class="string">"missing default case"</span>));
                     }
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(case) = cases.last() {
                         <span class="kw">if </span>case.fall_through {
@@ -1561,7 +1561,7 @@
                                     .span_iter()
                                     .next()
                                     .map_or(Default::default(), |(<span class="kw">_</span>, s)| <span class="kw-2">*</span>s),
-                                <span class="string">&quot;bad switch arm here&quot;</span>,
+                                <span class="string">"bad switch arm here"</span>,
                             ));
                         }
                     }
@@ -1619,27 +1619,27 @@
                 S::Break =&gt; {
                     <span class="kw">if </span>!context.abilities.contains(ControlFlowAbility::BREAK) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::BreakOutsideOfLoopOrSwitch
-                            .with_span_static(span, <span class="string">&quot;invalid break&quot;</span>));
+                            .with_span_static(span, <span class="string">"invalid break"</span>));
                     }
                     finished = <span class="bool-val">true</span>;
                 }
                 S::Continue =&gt; {
                     <span class="kw">if </span>!context.abilities.contains(ControlFlowAbility::CONTINUE) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::ContinueOutsideOfLoop
-                            .with_span_static(span, <span class="string">&quot;invalid continue&quot;</span>));
+                            .with_span_static(span, <span class="string">"invalid continue"</span>));
                     }
                     finished = <span class="bool-val">true</span>;
                 }
                 S::Return { value } =&gt; {
                     <span class="kw">if </span>!context.abilities.contains(ControlFlowAbility::RETURN) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidReturnSpot
-                            .with_span_static(span, <span class="string">&quot;invalid return&quot;</span>));
+                            .with_span_static(span, <span class="string">"invalid return"</span>));
                     }
                     <span class="kw">let </span>value_ty = value
                         .map(|expr| context.resolve_type(expr, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set))
                         .transpose()<span class="question-mark">?</span>;
                     <span class="kw">let </span>expected_ty = context.return_type.map(|ty| <span class="kw-2">&amp;</span>context.types[ty].inner);
-                    <span class="comment">// We can&#39;t return pointers, but it seems best not to embed that
+                    <span class="comment">// We can't return pointers, but it seems best not to embed that
                     // assumption here, so use `TypeInner::equivalent` for comparison.
                     </span><span class="kw">let </span>okay = <span class="kw">match </span>(value_ty, expected_ty) {
                         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="bool-val">true</span>,
@@ -1651,7 +1651,7 @@
 
                     <span class="kw">if </span>!okay {
                         <span class="macro">log::error!</span>(
-                            <span class="string">&quot;Returning {:?} where {:?} is expected&quot;</span>,
+                            <span class="string">"Returning {:?} where {:?} is expected"</span>,
                             value_ty,
                             expected_ty
                         );
@@ -1660,7 +1660,7 @@
                                 .with_span_handle(handle, context.expressions));
                         } <span class="kw">else </span>{
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidReturnType(value)
-                                .with_span_static(span, <span class="string">&quot;invalid return&quot;</span>));
+                                .with_span_static(span, <span class="string">"invalid return"</span>));
                         }
                     }
                     finished = <span class="bool-val">true</span>;
@@ -1733,7 +1733,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidStorePointer(pointer)
                                 .with_span_static(
                                     context.expressions.get_span(pointer),
-                                    <span class="string">&quot;writing to this location is not permitted&quot;</span>,
+                                    <span class="string">"writing to this location is not permitted"</span>,
                                 ));
                         }
                     }
@@ -1750,7 +1750,7 @@
                         <span class="kw">crate</span>::Expression::GlobalVariable(var_handle) =&gt; {
                             <span class="kw-2">&amp;</span>context.global_vars[var_handle]
                         }
-                        <span class="comment">// We&#39;re looking at a binding index situation, so punch through the index and look at the global behind it.
+                        <span class="comment">// We're looking at a binding index situation, so punch through the index and look at the global behind it.
                         </span><span class="kw">crate</span>::Expression::Access { base, .. }
                         | <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; {
                             <span class="kw">match </span><span class="kw-2">*</span>context.get_expression(base) {
@@ -1861,7 +1861,7 @@
                     <span class="prelude-val">Err</span>(error) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(error.and_then(|error| {
                             FunctionError::InvalidCall { function, error }
-                                .with_span_static(span, <span class="string">&quot;invalid function call&quot;</span>)
+                                .with_span_static(span, <span class="string">"invalid function call"</span>)
                         }))
                     }
                 },
@@ -1888,7 +1888,7 @@
                         } =&gt; {}
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::WorkgroupUniformLoadInvalidPointer(pointer)
-                                .with_span_static(span, <span class="string">&quot;WorkGroupUniformLoad&quot;</span>))
+                                .with_span_static(span, <span class="string">"WorkGroupUniformLoad"</span>))
                         }
                     }
                     <span class="self">self</span>.emit_expression(result, context)<span class="question-mark">?</span>;
@@ -1898,7 +1898,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::WorkgroupUniformLoadExpressionMismatch(
                                 result,
                             )
-                            .with_span_static(span, <span class="string">&quot;WorkGroupUniformLoad&quot;</span>));
+                            .with_span_static(span, <span class="string">"WorkGroupUniformLoad"</span>));
                         }
                     };
                     <span class="kw">let </span>expected_pointer_inner = Ti::Pointer {
@@ -1907,24 +1907,24 @@
                     };
                     <span class="kw">if </span>!expected_pointer_inner.equivalent(pointer_inner, context.types) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::WorkgroupUniformLoadInvalidPointer(pointer)
-                            .with_span_static(span, <span class="string">&quot;WorkGroupUniformLoad&quot;</span>));
+                            .with_span_static(span, <span class="string">"WorkGroupUniformLoad"</span>));
                     }
                 }
                 S::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
                     <span class="kw">let </span>query_var = <span class="kw">match </span><span class="kw-2">*</span>context.get_expression(query) {
                         <span class="kw">crate</span>::Expression::LocalVariable(var) =&gt; <span class="kw-2">&amp;</span>context.local_vars[var],
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected ray query expression {other:?}&quot;</span>);
+                            <span class="macro">log::error!</span>(<span class="string">"Unexpected ray query expression {other:?}"</span>);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidRayQueryExpression(query)
-                                .with_span_static(span, <span class="string">&quot;invalid query expression&quot;</span>));
+                                .with_span_static(span, <span class="string">"invalid query expression"</span>));
                         }
                     };
                     <span class="kw">match </span>context.types[query_var.ty].inner {
                         Ti::RayQuery =&gt; {}
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected ray query type {other:?}&quot;</span>);
+                            <span class="macro">log::error!</span>(<span class="string">"Unexpected ray query type {other:?}"</span>);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidRayQueryType(query_var.ty)
-                                .with_span_static(span, <span class="string">&quot;invalid query type&quot;</span>));
+                                .with_span_static(span, <span class="string">"invalid query type"</span>));
                         }
                     }
                     <span class="kw">match </span><span class="kw-2">*</span>fun {
@@ -1940,7 +1940,7 @@
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidAccelerationStructure(
                                         acceleration_structure,
                                     )
-                                    .with_span_static(span, <span class="string">&quot;invalid acceleration structure&quot;</span>))
+                                    .with_span_static(span, <span class="string">"invalid acceleration structure"</span>))
                                 }
                             }
                             <span class="kw">let </span>desc_ty_given =
@@ -1951,7 +1951,7 @@
                                 .map(|handle| <span class="kw-2">&amp;</span>context.types[handle].inner);
                             <span class="kw">if </span><span class="prelude-val">Some</span>(desc_ty_given) != desc_ty_expected {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidRayDescriptor(descriptor)
-                                    .with_span_static(span, <span class="string">&quot;invalid ray descriptor&quot;</span>));
+                                    .with_span_static(span, <span class="string">"invalid ray descriptor"</span>));
                             }
                         }
                         <span class="kw">crate</span>::RayQueryFunction::Proceed { result } =&gt; {
@@ -1985,7 +1985,7 @@
         fun_info: <span class="kw-2">&amp;</span>FunctionInfo,
         expression_constness: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::ExpressionConstnessTracker,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LocalVariableError&gt; {
-        <span class="macro">log::debug!</span>(<span class="string">&quot;var {:?}&quot;</span>, var);
+        <span class="macro">log::debug!</span>(<span class="string">"var {:?}"</span>, var);
         <span class="kw">let </span>type_info = <span class="self">self
             </span>.types
             .get(var.ty.index())

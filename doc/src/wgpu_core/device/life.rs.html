@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/life.rs`."><title>life.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/life.rs`."><title>life.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -948,7 +948,7 @@
 <a href="#948" id="948">948</a>
 <a href="#949" id="949">949</a>
 <a href="#950" id="950">950</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
@@ -1076,7 +1076,7 @@
 </span><span class="kw">struct </span>ActiveSubmission&lt;A: HalApi&gt; {
     <span class="doccomment">/// The index of the submission we track.
     ///
-    /// When `Device::fence`&#39;s value is greater than or equal to this, our queue
+    /// When `Device::fence`'s value is greater than or equal to this, our queue
     /// submission has completed.
     </span>index: SubmissionIndex,
 
@@ -1097,7 +1097,7 @@
 
     encoders: Vec&lt;EncoderInFlight&lt;A&gt;&gt;,
 
-    <span class="doccomment">/// List of queue &quot;on_submitted_work_done&quot; closures to be called once this
+    <span class="doccomment">/// List of queue "on_submitted_work_done" closures to be called once this
     /// submission has completed.
     </span>work_done_closures: SmallVec&lt;[SubmittedWorkDoneClosure; <span class="number">1</span>]&gt;,
 }
@@ -1107,9 +1107,9 @@
 </span><span class="kw">pub enum </span>WaitIdleError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Tried to wait using a submission index from the wrong device. Submission index is from device {0:?}. Called poll on device {1:?}.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Tried to wait using a submission index from the wrong device. Submission index is from device {0:?}. Called poll on device {1:?}."</span>)]
     </span>WrongSubmissionIndex(id::QueueId, id::DeviceId),
-    <span class="attr">#[error(<span class="string">&quot;GPU got stuck :(&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"GPU got stuck :("</span>)]
     </span>StuckGpu,
 }
 
@@ -1120,7 +1120,7 @@
 /// A buffer cannot be mapped until all active queue submissions that use it
 /// have completed. To that end:
 ///
-/// -   Each buffer&#39;s `ResourceInfo::submission_index` records the index of the
+/// -   Each buffer's `ResourceInfo::submission_index` records the index of the
 ///     most recent queue submission that uses that buffer.
 ///
 /// -   Calling `Global::buffer_map_async` adds the buffer to
@@ -1185,13 +1185,13 @@
     /// queue submission still in flight.
     </span>ready_to_map: Vec&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
 
-    <span class="doccomment">/// Queue &quot;on_submitted_work_done&quot; closures that were initiated for while there is no
+    <span class="doccomment">/// Queue "on_submitted_work_done" closures that were initiated for while there is no
     /// currently pending submissions. These cannot be immeidately invoked as they
     /// must happen _after_ all mapped buffer callbacks are mapped, so we defer them
     /// here until the next time the device is maintained.
     </span>work_done_closures: SmallVec&lt;[SubmittedWorkDoneClosure; <span class="number">1</span>]&gt;,
 
-    <span class="doccomment">/// Closure to be called on &quot;lose the device&quot;. This is invoked directly by
+    <span class="doccomment">/// Closure to be called on "lose the device". This is invoked directly by
     /// device.lose or by the UserCallbacks returned from maintain when the device
     /// has been destroyed and its queues are empty.
     </span><span class="kw">pub </span>device_lost_closure: <span class="prelude-ty">Option</span>&lt;DeviceLostClosure&gt;,
@@ -1266,12 +1266,12 @@
     /// Assume that all submissions up through `last_done` have completed.
     ///
     /// -   Buffers used by those submissions are now ready to map, if
-    ///     requested. Add any buffers in the submission&#39;s [`mapped`] list to
+    ///     requested. Add any buffers in the submission's [`mapped`] list to
     ///     [`self.ready_to_map`], where [`LifetimeTracker::handle_mapping`] will find
     ///     them.
     ///
     /// -   Resources whose final use was in those submissions are now ready to
-    ///     free. Add any resources in the submission&#39;s [`last_resources`] table
+    ///     free. Add any resources in the submission's [`last_resources`] table
     ///     to [`self.free_resources`], where [`LifetimeTracker::cleanup`] will find
     ///     them.
     ///
@@ -1288,7 +1288,7 @@
         last_done: SubmissionIndex,
         command_allocator: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::CommandAllocator&lt;A&gt;,
     ) -&gt; SmallVec&lt;[SubmittedWorkDoneClosure; <span class="number">1</span>]&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;triage_submissions&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"triage_submissions"</span>);
 
         <span class="comment">//TODO: enable when `is_sorted_by_key` is stable
         //debug_assert!(self.active.is_sorted_by_key(|a| a.index));
@@ -1300,7 +1300,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>work_done_closures: SmallVec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.work_done_closures.drain(..).collect();
         <span class="kw">for </span>a <span class="kw">in </span><span class="self">self</span>.active.drain(..done_count) {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Active submission {} is done&quot;</span>, a.index);
+            <span class="macro">log::debug!</span>(<span class="string">"Active submission {} is done"</span>, a.index);
             <span class="self">self</span>.free_resources.extend(a.last_resources);
             <span class="self">self</span>.ready_to_map.extend(a.mapped);
             <span class="kw">for </span>encoder <span class="kw">in </span>a.encoders {
@@ -1313,7 +1313,7 @@
     }
 
     <span class="kw">pub fn </span>cleanup(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;LifetimeTracker::cleanup&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"LifetimeTracker::cleanup"</span>);
         <span class="self">self</span>.free_resources.clear();
     }
 
@@ -1389,7 +1389,7 @@
     <span class="kw">fn </span>triage_suspected_render_bundles(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1399,7 +1399,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.bundles,
             |_bundle_id, _bundle| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyRenderBundle(<span class="kw-2">*</span>_bundle_id));
                 }
@@ -1428,7 +1428,7 @@
     <span class="kw">fn </span>triage_suspected_bind_groups(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1438,7 +1438,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.bind_groups,
             |_bind_group_id, _bind_group| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyBindGroup(<span class="kw-2">*</span>_bind_group_id));
                 }
@@ -1471,7 +1471,7 @@
     <span class="kw">fn </span>triage_suspected_texture_views(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1481,7 +1481,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.views,
             |_texture_view_id, _texture_view| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyTextureView(<span class="kw-2">*</span>_texture_view_id));
                 }
@@ -1500,7 +1500,7 @@
     <span class="kw">fn </span>triage_suspected_textures(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1510,7 +1510,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.textures,
             |_texture_id, _texture| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyTexture(<span class="kw-2">*</span>_texture_id));
                 }
@@ -1522,7 +1522,7 @@
     <span class="kw">fn </span>triage_suspected_samplers(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1532,7 +1532,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.samplers,
             |_sampler_id, _sampler| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroySampler(<span class="kw-2">*</span>_sampler_id));
                 }
@@ -1544,7 +1544,7 @@
     <span class="kw">fn </span>triage_suspected_buffers(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1554,7 +1554,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.buffers,
             |_buffer_id, _buffer| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyBuffer(<span class="kw-2">*</span>_buffer_id));
                 }
@@ -1575,7 +1575,7 @@
     <span class="kw">fn </span>triage_suspected_compute_pipelines(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1585,7 +1585,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.compute_pipelines,
             |_compute_pipeline_id, _compute_pipeline| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyComputePipeline(<span class="kw-2">*</span>_compute_pipeline_id));
                 }
@@ -1603,7 +1603,7 @@
     <span class="kw">fn </span>triage_suspected_render_pipelines(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
@@ -1613,7 +1613,7 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.render_pipelines,
             |_render_pipeline_id, _render_pipeline| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyRenderPipeline(<span class="kw-2">*</span>_render_pipeline_id));
                 }
@@ -1630,13 +1630,13 @@
 
     <span class="kw">fn </span>triage_suspected_pipeline_layouts(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = Vec::new();
         <span class="self">self</span>.suspected_resources
             .map_mut::&lt;PipelineLayoutId, PipelineLayout&lt;A&gt;&gt;()
             .retain(|_pipeline_layout_id, pipeline_layout| {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyPipelineLayout(<span class="kw-2">*</span>_pipeline_layout_id));
                 }
@@ -1654,7 +1654,7 @@
 
     <span class="kw">fn </span>triage_suspected_bind_group_layouts(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.suspected_resources
             .map_mut::&lt;BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;()
@@ -1663,7 +1663,7 @@
                 //Note: nothing else can bump the refcount since the guard is locked exclusively
                 //Note: same BGL can appear multiple times in the list, but only the last
                 // encounter could drop the refcount to 0.
-                </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
                     t.add(trace::Action::DestroyBindGroupLayout(<span class="kw-2">*</span>bind_group_layout_id));
                 }
@@ -1709,7 +1709,7 @@
     /// the hal:
     ///
     /// -   Add resources used by queue submissions still in flight to the
-    ///     [`last_resources`] table of the last such submission&#39;s entry in
+    ///     [`last_resources`] table of the last such submission's entry in
     ///     [`self.active`]. When that submission has finished execution. the
     ///     [`triage_submissions`] method will move them to
     ///     [`self.free_resources`].
@@ -1722,7 +1722,7 @@
     ///
     /// This function finds resources that are used only by other resources
     /// ready to be freed, and adds those to the free lists as well. For
-    /// example, if there&#39;s some texture `T` used only by some texture view
+    /// example, if there's some texture `T` used only by some texture view
     /// `TV`, then if `TV` can be freed, `T` gets added to the free lists too.
     ///
     /// Since `wgpu-core` resource ownership patterns are acyclic, we can visit
@@ -1740,59 +1740,59 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>triage_suspected(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)] </span><span class="kw-2">mut </span>trace: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span><span class="kw-2">mut </span>trace: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;triage_suspected&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"triage_suspected"</span>);
 
         <span class="comment">//NOTE: the order is important to release resources that depends between each other!
         </span><span class="self">self</span>.triage_suspected_render_bundles(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_compute_pipelines(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_render_pipelines(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_bind_groups(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_pipeline_layouts(
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_bind_group_layouts(
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_query_sets(trackers);
         <span class="self">self</span>.triage_suspected_samplers(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_staging_buffers();
         <span class="self">self</span>.triage_suspected_texture_views(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_textures(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
         <span class="self">self</span>.triage_suspected_buffers(
             trackers,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );
     }
@@ -1809,7 +1809,7 @@
         <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.mapped.drain(..) {
             <span class="kw">let </span>submit_index = buffer.info.submission_index();
             <span class="macro">log::trace!</span>(
-                <span class="string">&quot;Mapping of {:?} at submission {:?} gets assigned to active {:?}&quot;</span>,
+                <span class="string">"Mapping of {:?} at submission {:?} gets assigned to active {:?}"</span>,
                 buffer.info.id(),
                 submit_index,
                 <span class="self">self</span>.active.iter().position(|a| a.index == submit_index)
@@ -1848,7 +1848,7 @@
             };
             <span class="kw">if </span>is_removed {
                 <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Idle;
-                <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer ready to map {:?} is not tracked anymore&quot;</span>, buffer_id);
+                <span class="macro">log::trace!</span>(<span class="string">"Buffer ready to map {:?} is not tracked anymore"</span>, buffer_id);
                 <span class="self">self</span>.free_resources.insert(buffer_id, buffer.clone());
             } <span class="kw">else </span>{
                 <span class="kw">let </span>mapping = <span class="kw">match </span>std::mem::replace(
@@ -1864,10 +1864,10 @@
                         <span class="kw-2">*</span>buffer.map_state.lock() = active;
                         <span class="kw">continue</span>;
                     }
-                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;No pending mapping.&quot;</span>),
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No pending mapping."</span>),
                 };
                 <span class="kw">let </span>status = <span class="kw">if </span>mapping.range.start != mapping.range.end {
-                    <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Active&quot;</span>, buffer_id);
+                    <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Active"</span>, buffer_id);
                     <span class="kw">let </span>host = mapping.op.host;
                     <span class="kw">let </span>size = mapping.range.end - mapping.range.start;
                     <span class="kw">match </span><span class="kw">super</span>::map_buffer(raw, <span class="kw-2">&amp;</span>buffer, mapping.range.start, size, host) {
@@ -1880,7 +1880,7 @@
                             <span class="prelude-val">Ok</span>(())
                         }
                         <span class="prelude-val">Err</span>(e) =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Mapping failed: {e}&quot;</span>);
+                            <span class="macro">log::error!</span>(<span class="string">"Mapping failed: {e}"</span>);
                             <span class="prelude-val">Err</span>(e)
                         }
                     }

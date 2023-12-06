@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/layouter.rs`."><title>layouter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/layouter.rs`."><title>layouter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -254,8 +254,8 @@
 
 <span class="doccomment">/// A newtype struct where its only valid values are powers of 2
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>Alignment(NonZeroU32);
 
 <span class="kw">impl </span>Alignment {
@@ -269,7 +269,7 @@
 
     <span class="kw">pub const fn </span>new(n: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">if </span>n.is_power_of_two() {
-            <span class="comment">// SAFETY: value can&#39;t be 0 since we just checked if it&#39;s a power of 2
+            <span class="comment">// SAFETY: value can't be 0 since we just checked if it's a power of 2
             </span><span class="prelude-val">Some</span>(<span class="self">Self</span>(<span class="kw">unsafe </span>{ NonZeroU32::new_unchecked(n) }))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -301,7 +301,7 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>Alignment {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="self">self</span>.<span class="number">0</span>.get().fmt(f)
     }
 }
@@ -335,8 +335,8 @@
 
 <span class="doccomment">/// Size and alignment information for a type.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>TypeLayout {
     <span class="kw">pub </span>size: u32,
     <span class="kw">pub </span>alignment: Alignment,
@@ -352,15 +352,15 @@
 <span class="doccomment">/// Helper processor that derives the sizes of all types.
 ///
 /// `Layouter` uses the default layout algorithm/table, described in
-/// [WGSL §4.3.7, &quot;Memory Layout&quot;]
+/// [WGSL §4.3.7, "Memory Layout"]
 ///
 /// A `Layouter` may be indexed by `Handle&lt;Type&gt;` values: `layouter[handle]` is the
 /// layout of the type whose handle is `handle`.
 ///
-/// [WGSL §4.3.7, &quot;Memory Layout&quot;](https://gpuweb.github.io/gpuweb/wgsl/#memory-layouts)
+/// [WGSL §4.3.7, "Memory Layout"](https://gpuweb.github.io/gpuweb/wgsl/#memory-layouts)
 </span><span class="attr">#[derive(Debug, Default)]
-#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>Layouter {
     <span class="doccomment">/// Layouts for types in an arena, indexed by `Handle` index.
     </span>layouts: Vec&lt;TypeLayout&gt;,
@@ -375,16 +375,16 @@
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, thiserror::Error)]
 </span><span class="kw">pub enum </span>LayoutErrorInner {
-    <span class="attr">#[error(<span class="string">&quot;Array element type {0:?} doesn&#39;t exist&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Array element type {0:?} doesn't exist"</span>)]
     </span>InvalidArrayElementType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Struct member[{0}] type {1:?} doesn&#39;t exist&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Struct member[{0}] type {1:?} doesn't exist"</span>)]
     </span>InvalidStructMemberType(u32, Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Type width must be a power of two&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Type width must be a power of two"</span>)]
     </span>NonPowerOfTwoWidth,
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, PartialEq, thiserror::Error)]
-#[error(<span class="string">&quot;Error laying out type {ty:?}: {inner}&quot;</span>)]
+#[error(<span class="string">"Error laying out type {ty:?}: {inner}"</span>)]
 </span><span class="kw">pub struct </span>LayoutError {
     <span class="kw">pub </span>ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>inner: LayoutErrorInner,

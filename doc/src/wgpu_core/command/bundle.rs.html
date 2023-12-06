@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bundle.rs`."><title>bundle.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bundle.rs`."><title>bundle.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1661,10 +1661,10 @@ efficient than simply re-recording its commands each time.
 Not all commands are available in bundles; for example, a render bundle may not
 contain a [`RenderCommand::SetViewport`] command.
 
-Most of `wgpu`&#39;s backend graphics APIs have something like bundles. For example,
-Vulkan calls them &quot;secondary command buffers&quot;, and Metal calls them &quot;indirect
-command buffers&quot;. Although we plan to take advantage of these platform features
-at some point in the future, for now `wgpu`&#39;s implementation of render bundles
+Most of `wgpu`'s backend graphics APIs have something like bundles. For example,
+Vulkan calls them "secondary command buffers", and Metal calls them "indirect
+command buffers". Although we plan to take advantage of these platform features
+at some point in the future, for now `wgpu`'s implementation of render bundles
 does not use them: at the hal level, `wgpu` render bundles just replay the
 commands.
 
@@ -1674,15 +1674,15 @@ One important property of render bundles is that the draw calls in a render
 bundle depend solely on the pipeline and state established within the render
 bundle itself. A draw call in a bundle will never use a vertex buffer, say, that
 was set in the `RenderPass` before executing the bundle. We call this property
-&#39;isolation&#39;, in that a render bundle is somewhat isolated from the passes that
+'isolation', in that a render bundle is somewhat isolated from the passes that
 use it.
 
 Render passes are also isolated from the effects of bundles. After executing a
-render bundle, a render pass&#39;s pipeline, bind groups, and vertex and index
+render bundle, a render pass's pipeline, bind groups, and vertex and index
 buffers are are unset, so the bundle cannot affect later draw calls in the pass.
 
-A render pass is not fully isolated from a bundle&#39;s effects on push constant
-values. Draw calls following a bundle&#39;s execution will see whatever values the
+A render pass is not fully isolated from a bundle's effects on push constant
+values. Draw calls following a bundle's execution will see whatever values the
 bundle writes to push constant storage. Setting a pipeline initializes any push
 constant storage it could access to zero, and this initialization may also be
 visible after bundle execution.
@@ -1705,13 +1705,13 @@ To create a render bundle:
 
 ## Implementation
 
-The most complex part of render bundles is the &quot;finish&quot; step, mostly implemented
+The most complex part of render bundles is the "finish" step, mostly implemented
 in [`RenderBundleEncoder::finish`]. This consumes the commands stored in the
-encoder&#39;s [`BasePass`], while validating everything, tracking the state,
+encoder's [`BasePass`], while validating everything, tracking the state,
 dropping redundant or unnecessary commands, and presenting the results as a new
-[`RenderBundle`]. It doesn&#39;t actually execute any commands.
+[`RenderBundle`]. It doesn't actually execute any commands.
 
-This step also enforces the &#39;isolation&#39; property mentioned above: every draw
+This step also enforces the 'isolation' property mentioned above: every draw
 call is checked to ensure that the resources it uses on were established since
 the last time the pipeline was set. This means the bundle can be executed
 verbatim without any state tracking.
@@ -1720,7 +1720,7 @@ verbatim without any state tracking.
 
 When the bundle is used in an actual render pass, `RenderBundle::execute` is
 called. It goes through the commands and issues them into the native command
-buffer. Thanks to isolation, it doesn&#39;t track any bind group invalidations or
+buffer. Thanks to isolation, it doesn't track any bind group invalidations or
 index format changes.
 
 [Gdcrbe]: crate::global::Global::device_create_render_bundle_encoder
@@ -1761,19 +1761,19 @@ index format changes.
 
 <span class="doccomment">/// Describes a [`RenderBundleEncoder`].
 </span><span class="attr">#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>RenderBundleEncoderDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>RenderBundleEncoderDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the render bundle encoder.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The formats of the color attachments that this render bundle is capable
     /// to rendering to.
     ///
     /// This must match the formats of the color attachments in the
     /// renderpass this render bundle is executed in.
-    </span><span class="kw">pub </span>color_formats: Cow&lt;<span class="lifetime">&#39;a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::TextureFormat&gt;]&gt;,
+    </span><span class="kw">pub </span>color_formats: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::TextureFormat&gt;]&gt;,
     <span class="doccomment">/// Information about the depth attachment that this render bundle is
     /// capable to rendering to.
     ///
@@ -1790,7 +1790,7 @@ index format changes.
 }
 
 <span class="attr">#[derive(Debug)]
-#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>RenderBundleEncoder {
     base: BasePass&lt;RenderCommand&gt;,
     parent_id: id::DeviceId,
@@ -1799,9 +1799,9 @@ index format changes.
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_stencil_read_only: bool,
 
     <span class="comment">// Resource binding dedupe state.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, serde(skip))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
     </span>current_bind_groups: BindGroupStateChange,
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
     </span>current_pipeline: StateChange&lt;id::RenderPipelineId&gt;,
 }
 
@@ -1819,7 +1819,7 @@ index format changes.
                     !aspects.contains(hal::FormatAspects::STENCIL) || ds.stencil_read_only,
                 )
             }
-            <span class="comment">// There&#39;s no depth/stencil attachment, so these values just don&#39;t
+            <span class="comment">// There's no depth/stencil attachment, so these values just don't
             // matter.  Choose the most accommodating value, to simplify
             // validation.
             </span><span class="prelude-val">None </span>=&gt; (<span class="bool-val">true</span>, <span class="bool-val">true</span>),
@@ -1883,7 +1883,7 @@ index format changes.
         }
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>to_base_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BasePass&lt;RenderCommand&gt; {
         BasePass::from_ref(<span class="self">self</span>.base.as_ref())
     }
@@ -1892,10 +1892,10 @@ index format changes.
         <span class="self">self</span>.parent_id
     }
 
-    <span class="doccomment">/// Convert this encoder&#39;s commands into a [`RenderBundle`].
+    <span class="doccomment">/// Convert this encoder's commands into a [`RenderBundle`].
     ///
     /// We want executing a [`RenderBundle`] to be quick, so we take
-    /// this opportunity to clean up the [`RenderBundleEncoder`]&#39;s
+    /// this opportunity to clean up the [`RenderBundleEncoder`]'s
     /// command stream and gather metadata about it that will help
     /// keep [`ExecuteBundle`] simple and fast. We remove redundant
     /// commands (along with their side data), note resource usage,
@@ -2298,7 +2298,7 @@ index format changes.
                 | RenderCommand::SetBlendConstant(<span class="kw">_</span>)
                 | RenderCommand::SetStencilReference(<span class="kw">_</span>)
                 | RenderCommand::SetViewport { .. }
-                | RenderCommand::SetScissor(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;not supported by a render bundle&quot;</span>),
+                | RenderCommand::SetScissor(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">"not supported by a render bundle"</span>),
             }
         }
 
@@ -2354,7 +2354,7 @@ index format changes.
 </span><span class="kw">pub enum </span>CreateRenderBundleError {
     <span class="attr">#[error(transparent)]
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
-    <span class="attr">#[error(<span class="string">&quot;Invalid number of samples {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid number of samples {0}"</span>)]
     </span>InvalidSampleCount(u32),
 }
 
@@ -2362,10 +2362,10 @@ index format changes.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ExecutionError {
-    <span class="attr">#[error(<span class="string">&quot;Buffer {0:?} is destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer {0:?} is destroyed"</span>)]
     </span>DestroyedBuffer(id::BufferId),
-    <span class="attr">#[error(<span class="string">&quot;Using {0} in a render bundle is not implemented&quot;</span>)]
-    </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
+    <span class="attr">#[error(<span class="string">"Using {0} in a render bundle is not implemented"</span>)]
+    </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
 }
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>ExecutionError {
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
@@ -2379,7 +2379,7 @@ index format changes.
     }
 }
 
-<span class="kw">pub type </span>RenderBundleDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::RenderBundleDescriptor&lt;Label&lt;<span class="lifetime">&#39;a</span>&gt;&gt;;
+<span class="kw">pub type </span>RenderBundleDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::RenderBundleDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 
 <span class="comment">//Note: here, `RenderBundle` is just wrapping a raw stream of render commands.
 // The plan is to back it by an actual Vulkan secondary buffer, D3D12 Bundle,
@@ -2401,18 +2401,18 @@ index format changes.
 }
 
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Send <span class="kw">for </span>RenderBundle&lt;A&gt; {}
 <span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    not(target_arch = <span class="string">"wasm32"</span>),
     all(
-        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+        not(target_feature = <span class="string">"atomics"</span>)
     )
 ))]
 </span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Sync <span class="kw">for </span>RenderBundle&lt;A&gt; {}
@@ -2424,7 +2424,7 @@ index format changes.
     /// However the point of this function is to be lighter, since we already had
     /// a chance to go through the commands in `render_bundle_encoder_finish`.
     ///
-    /// Note that the function isn&#39;t expected to fail, generally.
+    /// Note that the function isn't expected to fail, generally.
     /// All the validation has already been done by this point.
     /// The only failure condition is if some of the used buffers are destroyed.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>execute(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
@@ -2579,19 +2579,19 @@ index format changes.
                 }
                 RenderCommand::MultiDrawIndirect { .. }
                 | RenderCommand::MultiDrawIndirectCount { .. } =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">&quot;multi-draw-indirect&quot;</span>))
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"multi-draw-indirect"</span>))
                 }
                 RenderCommand::PushDebugGroup { .. }
                 | RenderCommand::InsertDebugMarker { .. }
                 | RenderCommand::PopDebugGroup =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">&quot;debug-markers&quot;</span>))
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"debug-markers"</span>))
                 }
                 RenderCommand::WriteTimestamp { .. }
                 | RenderCommand::BeginOcclusionQuery { .. }
                 | RenderCommand::EndOcclusionQuery
                 | RenderCommand::BeginPipelineStatisticsQuery { .. }
                 | RenderCommand::EndPipelineStatisticsQuery =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">&quot;queries&quot;</span>))
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"queries"</span>))
                 }
                 RenderCommand::ExecuteBundle(<span class="kw">_</span>)
                 | RenderCommand::SetBlendConstant(<span class="kw">_</span>)
@@ -2612,7 +2612,7 @@ index format changes.
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;RenderBundleId&gt; <span class="kw">for </span>RenderBundle&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;RenderBundle&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"RenderBundle"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;RenderBundleId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -2623,7 +2623,7 @@ index format changes.
     }
 }
 
-<span class="doccomment">/// A render bundle&#39;s current index buffer state.
+<span class="doccomment">/// A render bundle's current index buffer state.
 ///
 /// [`RenderBundleEncoder::finish`] records the currently set index buffer here,
 /// and calls [`State::flush_index`] before any indexed draw command to produce
@@ -2669,8 +2669,8 @@ index format changes.
 ///
 /// [`RenderBundleEncoder::finish`] uses this to drop redundant
 /// `SetVertexBuffer` commands from the final [`RenderBundle`]. It
-/// records one vertex buffer slot&#39;s state changes here, and then
-/// calls this type&#39;s [`flush`] method just before any draw command to
+/// records one vertex buffer slot's state changes here, and then
+/// calls this type's [`flush`] method just before any draw command to
 /// produce a `SetVertexBuffer` commands if one is necessary.
 ///
 /// [`flush`]: IndexState::flush
@@ -2718,10 +2718,10 @@ index format changes.
     </span>layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
 
     <span class="doccomment">/// The range of dynamic offsets for this bind group, in the original
-    /// command stream&#39;s `BassPass::dynamic_offsets` array.
+    /// command stream's `BassPass::dynamic_offsets` array.
     </span>dynamic_offsets: Range&lt;usize&gt;,
 
-    <span class="doccomment">/// True if this index&#39;s contents have been changed since the last time we
+    <span class="doccomment">/// True if this index's contents have been changed since the last time we
     /// generated a `SetBindGroup` command.
     </span>is_dirty: bool,
 }
@@ -2738,12 +2738,12 @@ index format changes.
     </span>instance_limit_slot: u32,
 }
 
-<span class="doccomment">/// The bundle&#39;s current pipeline, and some cached information needed for validation.
+<span class="doccomment">/// The bundle's current pipeline, and some cached information needed for validation.
 </span><span class="kw">struct </span>PipelineState&lt;A: HalApi&gt; {
     <span class="doccomment">/// The pipeline
     </span>pipeline: Arc&lt;RenderPipeline&lt;A&gt;&gt;,
 
-    <span class="doccomment">/// How this pipeline&#39;s vertex shader traverses each vertex buffer, indexed
+    <span class="doccomment">/// How this pipeline's vertex shader traverses each vertex buffer, indexed
     /// by vertex buffer slot number.
     </span>steps: Vec&lt;pipeline::VertexStep&gt;,
 
@@ -2822,7 +2822,7 @@ index format changes.
 
     <span class="doccomment">/// Dynamic offset values used by the cleaned-up command sequence.
     ///
-    /// This becomes the final [`RenderBundle`]&#39;s [`BasePass`]&#39;s
+    /// This becomes the final [`RenderBundle`]'s [`BasePass`]'s
     /// [`dynamic_offsets`] list.
     ///
     /// [`dynamic_offsets`]: BasePass::dynamic_offsets
@@ -2886,7 +2886,7 @@ index format changes.
         layout: <span class="kw-2">&amp;</span>Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
         dynamic_offsets: Range&lt;usize&gt;,
     ) {
-        <span class="comment">// If this call wouldn&#39;t actually change this index&#39;s state, we can
+        <span class="comment">// If this call wouldn't actually change this index's state, we can
         // return early.  (If there are dynamic offsets, the range will always
         // be different.)
         </span><span class="kw">if </span>dynamic_offsets.is_empty() {
@@ -2897,7 +2897,7 @@ index format changes.
             }
         }
 
-        <span class="comment">// Record the index&#39;s new state.
+        <span class="comment">// Record the index's new state.
         </span><span class="self">self</span>.bind[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(BindState {
             bind_group: bind_group.clone(),
             layout: layout.clone(),
@@ -2905,7 +2905,7 @@ index format changes.
             is_dirty: <span class="bool-val">true</span>,
         });
 
-        <span class="comment">// Once we&#39;ve changed the bind group at a particular index, all
+        <span class="comment">// Once we've changed the bind group at a particular index, all
         // subsequent indices need to be rewritten.
         </span><span class="self">self</span>.invalidate_bind_group_from(slot <span class="kw">as </span>usize + <span class="number">1</span>);
     }
@@ -2916,7 +2916,7 @@ index format changes.
     /// whose layout is `layout`, mark all the bind group slots that we need to
     /// emit new `SetBindGroup` commands for as dirty.
     ///
-    /// According to `wgpu_hal`&#39;s rules:
+    /// According to `wgpu_hal`'s rules:
     ///
     /// - If the layout of any bind group slot changes, then that slot and
     ///   all following slots must have their bind groups re-established.
@@ -2932,7 +2932,7 @@ index format changes.
             <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>old) =&gt; {
                 <span class="kw">if </span>old.pipeline.is_equal(<span class="kw-2">&amp;</span>new.pipeline) {
                     <span class="comment">// Everything is derived from the pipeline, so if the id has
-                    // not changed, there&#39;s no need to consider anything else.
+                    // not changed, there's no need to consider anything else.
                     </span><span class="kw">return</span>;
                 }
 
@@ -2954,7 +2954,7 @@ index format changes.
         }
     }
 
-    <span class="doccomment">/// Set the bundle&#39;s current index buffer and its associated parameters.
+    <span class="doccomment">/// Set the bundle's current index buffer and its associated parameters.
     </span><span class="kw">fn </span>set_index_buffer(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         buffer: id::BufferId,
@@ -2986,7 +2986,7 @@ index format changes.
         <span class="self">self</span>.index.as_mut().and_then(|index| index.flush())
     }
 
-    <span class="kw">fn </span>flush_vertices(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">fn </span>flush_vertices(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.vertex
             .iter_mut()
             .enumerate()
@@ -2998,8 +2998,8 @@ index format changes.
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         used_bind_groups: usize,
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="comment">// Append each dirty bind group&#39;s dynamic offsets to `flat_dynamic_offsets`.
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">'_ </span>{
+        <span class="comment">// Append each dirty bind group's dynamic offsets to `flat_dynamic_offsets`.
         </span><span class="kw">for </span>contents <span class="kw">in </span><span class="self">self</span>.bind[..used_bind_groups].iter().flatten() {
             <span class="kw">if </span>contents.is_dirty {
                 <span class="self">self</span>.flat_dynamic_offsets
@@ -3032,7 +3032,7 @@ index format changes.
 <span class="doccomment">/// Error encountered when finishing recording a render bundle.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>RenderBundleErrorInner {
-    <span class="attr">#[error(<span class="string">&quot;Resource is not valid to use with this render bundle because the resource and the bundle come from different devices&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Resource is not valid to use with this render bundle because the resource and the bundle come from different devices"</span>)]
     </span>NotValidToUse,
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
@@ -3055,7 +3055,7 @@ index format changes.
 
 <span class="doccomment">/// Error encountered when finishing recording a render bundle.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;{scope}&quot;</span>)]
+#[error(<span class="string">"{scope}"</span>)]
 </span><span class="kw">pub struct </span>RenderBundleError {
     <span class="kw">pub </span>scope: PassErrorScope,
     <span class="attr">#[source]
@@ -3100,7 +3100,7 @@ index format changes.
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `offset_length` elements.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_set_bind_group(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_set_bind_group(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         index: u32,
         bind_group_id: id::BindGroupId,
@@ -3129,7 +3129,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_set_pipeline(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_set_pipeline(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         pipeline_id: id::RenderPipelineId,
     ) {
@@ -3144,7 +3144,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_set_vertex_buffer(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_set_vertex_buffer(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         slot: u32,
         buffer_id: id::BufferId,
@@ -3160,7 +3160,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_set_index_buffer(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_set_index_buffer(
         encoder: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         buffer: id::BufferId,
         index_format: IndexFormat,
@@ -3175,7 +3175,7 @@ index format changes.
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `data` elements.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_set_push_constants(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_set_push_constants(
         pass: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         stages: wgt::ShaderStages,
         offset: u32,
@@ -3185,16 +3185,16 @@ index format changes.
         <span class="macro">assert_eq!</span>(
             offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
             <span class="number">0</span>,
-            <span class="string">&quot;Push constant offset must be aligned to 4 bytes.&quot;
+            <span class="string">"Push constant offset must be aligned to 4 bytes."
         </span>);
         <span class="macro">assert_eq!</span>(
             size_bytes &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
             <span class="number">0</span>,
-            <span class="string">&quot;Push constant size must be aligned to 4 bytes.&quot;
+            <span class="string">"Push constant size must be aligned to 4 bytes."
         </span>);
         <span class="kw">let </span>data_slice = <span class="kw">unsafe </span>{ slice::from_raw_parts(data, size_bytes <span class="kw">as </span>usize) };
         <span class="kw">let </span>value_offset = pass.base.push_constant_data.len().try_into().expect(
-            <span class="string">&quot;Ran out of push constant space. Don&#39;t set 4gb of push constants per RenderBundle.&quot;</span>,
+            <span class="string">"Ran out of push constant space. Don't set 4gb of push constants per RenderBundle."</span>,
         );
 
         pass.base.push_constant_data.extend(
@@ -3212,7 +3212,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_draw(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_draw(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         vertex_count: u32,
         instance_count: u32,
@@ -3228,7 +3228,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_draw_indexed(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_draw_indexed(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         index_count: u32,
         instance_count: u32,
@@ -3246,7 +3246,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_draw_indirect(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_draw_indirect(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -3260,7 +3260,7 @@ index format changes.
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_draw_indexed_indirect(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_draw_indexed_indirect(
         bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -3278,7 +3278,7 @@ index format changes.
     /// This function is unsafe as there is no guarantee that the given `label`
     /// is a valid null-terminated string.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_push_debug_group(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_push_debug_group(
         _bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         _label: RawString,
     ) {
@@ -3286,7 +3286,7 @@ index format changes.
     </span>}
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_pop_debug_group(_bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder) {
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_pop_debug_group(_bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder) {
         <span class="comment">//TODO
     </span>}
 
@@ -3295,7 +3295,7 @@ index format changes.
     /// This function is unsafe as there is no guarantee that the given `label`
     /// is a valid null-terminated string.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_render_bundle_insert_debug_marker(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_bundle_insert_debug_marker(
         _bundle: <span class="kw-2">&amp;mut </span>RenderBundleEncoder,
         _label: RawString,
     ) {

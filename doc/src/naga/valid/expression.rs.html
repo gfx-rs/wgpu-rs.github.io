@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1809,115 +1809,115 @@
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>ExpressionError {
-    <span class="attr">#[error(<span class="string">&quot;Doesn&#39;t exist&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Doesn't exist"</span>)]
     </span>DoesntExist,
-    <span class="attr">#[error(<span class="string">&quot;Used by a statement before it was introduced into the scope by any of the dominating blocks&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Used by a statement before it was introduced into the scope by any of the dominating blocks"</span>)]
     </span>NotInScope,
-    <span class="attr">#[error(<span class="string">&quot;Base type {0:?} is not compatible with this expression&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Base type {0:?} is not compatible with this expression"</span>)]
     </span>InvalidBaseType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Accessing with index {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Accessing with index {0:?} can't be done"</span>)]
     </span>InvalidIndexType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Accessing {0:?} via a negative index is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Accessing {0:?} via a negative index is invalid"</span>)]
     </span>NegativeIndex(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Accessing index {1} is out of {0:?} bounds&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Accessing index {1} is out of {0:?} bounds"</span>)]
     </span>IndexOutOfBounds(Handle&lt;<span class="kw">crate</span>::Expression&gt;, u32),
-    <span class="attr">#[error(<span class="string">&quot;The expression {0:?} may only be indexed by a constant&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The expression {0:?} may only be indexed by a constant"</span>)]
     </span>IndexMustBeConstant(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Function argument {0:?} doesn&#39;t exist&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Function argument {0:?} doesn't exist"</span>)]
     </span>FunctionArgumentDoesntExist(u32),
-    <span class="attr">#[error(<span class="string">&quot;Loading of {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Loading of {0:?} can't be done"</span>)]
     </span>InvalidPointerType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Array length of {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Array length of {0:?} can't be done"</span>)]
     </span>InvalidArrayType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Get intersection of {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Get intersection of {0:?} can't be done"</span>)]
     </span>InvalidRayQueryType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Splatting {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Splatting {0:?} can't be done"</span>)]
     </span>InvalidSplatType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Swizzling {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Swizzling {0:?} can't be done"</span>)]
     </span>InvalidVectorType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Swizzle component {0:?} is outside of vector size {1:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Swizzle component {0:?} is outside of vector size {1:?}"</span>)]
     </span>InvalidSwizzleComponent(<span class="kw">crate</span>::SwizzleComponent, <span class="kw">crate</span>::VectorSize),
     <span class="attr">#[error(transparent)]
     </span>Compose(<span class="attr">#[from] </span><span class="kw">super</span>::ComposeError),
     <span class="attr">#[error(transparent)]
     </span>IndexableLength(<span class="attr">#[from] </span>IndexableLengthError),
-    <span class="attr">#[error(<span class="string">&quot;Operation {0:?} can&#39;t work with {1:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Operation {0:?} can't work with {1:?}"</span>)]
     </span>InvalidUnaryOperandType(<span class="kw">crate</span>::UnaryOperator, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Operation {0:?} can&#39;t work with {1:?} and {2:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Operation {0:?} can't work with {1:?} and {2:?}"</span>)]
     </span>InvalidBinaryOperandTypes(
         <span class="kw">crate</span>::BinaryOperator,
         Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         Handle&lt;<span class="kw">crate</span>::Expression&gt;,
     ),
-    <span class="attr">#[error(<span class="string">&quot;Selecting is not possible&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Selecting is not possible"</span>)]
     </span>InvalidSelectTypes,
-    <span class="attr">#[error(<span class="string">&quot;Relational argument {0:?} is not a boolean vector&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Relational argument {0:?} is not a boolean vector"</span>)]
     </span>InvalidBooleanVector(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Relational argument {0:?} is not a float&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Relational argument {0:?} is not a float"</span>)]
     </span>InvalidFloatArgument(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Type resolution failed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Type resolution failed"</span>)]
     </span>Type(<span class="attr">#[from] </span>ResolveError),
-    <span class="attr">#[error(<span class="string">&quot;Not a global variable&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Not a global variable"</span>)]
     </span>ExpectedGlobalVariable,
-    <span class="attr">#[error(<span class="string">&quot;Not a global variable or a function argument&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Not a global variable or a function argument"</span>)]
     </span>ExpectedGlobalOrArgument,
-    <span class="attr">#[error(<span class="string">&quot;Needs to be an binding array instead of {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Needs to be an binding array instead of {0:?}"</span>)]
     </span>ExpectedBindingArrayType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Needs to be an image instead of {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Needs to be an image instead of {0:?}"</span>)]
     </span>ExpectedImageType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Needs to be an image instead of {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Needs to be an image instead of {0:?}"</span>)]
     </span>ExpectedSamplerType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Unable to operate on image class {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to operate on image class {0:?}"</span>)]
     </span>InvalidImageClass(<span class="kw">crate</span>::ImageClass),
-    <span class="attr">#[error(<span class="string">&quot;Derivatives can only be taken from scalar and vector floats&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Derivatives can only be taken from scalar and vector floats"</span>)]
     </span>InvalidDerivative,
-    <span class="attr">#[error(<span class="string">&quot;Image array index parameter is misplaced&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Image array index parameter is misplaced"</span>)]
     </span>InvalidImageArrayIndex,
-    <span class="attr">#[error(<span class="string">&quot;Inappropriate sample or level-of-detail index for texel access&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Inappropriate sample or level-of-detail index for texel access"</span>)]
     </span>InvalidImageOtherIndex,
-    <span class="attr">#[error(<span class="string">&quot;Image array index type of {0:?} is not an integer scalar&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Image array index type of {0:?} is not an integer scalar"</span>)]
     </span>InvalidImageArrayIndexType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Image sample or level-of-detail index&#39;s type of {0:?} is not an integer scalar&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Image sample or level-of-detail index's type of {0:?} is not an integer scalar"</span>)]
     </span>InvalidImageOtherIndexType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Image coordinate type of {1:?} does not match dimension {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Image coordinate type of {1:?} does not match dimension {0:?}"</span>)]
     </span>InvalidImageCoordinateType(<span class="kw">crate</span>::ImageDimension, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Comparison sampling mismatch: image has class {image:?}, but the sampler is comparison={sampler}, and the reference was provided={has_ref}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Comparison sampling mismatch: image has class {image:?}, but the sampler is comparison={sampler}, and the reference was provided={has_ref}"</span>)]
     </span>ComparisonSamplingMismatch {
         image: <span class="kw">crate</span>::ImageClass,
         sampler: bool,
         has_ref: bool,
     },
-    <span class="attr">#[error(<span class="string">&quot;Sample offset constant {1:?} doesn&#39;t match the image dimension {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample offset constant {1:?} doesn't match the image dimension {0:?}"</span>)]
     </span>InvalidSampleOffset(<span class="kw">crate</span>::ImageDimension, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Depth reference {0:?} is not a scalar float&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Depth reference {0:?} is not a scalar float"</span>)]
     </span>InvalidDepthReference(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Depth sample level can only be Auto or Zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Depth sample level can only be Auto or Zero"</span>)]
     </span>InvalidDepthSampleLevel,
-    <span class="attr">#[error(<span class="string">&quot;Gather level can only be Zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Gather level can only be Zero"</span>)]
     </span>InvalidGatherLevel,
-    <span class="attr">#[error(<span class="string">&quot;Gather component {0:?} doesn&#39;t exist in the image&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Gather component {0:?} doesn't exist in the image"</span>)]
     </span>InvalidGatherComponent(<span class="kw">crate</span>::SwizzleComponent),
-    <span class="attr">#[error(<span class="string">&quot;Gather can&#39;t be done for image dimension {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Gather can't be done for image dimension {0:?}"</span>)]
     </span>InvalidGatherDimension(<span class="kw">crate</span>::ImageDimension),
-    <span class="attr">#[error(<span class="string">&quot;Sample level (exact) type {0:?} is not a scalar float&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample level (exact) type {0:?} is not a scalar float"</span>)]
     </span>InvalidSampleLevelExactType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Sample level (bias) type {0:?} is not a scalar float&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample level (bias) type {0:?} is not a scalar float"</span>)]
     </span>InvalidSampleLevelBiasType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Sample level (gradient) of {1:?} doesn&#39;t match the image dimension {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sample level (gradient) of {1:?} doesn't match the image dimension {0:?}"</span>)]
     </span>InvalidSampleLevelGradientType(<span class="kw">crate</span>::ImageDimension, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Unable to cast&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to cast"</span>)]
     </span>InvalidCastArgument,
-    <span class="attr">#[error(<span class="string">&quot;Invalid argument count for {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid argument count for {0:?}"</span>)]
     </span>WrongArgumentCount(<span class="kw">crate</span>::MathFunction),
-    <span class="attr">#[error(<span class="string">&quot;Argument [{1}] to {0:?} as expression {2:?} has an invalid type.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Argument [{1}] to {0:?} as expression {2:?} has an invalid type."</span>)]
     </span>InvalidArgumentType(<span class="kw">crate</span>::MathFunction, u32, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Atomic result type can&#39;t be {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Atomic result type can't be {0:?}"</span>)]
     </span>InvalidAtomicResultType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(
-        <span class="string">&quot;workgroupUniformLoad result type can&#39;t be {0:?}. It can only be a constructible type.&quot;
+        <span class="string">"workgroupUniformLoad result type can't be {0:?}. It can only be a constructible type."
     </span>)]
     </span>InvalidWorkGroupUniformLoadResultType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Shader requires capability {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Shader requires capability {0:?}"</span>)]
     </span>MissingCapabilities(<span class="kw">super</span>::Capabilities),
     <span class="attr">#[error(transparent)]
     </span>Literal(<span class="attr">#[from] </span>LiteralError),
@@ -1925,13 +1925,13 @@
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>ConstExpressionError {
-    <span class="attr">#[error(<span class="string">&quot;The expression is not a constant expression&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The expression is not a constant expression"</span>)]
     </span>NonConst,
     <span class="attr">#[error(transparent)]
     </span>Compose(<span class="attr">#[from] </span><span class="kw">super</span>::ComposeError),
-    <span class="attr">#[error(<span class="string">&quot;Splatting {0:?} can&#39;t be done&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Splatting {0:?} can't be done"</span>)]
     </span>InvalidSplatType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">&quot;Type resolution failed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Type resolution failed"</span>)]
     </span>Type(<span class="attr">#[from] </span>ResolveError),
     <span class="attr">#[error(transparent)]
     </span>Literal(<span class="attr">#[from] </span>LiteralError),
@@ -1942,21 +1942,21 @@
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>LiteralError {
-    <span class="attr">#[error(<span class="string">&quot;Float literal is NaN&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Float literal is NaN"</span>)]
     </span>NaN,
-    <span class="attr">#[error(<span class="string">&quot;Float literal is infinite&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Float literal is infinite"</span>)]
     </span>Infinity,
     <span class="attr">#[error(transparent)]
     </span>Width(<span class="attr">#[from] </span><span class="kw">super</span>::r#type::WidthError),
 }
 
-<span class="kw">struct </span>ExpressionTypeResolver&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">struct </span>ExpressionTypeResolver&lt;<span class="lifetime">'a</span>&gt; {
     root: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
-    info: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>FunctionInfo,
+    types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
+    info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>FunctionInfo,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; std::ops::Index&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; <span class="kw">for </span>ExpressionTypeResolver&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::Index&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; <span class="kw">for </span>ExpressionTypeResolver&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Output = <span class="kw">crate</span>::TypeInner;
 
     <span class="attr">#[allow(clippy::panic)]
@@ -1966,7 +1966,7 @@
         } <span class="kw">else </span>{
             <span class="comment">// `Validator::validate_module_handles` should have caught this.
             </span><span class="macro">panic!</span>(
-                <span class="string">&quot;Depends on {:?}, which has not been processed yet&quot;</span>,
+                <span class="string">"Depends on {:?}, which has not been processed yet"</span>,
                 <span class="self">self</span>.root
             )
         }
@@ -2032,7 +2032,7 @@
                     | Ti::ValuePointer { size: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. }
                     | Ti::BindingArray { .. } =&gt; <span class="bool-val">false</span>,
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Indexing of {:?}&quot;</span>, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Indexing of {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBaseType(base));
                     }
                 };
@@ -2043,7 +2043,7 @@
                         ..
                     }) =&gt; {}
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Indexing by {:?}&quot;</span>, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Indexing by {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidIndexType(index));
                     }
                 }
@@ -2093,13 +2093,13 @@
                             size: <span class="kw">crate</span>::ArraySize::Constant(len),
                             ..
                         } =&gt; len.get(),
-                        Ti::Array { .. } | Ti::BindingArray { .. } =&gt; u32::MAX, <span class="comment">// can&#39;t statically know, but need run-time checks
+                        Ti::Array { .. } | Ti::BindingArray { .. } =&gt; u32::MAX, <span class="comment">// can't statically know, but need run-time checks
                         </span>Ti::Pointer { base, .. } <span class="kw">if </span>top_level =&gt; {
                             resolve_index_limit(module, top, <span class="kw-2">&amp;</span>module.types[base].inner, <span class="bool-val">false</span>)<span class="question-mark">?
                         </span>}
                         Ti::Struct { <span class="kw-2">ref </span>members, .. } =&gt; members.len() <span class="kw">as </span>u32,
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Indexing of {:?}&quot;</span>, other);
+                            <span class="macro">log::error!</span>(<span class="string">"Indexing of {:?}"</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBaseType(top));
                         }
                     };
@@ -2115,7 +2115,7 @@
             E::Splat { size: <span class="kw">_</span>, value } =&gt; <span class="kw">match </span>resolver[value] {
                 Ti::Scalar { .. } =&gt; ShaderStages::all(),
                 <span class="kw-2">ref </span>other =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;Splat scalar type {:?}&quot;</span>, other);
+                    <span class="macro">log::error!</span>(<span class="string">"Splat scalar type {:?}"</span>, other);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSplatType(value));
                 }
             },
@@ -2127,7 +2127,7 @@
                 <span class="kw">let </span>vec_size = <span class="kw">match </span>resolver[vector] {
                     Ti::Vector { size: vec_size, .. } =&gt; vec_size,
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Swizzle vector type {:?}&quot;</span>, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Swizzle vector type {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidVectorType(vector));
                     }
                 };
@@ -2167,7 +2167,7 @@
                             .contains(TypeFlags::SIZED | TypeFlags::DATA) =&gt; {}
                     Ti::ValuePointer { .. } =&gt; {}
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Loading {:?}&quot;</span>, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Loading {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidPointerType(pointer));
                     }
                 }
@@ -2454,7 +2454,7 @@
                     | (Uo::LogicalNot, <span class="prelude-val">Some</span>(Sk::Bool))
                     | (Uo::BitwiseNot, <span class="prelude-val">Some</span>(Sk::Sint | Sk::Uint)) =&gt; {}
                     other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} kind {:?}&quot;</span>, op, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Op {:?} kind {:?}"</span>, op, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidUnaryOperandType(op, expr));
                     }
                 }
@@ -2563,7 +2563,7 @@
                                 Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                             },
                             <span class="kw-2">ref </span>other =&gt; {
-                                <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
+                                <span class="macro">log::error!</span>(<span class="string">"Op {:?} left type {:?}"</span>, op, other);
                                 <span class="bool-val">false
                             </span>}
                         }
@@ -2575,7 +2575,7 @@
                             ..
                         } =&gt; left_inner == right_inner,
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
+                            <span class="macro">log::error!</span>(<span class="string">"Op {:?} left type {:?}"</span>, op, other);
                             <span class="bool-val">false
                         </span>}
                     },
@@ -2585,7 +2585,7 @@
                             Sk::Float | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
+                            <span class="macro">log::error!</span>(<span class="string">"Op {:?} left type {:?}"</span>, op, other);
                             <span class="bool-val">false
                         </span>}
                     },
@@ -2595,7 +2595,7 @@
                             Sk::Bool | Sk::Float | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="bool-val">false</span>,
                         },
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
+                            <span class="macro">log::error!</span>(<span class="string">"Op {:?} left type {:?}"</span>, op, other);
                             <span class="bool-val">false
                         </span>}
                     },
@@ -2604,7 +2604,7 @@
                             Ti::Scalar(scalar) =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), scalar),
                             Ti::Vector { size, scalar } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(size)), scalar),
                             <span class="kw-2">ref </span>other =&gt; {
-                                <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} base type {:?}&quot;</span>, op, other);
+                                <span class="macro">log::error!</span>(<span class="string">"Op {:?} base type {:?}"</span>, op, other);
                                 (<span class="prelude-val">Err</span>(()), Sc::BOOL)
                             }
                         };
@@ -2615,7 +2615,7 @@
                                 scalar: Sc { kind: Sk::Uint, .. },
                             } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(size)),
                             <span class="kw-2">ref </span>other =&gt; {
-                                <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} shift type {:?}&quot;</span>, op, other);
+                                <span class="macro">log::error!</span>(<span class="string">"Op {:?} shift type {:?}"</span>, op, other);
                                 <span class="prelude-val">Err</span>(())
                             }
                         };
@@ -2627,12 +2627,12 @@
                 };
                 <span class="kw">if </span>!good {
                     <span class="macro">log::error!</span>(
-                        <span class="string">&quot;Left: {:?} of type {:?}&quot;</span>,
+                        <span class="string">"Left: {:?} of type {:?}"</span>,
                         function.expressions[left],
                         left_inner
                     );
                     <span class="macro">log::error!</span>(
-                        <span class="string">&quot;Right: {:?} of type {:?}&quot;</span>,
+                        <span class="string">"Right: {:?} of type {:?}"</span>,
                         function.expressions[right],
                         right_inner
                     );
@@ -2705,7 +2705,7 @@
                             ..
                         } =&gt; {}
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;All/Any of type {:?}&quot;</span>, other);
+                            <span class="macro">log::error!</span>(<span class="string">"All/Any of type {:?}"</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBooleanVector(argument));
                         }
                     },
@@ -2713,7 +2713,7 @@
                         Ti::Scalar(scalar) | Ti::Vector { scalar, .. }
                             <span class="kw">if </span>scalar.kind == Sk::Float =&gt; {}
                         <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;Float test of type {:?}&quot;</span>, other);
+                            <span class="macro">log::error!</span>(<span class="string">"Float test of type {:?}"</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidFloatArgument(argument));
                         }
                     },
@@ -3363,7 +3363,7 @@
                     }
                 }
                 <span class="kw-2">ref </span>other =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;Array length of {:?}&quot;</span>, other);
+                    <span class="macro">log::error!</span>(<span class="string">"Array length of {:?}"</span>, other);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArrayType(expr));
                 }
             },
@@ -3378,12 +3378,12 @@
                 } =&gt; <span class="kw">match </span>resolver.types[base].inner {
                     Ti::RayQuery =&gt; ShaderStages::all(),
                     <span class="kw-2">ref </span>other =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Intersection result of a pointer to {:?}&quot;</span>, other);
+                        <span class="macro">log::error!</span>(<span class="string">"Intersection result of a pointer to {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidRayQueryType(query));
                     }
                 },
                 <span class="kw-2">ref </span>other =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;Intersection result of {:?}&quot;</span>, other);
+                    <span class="macro">log::error!</span>(<span class="string">"Intersection result of {:?}"</span>, other);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidRayQueryType(query));
                 }
             },
@@ -3448,7 +3448,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[cfg(all(test, feature = <span class="string">&quot;validate&quot;</span>))]
+<span class="attr">#[cfg(all(test, feature = <span class="string">"validate"</span>))]
 </span><span class="doccomment">/// Validate a module containing the given expression, expecting an error.
 </span><span class="kw">fn </span>validate_with_expression(
     expr: <span class="kw">crate</span>::Expression,
@@ -3471,7 +3471,7 @@
     validator.validate(<span class="kw-2">&amp;</span>module)
 }
 
-<span class="attr">#[cfg(all(test, feature = <span class="string">&quot;validate&quot;</span>))]
+<span class="attr">#[cfg(all(test, feature = <span class="string">"validate"</span>))]
 </span><span class="doccomment">/// Validate a module containing the given constant expression, expecting an error.
 </span><span class="kw">fn </span>validate_with_const_expression(
     expr: <span class="kw">crate</span>::Expression,
@@ -3487,8 +3487,8 @@
     validator.validate(<span class="kw-2">&amp;</span>module)
 }
 
-<span class="doccomment">/// Using F64 in a function&#39;s expression arena is forbidden.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
+<span class="doccomment">/// Using F64 in a function's expression arena is forbidden.
+</span><span class="attr">#[cfg(feature = <span class="string">"validate"</span>)]
 #[test]
 </span><span class="kw">fn </span>f64_runtime_literals() {
     <span class="kw">let </span>result = validate_with_expression(
@@ -3502,8 +3502,8 @@
             source: <span class="kw">super</span>::FunctionError::Expression {
                 source: <span class="kw">super</span>::ExpressionError::Literal(<span class="kw">super</span>::LiteralError::Width(
                     <span class="kw">super</span>::r#type::WidthError::MissingCapability {
-                        name: <span class="string">&quot;f64&quot;</span>,
-                        flag: <span class="string">&quot;FLOAT64&quot;</span>,
+                        name: <span class="string">"f64"</span>,
+                        flag: <span class="string">"FLOAT64"</span>,
                     }
                 ),),
                 ..
@@ -3519,8 +3519,8 @@
     <span class="macro">assert!</span>(result.is_ok());
 }
 
-<span class="doccomment">/// Using F64 in a module&#39;s constant expression arena is forbidden.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
+<span class="doccomment">/// Using F64 in a module's constant expression arena is forbidden.
+</span><span class="attr">#[cfg(feature = <span class="string">"validate"</span>)]
 #[test]
 </span><span class="kw">fn </span>f64_const_literals() {
     <span class="kw">let </span>result = validate_with_const_expression(
@@ -3533,8 +3533,8 @@
         <span class="kw">crate</span>::valid::ValidationError::ConstExpression {
             source: <span class="kw">super</span>::ConstExpressionError::Literal(<span class="kw">super</span>::LiteralError::Width(
                 <span class="kw">super</span>::r#type::WidthError::MissingCapability {
-                    name: <span class="string">&quot;f64&quot;</span>,
-                    flag: <span class="string">&quot;FLOAT64&quot;</span>,
+                    name: <span class="string">"f64"</span>,
+                    flag: <span class="string">"FLOAT64"</span>,
                 }
             )),
             ..
@@ -3548,8 +3548,8 @@
     <span class="macro">assert!</span>(result.is_ok());
 }
 
-<span class="doccomment">/// Using I64 in a function&#39;s expression arena is forbidden.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
+<span class="doccomment">/// Using I64 in a function's expression arena is forbidden.
+</span><span class="attr">#[cfg(feature = <span class="string">"validate"</span>)]
 #[test]
 </span><span class="kw">fn </span>i64_runtime_literals() {
     <span class="kw">let </span>result = validate_with_expression(
@@ -3572,8 +3572,8 @@
     ));
 }
 
-<span class="doccomment">/// Using I64 in a module&#39;s constant expression arena is forbidden.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
+<span class="doccomment">/// Using I64 in a module's constant expression arena is forbidden.
+</span><span class="attr">#[cfg(feature = <span class="string">"validate"</span>)]
 #[test]
 </span><span class="kw">fn </span>i64_const_literals() {
     <span class="kw">let </span>result = validate_with_const_expression(

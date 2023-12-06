@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/init_tracker/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/init_tracker/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -426,7 +426,7 @@ system there are two kind of writes:
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>MemoryInitKind {
     <span class="comment">// The memory range is going to be written by an already initialized source,
-    // thus doesn&#39;t need extra attention other than marking as initialized.
+    // thus doesn't need extra attention other than marking as initialized.
     </span>ImplicitlyInitialized,
     <span class="comment">// The memory range is going to be read, therefore needs to ensure prior
     // initialization.
@@ -444,14 +444,14 @@ system there are two kind of writes:
     </span>uninitialized_ranges: UninitializedRangeVec&lt;Idx&gt;,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>InitTrackerDrain&lt;<span class="lifetime">&#39;a</span>, Idx: fmt::Debug + Ord + Copy&gt; {
-    uninitialized_ranges: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>UninitializedRangeVec&lt;Idx&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>InitTrackerDrain&lt;<span class="lifetime">'a</span>, Idx: fmt::Debug + Ord + Copy&gt; {
+    uninitialized_ranges: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>UninitializedRangeVec&lt;Idx&gt;,
     drain_range: Range&lt;Idx&gt;,
     first_index: usize,
     next_index: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Idx&gt; Iterator <span class="kw">for </span>InitTrackerDrain&lt;<span class="lifetime">&#39;a</span>, Idx&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Idx&gt; Iterator <span class="kw">for </span>InitTrackerDrain&lt;<span class="lifetime">'a</span>, Idx&gt;
 <span class="kw">where
     </span>Idx: fmt::Debug + Ord + Copy,
 {
@@ -478,7 +478,7 @@ system there are two kind of writes:
             }
             <span class="kw">let </span>first_range = <span class="kw-2">&amp;mut </span><span class="self">self</span>.uninitialized_ranges[<span class="self">self</span>.first_index];
 
-            <span class="comment">// Split one &quot;big&quot; uninitialized range?
+            <span class="comment">// Split one "big" uninitialized range?
             </span><span class="kw">if </span>num_affected == <span class="number">1
                 </span>&amp;&amp; first_range.start &lt; <span class="self">self</span>.drain_range.start
                 &amp;&amp; first_range.end &gt; <span class="self">self</span>.drain_range.end
@@ -513,7 +513,7 @@ system there are two kind of writes:
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Idx&gt; Drop <span class="kw">for </span>InitTrackerDrain&lt;<span class="lifetime">&#39;a</span>, Idx&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Idx&gt; Drop <span class="kw">for </span>InitTrackerDrain&lt;<span class="lifetime">'a</span>, Idx&gt;
 <span class="kw">where
     </span>Idx: fmt::Debug + Ord + Copy,
 {
@@ -534,7 +534,7 @@ system there are two kind of writes:
         }
     }
 
-    <span class="comment">// Checks if there&#39;s any uninitialized ranges within a query.
+    <span class="comment">// Checks if there's any uninitialized ranges within a query.
     //
     // If there are any, the range returned a the subrange of the query_range
     // that contains all these uninitialized regions. Returned range may be
@@ -552,7 +552,7 @@ system there are two kind of writes:
                         <span class="prelude-val">Some</span>(next_range) =&gt; {
                             <span class="kw">if </span>next_range.start &lt; query_range.end {
                                 <span class="comment">// Would need to keep iterating for more
-                                // accurate upper bound. Don&#39;t do that here.
+                                // accurate upper bound. Don't do that here.
                                 </span><span class="prelude-val">Some</span>(start..query_range.end)
                             } <span class="kw">else </span>{
                                 <span class="prelude-val">Some</span>(start..start_range.end.min(query_range.end))
@@ -652,7 +652,7 @@ system there are two kind of writes:
         </span><span class="macro">assert_eq!</span>(tracker.check(<span class="number">3</span>..<span class="number">8</span>), <span class="prelude-val">Some</span>(<span class="number">5</span>..<span class="number">8</span>)); <span class="comment">// left overlapping region
         </span><span class="macro">assert_eq!</span>(tracker.check(<span class="number">3</span>..<span class="number">17</span>), <span class="prelude-val">Some</span>(<span class="number">5</span>..<span class="number">17</span>)); <span class="comment">// left overlapping region + contained region
 
-        // right overlapping region + contained region (yes, doesn&#39;t fix range end!)
+        // right overlapping region + contained region (yes, doesn't fix range end!)
         </span><span class="macro">assert_eq!</span>(tracker.check(<span class="number">8</span>..<span class="number">22</span>), <span class="prelude-val">Some</span>(<span class="number">8</span>..<span class="number">22</span>));
         <span class="comment">// right overlapping region
         </span><span class="macro">assert_eq!</span>(tracker.check(<span class="number">17</span>..<span class="number">22</span>), <span class="prelude-val">Some</span>(<span class="number">17</span>..<span class="number">20</span>));

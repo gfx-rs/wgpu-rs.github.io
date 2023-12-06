@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/compute.rs`."><title>compute.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/compute.rs`."><title>compute.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1088,9 +1088,9 @@
 };
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
-<span class="attr">#[cfg(any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;replay&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>))]
 </span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>))]
 </span><span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span>thiserror::Error;
@@ -1100,11 +1100,11 @@
 <span class="attr">#[doc(hidden)]
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(
-    any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>),
+    any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>),
     derive(serde::Serialize)
 )]
 #[cfg_attr(
-    any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;replay&quot;</span>),
+    any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>),
     derive(serde::Deserialize)
 )]
 </span><span class="kw">pub enum </span>ComputeCommand {
@@ -1157,16 +1157,16 @@
     EndPipelineStatisticsQuery,
 }
 
-<span class="attr">#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
+<span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>ComputePass {
     base: BasePass&lt;ComputeCommand&gt;,
     parent_id: id::CommandEncoderId,
     timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&gt;,
 
     <span class="comment">// Resource binding dedupe state.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, serde(skip))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
     </span>current_bind_groups: BindGroupStateChange,
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serial-pass&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
     </span>current_pipeline: StateChange&lt;id::ComputePipelineId&gt;,
 }
 
@@ -1186,7 +1186,7 @@
         <span class="self">self</span>.parent_id
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub fn </span>into_command(<span class="self">self</span>) -&gt; <span class="kw">crate</span>::device::trace::Command {
         <span class="kw">crate</span>::device::trace::Command::RunComputePass {
             base: <span class="self">self</span>.base,
@@ -1196,10 +1196,10 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>ComputePass {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;ComputePass {{ encoder_id: {:?}, data: {:?} commands and {:?} dynamic offsets }}&quot;</span>,
+            <span class="string">"ComputePass {{ encoder_id: {:?}, data: {:?} commands and {:?} dynamic offsets }}"</span>,
             <span class="self">self</span>.parent_id,
             <span class="self">self</span>.base.commands.len(),
             <span class="self">self</span>.base.dynamic_offsets.len()
@@ -1210,8 +1210,8 @@
 <span class="doccomment">/// Describes the writing of timestamp values in a compute pass.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;trace&quot;</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">&quot;serial-pass&quot;</span>, feature = <span class="string">&quot;replay&quot;</span>), derive(Deserialize))]
+#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
+#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
 </span><span class="kw">pub struct </span>ComputePassTimestampWrites {
     <span class="doccomment">/// The query set to write the timestamps to.
     </span><span class="kw">pub </span>query_set: id::QuerySetId,
@@ -1222,25 +1222,25 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Default)]
-</span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Defines where and when timestamp values will be written for this pass.
-    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ComputePassTimestampWrites&gt;,
+    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ComputePassTimestampWrites&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DispatchError {
-    <span class="attr">#[error(<span class="string">&quot;Compute pipeline must be set&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Compute pipeline must be set"</span>)]
     </span>MissingPipeline,
-    <span class="attr">#[error(<span class="string">&quot;The pipeline layout, associated with the current compute pipeline, contains a bind group layout at index {index} which is incompatible with the bind group layout associated with the bind group at {index}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The pipeline layout, associated with the current compute pipeline, contains a bind group layout at index {index} which is incompatible with the bind group layout associated with the bind group at {index}"</span>)]
     </span>IncompatibleBindGroup {
         index: u32,
         <span class="comment">//expected: BindGroupLayoutId,
         //provided: Option&lt;(BindGroupLayoutId, BindGroupId)&gt;,
     </span>},
     <span class="attr">#[error(
-        <span class="string">&quot;Each current dispatch group size dimension ({current:?}) must be less or equal to {limit}&quot;
+        <span class="string">"Each current dispatch group size dimension ({current:?}) must be less or equal to {limit}"
     </span>)]
     </span>InvalidGroupSize { current: [u32; <span class="number">3</span>], limit: u32 },
     <span class="attr">#[error(transparent)]
@@ -1252,31 +1252,31 @@
 </span><span class="kw">pub enum </span>ComputePassErrorInner {
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
-    <span class="attr">#[error(<span class="string">&quot;Bind group {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bind group {0:?} is invalid"</span>)]
     </span>InvalidBindGroup(id::BindGroupId),
-    <span class="attr">#[error(<span class="string">&quot;Device {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
     </span>InvalidDevice(DeviceId),
-    <span class="attr">#[error(<span class="string">&quot;Bind group index {index} is greater than the device&#39;s requested `max_bind_group` limit {max}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
     </span>BindGroupIndexOutOfRange { index: u32, max: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Compute pipeline {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Compute pipeline {0:?} is invalid"</span>)]
     </span>InvalidPipeline(id::ComputePipelineId),
-    <span class="attr">#[error(<span class="string">&quot;QuerySet {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid"</span>)]
     </span>InvalidQuerySet(id::QuerySetId),
-    <span class="attr">#[error(<span class="string">&quot;Indirect buffer {0:?} is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Indirect buffer {0:?} is invalid or destroyed"</span>)]
     </span>InvalidIndirectBuffer(id::BufferId),
-    <span class="attr">#[error(<span class="string">&quot;Indirect buffer uses bytes {offset}..{end_offset} which overruns indirect buffer of size {buffer_size}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Indirect buffer uses bytes {offset}..{end_offset} which overruns indirect buffer of size {buffer_size}"</span>)]
     </span>IndirectBufferOverrun {
         offset: u64,
         end_offset: u64,
         buffer_size: u64,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer {0:?} is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
     </span>InvalidBuffer(id::BufferId),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsageConflict(<span class="attr">#[from] </span>UsageConflict),
     <span class="attr">#[error(transparent)]
     </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
-    <span class="attr">#[error(<span class="string">&quot;Cannot pop debug group, because number of pushed debug groups is zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cannot pop debug group, because number of pushed debug groups is zero"</span>)]
     </span>InvalidPopDebugGroup,
     <span class="attr">#[error(transparent)]
     </span>Dispatch(<span class="attr">#[from] </span>DispatchError),
@@ -1312,7 +1312,7 @@
 
 <span class="doccomment">/// Error encountered when performing a compute pass.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;{scope}&quot;</span>)]
+#[error(<span class="string">"{scope}"</span>)]
 </span><span class="kw">pub struct </span>ComputePassError {
     <span class="kw">pub </span>scope: PassErrorScope,
     <span class="attr">#[source]
@@ -1387,14 +1387,14 @@
             }
         }
 
-        <span class="comment">// Add the state of the indirect buffer if it hasn&#39;t been hit before.
+        <span class="comment">// Add the state of the indirect buffer if it hasn't been hit before.
         </span><span class="kw">unsafe </span>{
             base_trackers
                 .buffers
                 .set_and_remove_from_usage_scope_sparse(<span class="kw-2">&amp;mut </span><span class="self">self</span>.scope.buffers, indirect_buffer);
         }
 
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">"Encoding dispatch barriers"</span>);
 
         CommandBuffer::drain_barriers(raw_encoder, base_trackers);
         <span class="prelude-val">Ok</span>(())
@@ -1423,7 +1423,7 @@
         base: BasePassRef&lt;ComputeCommand&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::run_compute_pass&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
         <span class="kw">let </span>init_scope = PassErrorScope::Pass(encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -1440,7 +1440,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
                 base: BasePass::from_ref(base),
@@ -1455,7 +1455,7 @@
         <span class="kw">let </span>texture_memory_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions;
 
         <span class="comment">// We automatically keep extending command buffers over time, and because
-        // we want to insert a command buffer _before_ what we&#39;re about to record,
+        // we want to insert a command buffer _before_ what we're about to record,
         // we need to make sure to close the previous one.
         </span>encoder.close();
         <span class="comment">// will be reset to true if recording is done without errors
@@ -1486,7 +1486,7 @@
                 .ok_or(ComputePassErrorInner::InvalidQuerySet(tw.query_set))
                 .map_pass_err(init_scope)<span class="question-mark">?</span>;
 
-            <span class="comment">// Unlike in render passes we can&#39;t delay resetting the query sets since
+            <span class="comment">// Unlike in render passes we can't delay resetting the query sets since
             // there is no auxillary pass.
             </span><span class="kw">let </span>range = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(index_a), <span class="prelude-val">Some</span>(index_b)) =
                 (tw.beginning_of_pass_write_index, tw.end_of_pass_write_index)
@@ -1703,7 +1703,7 @@
                         .binder
                         .pipeline_layout
                         .as_ref()
-                        <span class="comment">//TODO: don&#39;t error here, lazily update the push constants
+                        <span class="comment">//TODO: don't error here, lazily update the push constants
                         </span>.ok_or(ComputePassErrorInner::Dispatch(
                             DispatchError::MissingPipeline,
                         ))
@@ -1904,7 +1904,7 @@
             raw.end_compute_pass();
         }
 
-        <span class="comment">// We&#39;ve successfully recorded the compute pass, bring the
+        <span class="comment">// We've successfully recorded the compute pass, bring the
         // command buffer out of the error state.
         </span><span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
 
@@ -1940,7 +1940,7 @@
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `offset_length` elements.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_set_bind_group(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_set_bind_group(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         index: u32,
         bind_group_id: id::BindGroupId,
@@ -1969,7 +1969,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_set_pipeline(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_set_pipeline(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         pipeline_id: id::ComputePipelineId,
     ) {
@@ -1987,7 +1987,7 @@
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `size_bytes` bytes.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_set_push_constant(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_set_push_constant(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         offset: u32,
         size_bytes: u32,
@@ -1996,16 +1996,16 @@
         <span class="macro">assert_eq!</span>(
             offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
             <span class="number">0</span>,
-            <span class="string">&quot;Push constant offset must be aligned to 4 bytes.&quot;
+            <span class="string">"Push constant offset must be aligned to 4 bytes."
         </span>);
         <span class="macro">assert_eq!</span>(
             size_bytes &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
             <span class="number">0</span>,
-            <span class="string">&quot;Push constant size must be aligned to 4 bytes.&quot;
+            <span class="string">"Push constant size must be aligned to 4 bytes."
         </span>);
         <span class="kw">let </span>data_slice = <span class="kw">unsafe </span>{ slice::from_raw_parts(data, size_bytes <span class="kw">as </span>usize) };
         <span class="kw">let </span>value_offset = pass.base.push_constant_data.len().try_into().expect(
-            <span class="string">&quot;Ran out of push constant space. Don&#39;t set 4gb of push constants per ComputePass.&quot;</span>,
+            <span class="string">"Ran out of push constant space. Don't set 4gb of push constants per ComputePass."</span>,
         );
 
         pass.base.push_constant_data.extend(
@@ -2022,7 +2022,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_dispatch_workgroups(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_dispatch_workgroups(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         groups_x: u32,
         groups_y: u32,
@@ -2034,7 +2034,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_dispatch_workgroups_indirect(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_dispatch_workgroups_indirect(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -2049,7 +2049,7 @@
     /// This function is unsafe as there is no guarantee that the given `label`
     /// is a valid null-terminated string.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_push_debug_group(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_push_debug_group(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         label: RawString,
         color: u32,
@@ -2064,7 +2064,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_pop_debug_group(pass: <span class="kw-2">&amp;mut </span>ComputePass) {
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_pop_debug_group(pass: <span class="kw-2">&amp;mut </span>ComputePass) {
         pass.base.commands.push(ComputeCommand::PopDebugGroup);
     }
 
@@ -2073,7 +2073,7 @@
     /// This function is unsafe as there is no guarantee that the given `label`
     /// is a valid null-terminated string.
     </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_insert_debug_marker(
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_insert_debug_marker(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         label: RawString,
         color: u32,
@@ -2088,7 +2088,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_write_timestamp(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_write_timestamp(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         query_set_id: id::QuerySetId,
         query_index: u32,
@@ -2100,7 +2100,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_begin_pipeline_statistics_query(
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_begin_pipeline_statistics_query(
         pass: <span class="kw-2">&amp;mut </span>ComputePass,
         query_set_id: id::QuerySetId,
         query_index: u32,
@@ -2114,7 +2114,7 @@
     }
 
     <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>wgpu_compute_pass_end_pipeline_statistics_query(pass: <span class="kw-2">&amp;mut </span>ComputePass) {
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_compute_pass_end_pipeline_statistics_query(pass: <span class="kw-2">&amp;mut </span>ComputePass) {
         pass.base
             .commands
             .push(ComputeCommand::EndPipelineStatisticsQuery);

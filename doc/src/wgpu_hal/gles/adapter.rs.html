@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1245,7 +1245,7 @@
     /// # Notes
     /// `WebGL 2` version returned as `OpenGL ES 3.0`
     </span><span class="kw">fn </span>parse_version(<span class="kw-2">mut </span>src: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(u8, u8), <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">let </span>webgl_sig = <span class="string">&quot;WebGL &quot;</span>;
+        <span class="kw">let </span>webgl_sig = <span class="string">"WebGL "</span>;
         <span class="comment">// According to the WebGL specification
         // VERSION  WebGL&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;
         // SHADING_LANGUAGE_VERSION WebGL&lt;space&gt;GLSL&lt;space&gt;ES&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;
@@ -1254,20 +1254,20 @@
             <span class="kw">let </span>pos = src.rfind(webgl_sig).unwrap_or(<span class="number">0</span>);
             src = <span class="kw-2">&amp;</span>src[pos + webgl_sig.len()..];
         } <span class="kw">else </span>{
-            <span class="kw">let </span>es_sig = <span class="string">&quot; ES &quot;</span>;
+            <span class="kw">let </span>es_sig = <span class="string">" ES "</span>;
             <span class="kw">match </span>src.rfind(es_sig) {
                 <span class="prelude-val">Some</span>(pos) =&gt; {
                     src = <span class="kw-2">&amp;</span>src[pos + es_sig.len()..];
                 }
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(<span class="macro">format!</span>(
-                        <span class="string">&quot;OpenGL version {src:?} does not contain &#39;ES&#39;&quot;
+                        <span class="string">"OpenGL version {src:?} does not contain 'ES'"
                     </span>)));
                 }
             }
         };
 
-        <span class="kw">let </span>glsl_es_sig = <span class="string">&quot;GLSL ES &quot;</span>;
+        <span class="kw">let </span>glsl_es_sig = <span class="string">"GLSL ES "</span>;
         <span class="kw">let </span>is_glsl = <span class="kw">match </span>src.find(glsl_es_sig) {
             <span class="prelude-val">Some</span>(pos) =&gt; {
                 src = <span class="kw-2">&amp;</span>src[pos + glsl_es_sig.len()..];
@@ -1297,28 +1297,28 @@
     /// &lt;minor&gt;       ::= &lt;number&gt;
     /// &lt;revision&gt;    ::= &lt;number&gt;
     /// &lt;vendor-info&gt; ::= &lt;string&gt;
-    /// &lt;release&gt;     ::= &lt;major&gt; &quot;.&quot; &lt;minor&gt; [&quot;.&quot; &lt;release&gt;]
-    /// &lt;version&gt;     ::= &lt;release&gt; [&quot; &quot; &lt;vendor-info&gt;]
+    /// &lt;release&gt;     ::= &lt;major&gt; "." &lt;minor&gt; ["." &lt;release&gt;]
+    /// &lt;version&gt;     ::= &lt;release&gt; [" " &lt;vendor-info&gt;]
     /// ~~~
     ///
     /// Note that this function is intentionally lenient in regards to parsing,
     /// and will try to recover at least the first two version numbers without
     /// resulting in an `Err`.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>parse_full_version(src: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(u8, u8), <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">let </span>(version, _vendor_info) = <span class="kw">match </span>src.find(<span class="string">&#39; &#39;</span>) {
+        <span class="kw">let </span>(version, _vendor_info) = <span class="kw">match </span>src.find(<span class="string">' '</span>) {
             <span class="prelude-val">Some</span>(i) =&gt; (<span class="kw-2">&amp;</span>src[..i], src[i + <span class="number">1</span>..].to_string()),
             <span class="prelude-val">None </span>=&gt; (src, String::new()),
         };
 
         <span class="comment">// TODO: make this even more lenient so that we can also accept
-        // `&lt;major&gt; &quot;.&quot; &lt;minor&gt; [&lt;???&gt;]`
-        </span><span class="kw">let </span><span class="kw-2">mut </span>it = version.split(<span class="string">&#39;.&#39;</span>);
+        // `&lt;major&gt; "." &lt;minor&gt; [&lt;???&gt;]`
+        </span><span class="kw">let </span><span class="kw-2">mut </span>it = version.split(<span class="string">'.'</span>);
         <span class="kw">let </span>major = it.next().and_then(|s| s.parse().ok());
         <span class="kw">let </span>minor = it.next().and_then(|s| {
-            <span class="kw">let </span>trimmed = <span class="kw">if </span>s.starts_with(<span class="string">&#39;0&#39;</span>) {
-                <span class="string">&quot;0&quot;
+            <span class="kw">let </span>trimmed = <span class="kw">if </span>s.starts_with(<span class="string">'0'</span>) {
+                <span class="string">"0"
             </span>} <span class="kw">else </span>{
-                s.trim_end_matches(<span class="string">&#39;0&#39;</span>)
+                s.trim_end_matches(<span class="string">'0'</span>)
             };
             trimmed.parse().ok()
         });
@@ -1326,7 +1326,7 @@
         <span class="kw">match </span>(major, minor) {
             (<span class="prelude-val">Some</span>(major), <span class="prelude-val">Some</span>(minor)) =&gt; <span class="prelude-val">Ok</span>((major, minor)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(<span class="macro">format!</span>(
-                <span class="string">&quot;unable to extract OpenGL version from {version:?}&quot;
+                <span class="string">"unable to extract OpenGL version from {version:?}"
             </span>))),
         }
     }
@@ -1337,36 +1337,36 @@
 
         <span class="comment">// opengl has no way to discern device_type, so we can try to infer it from the renderer string
         </span><span class="kw">let </span>strings_that_imply_integrated = [
-            <span class="string">&quot; xpress&quot;</span>, <span class="comment">// space here is on purpose so we don&#39;t match express
-            </span><span class="string">&quot;amd renoir&quot;</span>,
-            <span class="string">&quot;radeon hd 4200&quot;</span>,
-            <span class="string">&quot;radeon hd 4250&quot;</span>,
-            <span class="string">&quot;radeon hd 4290&quot;</span>,
-            <span class="string">&quot;radeon hd 4270&quot;</span>,
-            <span class="string">&quot;radeon hd 4225&quot;</span>,
-            <span class="string">&quot;radeon hd 3100&quot;</span>,
-            <span class="string">&quot;radeon hd 3200&quot;</span>,
-            <span class="string">&quot;radeon hd 3000&quot;</span>,
-            <span class="string">&quot;radeon hd 3300&quot;</span>,
-            <span class="string">&quot;radeon(tm) r4 graphics&quot;</span>,
-            <span class="string">&quot;radeon(tm) r5 graphics&quot;</span>,
-            <span class="string">&quot;radeon(tm) r6 graphics&quot;</span>,
-            <span class="string">&quot;radeon(tm) r7 graphics&quot;</span>,
-            <span class="string">&quot;radeon r7 graphics&quot;</span>,
-            <span class="string">&quot;nforce&quot;</span>, <span class="comment">// all nvidia nforce are integrated
-            </span><span class="string">&quot;tegra&quot;</span>,  <span class="comment">// all nvidia tegra are integrated
-            </span><span class="string">&quot;shield&quot;</span>, <span class="comment">// all nvidia shield are integrated
-            </span><span class="string">&quot;igp&quot;</span>,
-            <span class="string">&quot;mali&quot;</span>,
-            <span class="string">&quot;intel&quot;</span>,
-            <span class="string">&quot;v3d&quot;</span>,
-            <span class="string">&quot;apple m&quot;</span>, <span class="comment">// all apple m are integrated
+            <span class="string">" xpress"</span>, <span class="comment">// space here is on purpose so we don't match express
+            </span><span class="string">"amd renoir"</span>,
+            <span class="string">"radeon hd 4200"</span>,
+            <span class="string">"radeon hd 4250"</span>,
+            <span class="string">"radeon hd 4290"</span>,
+            <span class="string">"radeon hd 4270"</span>,
+            <span class="string">"radeon hd 4225"</span>,
+            <span class="string">"radeon hd 3100"</span>,
+            <span class="string">"radeon hd 3200"</span>,
+            <span class="string">"radeon hd 3000"</span>,
+            <span class="string">"radeon hd 3300"</span>,
+            <span class="string">"radeon(tm) r4 graphics"</span>,
+            <span class="string">"radeon(tm) r5 graphics"</span>,
+            <span class="string">"radeon(tm) r6 graphics"</span>,
+            <span class="string">"radeon(tm) r7 graphics"</span>,
+            <span class="string">"radeon r7 graphics"</span>,
+            <span class="string">"nforce"</span>, <span class="comment">// all nvidia nforce are integrated
+            </span><span class="string">"tegra"</span>,  <span class="comment">// all nvidia tegra are integrated
+            </span><span class="string">"shield"</span>, <span class="comment">// all nvidia shield are integrated
+            </span><span class="string">"igp"</span>,
+            <span class="string">"mali"</span>,
+            <span class="string">"intel"</span>,
+            <span class="string">"v3d"</span>,
+            <span class="string">"apple m"</span>, <span class="comment">// all apple m are integrated
         </span>];
-        <span class="kw">let </span>strings_that_imply_cpu = [<span class="string">&quot;mesa offscreen&quot;</span>, <span class="string">&quot;swiftshader&quot;</span>, <span class="string">&quot;llvmpipe&quot;</span>];
+        <span class="kw">let </span>strings_that_imply_cpu = [<span class="string">"mesa offscreen"</span>, <span class="string">"swiftshader"</span>, <span class="string">"llvmpipe"</span>];
 
         <span class="comment">//TODO: handle Intel Iris XE as discreet
-        </span><span class="kw">let </span>inferred_device_type = <span class="kw">if </span>vendor.contains(<span class="string">&quot;qualcomm&quot;</span>)
-            || vendor.contains(<span class="string">&quot;intel&quot;</span>)
+        </span><span class="kw">let </span>inferred_device_type = <span class="kw">if </span>vendor.contains(<span class="string">"qualcomm"</span>)
+            || vendor.contains(<span class="string">"intel"</span>)
             || strings_that_imply_integrated
                 .iter()
                 .any(|<span class="kw-2">&amp;</span>s| renderer.contains(s))
@@ -1376,31 +1376,31 @@
             wgt::DeviceType::Cpu
         } <span class="kw">else </span>{
             <span class="comment">// At this point the Device type is Unknown.
-            // It&#39;s most likely DiscreteGpu, but we do not know for sure.
-            // Use &quot;Other&quot; to avoid possibly making incorrect assumptions.
+            // It's most likely DiscreteGpu, but we do not know for sure.
+            // Use "Other" to avoid possibly making incorrect assumptions.
             // Note that if this same device is available under some other API (ex: Vulkan),
             // It will mostly likely get a different device type (probably DiscreteGpu).
             </span>wgt::DeviceType::Other
         };
 
         <span class="comment">// source: Sascha Willems at Vulkan
-        </span><span class="kw">let </span>vendor_id = <span class="kw">if </span>vendor.contains(<span class="string">&quot;amd&quot;</span>) {
+        </span><span class="kw">let </span>vendor_id = <span class="kw">if </span>vendor.contains(<span class="string">"amd"</span>) {
             db::amd::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;imgtec&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"imgtec"</span>) {
             db::imgtec::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;nvidia&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"nvidia"</span>) {
             db::nvidia::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;arm&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"arm"</span>) {
             db::arm::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;qualcomm&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"qualcomm"</span>) {
             db::qualcomm::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;intel&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"intel"</span>) {
             db::intel::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;broadcom&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"broadcom"</span>) {
             db::broadcom::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;mesa&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"mesa"</span>) {
             db::mesa::VENDOR
-        } <span class="kw">else if </span>vendor.contains(<span class="string">&quot;apple&quot;</span>) {
+        } <span class="kw">else if </span>vendor.contains(<span class="string">"apple"</span>) {
             db::apple::VENDOR
         } <span class="kw">else </span>{
             <span class="number">0
@@ -1423,17 +1423,17 @@
         <span class="kw">let </span>gl = context.lock();
         <span class="kw">let </span>extensions = gl.supported_extensions();
 
-        <span class="kw">let </span>(vendor_const, renderer_const) = <span class="kw">if </span>extensions.contains(<span class="string">&quot;WEBGL_debug_renderer_info&quot;</span>) {
-            <span class="comment">// emscripten doesn&#39;t enable &quot;WEBGL_debug_renderer_info&quot; extension by default. so, we do it manually.
+        <span class="kw">let </span>(vendor_const, renderer_const) = <span class="kw">if </span>extensions.contains(<span class="string">"WEBGL_debug_renderer_info"</span>) {
+            <span class="comment">// emscripten doesn't enable "WEBGL_debug_renderer_info" extension by default. so, we do it manually.
             // See https://github.com/gfx-rs/wgpu/issues/3245 for context
-            </span><span class="attr">#[cfg(target_os = <span class="string">&quot;emscripten&quot;</span>)]
-            </span><span class="kw">if unsafe </span>{ <span class="kw">super</span>::emscripten::enable_extension(<span class="string">&quot;WEBGL_debug_renderer_info\0&quot;</span>) } {
+            </span><span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+            </span><span class="kw">if unsafe </span>{ <span class="kw">super</span>::emscripten::enable_extension(<span class="string">"WEBGL_debug_renderer_info\0"</span>) } {
                 (GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
             } <span class="kw">else </span>{
                 (glow::VENDOR, glow::RENDERER)
             }
             <span class="comment">// glow already enables WEBGL_debug_renderer_info on wasm32-unknown-unknown target by default.
-            </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;emscripten&quot;</span>))]
+            </span><span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
             </span>(GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
         } <span class="kw">else </span>{
             (glow::VENDOR, glow::RENDERER)
@@ -1442,16 +1442,16 @@
         <span class="kw">let </span>vendor = <span class="kw">unsafe </span>{ gl.get_parameter_string(vendor_const) };
         <span class="kw">let </span>renderer = <span class="kw">unsafe </span>{ gl.get_parameter_string(renderer_const) };
         <span class="kw">let </span>version = <span class="kw">unsafe </span>{ gl.get_parameter_string(glow::VERSION) };
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Vendor: {}&quot;</span>, vendor);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Renderer: {}&quot;</span>, renderer);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Version: {}&quot;</span>, version);
+        <span class="macro">log::debug!</span>(<span class="string">"Vendor: {}"</span>, vendor);
+        <span class="macro">log::debug!</span>(<span class="string">"Renderer: {}"</span>, renderer);
+        <span class="macro">log::debug!</span>(<span class="string">"Version: {}"</span>, version);
 
         <span class="kw">let </span>full_ver = <span class="self">Self</span>::parse_full_version(<span class="kw-2">&amp;</span>version).ok();
         <span class="kw">let </span>es_ver = full_ver
             .is_none()
             .then_some(())
             .and_then(|<span class="kw">_</span>| <span class="self">Self</span>::parse_version(<span class="kw-2">&amp;</span>version).ok());
-        <span class="kw">let </span>web_gl = <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>);
+        <span class="kw">let </span>web_gl = <span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(full_ver) = full_ver {
             <span class="kw">let </span>core_profile = (full_ver &gt;= (<span class="number">3</span>, <span class="number">2</span>)).then_some(<span class="kw">unsafe </span>{
@@ -1460,26 +1460,26 @@
                     != <span class="number">0
             </span>});
             <span class="macro">log::trace!</span>(
-                <span class="string">&quot;Profile: {}&quot;</span>,
+                <span class="string">"Profile: {}"</span>,
                 core_profile
                     .map(|core_profile| <span class="kw">if </span>core_profile {
-                        <span class="string">&quot;Core&quot;
+                        <span class="string">"Core"
                     </span>} <span class="kw">else </span>{
-                        <span class="string">&quot;Compatibility&quot;
+                        <span class="string">"Compatibility"
                     </span>})
-                    .unwrap_or(<span class="string">&quot;Legacy&quot;</span>)
+                    .unwrap_or(<span class="string">"Legacy"</span>)
             );
         }
 
         <span class="kw">if </span>es_ver.is_none() &amp;&amp; full_ver.is_none() {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to parse OpenGL version&quot;</span>);
+            <span class="macro">log::warn!</span>(<span class="string">"Unable to parse OpenGL version"</span>);
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(es_ver) = es_ver {
             <span class="kw">if </span>es_ver &lt; (<span class="number">3</span>, <span class="number">0</span>) {
                 <span class="macro">log::warn!</span>(
-                    <span class="string">&quot;Returned GLES context is {}.{}, when 3.0+ was requested&quot;</span>,
+                    <span class="string">"Returned GLES context is {}.{}, when 3.0+ was requested"</span>,
                     es_ver.<span class="number">0</span>,
                     es_ver.<span class="number">1
                 </span>);
@@ -1490,7 +1490,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(full_ver) = full_ver {
             <span class="kw">if </span>full_ver &lt; (<span class="number">3</span>, <span class="number">3</span>) {
                 <span class="macro">log::warn!</span>(
-                    <span class="string">&quot;Returned GL context is {}.{}, when 3.3+ is needed&quot;</span>,
+                    <span class="string">"Returned GL context is {}.{}, when 3.3+ is needed"</span>,
                     full_ver.<span class="number">0</span>,
                     full_ver.<span class="number">1
                 </span>);
@@ -1500,11 +1500,11 @@
 
         <span class="kw">let </span>shading_language_version = {
             <span class="kw">let </span>sl_version = <span class="kw">unsafe </span>{ gl.get_parameter_string(glow::SHADING_LANGUAGE_VERSION) };
-            <span class="macro">log::debug!</span>(<span class="string">&quot;SL version: {}&quot;</span>, <span class="kw-2">&amp;</span>sl_version);
+            <span class="macro">log::debug!</span>(<span class="string">"SL version: {}"</span>, <span class="kw-2">&amp;</span>sl_version);
             <span class="kw">if </span>full_ver.is_some() {
                 <span class="kw">let </span>(sl_major, sl_minor) = <span class="self">Self</span>::parse_full_version(<span class="kw-2">&amp;</span>sl_version).ok()<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>value = sl_major <span class="kw">as </span>u16 * <span class="number">100 </span>+ sl_minor <span class="kw">as </span>u16 * <span class="number">10</span>;
-                <span class="comment">// Naga doesn&#39;t think it supports GL 460+, so we cap it at 450
+                <span class="comment">// Naga doesn't think it supports GL 460+, so we cap it at 450
                 </span><span class="kw">if </span>value &gt; <span class="number">450 </span>{
                     value = <span class="number">450</span>;
                 }
@@ -1514,12 +1514,12 @@
                 <span class="kw">let </span>value = sl_major <span class="kw">as </span>u16 * <span class="number">100 </span>+ sl_minor <span class="kw">as </span>u16 * <span class="number">10</span>;
                 naga::back::glsl::Version::Embedded {
                     version: value,
-                    is_webgl: <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+                    is_webgl: <span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>),
                 }
             }
         };
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Supported GL Extensions: {:#?}&quot;</span>, extensions);
+        <span class="macro">log::debug!</span>(<span class="string">"Supported GL Extensions: {:#?}"</span>, extensions);
 
         <span class="kw">let </span>supported = |(req_es_major, req_es_minor), (req_full_major, req_full_minor)| {
             <span class="kw">let </span>es_supported = es_ver
@@ -1534,24 +1534,24 @@
         };
 
         <span class="kw">let </span>supports_storage =
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_shader_storage_buffer_object&quot;</span>);
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_shader_storage_buffer_object"</span>);
         <span class="kw">let </span>supports_compute =
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_compute_shader&quot;</span>);
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_compute_shader"</span>);
         <span class="kw">let </span>supports_work_group_params = supports_compute;
 
-        <span class="comment">// ANGLE provides renderer strings like: &quot;ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)&quot;
-        </span><span class="kw">let </span>is_angle = renderer.contains(<span class="string">&quot;ANGLE&quot;</span>);
+        <span class="comment">// ANGLE provides renderer strings like: "ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)"
+        </span><span class="kw">let </span>is_angle = renderer.contains(<span class="string">"ANGLE"</span>);
 
         <span class="kw">let </span>vertex_shader_storage_blocks = <span class="kw">if </span>supports_storage {
             <span class="kw">let </span>value =
                 (<span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS) } <span class="kw">as </span>u32);
 
-            <span class="kw">if </span>value == <span class="number">0 </span>&amp;&amp; extensions.contains(<span class="string">&quot;GL_ARB_shader_storage_buffer_object&quot;</span>) {
+            <span class="kw">if </span>value == <span class="number">0 </span>&amp;&amp; extensions.contains(<span class="string">"GL_ARB_shader_storage_buffer_object"</span>) {
                 <span class="comment">// The driver for AMD Radeon HD 5870 returns zero here, so assume the value matches the compute shader storage block count.
-                // Windows doesn&#39;t recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
+                // Windows doesn't recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
                 </span><span class="kw">let </span>new = (<span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_COMPUTE_SHADER_STORAGE_BLOCKS) }
                     <span class="kw">as </span>u32);
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader storage blocks is zero, but GL_ARB_shader_storage_buffer_object is specified. Assuming the compute value {new}&quot;</span>);
+                <span class="macro">log::warn!</span>(<span class="string">"Max vertex shader storage blocks is zero, but GL_ARB_shader_storage_buffer_object is specified. Assuming the compute value {new}"</span>);
                 new
             } <span class="kw">else </span>{
                 value
@@ -1590,7 +1590,7 @@
             vertex_shader_storage_blocks == <span class="number">0 </span>&amp;&amp; vertex_shader_storage_textures != <span class="number">0</span>;
         <span class="kw">if </span>vertex_ssbo_false_zero {
             <span class="comment">// We only care about fragment here as the 0 is a lie.
-            </span><span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero.&quot;</span>);
+            </span><span class="macro">log::warn!</span>(<span class="string">"Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero."</span>);
         }
 
         <span class="kw">let </span>max_storage_buffers_per_shader_stage = <span class="kw">if </span>vertex_shader_storage_blocks == <span class="number">0 </span>{
@@ -1616,12 +1616,12 @@
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::INDIRECT_EXECUTION,
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_multi_draw_indirect&quot;</span>),
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_multi_draw_indirect"</span>),
         );
         downlevel_flags.set(wgt::DownlevelFlags::BASE_VERTEX, supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">2</span>)));
         downlevel_flags.set(
             wgt::DownlevelFlags::INDEPENDENT_BLEND,
-            supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">4</span>, <span class="number">0</span>)) || extensions.contains(<span class="string">&quot;GL_EXT_draw_buffers_indexed&quot;</span>),
+            supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">4</span>, <span class="number">0</span>)) || extensions.contains(<span class="string">"GL_EXT_draw_buffers_indexed"</span>),
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::VERTEX_STORAGE,
@@ -1630,8 +1630,8 @@
                 </span>&amp;&amp; (vertex_shader_storage_blocks != <span class="number">0 </span>|| vertex_ssbo_false_zero),
         );
         downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
-        <span class="kw">if </span>extensions.contains(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>)
-            || extensions.contains(<span class="string">&quot;GL_EXT_texture_filter_anisotropic&quot;</span>)
+        <span class="kw">if </span>extensions.contains(<span class="string">"EXT_texture_filter_anisotropic"</span>)
+            || extensions.contains(<span class="string">"GL_EXT_texture_filter_anisotropic"</span>)
         {
             <span class="kw">let </span>max_aniso =
                 <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_TEXTURE_MAX_ANISOTROPY_EXT) } <span class="kw">as </span>u32;
@@ -1639,16 +1639,16 @@
         }
         downlevel_flags.set(
             wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED,
-            !(<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || is_angle),
+            !(<span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) || is_angle),
         );
         <span class="comment">// see https://registry.khronos.org/webgl/specs/latest/2.0/#BUFFER_OBJECT_BINDING
         </span>downlevel_flags.set(
             wgt::DownlevelFlags::UNRESTRICTED_INDEX_BUFFER,
-            !<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+            !<span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>),
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES,
-            !<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+            !<span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>),
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::FULL_DRAW_INDEX_UINT32,
@@ -1656,10 +1656,10 @@
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::MULTISAMPLED_SHADING,
-            supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">4</span>, <span class="number">0</span>)) || extensions.contains(<span class="string">&quot;OES_sample_variables&quot;</span>),
+            supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">4</span>, <span class="number">0</span>)) || extensions.contains(<span class="string">"OES_sample_variables"</span>),
         );
-        <span class="kw">let </span>query_buffers = extensions.contains(<span class="string">&quot;GL_ARB_query_buffer_object&quot;</span>)
-            || extensions.contains(<span class="string">&quot;GL_AMD_query_buffer_object&quot;</span>);
+        <span class="kw">let </span>query_buffers = extensions.contains(<span class="string">"GL_ARB_query_buffer_object"</span>)
+            || extensions.contains(<span class="string">"GL_AMD_query_buffer_object"</span>);
         <span class="kw">if </span>query_buffers {
             downlevel_flags.set(wgt::DownlevelFlags::NONBLOCKING_QUERY_RESOLVE, <span class="bool-val">true</span>);
         }
@@ -1670,12 +1670,12 @@
             | wgt::Features::PUSH_CONSTANTS;
         features.set(
             wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER | wgt::Features::ADDRESS_MODE_CLAMP_TO_ZERO,
-            extensions.contains(<span class="string">&quot;GL_EXT_texture_border_clamp&quot;</span>)
-                || extensions.contains(<span class="string">&quot;GL_ARB_texture_border_clamp&quot;</span>),
+            extensions.contains(<span class="string">"GL_EXT_texture_border_clamp"</span>)
+                || extensions.contains(<span class="string">"GL_ARB_texture_border_clamp"</span>),
         );
         features.set(
             wgt::Features::DEPTH_CLIP_CONTROL,
-            extensions.contains(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>) || extensions.contains(<span class="string">&quot;GL_ARB_depth_clamp&quot;</span>),
+            extensions.contains(<span class="string">"GL_EXT_depth_clamp"</span>) || extensions.contains(<span class="string">"GL_ARB_depth_clamp"</span>),
         );
         features.set(
             wgt::Features::VERTEX_WRITABLE_STORAGE,
@@ -1684,45 +1684,45 @@
         );
         features.set(
             wgt::Features::MULTIVIEW,
-            extensions.contains(<span class="string">&quot;OVR_multiview2&quot;</span>) || extensions.contains(<span class="string">&quot;GL_OVR_multiview2&quot;</span>),
+            extensions.contains(<span class="string">"OVR_multiview2"</span>) || extensions.contains(<span class="string">"GL_OVR_multiview2"</span>),
         );
         features.set(
             wgt::Features::DUAL_SOURCE_BLENDING,
-            extensions.contains(<span class="string">&quot;GL_EXT_blend_func_extended&quot;</span>)
-                || extensions.contains(<span class="string">&quot;GL_ARB_blend_func_extended&quot;</span>),
+            extensions.contains(<span class="string">"GL_EXT_blend_func_extended"</span>)
+                || extensions.contains(<span class="string">"GL_ARB_blend_func_extended"</span>),
         );
         features.set(
             wgt::Features::SHADER_PRIMITIVE_INDEX,
             supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">2</span>))
-                || extensions.contains(<span class="string">&quot;OES_geometry_shader&quot;</span>)
-                || extensions.contains(<span class="string">&quot;GL_ARB_geometry_shader4&quot;</span>),
+                || extensions.contains(<span class="string">"OES_geometry_shader"</span>)
+                || extensions.contains(<span class="string">"GL_ARB_geometry_shader4"</span>),
         );
         features.set(
             wgt::Features::SHADER_EARLY_DEPTH_TEST,
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">2</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_shader_image_load_store&quot;</span>),
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">2</span>)) || extensions.contains(<span class="string">"GL_ARB_shader_image_load_store"</span>),
         );
         features.set(wgt::Features::SHADER_UNUSED_VERTEX_OUTPUT, <span class="bool-val">true</span>);
-        <span class="kw">if </span>extensions.contains(<span class="string">&quot;GL_ARB_timer_query&quot;</span>) {
+        <span class="kw">if </span>extensions.contains(<span class="string">"GL_ARB_timer_query"</span>) {
             features.set(wgt::Features::TIMESTAMP_QUERY, <span class="bool-val">true</span>);
             features.set(wgt::Features::TIMESTAMP_QUERY_INSIDE_PASSES, <span class="bool-val">true</span>);
         }
         <span class="kw">let </span>gl_bcn_exts = [
-            <span class="string">&quot;GL_EXT_texture_compression_s3tc&quot;</span>,
-            <span class="string">&quot;GL_EXT_texture_compression_rgtc&quot;</span>,
-            <span class="string">&quot;GL_ARB_texture_compression_bptc&quot;</span>,
+            <span class="string">"GL_EXT_texture_compression_s3tc"</span>,
+            <span class="string">"GL_EXT_texture_compression_rgtc"</span>,
+            <span class="string">"GL_ARB_texture_compression_bptc"</span>,
         ];
         <span class="kw">let </span>gles_bcn_exts = [
-            <span class="string">&quot;GL_EXT_texture_compression_s3tc_srgb&quot;</span>,
-            <span class="string">&quot;GL_EXT_texture_compression_rgtc&quot;</span>,
-            <span class="string">&quot;GL_EXT_texture_compression_bptc&quot;</span>,
+            <span class="string">"GL_EXT_texture_compression_s3tc_srgb"</span>,
+            <span class="string">"GL_EXT_texture_compression_rgtc"</span>,
+            <span class="string">"GL_EXT_texture_compression_bptc"</span>,
         ];
         <span class="kw">let </span>webgl_bcn_exts = [
-            <span class="string">&quot;WEBGL_compressed_texture_s3tc&quot;</span>,
-            <span class="string">&quot;WEBGL_compressed_texture_s3tc_srgb&quot;</span>,
-            <span class="string">&quot;EXT_texture_compression_rgtc&quot;</span>,
-            <span class="string">&quot;EXT_texture_compression_bptc&quot;</span>,
+            <span class="string">"WEBGL_compressed_texture_s3tc"</span>,
+            <span class="string">"WEBGL_compressed_texture_s3tc_srgb"</span>,
+            <span class="string">"EXT_texture_compression_rgtc"</span>,
+            <span class="string">"EXT_texture_compression_bptc"</span>,
         ];
-        <span class="kw">let </span>bcn_exts = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
+        <span class="kw">let </span>bcn_exts = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) {
             <span class="kw-2">&amp;</span>webgl_bcn_exts[..]
         } <span class="kw">else if </span>es_ver.is_some() {
             <span class="kw-2">&amp;</span>gles_bcn_exts[..]
@@ -1733,8 +1733,8 @@
             wgt::Features::TEXTURE_COMPRESSION_BC,
             bcn_exts.iter().all(|<span class="kw-2">&amp;</span>ext| extensions.contains(ext)),
         );
-        <span class="kw">let </span>has_etc = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
-            extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_etc&quot;</span>)
+        <span class="kw">let </span>has_etc = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) {
+            extensions.contains(<span class="string">"WEBGL_compressed_texture_etc"</span>)
         } <span class="kw">else </span>{
             <span class="comment">// This is a required part of GLES3, but not part of Desktop GL at all.
             </span>es_ver.is_some()
@@ -1742,10 +1742,10 @@
         features.set(wgt::Features::TEXTURE_COMPRESSION_ETC2, has_etc);
 
         <span class="comment">// `OES_texture_compression_astc` provides 2D + 3D, LDR + HDR support
-        </span><span class="kw">if </span>extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>)
-            || extensions.contains(<span class="string">&quot;GL_OES_texture_compression_astc&quot;</span>)
+        </span><span class="kw">if </span>extensions.contains(<span class="string">"WEBGL_compressed_texture_astc"</span>)
+            || extensions.contains(<span class="string">"GL_OES_texture_compression_astc"</span>)
         {
-            <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+            <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(target_os = <span class="string">"emscripten"</span>)))]
             </span>{
                 <span class="kw">if </span>context
                     .glow_context
@@ -1761,7 +1761,7 @@
                 }
             }
 
-            <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
+            <span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), target_os = <span class="string">"emscripten"</span>))]
             </span>{
                 features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC);
                 features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR);
@@ -1769,28 +1769,28 @@
         } <span class="kw">else </span>{
             features.set(
                 wgt::Features::TEXTURE_COMPRESSION_ASTC,
-                extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>),
+                extensions.contains(<span class="string">"GL_KHR_texture_compression_astc_ldr"</span>),
             );
             features.set(
                 wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR,
-                extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_hdr&quot;</span>),
+                extensions.contains(<span class="string">"GL_KHR_texture_compression_astc_hdr"</span>),
             );
         }
 
         features.set(
             wgt::Features::FLOAT32_FILTERABLE,
-            extensions.contains(<span class="string">&quot;GL_ARB_color_buffer_float&quot;</span>)
-                || extensions.contains(<span class="string">&quot;GL_EXT_color_buffer_float&quot;</span>)
-                || extensions.contains(<span class="string">&quot;OES_texture_float_linear&quot;</span>),
+            extensions.contains(<span class="string">"GL_ARB_color_buffer_float"</span>)
+                || extensions.contains(<span class="string">"GL_EXT_color_buffer_float"</span>)
+                || extensions.contains(<span class="string">"OES_texture_float_linear"</span>),
         );
 
-        <span class="comment">// We *might* be able to emulate bgra8unorm-storage but currently don&#39;t attempt to.
+        <span class="comment">// We *might* be able to emulate bgra8unorm-storage but currently don't attempt to.
 
         </span><span class="kw">let </span><span class="kw-2">mut </span>private_caps = <span class="kw">super</span>::PrivateCapabilities::empty();
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::BUFFER_ALLOCATION,
-            extensions.contains(<span class="string">&quot;GL_EXT_buffer_storage&quot;</span>)
-                || extensions.contains(<span class="string">&quot;GL_ARB_buffer_storage&quot;</span>),
+            extensions.contains(<span class="string">"GL_EXT_buffer_storage"</span>)
+                || extensions.contains(<span class="string">"GL_ARB_buffer_storage"</span>),
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT,
@@ -1798,7 +1798,7 @@
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD,
-            extensions.contains(<span class="string">&quot;GL_EXT_texture_shadow_lod&quot;</span>),
+            extensions.contains(<span class="string">"GL_EXT_texture_shadow_lod"</span>),
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::MEMORY_BARRIERS,
@@ -1806,21 +1806,21 @@
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT,
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_vertex_attrib_binding&quot;</span>),
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_vertex_attrib_binding"</span>),
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE,
-            !<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+            !<span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>),
         );
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA,
-            <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || full_ver.is_some(),
+            <span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) || full_ver.is_some(),
         );
-        <span class="kw">let </span>color_buffer_float = extensions.contains(<span class="string">&quot;GL_EXT_color_buffer_float&quot;</span>)
-            || extensions.contains(<span class="string">&quot;GL_ARB_color_buffer_float&quot;</span>)
-            || extensions.contains(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
-        <span class="kw">let </span>color_buffer_half_float = extensions.contains(<span class="string">&quot;GL_EXT_color_buffer_half_float&quot;</span>)
-            || extensions.contains(<span class="string">&quot;GL_ARB_half_float_pixel&quot;</span>);
+        <span class="kw">let </span>color_buffer_float = extensions.contains(<span class="string">"GL_EXT_color_buffer_float"</span>)
+            || extensions.contains(<span class="string">"GL_ARB_color_buffer_float"</span>)
+            || extensions.contains(<span class="string">"EXT_color_buffer_float"</span>);
+        <span class="kw">let </span>color_buffer_half_float = extensions.contains(<span class="string">"GL_EXT_color_buffer_half_float"</span>)
+            || extensions.contains(<span class="string">"GL_ARB_half_float_pixel"</span>);
         private_caps.set(
             <span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT,
             color_buffer_half_float || color_buffer_float,
@@ -1845,7 +1845,7 @@
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(full_ver) = full_ver {
             <span class="kw">let </span>supported =
-                full_ver &gt;= (<span class="number">4</span>, <span class="number">2</span>) &amp;&amp; extensions.contains(<span class="string">&quot;GL_ARB_shader_draw_parameters&quot;</span>);
+                full_ver &gt;= (<span class="number">4</span>, <span class="number">2</span>) &amp;&amp; extensions.contains(<span class="string">"GL_ARB_shader_draw_parameters"</span>);
             private_caps.set(
                 <span class="kw">super</span>::PrivateCapabilities::FULLY_FEATURED_INSTANCING,
                 supported,
@@ -1855,7 +1855,7 @@
             // For all other versions, the behavior is undefined.
             //
             // We only support indirect first instance when we also have ARB_shader_draw_parameters as
-            // that&#39;s the only way to get gl_InstanceID to work correctly.
+            // that's the only way to get gl_InstanceID to work correctly.
             </span>features.set(wgt::Features::INDIRECT_FIRST_INSTANCE, supported);
         }
 
@@ -1930,15 +1930,15 @@
 
                         <span class="kw">if </span>value == <span class="number">0 </span>{
                             <span class="comment">// This should be at least 2048, but the driver for AMD Radeon HD 5870 on
-                            // Windows doesn&#39;t recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
+                            // Windows doesn't recognize `GL_MAX_VERTEX_ATTRIB_STRIDE`.
 
-                            </span><span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex attribute stride is 0. Assuming it is 2048&quot;</span>);
+                            </span><span class="macro">log::warn!</span>(<span class="string">"Max vertex attribute stride is 0. Assuming it is 2048"</span>);
                             <span class="number">2048
                         </span>} <span class="kw">else </span>{
                             value
                         }
                     } <span class="kw">else </span>{
-                        <span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex attribute stride unknown. Assuming it is 2048&quot;</span>);
+                        <span class="macro">log::warn!</span>(<span class="string">"Max vertex attribute stride unknown. Assuming it is 2048"</span>);
                         <span class="number">2048
                     </span>}
                 } <span class="kw">else </span>{
@@ -1990,21 +1990,21 @@
 
         workarounds.set(
             <span class="kw">super</span>::Workarounds::EMULATE_BUFFER_MAP,
-            <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+            <span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>),
         );
 
         <span class="kw">let </span>r = renderer.to_lowercase();
         <span class="comment">// Check for Mesa sRGB clear bug. See
         // [`super::PrivateCapabilities::MESA_I915_SRGB_SHADER_CLEAR`].
         </span><span class="kw">if </span>context.is_owned()
-            &amp;&amp; r.contains(<span class="string">&quot;mesa&quot;</span>)
-            &amp;&amp; r.contains(<span class="string">&quot;intel&quot;</span>)
-            &amp;&amp; r.split(<span class="kw-2">&amp;</span>[<span class="string">&#39; &#39;</span>, <span class="string">&#39;(&#39;</span>, <span class="string">&#39;)&#39;</span>][..])
-                .any(|substr| substr.len() == <span class="number">3 </span>&amp;&amp; substr.chars().nth(<span class="number">2</span>) == <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>))
+            &amp;&amp; r.contains(<span class="string">"mesa"</span>)
+            &amp;&amp; r.contains(<span class="string">"intel"</span>)
+            &amp;&amp; r.split(<span class="kw-2">&amp;</span>[<span class="string">' '</span>, <span class="string">'('</span>, <span class="string">')'</span>][..])
+                .any(|substr| substr.len() == <span class="number">3 </span>&amp;&amp; substr.chars().nth(<span class="number">2</span>) == <span class="prelude-val">Some</span>(<span class="string">'l'</span>))
         {
             <span class="macro">log::warn!</span>(
-                <span class="string">&quot;Detected skylake derivative running on mesa i915. Clears to srgb textures will \
-                use manual shader clears.&quot;
+                <span class="string">"Detected skylake derivative running on mesa i915. Clears to srgb textures will \
+                use manual shader clears."
             </span>);
             workarounds.set(<span class="kw">super</span>::Workarounds::MESA_I915_SRGB_SHADER_CLEAR, <span class="bool-val">true</span>);
         }
@@ -2014,7 +2014,7 @@
         <span class="comment">// Drop the GL guard so we can move the context into AdapterShared
         // ( on Wasm the gl handle is just a ref so we tell clippy to allow
         // dropping the ref )
-        </span><span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(dropping_references))]
+        </span><span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(dropping_references))]
         </span>drop(gl);
 
         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ExposedAdapter {
@@ -2054,18 +2054,18 @@
         es: bool,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;glow::Shader&gt; {
         <span class="kw">let </span>source = <span class="kw">if </span>es {
-            <span class="macro">format!</span>(<span class="string">&quot;#version 300 es\nprecision lowp float;\n{source}&quot;</span>)
+            <span class="macro">format!</span>(<span class="string">"#version 300 es\nprecision lowp float;\n{source}"</span>)
         } <span class="kw">else </span>{
-            <span class="macro">format!</span>(<span class="string">&quot;#version 130\n{source}&quot;</span>)
+            <span class="macro">format!</span>(<span class="string">"#version 130\n{source}"</span>)
         };
-        <span class="kw">let </span>shader = <span class="kw">unsafe </span>{ gl.create_shader(shader_type) }.expect(<span class="string">&quot;Could not create shader&quot;</span>);
+        <span class="kw">let </span>shader = <span class="kw">unsafe </span>{ gl.create_shader(shader_type) }.expect(<span class="string">"Could not create shader"</span>);
         <span class="kw">unsafe </span>{ gl.shader_source(shader, <span class="kw-2">&amp;</span>source) };
         <span class="kw">unsafe </span>{ gl.compile_shader(shader) };
 
         <span class="kw">if </span>!<span class="kw">unsafe </span>{ gl.get_shader_compile_status(shader) } {
             <span class="kw">let </span>msg = <span class="kw">unsafe </span>{ gl.get_shader_info_log(shader) };
             <span class="kw">if </span>!msg.is_empty() {
-                <span class="macro">log::error!</span>(<span class="string">&quot;\tShader compile error: {}&quot;</span>, msg);
+                <span class="macro">log::error!</span>(<span class="string">"\tShader compile error: {}"</span>, msg);
             }
             <span class="kw">unsafe </span>{ gl.delete_shader(shader) };
             <span class="prelude-val">None
@@ -2078,10 +2078,10 @@
         gl: <span class="kw-2">&amp;</span>glow::Context,
         es: bool,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;(glow::Program, glow::UniformLocation)&gt; {
-        <span class="kw">let </span>program = <span class="kw">unsafe </span>{ gl.create_program() }.expect(<span class="string">&quot;Could not create shader program&quot;</span>);
+        <span class="kw">let </span>program = <span class="kw">unsafe </span>{ gl.create_program() }.expect(<span class="string">"Could not create shader program"</span>);
         <span class="kw">let </span>vertex = <span class="kw">unsafe </span>{
             <span class="self">Self</span>::compile_shader(
-                <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.vert&quot;</span>),
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/clear.vert"</span>),
                 gl,
                 glow::VERTEX_SHADER,
                 es,
@@ -2089,7 +2089,7 @@
         </span>};
         <span class="kw">let </span>fragment = <span class="kw">unsafe </span>{
             <span class="self">Self</span>::compile_shader(
-                <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.frag&quot;</span>),
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/clear.frag"</span>),
                 gl,
                 glow::FRAGMENT_SHADER,
                 es,
@@ -2102,14 +2102,14 @@
         <span class="kw">let </span>linked_ok = <span class="kw">unsafe </span>{ gl.get_program_link_status(program) };
         <span class="kw">let </span>msg = <span class="kw">unsafe </span>{ gl.get_program_info_log(program) };
         <span class="kw">if </span>!msg.is_empty() {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Shader link error: {}&quot;</span>, msg);
+            <span class="macro">log::warn!</span>(<span class="string">"Shader link error: {}"</span>, msg);
         }
         <span class="kw">if </span>!linked_ok {
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let </span>color_uniform_location = <span class="kw">unsafe </span>{ gl.get_uniform_location(program, <span class="string">&quot;color&quot;</span>) }
-            .expect(<span class="string">&quot;Could not find color uniform in shader clear shader&quot;</span>);
+        <span class="kw">let </span>color_uniform_location = <span class="kw">unsafe </span>{ gl.get_uniform_location(program, <span class="string">"color"</span>) }
+            .expect(<span class="string">"Could not find color uniform in shader clear shader"</span>);
         <span class="kw">unsafe </span>{ gl.delete_shader(vertex) };
         <span class="kw">unsafe </span>{ gl.delete_shader(fragment) };
 
@@ -2148,7 +2148,7 @@
             device: <span class="kw">super</span>::Device {
                 shared: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared),
                 main_vao,
-                <span class="attr">#[cfg(all(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;renderdoc&quot;</span>))]
+                <span class="attr">#[cfg(all(not(target_arch = <span class="string">"wasm32"</span>), feature = <span class="string">"renderdoc"</span>))]
                 </span>render_doc: Default::default(),
             },
             queue: <span class="kw">super</span>::Queue {
@@ -2201,7 +2201,7 @@
         <span class="comment">// Base types are pulled from the table in the OpenGLES 3.0 spec in section 3.8.
         //
         // The storage types are based on table 8.26, in section
-        // &quot;TEXTURE IMAGE LOADS AND STORES&quot; of OpenGLES-3.2 spec.
+        // "TEXTURE IMAGE LOADS AND STORES" of OpenGLES-3.2 spec.
         </span><span class="kw">let </span>empty = Tfc::empty();
         <span class="kw">let </span>base = Tfc::COPY_SRC | Tfc::COPY_DST;
         <span class="kw">let </span>unfilterable = base | Tfc::SAMPLED;
@@ -2342,13 +2342,13 @@
         <span class="kw">if </span>surface.presentable {
             <span class="kw">let </span><span class="kw-2">mut </span>formats = <span class="macro">vec!</span>[
                 wgt::TextureFormat::Rgba8Unorm,
-                <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
                 </span>wgt::TextureFormat::Bgra8Unorm,
             ];
             <span class="kw">if </span>surface.supports_srgb() {
                 formats.extend([
                     wgt::TextureFormat::Rgba8UnormSrgb,
-                    <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                    <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
                     </span>wgt::TextureFormat::Bgra8UnormSrgb,
                 ])
             }
@@ -2396,7 +2396,7 @@
         {
             <span class="kw">unsafe </span>{ gl.get_buffer_sub_data(target, offset, dst_data) };
         } <span class="kw">else </span>{
-            <span class="macro">log::error!</span>(<span class="string">&quot;Fake map&quot;</span>);
+            <span class="macro">log::error!</span>(<span class="string">"Fake map"</span>);
             <span class="kw">let </span>length = dst_data.len();
             <span class="kw">let </span>buffer_mapping =
                 <span class="kw">unsafe </span>{ gl.map_buffer_range(target, offset, length <span class="kw">as _</span>, glow::MAP_READ_BIT) };
@@ -2409,15 +2409,15 @@
 }
 
 <span class="attr">#[cfg(all(
-    target_arch = <span class="string">&quot;wasm32&quot;</span>,
-    feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-    not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    target_arch = <span class="string">"wasm32"</span>,
+    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+    not(target_feature = <span class="string">"atomics"</span>)
 ))]
 </span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Adapter {}
 <span class="attr">#[cfg(all(
-    target_arch = <span class="string">&quot;wasm32&quot;</span>,
-    feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
-    not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    target_arch = <span class="string">"wasm32"</span>,
+    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
+    not(target_feature = <span class="string">"atomics"</span>)
 ))]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Adapter {}
 
@@ -2427,29 +2427,29 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_version_parse() {
-        Adapter::parse_version(<span class="string">&quot;1&quot;</span>).unwrap_err();
-        Adapter::parse_version(<span class="string">&quot;1.&quot;</span>).unwrap_err();
-        Adapter::parse_version(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>).unwrap_err();
-        Adapter::parse_version(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>).unwrap_err();
-        Adapter::parse_version(<span class="string">&quot;1.2.3&quot;</span>).unwrap_err();
+        Adapter::parse_version(<span class="string">"1"</span>).unwrap_err();
+        Adapter::parse_version(<span class="string">"1."</span>).unwrap_err();
+        Adapter::parse_version(<span class="string">"1 h3l1o. W0rld"</span>).unwrap_err();
+        Adapter::parse_version(<span class="string">"1. h3l1o. W0rld"</span>).unwrap_err();
+        Adapter::parse_version(<span class="string">"1.2.3"</span>).unwrap_err();
 
-        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;OpenGL ES 3.1&quot;</span>).unwrap(), (<span class="number">3</span>, <span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"OpenGL ES 3.1"</span>).unwrap(), (<span class="number">3</span>, <span class="number">1</span>));
         <span class="macro">assert_eq!</span>(
-            Adapter::parse_version(<span class="string">&quot;OpenGL ES 2.0 Google Nexus&quot;</span>).unwrap(),
+            Adapter::parse_version(<span class="string">"OpenGL ES 2.0 Google Nexus"</span>).unwrap(),
             (<span class="number">2</span>, <span class="number">0</span>)
         );
-        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;GLSL ES 1.1&quot;</span>).unwrap(), (<span class="number">1</span>, <span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">"GLSL ES 1.1"</span>).unwrap(), (<span class="number">1</span>, <span class="number">1</span>));
         <span class="macro">assert_eq!</span>(
-            Adapter::parse_version(<span class="string">&quot;OpenGL ES GLSL ES 3.20&quot;</span>).unwrap(),
+            Adapter::parse_version(<span class="string">"OpenGL ES GLSL ES 3.20"</span>).unwrap(),
             (<span class="number">3</span>, <span class="number">2</span>)
         );
         <span class="macro">assert_eq!</span>(
             <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0
-            </span>Adapter::parse_version(<span class="string">&quot;WebGL 2.0 (OpenGL ES 3.0 Chromium)&quot;</span>).unwrap(),
+            </span>Adapter::parse_version(<span class="string">"WebGL 2.0 (OpenGL ES 3.0 Chromium)"</span>).unwrap(),
             (<span class="number">3</span>, <span class="number">0</span>)
         );
         <span class="macro">assert_eq!</span>(
-            Adapter::parse_version(<span class="string">&quot;WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>).unwrap(),
+            Adapter::parse_version(<span class="string">"WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)"</span>).unwrap(),
             (<span class="number">3</span>, <span class="number">0</span>)
         );
     }

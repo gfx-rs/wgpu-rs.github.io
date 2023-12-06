@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/binding_model.rs`."><title>binding_model.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/binding_model.rs`."><title>binding_model.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -940,9 +940,9 @@
 <span class="kw">use </span>arrayvec::ArrayVec;
 
 <span class="kw">use </span>parking_lot::RwLock;
-<span class="attr">#[cfg(feature = <span class="string">&quot;replay&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span>std::{borrow::Cow, ops::Range, sync::Arc};
@@ -952,13 +952,13 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>BindGroupLayoutEntryError {
-    <span class="attr">#[error(<span class="string">&quot;Cube dimension is not expected for texture storage&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Cube dimension is not expected for texture storage"</span>)]
     </span>StorageTextureCube,
-    <span class="attr">#[error(<span class="string">&quot;Read-write and read-only storage textures are not allowed by webgpu, they require the native only feature TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Read-write and read-only storage textures are not allowed by webgpu, they require the native only feature TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES"</span>)]
     </span>StorageTextureReadWrite,
-    <span class="attr">#[error(<span class="string">&quot;Arrays of bindings unsupported for this type of binding&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Arrays of bindings unsupported for this type of binding"</span>)]
     </span>ArrayUnsupported,
-    <span class="attr">#[error(<span class="string">&quot;Multisampled binding with sample type `TextureSampleType::Float` must have filterable set to false.&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Multisampled binding with sample type `TextureSampleType::Float` must have filterable set to false."</span>)]
     </span>SampleTypeFloatFilterableBindingMultisampled,
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
@@ -971,9 +971,9 @@
 </span><span class="kw">pub enum </span>CreateBindGroupLayoutError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Conflicting binding at index {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Conflicting binding at index {0}"</span>)]
     </span>ConflictBinding(u32),
-    <span class="attr">#[error(<span class="string">&quot;Binding {binding} entry is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding {binding} entry is invalid"</span>)]
     </span>Entry {
         binding: u32,
         <span class="attr">#[source]
@@ -981,9 +981,9 @@
     },
     <span class="attr">#[error(transparent)]
     </span>TooManyBindings(BindingTypeMaxCountError),
-    <span class="attr">#[error(<span class="string">&quot;Binding index {binding} is greater than the maximum index {maximum}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding index {binding} is greater than the maximum index {maximum}"</span>)]
     </span>InvalidBindingIndex { binding: u32, maximum: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Invalid visibility {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid visibility {0:?}"</span>)]
     </span>InvalidVisibility(wgt::ShaderStages),
 }
 
@@ -994,112 +994,112 @@
 </span><span class="kw">pub enum </span>CreateBindGroupError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Bind group layout is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bind group layout is invalid"</span>)]
     </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">&quot;Buffer {0:?} is invalid or destroyed&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
     </span>InvalidBuffer(BufferId),
-    <span class="attr">#[error(<span class="string">&quot;Texture view {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture view {0:?} is invalid"</span>)]
     </span>InvalidTextureView(TextureViewId),
-    <span class="attr">#[error(<span class="string">&quot;Texture {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture {0:?} is invalid"</span>)]
     </span>InvalidTexture(TextureId),
-    <span class="attr">#[error(<span class="string">&quot;Sampler {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sampler {0:?} is invalid"</span>)]
     </span>InvalidSampler(SamplerId),
     <span class="attr">#[error(
-        <span class="string">&quot;Binding count declared with at most {expected} items, but {actual} items were provided&quot;
+        <span class="string">"Binding count declared with at most {expected} items, but {actual} items were provided"
     </span>)]
     </span>BindingArrayPartialLengthMismatch { actual: usize, expected: usize },
     <span class="attr">#[error(
-        <span class="string">&quot;Binding count declared with exactly {expected} items, but {actual} items were provided&quot;
+        <span class="string">"Binding count declared with exactly {expected} items, but {actual} items were provided"
     </span>)]
     </span>BindingArrayLengthMismatch { actual: usize, expected: usize },
-    <span class="attr">#[error(<span class="string">&quot;Array binding provided zero elements&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Array binding provided zero elements"</span>)]
     </span>BindingArrayZeroLength,
-    <span class="attr">#[error(<span class="string">&quot;Bound buffer range {range:?} does not fit in buffer of size {size}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bound buffer range {range:?} does not fit in buffer of size {size}"</span>)]
     </span>BindingRangeTooLarge {
         buffer: BufferId,
         range: Range&lt;wgt::BufferAddress&gt;,
         size: u64,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer binding size {actual} is less than minimum {min}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer binding size {actual} is less than minimum {min}"</span>)]
     </span>BindingSizeTooSmall {
         buffer: BufferId,
         actual: u64,
         min: u64,
     },
-    <span class="attr">#[error(<span class="string">&quot;Buffer binding size is zero&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Buffer binding size is zero"</span>)]
     </span>BindingZeroSize(BufferId),
-    <span class="attr">#[error(<span class="string">&quot;Number of bindings in bind group descriptor ({actual}) does not match the number of bindings defined in the bind group layout ({expected})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Number of bindings in bind group descriptor ({actual}) does not match the number of bindings defined in the bind group layout ({expected})"</span>)]
     </span>BindingsNumMismatch { actual: usize, expected: usize },
-    <span class="attr">#[error(<span class="string">&quot;Binding {0} is used at least twice in the descriptor&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding {0} is used at least twice in the descriptor"</span>)]
     </span>DuplicateBinding(u32),
-    <span class="attr">#[error(<span class="string">&quot;Unable to find a corresponding declaration for the given binding {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unable to find a corresponding declaration for the given binding {0}"</span>)]
     </span>MissingBindingDeclaration(u32),
     <span class="attr">#[error(transparent)]
     </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
     <span class="attr">#[error(transparent)]
     </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
-    <span class="attr">#[error(<span class="string">&quot;Binding declared as a single item, but bind group is using it as an array&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding declared as a single item, but bind group is using it as an array"</span>)]
     </span>SingleBindingExpected,
-    <span class="attr">#[error(<span class="string">&quot;Buffer offset {0} does not respect device&#39;s requested `{1}` limit {2}&quot;</span>)]
-    </span>UnalignedBufferOffset(wgt::BufferAddress, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, u32),
+    <span class="attr">#[error(<span class="string">"Buffer offset {0} does not respect device's requested `{1}` limit {2}"</span>)]
+    </span>UnalignedBufferOffset(wgt::BufferAddress, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32),
     <span class="attr">#[error(
-        <span class="string">&quot;Buffer binding {binding} range {given} exceeds `max_*_buffer_binding_size` limit {limit}&quot;
+        <span class="string">"Buffer binding {binding} range {given} exceeds `max_*_buffer_binding_size` limit {limit}"
     </span>)]
     </span>BufferRangeTooLarge {
         binding: u32,
         given: u32,
         limit: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Binding {binding} has a different type ({actual:?}) than the one in the layout ({expected:?})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Binding {binding} has a different type ({actual:?}) than the one in the layout ({expected:?})"</span>)]
     </span>WrongBindingType {
         <span class="comment">// Index of the binding
         </span>binding: u32,
         <span class="comment">// The type given to the function
         </span>actual: wgt::BindingType,
         <span class="comment">// Human-readable description of expected types
-        </span>expected: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        </span>expected: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
-    <span class="attr">#[error(<span class="string">&quot;Texture binding {binding} expects multisampled = {layout_multisampled}, but given a view with samples = {view_samples}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture binding {binding} expects multisampled = {layout_multisampled}, but given a view with samples = {view_samples}"</span>)]
     </span>InvalidTextureMultisample {
         binding: u32,
         layout_multisampled: bool,
         view_samples: u32,
     },
-    <span class="attr">#[error(<span class="string">&quot;Texture binding {binding} expects sample type = {layout_sample_type:?}, but given a view with format = {view_format:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture binding {binding} expects sample type = {layout_sample_type:?}, but given a view with format = {view_format:?}"</span>)]
     </span>InvalidTextureSampleType {
         binding: u32,
         layout_sample_type: wgt::TextureSampleType,
         view_format: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Texture binding {binding} expects dimension = {layout_dimension:?}, but given a view with dimension = {view_dimension:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Texture binding {binding} expects dimension = {layout_dimension:?}, but given a view with dimension = {view_dimension:?}"</span>)]
     </span>InvalidTextureDimension {
         binding: u32,
         layout_dimension: wgt::TextureViewDimension,
         view_dimension: wgt::TextureViewDimension,
     },
-    <span class="attr">#[error(<span class="string">&quot;Storage texture binding {binding} expects format = {layout_format:?}, but given a view with format = {view_format:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Storage texture binding {binding} expects format = {layout_format:?}, but given a view with format = {view_format:?}"</span>)]
     </span>InvalidStorageTextureFormat {
         binding: u32,
         layout_format: wgt::TextureFormat,
         view_format: wgt::TextureFormat,
     },
-    <span class="attr">#[error(<span class="string">&quot;Storage texture bindings must have a single mip level, but given a view with mip_level_count = {mip_level_count:?} at binding {binding}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Storage texture bindings must have a single mip level, but given a view with mip_level_count = {mip_level_count:?} at binding {binding}"</span>)]
     </span>InvalidStorageTextureMipLevelCount { binding: u32, mip_level_count: u32 },
-    <span class="attr">#[error(<span class="string">&quot;Sampler binding {binding} expects comparison = {layout_cmp}, but given a sampler with comparison = {sampler_cmp}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sampler binding {binding} expects comparison = {layout_cmp}, but given a sampler with comparison = {sampler_cmp}"</span>)]
     </span>WrongSamplerComparison {
         binding: u32,
         layout_cmp: bool,
         sampler_cmp: bool,
     },
-    <span class="attr">#[error(<span class="string">&quot;Sampler binding {binding} expects filtering = {layout_flt}, but given a sampler with filtering = {sampler_flt}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Sampler binding {binding} expects filtering = {layout_flt}, but given a sampler with filtering = {sampler_flt}"</span>)]
     </span>WrongSamplerFiltering {
         binding: u32,
         layout_flt: bool,
         sampler_flt: bool,
     },
-    <span class="attr">#[error(<span class="string">&quot;Bound texture views can not have both depth and stencil aspects enabled&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bound texture views can not have both depth and stencil aspects enabled"</span>)]
     </span>DepthStencilAspect,
-    <span class="attr">#[error(<span class="string">&quot;The adapter does not support read access for storages texture of format {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"The adapter does not support read access for storages texture of format {0:?}"</span>)]
     </span>StorageReadNotSupported(wgt::TextureFormat),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsageConflict(<span class="attr">#[from] </span>UsageConflict),
@@ -1134,14 +1134,14 @@
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>BindingZone {
-    <span class="attr">#[error(<span class="string">&quot;Stage {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Stage {0:?}"</span>)]
     </span>Stage(wgt::ShaderStages),
-    <span class="attr">#[error(<span class="string">&quot;Whole pipeline&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Whole pipeline"</span>)]
     </span>Pipeline,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">&quot;Too many bindings of type {kind:?} in {zone}, limit is {limit}, count was {count}&quot;</span>)]
+#[error(<span class="string">"Too many bindings of type {kind:?} in {zone}, limit is {limit}, count was {count}"</span>)]
 </span><span class="kw">pub struct </span>BindingTypeMaxCountError {
     <span class="kw">pub </span>kind: BindingTypeMaxCountErrorKind,
     <span class="kw">pub </span>zone: BindingZone,
@@ -1324,42 +1324,42 @@
 
 <span class="doccomment">/// Bindable resource and the slot to bind it to.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
-</span><span class="kw">pub struct </span>BindGroupEntry&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(Deserialize))]
+</span><span class="kw">pub struct </span>BindGroupEntry&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same
     /// binding index in the [`BindGroupLayoutDescriptor`].
     </span><span class="kw">pub </span>binding: u32,
     <span class="doccomment">/// Resource to attach to the binding
-    </span><span class="kw">pub </span>resource: BindingResource&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>resource: BindingResource&lt;<span class="lifetime">'a</span>&gt;,
 }
 
 <span class="doccomment">/// Describes a group of bindings and the resources to be bound.
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
-</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(Deserialize))]
+</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the bind group.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The [`BindGroupLayout`] that corresponds to this bind group.
     </span><span class="kw">pub </span>layout: BindGroupLayoutId,
     <span class="doccomment">/// The resources to bind to this bind group.
-    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">&#39;a</span>, [BindGroupEntry&lt;<span class="lifetime">&#39;a</span>&gt;]&gt;,
+    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [BindGroupEntry&lt;<span class="lifetime">'a</span>&gt;]&gt;,
 }
 
 <span class="doccomment">/// Describes a [`BindGroupLayout`].
 </span><span class="attr">#[derive(Clone, Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub struct </span>BindGroupLayoutDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub struct </span>BindGroupLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the bind group layout.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Array of entries in this BindGroupLayout
-    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">&#39;a</span>, [wgt::BindGroupLayoutEntry]&gt;,
+    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [wgt::BindGroupLayoutEntry]&gt;,
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>BindEntryMap = FastHashMap&lt;u32, wgt::BindGroupLayoutEntry&gt;;
@@ -1390,7 +1390,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw BindGroupLayout {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw BindGroupLayout {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_bind_group_layout(raw);
@@ -1400,7 +1400,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupLayoutId&gt; <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;BindGroupLayout&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroupLayout"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupLayoutId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1428,22 +1428,22 @@
 </span><span class="kw">pub enum </span>CreatePipelineLayoutError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">&quot;Bind group layout {0:?} is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bind group layout {0:?} is invalid"</span>)]
     </span>InvalidBindGroupLayout(BindGroupLayoutId),
     <span class="attr">#[error(
-        <span class="string">&quot;Push constant at index {index} has range bound {bound} not aligned to {}&quot;</span>,
+        <span class="string">"Push constant at index {index} has range bound {bound} not aligned to {}"</span>,
         wgt::PUSH_CONSTANT_ALIGNMENT
     )]
     </span>MisalignedPushConstantRange { index: usize, bound: u32 },
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
-    <span class="attr">#[error(<span class="string">&quot;Push constant range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Push constant range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range"</span>)]
     </span>MoreThanOnePushConstantRangePerStage {
         index: usize,
         provided: wgt::ShaderStages,
         intersected: wgt::ShaderStages,
     },
-    <span class="attr">#[error(<span class="string">&quot;Push constant at index {index} has range {}..{} which exceeds device push constant size limit 0..{max}&quot;</span>, range.start, range.end)]
+    <span class="attr">#[error(<span class="string">"Push constant at index {index} has range {}..{} which exceeds device push constant size limit 0..{max}"</span>, range.start, range.end)]
     </span>PushConstantRangeTooLarge {
         index: usize,
         range: Range&lt;u32&gt;,
@@ -1451,7 +1451,7 @@
     },
     <span class="attr">#[error(transparent)]
     </span>TooManyBindings(BindingTypeMaxCountError),
-    <span class="attr">#[error(<span class="string">&quot;Bind group layout count {actual} exceeds device bind group limit {max}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bind group layout count {actual} exceeds device bind group limit {max}"</span>)]
     </span>TooManyGroups { actual: usize, max: usize },
 }
 
@@ -1467,31 +1467,31 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>PushConstantUploadError {
-    <span class="attr">#[error(<span class="string">&quot;Provided push constant with indices {offset}..{end_offset} overruns matching push constant range at index {idx}, with stage(s) {:?} and indices {:?}&quot;</span>, range.stages, range.range)]
+    <span class="attr">#[error(<span class="string">"Provided push constant with indices {offset}..{end_offset} overruns matching push constant range at index {idx}, with stage(s) {:?} and indices {:?}"</span>, range.stages, range.range)]
     </span>TooLarge {
         offset: u32,
         end_offset: u32,
         idx: usize,
         range: wgt::PushConstantRange,
     },
-    <span class="attr">#[error(<span class="string">&quot;Provided push constant is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however push constants must be complete matches&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however push constants must be complete matches"</span>)]
     </span>PartialRangeMatch {
         actual: wgt::ShaderStages,
         idx: usize,
         matched: wgt::ShaderStages,
     },
-    <span class="attr">#[error(<span class="string">&quot;Provided push constant is for stage(s) {actual:?}, but intersects a push constant range (at index {idx}) with stage(s) {missing:?}. Push constants must provide the stages for all ranges they intersect&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, but intersects a push constant range (at index {idx}) with stage(s) {missing:?}. Push constants must provide the stages for all ranges they intersect"</span>)]
     </span>MissingStages {
         actual: wgt::ShaderStages,
         idx: usize,
         missing: wgt::ShaderStages,
     },
-    <span class="attr">#[error(<span class="string">&quot;Provided push constant is for stage(s) {actual:?}, however the pipeline layout has no push constant range for the stage(s) {unmatched:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Provided push constant is for stage(s) {actual:?}, however the pipeline layout has no push constant range for the stage(s) {unmatched:?}"</span>)]
     </span>UnmatchedStages {
         actual: wgt::ShaderStages,
         unmatched: wgt::ShaderStages,
     },
-    <span class="attr">#[error(<span class="string">&quot;Provided push constant offset {0} does not respect `PUSH_CONSTANT_ALIGNMENT`&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Provided push constant offset {0} does not respect `PUSH_CONSTANT_ALIGNMENT`"</span>)]
     </span>Unaligned(u32),
 }
 
@@ -1499,16 +1499,16 @@
 ///
 /// A `PipelineLayoutDescriptor` can be used to create a pipeline layout.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
-</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(Deserialize))]
+</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the pipeine layout.
     ///
     /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Bind groups that this pipeline uses. The first entry will provide all the bindings for
-    /// &quot;set = 0&quot;, second entry will provide all the bindings for &quot;set = 1&quot; etc.
-    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">&#39;a</span>, [BindGroupLayoutId]&gt;,
+    /// "set = 0", second entry will provide all the bindings for "set = 1" etc.
+    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [BindGroupLayoutId]&gt;,
     <span class="doccomment">/// Set of push constant ranges this pipeline uses. Each shader stage that
     /// uses push constants must define the range in push constant memory that
     /// corresponds to its single `layout(push_constant)` uniform block.
@@ -1516,7 +1516,7 @@
     /// If this array is non-empty, the
     /// [`Features::PUSH_CONSTANTS`](wgt::Features::PUSH_CONSTANTS) feature must
     /// be enabled.
-    </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">&#39;a</span>, [wgt::PushConstantRange]&gt;,
+    </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -1531,7 +1531,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>PipelineLayout&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw PipelineLayout {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw PipelineLayout {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_pipeline_layout(raw);
@@ -1551,7 +1551,7 @@
         offset: u32,
         end_offset: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PushConstantUploadError&gt; {
-        <span class="comment">// Don&#39;t need to validate size against the push constant size limit here,
+        <span class="comment">// Don't need to validate size against the push constant size limit here,
         // as push constant ranges are already validated to be within bounds,
         // and we validate that they are within the ranges.
 
@@ -1603,7 +1603,7 @@
 
             <span class="comment">// The push constant range intersects range we are uploading
             </span><span class="kw">if </span>offset &lt; range.range.end &amp;&amp; range.range.start &lt; end_offset {
-                <span class="comment">// But requires stages we don&#39;t provide
+                <span class="comment">// But requires stages we don't provide
                 </span><span class="kw">if </span>!stages.contains(range.stages) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(PushConstantUploadError::MissingStages {
                         actual: stages,
@@ -1624,7 +1624,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;PipelineLayoutId&gt; <span class="kw">for </span>PipelineLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;PipelineLayout&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"PipelineLayout"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;PipelineLayoutId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1637,8 +1637,8 @@
 
 <span class="attr">#[repr(C)]
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(Deserialize))]
 </span><span class="kw">pub struct </span>BufferBinding {
     <span class="kw">pub </span>buffer_id: BufferId,
     <span class="kw">pub </span>offset: wgt::BufferAddress,
@@ -1646,26 +1646,26 @@
 }
 
 <span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`
-// They&#39;re different enough that it doesn&#39;t make sense to share a common type
+// They're different enough that it doesn't make sense to share a common type
 </span><span class="attr">#[derive(Debug, Clone)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub enum </span>BindingResource&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub enum </span>BindingResource&lt;<span class="lifetime">'a</span>&gt; {
     Buffer(BufferBinding),
-    BufferArray(Cow&lt;<span class="lifetime">&#39;a</span>, [BufferBinding]&gt;),
+    BufferArray(Cow&lt;<span class="lifetime">'a</span>, [BufferBinding]&gt;),
     Sampler(SamplerId),
-    SamplerArray(Cow&lt;<span class="lifetime">&#39;a</span>, [SamplerId]&gt;),
+    SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [SamplerId]&gt;),
     TextureView(TextureViewId),
-    TextureViewArray(Cow&lt;<span class="lifetime">&#39;a</span>, [TextureViewId]&gt;),
+    TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [TextureViewId]&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>BindError {
     <span class="attr">#[error(
-        <span class="string">&quot;Bind group {group} expects {expected} dynamic offset{s0}. However {actual} dynamic offset{s1} were provided.&quot;</span>,
-        s0 = <span class="kw">if </span><span class="kw-2">*</span>.expected &gt;= <span class="number">2 </span>{ <span class="string">&quot;s&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>},
-        s1 = <span class="kw">if </span><span class="kw-2">*</span>.actual &gt;= <span class="number">2 </span>{ <span class="string">&quot;s&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>},
+        <span class="string">"Bind group {group} expects {expected} dynamic offset{s0}. However {actual} dynamic offset{s1} were provided."</span>,
+        s0 = <span class="kw">if </span><span class="kw-2">*</span>.expected &gt;= <span class="number">2 </span>{ <span class="string">"s" </span>} <span class="kw">else </span>{ <span class="string">"" </span>},
+        s1 = <span class="kw">if </span><span class="kw-2">*</span>.actual &gt;= <span class="number">2 </span>{ <span class="string">"s" </span>} <span class="kw">else </span>{ <span class="string">"" </span>},
     )]
     </span>MismatchedDynamicOffsetCount {
         group: u32,
@@ -1673,7 +1673,7 @@
         expected: usize,
     },
     <span class="attr">#[error(
-        <span class="string">&quot;Dynamic binding index {idx} (targeting bind group {group}, binding {binding}) with value {offset}, does not respect device&#39;s requested `{limit_name}` limit: {alignment}&quot;
+        <span class="string">"Dynamic binding index {idx} (targeting bind group {group}, binding {binding}) with value {offset}, does not respect device's requested `{limit_name}` limit: {alignment}"
     </span>)]
     </span>UnalignedDynamicBinding {
         idx: usize,
@@ -1681,11 +1681,11 @@
         binding: u32,
         offset: u32,
         alignment: u32,
-        limit_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        limit_name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
     <span class="attr">#[error(
-        <span class="string">&quot;Dynamic binding offset index {idx} with offset {offset} would overrun the buffer bound to bind group {group} -&gt; binding {binding}. \
-         Buffer size is {buffer_size} bytes, the binding binds bytes {binding_range:?}, meaning the maximum the binding can be offset is {maximum_dynamic_offset} bytes&quot;</span>,
+        <span class="string">"Dynamic binding offset index {idx} with offset {offset} would overrun the buffer bound to bind group {group} -&gt; binding {binding}. \
+         Buffer size is {buffer_size} bytes, the binding binds bytes {binding_range:?}, meaning the maximum the binding can be offset is {maximum_dynamic_offset} bytes"</span>,
     )]
     </span>DynamicBindingOutOfBounds {
         idx: usize,
@@ -1721,15 +1721,15 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>buffer_binding_type_alignment(
     limits: <span class="kw-2">&amp;</span>wgt::Limits,
     binding_type: wgt::BufferBindingType,
-) -&gt; (u32, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) {
+) -&gt; (u32, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
     <span class="kw">match </span>binding_type {
         wgt::BufferBindingType::Uniform =&gt; (
             limits.min_uniform_buffer_offset_alignment,
-            <span class="string">&quot;min_uniform_buffer_offset_alignment&quot;</span>,
+            <span class="string">"min_uniform_buffer_offset_alignment"</span>,
         ),
         wgt::BufferBindingType::Storage { .. } =&gt; (
             limits.min_storage_buffer_offset_alignment,
-            <span class="string">&quot;min_storage_buffer_offset_alignment&quot;</span>,
+            <span class="string">"min_storage_buffer_offset_alignment"</span>,
         ),
     }
 }
@@ -1744,7 +1744,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_buffer_ranges: RwLock&lt;Vec&lt;BufferInitTrackerAction&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_texture_ranges: RwLock&lt;Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_binding_info: RwLock&lt;Vec&lt;BindGroupDynamicBindingData&gt;&gt;,
-    <span class="doccomment">/// Actual binding sizes for buffers that don&#39;t have `min_binding_size`
+    <span class="doccomment">/// Actual binding sizes for buffers that don't have `min_binding_size`
     /// specified in BGL. Listed in the order of iteration of `BGL.entries`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) late_buffer_binding_sizes: Vec&lt;wgt::BufferSize&gt;,
 }
@@ -1752,7 +1752,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroup&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">&quot;Destroy raw BindGroup {}&quot;</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw BindGroup {}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_bind_group(raw);
@@ -1816,7 +1816,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupId&gt; <span class="kw">for </span>BindGroup&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;BindGroup&quot;</span>;
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroup"</span>;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupId&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1830,14 +1830,14 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>GetBindGroupLayoutError {
-    <span class="attr">#[error(<span class="string">&quot;Pipeline is invalid&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pipeline is invalid"</span>)]
     </span>InvalidPipeline,
-    <span class="attr">#[error(<span class="string">&quot;Invalid group index {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid group index {0}"</span>)]
     </span>InvalidGroupIndex(u32),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]
-#[error(<span class="string">&quot;Buffer is bound with size {bound_size} where the shader expects {shader_size} in group[{group_index}] compact index {compact_index}&quot;</span>)]
+#[error(<span class="string">"Buffer is bound with size {bound_size} where the shader expects {shader_size} in group[{group_index}] compact index {compact_index}"</span>)]
 </span><span class="kw">pub struct </span>LateMinBufferBindingSizeMismatch {
     <span class="kw">pub </span>group_index: u32,
     <span class="kw">pub </span>compact_index: usize,

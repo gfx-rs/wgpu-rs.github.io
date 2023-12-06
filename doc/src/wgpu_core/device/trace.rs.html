@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/trace.rs`."><title>trace.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/trace.rs`."><title>trace.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -237,22 +237,22 @@
 <a href="#237" id="237">237</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::id;
 <span class="kw">use </span>std::ops::Range;
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span>std::{borrow::Cow, io::Write <span class="kw">as _</span>};
 
-<span class="comment">//TODO: consider a readable Id that doesn&#39;t include the backend
+<span class="comment">//TODO: consider a readable Id that doesn't include the backend
 
 </span><span class="kw">type </span>FileName = String;
 
-<span class="kw">pub const </span>FILE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;trace.ron&quot;</span>;
+<span class="kw">pub const </span>FILE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"trace.ron"</span>;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_render_bundle_encoder_descriptor&lt;<span class="lifetime">&#39;a</span>&gt;(
-    label: <span class="kw">crate</span>::Label&lt;<span class="lifetime">&#39;a</span>&gt;,
-    context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">super</span>::RenderPassContext,
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_render_bundle_encoder_descriptor&lt;<span class="lifetime">'a</span>&gt;(
+    label: <span class="kw">crate</span>::Label&lt;<span class="lifetime">'a</span>&gt;,
+    context: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">super</span>::RenderPassContext,
     depth_read_only: bool,
     stencil_read_only: bool,
-) -&gt; <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor&lt;<span class="lifetime">&#39;a</span>&gt; {
+) -&gt; <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor {
         label,
         color_formats: Cow::Borrowed(<span class="kw-2">&amp;</span>context.attachments.colors),
@@ -270,30 +270,30 @@
 
 <span class="attr">#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
-</span><span class="kw">pub enum </span>Action&lt;<span class="lifetime">&#39;a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
+</span><span class="kw">pub enum </span>Action&lt;<span class="lifetime">'a</span>&gt; {
     Init {
-        desc: <span class="kw">crate</span>::device::DeviceDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        desc: <span class="kw">crate</span>::device::DeviceDescriptor&lt;<span class="lifetime">'a</span>&gt;,
         backend: wgt::Backend,
     },
     ConfigureSurface(
         id::SurfaceId,
         wgt::SurfaceConfiguration&lt;Vec&lt;wgt::TextureFormat&gt;&gt;,
     ),
-    CreateBuffer(id::BufferId, <span class="kw">crate</span>::resource::BufferDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;),
+    CreateBuffer(id::BufferId, <span class="kw">crate</span>::resource::BufferDescriptor&lt;<span class="lifetime">'a</span>&gt;),
     FreeBuffer(id::BufferId),
     DestroyBuffer(id::BufferId),
-    CreateTexture(id::TextureId, <span class="kw">crate</span>::resource::TextureDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;),
+    CreateTexture(id::TextureId, <span class="kw">crate</span>::resource::TextureDescriptor&lt;<span class="lifetime">'a</span>&gt;),
     FreeTexture(id::TextureId),
     DestroyTexture(id::TextureId),
     CreateTextureView {
         id: id::TextureViewId,
         parent_id: id::TextureId,
-        desc: <span class="kw">crate</span>::resource::TextureViewDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        desc: <span class="kw">crate</span>::resource::TextureViewDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     },
     DestroyTextureView(id::TextureViewId),
-    CreateSampler(id::SamplerId, <span class="kw">crate</span>::resource::SamplerDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;),
+    CreateSampler(id::SamplerId, <span class="kw">crate</span>::resource::SamplerDescriptor&lt;<span class="lifetime">'a</span>&gt;),
     DestroySampler(id::SamplerId),
     GetSurfaceTexture {
         id: id::TextureId,
@@ -303,48 +303,48 @@
     DiscardSurfaceTexture(id::SurfaceId),
     CreateBindGroupLayout(
         id::BindGroupLayoutId,
-        <span class="kw">crate</span>::binding_model::BindGroupLayoutDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        <span class="kw">crate</span>::binding_model::BindGroupLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     ),
     DestroyBindGroupLayout(id::BindGroupLayoutId),
     CreatePipelineLayout(
         id::PipelineLayoutId,
-        <span class="kw">crate</span>::binding_model::PipelineLayoutDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        <span class="kw">crate</span>::binding_model::PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     ),
     DestroyPipelineLayout(id::PipelineLayoutId),
     CreateBindGroup(
         id::BindGroupId,
-        <span class="kw">crate</span>::binding_model::BindGroupDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        <span class="kw">crate</span>::binding_model::BindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     ),
     DestroyBindGroup(id::BindGroupId),
     CreateShaderModule {
         id: id::ShaderModuleId,
-        desc: <span class="kw">crate</span>::pipeline::ShaderModuleDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        desc: <span class="kw">crate</span>::pipeline::ShaderModuleDescriptor&lt;<span class="lifetime">'a</span>&gt;,
         data: FileName,
     },
     DestroyShaderModule(id::ShaderModuleId),
     CreateComputePipeline {
         id: id::ComputePipelineId,
-        desc: <span class="kw">crate</span>::pipeline::ComputePipelineDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
-        <span class="attr">#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, serde(default))]
+        desc: <span class="kw">crate</span>::pipeline::ComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+        <span class="attr">#[cfg_attr(feature = <span class="string">"replay"</span>, serde(default))]
         </span>implicit_context: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::ImplicitPipelineContext&gt;,
     },
     DestroyComputePipeline(id::ComputePipelineId),
     CreateRenderPipeline {
         id: id::RenderPipelineId,
-        desc: <span class="kw">crate</span>::pipeline::RenderPipelineDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
-        <span class="attr">#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, serde(default))]
+        desc: <span class="kw">crate</span>::pipeline::RenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+        <span class="attr">#[cfg_attr(feature = <span class="string">"replay"</span>, serde(default))]
         </span>implicit_context: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::ImplicitPipelineContext&gt;,
     },
     DestroyRenderPipeline(id::RenderPipelineId),
     CreateRenderBundle {
         id: id::RenderBundleId,
-        desc: <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        desc: <span class="kw">crate</span>::command::RenderBundleEncoderDescriptor&lt;<span class="lifetime">'a</span>&gt;,
         base: <span class="kw">crate</span>::command::BasePass&lt;<span class="kw">crate</span>::command::RenderCommand&gt;,
     },
     DestroyRenderBundle(id::RenderBundleId),
     CreateQuerySet {
         id: id::QuerySetId,
-        desc: <span class="kw">crate</span>::resource::QuerySetDescriptor&lt;<span class="lifetime">&#39;a</span>&gt;,
+        desc: <span class="kw">crate</span>::resource::QuerySetDescriptor&lt;<span class="lifetime">'a</span>&gt;,
     },
     DestroyQuerySet(id::QuerySetId),
     WriteBuffer {
@@ -363,8 +363,8 @@
 }
 
 <span class="attr">#[derive(Debug)]
-#[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub enum </span>Command {
     CopyBufferToBuffer {
         src: id::BufferId,
@@ -424,7 +424,7 @@
     },
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>Trace {
     path: std::path::PathBuf,
@@ -433,12 +433,12 @@
     binary_id: usize,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">impl </span>Trace {
     <span class="kw">pub fn </span>new(path: <span class="kw-2">&amp;</span>std::path::Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, std::io::Error&gt; {
-        <span class="macro">log::info!</span>(<span class="string">&quot;Tracing into &#39;{:?}&#39;&quot;</span>, path);
+        <span class="macro">log::info!</span>(<span class="string">"Tracing into '{:?}'"</span>, path);
         <span class="kw">let </span><span class="kw-2">mut </span>file = std::fs::File::create(path.join(FILE_NAME))<span class="question-mark">?</span>;
-        file.write_all(<span class="string">b&quot;[\n&quot;</span>)<span class="question-mark">?</span>;
+        file.write_all(<span class="string">b"[\n"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             path: path.to_path_buf(),
             file,
@@ -449,7 +449,7 @@
 
     <span class="kw">pub fn </span>make_binary(<span class="kw-2">&amp;mut </span><span class="self">self</span>, kind: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>[u8]) -&gt; String {
         <span class="self">self</span>.binary_id += <span class="number">1</span>;
-        <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">&quot;data{}.{}&quot;</span>, <span class="self">self</span>.binary_id, kind);
+        <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"data{}.{}"</span>, <span class="self">self</span>.binary_id, kind);
         <span class="kw">let _ </span>= std::fs::write(<span class="self">self</span>.path.join(<span class="kw-2">&amp;</span>name), data);
         name
     }
@@ -457,19 +457,19 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, action: Action) {
         <span class="kw">match </span>ron::ser::to_string_pretty(<span class="kw-2">&amp;</span>action, <span class="self">self</span>.config.clone()) {
             <span class="prelude-val">Ok</span>(string) =&gt; {
-                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(<span class="self">self</span>.file, <span class="string">&quot;{},&quot;</span>, string);
+                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(<span class="self">self</span>.file, <span class="string">"{},"</span>, string);
             }
             <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;RON serialization failure: {:?}&quot;</span>, e);
+                <span class="macro">log::warn!</span>(<span class="string">"RON serialization failure: {:?}"</span>, e);
             }
         }
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">impl </span>Drop <span class="kw">for </span>Trace {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let _ </span>= <span class="self">self</span>.file.write_all(<span class="string">b&quot;]&quot;</span>);
+        <span class="kw">let _ </span>= <span class="self">self</span>.file.write_all(<span class="string">b"]"</span>);
     }
 }
 </code></pre></div></section></main></body></html>

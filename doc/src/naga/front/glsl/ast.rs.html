@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/ast.rs`."><title>ast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/glsl/ast.rs`."><title>ast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -432,10 +432,10 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>FunctionKind {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Call(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Call&quot;</span>),
-            <span class="self">Self</span>::Macro(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Macro&quot;</span>),
+            <span class="self">Self</span>::Call(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"Call"</span>),
+            <span class="self">Self</span>::Macro(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"Macro"</span>),
         }
     }
 }
@@ -458,7 +458,7 @@
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Tracks the variations of the builtin already generated, this is needed because some
-    /// builtins overloads can&#39;t be generated unless explicitly used, since they might cause
+    /// builtins overloads can't be generated unless explicitly used, since they might cause
     /// unneeded capabilities to be requested
     </span><span class="attr">#[derive(Default)]
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -566,8 +566,8 @@
 }
 
 <span class="attr">#[derive(Debug, Hash, PartialEq, Eq)]
-</span><span class="kw">pub enum </span>QualifierKey&lt;<span class="lifetime">&#39;a</span>&gt; {
-    String(Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;),
+</span><span class="kw">pub enum </span>QualifierKey&lt;<span class="lifetime">'a</span>&gt; {
+    String(Cow&lt;<span class="lifetime">'a</span>, str&gt;),
     <span class="doccomment">/// Used for `std140` and `std430` layout qualifiers
     </span>Layout,
     <span class="doccomment">/// Used for image formats
@@ -583,7 +583,7 @@
 }
 
 <span class="attr">#[derive(Debug, Default)]
-</span><span class="kw">pub struct </span>TypeQualifiers&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>TypeQualifiers&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>span: Span,
     <span class="kw">pub </span>storage: (StorageQualifier, Span),
     <span class="kw">pub </span>invariant: <span class="prelude-ty">Option</span>&lt;Span&gt;,
@@ -593,16 +593,16 @@
     <span class="doccomment">/// Memory qualifiers used in the declaration to set the storage access to be used
     /// in declarations that support it (storage images and buffers)
     </span><span class="kw">pub </span>storage_access: <span class="prelude-ty">Option</span>&lt;(StorageAccess, Span)&gt;,
-    <span class="kw">pub </span>layout_qualifiers: <span class="kw">crate</span>::FastHashMap&lt;QualifierKey&lt;<span class="lifetime">&#39;a</span>&gt;, (QualifierValue, Span)&gt;,
+    <span class="kw">pub </span>layout_qualifiers: <span class="kw">crate</span>::FastHashMap&lt;QualifierKey&lt;<span class="lifetime">'a</span>&gt;, (QualifierValue, Span)&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; TypeQualifiers&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; TypeQualifiers&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Appends `errors` with errors for all unused qualifiers
     </span><span class="kw">pub fn </span>unused_errors(<span class="kw-2">&amp;</span><span class="self">self</span>, errors: <span class="kw-2">&amp;mut </span>Vec&lt;<span class="kw">super</span>::Error&gt;) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(meta) = <span class="self">self</span>.invariant {
             errors.push(<span class="kw">super</span>::Error {
                 kind: <span class="kw">super</span>::ErrorKind::SemanticError(
-                    <span class="string">&quot;Invariant qualifier can only be used in in/out variables&quot;</span>.into(),
+                    <span class="string">"Invariant qualifier can only be used in in/out variables"</span>.into(),
                 ),
                 meta,
             });
@@ -611,7 +611,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, meta)) = <span class="self">self</span>.interpolation {
             errors.push(<span class="kw">super</span>::Error {
                 kind: <span class="kw">super</span>::ErrorKind::SemanticError(
-                    <span class="string">&quot;Interpolation qualifiers can only be used in in/out variables&quot;</span>.into(),
+                    <span class="string">"Interpolation qualifiers can only be used in in/out variables"</span>.into(),
                 ),
                 meta,
             });
@@ -620,7 +620,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, meta)) = <span class="self">self</span>.sampling {
             errors.push(<span class="kw">super</span>::Error {
                 kind: <span class="kw">super</span>::ErrorKind::SemanticError(
-                    <span class="string">&quot;Sampling qualifiers can only be used in in/out variables&quot;</span>.into(),
+                    <span class="string">"Sampling qualifiers can only be used in in/out variables"</span>.into(),
                 ),
                 meta,
             });
@@ -629,7 +629,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, meta)) = <span class="self">self</span>.storage_access {
             errors.push(<span class="kw">super</span>::Error {
                 kind: <span class="kw">super</span>::ErrorKind::SemanticError(
-                    <span class="string">&quot;Memory qualifiers can only be used in storage variables&quot;</span>.into(),
+                    <span class="string">"Memory qualifiers can only be used in storage variables"</span>.into(),
                 ),
                 meta,
             });
@@ -637,17 +637,17 @@
 
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw">_</span>, meta) <span class="kw">in </span><span class="self">self</span>.layout_qualifiers.values() {
             errors.push(<span class="kw">super</span>::Error {
-                kind: <span class="kw">super</span>::ErrorKind::SemanticError(<span class="string">&quot;Unexpected qualifier&quot;</span>.into()),
+                kind: <span class="kw">super</span>::ErrorKind::SemanticError(<span class="string">"Unexpected qualifier"</span>.into()),
                 meta,
             });
         }
     }
 
-    <span class="doccomment">/// Removes the layout qualifier with `name`, if it exists and adds an error if it isn&#39;t
+    <span class="doccomment">/// Removes the layout qualifier with `name`, if it exists and adds an error if it isn't
     /// a [`QualifierValue::Uint`]
     </span><span class="kw">pub fn </span>uint_layout_qualifier(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         errors: <span class="kw-2">&amp;mut </span>Vec&lt;<span class="kw">super</span>::Error&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="kw">match </span><span class="self">self
@@ -657,12 +657,12 @@
             <span class="prelude-val">Some</span>((QualifierValue::Uint(v), <span class="kw">_</span>)) =&gt; <span class="prelude-val">Some</span>(v),
             <span class="prelude-val">Some</span>((<span class="kw">_</span>, meta)) =&gt; {
                 errors.push(<span class="kw">super</span>::Error {
-                    kind: <span class="kw">super</span>::ErrorKind::SemanticError(<span class="string">&quot;Qualifier expects a uint value&quot;</span>.into()),
+                    kind: <span class="kw">super</span>::ErrorKind::SemanticError(<span class="string">"Qualifier expects a uint value"</span>.into()),
                     meta,
                 });
                 <span class="comment">// Return a dummy value instead of `None` to differentiate from
                 // the qualifier not existing, since some parts might require the
-                // qualifier to exist and throwing another error that it doesn&#39;t
+                // qualifier to exist and throwing another error that it doesn't
                 // exist would be unhelpful
                 </span><span class="prelude-val">Some</span>(<span class="number">0</span>)
             }
@@ -670,9 +670,9 @@
         }
     }
 
-    <span class="doccomment">/// Removes the layout qualifier with `name`, if it exists and adds an error if it isn&#39;t
+    <span class="doccomment">/// Removes the layout qualifier with `name`, if it exists and adds an error if it isn't
     /// a [`QualifierValue::None`]
-    </span><span class="kw">pub fn </span>none_layout_qualifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, errors: <span class="kw-2">&amp;mut </span>Vec&lt;<span class="kw">super</span>::Error&gt;) -&gt; bool {
+    </span><span class="kw">pub fn </span>none_layout_qualifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, errors: <span class="kw-2">&amp;mut </span>Vec&lt;<span class="kw">super</span>::Error&gt;) -&gt; bool {
         <span class="kw">match </span><span class="self">self
             </span>.layout_qualifiers
             .remove(<span class="kw-2">&amp;</span>QualifierKey::String(name.into()))
@@ -681,7 +681,7 @@
             <span class="prelude-val">Some</span>((<span class="kw">_</span>, meta)) =&gt; {
                 errors.push(<span class="kw">super</span>::Error {
                     kind: <span class="kw">super</span>::ErrorKind::SemanticError(
-                        <span class="string">&quot;Qualifier doesn&#39;t expect a value&quot;</span>.into(),
+                        <span class="string">"Qualifier doesn't expect a value"</span>.into(),
                     ),
                     meta,
                 });

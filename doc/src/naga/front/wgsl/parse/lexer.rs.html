@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -762,15 +762,15 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::Span;
 
-<span class="kw">type </span>TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; = (Token&lt;<span class="lifetime">&#39;a</span>&gt;, Span);
+<span class="kw">type </span>TokenSpan&lt;<span class="lifetime">'a</span>&gt; = (Token&lt;<span class="lifetime">'a</span>&gt;, Span);
 
 <span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
-</span><span class="kw">pub enum </span>Token&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub enum </span>Token&lt;<span class="lifetime">'a</span>&gt; {
     Separator(char),
     Paren(char),
     Attribute,
     Number(<span class="prelude-ty">Result</span>&lt;Number, NumberError&gt;),
-    Word(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+    Word(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str),
     Operation(char),
     LogicalOperation(char),
     ShiftOperation(char),
@@ -797,65 +797,65 @@
 /// -   If `generic` is `true`, then we are expecting an angle bracket
 ///     around a generic type parameter, like the `&lt;` and `&gt;` in
 ///     `vec3&lt;f32&gt;`, so interpret `&lt;` and `&gt;` as `Token::Paren` tokens,
-///     even if they&#39;re part of `&lt;&lt;` or `&gt;&gt;` sequences.
+///     even if they're part of `&lt;&lt;` or `&gt;&gt;` sequences.
 ///
 /// -   Otherwise, interpret `&lt;&lt;` and `&gt;&gt;` as shift operators:
 ///     `Token::LogicalOperation` tokens.
 ///
 /// [§3.1 Parsing]: https://gpuweb.github.io/gpuweb/wgsl/#parsing
-</span><span class="kw">fn </span>consume_token(input: <span class="kw-2">&amp;</span>str, generic: bool) -&gt; (Token&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw-2">&amp;</span>str) {
+</span><span class="kw">fn </span>consume_token(input: <span class="kw-2">&amp;</span>str, generic: bool) -&gt; (Token&lt;<span class="lifetime">'_</span>&gt;, <span class="kw-2">&amp;</span>str) {
     <span class="kw">let </span><span class="kw-2">mut </span>chars = input.chars();
     <span class="kw">let </span>cur = <span class="kw">match </span>chars.next() {
         <span class="prelude-val">Some</span>(c) =&gt; c,
-        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>(Token::End, <span class="string">&quot;&quot;</span>),
+        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>(Token::End, <span class="string">""</span>),
     };
     <span class="kw">match </span>cur {
-        <span class="string">&#39;:&#39; </span>| <span class="string">&#39;;&#39; </span>| <span class="string">&#39;,&#39; </span>=&gt; (Token::Separator(cur), chars.as_str()),
-        <span class="string">&#39;.&#39; </span>=&gt; {
+        <span class="string">':' </span>| <span class="string">';' </span>| <span class="string">',' </span>=&gt; (Token::Separator(cur), chars.as_str()),
+        <span class="string">'.' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39;</span>) =&gt; consume_number(input),
+                <span class="prelude-val">Some</span>(<span class="string">'0'</span>..=<span class="string">'9'</span>) =&gt; consume_number(input),
                 <span class="kw">_ </span>=&gt; (Token::Separator(cur), og_chars),
             }
         }
-        <span class="string">&#39;@&#39; </span>=&gt; (Token::Attribute, chars.as_str()),
-        <span class="string">&#39;(&#39; </span>| <span class="string">&#39;)&#39; </span>| <span class="string">&#39;{&#39; </span>| <span class="string">&#39;}&#39; </span>| <span class="string">&#39;[&#39; </span>| <span class="string">&#39;]&#39; </span>=&gt; (Token::Paren(cur), chars.as_str()),
-        <span class="string">&#39;&lt;&#39; </span>| <span class="string">&#39;&gt;&#39; </span>=&gt; {
+        <span class="string">'@' </span>=&gt; (Token::Attribute, chars.as_str()),
+        <span class="string">'(' </span>| <span class="string">')' </span>| <span class="string">'{' </span>| <span class="string">'}' </span>| <span class="string">'[' </span>| <span class="string">']' </span>=&gt; (Token::Paren(cur), chars.as_str()),
+        <span class="string">'&lt;' </span>| <span class="string">'&gt;' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) <span class="kw">if </span>!generic =&gt; (Token::LogicalOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) <span class="kw">if </span>!generic =&gt; (Token::LogicalOperation(cur), chars.as_str()),
                 <span class="prelude-val">Some</span>(c) <span class="kw">if </span>c == cur &amp;&amp; !generic =&gt; {
                     <span class="kw">let </span>og_chars = chars.as_str();
                     <span class="kw">match </span>chars.next() {
-                        <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                        <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                         <span class="kw">_ </span>=&gt; (Token::ShiftOperation(cur), og_chars),
                     }
                 }
                 <span class="kw">_ </span>=&gt; (Token::Paren(cur), og_chars),
             }
         }
-        <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>=&gt; consume_number(input),
-        <span class="string">&#39;/&#39; </span>=&gt; {
+        <span class="string">'0'</span>..=<span class="string">'9' </span>=&gt; consume_number(input),
+        <span class="string">'/' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;/&#39;</span>) =&gt; {
+                <span class="prelude-val">Some</span>(<span class="string">'/'</span>) =&gt; {
                     <span class="kw">let _ </span>= chars.position(is_comment_end);
                     (Token::Trivia, chars.as_str())
                 }
-                <span class="prelude-val">Some</span>(<span class="string">&#39;*&#39;</span>) =&gt; {
+                <span class="prelude-val">Some</span>(<span class="string">'*'</span>) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>depth = <span class="number">1</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="prelude-val">None</span>;
 
                     <span class="kw">for </span>c <span class="kw">in </span><span class="kw-2">&amp;mut </span>chars {
                         <span class="kw">match </span>(prev, c) {
-                            (<span class="prelude-val">Some</span>(<span class="string">&#39;*&#39;</span>), <span class="string">&#39;/&#39;</span>) =&gt; {
+                            (<span class="prelude-val">Some</span>(<span class="string">'*'</span>), <span class="string">'/'</span>) =&gt; {
                                 prev = <span class="prelude-val">None</span>;
                                 depth -= <span class="number">1</span>;
                                 <span class="kw">if </span>depth == <span class="number">0 </span>{
                                     <span class="kw">return </span>(Token::Trivia, chars.as_str());
                                 }
                             }
-                            (<span class="prelude-val">Some</span>(<span class="string">&#39;/&#39;</span>), <span class="string">&#39;*&#39;</span>) =&gt; {
+                            (<span class="prelude-val">Some</span>(<span class="string">'/'</span>), <span class="string">'*'</span>) =&gt; {
                                 prev = <span class="prelude-val">None</span>;
                                 depth += <span class="number">1</span>;
                             }
@@ -865,50 +865,50 @@
                         }
                     }
 
-                    (Token::End, <span class="string">&quot;&quot;</span>)
+                    (Token::End, <span class="string">""</span>)
                 }
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
-        <span class="string">&#39;-&#39; </span>=&gt; {
+        <span class="string">'-' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;&gt;&#39;</span>) =&gt; (Token::Arrow, chars.as_str()),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>| <span class="string">&#39;.&#39;</span>) =&gt; consume_number(input),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;-&#39;</span>) =&gt; (Token::DecrementOperation, chars.as_str()),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'&gt;'</span>) =&gt; (Token::Arrow, chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'0'</span>..=<span class="string">'9' </span>| <span class="string">'.'</span>) =&gt; consume_number(input),
+                <span class="prelude-val">Some</span>(<span class="string">'-'</span>) =&gt; (Token::DecrementOperation, chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
-        <span class="string">&#39;+&#39; </span>=&gt; {
+        <span class="string">'+' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;+&#39;</span>) =&gt; (Token::IncrementOperation, chars.as_str()),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'+'</span>) =&gt; (Token::IncrementOperation, chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
-        <span class="string">&#39;*&#39; </span>| <span class="string">&#39;%&#39; </span>| <span class="string">&#39;^&#39; </span>=&gt; {
+        <span class="string">'*' </span>| <span class="string">'%' </span>| <span class="string">'^' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
-        <span class="string">&#39;~&#39; </span>=&gt; (Token::Operation(cur), chars.as_str()),
-        <span class="string">&#39;=&#39; </span>| <span class="string">&#39;!&#39; </span>=&gt; {
+        <span class="string">'~' </span>=&gt; (Token::Operation(cur), chars.as_str()),
+        <span class="string">'=' </span>| <span class="string">'!' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::LogicalOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::LogicalOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
-        <span class="string">&#39;&amp;&#39; </span>| <span class="string">&#39;|&#39; </span>=&gt; {
+        <span class="string">'&amp;' </span>| <span class="string">'|' </span>=&gt; {
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
                 <span class="prelude-val">Some</span>(c) <span class="kw">if </span>c == cur =&gt; (Token::LogicalOperation(cur), chars.as_str()),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
+                <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
             }
         }
@@ -928,7 +928,7 @@
 /// (Unicode Pattern_White_Space excluding U+0020, U+0009, U+200E and U+200F)
 </span><span class="kw">const fn </span>is_comment_end(c: char) -&gt; bool {
     <span class="kw">match </span>c {
-        <span class="string">&#39;\u{000a}&#39;</span>..=<span class="string">&#39;\u{000d}&#39; </span>| <span class="string">&#39;\u{0085}&#39; </span>| <span class="string">&#39;\u{2028}&#39; </span>| <span class="string">&#39;\u{2029}&#39; </span>=&gt; <span class="bool-val">true</span>,
+        <span class="string">'\u{000a}'</span>..=<span class="string">'\u{000d}' </span>| <span class="string">'\u{0085}' </span>| <span class="string">'\u{2028}' </span>| <span class="string">'\u{2029}' </span>=&gt; <span class="bool-val">true</span>,
         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
     }
 }
@@ -936,20 +936,20 @@
 <span class="doccomment">/// Returns whether or not a char is a blankspace (Unicode Pattern_White_Space)
 </span><span class="kw">const fn </span>is_blankspace(c: char) -&gt; bool {
     <span class="kw">match </span>c {
-        <span class="string">&#39;\u{0020}&#39;
-        </span>| <span class="string">&#39;\u{0009}&#39;</span>..=<span class="string">&#39;\u{000d}&#39;
-        </span>| <span class="string">&#39;\u{0085}&#39;
-        </span>| <span class="string">&#39;\u{200e}&#39;
-        </span>| <span class="string">&#39;\u{200f}&#39;
-        </span>| <span class="string">&#39;\u{2028}&#39;
-        </span>| <span class="string">&#39;\u{2029}&#39; </span>=&gt; <span class="bool-val">true</span>,
+        <span class="string">'\u{0020}'
+        </span>| <span class="string">'\u{0009}'</span>..=<span class="string">'\u{000d}'
+        </span>| <span class="string">'\u{0085}'
+        </span>| <span class="string">'\u{200e}'
+        </span>| <span class="string">'\u{200f}'
+        </span>| <span class="string">'\u{2028}'
+        </span>| <span class="string">'\u{2029}' </span>=&gt; <span class="bool-val">true</span>,
         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
     }
 }
 
-<span class="doccomment">/// Returns whether or not a char is a word start (Unicode XID_Start + &#39;_&#39;)
+<span class="doccomment">/// Returns whether or not a char is a word start (Unicode XID_Start + '_')
 </span><span class="kw">fn </span>is_word_start(c: char) -&gt; bool {
-    c == <span class="string">&#39;_&#39; </span>|| unicode_xid::UnicodeXID::is_xid_start(c)
+    c == <span class="string">'_' </span>|| unicode_xid::UnicodeXID::is_xid_start(c)
 }
 
 <span class="doccomment">/// Returns whether or not a char is a word part (Unicode XID_Continue)
@@ -958,15 +958,15 @@
 }
 
 <span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">struct </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+</span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">struct </span>Lexer&lt;<span class="lifetime">'a</span>&gt; {
+    input: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="comment">// The byte offset of the end of the last non-trivia token.
     </span>last_end_offset: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">const fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Lexer&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">const fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="self">Self </span>{
         Lexer {
             input,
             source: input,
@@ -978,7 +978,7 @@
     ///
     /// # Examples
     /// ```ignore
-    /// let lexer = Lexer::new(&quot;5&quot;);
+    /// let lexer = Lexer::new("5");
     /// let (value, span) = lexer.capture_span(Lexer::next_uint_literal);
     /// assert_eq!(value, 5);
     /// ```
@@ -995,7 +995,7 @@
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>start_byte_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; usize {
         <span class="kw">loop </span>{
-            <span class="comment">// Eat all trivia because `next` doesn&#39;t eat trailing trivia.
+            <span class="comment">// Eat all trivia because `next` doesn't eat trailing trivia.
             </span><span class="kw">let </span>(token, rest) = consume_token(<span class="self">self</span>.input, <span class="bool-val">false</span>);
             <span class="kw">if let </span>Token::Trivia = token {
                 <span class="self">self</span>.input = rest;
@@ -1005,7 +1005,7 @@
         }
     }
 
-    <span class="kw">fn </span>peek_token_and_rest(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) {
+    <span class="kw">fn </span>peek_token_and_rest(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (TokenSpan&lt;<span class="lifetime">'a</span>&gt;, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) {
         <span class="kw">let </span><span class="kw-2">mut </span>cloned = <span class="self">self</span>.clone();
         <span class="kw">let </span>token = cloned.next();
         <span class="kw">let </span>rest = cloned.input;
@@ -1025,7 +1025,7 @@
     /// Assume we are a parse state where bit shift operators may
     /// occur, but not angle brackets.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">'a</span>&gt; {
         <span class="self">self</span>.next_impl(<span class="bool-val">false</span>)
     }
 
@@ -1034,14 +1034,14 @@
     /// Assume we are in a parse state where angle brackets may occur,
     /// but not bit shift operators.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">'a</span>&gt; {
         <span class="self">self</span>.next_impl(<span class="bool-val">true</span>)
     }
 
     <span class="doccomment">/// Return the next non-whitespace token from `self`, with a span.
     ///
     /// See [`consume_token`] for the meaning of `generic`.
-    </span><span class="kw">fn </span>next_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, generic: bool) -&gt; TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">fn </span>next_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, generic: bool) -&gt; TokenSpan&lt;<span class="lifetime">'a</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>start_byte_offset = <span class="self">self</span>.current_byte_offset();
         <span class="kw">loop </span>{
             <span class="kw">let </span>(token, rest) = consume_token(<span class="self">self</span>.input, generic);
@@ -1057,15 +1057,15 @@
     }
 
     <span class="attr">#[must_use]
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>peek(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>peek(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TokenSpan&lt;<span class="lifetime">'a</span>&gt; {
         <span class="kw">let </span>(token, <span class="kw">_</span>) = <span class="self">self</span>.peek_token_and_rest();
         token
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect_span(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expected: Token&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Span, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        expected: Token&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Span, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>next = <span class="self">self</span>.next();
         <span class="kw">if </span>next.<span class="number">0 </span>== expected {
             <span class="prelude-val">Ok</span>(next.<span class="number">1</span>)
@@ -1074,7 +1074,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: Token&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.expect_span(expected)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -1082,7 +1082,7 @@
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect_generic_paren(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expected: char,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>next = <span class="self">self</span>.next_generic();
         <span class="kw">if </span>next.<span class="number">0 </span>== Token::Paren(expected) {
             <span class="prelude-val">Ok</span>(())
@@ -1095,7 +1095,7 @@
     }
 
     <span class="doccomment">/// If the next token matches it is skipped and true is returned
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>skip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, what: Token&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; bool {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>skip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, what: Token&lt;<span class="lifetime">'_</span>&gt;) -&gt; bool {
         <span class="kw">let </span>(peeked_token, rest) = <span class="self">self</span>.peek_token_and_rest();
         <span class="kw">if </span>peeked_token.<span class="number">0 </span>== what {
             <span class="self">self</span>.input = rest;
@@ -1107,10 +1107,10 @@
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident_with_span(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.next() {
-            (Token::Word(<span class="string">&quot;_&quot;</span>), span) =&gt; <span class="prelude-val">Err</span>(Error::InvalidIdentifierUnderscore(span)),
-            (Token::Word(word), span) <span class="kw">if </span>word.starts_with(<span class="string">&quot;__&quot;</span>) =&gt; {
+            (Token::Word(<span class="string">"_"</span>), span) =&gt; <span class="prelude-val">Err</span>(Error::InvalidIdentifierUnderscore(span)),
+            (Token::Word(word), span) <span class="kw">if </span>word.starts_with(<span class="string">"__"</span>) =&gt; {
                 <span class="prelude-val">Err</span>(Error::ReservedIdentifierPrefix(span))
             }
             (Token::Word(word), span) =&gt; <span class="prelude-val">Ok</span>((word, span)),
@@ -1120,7 +1120,7 @@
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ast::Ident&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ast::Ident&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>ident = <span class="self">self
             </span>.next_ident_with_span()
             .map(|(name, span)| <span class="kw">super</span>::ast::Ident { name, span })<span class="question-mark">?</span>;
@@ -1133,15 +1133,15 @@
     }
 
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Scalar, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Scalar, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; {
                 conv::get_scalar_type(word).ok_or(Error::UnknownScalarType(span))
             }
             (<span class="kw">_</span>, span) =&gt; <span class="prelude-val">Err</span>(Error::UnknownScalarType(span)),
         }<span class="question-mark">?</span>;
-        <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(pair)
     }
 
@@ -1150,54 +1150,54 @@
     /// Returns the span covering the inner type, excluding the brackets.
     </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic_with_span(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Scalar, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Scalar, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; conv::get_scalar_type(word)
                 .map(|scalar| (scalar, span))
                 .ok_or(Error::UnknownScalarType(span)),
             (<span class="kw">_</span>, span) =&gt; <span class="prelude-val">Err</span>(Error::UnknownScalarType(span)),
         }<span class="question-mark">?</span>;
-        <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(pair)
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_storage_access(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageAccess, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageAccess, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>(ident, span) = <span class="self">self</span>.next_ident_with_span()<span class="question-mark">?</span>;
         <span class="kw">match </span>ident {
-            <span class="string">&quot;read&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::LOAD),
-            <span class="string">&quot;write&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::STORE),
-            <span class="string">&quot;read_write&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::LOAD | <span class="kw">crate</span>::StorageAccess::STORE),
+            <span class="string">"read" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::LOAD),
+            <span class="string">"write" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::STORE),
+            <span class="string">"read_write" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::LOAD | <span class="kw">crate</span>::StorageAccess::STORE),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAccess(span)),
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_format_generic(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::StorageFormat, <span class="kw">crate</span>::StorageAccess), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="self">self</span>.expect(Token::Paren(<span class="string">&#39;&lt;&#39;</span>))<span class="question-mark">?</span>;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::StorageFormat, <span class="kw">crate</span>::StorageAccess), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.expect(Token::Paren(<span class="string">'&lt;'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span>(ident, ident_span) = <span class="self">self</span>.next_ident_with_span()<span class="question-mark">?</span>;
         <span class="kw">let </span>format = conv::map_storage_format(ident, ident_span)<span class="question-mark">?</span>;
-        <span class="self">self</span>.expect(Token::Separator(<span class="string">&#39;,&#39;</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.expect(Token::Separator(<span class="string">','</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span>access = <span class="self">self</span>.next_storage_access()<span class="question-mark">?</span>;
-        <span class="self">self</span>.expect(Token::Paren(<span class="string">&#39;&gt;&#39;</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.expect(Token::Paren(<span class="string">'&gt;'</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((format, access))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>open_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="self">self</span>.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>open_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.expect(Token::Paren(<span class="string">'('</span>))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>close_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="kw">let _ </span>= <span class="self">self</span>.skip(Token::Separator(<span class="string">&#39;,&#39;</span>));
-        <span class="self">self</span>.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>close_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">let _ </span>= <span class="self">self</span>.skip(Token::Separator(<span class="string">','</span>));
+        <span class="self">self</span>.expect(Token::Paren(<span class="string">')'</span>))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_argument(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="kw">let </span>paren = Token::Paren(<span class="string">&#39;)&#39;</span>);
-        <span class="kw">if </span><span class="self">self</span>.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_argument(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">let </span>paren = Token::Paren(<span class="string">')'</span>);
+        <span class="kw">if </span><span class="self">self</span>.skip(Token::Separator(<span class="string">','</span>)) {
             <span class="prelude-val">Ok</span>(!<span class="self">self</span>.skip(paren))
         } <span class="kw">else </span>{
             <span class="self">self</span>.expect(paren).map(|()| <span class="bool-val">false</span>)
@@ -1221,7 +1221,7 @@
 
     // decimal integer
     </span>sub_test(
-        <span class="string">&quot;0x123 0X123u 1u 123 0 0i 0x3f&quot;</span>,
+        <span class="string">"0x123 0X123u 1u 123 0 0i 0x3f"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">291</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(<span class="number">291</span>))),
@@ -1234,7 +1234,7 @@
     );
     <span class="comment">// decimal floating point
     </span>sub_test(
-        <span class="string">&quot;0.e+4f 01. .01 12.34 .0f 0h 1e-3 0xa.fp+2 0x1P+4f 0X.3 0x3p+2h 0X1.fp-4 0x3.2p+2h&quot;</span>,
+        <span class="string">"0.e+4f 01. .01 12.34 .0f 0h 1e-3 0xa.fp+2 0x1P+4f 0X.3 0x3p+2h 0X1.fp-4 0x3.2p+2h"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.</span>))),
@@ -1256,7 +1256,7 @@
 
     // min / max decimal signed integer
     </span>sub_test(
-        <span class="string">&quot;-2147483648i 2147483647i -2147483649i 2147483648i&quot;</span>,
+        <span class="string">"-2147483648i 2147483647i -2147483649i 2147483648i"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MAX))),
@@ -1266,7 +1266,7 @@
     );
     <span class="comment">// min / max decimal unsigned integer
     </span>sub_test(
-        <span class="string">&quot;0u 4294967295u -1u 4294967296u&quot;</span>,
+        <span class="string">"0u 4294967295u -1u 4294967296u"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MAX))),
@@ -1277,7 +1277,7 @@
 
     <span class="comment">// min / max hexadecimal signed integer
     </span>sub_test(
-        <span class="string">&quot;-0x80000000i 0x7FFFFFFFi -0x80000001i 0x80000000i&quot;</span>,
+        <span class="string">"-0x80000000i 0x7FFFFFFFi -0x80000001i 0x80000000i"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MAX))),
@@ -1287,7 +1287,7 @@
     );
     <span class="comment">// min / max hexadecimal unsigned integer
     </span>sub_test(
-        <span class="string">&quot;0x0u 0xFFFFFFFFu -0x1u 0x100000000u&quot;</span>,
+        <span class="string">"0x0u 0xFFFFFFFFu -0x1u 0x100000000u"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MAX))),
@@ -1313,7 +1313,7 @@
 
     <span class="comment">// decimal floating point
     </span>sub_test(
-        <span class="string">&quot;1e-45f 1.1754942e-38f 1.17549435e-38f 0.99999994f 1.0000001f -3.40282347e+38f 3.40282347e+38f&quot;</span>,
+        <span class="string">"1e-45f 1.1754942e-38f 1.17549435e-38f 0.99999994f 1.0000001f -3.40282347e+38f 3.40282347e+38f"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
                 SMALLEST_POSITIVE_SUBNORMAL_F32,
@@ -1339,7 +1339,7 @@
         ],
     );
     sub_test(
-        <span class="string">&quot;-3.40282367e+38f 3.40282367e+38f&quot;</span>,
+        <span class="string">"-3.40282367e+38f 3.40282367e+38f"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// ≈ -2^128
             </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// ≈ 2^128
@@ -1348,7 +1348,7 @@
 
     <span class="comment">// hexadecimal floating point
     </span>sub_test(
-        <span class="string">&quot;0x1p-149f 0x7FFFFFp-149f 0x1p-126f 0xFFFFFFp-24f 0x800001p-23f -0xFFFFFFp+104f 0xFFFFFFp+104f&quot;</span>,
+        <span class="string">"0x1p-149f 0x7FFFFFp-149f 0x1p-126f 0xFFFFFFp-24f 0x800001p-23f -0xFFFFFFp+104f 0xFFFFFFp+104f"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
                 SMALLEST_POSITIVE_SUBNORMAL_F32,
@@ -1374,7 +1374,7 @@
         ],
     );
     sub_test(
-        <span class="string">&quot;-0x1p128f 0x1p128f 0x1.000001p0f&quot;</span>,
+        <span class="string">"-0x1p128f 0x1p128f 0x1.000001p0f"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// = -2^128
             </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// = 2^128
@@ -1386,7 +1386,7 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>double_floats() {
     sub_test(
-        <span class="string">&quot;0x1.2p4lf 0x1p8lf 0.0625lf 625e-4lf 10lf 10l&quot;</span>,
+        <span class="string">"0x1.2p4lf 0x1p8lf 0.0625lf 625e-4lf 10lf 10l"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">18.0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">256.0</span>))),
@@ -1394,80 +1394,80 @@
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">0.0625</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F64(<span class="number">10.0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">10</span>))),
-            Token::Word(<span class="string">&quot;l&quot;</span>),
+            Token::Word(<span class="string">"l"</span>),
         ],
     )
 }
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_tokens() {
-    sub_test(<span class="string">&quot;id123_OK&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;id123_OK&quot;</span>)]);
+    sub_test(<span class="string">"id123_OK"</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">"id123_OK"</span>)]);
     sub_test(
-        <span class="string">&quot;92No&quot;</span>,
+        <span class="string">"92No"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">92</span>))),
-            Token::Word(<span class="string">&quot;No&quot;</span>),
+            Token::Word(<span class="string">"No"</span>),
         ],
     );
     sub_test(
-        <span class="string">&quot;2u3o&quot;</span>,
+        <span class="string">"2u3o"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(<span class="number">2</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">3</span>))),
-            Token::Word(<span class="string">&quot;o&quot;</span>),
+            Token::Word(<span class="string">"o"</span>),
         ],
     );
     sub_test(
-        <span class="string">&quot;2.4f44po&quot;</span>,
+        <span class="string">"2.4f44po"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">2.4</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">44</span>))),
-            Token::Word(<span class="string">&quot;po&quot;</span>),
+            Token::Word(<span class="string">"po"</span>),
         ],
     );
     sub_test(
-        <span class="string">&quot;Δέλτα réflexion Кызыл 𐰓𐰏𐰇 朝焼け سلام 검정 שָׁלוֹם गुलाबी փիրուզ&quot;</span>,
+        <span class="string">"Δέλτα réflexion Кызыл 𐰓𐰏𐰇 朝焼け سلام 검정 שָׁלוֹם गुलाबी փիրուզ"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Word(<span class="string">&quot;Δέλτα&quot;</span>),
-            Token::Word(<span class="string">&quot;réflexion&quot;</span>),
-            Token::Word(<span class="string">&quot;Кызыл&quot;</span>),
-            Token::Word(<span class="string">&quot;𐰓𐰏𐰇&quot;</span>),
-            Token::Word(<span class="string">&quot;朝焼け&quot;</span>),
-            Token::Word(<span class="string">&quot;سلام&quot;</span>),
-            Token::Word(<span class="string">&quot;검정&quot;</span>),
-            Token::Word(<span class="string">&quot;שָׁלוֹם&quot;</span>),
-            Token::Word(<span class="string">&quot;गुलाबी&quot;</span>),
-            Token::Word(<span class="string">&quot;փիրուզ&quot;</span>),
+            Token::Word(<span class="string">"Δέλτα"</span>),
+            Token::Word(<span class="string">"réflexion"</span>),
+            Token::Word(<span class="string">"Кызыл"</span>),
+            Token::Word(<span class="string">"𐰓𐰏𐰇"</span>),
+            Token::Word(<span class="string">"朝焼け"</span>),
+            Token::Word(<span class="string">"سلام"</span>),
+            Token::Word(<span class="string">"검정"</span>),
+            Token::Word(<span class="string">"שָׁלוֹם"</span>),
+            Token::Word(<span class="string">"गुलाबी"</span>),
+            Token::Word(<span class="string">"փիրուզ"</span>),
         ],
     );
-    sub_test(<span class="string">&quot;æNoø&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;æNoø&quot;</span>)]);
-    sub_test(<span class="string">&quot;No¾&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;No&quot;</span>), Token::Unknown(<span class="string">&#39;¾&#39;</span>)]);
-    sub_test(<span class="string">&quot;No好&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;No好&quot;</span>)]);
-    sub_test(<span class="string">&quot;_No&quot;</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">&quot;_No&quot;</span>)]);
+    sub_test(<span class="string">"æNoø"</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">"æNoø"</span>)]);
+    sub_test(<span class="string">"No¾"</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">"No"</span>), Token::Unknown(<span class="string">'¾'</span>)]);
+    sub_test(<span class="string">"No好"</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">"No好"</span>)]);
+    sub_test(<span class="string">"_No"</span>, <span class="kw-2">&amp;</span>[Token::Word(<span class="string">"_No"</span>)]);
     sub_test(
-        <span class="string">&quot;*/*/***/*//=/*****//&quot;</span>,
+        <span class="string">"*/*/***/*//=/*****//"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Operation(<span class="string">&#39;*&#39;</span>),
-            Token::AssignmentOperation(<span class="string">&#39;/&#39;</span>),
-            Token::Operation(<span class="string">&#39;/&#39;</span>),
+            Token::Operation(<span class="string">'*'</span>),
+            Token::AssignmentOperation(<span class="string">'/'</span>),
+            Token::Operation(<span class="string">'/'</span>),
         ],
     );
 
     <span class="comment">// Type suffixes are only allowed on hex float literals
     // if you provided an exponent.
     </span>sub_test(
-        <span class="string">&quot;0x1.2f 0x1.2f 0x1.2h 0x1.2H 0x1.2lf&quot;</span>,
+        <span class="string">"0x1.2f 0x1.2f 0x1.2h 0x1.2H 0x1.2lf"</span>,
         <span class="kw-2">&amp;</span>[
-            <span class="comment">// The &#39;f&#39; suffixes are taken as a hex digit:
+            <span class="comment">// The 'f' suffixes are taken as a hex digit:
             // the fractional part is 0x2f / 256.
             </span>Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f64 / <span class="number">256.0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f64 / <span class="number">256.0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
-            Token::Word(<span class="string">&quot;h&quot;</span>),
+            Token::Word(<span class="string">"h"</span>),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
-            Token::Word(<span class="string">&quot;H&quot;</span>),
+            Token::Word(<span class="string">"H"</span>),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">1.125</span>))),
-            Token::Word(<span class="string">&quot;lf&quot;</span>),
+            Token::Word(<span class="string">"lf"</span>),
         ],
     )
 }
@@ -1475,42 +1475,42 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_variable_decl() {
     sub_test(
-        <span class="string">&quot;@group(0 ) var&lt; uniform&gt; texture:   texture_multisampled_2d &lt;f32 &gt;;&quot;</span>,
+        <span class="string">"@group(0 ) var&lt; uniform&gt; texture:   texture_multisampled_2d &lt;f32 &gt;;"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Attribute,
-            Token::Word(<span class="string">&quot;group&quot;</span>),
-            Token::Paren(<span class="string">&#39;(&#39;</span>),
+            Token::Word(<span class="string">"group"</span>),
+            Token::Paren(<span class="string">'('</span>),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">0</span>))),
-            Token::Paren(<span class="string">&#39;)&#39;</span>),
-            Token::Word(<span class="string">&quot;var&quot;</span>),
-            Token::Paren(<span class="string">&#39;&lt;&#39;</span>),
-            Token::Word(<span class="string">&quot;uniform&quot;</span>),
-            Token::Paren(<span class="string">&#39;&gt;&#39;</span>),
-            Token::Word(<span class="string">&quot;texture&quot;</span>),
-            Token::Separator(<span class="string">&#39;:&#39;</span>),
-            Token::Word(<span class="string">&quot;texture_multisampled_2d&quot;</span>),
-            Token::Paren(<span class="string">&#39;&lt;&#39;</span>),
-            Token::Word(<span class="string">&quot;f32&quot;</span>),
-            Token::Paren(<span class="string">&#39;&gt;&#39;</span>),
-            Token::Separator(<span class="string">&#39;;&#39;</span>),
+            Token::Paren(<span class="string">')'</span>),
+            Token::Word(<span class="string">"var"</span>),
+            Token::Paren(<span class="string">'&lt;'</span>),
+            Token::Word(<span class="string">"uniform"</span>),
+            Token::Paren(<span class="string">'&gt;'</span>),
+            Token::Word(<span class="string">"texture"</span>),
+            Token::Separator(<span class="string">':'</span>),
+            Token::Word(<span class="string">"texture_multisampled_2d"</span>),
+            Token::Paren(<span class="string">'&lt;'</span>),
+            Token::Word(<span class="string">"f32"</span>),
+            Token::Paren(<span class="string">'&gt;'</span>),
+            Token::Separator(<span class="string">';'</span>),
         ],
     );
     sub_test(
-        <span class="string">&quot;var&lt;storage,read_write&gt; buffer: array&lt;u32&gt;;&quot;</span>,
+        <span class="string">"var&lt;storage,read_write&gt; buffer: array&lt;u32&gt;;"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Word(<span class="string">&quot;var&quot;</span>),
-            Token::Paren(<span class="string">&#39;&lt;&#39;</span>),
-            Token::Word(<span class="string">&quot;storage&quot;</span>),
-            Token::Separator(<span class="string">&#39;,&#39;</span>),
-            Token::Word(<span class="string">&quot;read_write&quot;</span>),
-            Token::Paren(<span class="string">&#39;&gt;&#39;</span>),
-            Token::Word(<span class="string">&quot;buffer&quot;</span>),
-            Token::Separator(<span class="string">&#39;:&#39;</span>),
-            Token::Word(<span class="string">&quot;array&quot;</span>),
-            Token::Paren(<span class="string">&#39;&lt;&#39;</span>),
-            Token::Word(<span class="string">&quot;u32&quot;</span>),
-            Token::Paren(<span class="string">&#39;&gt;&#39;</span>),
-            Token::Separator(<span class="string">&#39;;&#39;</span>),
+            Token::Word(<span class="string">"var"</span>),
+            Token::Paren(<span class="string">'&lt;'</span>),
+            Token::Word(<span class="string">"storage"</span>),
+            Token::Separator(<span class="string">','</span>),
+            Token::Word(<span class="string">"read_write"</span>),
+            Token::Paren(<span class="string">'&gt;'</span>),
+            Token::Word(<span class="string">"buffer"</span>),
+            Token::Separator(<span class="string">':'</span>),
+            Token::Word(<span class="string">"array"</span>),
+            Token::Paren(<span class="string">'&lt;'</span>),
+            Token::Word(<span class="string">"u32"</span>),
+            Token::Paren(<span class="string">'&gt;'</span>),
+            Token::Separator(<span class="string">';'</span>),
         ],
     );
 }

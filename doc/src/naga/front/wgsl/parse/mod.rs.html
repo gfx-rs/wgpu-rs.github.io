@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2366,55 +2366,55 @@
 /// Naga IR from the AST we produce here.
 ///
 /// [`lower::ExpressionContext`]: super::lower::ExpressionContext
-</span><span class="kw">struct </span>ExpressionContext&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;temp</span>, <span class="lifetime">&#39;out</span>&gt; {
+</span><span class="kw">struct </span>ExpressionContext&lt;<span class="lifetime">'input</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
     <span class="doccomment">/// The [`TranslationUnit::expressions`] arena to which we should contribute
     /// expressions.
     ///
     /// [`TranslationUnit::expressions`]: ast::TranslationUnit::expressions
-    </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;out </span><span class="kw-2">mut </span>Arena&lt;ast::Expression&lt;<span class="lifetime">&#39;input</span>&gt;&gt;,
+    </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>Arena&lt;ast::Expression&lt;<span class="lifetime">'input</span>&gt;&gt;,
 
     <span class="doccomment">/// The [`TranslationUnit::types`] arena to which we should contribute new
     /// types.
     ///
     /// [`TranslationUnit::types`]: ast::TranslationUnit::types
-    </span>types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;out </span><span class="kw-2">mut </span>Arena&lt;ast::Type&lt;<span class="lifetime">&#39;input</span>&gt;&gt;,
+    </span>types: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>Arena&lt;ast::Type&lt;<span class="lifetime">'input</span>&gt;&gt;,
 
     <span class="doccomment">/// A map from identifiers in scope to the locals/arguments they represent.
     ///
-    /// The handles refer to the [`Function::locals`] area; see that field&#39;s
+    /// The handles refer to the [`Function::locals`] area; see that field's
     /// documentation for details.
     ///
     /// [`Function::locals`]: ast::Function::locals
-    </span>local_table: <span class="kw-2">&amp;</span><span class="lifetime">&#39;temp </span><span class="kw-2">mut </span>SymbolTable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str, Handle&lt;ast::Local&gt;&gt;,
+    </span>local_table: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>SymbolTable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'input </span>str, Handle&lt;ast::Local&gt;&gt;,
 
-    <span class="doccomment">/// The [`Function::locals`] arena for the function we&#39;re building.
+    <span class="doccomment">/// The [`Function::locals`] arena for the function we're building.
     ///
     /// [`Function::locals`]: ast::Function::locals
-    </span>locals: <span class="kw-2">&amp;</span><span class="lifetime">&#39;out </span><span class="kw-2">mut </span>Arena&lt;ast::Local&gt;,
+    </span>locals: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>Arena&lt;ast::Local&gt;,
 
     <span class="doccomment">/// Identifiers used by the current global declaration that have no local definition.
     ///
-    /// This becomes the [`GlobalDecl`]&#39;s [`dependencies`] set.
+    /// This becomes the [`GlobalDecl`]'s [`dependencies`] set.
     ///
-    /// Note that we don&#39;t know at parse time what kind of [`GlobalDecl`] the
-    /// name refers to. We can&#39;t look up names until we&#39;ve seen the entire
+    /// Note that we don't know at parse time what kind of [`GlobalDecl`] the
+    /// name refers to. We can't look up names until we've seen the entire
     /// translation unit.
     ///
     /// [`GlobalDecl`]: ast::GlobalDecl
     /// [`dependencies`]: ast::GlobalDecl::dependencies
-    </span>unresolved: <span class="kw-2">&amp;</span><span class="lifetime">&#39;out </span><span class="kw-2">mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">&#39;input</span>&gt;&gt;,
+    </span>unresolved: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">'input</span>&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>parse_binary_op(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        classifier: <span class="kw">impl </span>Fn(Token&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::BinaryOperator&gt;,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        classifier: <span class="kw">impl </span>Fn(Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::BinaryOperator&gt;,
         <span class="kw-2">mut </span>parser: <span class="kw">impl </span>FnMut(
-            <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
+            <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
             <span class="kw-2">&amp;mut </span><span class="self">Self</span>,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span><span class="kw-2">mut </span>accumulator = parser(lexer, <span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(op) = classifier(lexer.peek().<span class="number">0</span>) {
@@ -2429,7 +2429,7 @@
         <span class="prelude-val">Ok</span>(accumulator)
     }
 
-    <span class="kw">fn </span>declare_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: ast::Ident&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Local&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">fn </span>declare_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: ast::Ident&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Local&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>handle = <span class="self">self</span>.locals.append(ast::Local, name.span);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = <span class="self">self</span>.local_table.add(name.name, handle) {
             <span class="prelude-val">Err</span>(Error::Redefinition {
@@ -2472,7 +2472,7 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; ParsedAttribute&lt;T&gt; {
-    <span class="kw">fn </span>set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;static</span>&gt;&gt; {
+    <span class="kw">fn </span>set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'static</span>&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.value.is_some() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::RepeatedAttribute(name_span));
         }
@@ -2482,8 +2482,8 @@
 }
 
 <span class="attr">#[derive(Default)]
-</span><span class="kw">struct </span>BindingParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    location: ParsedAttribute&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;,
+</span><span class="kw">struct </span>BindingParser&lt;<span class="lifetime">'a</span>&gt; {
+    location: ParsedAttribute&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
     second_blend_source: ParsedAttribute&lt;bool&gt;,
     built_in: ParsedAttribute&lt;<span class="kw">crate</span>::BuiltIn&gt;,
     interpolation: ParsedAttribute&lt;<span class="kw">crate</span>::Interpolation&gt;,
@@ -2491,45 +2491,45 @@
     invariant: ParsedAttribute&lt;bool&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BindingParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BindingParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>parse(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         parser: <span class="kw-2">&amp;mut </span>Parser,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         name_span: Span,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span>name {
-            <span class="string">&quot;location&quot; </span>=&gt; {
-                lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+            <span class="string">"location" </span>=&gt; {
+                lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                 <span class="self">self</span>.location
                     .set(parser.general_expression(lexer, ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
-                lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
-            <span class="string">&quot;builtin&quot; </span>=&gt; {
-                lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+            <span class="string">"builtin" </span>=&gt; {
+                lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>(raw, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                 <span class="self">self</span>.built_in
                     .set(conv::map_built_in(raw, span)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
-                lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
-            <span class="string">&quot;interpolate&quot; </span>=&gt; {
-                lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+            <span class="string">"interpolate" </span>=&gt; {
+                lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>(raw, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                 <span class="self">self</span>.interpolation
                     .set(conv::map_interpolation(raw, span)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
-                <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                     <span class="kw">let </span>(raw, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                     <span class="self">self</span>.sampling
                         .set(conv::map_sampling(raw, span)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                 }
-                lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
-            <span class="string">&quot;second_blend_source&quot; </span>=&gt; {
+            <span class="string">"second_blend_source" </span>=&gt; {
                 <span class="self">self</span>.second_blend_source.set(<span class="bool-val">true</span>, name_span)<span class="question-mark">?</span>;
             }
-            <span class="string">&quot;invariant&quot; </span>=&gt; {
+            <span class="string">"invariant" </span>=&gt; {
                 <span class="self">self</span>.invariant.set(<span class="bool-val">true</span>, name_span)<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
@@ -2537,7 +2537,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>finish(<span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">fn </span>finish(<span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span>(
             <span class="self">self</span>.location.value,
             <span class="self">self</span>.built_in.value,
@@ -2582,26 +2582,26 @@
         <span class="self">self</span>.rules.clear();
     }
 
-    <span class="kw">fn </span>push_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rule: Rule, lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;_</span>&gt;) {
+    <span class="kw">fn </span>push_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rule: Rule, lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'_</span>&gt;) {
         <span class="self">self</span>.rules.push((rule, lexer.start_byte_offset()));
     }
 
-    <span class="kw">fn </span>pop_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lexer: <span class="kw-2">&amp;</span>Lexer&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Span {
+    <span class="kw">fn </span>pop_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lexer: <span class="kw-2">&amp;</span>Lexer&lt;<span class="lifetime">'_</span>&gt;) -&gt; Span {
         <span class="kw">let </span>(<span class="kw">_</span>, initial) = <span class="self">self</span>.rules.pop().unwrap();
         lexer.span_from(initial)
     }
 
-    <span class="kw">fn </span>peek_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lexer: <span class="kw-2">&amp;</span>Lexer&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Span {
+    <span class="kw">fn </span>peek_rule_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lexer: <span class="kw-2">&amp;</span>Lexer&lt;<span class="lifetime">'_</span>&gt;) -&gt; Span {
         <span class="kw">let </span><span class="kw-2">&amp;</span>(<span class="kw">_</span>, initial) = <span class="self">self</span>.rules.last().unwrap();
         lexer.span_from(initial)
     }
 
-    <span class="kw">fn </span>switch_value&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>switch_value&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::SwitchValue&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
-        <span class="kw">if let </span>Token::Word(<span class="string">&quot;default&quot;</span>) = lexer.peek().<span class="number">0 </span>{
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::SwitchValue&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">if let </span>Token::Word(<span class="string">"default"</span>) = lexer.peek().<span class="number">0 </span>{
             <span class="kw">let _ </span>= lexer.next();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ast::SwitchValue::Default);
         }
@@ -2610,33 +2610,33 @@
         <span class="prelude-val">Ok</span>(ast::SwitchValue::Expr(expr))
     }
 
-    <span class="doccomment">/// Decide if we&#39;re looking at a construction expression, and return its
+    <span class="doccomment">/// Decide if we're looking at a construction expression, and return its
     /// type if so.
     ///
     /// If the identifier `word` is a [type-defining keyword], then return a
     /// [`ConstructorType`] value describing the type to build. Return an error
     /// if the type is not constructible (like `sampler`).
     ///
-    /// If `word` isn&#39;t a type name, then return `None`.
+    /// If `word` isn't a type name, then return `None`.
     ///
     /// [type-defining keyword]: https://gpuweb.github.io/gpuweb/wgsl/#type-defining-keywords
     /// [`ConstructorType`]: ast::ConstructorType
-    </span><span class="kw">fn </span>constructor_type&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>constructor_type&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        word: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         span: Span,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::ConstructorType&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::ConstructorType&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = conv::get_scalar_type(word) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Scalar(scalar)));
         }
 
         <span class="kw">let </span>partial = <span class="kw">match </span>word {
-            <span class="string">&quot;vec2&quot; </span>=&gt; ast::ConstructorType::PartialVector {
+            <span class="string">"vec2" </span>=&gt; ast::ConstructorType::PartialVector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
             },
-            <span class="string">&quot;vec2i&quot; </span>=&gt; {
+            <span class="string">"vec2i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
                     scalar: Scalar {
@@ -2645,7 +2645,7 @@
                     },
                 }))
             }
-            <span class="string">&quot;vec2u&quot; </span>=&gt; {
+            <span class="string">"vec2u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
                     scalar: Scalar {
@@ -2654,187 +2654,187 @@
                     },
                 }))
             }
-            <span class="string">&quot;vec2f&quot; </span>=&gt; {
+            <span class="string">"vec2f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
                     scalar: Scalar::F32,
                 }))
             }
-            <span class="string">&quot;vec3&quot; </span>=&gt; ast::ConstructorType::PartialVector {
+            <span class="string">"vec3" </span>=&gt; ast::ConstructorType::PartialVector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
             },
-            <span class="string">&quot;vec3i&quot; </span>=&gt; {
+            <span class="string">"vec3i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
                     scalar: Scalar::I32,
                 }))
             }
-            <span class="string">&quot;vec3u&quot; </span>=&gt; {
+            <span class="string">"vec3u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
                     scalar: Scalar::U32,
                 }))
             }
-            <span class="string">&quot;vec3f&quot; </span>=&gt; {
+            <span class="string">"vec3f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
                     scalar: Scalar::F32,
                 }))
             }
-            <span class="string">&quot;vec4&quot; </span>=&gt; ast::ConstructorType::PartialVector {
+            <span class="string">"vec4" </span>=&gt; ast::ConstructorType::PartialVector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
             },
-            <span class="string">&quot;vec4i&quot; </span>=&gt; {
+            <span class="string">"vec4i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
                     scalar: Scalar::I32,
                 }))
             }
-            <span class="string">&quot;vec4u&quot; </span>=&gt; {
+            <span class="string">"vec4u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
                     scalar: Scalar::U32,
                 }))
             }
-            <span class="string">&quot;vec4f&quot; </span>=&gt; {
+            <span class="string">"vec4f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
                     scalar: Scalar::F32,
                 }))
             }
-            <span class="string">&quot;mat2x2&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat2x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
             },
-            <span class="string">&quot;mat2x2f&quot; </span>=&gt; {
+            <span class="string">"mat2x2f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat2x3&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat2x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
             },
-            <span class="string">&quot;mat2x3f&quot; </span>=&gt; {
+            <span class="string">"mat2x3f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat2x4&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat2x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
             },
-            <span class="string">&quot;mat2x4f&quot; </span>=&gt; {
+            <span class="string">"mat2x4f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat3x2&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat3x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
             },
-            <span class="string">&quot;mat3x2f&quot; </span>=&gt; {
+            <span class="string">"mat3x2f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat3x3&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat3x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
             },
-            <span class="string">&quot;mat3x3f&quot; </span>=&gt; {
+            <span class="string">"mat3x3f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat3x4&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat3x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
             },
-            <span class="string">&quot;mat3x4f&quot; </span>=&gt; {
+            <span class="string">"mat3x4f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat4x2&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat4x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
             },
-            <span class="string">&quot;mat4x2f&quot; </span>=&gt; {
+            <span class="string">"mat4x2f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat4x3&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat4x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
             },
-            <span class="string">&quot;mat4x3f&quot; </span>=&gt; {
+            <span class="string">"mat4x3f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;mat4x4&quot; </span>=&gt; ast::ConstructorType::PartialMatrix {
+            <span class="string">"mat4x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
             },
-            <span class="string">&quot;mat4x4f&quot; </span>=&gt; {
+            <span class="string">"mat4x4f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
                     width: <span class="number">4</span>,
                 }))
             }
-            <span class="string">&quot;array&quot; </span>=&gt; ast::ConstructorType::PartialArray,
-            <span class="string">&quot;atomic&quot;
-            </span>| <span class="string">&quot;binding_array&quot;
-            </span>| <span class="string">&quot;sampler&quot;
-            </span>| <span class="string">&quot;sampler_comparison&quot;
-            </span>| <span class="string">&quot;texture_1d&quot;
-            </span>| <span class="string">&quot;texture_1d_array&quot;
-            </span>| <span class="string">&quot;texture_2d&quot;
-            </span>| <span class="string">&quot;texture_2d_array&quot;
-            </span>| <span class="string">&quot;texture_3d&quot;
-            </span>| <span class="string">&quot;texture_cube&quot;
-            </span>| <span class="string">&quot;texture_cube_array&quot;
-            </span>| <span class="string">&quot;texture_multisampled_2d&quot;
-            </span>| <span class="string">&quot;texture_multisampled_2d_array&quot;
-            </span>| <span class="string">&quot;texture_depth_2d&quot;
-            </span>| <span class="string">&quot;texture_depth_2d_array&quot;
-            </span>| <span class="string">&quot;texture_depth_cube&quot;
-            </span>| <span class="string">&quot;texture_depth_cube_array&quot;
-            </span>| <span class="string">&quot;texture_depth_multisampled_2d&quot;
-            </span>| <span class="string">&quot;texture_storage_1d&quot;
-            </span>| <span class="string">&quot;texture_storage_1d_array&quot;
-            </span>| <span class="string">&quot;texture_storage_2d&quot;
-            </span>| <span class="string">&quot;texture_storage_2d_array&quot;
-            </span>| <span class="string">&quot;texture_storage_3d&quot; </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TypeNotConstructible(span)),
+            <span class="string">"array" </span>=&gt; ast::ConstructorType::PartialArray,
+            <span class="string">"atomic"
+            </span>| <span class="string">"binding_array"
+            </span>| <span class="string">"sampler"
+            </span>| <span class="string">"sampler_comparison"
+            </span>| <span class="string">"texture_1d"
+            </span>| <span class="string">"texture_1d_array"
+            </span>| <span class="string">"texture_2d"
+            </span>| <span class="string">"texture_2d_array"
+            </span>| <span class="string">"texture_3d"
+            </span>| <span class="string">"texture_cube"
+            </span>| <span class="string">"texture_cube_array"
+            </span>| <span class="string">"texture_multisampled_2d"
+            </span>| <span class="string">"texture_multisampled_2d_array"
+            </span>| <span class="string">"texture_depth_2d"
+            </span>| <span class="string">"texture_depth_2d_array"
+            </span>| <span class="string">"texture_depth_cube"
+            </span>| <span class="string">"texture_depth_cube_array"
+            </span>| <span class="string">"texture_depth_multisampled_2d"
+            </span>| <span class="string">"texture_storage_1d"
+            </span>| <span class="string">"texture_storage_1d_array"
+            </span>| <span class="string">"texture_storage_2d"
+            </span>| <span class="string">"texture_storage_2d_array"
+            </span>| <span class="string">"texture_storage_3d" </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TypeNotConstructible(span)),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         };
 
         <span class="comment">// parse component type if present
         </span><span class="kw">match </span>(lexer.peek().<span class="number">0</span>, partial) {
-            (Token::Paren(<span class="string">&#39;&lt;&#39;</span>), ast::ConstructorType::PartialVector { size }) =&gt; {
+            (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialVector { size }) =&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector { size, scalar }))
             }
-            (Token::Paren(<span class="string">&#39;&lt;&#39;</span>), ast::ConstructorType::PartialMatrix { columns, rows }) =&gt; {
+            (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialMatrix { columns, rows }) =&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="kw">match </span>scalar.kind {
                     <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
@@ -2845,16 +2845,16 @@
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(span, scalar)),
                 }
             }
-            (Token::Paren(<span class="string">&#39;&lt;&#39;</span>), ast::ConstructorType::PartialArray) =&gt; {
-                lexer.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+            (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialArray) =&gt; {
+                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                     <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                     ast::ArraySize::Constant(expr)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
                 };
-                lexer.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Array { base, size }))
             }
@@ -2863,11 +2863,11 @@
     }
 
     <span class="doccomment">/// Expects `name` to be consumed (not in lexer).
-    </span><span class="kw">fn </span>arguments&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>arguments&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         lexer.open_arguments()<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>arguments = Vec::new();
         <span class="kw">loop </span>{
@@ -2875,7 +2875,7 @@
                 <span class="kw">if </span>!lexer.next_argument()<span class="question-mark">? </span>{
                     <span class="kw">break</span>;
                 }
-            } <span class="kw">else if </span>lexer.skip(Token::Paren(<span class="string">&#39;)&#39;</span>)) {
+            } <span class="kw">else if </span>lexer.skip(Token::Paren(<span class="string">')'</span>)) {
                 <span class="kw">break</span>;
             }
             <span class="kw">let </span>arg = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
@@ -2887,23 +2887,23 @@
 
     <span class="doccomment">/// Expects [`Rule::PrimaryExpr`] or [`Rule::SingularExpr`] on top; does not pop it.
     /// Expects `name` to be consumed (not in lexer).
-    </span><span class="kw">fn </span>function_call&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>function_call&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         name_span: Span,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="macro">assert!</span>(<span class="self">self</span>.rules.last().is_some());
 
         <span class="kw">let </span>expr = <span class="kw">match </span>name {
-            <span class="comment">// bitcast looks like a function call, but it&#39;s an operator and must be handled differently.
-            </span><span class="string">&quot;bitcast&quot; </span>=&gt; {
-                lexer.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+            <span class="comment">// bitcast looks like a function call, but it's an operator and must be handled differently.
+            </span><span class="string">"bitcast" </span>=&gt; {
+                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>start = lexer.start_byte_offset();
                 <span class="kw">let </span>to = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>span = lexer.span_from(start);
-                lexer.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
 
                 lexer.open_arguments()<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
@@ -2937,12 +2937,12 @@
         <span class="prelude-val">Ok</span>(expr)
     }
 
-    <span class="kw">fn </span>ident_expr&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>ident_expr&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         name_span: Span,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; ast::IdentExpr&lt;<span class="lifetime">&#39;a</span>&gt; {
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; ast::IdentExpr&lt;<span class="lifetime">'a</span>&gt; {
         <span class="kw">match </span>ctx.local_table.lookup(name) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>local) =&gt; ast::IdentExpr::Local(local),
             <span class="prelude-val">None </span>=&gt; {
@@ -2955,26 +2955,26 @@
         }
     }
 
-    <span class="kw">fn </span>primary_expression&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>primary_expression&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::PrimaryExpr, lexer);
 
         <span class="kw">let </span>expr = <span class="kw">match </span>lexer.peek() {
-            (Token::Paren(<span class="string">&#39;(&#39;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Paren(<span class="string">'('</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 <span class="self">self</span>.pop_rule_span(lexer);
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(expr);
             }
-            (Token::Word(<span class="string">&quot;true&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"true"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 ast::Expression::Literal(ast::Literal::Bool(<span class="bool-val">true</span>))
             }
-            (Token::Word(<span class="string">&quot;false&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"false"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 ast::Expression::Literal(ast::Literal::Bool(<span class="bool-val">false</span>))
             }
@@ -2983,15 +2983,15 @@
                 <span class="kw">let </span>num = res.map_err(|err| Error::BadNumber(span, err))<span class="question-mark">?</span>;
                 ast::Expression::Literal(ast::Literal::Number(num))
             }
-            (Token::Word(<span class="string">&quot;RAY_FLAG_NONE&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"RAY_FLAG_NONE"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">0</span>)))
             }
-            (Token::Word(<span class="string">&quot;RAY_FLAG_TERMINATE_ON_FIRST_HIT&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"RAY_FLAG_TERMINATE_ON_FIRST_HIT"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">4</span>)))
             }
-            (Token::Word(<span class="string">&quot;RAY_QUERY_INTERSECTION_NONE&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"RAY_QUERY_INTERSECTION_NONE"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">0</span>)))
             }
@@ -3007,10 +3007,10 @@
                         ty_span,
                         components,
                     }
-                } <span class="kw">else if let </span>Token::Paren(<span class="string">&#39;(&#39;</span>) = lexer.peek().<span class="number">0 </span>{
+                } <span class="kw">else if let </span>Token::Paren(<span class="string">'('</span>) = lexer.peek().<span class="number">0 </span>{
                     <span class="self">self</span>.pop_rule_span(lexer);
                     <span class="kw">return </span><span class="self">self</span>.function_call(lexer, word, span, ctx);
-                } <span class="kw">else if </span>word == <span class="string">&quot;bitcast&quot; </span>{
+                } <span class="kw">else if </span>word == <span class="string">"bitcast" </span>{
                     <span class="self">self</span>.pop_rule_span(lexer);
                     <span class="kw">return </span><span class="self">self</span>.function_call(lexer, word, span, ctx);
                 } <span class="kw">else </span>{
@@ -3026,27 +3026,27 @@
         <span class="prelude-val">Ok</span>(expr)
     }
 
-    <span class="kw">fn </span>postfix&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>postfix&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span_start: usize,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        expr: Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>expr = expr;
 
         <span class="kw">loop </span>{
             <span class="kw">let </span>expression = <span class="kw">match </span>lexer.peek().<span class="number">0 </span>{
-                Token::Separator(<span class="string">&#39;.&#39;</span>) =&gt; {
+                Token::Separator(<span class="string">'.'</span>) =&gt; {
                     <span class="kw">let _ </span>= lexer.next();
                     <span class="kw">let </span>field = lexer.next_ident()<span class="question-mark">?</span>;
 
                     ast::Expression::Member { base: expr, field }
                 }
-                Token::Paren(<span class="string">&#39;[&#39;</span>) =&gt; {
+                Token::Paren(<span class="string">'['</span>) =&gt; {
                     <span class="kw">let _ </span>= lexer.next();
                     <span class="kw">let </span>index = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                    lexer.expect(Token::Paren(<span class="string">&#39;]&#39;</span>))<span class="question-mark">?</span>;
+                    lexer.expect(Token::Paren(<span class="string">']'</span>))<span class="question-mark">?</span>;
 
                     ast::Expression::Index { base: expr, index }
                 }
@@ -3061,15 +3061,15 @@
     }
 
     <span class="doccomment">/// Parse a `unary_expression`.
-    </span><span class="kw">fn </span>unary_expression&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>unary_expression&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::UnaryExpr, lexer);
         <span class="comment">//TODO: refactor this to avoid backing up
         </span><span class="kw">let </span>expr = <span class="kw">match </span>lexer.peek().<span class="number">0 </span>{
-            Token::Operation(<span class="string">&#39;-&#39;</span>) =&gt; {
+            Token::Operation(<span class="string">'-'</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = ast::Expression::Unary {
@@ -3079,7 +3079,7 @@
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
                 ctx.expressions.append(expr, span)
             }
-            Token::Operation(<span class="string">&#39;!&#39;</span>) =&gt; {
+            Token::Operation(<span class="string">'!'</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = ast::Expression::Unary {
@@ -3089,7 +3089,7 @@
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
                 ctx.expressions.append(expr, span)
             }
-            Token::Operation(<span class="string">&#39;~&#39;</span>) =&gt; {
+            Token::Operation(<span class="string">'~'</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = ast::Expression::Unary {
@@ -3099,14 +3099,14 @@
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
                 ctx.expressions.append(expr, span)
             }
-            Token::Operation(<span class="string">&#39;*&#39;</span>) =&gt; {
+            Token::Operation(<span class="string">'*'</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = ast::Expression::Deref(expr);
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
                 ctx.expressions.append(expr, span)
             }
-            Token::Operation(<span class="string">&#39;&amp;&#39;</span>) =&gt; {
+            Token::Operation(<span class="string">'&amp;'</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">let </span>expr = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = ast::Expression::AddrOf(expr);
@@ -3121,11 +3121,11 @@
     }
 
     <span class="doccomment">/// Parse a `singular_expression`.
-    </span><span class="kw">fn </span>singular_expression&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>singular_expression&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="self">self</span>.push_rule_span(Rule::SingularExpr, lexer);
         <span class="kw">let </span>primary_expr = <span class="self">self</span>.primary_expression(lexer, ctx)<span class="question-mark">?</span>;
@@ -3135,17 +3135,17 @@
         <span class="prelude-val">Ok</span>(singular_expr)
     }
 
-    <span class="kw">fn </span>equality_expression&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>equality_expression&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="comment">// equality_expression
         </span>context.parse_binary_op(
             lexer,
             |token| <span class="kw">match </span>token {
-                Token::LogicalOperation(<span class="string">&#39;=&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Equal),
-                Token::LogicalOperation(<span class="string">&#39;!&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::NotEqual),
+                Token::LogicalOperation(<span class="string">'='</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Equal),
+                Token::LogicalOperation(<span class="string">'!'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::NotEqual),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             <span class="comment">// relational_expression
@@ -3153,10 +3153,10 @@
                 context.parse_binary_op(
                     lexer,
                     |token| <span class="kw">match </span>token {
-                        Token::Paren(<span class="string">&#39;&lt;&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Less),
-                        Token::Paren(<span class="string">&#39;&gt;&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Greater),
-                        Token::LogicalOperation(<span class="string">&#39;&lt;&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LessEqual),
-                        Token::LogicalOperation(<span class="string">&#39;&gt;&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::GreaterEqual),
+                        Token::Paren(<span class="string">'&lt;'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Less),
+                        Token::Paren(<span class="string">'&gt;'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Greater),
+                        Token::LogicalOperation(<span class="string">'&lt;'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LessEqual),
+                        Token::LogicalOperation(<span class="string">'&gt;'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::GreaterEqual),
                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                     },
                     <span class="comment">// shift_expression
@@ -3164,10 +3164,10 @@
                         context.parse_binary_op(
                             lexer,
                             |token| <span class="kw">match </span>token {
-                                Token::ShiftOperation(<span class="string">&#39;&lt;&#39;</span>) =&gt; {
+                                Token::ShiftOperation(<span class="string">'&lt;'</span>) =&gt; {
                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::ShiftLeft)
                                 }
-                                Token::ShiftOperation(<span class="string">&#39;&gt;&#39;</span>) =&gt; {
+                                Token::ShiftOperation(<span class="string">'&gt;'</span>) =&gt; {
                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::ShiftRight)
                                 }
                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3177,8 +3177,8 @@
                                 context.parse_binary_op(
                                     lexer,
                                     |token| <span class="kw">match </span>token {
-                                        Token::Operation(<span class="string">&#39;+&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Add),
-                                        Token::Operation(<span class="string">&#39;-&#39;</span>) =&gt; {
+                                        Token::Operation(<span class="string">'+'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Add),
+                                        Token::Operation(<span class="string">'-'</span>) =&gt; {
                                             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Subtract)
                                         }
                                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3188,13 +3188,13 @@
                                         context.parse_binary_op(
                                             lexer,
                                             |token| <span class="kw">match </span>token {
-                                                Token::Operation(<span class="string">&#39;*&#39;</span>) =&gt; {
+                                                Token::Operation(<span class="string">'*'</span>) =&gt; {
                                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Multiply)
                                                 }
-                                                Token::Operation(<span class="string">&#39;/&#39;</span>) =&gt; {
+                                                Token::Operation(<span class="string">'/'</span>) =&gt; {
                                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Divide)
                                                 }
-                                                Token::Operation(<span class="string">&#39;%&#39;</span>) =&gt; {
+                                                Token::Operation(<span class="string">'%'</span>) =&gt; {
                                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::Modulo)
                                                 }
                                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3211,26 +3211,26 @@
         )
     }
 
-    <span class="kw">fn </span>general_expression&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>general_expression&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.general_expression_with_span(lexer, ctx)
             .map(|(expr, <span class="kw">_</span>)| expr)
     }
 
-    <span class="kw">fn </span>general_expression_with_span&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>general_expression_with_span&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::GeneralExpr, lexer);
         <span class="comment">// logical_or_expression
         </span><span class="kw">let </span>handle = context.parse_binary_op(
             lexer,
             |token| <span class="kw">match </span>token {
-                Token::LogicalOperation(<span class="string">&#39;|&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LogicalOr),
+                Token::LogicalOperation(<span class="string">'|'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LogicalOr),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             <span class="comment">// logical_and_expression
@@ -3238,7 +3238,7 @@
                 context.parse_binary_op(
                     lexer,
                     |token| <span class="kw">match </span>token {
-                        Token::LogicalOperation(<span class="string">&#39;&amp;&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LogicalAnd),
+                        Token::LogicalOperation(<span class="string">'&amp;'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::LogicalAnd),
                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                     },
                     <span class="comment">// inclusive_or_expression
@@ -3246,7 +3246,7 @@
                         context.parse_binary_op(
                             lexer,
                             |token| <span class="kw">match </span>token {
-                                Token::Operation(<span class="string">&#39;|&#39;</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::InclusiveOr),
+                                Token::Operation(<span class="string">'|'</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::InclusiveOr),
                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                             },
                             <span class="comment">// exclusive_or_expression
@@ -3254,7 +3254,7 @@
                                 context.parse_binary_op(
                                     lexer,
                                     |token| <span class="kw">match </span>token {
-                                        Token::Operation(<span class="string">&#39;^&#39;</span>) =&gt; {
+                                        Token::Operation(<span class="string">'^'</span>) =&gt; {
                                             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::ExclusiveOr)
                                         }
                                         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3264,7 +3264,7 @@
                                         context.parse_binary_op(
                                             lexer,
                                             |token| <span class="kw">match </span>token {
-                                                Token::Operation(<span class="string">&#39;&amp;&#39;</span>) =&gt; {
+                                                Token::Operation(<span class="string">'&amp;'</span>) =&gt; {
                                                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::And)
                                                 }
                                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3284,19 +3284,19 @@
         <span class="prelude-val">Ok</span>((handle, <span class="self">self</span>.pop_rule_span(lexer)))
     }
 
-    <span class="kw">fn </span>variable_decl&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>variable_decl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::GlobalVariable&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::GlobalVariable&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::VariableDecl, lexer);
         <span class="kw">let </span><span class="kw-2">mut </span>space = <span class="kw">crate</span>::AddressSpace::Handle;
 
-        <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">&#39;&lt;&#39;</span>)) {
+        <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">'&lt;'</span>)) {
             <span class="kw">let </span>(class_str, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
             space = <span class="kw">match </span>class_str {
-                <span class="string">&quot;storage&quot; </span>=&gt; {
-                    <span class="kw">let </span>access = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                <span class="string">"storage" </span>=&gt; {
+                    <span class="kw">let </span>access = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                         lexer.next_storage_access()<span class="question-mark">?
                     </span>} <span class="kw">else </span>{
                         <span class="comment">// defaulting to `read`
@@ -3306,19 +3306,19 @@
                 }
                 <span class="kw">_ </span>=&gt; conv::map_address_space(class_str, span)<span class="question-mark">?</span>,
             };
-            lexer.expect(Token::Paren(<span class="string">&#39;&gt;&#39;</span>))<span class="question-mark">?</span>;
+            lexer.expect(Token::Paren(<span class="string">'&gt;'</span>))<span class="question-mark">?</span>;
         }
         <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
-        lexer.expect(Token::Separator(<span class="string">&#39;:&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Separator(<span class="string">':'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>init = <span class="kw">if </span>lexer.skip(Token::Operation(<span class="string">&#39;=&#39;</span>)) {
+        <span class="kw">let </span>init = <span class="kw">if </span>lexer.skip(Token::Operation(<span class="string">'='</span>)) {
             <span class="kw">let </span>handle = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(handle)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
-        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
         <span class="self">self</span>.pop_rule_span(lexer);
 
         <span class="prelude-val">Ok</span>(ast::GlobalVariable {
@@ -3330,20 +3330,20 @@
         })
     }
 
-    <span class="kw">fn </span>struct_body&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>struct_body&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ast::StructMember&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ast::StructMember&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>members = Vec::new();
 
-        lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>ready = <span class="bool-val">true</span>;
-        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">&#39;}&#39;</span>)) {
+        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
             <span class="kw">if </span>!ready {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
                     lexer.next().<span class="number">1</span>,
-                    ExpectedToken::Token(Token::Separator(<span class="string">&#39;,&#39;</span>)),
+                    ExpectedToken::Token(Token::Separator(<span class="string">','</span>)),
                 ));
             }
             <span class="kw">let </span>(<span class="kw-2">mut </span>size, <span class="kw-2">mut </span>align) = (ParsedAttribute::default(), ParsedAttribute::default());
@@ -3351,16 +3351,16 @@
             <span class="kw">let </span><span class="kw-2">mut </span>bind_parser = BindingParser::default();
             <span class="kw">while </span>lexer.skip(Token::Attribute) {
                 <span class="kw">match </span>lexer.next_ident_with_span()<span class="question-mark">? </span>{
-                    (<span class="string">&quot;size&quot;</span>, name_span) =&gt; {
-                        lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                    (<span class="string">"size"</span>, name_span) =&gt; {
+                        lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                         <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                         size.set(expr, name_span)<span class="question-mark">?</span>;
                     }
-                    (<span class="string">&quot;align&quot;</span>, name_span) =&gt; {
-                        lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                    (<span class="string">"align"</span>, name_span) =&gt; {
+                        lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                         <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                         align.set(expr, name_span)<span class="question-mark">?</span>;
                     }
                     (word, word_span) =&gt; bind_parser.parse(<span class="self">self</span>, lexer, word, word_span, ctx)<span class="question-mark">?</span>,
@@ -3371,9 +3371,9 @@
             <span class="kw">let </span>binding = bind_parser.finish(bind_span)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
-            lexer.expect(Token::Separator(<span class="string">&#39;:&#39;</span>))<span class="question-mark">?</span>;
+            lexer.expect(Token::Separator(<span class="string">':'</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-            ready = lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>));
+            ready = lexer.skip(Token::Separator(<span class="string">','</span>));
 
             members.push(ast::StructMember {
                 name,
@@ -3387,12 +3387,12 @@
         <span class="prelude-val">Ok</span>(members)
     }
 
-    <span class="kw">fn </span>matrix_scalar_type&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>matrix_scalar_type&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         columns: <span class="kw">crate</span>::VectorSize,
         rows: <span class="kw">crate</span>::VectorSize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Type&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
         <span class="kw">match </span>scalar.kind {
             <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="prelude-val">Ok</span>(ast::Type::Matrix {
@@ -3404,213 +3404,213 @@
         }
     }
 
-    <span class="kw">fn </span>type_decl_impl&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>type_decl_impl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        word: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = conv::get_scalar_type(word) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Type::Scalar(scalar)));
         }
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">match </span>word {
-            <span class="string">&quot;vec2&quot; </span>=&gt; {
+            <span class="string">"vec2" </span>=&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
                     scalar,
                 }
             }
-            <span class="string">&quot;vec2i&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec2i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Sint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec2u&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec2u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Uint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec2f&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec2f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
                 scalar: Scalar::F32,
             },
-            <span class="string">&quot;vec3&quot; </span>=&gt; {
+            <span class="string">"vec3" </span>=&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
                     scalar,
                 }
             }
-            <span class="string">&quot;vec3i&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec3i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Sint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec3u&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec3u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Uint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec3f&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec3f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
                 scalar: Scalar::F32,
             },
-            <span class="string">&quot;vec4&quot; </span>=&gt; {
+            <span class="string">"vec4" </span>=&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
                     scalar,
                 }
             }
-            <span class="string">&quot;vec4i&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec4i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Sint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec4u&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec4u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
                 scalar: Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Uint,
                     width: <span class="number">4</span>,
                 },
             },
-            <span class="string">&quot;vec4f&quot; </span>=&gt; ast::Type::Vector {
+            <span class="string">"vec4f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
                 scalar: Scalar::F32,
             },
-            <span class="string">&quot;mat2x2&quot; </span>=&gt; {
+            <span class="string">"mat2x2" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat2x2f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat2x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat2x3&quot; </span>=&gt; {
+            <span class="string">"mat2x3" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat2x3f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat2x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat2x4&quot; </span>=&gt; {
+            <span class="string">"mat2x4" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat2x4f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat2x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat3x2&quot; </span>=&gt; {
+            <span class="string">"mat3x2" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat3x2f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat3x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat3x3&quot; </span>=&gt; {
+            <span class="string">"mat3x3" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat3x3f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat3x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat3x4&quot; </span>=&gt; {
+            <span class="string">"mat3x4" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat3x4f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat3x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat4x2&quot; </span>=&gt; {
+            <span class="string">"mat4x2" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat4x2f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat4x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat4x3&quot; </span>=&gt; {
+            <span class="string">"mat4x3" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat4x3f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat4x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;mat4x4&quot; </span>=&gt; {
+            <span class="string">"mat4x4" </span>=&gt; {
                 <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
-            <span class="string">&quot;mat4x4f&quot; </span>=&gt; ast::Type::Matrix {
+            <span class="string">"mat4x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
                 width: <span class="number">4</span>,
             },
-            <span class="string">&quot;atomic&quot; </span>=&gt; {
+            <span class="string">"atomic" </span>=&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
                 ast::Type::Atomic(scalar)
             }
-            <span class="string">&quot;ptr&quot; </span>=&gt; {
-                lexer.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+            <span class="string">"ptr" </span>=&gt; {
+                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(ident, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>space = conv::map_address_space(ident, span)<span class="question-mark">?</span>;
-                lexer.expect(Token::Separator(<span class="string">&#39;,&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Separator(<span class="string">','</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::Storage { <span class="kw-2">ref mut </span>access } = space {
-                    <span class="kw-2">*</span>access = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                    <span class="kw-2">*</span>access = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                         lexer.next_storage_access()<span class="question-mark">?
                     </span>} <span class="kw">else </span>{
                         <span class="kw">crate</span>::StorageAccess::LOAD
                     };
                 }
-                lexer.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
                 ast::Type::Pointer { base, space }
             }
-            <span class="string">&quot;array&quot; </span>=&gt; {
-                lexer.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+            <span class="string">"array" </span>=&gt; {
+                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                     <span class="kw">let </span>size = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                     ast::ArraySize::Constant(size)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
                 };
-                lexer.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
 
                 ast::Type::Array { base, size }
             }
-            <span class="string">&quot;binding_array&quot; </span>=&gt; {
-                lexer.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
+            <span class="string">"binding_array" </span>=&gt; {
+                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
                     <span class="kw">let </span>size = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
                     ast::ArraySize::Constant(size)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
                 };
-                lexer.expect_generic_paren(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
+                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
 
                 ast::Type::BindingArray { base, size }
             }
-            <span class="string">&quot;sampler&quot; </span>=&gt; ast::Type::Sampler { comparison: <span class="bool-val">false </span>},
-            <span class="string">&quot;sampler_comparison&quot; </span>=&gt; ast::Type::Sampler { comparison: <span class="bool-val">true </span>},
-            <span class="string">&quot;texture_1d&quot; </span>=&gt; {
+            <span class="string">"sampler" </span>=&gt; ast::Type::Sampler { comparison: <span class="bool-val">false </span>},
+            <span class="string">"sampler_comparison" </span>=&gt; ast::Type::Sampler { comparison: <span class="bool-val">true </span>},
+            <span class="string">"texture_1d" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3622,7 +3622,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_1d_array&quot; </span>=&gt; {
+            <span class="string">"texture_1d_array" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3634,7 +3634,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_2d&quot; </span>=&gt; {
+            <span class="string">"texture_2d" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3646,7 +3646,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_2d_array&quot; </span>=&gt; {
+            <span class="string">"texture_2d_array" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3658,7 +3658,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_3d&quot; </span>=&gt; {
+            <span class="string">"texture_3d" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3670,7 +3670,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_cube&quot; </span>=&gt; {
+            <span class="string">"texture_cube" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3682,7 +3682,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_cube_array&quot; </span>=&gt; {
+            <span class="string">"texture_cube_array" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3694,7 +3694,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_multisampled_2d&quot; </span>=&gt; {
+            <span class="string">"texture_multisampled_2d" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3706,7 +3706,7 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_multisampled_2d_array&quot; </span>=&gt; {
+            <span class="string">"texture_multisampled_2d_array" </span>=&gt; {
                 <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
                 <span class="self">Self</span>::check_texture_sample_type(scalar, span)<span class="question-mark">?</span>;
                 ast::Type::Image {
@@ -3718,32 +3718,32 @@
                     },
                 }
             }
-            <span class="string">&quot;texture_depth_2d&quot; </span>=&gt; ast::Type::Image {
+            <span class="string">"texture_depth_2d" </span>=&gt; ast::Type::Image {
                 dim: <span class="kw">crate</span>::ImageDimension::D2,
                 arrayed: <span class="bool-val">false</span>,
                 class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>},
             },
-            <span class="string">&quot;texture_depth_2d_array&quot; </span>=&gt; ast::Type::Image {
+            <span class="string">"texture_depth_2d_array" </span>=&gt; ast::Type::Image {
                 dim: <span class="kw">crate</span>::ImageDimension::D2,
                 arrayed: <span class="bool-val">true</span>,
                 class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>},
             },
-            <span class="string">&quot;texture_depth_cube&quot; </span>=&gt; ast::Type::Image {
+            <span class="string">"texture_depth_cube" </span>=&gt; ast::Type::Image {
                 dim: <span class="kw">crate</span>::ImageDimension::Cube,
                 arrayed: <span class="bool-val">false</span>,
                 class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>},
             },
-            <span class="string">&quot;texture_depth_cube_array&quot; </span>=&gt; ast::Type::Image {
+            <span class="string">"texture_depth_cube_array" </span>=&gt; ast::Type::Image {
                 dim: <span class="kw">crate</span>::ImageDimension::Cube,
                 arrayed: <span class="bool-val">true</span>,
                 class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">false </span>},
             },
-            <span class="string">&quot;texture_depth_multisampled_2d&quot; </span>=&gt; ast::Type::Image {
+            <span class="string">"texture_depth_multisampled_2d" </span>=&gt; ast::Type::Image {
                 dim: <span class="kw">crate</span>::ImageDimension::D2,
                 arrayed: <span class="bool-val">false</span>,
                 class: <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="bool-val">true </span>},
             },
-            <span class="string">&quot;texture_storage_1d&quot; </span>=&gt; {
+            <span class="string">"texture_storage_1d" </span>=&gt; {
                 <span class="kw">let </span>(format, access) = lexer.next_format_generic()<span class="question-mark">?</span>;
                 ast::Type::Image {
                     dim: <span class="kw">crate</span>::ImageDimension::D1,
@@ -3751,7 +3751,7 @@
                     class: <span class="kw">crate</span>::ImageClass::Storage { format, access },
                 }
             }
-            <span class="string">&quot;texture_storage_1d_array&quot; </span>=&gt; {
+            <span class="string">"texture_storage_1d_array" </span>=&gt; {
                 <span class="kw">let </span>(format, access) = lexer.next_format_generic()<span class="question-mark">?</span>;
                 ast::Type::Image {
                     dim: <span class="kw">crate</span>::ImageDimension::D1,
@@ -3759,7 +3759,7 @@
                     class: <span class="kw">crate</span>::ImageClass::Storage { format, access },
                 }
             }
-            <span class="string">&quot;texture_storage_2d&quot; </span>=&gt; {
+            <span class="string">"texture_storage_2d" </span>=&gt; {
                 <span class="kw">let </span>(format, access) = lexer.next_format_generic()<span class="question-mark">?</span>;
                 ast::Type::Image {
                     dim: <span class="kw">crate</span>::ImageDimension::D2,
@@ -3767,7 +3767,7 @@
                     class: <span class="kw">crate</span>::ImageClass::Storage { format, access },
                 }
             }
-            <span class="string">&quot;texture_storage_2d_array&quot; </span>=&gt; {
+            <span class="string">"texture_storage_2d_array" </span>=&gt; {
                 <span class="kw">let </span>(format, access) = lexer.next_format_generic()<span class="question-mark">?</span>;
                 ast::Type::Image {
                     dim: <span class="kw">crate</span>::ImageDimension::D2,
@@ -3775,7 +3775,7 @@
                     class: <span class="kw">crate</span>::ImageClass::Storage { format, access },
                 }
             }
-            <span class="string">&quot;texture_storage_3d&quot; </span>=&gt; {
+            <span class="string">"texture_storage_3d" </span>=&gt; {
                 <span class="kw">let </span>(format, access) = lexer.next_format_generic()<span class="question-mark">?</span>;
                 ast::Type::Image {
                     dim: <span class="kw">crate</span>::ImageDimension::D3,
@@ -3783,15 +3783,15 @@
                     class: <span class="kw">crate</span>::ImageClass::Storage { format, access },
                 }
             }
-            <span class="string">&quot;acceleration_structure&quot; </span>=&gt; ast::Type::AccelerationStructure,
-            <span class="string">&quot;ray_query&quot; </span>=&gt; ast::Type::RayQuery,
-            <span class="string">&quot;RayDesc&quot; </span>=&gt; ast::Type::RayDesc,
-            <span class="string">&quot;RayIntersection&quot; </span>=&gt; ast::Type::RayIntersection,
+            <span class="string">"acceleration_structure" </span>=&gt; ast::Type::AccelerationStructure,
+            <span class="string">"ray_query" </span>=&gt; ast::Type::RayQuery,
+            <span class="string">"RayDesc" </span>=&gt; ast::Type::RayDesc,
+            <span class="string">"RayIntersection" </span>=&gt; ast::Type::RayIntersection,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }))
     }
 
-    <span class="kw">const fn </span>check_texture_sample_type(scalar: Scalar, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;static</span>&gt;&gt; {
+    <span class="kw">const fn </span>check_texture_sample_type(scalar: Scalar, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'static</span>&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::ScalarKind::<span class="kw-2">*</span>;
         <span class="comment">// Validate according to https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
         </span><span class="kw">match </span>scalar {
@@ -3804,11 +3804,11 @@
     }
 
     <span class="doccomment">/// Parse type declaration of a given name.
-    </span><span class="kw">fn </span>type_decl&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>type_decl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::TypeDecl, lexer);
 
         <span class="kw">let </span>(name, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
@@ -3830,35 +3830,35 @@
         <span class="prelude-val">Ok</span>(handle)
     }
 
-    <span class="kw">fn </span>assignment_op_and_rhs&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>assignment_op_and_rhs&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-        target: Handle&lt;ast::Expression&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
+        target: Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
         span_start: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::BinaryOperator <span class="kw">as </span>Bo;
 
         <span class="kw">let </span>op = lexer.next();
         <span class="kw">let </span>(op, value) = <span class="kw">match </span>op {
-            (Token::Operation(<span class="string">&#39;=&#39;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Operation(<span class="string">'='</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
                 (<span class="prelude-val">None</span>, value)
             }
             (Token::AssignmentOperation(c), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>op = <span class="kw">match </span>c {
-                    <span class="string">&#39;&lt;&#39; </span>=&gt; Bo::ShiftLeft,
-                    <span class="string">&#39;&gt;&#39; </span>=&gt; Bo::ShiftRight,
-                    <span class="string">&#39;+&#39; </span>=&gt; Bo::Add,
-                    <span class="string">&#39;-&#39; </span>=&gt; Bo::Subtract,
-                    <span class="string">&#39;*&#39; </span>=&gt; Bo::Multiply,
-                    <span class="string">&#39;/&#39; </span>=&gt; Bo::Divide,
-                    <span class="string">&#39;%&#39; </span>=&gt; Bo::Modulo,
-                    <span class="string">&#39;&amp;&#39; </span>=&gt; Bo::And,
-                    <span class="string">&#39;|&#39; </span>=&gt; Bo::InclusiveOr,
-                    <span class="string">&#39;^&#39; </span>=&gt; Bo::ExclusiveOr,
-                    <span class="comment">// Note: `consume_token` shouldn&#39;t produce any other assignment ops
+                    <span class="string">'&lt;' </span>=&gt; Bo::ShiftLeft,
+                    <span class="string">'&gt;' </span>=&gt; Bo::ShiftRight,
+                    <span class="string">'+' </span>=&gt; Bo::Add,
+                    <span class="string">'-' </span>=&gt; Bo::Subtract,
+                    <span class="string">'*' </span>=&gt; Bo::Multiply,
+                    <span class="string">'/' </span>=&gt; Bo::Divide,
+                    <span class="string">'%' </span>=&gt; Bo::Modulo,
+                    <span class="string">'&amp;' </span>=&gt; Bo::And,
+                    <span class="string">'|' </span>=&gt; Bo::InclusiveOr,
+                    <span class="string">'^' </span>=&gt; Bo::ExclusiveOr,
+                    <span class="comment">// Note: `consume_token` shouldn't produce any other assignment ops
                     </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
 
@@ -3891,12 +3891,12 @@
     }
 
     <span class="doccomment">/// Parse an assignment statement (will also parse increment and decrement statements)
-    </span><span class="kw">fn </span>assignment_statement&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>assignment_statement&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>span_start = lexer.start_byte_offset();
         <span class="kw">let </span>target = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
         <span class="self">self</span>.assignment_op_and_rhs(lexer, ctx, block, target, span_start)
@@ -3904,15 +3904,15 @@
 
     <span class="doccomment">/// Parse a function call statement.
     /// Expects `ident` to be consumed (not in the lexer).
-    </span><span class="kw">fn </span>function_statement&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>function_statement&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ident: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ident: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         ident_span: Span,
         span_start: usize,
-        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::SingularExpr, lexer);
 
         context.unresolved.insert(ast::Dependency {
@@ -3938,12 +3938,12 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>function_call_or_assignment_statement&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>function_call_or_assignment_statement&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>span_start = lexer.start_byte_offset();
         <span class="kw">match </span>lexer.peek() {
             (Token::Word(name), span) =&gt; {
@@ -3951,7 +3951,7 @@
                 </span><span class="kw">let </span>cloned = lexer.clone();
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="kw">match </span>lexer.peek() {
-                    (Token::Paren(<span class="string">&#39;(&#39;</span>), <span class="kw">_</span>) =&gt; {
+                    (Token::Paren(<span class="string">'('</span>), <span class="kw">_</span>) =&gt; {
                         <span class="self">self</span>.function_statement(lexer, name, span, span_start, context, block)
                     }
                     <span class="kw">_ </span>=&gt; {
@@ -3964,20 +3964,20 @@
         }
     }
 
-    <span class="kw">fn </span>statement&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>statement&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::Statement, lexer);
         <span class="kw">match </span>lexer.peek() {
-            (Token::Separator(<span class="string">&#39;;&#39;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Separator(<span class="string">';'</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="self">self</span>.pop_rule_span(lexer);
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
-            (Token::Paren(<span class="string">&#39;{&#39;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Paren(<span class="string">'{'</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>(inner, span) = <span class="self">self</span>.block(lexer, ctx)<span class="question-mark">?</span>;
                 block.stmts.push(ast::Statement {
                     kind: ast::StatementKind::Block(inner),
@@ -3988,27 +3988,27 @@
             }
             (Token::Word(word), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>kind = <span class="kw">match </span>word {
-                    <span class="string">&quot;_&quot; </span>=&gt; {
+                    <span class="string">"_" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
-                        lexer.expect(Token::Operation(<span class="string">&#39;=&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
                         <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
 
                         ast::StatementKind::Ignore(expr)
                     }
-                    <span class="string">&quot;let&quot; </span>=&gt; {
+                    <span class="string">"let" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
                         <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>given_ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>)) {
+                        <span class="kw">let </span>given_ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
                             <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
                             <span class="prelude-val">Some</span>(ty)
                         } <span class="kw">else </span>{
                             <span class="prelude-val">None
                         </span>};
-                        lexer.expect(Token::Operation(<span class="string">&#39;=&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
                         <span class="kw">let </span>expr_id = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>handle = ctx.declare_local(name)<span class="question-mark">?</span>;
                         ast::StatementKind::LocalDecl(ast::LocalDecl::Let(ast::Let {
@@ -4018,25 +4018,25 @@
                             handle,
                         }))
                     }
-                    <span class="string">&quot;var&quot; </span>=&gt; {
+                    <span class="string">"var" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
 
                         <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
-                        <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>)) {
+                        <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
                             <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
                             <span class="prelude-val">Some</span>(ty)
                         } <span class="kw">else </span>{
                             <span class="prelude-val">None
                         </span>};
 
-                        <span class="kw">let </span>init = <span class="kw">if </span>lexer.skip(Token::Operation(<span class="string">&#39;=&#39;</span>)) {
+                        <span class="kw">let </span>init = <span class="kw">if </span>lexer.skip(Token::Operation(<span class="string">'='</span>)) {
                             <span class="kw">let </span>init = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
                             <span class="prelude-val">Some</span>(init)
                         } <span class="kw">else </span>{
                             <span class="prelude-val">None
                         </span>};
 
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>handle = ctx.declare_local(name)<span class="question-mark">?</span>;
                         ast::StatementKind::LocalDecl(ast::LocalDecl::Var(ast::LocalVariable {
@@ -4046,18 +4046,18 @@
                             handle,
                         }))
                     }
-                    <span class="string">&quot;return&quot; </span>=&gt; {
+                    <span class="string">"return" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
-                        <span class="kw">let </span>value = <span class="kw">if </span>lexer.peek().<span class="number">0 </span>!= Token::Separator(<span class="string">&#39;;&#39;</span>) {
+                        <span class="kw">let </span>value = <span class="kw">if </span>lexer.peek().<span class="number">0 </span>!= Token::Separator(<span class="string">';'</span>) {
                             <span class="kw">let </span>handle = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
                             <span class="prelude-val">Some</span>(handle)
                         } <span class="kw">else </span>{
                             <span class="prelude-val">None
                         </span>};
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         ast::StatementKind::Return { value }
                     }
-                    <span class="string">&quot;if&quot; </span>=&gt; {
+                    <span class="string">"if" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
                         <span class="kw">let </span>condition = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
 
@@ -4066,11 +4066,11 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>elsif_stack = Vec::new();
                         <span class="kw">let </span><span class="kw-2">mut </span>elseif_span_start = lexer.start_byte_offset();
                         <span class="kw">let </span><span class="kw-2">mut </span>reject = <span class="kw">loop </span>{
-                            <span class="kw">if </span>!lexer.skip(Token::Word(<span class="string">&quot;else&quot;</span>)) {
+                            <span class="kw">if </span>!lexer.skip(Token::Word(<span class="string">"else"</span>)) {
                                 <span class="kw">break </span>ast::Block::default();
                             }
 
-                            <span class="kw">if </span>!lexer.skip(Token::Word(<span class="string">&quot;if&quot;</span>)) {
+                            <span class="kw">if </span>!lexer.skip(Token::Word(<span class="string">"if"</span>)) {
                                 <span class="comment">// ... else { ... }
                                 </span><span class="kw">break </span><span class="self">self</span>.block(lexer, ctx)<span class="question-mark">?</span>.<span class="number">0</span>;
                             }
@@ -4106,25 +4106,25 @@
                             reject,
                         }
                     }
-                    <span class="string">&quot;switch&quot; </span>=&gt; {
+                    <span class="string">"switch" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
                         <span class="kw">let </span>selector = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
                         <span class="kw">let </span><span class="kw-2">mut </span>cases = Vec::new();
 
                         <span class="kw">loop </span>{
                             <span class="comment">// cases + default
                             </span><span class="kw">match </span>lexer.next() {
-                                (Token::Word(<span class="string">&quot;case&quot;</span>), <span class="kw">_</span>) =&gt; {
+                                (Token::Word(<span class="string">"case"</span>), <span class="kw">_</span>) =&gt; {
                                     <span class="comment">// parse a list of values
                                     </span><span class="kw">let </span>value = <span class="kw">loop </span>{
                                         <span class="kw">let </span>value = <span class="self">self</span>.switch_value(lexer, ctx)<span class="question-mark">?</span>;
-                                        <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>)) {
-                                            <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>)) {
+                                        <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
+                                            <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
                                                 <span class="kw">break </span>value;
                                             }
                                         } <span class="kw">else </span>{
-                                            lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>));
+                                            lexer.skip(Token::Separator(<span class="string">':'</span>));
                                             <span class="kw">break </span>value;
                                         }
                                         cases.push(ast::SwitchCase {
@@ -4142,8 +4142,8 @@
                                         fall_through: <span class="bool-val">false</span>,
                                     });
                                 }
-                                (Token::Word(<span class="string">&quot;default&quot;</span>), <span class="kw">_</span>) =&gt; {
-                                    lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>));
+                                (Token::Word(<span class="string">"default"</span>), <span class="kw">_</span>) =&gt; {
+                                    lexer.skip(Token::Separator(<span class="string">':'</span>));
                                     <span class="kw">let </span>body = <span class="self">self</span>.block(lexer, ctx)<span class="question-mark">?</span>.<span class="number">0</span>;
                                     cases.push(ast::SwitchCase {
                                         value: ast::SwitchValue::Default,
@@ -4151,7 +4151,7 @@
                                         fall_through: <span class="bool-val">false</span>,
                                     });
                                 }
-                                (Token::Paren(<span class="string">&#39;}&#39;</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
+                                (Token::Paren(<span class="string">'}'</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
                                 (<span class="kw">_</span>, span) =&gt; {
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(span, ExpectedToken::SwitchItem))
                                 }
@@ -4160,8 +4160,8 @@
 
                         ast::StatementKind::Switch { selector, cases }
                     }
-                    <span class="string">&quot;loop&quot; </span>=&gt; <span class="self">self</span>.r#loop(lexer, ctx)<span class="question-mark">?</span>,
-                    <span class="string">&quot;while&quot; </span>=&gt; {
+                    <span class="string">"loop" </span>=&gt; <span class="self">self</span>.r#loop(lexer, ctx)<span class="question-mark">?</span>,
+                    <span class="string">"while" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
                         <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
 
@@ -4196,13 +4196,13 @@
                             break_if: <span class="prelude-val">None</span>,
                         }
                     }
-                    <span class="string">&quot;for&quot; </span>=&gt; {
+                    <span class="string">"for" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
-                        lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
 
                         ctx.local_table.push_scope();
 
-                        <span class="kw">if </span>!lexer.skip(Token::Separator(<span class="string">&#39;;&#39;</span>)) {
+                        <span class="kw">if </span>!lexer.skip(Token::Separator(<span class="string">';'</span>)) {
                             <span class="kw">let </span>num_statements = block.stmts.len();
                             <span class="kw">let </span>(<span class="kw">_</span>, span) = {
                                 <span class="kw">let </span>ctx = <span class="kw-2">&amp;mut *</span>ctx;
@@ -4221,10 +4221,10 @@
                         };
 
                         <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
-                        <span class="kw">if </span>!lexer.skip(Token::Separator(<span class="string">&#39;;&#39;</span>)) {
+                        <span class="kw">if </span>!lexer.skip(Token::Separator(<span class="string">';'</span>)) {
                             <span class="kw">let </span>(condition, span) = lexer.capture_span(|lexer| {
                                 <span class="kw">let </span>condition = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
-                                lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                                lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                                 <span class="prelude-val">Ok</span>(condition)
                             })<span class="question-mark">?</span>;
                             <span class="kw">let </span><span class="kw-2">mut </span>reject = ast::Block::default();
@@ -4243,13 +4243,13 @@
                         };
 
                         <span class="kw">let </span><span class="kw-2">mut </span>continuing = ast::Block::default();
-                        <span class="kw">if </span>!lexer.skip(Token::Paren(<span class="string">&#39;)&#39;</span>)) {
+                        <span class="kw">if </span>!lexer.skip(Token::Paren(<span class="string">')'</span>)) {
                             <span class="self">self</span>.function_call_or_assignment_statement(
                                 lexer,
                                 ctx,
                                 <span class="kw-2">&amp;mut </span>continuing,
                             )<span class="question-mark">?</span>;
-                            lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                            lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                         }
 
                         <span class="kw">let </span>(block, span) = <span class="self">self</span>.block(lexer, ctx)<span class="question-mark">?</span>;
@@ -4266,33 +4266,33 @@
                             break_if: <span class="prelude-val">None</span>,
                         }
                     }
-                    <span class="string">&quot;break&quot; </span>=&gt; {
+                    <span class="string">"break" </span>=&gt; {
                         <span class="kw">let </span>(<span class="kw">_</span>, span) = lexer.next();
                         <span class="comment">// Check if the next token is an `if`, this indicates
                         // that the user tried to type out a `break if` which
                         // is illegal in this position.
                         </span><span class="kw">let </span>(peeked_token, peeked_span) = lexer.peek();
-                        <span class="kw">if let </span>Token::Word(<span class="string">&quot;if&quot;</span>) = peeked_token {
+                        <span class="kw">if let </span>Token::Word(<span class="string">"if"</span>) = peeked_token {
                             <span class="kw">let </span>span = span.until(<span class="kw-2">&amp;</span>peeked_span);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidBreakIf(span));
                         }
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         ast::StatementKind::Break
                     }
-                    <span class="string">&quot;continue&quot; </span>=&gt; {
+                    <span class="string">"continue" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         ast::StatementKind::Continue
                     }
-                    <span class="string">&quot;discard&quot; </span>=&gt; {
+                    <span class="string">"discard" </span>=&gt; {
                         <span class="kw">let _ </span>= lexer.next();
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         ast::StatementKind::Kill
                     }
                     <span class="comment">// assignment or a function call
                     </span><span class="kw">_ </span>=&gt; {
                         <span class="self">self</span>.function_call_or_assignment_statement(lexer, ctx, block)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         <span class="self">self</span>.pop_rule_span(lexer);
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                     }
@@ -4303,43 +4303,43 @@
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="self">self</span>.assignment_statement(lexer, ctx, block)<span class="question-mark">?</span>;
-                lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                 <span class="self">self</span>.pop_rule_span(lexer);
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>r#loop&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>r#loop&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::StatementKind&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::StatementKind&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let _ </span>= lexer.next();
         <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
         <span class="kw">let </span><span class="kw-2">mut </span>continuing = ast::Block::default();
         <span class="kw">let </span><span class="kw-2">mut </span>break_if = <span class="prelude-val">None</span>;
 
-        lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
 
         ctx.local_table.push_scope();
 
         <span class="kw">loop </span>{
-            <span class="kw">if </span>lexer.skip(Token::Word(<span class="string">&quot;continuing&quot;</span>)) {
+            <span class="kw">if </span>lexer.skip(Token::Word(<span class="string">"continuing"</span>)) {
                 <span class="comment">// Branch for the `continuing` block, this must be
                 // the last thing in the loop body
 
                 // Expect a opening brace to start the continuing block
-                </span>lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+                </span>lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
                 <span class="kw">loop </span>{
-                    <span class="kw">if </span>lexer.skip(Token::Word(<span class="string">&quot;break&quot;</span>)) {
+                    <span class="kw">if </span>lexer.skip(Token::Word(<span class="string">"break"</span>)) {
                         <span class="comment">// Branch for the `break if` statement, this statement
                         // has the form `break if &lt;expr&gt;;` and must be the last
                         // statement in a continuing block
 
                         // The break must be followed by an `if` to form
                         // the break if
-                        </span>lexer.expect(Token::Word(<span class="string">&quot;if&quot;</span>))<span class="question-mark">?</span>;
+                        </span>lexer.expect(Token::Word(<span class="string">"if"</span>))<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>condition = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
                         <span class="comment">// Set the condition of the break if to the newly parsed
@@ -4347,13 +4347,13 @@
                         </span>break_if = <span class="prelude-val">Some</span>(condition);
 
                         <span class="comment">// Expect a semicolon to close the statement
-                        </span>lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                        </span>lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                         <span class="comment">// Expect a closing brace to close the continuing block,
                         // since the break if must be the last statement
-                        </span>lexer.expect(Token::Paren(<span class="string">&#39;}&#39;</span>))<span class="question-mark">?</span>;
+                        </span>lexer.expect(Token::Paren(<span class="string">'}'</span>))<span class="question-mark">?</span>;
                         <span class="comment">// Stop parsing the continuing block
                         </span><span class="kw">break</span>;
-                    } <span class="kw">else if </span>lexer.skip(Token::Paren(<span class="string">&#39;}&#39;</span>)) {
+                    } <span class="kw">else if </span>lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
                         <span class="comment">// If we encounter a closing brace it means we have reached
                         // the end of the continuing block and should stop processing
                         </span><span class="kw">break</span>;
@@ -4364,10 +4364,10 @@
                 }
                 <span class="comment">// Since the continuing block must be the last part of the loop body,
                 // we expect to see a closing brace to end the loop body
-                </span>lexer.expect(Token::Paren(<span class="string">&#39;}&#39;</span>))<span class="question-mark">?</span>;
+                </span>lexer.expect(Token::Paren(<span class="string">'}'</span>))<span class="question-mark">?</span>;
                 <span class="kw">break</span>;
             }
-            <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">&#39;}&#39;</span>)) {
+            <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
                 <span class="comment">// If we encounter a closing brace it means we have reached
                 // the end of the loop body and should stop processing
                 </span><span class="kw">break</span>;
@@ -4386,18 +4386,18 @@
     }
 
     <span class="doccomment">/// compound_statement
-    </span><span class="kw">fn </span>block&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>block&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ast::Block&lt;<span class="lifetime">&#39;a</span>&gt;, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ast::Block&lt;<span class="lifetime">'a</span>&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::Block, lexer);
 
         ctx.local_table.push_scope();
 
-        lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>block = ast::Block::default();
-        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">&#39;}&#39;</span>)) {
+        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
             <span class="self">self</span>.statement(lexer, ctx, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
         }
 
@@ -4407,11 +4407,11 @@
         <span class="prelude-val">Ok</span>((block, span))
     }
 
-    <span class="kw">fn </span>varying_binding&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>varying_binding&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>bind_parser = BindingParser::default();
         <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
 
@@ -4424,12 +4424,12 @@
         bind_parser.finish(span)
     }
 
-    <span class="kw">fn </span>function_decl&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>function_decl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">&#39;a</span>&gt;,
-        dependencies: <span class="kw-2">&amp;mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Function&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
+        dependencies: <span class="kw-2">&amp;mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Function&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::FunctionDecl, lexer);
         <span class="comment">// read function name
         </span><span class="kw">let </span>fun_name = lexer.next_ident()<span class="question-mark">?</span>;
@@ -4449,20 +4449,20 @@
 
         <span class="comment">// read parameter list
         </span><span class="kw">let </span><span class="kw-2">mut </span>arguments = Vec::new();
-        lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+        lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>ready = <span class="bool-val">true</span>;
-        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">&#39;)&#39;</span>)) {
+        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">')'</span>)) {
             <span class="kw">if </span>!ready {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
                     lexer.next().<span class="number">1</span>,
-                    ExpectedToken::Token(Token::Separator(<span class="string">&#39;,&#39;</span>)),
+                    ExpectedToken::Token(Token::Separator(<span class="string">','</span>)),
                 ));
             }
             <span class="kw">let </span>binding = <span class="self">self</span>.varying_binding(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>param_name = lexer.next_ident()<span class="question-mark">?</span>;
 
-            lexer.expect(Token::Separator(<span class="string">&#39;:&#39;</span>))<span class="question-mark">?</span>;
+            lexer.expect(Token::Separator(<span class="string">':'</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>param_type = <span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>handle = ctx.declare_local(param_name)<span class="question-mark">?</span>;
@@ -4472,10 +4472,10 @@
                 binding,
                 handle,
             });
-            ready = lexer.skip(Token::Separator(<span class="string">&#39;,&#39;</span>));
+            ready = lexer.skip(Token::Separator(<span class="string">','</span>));
         }
         <span class="comment">// read return type
-        </span><span class="kw">let </span>result = <span class="kw">if </span>lexer.skip(Token::Arrow) &amp;&amp; !lexer.skip(Token::Word(<span class="string">&quot;void&quot;</span>)) {
+        </span><span class="kw">let </span>result = <span class="kw">if </span>lexer.skip(Token::Arrow) &amp;&amp; !lexer.skip(Token::Word(<span class="string">"void"</span>)) {
             <span class="kw">let </span>binding = <span class="self">self</span>.varying_binding(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
             <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(ast::FunctionResult { ty, binding })
@@ -4484,9 +4484,9 @@
         </span>};
 
         <span class="comment">// do not use `self.block` here, since we must not push a new scope
-        </span>lexer.expect(Token::Paren(<span class="string">&#39;{&#39;</span>))<span class="question-mark">?</span>;
+        </span>lexer.expect(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
-        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">&#39;}&#39;</span>)) {
+        <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
             <span class="self">self</span>.statement(lexer, <span class="kw-2">&amp;mut </span>ctx, <span class="kw-2">&amp;mut </span>body)<span class="question-mark">?</span>;
         }
 
@@ -4507,11 +4507,11 @@
         <span class="prelude-val">Ok</span>(fun)
     }
 
-    <span class="kw">fn </span>global_decl&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>global_decl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt;,
-        out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">&#39;a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="comment">// read attributes
         </span><span class="kw">let </span><span class="kw-2">mut </span>binding = <span class="prelude-val">None</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>stage = ParsedAttribute::default();
@@ -4533,34 +4533,34 @@
         <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
         <span class="kw">while </span>lexer.skip(Token::Attribute) {
             <span class="kw">match </span>lexer.next_ident_with_span()<span class="question-mark">? </span>{
-                (<span class="string">&quot;binding&quot;</span>, name_span) =&gt; {
-                    lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                (<span class="string">"binding"</span>, name_span) =&gt; {
+                    lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     bind_index.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
-                    lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                    lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;group&quot;</span>, name_span) =&gt; {
-                    lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                (<span class="string">"group"</span>, name_span) =&gt; {
+                    lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     bind_group.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
-                    lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                    lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;vertex&quot;</span>, name_span) =&gt; {
+                (<span class="string">"vertex"</span>, name_span) =&gt; {
                     stage.set(<span class="kw">crate</span>::ShaderStage::Vertex, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;fragment&quot;</span>, name_span) =&gt; {
+                (<span class="string">"fragment"</span>, name_span) =&gt; {
                     stage.set(<span class="kw">crate</span>::ShaderStage::Fragment, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;compute&quot;</span>, name_span) =&gt; {
+                (<span class="string">"compute"</span>, name_span) =&gt; {
                     stage.set(<span class="kw">crate</span>::ShaderStage::Compute, name_span)<span class="question-mark">?</span>;
                     compute_span = name_span;
                 }
-                (<span class="string">&quot;workgroup_size&quot;</span>, name_span) =&gt; {
-                    lexer.expect(Token::Paren(<span class="string">&#39;(&#39;</span>))<span class="question-mark">?</span>;
+                (<span class="string">"workgroup_size"</span>, name_span) =&gt; {
+                    lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>new_workgroup_size = [<span class="prelude-val">None</span>; <span class="number">3</span>];
                     <span class="kw">for </span>(i, size) <span class="kw">in </span>new_workgroup_size.iter_mut().enumerate() {
                         <span class="kw-2">*</span>size = <span class="prelude-val">Some</span>(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>);
                         <span class="kw">match </span>lexer.next() {
-                            (Token::Paren(<span class="string">&#39;)&#39;</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
-                            (Token::Separator(<span class="string">&#39;,&#39;</span>), <span class="kw">_</span>) <span class="kw">if </span>i != <span class="number">2 </span>=&gt; (),
+                            (Token::Paren(<span class="string">')'</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
+                            (Token::Separator(<span class="string">','</span>), <span class="kw">_</span>) <span class="kw">if </span>i != <span class="number">2 </span>=&gt; (),
                             other =&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
                                     other.<span class="number">1</span>,
@@ -4571,11 +4571,11 @@
                     }
                     workgroup_size.set(new_workgroup_size, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">&quot;early_depth_test&quot;</span>, name_span) =&gt; {
-                    <span class="kw">let </span>conservative = <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">&#39;(&#39;</span>)) {
+                (<span class="string">"early_depth_test"</span>, name_span) =&gt; {
+                    <span class="kw">let </span>conservative = <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">'('</span>)) {
                         <span class="kw">let </span>(ident, ident_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                         <span class="kw">let </span>value = conv::map_conservative_depth(ident, ident_span)<span class="question-mark">?</span>;
-                        lexer.expect(Token::Paren(<span class="string">&#39;)&#39;</span>))<span class="question-mark">?</span>;
+                        lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                         <span class="prelude-val">Some</span>(value)
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
@@ -4594,51 +4594,51 @@
                     binding: index,
                 });
             }
-            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">&quot;binding&quot;</span>, attrib_span)),
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">&quot;group&quot;</span>, attrib_span)),
+            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">"binding"</span>, attrib_span)),
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">"group"</span>, attrib_span)),
             (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; {}
         }
 
         <span class="comment">// read item
         </span><span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span>kind = <span class="kw">match </span>lexer.next() {
-            (Token::Separator(<span class="string">&#39;;&#39;</span>), <span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            (Token::Word(<span class="string">&quot;struct&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Separator(<span class="string">';'</span>), <span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            (Token::Word(<span class="string">"struct"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>members = <span class="self">self</span>.struct_body(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Struct(ast::Struct { name, members }))
             }
-            (Token::Word(<span class="string">&quot;alias&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"alias"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
-                lexer.expect(Token::Operation(<span class="string">&#39;=&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
-                lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Type(ast::TypeAlias { name, ty }))
             }
-            (Token::Word(<span class="string">&quot;const&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"const"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">&#39;:&#39;</span>)) {
+                <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
                     <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                     <span class="prelude-val">Some</span>(ty)
                 } <span class="kw">else </span>{
                     <span class="prelude-val">None
                 </span>};
 
-                lexer.expect(Token::Operation(<span class="string">&#39;=&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>init = <span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
-                lexer.expect(Token::Separator(<span class="string">&#39;;&#39;</span>))<span class="question-mark">?</span>;
+                lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Const(ast::Const { name, ty, init }))
             }
-            (Token::Word(<span class="string">&quot;var&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"var"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>var = <span class="self">self</span>.variable_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 var.binding = binding.take();
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Var(var))
             }
-            (Token::Word(<span class="string">&quot;fn&quot;</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Word(<span class="string">"fn"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>function = <span class="self">self</span>.function_decl(lexer, out, <span class="kw-2">&amp;mut </span>dependencies)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Fn(ast::Function {
                     entry_point: <span class="kw">if let </span><span class="prelude-val">Some</span>(stage) = stage.value {
@@ -4668,18 +4668,18 @@
         }
 
         <span class="kw">if </span>!<span class="self">self</span>.rules.is_empty() {
-            <span class="macro">log::error!</span>(<span class="string">&quot;Reached the end of global decl, but rule stack is not empty&quot;</span>);
-            <span class="macro">log::error!</span>(<span class="string">&quot;Rules: {:?}&quot;</span>, <span class="self">self</span>.rules);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Internal(<span class="string">&quot;rule stack is not empty&quot;</span>));
+            <span class="macro">log::error!</span>(<span class="string">"Reached the end of global decl, but rule stack is not empty"</span>);
+            <span class="macro">log::error!</span>(<span class="string">"Rules: {:?}"</span>, <span class="self">self</span>.rules);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Internal(<span class="string">"rule stack is not empty"</span>));
         };
 
         <span class="kw">match </span>binding {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::Internal(<span class="string">&quot;we had the attribute but no var?&quot;</span>)),
+            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::Internal(<span class="string">"we had the attribute but no var?"</span>)),
         }
     }
 
-    <span class="kw">pub fn </span>parse&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ast::TranslationUnit&lt;<span class="lifetime">&#39;a</span>&gt;, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">pub fn </span>parse&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.reset();
 
         <span class="kw">let </span><span class="kw-2">mut </span>lexer = Lexer::new(source);
