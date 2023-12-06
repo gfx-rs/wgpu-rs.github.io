@@ -6909,15 +6909,6 @@
 <a href="#6909" id="6909">6909</a>
 <a href="#6910" id="6910">6910</a>
 <a href="#6911" id="6911">6911</a>
-<a href="#6912" id="6912">6912</a>
-<a href="#6913" id="6913">6913</a>
-<a href="#6914" id="6914">6914</a>
-<a href="#6915" id="6915">6915</a>
-<a href="#6916" id="6916">6916</a>
-<a href="#6917" id="6917">6917</a>
-<a href="#6918" id="6918">6918</a>
-<a href="#6919" id="6919">6919</a>
-<a href="#6920" id="6920">6920</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -7022,12 +7013,10 @@
     </span>Metal = <span class="number">2</span>,
     <span class="doccomment">/// Direct3D-12 (Windows)
     </span>Dx12 = <span class="number">3</span>,
-    <span class="doccomment">/// Direct3D-11 (Windows)
-    </span>Dx11 = <span class="number">4</span>,
     <span class="doccomment">/// OpenGL ES-3 (Linux, Android)
-    </span>Gl = <span class="number">5</span>,
+    </span>Gl = <span class="number">4</span>,
     <span class="doccomment">/// WebGPU in the browser
-    </span>BrowserWebGpu = <span class="number">6</span>,
+    </span>BrowserWebGpu = <span class="number">5</span>,
 }
 
 <span class="kw">impl </span>Backend {
@@ -7038,7 +7027,6 @@
             Backend::Vulkan =&gt; <span class="string">"vulkan"</span>,
             Backend::Metal =&gt; <span class="string">"metal"</span>,
             Backend::Dx12 =&gt; <span class="string">"dx12"</span>,
-            Backend::Dx11 =&gt; <span class="string">"dx11"</span>,
             Backend::Gl =&gt; <span class="string">"gl"</span>,
             Backend::BrowserWebGpu =&gt; <span class="string">"webgpu"</span>,
         }
@@ -7078,8 +7066,6 @@
         </span><span class="kw">const </span>METAL = <span class="number">1 </span>&lt;&lt; Backend::Metal <span class="kw">as </span>u32;
         <span class="doccomment">/// Supported on Windows 10
         </span><span class="kw">const </span>DX12 = <span class="number">1 </span>&lt;&lt; Backend::Dx12 <span class="kw">as </span>u32;
-        <span class="doccomment">/// Supported on Windows 7+
-        </span><span class="kw">const </span>DX11 = <span class="number">1 </span>&lt;&lt; Backend::Dx11 <span class="kw">as </span>u32;
         <span class="doccomment">/// Supported when targeting the web through webassembly
         </span><span class="kw">const </span>BROWSER_WEBGPU = <span class="number">1 </span>&lt;&lt; Backend::BrowserWebGpu <span class="kw">as </span>u32;
         <span class="doccomment">/// All the apis that wgpu offers first tier of support for.
@@ -7092,8 +7078,8 @@
         <span class="doccomment">/// All the apis that wgpu offers second tier of support for. These may
         /// be unsupported/still experimental.
         ///
-        /// OpenGL + DX11
-        </span><span class="kw">const </span>SECONDARY = <span class="self">Self</span>::GL.bits() | <span class="self">Self</span>::DX11.bits();
+        /// OpenGL
+        </span><span class="kw">const </span>SECONDARY = <span class="self">Self</span>::GL.bits();
     }
 }
 
@@ -7585,7 +7571,6 @@
         /// - DX12
         /// - Vulkan
         /// - Metal
-        /// - DX11 (emulated with uniforms)
         /// - OpenGL (emulated with uniforms)
         ///
         /// This is a native only feature.
@@ -7601,7 +7586,6 @@
         /// - DX12
         /// - Vulkan
         /// - Metal
-        /// - DX11
         /// - OpenGL
         ///
         /// This is a native only feature.
@@ -7613,7 +7597,6 @@
         /// - DX12
         /// - Vulkan
         /// - Metal (macOS 10.12+ only)
-        /// - DX11
         /// - OpenGL
         ///
         /// This is a native only feature.
@@ -7740,7 +7723,6 @@
         ///
         /// Supported platforms:
         /// - Vulkan
-        /// - DX11 (feature level 10+)
         /// - DX12
         /// - Metal (some)
         /// - OpenGL (some)
@@ -7996,7 +7978,7 @@
     /// - Vulkan: 128-256 bytes
     /// - DX12: 256 bytes
     /// - Metal: 4096 bytes
-    /// - DX11 &amp; OpenGL don't natively support push constants, and are emulated with uniforms,
+    /// - OpenGL doesn't natively support push constants, and are emulated with uniforms,
     ///   so this number is less useful but likely 256.
     </span><span class="kw">pub </span>max_push_constant_size: u32,
 
@@ -8341,13 +8323,13 @@
     </span><span class="kw">pub struct </span>DownlevelFlags: u32 {
         <span class="doccomment">/// The device supports compiling and using compute shaders.
         ///
-        /// DX11 on FL10 level hardware, WebGL2, and GLES3.0 devices do not support compute.
+        /// WebGL2, and GLES3.0 devices do not support compute.
         </span><span class="kw">const </span>COMPUTE_SHADERS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="doccomment">/// Supports binding storage buffers and textures to fragment shaders.
         </span><span class="kw">const </span>FRAGMENT_WRITABLE_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="doccomment">/// Supports indirect drawing and dispatching.
         ///
-        /// DX11 on FL10 level hardware, WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
+        /// WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
         </span><span class="kw">const </span>INDIRECT_EXECUTION = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
         <span class="doccomment">/// Supports non-zero `base_vertex` parameter to direct indexed draw calls.
         ///
@@ -11852,7 +11834,7 @@
     ///
     /// No tearing will be observed.
     ///
-    /// Supported on DX11/12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
+    /// Supported on DX12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
     ///
     /// This is traditionally called "Fast Vsync"
     </span>Mailbox = <span class="number">5</span>,
