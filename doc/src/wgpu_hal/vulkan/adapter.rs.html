@@ -1953,6 +1953,43 @@
 <a href="#1953" id="1953">1953</a>
 <a href="#1954" id="1954">1954</a>
 <a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2897,6 +2934,17 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>properties2 = builder.build();
                 <span class="kw">unsafe </span>{
                     get_device_properties.get_physical_device_properties2(phd, <span class="kw-2">&amp;mut </span>properties2);
+                }
+
+                <span class="kw">if </span>is_intel_igpu_outdated_for_robustness2(
+                    capabilities.properties,
+                    capabilities.driver,
+                ) {
+                    <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
+                    capabilities.supported_extensions.retain(|<span class="kw-2">&amp;</span>x| {
+                        cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>x.extension_name)
+                            != <span class="prelude-val">Some</span>(vk::ExtRobustness2Fn::name())
+                    });
                 }
             };
             capabilities
@@ -3907,5 +3955,31 @@
         features2.contains(vk::FormatFeatureFlags::STORAGE_IMAGE)
             &amp;&amp; features3.contains(vk::FormatFeatureFlags2::STORAGE_WRITE_WITHOUT_FORMAT)
     }
+}
+
+<span class="comment">// For https://github.com/gfx-rs/wgpu/issues/4599
+// Intel iGPUs with outdated drivers can break rendering if `VK_EXT_robustness2` is used.
+// Driver version 31.0.101.2115 works, but there's probably an earlier functional version.
+</span><span class="kw">fn </span>is_intel_igpu_outdated_for_robustness2(
+    props: vk::PhysicalDeviceProperties,
+    driver: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDriverPropertiesKHR&gt;,
+) -&gt; bool {
+    <span class="kw">const </span>DRIVER_VERSION_WORKING: u32 = (<span class="number">101 </span>&lt;&lt; <span class="number">14</span>) | <span class="number">2115</span>; <span class="comment">// X.X.101.2115
+
+    </span><span class="kw">let </span>is_outdated = props.vendor_id == <span class="kw">crate</span>::auxil::db::intel::VENDOR
+        &amp;&amp; props.device_type == vk::PhysicalDeviceType::INTEGRATED_GPU
+        &amp;&amp; props.driver_version &lt; DRIVER_VERSION_WORKING
+        &amp;&amp; driver
+            .map(|driver| driver.driver_id == vk::DriverId::INTEL_PROPRIETARY_WINDOWS)
+            .unwrap_or_default();
+
+    <span class="kw">if </span>is_outdated {
+        <span class="macro">log::warn!</span>(
+            <span class="string">"Disabling robustBufferAccess2 and robustImageAccess2: IntegratedGpu Intel Driver is outdated. Found with version 0x{:X}, less than the known good version 0x{:X} (31.0.101.2115)"</span>,
+            props.driver_version,
+            DRIVER_VERSION_WORKING
+        );
+    }
+    is_outdated
 }
 </code></pre></div></section></main></body></html>
