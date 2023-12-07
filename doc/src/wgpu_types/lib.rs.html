@@ -6965,6 +6965,58 @@
 <a href="#6965" id="6965">6965</a>
 <a href="#6966" id="6966">6966</a>
 <a href="#6967" id="6967">6967</a>
+<a href="#6968" id="6968">6968</a>
+<a href="#6969" id="6969">6969</a>
+<a href="#6970" id="6970">6970</a>
+<a href="#6971" id="6971">6971</a>
+<a href="#6972" id="6972">6972</a>
+<a href="#6973" id="6973">6973</a>
+<a href="#6974" id="6974">6974</a>
+<a href="#6975" id="6975">6975</a>
+<a href="#6976" id="6976">6976</a>
+<a href="#6977" id="6977">6977</a>
+<a href="#6978" id="6978">6978</a>
+<a href="#6979" id="6979">6979</a>
+<a href="#6980" id="6980">6980</a>
+<a href="#6981" id="6981">6981</a>
+<a href="#6982" id="6982">6982</a>
+<a href="#6983" id="6983">6983</a>
+<a href="#6984" id="6984">6984</a>
+<a href="#6985" id="6985">6985</a>
+<a href="#6986" id="6986">6986</a>
+<a href="#6987" id="6987">6987</a>
+<a href="#6988" id="6988">6988</a>
+<a href="#6989" id="6989">6989</a>
+<a href="#6990" id="6990">6990</a>
+<a href="#6991" id="6991">6991</a>
+<a href="#6992" id="6992">6992</a>
+<a href="#6993" id="6993">6993</a>
+<a href="#6994" id="6994">6994</a>
+<a href="#6995" id="6995">6995</a>
+<a href="#6996" id="6996">6996</a>
+<a href="#6997" id="6997">6997</a>
+<a href="#6998" id="6998">6998</a>
+<a href="#6999" id="6999">6999</a>
+<a href="#7000" id="7000">7000</a>
+<a href="#7001" id="7001">7001</a>
+<a href="#7002" id="7002">7002</a>
+<a href="#7003" id="7003">7003</a>
+<a href="#7004" id="7004">7004</a>
+<a href="#7005" id="7005">7005</a>
+<a href="#7006" id="7006">7006</a>
+<a href="#7007" id="7007">7007</a>
+<a href="#7008" id="7008">7008</a>
+<a href="#7009" id="7009">7009</a>
+<a href="#7010" id="7010">7010</a>
+<a href="#7011" id="7011">7011</a>
+<a href="#7012" id="7012">7012</a>
+<a href="#7013" id="7013">7013</a>
+<a href="#7014" id="7014">7014</a>
+<a href="#7015" id="7015">7015</a>
+<a href="#7016" id="7016">7016</a>
+<a href="#7017" id="7017">7017</a>
+<a href="#7018" id="7018">7018</a>
+<a href="#7019" id="7019">7019</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -9378,9 +9430,9 @@
     /// - 0: Single 8 bit channel luminance.
     /// - 1: Dual 8 bit channel chrominance at half width and half height.
     ///
-    /// Valid view formats for luminance are [`TextureFormat::R8Unorm`] and [`TextureFormat::R8Uint`].
+    /// Valid view formats for luminance are [`TextureFormat::R8Unorm`].
     ///
-    /// Valid view formats for chrominance are [`TextureFormat::Rg8Unorm`] and [`TextureFormat::Rg8Uint`].
+    /// Valid view formats for chrominance are [`TextureFormat::Rg8Unorm`].
     ///
     /// Width and height must be even.
     ///
@@ -9802,6 +9854,18 @@
     }
 }
 
+<span class="kw">impl </span>TextureAspect {
+    <span class="doccomment">/// Returns the texture aspect for a given plane.
+    </span><span class="kw">pub fn </span>from_plane(plane: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Some</span>(<span class="kw">match </span>plane {
+            <span class="number">0 </span>=&gt; <span class="self">Self</span>::Plane0,
+            <span class="number">1 </span>=&gt; <span class="self">Self</span>::Plane1,
+            <span class="number">2 </span>=&gt; <span class="self">Self</span>::Plane2,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        })
+    }
+}
+
 <span class="kw">impl </span>TextureFormat {
     <span class="doccomment">/// Returns the aspect-specific format of the original format
     ///
@@ -9819,7 +9883,10 @@
             ) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Stencil8),
             (<span class="self">Self</span>::Depth24PlusStencil8, TextureAspect::DepthOnly) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Depth24Plus),
             (<span class="self">Self</span>::Depth32FloatStencil8, TextureAspect::DepthOnly) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Depth32Float),
-            (format, TextureAspect::All) =&gt; <span class="prelude-val">Some</span>(format),
+            (<span class="self">Self</span>::NV12, TextureAspect::Plane0) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::R8Unorm),
+            (<span class="self">Self</span>::NV12, TextureAspect::Plane1) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Rg8Unorm),
+            <span class="comment">// views to multi-planar formats must specify the plane
+            </span>(format, TextureAspect::All) <span class="kw">if </span>!format.is_multi_planar_format() =&gt; <span class="prelude-val">Some</span>(format),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -9861,7 +9928,15 @@
 
     <span class="doccomment">/// Returns `true` if the format is a multi-planar format
     </span><span class="kw">pub fn </span>is_multi_planar_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="macro">matches!</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="self">Self</span>::NV12)
+        <span class="self">self</span>.planes().is_some()
+    }
+
+    <span class="doccomment">/// Returns the number of planes a multi-planar format has.
+    </span><span class="kw">pub fn </span>planes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::NV12 =&gt; <span class="prelude-val">Some</span>(<span class="number">2</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 
     <span class="doccomment">/// Returns `true` if the format has a color aspect
@@ -9886,6 +9961,14 @@
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Stencil8 | <span class="self">Self</span>::Depth24PlusStencil8 | <span class="self">Self</span>::Depth32FloatStencil8 =&gt; <span class="bool-val">true</span>,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns the size multiple requirement for a texture using this format.
+    </span><span class="kw">pub fn </span>size_multiple_requirement(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u32, u32) {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::NV12 =&gt; (<span class="number">2</span>, <span class="number">2</span>),
+            <span class="kw">_ </span>=&gt; <span class="self">self</span>.block_dimensions(),
         }
     }
 
@@ -9942,9 +10025,8 @@
             | <span class="self">Self</span>::Depth24Plus
             | <span class="self">Self</span>::Depth24PlusStencil8
             | <span class="self">Self</span>::Depth32Float
-            | <span class="self">Self</span>::Depth32FloatStencil8 =&gt; (<span class="number">1</span>, <span class="number">1</span>),
-
-            <span class="self">Self</span>::NV12 =&gt; (<span class="number">2</span>, <span class="number">2</span>),
+            | <span class="self">Self</span>::Depth32FloatStencil8
+            | <span class="self">Self</span>::NV12 =&gt; (<span class="number">1</span>, <span class="number">1</span>),
 
             <span class="self">Self</span>::Bc1RgbaUnorm
             | <span class="self">Self</span>::Bc1RgbaUnormSrgb
@@ -10220,16 +10302,17 @@
         }
     }
 
-    <span class="doccomment">/// Returns the sample type compatible with this format and aspect
+    <span class="doccomment">/// Returns the sample type compatible with this format and aspect.
     ///
-    /// Returns `None` only if the format is combined depth-stencil
-    /// and `TextureAspect::All` or no `aspect` was provided
+    /// Returns `None` only if this is a combined depth-stencil format or a multi-planar format
+    /// and `TextureAspect::All` or no `aspect` was provided.
     </span><span class="kw">pub fn </span>sample_type(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;,
         device_features: <span class="prelude-ty">Option</span>&lt;Features&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;TextureSampleType&gt; {
         <span class="kw">let </span>float = TextureSampleType::Float { filterable: <span class="bool-val">true </span>};
+        <span class="kw">let </span>unfilterable_float = TextureSampleType::Float { filterable: <span class="bool-val">false </span>};
         <span class="kw">let </span>float32_sample_type = TextureSampleType::Float {
             filterable: device_features
                 .unwrap_or(Features::empty())
@@ -10281,12 +10364,17 @@
             <span class="self">Self</span>::Stencil8 =&gt; <span class="prelude-val">Some</span>(uint),
             <span class="self">Self</span>::Depth16Unorm | <span class="self">Self</span>::Depth24Plus | <span class="self">Self</span>::Depth32Float =&gt; <span class="prelude-val">Some</span>(depth),
             <span class="self">Self</span>::Depth24PlusStencil8 | <span class="self">Self</span>::Depth32FloatStencil8 =&gt; <span class="kw">match </span>aspect {
-                <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(TextureAspect::All) =&gt; <span class="prelude-val">None</span>,
                 <span class="prelude-val">Some</span>(TextureAspect::DepthOnly) =&gt; <span class="prelude-val">Some</span>(depth),
                 <span class="prelude-val">Some</span>(TextureAspect::StencilOnly) =&gt; <span class="prelude-val">Some</span>(uint),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
 
-            <span class="self">Self</span>::NV12 =&gt; <span class="prelude-val">None</span>,
+            <span class="self">Self</span>::NV12 =&gt; <span class="kw">match </span>aspect {
+                <span class="prelude-val">Some</span>(TextureAspect::Plane0) | <span class="prelude-val">Some</span>(TextureAspect::Plane1) =&gt; {
+                    <span class="prelude-val">Some</span>(unfilterable_float)
+                }
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            },
 
             <span class="self">Self</span>::R16Unorm
             | <span class="self">Self</span>::R16Snorm
@@ -10335,7 +10423,8 @@
     /// since uncompressed formats have a block size of 1x1.
     ///
     /// Returns `None` if any of the following are true:
-    ///  - the format is combined depth-stencil and no `aspect` was provided
+    ///  - the format is a combined depth-stencil and no `aspect` was provided
+    ///  - the format is a multi-planar format and no `aspect` was provided
     ///  - the format is `Depth24Plus`
     ///  - the format is `Depth24PlusStencil8` and `aspect` is depth.
     </span><span class="attr">#[deprecated(since = <span class="string">"0.19.0"</span>, note = <span class="string">"Use `block_copy_size` instead."</span>)]
@@ -10351,7 +10440,8 @@
     /// since uncompressed formats have a block size of 1x1.
     ///
     /// Returns `None` if any of the following are true:
-    ///  - the format is combined depth-stencil and no `aspect` was provided
+    ///  - the format is a combined depth-stencil and no `aspect` was provided
+    ///  - the format is a multi-planar format and no `aspect` was provided
     ///  - the format is `Depth24Plus`
     ///  - the format is `Depth24PlusStencil8` and `aspect` is depth.
     </span><span class="kw">pub fn </span>block_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>, aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
@@ -10394,17 +10484,21 @@
             <span class="self">Self</span>::Depth32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">4</span>),
             <span class="self">Self</span>::Depth24Plus =&gt; <span class="prelude-val">None</span>,
             <span class="self">Self</span>::Depth24PlusStencil8 =&gt; <span class="kw">match </span>aspect {
-                <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(TextureAspect::All) =&gt; <span class="prelude-val">None</span>,
                 <span class="prelude-val">Some</span>(TextureAspect::DepthOnly) =&gt; <span class="prelude-val">None</span>,
                 <span class="prelude-val">Some</span>(TextureAspect::StencilOnly) =&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             <span class="self">Self</span>::Depth32FloatStencil8 =&gt; <span class="kw">match </span>aspect {
-                <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(TextureAspect::All) =&gt; <span class="prelude-val">None</span>,
                 <span class="prelude-val">Some</span>(TextureAspect::DepthOnly) =&gt; <span class="prelude-val">Some</span>(<span class="number">4</span>),
                 <span class="prelude-val">Some</span>(TextureAspect::StencilOnly) =&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
 
-            <span class="self">Self</span>::NV12 =&gt; <span class="prelude-val">None</span>,
+            <span class="self">Self</span>::NV12 =&gt; <span class="kw">match </span>aspect {
+                <span class="prelude-val">Some</span>(TextureAspect::Plane0) =&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
+                <span class="prelude-val">Some</span>(TextureAspect::Plane1) =&gt; <span class="prelude-val">Some</span>(<span class="number">2</span>),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            },
 
             <span class="self">Self</span>::Bc1RgbaUnorm | <span class="self">Self</span>::Bc1RgbaUnormSrgb | <span class="self">Self</span>::Bc4RUnorm | <span class="self">Self</span>::Bc4RSnorm =&gt; {
                 <span class="prelude-val">Some</span>(<span class="number">8</span>)
@@ -10442,7 +10536,7 @@
 
     <span class="doccomment">/// Returns the number of components this format has taking into account the `aspect`.
     ///
-    /// The `aspect` is only relevant for combined depth-stencil formats.
+    /// The `aspect` is only relevant for combined depth-stencil formats and multi-planar formats.
     </span><span class="kw">pub fn </span>components_with_aspect(<span class="kw-2">&amp;</span><span class="self">self</span>, aspect: TextureAspect) -&gt; u8 {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::R8Unorm
@@ -10493,11 +10587,15 @@
             <span class="self">Self</span>::Stencil8 | <span class="self">Self</span>::Depth16Unorm | <span class="self">Self</span>::Depth24Plus | <span class="self">Self</span>::Depth32Float =&gt; <span class="number">1</span>,
 
             <span class="self">Self</span>::Depth24PlusStencil8 | <span class="self">Self</span>::Depth32FloatStencil8 =&gt; <span class="kw">match </span>aspect {
-                TextureAspect::All =&gt; <span class="number">2</span>,
                 TextureAspect::DepthOnly | TextureAspect::StencilOnly =&gt; <span class="number">1</span>,
+                <span class="kw">_ </span>=&gt; <span class="number">2</span>,
             },
 
-            <span class="self">Self</span>::NV12 =&gt; <span class="number">3</span>,
+            <span class="self">Self</span>::NV12 =&gt; <span class="kw">match </span>aspect {
+                TextureAspect::Plane0 =&gt; <span class="number">1</span>,
+                TextureAspect::Plane1 =&gt; <span class="number">2</span>,
+                <span class="kw">_ </span>=&gt; <span class="number">3</span>,
+            },
 
             <span class="self">Self</span>::Bc4RUnorm | <span class="self">Self</span>::Bc4RSnorm =&gt; <span class="number">1</span>,
             <span class="self">Self</span>::Bc5RgUnorm | <span class="self">Self</span>::Bc5RgSnorm =&gt; <span class="number">2</span>,
@@ -12600,6 +12698,12 @@
     </span>StencilOnly,
     <span class="doccomment">/// Depth.
     </span>DepthOnly,
+    <span class="doccomment">/// Plane 0.
+    </span>Plane0,
+    <span class="doccomment">/// Plane 1.
+    </span>Plane1,
+    <span class="doccomment">/// Plane 2.
+    </span>Plane2,
 }
 
 <span class="doccomment">/// How edges should be handled in texture addressing.

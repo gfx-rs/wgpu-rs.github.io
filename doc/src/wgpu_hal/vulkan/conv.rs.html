@@ -1187,7 +1187,7 @@
     format: wgt::TextureFormat,
 ) -&gt; vk::ImageLayout {
     <span class="comment">// Note: depth textures are always sampled with RODS layout
-    </span><span class="kw">let </span>is_color = <span class="kw">crate</span>::FormatAspects::from(format).contains(<span class="kw">crate</span>::FormatAspects::COLOR);
+    </span><span class="kw">let </span>is_color = !format.is_depth_stencil_format();
     <span class="kw">match </span>usage {
         <span class="kw">crate</span>::TextureUses::UNINITIALIZED =&gt; vk::ImageLayout::UNDEFINED,
         <span class="kw">crate</span>::TextureUses::COPY_SRC =&gt; vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
@@ -1367,24 +1367,25 @@
     }
 }
 
-<span class="kw">pub fn </span>map_aspects(aspects: <span class="kw">crate</span>::FormatAspects, plane: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; vk::ImageAspectFlags {
+<span class="kw">pub fn </span>map_aspects(aspects: <span class="kw">crate</span>::FormatAspects) -&gt; vk::ImageAspectFlags {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::ImageAspectFlags::empty();
-    <span class="kw">match </span>plane {
-        <span class="prelude-val">Some</span>(<span class="number">0</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_0,
-        <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_1,
-        <span class="prelude-val">Some</span>(<span class="number">2</span>) =&gt; flags |= vk::ImageAspectFlags::PLANE_2,
-        <span class="prelude-val">Some</span>(plane) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected plane {}"</span>, plane),
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR) {
-                flags |= vk::ImageAspectFlags::COLOR;
-            }
-        }
+    <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR) {
+        flags |= vk::ImageAspectFlags::COLOR;
     }
     <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::DEPTH) {
         flags |= vk::ImageAspectFlags::DEPTH;
     }
     <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::STENCIL) {
         flags |= vk::ImageAspectFlags::STENCIL;
+    }
+    <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::PLANE_0) {
+        flags |= vk::ImageAspectFlags::PLANE_0;
+    }
+    <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::PLANE_1) {
+        flags |= vk::ImageAspectFlags::PLANE_1;
+    }
+    <span class="kw">if </span>aspects.contains(<span class="kw">crate</span>::FormatAspects::PLANE_2) {
+        flags |= vk::ImageAspectFlags::PLANE_2;
     }
     flags
 }
@@ -1579,10 +1580,9 @@
 <span class="kw">pub fn </span>map_subresource_range(
     range: <span class="kw-2">&amp;</span>wgt::ImageSubresourceRange,
     format: wgt::TextureFormat,
-    plane: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 ) -&gt; vk::ImageSubresourceRange {
     vk::ImageSubresourceRange {
-        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::new(format, range.aspect), plane),
+        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::new(format, range.aspect)),
         base_mip_level: range.base_mip_level,
         level_count: range.mip_level_count.unwrap_or(vk::REMAINING_MIP_LEVELS),
         base_array_layer: range.base_array_layer,
@@ -1599,7 +1599,7 @@
     format: wgt::TextureFormat,
     private_caps: <span class="kw-2">&amp;</span><span class="kw">super</span>::PrivateCapabilities,
 ) -&gt; vk::ImageSubresourceRange {
-    <span class="kw">let </span><span class="kw-2">mut </span>range = map_subresource_range(range, format, <span class="prelude-val">None</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>range = map_subresource_range(range, format);
     <span class="kw">if </span>!private_caps.texture_s8 &amp;&amp; format == wgt::TextureFormat::Stencil8 {
         range.aspect_mask |= vk::ImageAspectFlags::DEPTH;
     }
@@ -1615,7 +1615,7 @@
         z: base.origin.z <span class="kw">as </span>i32,
     };
     <span class="kw">let </span>subresource = vk::ImageSubresourceLayers {
-        aspect_mask: map_aspects(base.aspect, <span class="prelude-val">None</span>),
+        aspect_mask: map_aspects(base.aspect),
         mip_level: base.mip_level,
         base_array_layer: base.array_layer,
         layer_count: <span class="number">1</span>,

@@ -1924,6 +1924,35 @@
 <a href="#1924" id="1924">1924</a>
 <a href="#1925" id="1925">1925</a>
 <a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -1956,6 +1985,7 @@
     image_robustness: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceImageRobustnessFeaturesEXT&gt;,
     robustness2: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceRobustness2FeaturesEXT&gt;,
     multiview: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceMultiviewFeaturesKHR&gt;,
+    sampler_ycbcr_conversion: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceSamplerYcbcrConversionFeatures&gt;,
     astc_hdr: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT&gt;,
     shader_float16: <span class="prelude-ty">Option</span>&lt;(
         vk::PhysicalDeviceShaderFloat16Int8Features,
@@ -2199,6 +2229,17 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
+            sampler_ycbcr_conversion: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_1
+                || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrSamplerYcbcrConversionFn::name())
+            {
+                <span class="prelude-val">Some</span>(
+                    vk::PhysicalDeviceSamplerYcbcrConversionFeatures::builder()
+                        <span class="comment">// .sampler_ycbcr_conversion(requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12))
+                        </span>.build(),
+                )
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>},
             astc_hdr: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::ExtTextureCompressionAstcHdrFn::name()) {
                 <span class="prelude-val">Some</span>(
                     vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::builder()
@@ -2270,7 +2311,6 @@
 
     <span class="kw">fn </span>to_wgpu(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        adapter_info: <span class="kw-2">&amp;</span>wgt::AdapterInfo,
         instance: <span class="kw-2">&amp;</span>ash::Instance,
         phd: vk::PhysicalDevice,
         caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities,
@@ -2521,11 +2561,11 @@
             F::FLOAT32_FILTERABLE,
             is_float32_filterable_supported(instance, phd),
         );
-        features.set(
-            F::TEXTURE_FORMAT_NV12,
-            (caps.device_api_version &gt;= vk::API_VERSION_1_1
-                || caps.supports_extension(vk::KhrSamplerYcbcrConversionFn::name()))
-                &amp;&amp; supports_format(
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>_sampler_ycbcr_conversion) = <span class="self">self</span>.sampler_ycbcr_conversion {
+            features.set(
+                F::TEXTURE_FORMAT_NV12,
+                supports_format(
                     instance,
                     phd,
                     vk::Format::G8_B8R8_2PLANE_420_UNORM,
@@ -2533,9 +2573,12 @@
                     vk::FormatFeatureFlags::SAMPLED_IMAGE
                         | vk::FormatFeatureFlags::TRANSFER_SRC
                         | vk::FormatFeatureFlags::TRANSFER_DST,
-                )
-                &amp;&amp; !adapter_info.driver.contains(<span class="string">"MoltenVK"</span>),
-        );
+                ) &amp;&amp; !caps
+                    .driver
+                    .map(|driver| driver.driver_id == vk::DriverId::MOLTENVK)
+                    .unwrap_or_default(),
+            );
+        }
 
         (features, dl_flags)
     }
@@ -2618,6 +2661,11 @@
             <span class="comment">// Require `VK_KHR_multiview` if the associated feature was requested
             </span><span class="kw">if </span>requested_features.contains(wgt::Features::MULTIVIEW) {
                 extensions.push(vk::KhrMultiviewFn::name());
+            }
+
+            <span class="comment">// Require `VK_KHR_sampler_ycbcr_conversion` if the associated feature was requested
+            </span><span class="kw">if </span>requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12) {
+                extensions.push(vk::KhrSamplerYcbcrConversionFn::name());
             }
         }
 
@@ -2870,6 +2918,16 @@
                 builder = builder.push_next(next);
             }
 
+            <span class="comment">// `VK_KHR_sampler_ycbcr_conversion` is promoted to 1.1
+            </span><span class="kw">if </span>capabilities.device_api_version &gt;= vk::API_VERSION_1_1
+                || capabilities.supports_extension(vk::KhrSamplerYcbcrConversionFn::name())
+            {
+                <span class="kw">let </span>next = features
+                    .sampler_ycbcr_conversion
+                    .insert(vk::PhysicalDeviceSamplerYcbcrConversionFeatures::default());
+                builder = builder.push_next(next);
+            }
+
             <span class="kw">if </span>capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name()) {
                 <span class="kw">let </span>next = features
                     .descriptor_indexing
@@ -3000,7 +3058,7 @@
         };
 
         <span class="kw">let </span>(available_features, downlevel_flags) =
-            phd_features.to_wgpu(<span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, phd, <span class="kw-2">&amp;</span>phd_capabilities);
+            phd_features.to_wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, phd, <span class="kw-2">&amp;</span>phd_capabilities);
         <span class="kw">let </span><span class="kw-2">mut </span>workarounds = <span class="kw">super</span>::Workarounds::empty();
         {
             <span class="comment">// TODO: only enable for particular devices
@@ -3597,14 +3655,14 @@
                 .framebuffer_stencil_sample_counts
                 .min(limits.sampled_image_stencil_sample_counts)
         } <span class="kw">else </span>{
-            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
-                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Float { .. }) =&gt; limits
+            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>).unwrap() {
+                wgt::TextureSampleType::Float { .. } =&gt; limits
                     .framebuffer_color_sample_counts
                     .min(limits.sampled_image_color_sample_counts),
-                <span class="prelude-val">Some</span>(wgt::TextureSampleType::Sint) | <span class="prelude-val">Some</span>(wgt::TextureSampleType::Uint) =&gt; {
+                wgt::TextureSampleType::Sint | wgt::TextureSampleType::Uint =&gt; {
                     limits.sampled_image_integer_sample_counts
                 }
-                <span class="kw">_ </span>=&gt; vk::SampleCountFlags::TYPE_1,
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             }
         };
 

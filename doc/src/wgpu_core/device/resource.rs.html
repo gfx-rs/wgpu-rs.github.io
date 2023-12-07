@@ -3406,19 +3406,6 @@
 <a href="#3406" id="3406">3406</a>
 <a href="#3407" id="3407">3407</a>
 <a href="#3408" id="3408">3408</a>
-<a href="#3409" id="3409">3409</a>
-<a href="#3410" id="3410">3410</a>
-<a href="#3411" id="3411">3411</a>
-<a href="#3412" id="3412">3412</a>
-<a href="#3413" id="3413">3413</a>
-<a href="#3414" id="3414">3414</a>
-<a href="#3415" id="3415">3415</a>
-<a href="#3416" id="3416">3416</a>
-<a href="#3417" id="3417">3417</a>
-<a href="#3418" id="3418">3418</a>
-<a href="#3419" id="3419">3419</a>
-<a href="#3420" id="3420">3420</a>
-<a href="#3421" id="3421">3421</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4087,6 +4074,30 @@
             }
         }
 
+        {
+            <span class="kw">let </span>(width_multiple, height_multiple) = desc.format.size_multiple_requirement();
+
+            <span class="kw">if </span>desc.size.width % width_multiple != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidDimension(
+                    TextureDimensionError::WidthNotMultipleOf {
+                        width: desc.size.width,
+                        multiple: width_multiple,
+                        format: desc.format,
+                    },
+                ));
+            }
+
+            <span class="kw">if </span>desc.size.height % height_multiple != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidDimension(
+                    TextureDimensionError::HeightNotMultipleOf {
+                        height: desc.size.height,
+                        multiple: height_multiple,
+                        format: desc.format,
+                    },
+                ));
+            }
+        }
+
         <span class="kw">let </span>format_features = <span class="self">self
             </span>.describe_format_features(adapter, desc.format)
             .map_err(|error| CreateTextureError::MissingFeatures(desc.format, error))<span class="question-mark">?</span>;
@@ -4172,8 +4183,7 @@
             <span class="kw">if </span>desc.format == <span class="kw-2">*</span>format {
                 <span class="kw">continue</span>;
             }
-
-            <span class="kw">if </span>!check_texture_view_format_compatible(desc.format, <span class="kw-2">*</span>format) {
+            <span class="kw">if </span>desc.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidViewFormat(<span class="kw-2">*</span>format, desc.format));
             }
             hal_view_formats.push(<span class="kw-2">*</span>format);
@@ -4227,20 +4237,19 @@
             <span class="kw">for </span>mip_level <span class="kw">in </span><span class="number">0</span>..desc.mip_level_count {
                 <span class="kw">for </span>array_layer <span class="kw">in </span><span class="number">0</span>..desc.size.depth_or_array_layers {
                     <span class="macro">macro_rules! </span>push_clear_view {
-                        (<span class="macro-nonterminal">$format</span>:expr, <span class="macro-nonterminal">$plane</span>:expr) =&gt; {
+                        (<span class="macro-nonterminal">$format</span>:expr, <span class="macro-nonterminal">$aspect</span>:expr) =&gt; {
                             <span class="kw">let </span>desc = hal::TextureViewDescriptor {
                                 label: clear_label,
                                 format: <span class="macro-nonterminal">$format</span>,
                                 dimension,
                                 usage,
                                 range: wgt::ImageSubresourceRange {
-                                    aspect: wgt::TextureAspect::All,
+                                    aspect: <span class="macro-nonterminal">$aspect</span>,
                                     base_mip_level: mip_level,
                                     mip_level_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
                                     base_array_layer: array_layer,
                                     array_layer_count: <span class="prelude-val">Some</span>(<span class="number">1</span>),
                                 },
-                                plane: <span class="macro-nonterminal">$plane</span>,
                             };
                             clear_views.push(<span class="prelude-val">Some</span>(
                                 <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_texture_view(<span class="kw-2">&amp;</span>raw_texture, <span class="kw-2">&amp;</span>desc) }
@@ -4249,11 +4258,14 @@
                         };
                     }
 
-                    <span class="kw">if </span>desc.format == wgt::TextureFormat::NV12 {
-                        <span class="macro">push_clear_view!</span>(wgt::TextureFormat::R8Unorm, <span class="prelude-val">Some</span>(<span class="number">0</span>));
-                        <span class="macro">push_clear_view!</span>(wgt::TextureFormat::Rg8Unorm, <span class="prelude-val">Some</span>(<span class="number">1</span>));
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(planes) = desc.format.planes() {
+                        <span class="kw">for </span>plane <span class="kw">in </span><span class="number">0</span>..planes {
+                            <span class="kw">let </span>aspect = wgt::TextureAspect::from_plane(plane).unwrap();
+                            <span class="kw">let </span>format = desc.format.aspect_specific_format(aspect).unwrap();
+                            <span class="macro">push_clear_view!</span>(format, aspect);
+                        }
                     } <span class="kw">else </span>{
-                        <span class="macro">push_clear_view!</span>(desc.format, <span class="prelude-val">None</span>);
+                        <span class="macro">push_clear_view!</span>(desc.format, wgt::TextureAspect::All);
                     }
                 }
             }
@@ -4449,8 +4461,6 @@
             });
         };
 
-        validate_texture_view_plane(texture.desc.format, resolved_format, desc.plane)<span class="question-mark">?</span>;
-
         <span class="comment">// https://gpuweb.github.io/gpuweb/#abstract-opdef-renderable-texture-view
         </span><span class="kw">let </span>render_extent = <span class="lifetime">'b</span>: <span class="kw">loop </span>{
             <span class="kw">if </span>!texture
@@ -4542,7 +4552,6 @@
             dimension: resolved_dimension,
             usage,
             range: resolved_range,
-            plane: desc.plane,
         };
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
@@ -4563,6 +4572,7 @@
             parent: RwLock::new(<span class="prelude-val">Some</span>(texture.clone())),
             device: <span class="self">self</span>.clone(),
             desc: resource::HalTextureViewDescriptor {
+                texture_format: texture.desc.format,
                 format: resolved_format,
                 dimension: resolved_dimension,
                 range: resolved_range,
@@ -6802,42 +6812,6 @@
 
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;DeviceId&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">fn </span>check_texture_view_format_compatible(
-    texture_format: TextureFormat,
-    view_format: TextureFormat,
-) -&gt; bool {
-    <span class="kw">use </span>TextureFormat::<span class="kw-2">*</span>;
-
-    <span class="kw">match </span>(texture_format, view_format) {
-        (NV12, R8Unorm | R8Uint | Rg8Unorm | Rg8Uint) =&gt; <span class="bool-val">true</span>,
-        <span class="kw">_ </span>=&gt; texture_format.remove_srgb_suffix() == view_format.remove_srgb_suffix(),
-    }
-}
-
-<span class="kw">fn </span>validate_texture_view_plane(
-    texture_format: TextureFormat,
-    view_format: TextureFormat,
-    plane: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::CreateTextureViewError&gt; {
-    <span class="kw">use </span>TextureFormat::<span class="kw-2">*</span>;
-
-    <span class="kw">match </span>(texture_format, view_format, plane) {
-        (NV12, R8Unorm | R8Uint, <span class="prelude-val">Some</span>(<span class="number">0</span>)) =&gt; <span class="prelude-val">Ok</span>(()),
-        (NV12, Rg8Unorm | Rg8Uint, <span class="prelude-val">Some</span>(<span class="number">1</span>)) =&gt; <span class="prelude-val">Ok</span>(()),
-        (NV12, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; {
-            <span class="prelude-val">Err</span>(resource::CreateTextureViewError::InvalidTextureViewPlane { plane, view_format })
-        }
-
-        (<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Err</span>(
-            resource::CreateTextureViewError::InvalidTextureViewPlaneOnNonplanarTexture {
-                plane,
-                texture_format,
-            },
-        ),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
     }
 }
 </code></pre></div></section></main></body></html>

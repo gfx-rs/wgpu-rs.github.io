@@ -2335,6 +2335,12 @@
 <a href="#2335" id="2335">2335</a>
 <a href="#2336" id="2336">2336</a>
 <a href="#2337" id="2337">2337</a>
+<a href="#2338" id="2338">2338</a>
+<a href="#2339" id="2339">2339</a>
+<a href="#2340" id="2340">2340</a>
+<a href="#2341" id="2341">2341</a>
+<a href="#2342" id="2342">2342</a>
+<a href="#2343" id="2343">2343</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3004,6 +3010,9 @@
                 vk::ImageCreateFlags::MUTABLE_FORMAT | vk::ImageCreateFlags::EXTENDED_USAGE;
             view_formats.push(desc.format)
         }
+        <span class="kw">if </span>desc.format.is_multi_planar_format() {
+            raw_flags |= vk::ImageCreateFlags::MUTABLE_FORMAT;
+        }
 
         <span class="kw">super</span>::Texture {
             raw: vk_image,
@@ -3326,7 +3335,7 @@
             wgt_view_formats = desc.view_formats.clone();
             wgt_view_formats.push(desc.format);
 
-            <span class="kw">if </span><span class="self">self</span>.shared.private_caps.image_format_list &amp;&amp; !desc.format.is_multi_planar_format() {
+            <span class="kw">if </span><span class="self">self</span>.shared.private_caps.image_format_list {
                 vk_view_formats = desc
                     .view_formats
                     .iter()
@@ -3334,6 +3343,9 @@
                     .collect();
                 vk_view_formats.push(original_format)
             }
+        }
+        <span class="kw">if </span>desc.format.is_multi_planar_format() {
+            raw_flags |= vk::ImageCreateFlags::MUTABLE_FORMAT;
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageCreateInfo::builder()
@@ -3408,7 +3420,7 @@
         texture: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureViewDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::TextureView, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>subresource_range = conv::map_subresource_range(<span class="kw-2">&amp;</span>desc.range, desc.format, desc.plane);
+        <span class="kw">let </span>subresource_range = conv::map_subresource_range(<span class="kw-2">&amp;</span>desc.range, texture.format);
         <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageViewCreateInfo::builder()
             .flags(vk::ImageViewCreateFlags::empty())
             .image(texture.raw)
