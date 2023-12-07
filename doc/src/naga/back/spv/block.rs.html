@@ -2366,12 +2366,6 @@
 <a href="#2366" id="2366">2366</a>
 <a href="#2367" id="2367">2367</a>
 <a href="#2368" id="2368">2368</a>
-<a href="#2369" id="2369">2369</a>
-<a href="#2370" id="2370">2370</a>
-<a href="#2371" id="2371">2371</a>
-<a href="#2372" id="2372">2372</a>
-<a href="#2373" id="2373">2373</a>
-<a href="#2374" id="2374">2374</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3837,7 +3831,7 @@ Implementations for `BlockContext` methods.
         // but we expect these checks to almost always succeed, and keeping branches to a
         // minimum is essential.
         </span><span class="kw">let </span><span class="kw-2">mut </span>accumulated_checks = <span class="prelude-val">None</span>;
-        <span class="comment">// Is true if we are accessing into a binding array of buffers with a non-uniform index.
+        <span class="comment">// Is true if we are accessing into a binding array with a non-uniform index.
         </span><span class="kw">let </span><span class="kw-2">mut </span>is_non_uniform_binding_array = <span class="bool-val">false</span>;
 
         <span class="self">self</span>.temp_list.clear();
@@ -3847,20 +3841,14 @@ Implementations for `BlockContext` methods.
                     <span class="kw">if let </span><span class="kw">crate</span>::Expression::GlobalVariable(var_handle) =
                         <span class="self">self</span>.ir_function.expressions[base]
                     {
-                        <span class="kw">let </span>gvar: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GlobalVariable =
-                            <span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.global_variables[var_handle];
-                        <span class="kw">match </span>gvar.space {
-                            <span class="kw">crate</span>::AddressSpace::Storage { .. } | <span class="kw">crate</span>::AddressSpace::Uniform =&gt; {
-                                <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::BindingArray { .. } =
-                                    <span class="self">self</span>.ir_module.types[gvar.ty].inner
-                                {
-                                    is_non_uniform_binding_array = <span class="self">self</span>.fun_info[index]
-                                        .uniformity
-                                        .non_uniform_result
-                                        .is_some();
-                                }
-                            }
-                            <span class="kw">_ </span>=&gt; {}
+                        <span class="comment">// The access chain needs to be decorated as NonUniform
+                        // see VUID-RuntimeSpirv-NonUniform-06274
+                        </span><span class="kw">let </span>gvar = <span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.global_variables[var_handle];
+                        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::BindingArray { .. } =
+                            <span class="self">self</span>.ir_module.types[gvar.ty].inner
+                        {
+                            is_non_uniform_binding_array =
+                                <span class="self">self</span>.fun_info[index].uniformity.non_uniform_result.is_some();
                         }
                     }
 
@@ -3945,7 +3933,7 @@ Implementations for `BlockContext` methods.
             (pointer_id, expr_pointer)
         };
         <span class="comment">// Subsequent load, store and atomic operations require the pointer to be decorated as NonUniform
-        // if the buffer binding array was accessed with a non-uniform index
+        // if the binding array was accessed with a non-uniform index
         // see VUID-RuntimeSpirv-NonUniform-06274
         </span><span class="kw">if </span>is_non_uniform_binding_array {
             <span class="self">self</span>.writer
