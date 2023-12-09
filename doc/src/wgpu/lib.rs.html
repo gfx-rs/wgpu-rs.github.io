@@ -5455,8 +5455,6 @@
 <a href="#5455" id="5455">5455</a>
 <a href="#5456" id="5456">5456</a>
 <a href="#5457" id="5457">5457</a>
-<a href="#5458" id="5458">5458</a>
-<a href="#5459" id="5459">5459</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -9130,6 +9128,31 @@
         <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
         DynContext::command_encoder_pop_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, id, <span class="self">self</span>.data.as_ref());
     }
+
+    <span class="doccomment">/// Resolves a query set, writing the results into the supplied destination buffer.
+    ///
+    /// Occlusion and timestamp queries are 8 bytes each (see [`crate::QUERY_SIZE`]). For pipeline statistics queries,
+    /// see [`PipelineStatisticsTypes`] for more information.
+    </span><span class="kw">pub fn </span>resolve_query_set(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        query_set: <span class="kw-2">&amp;</span>QuerySet,
+        query_range: Range&lt;u32&gt;,
+        destination: <span class="kw-2">&amp;</span>Buffer,
+        destination_offset: BufferAddress,
+    ) {
+        DynContext::command_encoder_resolve_query_set(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
+            <span class="self">self</span>.id.as_ref().unwrap(),
+            <span class="self">self</span>.data.as_ref(),
+            <span class="kw-2">&amp;</span>query_set.id,
+            query_set.data.as_ref(),
+            query_range.start,
+            query_range.end - query_range.start,
+            <span class="kw-2">&amp;</span>destination.id,
+            destination.data.as_ref(),
+            destination_offset,
+        )
+    }
 }
 
 <span class="doccomment">/// [`Features::TIMESTAMP_QUERY`] must be enabled on the device in order to call these functions.
@@ -9149,33 +9172,6 @@
             <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
-        )
-    }
-}
-
-<span class="doccomment">/// [`Features::TIMESTAMP_QUERY`] or [`Features::PIPELINE_STATISTICS_QUERY`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl </span>CommandEncoder {
-    <span class="doccomment">/// Resolve a query set, writing the results into the supplied destination buffer.
-    ///
-    /// Queries may be between 8 and 40 bytes each. See [`PipelineStatisticsTypes`] for more information.
-    </span><span class="kw">pub fn </span>resolve_query_set(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        query_set: <span class="kw-2">&amp;</span>QuerySet,
-        query_range: Range&lt;u32&gt;,
-        destination: <span class="kw-2">&amp;</span>Buffer,
-        destination_offset: BufferAddress,
-    ) {
-        DynContext::command_encoder_resolve_query_set(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
-            <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;</span>query_set.id,
-            query_set.data.as_ref(),
-            query_range.start,
-            query_range.end - query_range.start,
-            <span class="kw-2">&amp;</span>destination.id,
-            destination.data.as_ref(),
-            destination_offset,
         )
     }
 }
