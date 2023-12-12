@@ -363,6 +363,18 @@
 <a href="#363" id="363">363</a>
 <a href="#364" id="364">364</a>
 <a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! WGSL's automatic conversions for abstract types.
 
 </span><span class="kw">use crate</span>::{Handle, Span};
@@ -539,11 +551,23 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = inner.automatically_convertible_scalar(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
             <span class="kw">let </span>concretized = scalar.concretize();
             <span class="kw">if </span>concretized != scalar {
-                <span class="kw">let </span>span = <span class="self">self</span>.get_expression_span(expr);
+                <span class="macro">assert!</span>(scalar.is_abstract());
+                <span class="kw">let </span>expr_span = <span class="self">self</span>.get_expression_span(expr);
                 expr = <span class="self">self
                     </span>.as_const_evaluator()
-                    .cast_array(expr, concretized, span)
-                    .map_err(|err| <span class="kw">super</span>::Error::ConstantEvaluatorError(err, span))<span class="question-mark">?</span>;
+                    .cast_array(expr, concretized, expr_span)
+                    .map_err(|err| {
+                        <span class="comment">// A `TypeResolution` includes the type's full name, if
+                        // it has one. Also, avoid holding the borrow of `inner`
+                        // across the call to `cast_array`.
+                        </span><span class="kw">let </span>expr_type = <span class="kw-2">&amp;</span><span class="self">self</span>.typifier()[expr];
+                        <span class="kw">super</span>::Error::ConcretizationFailed {
+                            expr_span,
+                            expr_type: expr_type.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx()),
+                            scalar: concretized.to_wgsl(),
+                            inner: err,
+                        }
+                    })<span class="question-mark">?</span>;
             }
         }
 
