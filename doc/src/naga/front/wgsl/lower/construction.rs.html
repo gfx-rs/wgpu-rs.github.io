@@ -614,48 +614,6 @@
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
 <a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
-<a href="#642" id="642">642</a>
-<a href="#643" id="643">643</a>
-<a href="#644" id="644">644</a>
-<a href="#645" id="645">645</a>
-<a href="#646" id="646">646</a>
-<a href="#647" id="647">647</a>
-<a href="#648" id="648">648</a>
-<a href="#649" id="649">649</a>
-<a href="#650" id="650">650</a>
-<a href="#651" id="651">651</a>
-<a href="#652" id="652">652</a>
-<a href="#653" id="653">653</a>
-<a href="#654" id="654">654</a>
-<a href="#655" id="655">655</a>
-<a href="#656" id="656">656</a>
-<a href="#657" id="657">657</a>
-<a href="#658" id="658">658</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::ast;
@@ -663,7 +621,6 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::Error;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::lower::{ExpressionContext, Lowerer};
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 
 <span class="doccomment">/// A cooked form of `ast::ConstructorType` that uses Naga types whenever
 /// possible.
@@ -958,7 +915,10 @@
                 },
                 Constructor::Type((<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Vector { size, scalar })),
             ) =&gt; {
-                ctx.convert_slice_to_common_scalar(std::slice::from_mut(<span class="kw-2">&amp;mut </span>component), scalar)<span class="question-mark">?</span>;
+                ctx.convert_slice_to_common_leaf_scalar(
+                    std::slice::from_mut(<span class="kw-2">&amp;mut </span>component),
+                    scalar,
+                )<span class="question-mark">?</span>;
                 expr = <span class="kw">crate</span>::Expression::Splat {
                     size,
                     value: component,
@@ -974,10 +934,11 @@
                 Constructor::PartialVector { size },
             ) =&gt; {
                 <span class="kw">let </span>consensus_scalar =
-                    automatic_conversion_consensus(<span class="kw-2">&amp;</span>components, ctx).map_err(|index| {
-                        Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
-                    })<span class="question-mark">?</span>;
-                ctx.convert_slice_to_common_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
+                    ctx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>components)
+                        .map_err(|index| {
+                            Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
+                        })<span class="question-mark">?</span>;
+                ctx.convert_slice_to_common_leaf_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
                 <span class="kw">let </span>inner = consensus_scalar.to_inner_vector(size);
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(inner);
                 expr = <span class="kw">crate</span>::Expression::Compose { ty, components };
@@ -1001,14 +962,15 @@
                 Constructor::PartialMatrix { columns, rows },
             ) <span class="kw">if </span>components.len() == columns <span class="kw">as </span>usize * rows <span class="kw">as </span>usize =&gt; {
                 <span class="kw">let </span>consensus_scalar =
-                    automatic_conversion_consensus(<span class="kw-2">&amp;</span>components, ctx).map_err(|index| {
-                        Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
-                    })<span class="question-mark">?</span>;
+                    ctx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>components)
+                        .map_err(|index| {
+                            Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
+                        })<span class="question-mark">?</span>;
                 <span class="comment">// We actually only accept floating-point elements.
                 </span><span class="kw">let </span>consensus_scalar = consensus_scalar
                     .automatic_conversion_combine(<span class="kw">crate</span>::Scalar::ABSTRACT_FLOAT)
                     .unwrap_or(consensus_scalar);
-                ctx.convert_slice_to_common_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
+                ctx.convert_slice_to_common_leaf_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
                 <span class="kw">let </span>vec_ty = ctx.ensure_type_exists(consensus_scalar.to_inner_vector(rows));
 
                 <span class="kw">let </span>components = components
@@ -1078,10 +1040,11 @@
                 Constructor::PartialMatrix { columns, rows },
             ) =&gt; {
                 <span class="kw">let </span>consensus_scalar =
-                    automatic_conversion_consensus(<span class="kw-2">&amp;</span>components, ctx).map_err(|index| {
-                        Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
-                    })<span class="question-mark">?</span>;
-                ctx.convert_slice_to_common_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
+                    ctx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>components)
+                        .map_err(|index| {
+                            Error::InvalidConstructorComponentType(spans[index], index <span class="kw">as </span>i32)
+                        })<span class="question-mark">?</span>;
+                ctx.convert_slice_to_common_leaf_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
                     columns,
                     rows,
@@ -1114,10 +1077,10 @@
             <span class="comment">// Array constructor - infer type
             </span>(components, Constructor::PartialArray) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>components = components.into_components_vec();
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(consensus_scalar) = automatic_conversion_consensus(<span class="kw-2">&amp;</span>components, ctx) {
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(consensus_scalar) = ctx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>components) {
                     <span class="comment">// Note that this will *not* necessarily convert all the
                     // components to the same type! The `automatic_conversion_consensus`
-                    // function only considers the parameters' leaf scalar
+                    // method only considers the parameters' leaf scalar
                     // types; the parameters themselves could be any mix of
                     // vectors, matrices, and scalars.
                     //
@@ -1129,7 +1092,7 @@
                     // do. And if this array construction is not well-typed,
                     // these conversions will not make it so, and we can let
                     // validation catch the error.
-                    </span>ctx.convert_slice_to_common_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
+                    </span>ctx.convert_slice_to_common_leaf_scalar(<span class="kw-2">&amp;mut </span>components, consensus_scalar)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="comment">// There's no consensus scalar. Emit the `Compose`
                     // expression anyway, and let validation catch the problem.
@@ -1266,52 +1229,5 @@
 
         <span class="prelude-val">Ok</span>(handle)
     }
-}
-
-<span class="doccomment">/// Find the consensus scalar of `components` under WGSL's automatic
-/// conversions.
-///
-/// If `components` can all be converted to any common scalar via
-/// WGSL's automatic conversions, return the best such scalar.
-///
-/// The `components` slice must not be empty. All elements' types must
-/// have been resolved.
-///
-/// If `components` are definitely not acceptable as arguments to such
-/// constructors, return `Err(i)`, where `i` is the index in
-/// `components` of some problematic argument.
-///
-/// This function doesn't fully type-check the arguments - it only
-/// considers their leaf scalar types. This means it may return `Ok`
-/// even when the Naga validator will reject the resulting
-/// construction expression later.
-</span><span class="kw">fn </span>automatic_conversion_consensus(
-    components: <span class="kw-2">&amp;</span>[Handle&lt;<span class="kw">crate</span>::Expression&gt;],
-    ctx: <span class="kw-2">&amp;</span>ExpressionContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Scalar, usize&gt; {
-    <span class="kw">let </span>types = <span class="kw-2">&amp;</span>ctx.module.types;
-    <span class="kw">let </span><span class="kw-2">mut </span>inners = components
-        .iter()
-        .map(|<span class="kw-2">&amp;</span>c| ctx.typifier()[c].inner_with(types));
-    <span class="macro">log::debug!</span>(
-        <span class="string">"wgsl automatic_conversion_consensus: {:?}"</span>,
-        inners
-            .clone()
-            .map(|inner| inner.to_wgsl(<span class="kw-2">&amp;</span>ctx.module.to_ctx()))
-            .collect::&lt;Vec&lt;String&gt;&gt;()
-    );
-    <span class="kw">let </span><span class="kw-2">mut </span>best = inners.next().unwrap().scalar().ok_or(<span class="number">0_usize</span>)<span class="question-mark">?</span>;
-    <span class="kw">for </span>(inner, i) <span class="kw">in </span>inners.zip(<span class="number">1</span>..) {
-        <span class="kw">let </span>scalar = inner.scalar().ok_or(i)<span class="question-mark">?</span>;
-        <span class="kw">match </span>best.automatic_conversion_combine(scalar) {
-            <span class="prelude-val">Some</span>(new_best) =&gt; {
-                best = new_best;
-            }
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(i),
-        }
-    }
-
-    <span class="macro">log::debug!</span>(<span class="string">"    consensus: {:?}"</span>, best.to_wgsl());
-    <span class="prelude-val">Ok</span>(best)
 }
 </code></pre></div></section></main></body></html>

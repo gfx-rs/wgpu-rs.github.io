@@ -753,6 +753,26 @@
 <a href="#753" id="753">753</a>
 <a href="#754" id="754">754</a>
 <a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::Token;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
@@ -1009,6 +1029,12 @@
     AutoConversion {
         dest_span: Span,
         dest_type: String,
+        source_span: Span,
+        source_type: String,
+    },
+    AutoConversionLeafScalar {
+        dest_span: Span,
+        dest_scalar: String,
         source_span: Span,
         source_type: String,
     },
@@ -1485,6 +1511,20 @@
                     (
                         dest_span,
                         <span class="macro">format!</span>(<span class="string">"a value of type {dest_type} is required here"</span>).into(),
+                    ),
+                    (
+                        source_span,
+                        <span class="macro">format!</span>(<span class="string">"this expression has type {source_type}"</span>).into(),
+                    )
+                ],
+                notes: <span class="macro">vec!</span>[],
+            },
+            Error::AutoConversionLeafScalar { dest_span, <span class="kw-2">ref </span>dest_scalar, source_span, <span class="kw-2">ref </span>source_type } =&gt; ParseError {
+                message: <span class="macro">format!</span>(<span class="string">"automatic conversions cannot convert elements of `{source_type}` to `{dest_scalar}`"</span>),
+                labels: <span class="macro">vec!</span>[
+                    (
+                        dest_span,
+                        <span class="macro">format!</span>(<span class="string">"a value with elements of type {dest_scalar} is required here"</span>).into(),
                     ),
                     (
                         source_span,

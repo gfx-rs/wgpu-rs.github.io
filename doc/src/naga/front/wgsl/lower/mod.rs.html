@@ -2714,6 +2714,48 @@
 <a href="#2714" id="2714">2714</a>
 <a href="#2715" id="2715">2715</a>
 <a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
+<a href="#2722" id="2722">2722</a>
+<a href="#2723" id="2723">2723</a>
+<a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
+<a href="#2728" id="2728">2728</a>
+<a href="#2729" id="2729">2729</a>
+<a href="#2730" id="2730">2730</a>
+<a href="#2731" id="2731">2731</a>
+<a href="#2732" id="2732">2732</a>
+<a href="#2733" id="2733">2733</a>
+<a href="#2734" id="2734">2734</a>
+<a href="#2735" id="2735">2735</a>
+<a href="#2736" id="2736">2736</a>
+<a href="#2737" id="2737">2737</a>
+<a href="#2738" id="2738">2738</a>
+<a href="#2739" id="2739">2739</a>
+<a href="#2740" id="2740">2740</a>
+<a href="#2741" id="2741">2741</a>
+<a href="#2742" id="2742">2742</a>
+<a href="#2743" id="2743">2743</a>
+<a href="#2744" id="2744">2744</a>
+<a href="#2745" id="2745">2745</a>
+<a href="#2746" id="2746">2746</a>
+<a href="#2747" id="2747">2747</a>
+<a href="#2748" id="2748">2748</a>
+<a href="#2749" id="2749">2749</a>
+<a href="#2750" id="2750">2750</a>
+<a href="#2751" id="2751">2751</a>
+<a href="#2752" id="2752">2752</a>
+<a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a>
+<a href="#2756" id="2756">2756</a>
+<a href="#2757" id="2757">2757</a>
+<a href="#2758" id="2758">2758</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4318,12 +4360,8 @@
                 </span><span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Reference(pointer));
             }
             ast::Expression::Binary { op, left, right } =&gt; {
-                <span class="comment">// Load both operands.
-                </span><span class="kw">let </span><span class="kw-2">mut </span>left = <span class="self">self</span>.expression(left, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>right = <span class="self">self</span>.expression(right, ctx)<span class="question-mark">?</span>;
-                ctx.binary_op_splat(op, <span class="kw-2">&amp;mut </span>left, <span class="kw-2">&amp;mut </span>right)<span class="question-mark">?</span>;
-                Typed::Plain(<span class="kw">crate</span>::Expression::Binary { op, left, right })
-            }
+                <span class="self">self</span>.binary(op, left, right, span, ctx)<span class="question-mark">?
+            </span>}
             ast::Expression::Call {
                 <span class="kw-2">ref </span>function,
                 <span class="kw-2">ref </span>arguments,
@@ -4451,6 +4489,52 @@
         };
 
         expr.try_map(|handle| ctx.append_expression(handle, span))
+    }
+
+    <span class="kw">fn </span>binary(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        op: <span class="kw">crate</span>::BinaryOperator,
+        left: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
+        right: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
+        span: Span,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Typed&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+        <span class="comment">// Load both operands.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>left = <span class="self">self</span>.expression_for_abstract(left, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>right = <span class="self">self</span>.expression_for_abstract(right, ctx)<span class="question-mark">?</span>;
+
+        <span class="comment">// Convert `scalar op vector` to `vector op vector` by introducing
+        // `Splat` expressions.
+        </span>ctx.binary_op_splat(op, <span class="kw-2">&amp;mut </span>left, <span class="kw-2">&amp;mut </span>right)<span class="question-mark">?</span>;
+
+        <span class="comment">// Apply automatic conversions.
+        </span><span class="kw">match </span>op {
+            <span class="comment">// Shift operators require the right operand to be `u32` or
+            // `vecN&lt;u32&gt;`. We can let the validator sort out vector length
+            // issues, but the right operand must be, or convert to, a u32 leaf
+            // scalar.
+            </span><span class="kw">crate</span>::BinaryOperator::ShiftLeft | <span class="kw">crate</span>::BinaryOperator::ShiftRight =&gt; {
+                right =
+                    ctx.try_automatic_conversion_for_leaf_scalar(right, <span class="kw">crate</span>::Scalar::U32, span)<span class="question-mark">?</span>;
+            }
+
+            <span class="comment">// All other operators follow the same pattern: reconcile the
+            // scalar leaf types. If there's no reconciliation possible,
+            // leave the expressions as they are: validation will report the
+            // problem.
+            </span><span class="kw">_ </span>=&gt; {
+                ctx.grow_types(left)<span class="question-mark">?</span>;
+                ctx.grow_types(right)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(consensus_scalar) =
+                    ctx.automatic_conversion_consensus([left, right].iter())
+                {
+                    ctx.convert_to_leaf_scalar(<span class="kw-2">&amp;mut </span>left, consensus_scalar)<span class="question-mark">?</span>;
+                    ctx.convert_to_leaf_scalar(<span class="kw-2">&amp;mut </span>right, consensus_scalar)<span class="question-mark">?</span>;
+                }
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(Typed::Plain(<span class="kw">crate</span>::Expression::Binary { op, left, right }))
     }
 
     <span class="doccomment">/// Generate Naga IR for call expressions and statements, and type
