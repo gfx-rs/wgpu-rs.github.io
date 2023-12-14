@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (3340d49d2 2023-12-12)" data-channel="nightly" data-search-js="search-cca444cbb68c36e9.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/front/wgsl/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (eeff92ad3 2023-12-13)" data-channel="nightly" data-search-js="search-ec029af4ec3ae4df.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -737,25 +737,6 @@
 <a href="#737" id="737">737</a>
 <a href="#738" id="738">738</a>
 <a href="#739" id="739">739</a>
-<a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
@@ -875,7 +856,6 @@
             <span class="kw">let </span>og_chars = chars.as_str();
             <span class="kw">match </span>chars.next() {
                 <span class="prelude-val">Some</span>(<span class="string">'&gt;'</span>) =&gt; (Token::Arrow, chars.as_str()),
-                <span class="prelude-val">Some</span>(<span class="string">'0'</span>..=<span class="string">'9' </span>| <span class="string">'.'</span>) =&gt; consume_number(input),
                 <span class="prelude-val">Some</span>(<span class="string">'-'</span>) =&gt; (Token::DecrementOperation, chars.as_str()),
                 <span class="prelude-val">Some</span>(<span class="string">'='</span>) =&gt; (Token::AssignmentOperation(cur), chars.as_str()),
                 <span class="kw">_ </span>=&gt; (Token::Operation(cur), og_chars),
@@ -1254,44 +1234,60 @@
 
     <span class="comment">// MIN / MAX //
 
-    // min / max decimal signed integer
+    // min / max decimal integer
     </span>sub_test(
-        <span class="string">"-2147483648i 2147483647i -2147483649i 2147483648i"</span>,
+        <span class="string">"0i 2147483647i 2147483648i"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MIN))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MAX))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
         ],
     );
     <span class="comment">// min / max decimal unsigned integer
     </span>sub_test(
-        <span class="string">"0u 4294967295u -1u 4294967296u"</span>,
+        <span class="string">"0u 4294967295u 4294967296u"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MAX))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
         ],
     );
 
     <span class="comment">// min / max hexadecimal signed integer
     </span>sub_test(
-        <span class="string">"-0x80000000i 0x7FFFFFFFi -0x80000001i 0x80000000i"</span>,
+        <span class="string">"0x0i 0x7FFFFFFFi 0x80000000i"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MIN))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::I32(<span class="number">0</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::I32(i32::MAX))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
         ],
     );
     <span class="comment">// min / max hexadecimal unsigned integer
     </span>sub_test(
-        <span class="string">"0x0u 0xFFFFFFFFu -0x1u 0x100000000u"</span>,
+        <span class="string">"0x0u 0xFFFFFFFFu 0x100000000u"</span>,
         <span class="kw-2">&amp;</span>[
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MIN))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::U32(u32::MAX))),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
+        ],
+    );
+
+    <span class="comment">// min/max decimal abstract int
+    </span>sub_test(
+        <span class="string">"0 9223372036854775807 9223372036854775808"</span>,
+        <span class="kw-2">&amp;</span>[
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(i64::MAX))),
+            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
+        ],
+    );
+
+    <span class="comment">// min/max hexadecimal abstract int
+    </span>sub_test(
+        <span class="string">"0 0x7fffffffffffffff 0x8000000000000000"</span>,
+        <span class="kw-2">&amp;</span>[
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(<span class="number">0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractInt(i64::MAX))),
             Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
         ],
     );
@@ -1306,78 +1302,44 @@
     </span><span class="kw">const </span>LARGEST_F32_LESS_THAN_ONE: f32 = <span class="number">0.99999994</span>;
     <span class="doccomment">/// ≈ 1 + 2^−23
     </span><span class="kw">const </span>SMALLEST_F32_LARGER_THAN_ONE: f32 = <span class="number">1.0000001</span>;
-    <span class="doccomment">/// ≈ -(2^127 * (2 − 2^−23))
-    </span><span class="kw">const </span>SMALLEST_NORMAL_F32: f32 = f32::MIN;
     <span class="doccomment">/// ≈ 2^127 * (2 − 2^−23)
     </span><span class="kw">const </span>LARGEST_NORMAL_F32: f32 = f32::MAX;
 
     <span class="comment">// decimal floating point
     </span>sub_test(
-        <span class="string">"1e-45f 1.1754942e-38f 1.17549435e-38f 0.99999994f 1.0000001f -3.40282347e+38f 3.40282347e+38f"</span>,
+        <span class="string">"1e-45f 1.1754942e-38f 1.17549435e-38f 0.99999994f 1.0000001f 3.40282347e+38f"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_POSITIVE_SUBNORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_SUBNORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_POSITIVE_NORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_F32_LESS_THAN_ONE,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_F32_LARGER_THAN_ONE,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_NORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_NORMAL_F32,
-            ))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_POSITIVE_SUBNORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_SUBNORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_POSITIVE_NORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_F32_LESS_THAN_ONE))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_F32_LARGER_THAN_ONE))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_NORMAL_F32))),
         ],
     );
     sub_test(
-        <span class="string">"-3.40282367e+38f 3.40282367e+38f"</span>,
+        <span class="string">"3.40282367e+38f"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// ≈ -2^128
-            </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// ≈ 2^128
+            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// ≈ 2^128
         </span>],
     );
 
     <span class="comment">// hexadecimal floating point
     </span>sub_test(
-        <span class="string">"0x1p-149f 0x7FFFFFp-149f 0x1p-126f 0xFFFFFFp-24f 0x800001p-23f -0xFFFFFFp+104f 0xFFFFFFp+104f"</span>,
+        <span class="string">"0x1p-149f 0x7FFFFFp-149f 0x1p-126f 0xFFFFFFp-24f 0x800001p-23f 0xFFFFFFp+104f"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_POSITIVE_SUBNORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_SUBNORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_POSITIVE_NORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_F32_LESS_THAN_ONE,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_F32_LARGER_THAN_ONE,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                SMALLEST_NORMAL_F32,
-            ))),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(
-                LARGEST_NORMAL_F32,
-            ))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_POSITIVE_SUBNORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_SUBNORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_POSITIVE_NORMAL_F32))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_F32_LESS_THAN_ONE))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(SMALLEST_F32_LARGER_THAN_ONE))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(LARGEST_NORMAL_F32))),
         ],
     );
     sub_test(
-        <span class="string">"-0x1p128f 0x1p128f 0x1.000001p0f"</span>,
+        <span class="string">"0x1p128f 0x1.000001p0f"</span>,
         <span class="kw-2">&amp;</span>[
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// = -2^128
-            </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// = 2^128
+            Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// = 2^128
             </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)),
         ],
     );
