@@ -3406,6 +3406,13 @@
 <a href="#3406" id="3406">3406</a>
 <a href="#3407" id="3407">3407</a>
 <a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
+<a href="#3414" id="3414">3414</a>
+<a href="#3415" id="3415">3415</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3434,6 +3441,7 @@
         TextureViewNotRenderableReason,
     },
     resource_log,
+    snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
     track::{BindGroupStates, TextureSelector, Tracker},
     validation::{<span class="self">self</span>, check_buffer_usage, check_texture_usage},
@@ -3502,6 +3510,7 @@
     <span class="comment">//Note: The submission index here corresponds to the last submission that is done.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: AtomicU64, <span class="comment">//SubmissionIndex,
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) fence: RwLock&lt;<span class="prelude-ty">Option</span>&lt;A::Fence&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) snatchable_lock: SnatchLock,
 
     <span class="doccomment">/// Is this device valid? Valid is closely associated with "lose the device",
     /// which can be triggered by various methods, including at the end of device
@@ -3662,6 +3671,7 @@
             command_allocator: Mutex::new(<span class="prelude-val">Some</span>(com_alloc)),
             active_submission_index: AtomicU64::new(<span class="number">0</span>),
             fence: RwLock::new(<span class="prelude-val">Some</span>(fence)),
+            snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new() },
             valid: AtomicBool::new(<span class="bool-val">true</span>),
             trackers: Mutex::new(Tracker::new()),
             life_tracker: Mutex::new(life::LifetimeTracker::new()),
@@ -3946,7 +3956,7 @@
         <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }.map_err(DeviceError::from)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Buffer {
-            raw: <span class="prelude-val">Some</span>(buffer),
+            raw: Snatchable::new(buffer),
             device: <span class="self">self</span>.clone(),
             usage: desc.usage,
             size: desc.size,
@@ -3996,7 +4006,7 @@
         <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
 
         Buffer {
-            raw: <span class="prelude-val">Some</span>(hal_buffer),
+            raw: Snatchable::new(hal_buffer),
             device: <span class="self">self</span>.clone(),
             usage: desc.usage,
             size: desc.size,
@@ -5174,6 +5184,7 @@
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
         storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;, id::BufferId&gt;,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
 
@@ -5226,7 +5237,7 @@
         check_buffer_usage(buffer.usage, pub_usage)<span class="question-mark">?</span>;
         <span class="kw">let </span>raw_buffer = buffer
             .raw
-            .as_ref()
+            .get(snatch_guard)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(bind_size, bind_end) = <span class="kw">match </span>bb.size {
@@ -5374,6 +5385,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hal_buffers = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>hal_samplers = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>hal_textures = Vec::new();
+        <span class="kw">let </span>snatch_guard = <span class="self">self</span>.snatchable_lock.read();
         <span class="kw">for </span>entry <span class="kw">in </span>desc.entries.iter() {
             <span class="kw">let </span>binding = entry.binding;
             <span class="comment">// Find the corresponding declaration in the layout
@@ -5393,6 +5405,7 @@
                         <span class="kw-2">&amp;mut </span>used,
                         <span class="kw-2">&amp;*</span>buffer_guard,
                         <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
+                        <span class="kw-2">&amp;</span>snatch_guard,
                     )<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>res_index = hal_buffers.len();
@@ -5415,6 +5428,7 @@
                             <span class="kw-2">&amp;mut </span>used,
                             <span class="kw-2">&amp;*</span>buffer_guard,
                             <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
+                            <span class="kw-2">&amp;</span>snatch_guard,
                         )<span class="question-mark">?</span>;
                         hal_buffers.push(bb);
                     }

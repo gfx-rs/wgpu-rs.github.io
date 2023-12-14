@@ -1237,6 +1237,12 @@
 <a href="#1237" id="1237">1237</a>
 <a href="#1238" id="1238">1238</a>
 <a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1836,6 +1842,8 @@
             });
         }
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span>(src_buffer, src_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
             <span class="kw">let </span>src_buffer = buffer_guard
@@ -1849,13 +1857,13 @@
         </span>};
         <span class="kw">let </span>src_raw = src_buffer
             .raw
-            .as_ref()
+            .get(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidBuffer(source))<span class="question-mark">?</span>;
         <span class="kw">if </span>!src_buffer.usage.contains(BufferUsages::COPY_SRC) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
         }
         <span class="comment">// expecting only a single barrier
-        </span><span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer));
+        </span><span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">let </span>(dst_buffer, dst_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
@@ -1870,12 +1878,12 @@
         </span>};
         <span class="kw">let </span>dst_raw = dst_buffer
             .raw
-            .as_ref()
+            .get(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidBuffer(destination))<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(destination), <span class="prelude-val">None</span>).into());
         }
-        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer));
+        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopySize(size).into());
@@ -2034,6 +2042,8 @@
             <span class="kw-2">&amp;</span>texture_guard,
         )<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span>(src_buffer, src_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
             <span class="kw">let </span>src_buffer = buffer_guard
@@ -2046,12 +2056,12 @@
         </span>};
         <span class="kw">let </span>src_raw = src_buffer
             .raw
-            .as_ref()
+            .get(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidBuffer(source.buffer))<span class="question-mark">?</span>;
         <span class="kw">if </span>!src_buffer.usage.contains(BufferUsages::COPY_SRC) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
         }
-        <span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer));
+        <span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">let </span>dst_pending = tracker
             .textures
@@ -2192,6 +2202,8 @@
             <span class="kw-2">&amp;</span>texture_guard,
         )<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span>src_pending = tracker
             .textures
             .set_single(src_texture, src_range, hal::TextureUses::COPY_SRC)
@@ -2232,14 +2244,14 @@
         </span>};
         <span class="kw">let </span>dst_raw = dst_buffer
             .raw
-            .as_ref()
+            .get(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidBuffer(destination.buffer))<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(destination.buffer), <span class="prelude-val">None</span>).into(),
             );
         }
-        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer));
+        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">if </span>!src_base.aspect.is_one() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyAspectNotOne.into());

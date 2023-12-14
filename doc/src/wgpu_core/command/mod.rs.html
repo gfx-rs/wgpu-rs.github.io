@@ -716,6 +716,13 @@
 <a href="#716" id="716">716</a>
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -740,6 +747,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::error::{ErrorFormatter, PrettyError};
 <span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
 <span class="kw">use </span><span class="kw">crate</span>::id::CommandBufferId;
+<span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::resource::{Resource, ResourceInfo, ResourceType};
@@ -911,32 +919,38 @@
         raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
         base: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         head: <span class="kw-2">&amp;</span>Tracker&lt;A&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) {
         <span class="macro">profiling::scope!</span>(<span class="string">"insert_barriers"</span>);
 
         base.buffers.set_from_tracker(<span class="kw-2">&amp;</span>head.buffers);
         base.textures.set_from_tracker(<span class="kw-2">&amp;</span>head.textures);
 
-        <span class="self">Self</span>::drain_barriers(raw, base);
+        <span class="self">Self</span>::drain_barriers(raw, base, snatch_guard);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_barriers_from_scope(
         raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
         base: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         head: <span class="kw-2">&amp;</span>UsageScope&lt;A&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) {
         <span class="macro">profiling::scope!</span>(<span class="string">"insert_barriers"</span>);
 
         base.buffers.set_from_usage_scope(<span class="kw-2">&amp;</span>head.buffers);
         base.textures.set_from_usage_scope(<span class="kw-2">&amp;</span>head.textures);
 
-        <span class="self">Self</span>::drain_barriers(raw, base);
+        <span class="self">Self</span>::drain_barriers(raw, base, snatch_guard);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_barriers(raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder, base: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_barriers(
+        raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
+        base: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
+    ) {
         <span class="macro">profiling::scope!</span>(<span class="string">"drain_barriers"</span>);
 
-        <span class="kw">let </span>buffer_barriers = base.buffers.drain_transitions();
+        <span class="kw">let </span>buffer_barriers = base.buffers.drain_transitions(snatch_guard);
         <span class="kw">let </span>(transitions, textures) = base.textures.drain_transitions();
         <span class="kw">let </span>texture_barriers = transitions
             .into_iter()

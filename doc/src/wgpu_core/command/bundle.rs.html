@@ -1650,6 +1650,8 @@
 <a href="#1650" id="1650">1650</a>
 <a href="#1651" id="1651">1651</a>
 <a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -2437,6 +2439,8 @@ index format changes.
             }
         }
 
+        <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
+
         <span class="kw">for </span>command <span class="kw">in </span><span class="self">self</span>.base.commands.iter() {
             <span class="kw">match </span><span class="kw-2">*</span>command {
                 RenderCommand::SetBindGroup {
@@ -2470,7 +2474,7 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw();
+                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw(<span class="kw-2">&amp;</span>snatch_guard);
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
                         offset,
@@ -2485,7 +2489,7 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw();
+                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw(<span class="kw-2">&amp;</span>snatch_guard);
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
                         offset,
@@ -2564,7 +2568,7 @@ index format changes.
                     indexed: <span class="bool-val">false</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw();
+                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw(<span class="kw-2">&amp;</span>snatch_guard);
                     <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, offset, <span class="number">1</span>) };
                 }
                 RenderCommand::MultiDrawIndirect {
@@ -2574,7 +2578,7 @@ index format changes.
                     indexed: <span class="bool-val">true</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw();
+                    <span class="kw">let </span>buffer = buffers.get(buffer_id).unwrap().raw(<span class="kw-2">&amp;</span>snatch_guard);
                     <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, offset, <span class="number">1</span>) };
                 }
                 RenderCommand::MultiDrawIndirect { .. }

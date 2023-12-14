@@ -833,6 +833,10 @@
 <a href="#833" id="833">833</a>
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -847,6 +851,7 @@
     hal_api::HalApi,
     id::{BufferId, TypedId},
     resource::{Buffer, Resource},
+    snatch::SnatchGuard,
     storage::Storage,
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
@@ -1222,10 +1227,13 @@
     }
 
     <span class="doccomment">/// Drains all currently pending transitions.
-    </span><span class="kw">pub fn </span>drain_transitions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferBarrier&lt;A&gt;&gt; {
+    </span><span class="kw">pub fn </span>drain_transitions&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>: <span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span><span class="self">self</span>,
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, A&gt;&gt; {
         <span class="kw">let </span>buffer_barriers = <span class="self">self</span>.temp.drain(..).map(|pending| {
             <span class="kw">let </span>buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.metadata.get_resource_unchecked(pending.id <span class="kw">as _</span>) };
-            pending.into_hal(buf)
+            pending.into_hal(buf, snatch_guard)
         });
         buffer_barriers
     }

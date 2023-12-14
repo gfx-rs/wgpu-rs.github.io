@@ -1297,6 +1297,15 @@
 <a href="#1297" id="1297">1297</a>
 <a href="#1298" id="1298">1298</a>
 <a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1313,6 +1322,7 @@
     identity::{GlobalIdentityHandlerFactory, IdentityManager},
     init_tracker::{BufferInitTracker, TextureInitTracker},
     resource, resource_log,
+    snatch::{SnatchGuard, Snatchable},
     track::TextureSelector,
     validation::MissingBufferUsageError,
     Label, SubmissionIndex,
@@ -1694,7 +1704,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Buffer&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Snatchable&lt;A::Buffer&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) usage: wgt::BufferUsages,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
@@ -1717,8 +1727,8 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Buffer&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::Buffer {
-        <span class="self">self</span>.raw.as_ref().unwrap()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="kw-2">&amp;</span>A::Buffer {
+        <span class="self">self</span>.raw.get(guard).unwrap()
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>buffer_unmap_inner(
@@ -1727,6 +1737,7 @@
         <span class="kw">use </span>hal::Device;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">let </span>buffer_id = <span class="self">self</span>.info.id();
         <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Idle"</span>, buffer_id);
         <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), resource::BufferMapState::Idle) {
@@ -1750,13 +1761,17 @@
                 <span class="kw">let _ </span>= ptr;
                 <span class="kw">if </span>needs_flush {
                     <span class="kw">unsafe </span>{
-                        device
-                            .raw()
-                            .flush_mapped_ranges(stage_buffer.raw(), iter::once(<span class="number">0</span>..<span class="self">self</span>.size));
+                        device.raw().flush_mapped_ranges(
+                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
+                            iter::once(<span class="number">0</span>..<span class="self">self</span>.size),
+                        );
                     }
                 }
 
-                <span class="kw">let </span>raw_buf = <span class="self">self</span>.raw.as_ref().ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
+                <span class="kw">let </span>raw_buf = <span class="self">self
+                    </span>.raw
+                    .get(<span class="kw-2">&amp;</span>snatch_guard)
+                    .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
 
                 <span class="self">self</span>.info
                     .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
@@ -1766,7 +1781,7 @@
                     size,
                 });
                 <span class="kw">let </span>transition_src = hal::BufferBarrier {
-                    buffer: stage_buffer.raw(),
+                    buffer: stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
                     usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
                 };
                 <span class="kw">let </span>transition_dst = hal::BufferBarrier {
@@ -1782,7 +1797,7 @@
                     );
                     <span class="kw">if </span><span class="self">self</span>.size &gt; <span class="number">0 </span>{
                         encoder.copy_buffer_to_buffer(
-                            stage_buffer.raw(),
+                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
                             raw_buf,
                             region.into_iter(),
                         );
@@ -1817,7 +1832,7 @@
                 <span class="kw">unsafe </span>{
                     device
                         .raw()
-                        .unmap_buffer(<span class="self">self</span>.raw())
+                        .unmap_buffer(<span class="self">self</span>.raw(<span class="kw-2">&amp;</span>snatch_guard))
                         .map_err(DeviceError::from)<span class="question-mark">?
                 </span>};
             }
@@ -1838,7 +1853,10 @@
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::FreeBuffer(buffer_id));
             }
-            <span class="kw">if </span><span class="self">self</span>.raw.is_none() {
+            <span class="comment">// Note: a future commit will replace this with a read guard
+            // and actually snatch the buffer.
+            </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+            <span class="kw">if </span><span class="self">self</span>.raw.get(<span class="kw-2">&amp;</span>snatch_guard).is_none() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
             }
 

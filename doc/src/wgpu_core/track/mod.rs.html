@@ -622,6 +622,8 @@
 <a href="#622" id="622">622</a>
 <a href="#623" id="623">623</a>
 <a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -730,6 +732,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     hal_api::HalApi,
     id::{<span class="self">self</span>, TypedId},
     pipeline, resource,
+    snatch::SnatchGuard,
     storage::Storage,
 };
 
@@ -762,8 +765,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span><span class="kw">pub fn </span>into_hal&lt;<span class="lifetime">'a</span>, A: HalApi&gt;(
         <span class="self">self</span>,
         buf: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>resource::Buffer&lt;A&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; hal::BufferBarrier&lt;<span class="lifetime">'a</span>, A&gt; {
-        <span class="kw">let </span>buffer = buf.raw.as_ref().expect(<span class="string">"Buffer is destroyed"</span>);
+        <span class="kw">let </span>buffer = buf.raw.get(snatch_guard).expect(<span class="string">"Buffer is destroyed"</span>);
         hal::BufferBarrier {
             buffer,
             usage: <span class="self">self</span>.usage,

@@ -490,6 +490,9 @@
 <a href="#490" id="490">490</a>
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -922,7 +925,10 @@
                 .set_single(dst_buffer, hal::BufferUses::COPY_DST)
                 .ok_or(QueryError::InvalidBuffer(destination))<span class="question-mark">?
         </span>};
-        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer));
+
+        <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
+
+        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">if </span>!dst_buffer.usage.contains(wgt::BufferUsages::QUERY_RESOLVE) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::MissingBufferUsage.into());
@@ -973,7 +979,7 @@
             raw_encoder.copy_query_results(
                 query_set.raw(),
                 start_query..end_query,
-                dst_buffer.raw(),
+                dst_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
                 destination_offset,
                 wgt::BufferSize::new_unchecked(stride <span class="kw">as </span>u64),
             );

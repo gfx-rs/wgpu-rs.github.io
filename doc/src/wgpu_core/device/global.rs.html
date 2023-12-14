@@ -2512,6 +2512,15 @@
 <a href="#2512" id="2512">2512</a>
 <a href="#2513" id="2513">2513</a>
 <a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2753,7 +2762,12 @@
                 <span class="kw">let </span>stage_fid = hub.buffers.request();
                 <span class="kw">let </span>stage = stage_fid.init(stage);
 
-                <span class="kw">let </span>mapping = <span class="kw">match unsafe </span>{ device.raw().map_buffer(stage.raw(), <span class="number">0</span>..stage.size) } {
+                <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+                <span class="kw">let </span>mapping = <span class="kw">match unsafe </span>{
+                    device
+                        .raw()
+                        .map_buffer(stage.raw(<span class="kw-2">&amp;</span>snatch_guard), <span class="number">0</span>..stage.size)
+                } {
                     <span class="prelude-val">Ok</span>(mapping) =&gt; mapping,
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>life_lock = device.lock_life();
@@ -2894,6 +2908,7 @@
             .devices
             .get(device_id)
             .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
         }
@@ -2916,7 +2931,7 @@
             });
         }
 
-        <span class="kw">let </span>raw_buf = buffer.raw();
+        <span class="kw">let </span>raw_buf = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>mapping = device
                 .raw()
@@ -2957,6 +2972,8 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
         }
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span>buffer = hub
             .buffers
             .get(buffer_id)
@@ -2964,7 +2981,7 @@
         check_buffer_usage(buffer.usage, wgt::BufferUsages::MAP_READ)<span class="question-mark">?</span>;
         <span class="comment">//assert!(buffer isn't used by the GPU);
 
-        </span><span class="kw">let </span>raw_buf = buffer.raw();
+        </span><span class="kw">let </span>raw_buf = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>mapping = device
                 .raw()
@@ -4920,7 +4937,8 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = buffer.device.as_ref().trackers.lock();
                 trackers.buffers.set_single(<span class="kw-2">&amp;</span>buffer, internal_use);
                 <span class="comment">//TODO: Check if draining ALL buffers is correct!
-                </span><span class="kw">let _ </span>= trackers.buffers.drain_transitions();
+                </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+                <span class="kw">let _ </span>= trackers.buffers.drain_transitions(<span class="kw-2">&amp;</span>snatch_guard);
             }
 
             buffer

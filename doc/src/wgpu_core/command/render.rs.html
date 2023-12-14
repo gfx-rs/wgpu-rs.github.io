@@ -2809,6 +2809,13 @@
 <a href="#2809" id="2809">2809</a>
 <a href="#2810" id="2810">2810</a>
 <a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
+<a href="#2815" id="2815">2815</a>
+<a href="#2816" id="2816">2816</a>
+<a href="#2817" id="2817">2817</a>
+<a href="#2818" id="2818">2818</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use crate</span>::{
     api_log,
@@ -4119,8 +4126,11 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(init_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span>(scope, pending_discard_init_fixups) = {
-            <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(init_scope)<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
             <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
@@ -4135,7 +4145,6 @@
                 });
             }
 
-            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
             <span class="kw">if </span>!device.is_valid() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost).map_pass_err(init_scope);
             }
@@ -4450,7 +4459,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
                             .raw
-                            .as_ref()
+                            .get(<span class="kw-2">&amp;</span>snatch_guard)
                             .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -4512,7 +4521,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
                             .raw
-                            .as_ref()
+                            .get(<span class="kw-2">&amp;</span>snatch_guard)
                             .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -4802,7 +4811,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>indirect_raw = indirect_buffer
                             .raw
-                            .as_ref()
+                            .get(<span class="kw-2">&amp;</span>snatch_guard)
                             .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -4874,7 +4883,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>indirect_raw = indirect_buffer
                             .raw
-                            .as_ref()
+                            .get(<span class="kw-2">&amp;</span>snatch_guard)
                             .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -4891,7 +4900,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>count_raw = count_buffer
                             .raw
-                            .as_ref()
+                            .get(<span class="kw-2">&amp;</span>snatch_guard)
                             .ok_or(RenderCommandError::DestroyedBuffer(count_buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -5196,7 +5205,12 @@
                 .map_err(RenderCommandError::InvalidQuerySet)
                 .map_pass_err(PassErrorScope::QueryReset)<span class="question-mark">?</span>;
 
-            <span class="kw">super</span>::CommandBuffer::insert_barriers_from_scope(transit, tracker, <span class="kw-2">&amp;</span>scope);
+            <span class="kw">super</span>::CommandBuffer::insert_barriers_from_scope(
+                transit,
+                tracker,
+                <span class="kw-2">&amp;</span>scope,
+                <span class="kw-2">&amp;</span>snatch_guard,
+            );
         }
 
         <span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
