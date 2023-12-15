@@ -2514,13 +2514,6 @@
 <a href="#2514" id="2514">2514</a>
 <a href="#2515" id="2515">2515</a>
 <a href="#2516" id="2516">2516</a>
-<a href="#2517" id="2517">2517</a>
-<a href="#2518" id="2518">2518</a>
-<a href="#2519" id="2519">2519</a>
-<a href="#2520" id="2520">2520</a>
-<a href="#2521" id="2521">2521</a>
-<a href="#2522" id="2522">2522</a>
-<a href="#2523" id="2523">2523</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2537,17 +2530,24 @@
     instance::{<span class="self">self</span>, Adapter, Surface},
     pipeline, present,
     resource::{<span class="self">self</span>, BufferAccessResult},
-    resource::{BufferAccessError, BufferMapOperation, Resource},
+    resource::{BufferAccessError, BufferMapOperation, CreateBufferError, Resource},
     validation::check_buffer_usage,
     FastHashMap, Label, LabelHelpers <span class="kw">as _</span>,
 };
 
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>hal::Device <span class="kw">as _</span>;
 <span class="kw">use </span>parking_lot::RwLock;
 
 <span class="kw">use </span>wgt::{BufferAddress, TextureFormat};
 
-<span class="kw">use </span>std::{borrow::Cow, iter, ops::Range, ptr, sync::atomic::Ordering};
+<span class="kw">use </span>std::{
+    borrow::Cow,
+    iter,
+    ops::Range,
+    ptr,
+    sync::{atomic::Ordering, Arc},
+};
 
 <span class="kw">use super</span>::{ImplicitPipelineIds, InvalidDevice, UserClosures};
 
@@ -2663,12 +2663,13 @@
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
         id_in: Input&lt;G, id::BufferId&gt;,
-    ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
+    ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;CreateBufferError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
 
+        <span class="kw">let </span><span class="kw-2">mut </span>to_destroy: ArrayVec&lt;resource::Buffer&lt;A&gt;, <span class="number">2</span>&gt; = ArrayVec::new();
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
@@ -2682,11 +2683,7 @@
 
             <span class="kw">if </span>desc.usage.is_empty() {
                 <span class="comment">// Per spec, `usage` must not be zero.
-                </span><span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
-                <span class="kw">return </span>(
-                    id,
-                    <span class="prelude-val">Some</span>(resource::CreateBufferError::InvalidUsage(desc.usage)),
-                );
+                </span><span class="kw">break </span>CreateBufferError::InvalidUsage(desc.usage);
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -2702,36 +2699,27 @@
             <span class="kw">let </span>buffer = <span class="kw">match </span>device.create_buffer(desc, <span class="bool-val">false</span>) {
                 <span class="prelude-val">Ok</span>(buffer) =&gt; buffer,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
-                    <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(e));
+                    <span class="kw">break </span>e;
                 }
             };
-
-            <span class="kw">let </span>(id, resource) = fid.assign(buffer);
-            <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer({desc:?}) -&gt; {id:?}"</span>);
 
             <span class="kw">let </span>buffer_use = <span class="kw">if </span>!desc.mapped_at_creation {
                 hal::BufferUses::empty()
             } <span class="kw">else if </span>desc.usage.contains(wgt::BufferUsages::MAP_WRITE) {
                 <span class="comment">// buffer is mappable, so we are just doing that at start
-                </span><span class="kw">let </span>map_size = resource.size;
+                </span><span class="kw">let </span>map_size = buffer.size;
                 <span class="kw">let </span>ptr = <span class="kw">if </span>map_size == <span class="number">0 </span>{
                     std::ptr::NonNull::dangling()
                 } <span class="kw">else </span>{
-                    <span class="kw">match </span>map_buffer(device.raw(), <span class="kw-2">&amp;</span>resource, <span class="number">0</span>, map_size, HostMap::Write) {
+                    <span class="kw">match </span>map_buffer(device.raw(), <span class="kw-2">&amp;</span>buffer, <span class="number">0</span>, map_size, HostMap::Write) {
                         <span class="prelude-val">Ok</span>(ptr) =&gt; ptr,
                         <span class="prelude-val">Err</span>(e) =&gt; {
-                            device.lock_life().schedule_resource_destruction(
-                                queue::TempResource::Buffer(resource),
-                                !<span class="number">0</span>,
-                            );
-                            hub.buffers
-                                .force_replace_with_error(id, desc.label.borrow_or_default());
-                            <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(e.into()));
+                            to_destroy.push(buffer);
+                            <span class="kw">break </span>e.into();
                         }
                     }
                 };
-                <span class="kw-2">*</span>resource.map_state.lock() = resource::BufferMapState::Active {
+                <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Active {
                     ptr,
                     range: <span class="number">0</span>..map_size,
                     host: HostMap::Write,
@@ -2750,17 +2738,10 @@
                 <span class="kw">let </span>stage = <span class="kw">match </span>device.create_buffer(<span class="kw-2">&amp;</span>stage_desc, <span class="bool-val">true</span>) {
                     <span class="prelude-val">Ok</span>(stage) =&gt; stage,
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        device.lock_life().schedule_resource_destruction(
-                            queue::TempResource::Buffer(resource),
-                            !<span class="number">0</span>,
-                        );
-                        hub.buffers
-                            .force_replace_with_error(id, desc.label.borrow_or_default());
-                        <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(e));
+                        to_destroy.push(buffer);
+                        <span class="kw">break </span>e;
                     }
                 };
-                <span class="kw">let </span>stage_fid = hub.buffers.request();
-                <span class="kw">let </span>stage = stage_fid.init(stage);
 
                 <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
                 <span class="kw">let </span>mapping = <span class="kw">match unsafe </span>{
@@ -2770,36 +2751,32 @@
                 } {
                     <span class="prelude-val">Ok</span>(mapping) =&gt; mapping,
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>life_lock = device.lock_life();
-                        life_lock.schedule_resource_destruction(
-                            queue::TempResource::Buffer(resource),
-                            !<span class="number">0</span>,
-                        );
-                        life_lock
-                            .schedule_resource_destruction(queue::TempResource::Buffer(stage), !<span class="number">0</span>);
-                        hub.buffers
-                            .force_replace_with_error(id, desc.label.borrow_or_default());
-                        <span class="kw">return </span>(id, <span class="prelude-val">Some</span>(DeviceError::from(e).into()));
+                        to_destroy.push(buffer);
+                        to_destroy.push(stage);
+                        <span class="kw">break </span>CreateBufferError::Device(e.into());
                     }
                 };
 
-                <span class="macro">assert_eq!</span>(resource.size % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
+                <span class="kw">let </span>stage_fid = hub.buffers.request();
+                <span class="kw">let </span>stage = stage_fid.init(stage);
+
+                <span class="macro">assert_eq!</span>(buffer.size % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
                 <span class="comment">// Zero initialize memory and then mark both staging and buffer as initialized
                 // (it's guaranteed that this is the case by the time the buffer is usable)
-                </span><span class="kw">unsafe </span>{ ptr::write_bytes(mapping.ptr.as_ptr(), <span class="number">0</span>, resource.size <span class="kw">as </span>usize) };
-                resource
-                    .initialization_status
-                    .write()
-                    .drain(<span class="number">0</span>..resource.size);
-                stage.initialization_status.write().drain(<span class="number">0</span>..resource.size);
+                </span><span class="kw">unsafe </span>{ ptr::write_bytes(mapping.ptr.as_ptr(), <span class="number">0</span>, buffer.size <span class="kw">as </span>usize) };
+                buffer.initialization_status.write().drain(<span class="number">0</span>..buffer.size);
+                stage.initialization_status.write().drain(<span class="number">0</span>..buffer.size);
 
-                <span class="kw-2">*</span>resource.map_state.lock() = resource::BufferMapState::Init {
+                <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Init {
                     ptr: mapping.ptr,
                     needs_flush: !mapping.is_coherent,
                     stage_buffer: stage,
                 };
                 hal::BufferUses::COPY_DST
             };
+
+            <span class="kw">let </span>(id, resource) = fid.assign(buffer);
+            <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer({desc:?}) -&gt; {id:?}"</span>);
 
             device
                 .trackers
@@ -2809,6 +2786,15 @@
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="comment">// Error path
+
+        </span><span class="kw">for </span>buffer <span class="kw">in </span>to_destroy {
+            <span class="kw">let </span>device = Arc::clone(<span class="kw-2">&amp;</span>buffer.device);
+            device
+                .lock_life()
+                .schedule_resource_destruction(queue::TempResource::Buffer(Arc::new(buffer)), !<span class="number">0</span>);
+        }
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3196,7 +3182,7 @@
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
         id_in: Input&lt;G, id::BufferId&gt;,
-    ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
+    ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;CreateBufferError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
