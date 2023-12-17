@@ -1076,6 +1076,10 @@
 <a href="#1075" id="1075">1075</a>
 <a href="#1076" id="1076">1076</a>
 <a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -1251,12 +1255,8 @@
 </span><span class="kw">pub enum </span>DispatchError {
     <span class="attr">#[error(<span class="string">"Compute pipeline must be set"</span>)]
     </span>MissingPipeline,
-    <span class="attr">#[error(<span class="string">"The pipeline layout, associated with the current compute pipeline, contains a bind group layout at index {index} which is incompatible with the bind group layout associated with the bind group at {index}"</span>)]
-    </span>IncompatibleBindGroup {
-        index: u32,
-        <span class="comment">//expected: BindGroupLayoutId,
-        //provided: Option&lt;(BindGroupLayoutId, BindGroupId)&gt;,
-    </span>},
+    <span class="attr">#[error(<span class="string">"Incompatible bind group at index {index} in the current compute pipeline"</span>)]
+    </span>IncompatibleBindGroup { index: u32, diff: Vec&lt;String&gt; },
     <span class="attr">#[error(
         <span class="string">"Each current dispatch group size dimension ({current:?}) must be less or equal to {limit}"
     </span>)]
@@ -1323,6 +1323,11 @@
             <span class="self">Self</span>::InvalidIndirectBuffer(id) =&gt; {
                 fmt.buffer_label(<span class="kw-2">&amp;</span>id);
             }
+            <span class="self">Self</span>::Dispatch(DispatchError::IncompatibleBindGroup { <span class="kw-2">ref </span>diff, .. }) =&gt; {
+                <span class="kw">for </span>d <span class="kw">in </span>diff {
+                    fmt.note(<span class="kw-2">&amp;</span>d);
+                }
+            }
             <span class="kw">_ </span>=&gt; {}
         };
     }
@@ -1369,8 +1374,11 @@
         <span class="kw">let </span>bind_mask = <span class="self">self</span>.binder.invalid_mask();
         <span class="kw">if </span>bind_mask != <span class="number">0 </span>{
             <span class="comment">//let (expected, provided) = self.binder.entries[index as usize].info();
-            </span><span class="kw">return </span><span class="prelude-val">Err</span>(DispatchError::IncompatibleBindGroup {
-                index: bind_mask.trailing_zeros(),
+            </span><span class="kw">let </span>index = bind_mask.trailing_zeros();
+
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DispatchError::IncompatibleBindGroup {
+                index,
+                diff: <span class="self">self</span>.binder.bgl_diff(),
             });
         }
         <span class="kw">if </span><span class="self">self</span>.pipeline.is_none() {

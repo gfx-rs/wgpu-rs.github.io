@@ -2817,6 +2817,12 @@
 <a href="#2816" id="2816">2816</a>
 <a href="#2817" id="2817">2817</a>
 <a href="#2818" id="2818">2818</a>
+<a href="#2819" id="2819">2819</a>
+<a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use crate</span>::{
     api_log,
@@ -3260,6 +3266,7 @@
             <span class="comment">//let (expected, provided) = self.binder.entries[index as usize].info();
             </span><span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::IncompatibleBindGroup {
                 index: bind_mask.trailing_zeros(),
+                diff: <span class="self">self</span>.binder.bgl_diff(),
             });
         }
         <span class="kw">if </span><span class="self">self</span>.pipeline.is_none() {
@@ -3461,6 +3468,11 @@
         fmt.error(<span class="self">self</span>);
         <span class="kw">if let </span><span class="self">Self</span>::InvalidAttachment(id) = <span class="kw-2">*</span><span class="self">self </span>{
             fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"attachment"</span>);
+        };
+        <span class="kw">if let </span><span class="self">Self</span>::Draw(DrawError::IncompatibleBindGroup { diff, .. }) = <span class="self">self </span>{
+            <span class="kw">for </span>d <span class="kw">in </span>diff {
+                fmt.note(<span class="kw-2">&amp;</span>d);
+            }
         };
     }
 }
