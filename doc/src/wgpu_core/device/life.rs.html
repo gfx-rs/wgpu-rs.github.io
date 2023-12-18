@@ -949,6 +949,38 @@
 <a href="#948" id="948">948</a>
 <a href="#949" id="949">949</a>
 <a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -965,112 +997,108 @@
         TextureViewId,
     },
     pipeline::{ComputePipeline, RenderPipeline},
-    resource::{
-        <span class="self">self</span>, Buffer, QuerySet, Resource, ResourceType, Sampler, StagingBuffer, Texture,
-        TextureView,
-    },
+    resource::{<span class="self">self</span>, Buffer, QuerySet, Resource, Sampler, StagingBuffer, Texture, TextureView},
     track::{ResourceTracker, Tracker},
     FastHashMap, SubmissionIndex,
 };
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span>parking_lot::Mutex;
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::WasmNotSendSync;
-
-<span class="kw">use </span>std::{any::Any, sync::Arc};
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ResourceMap: Any + WasmNotSendSync {
-    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any;
-    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any;
-    <span class="kw">fn </span>clear_map(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
-    <span class="kw">fn </span>extend_map(<span class="kw-2">&amp;mut </span><span class="self">self</span>, maps: <span class="kw-2">&amp;mut </span>ResourceMaps);
-}
-
-<span class="kw">impl</span>&lt;Id, R&gt; ResourceMap <span class="kw">for </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;
-<span class="kw">where
-    </span>Id: id::TypedId,
-    R: Resource&lt;Id&gt;,
-{
-    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any {
-        <span class="self">self
-    </span>}
-    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any {
-        <span class="self">self
-    </span>}
-    <span class="kw">fn </span>clear_map(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.clear()
-    }
-    <span class="kw">fn </span>extend_map(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: <span class="kw-2">&amp;mut </span>ResourceMaps) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(other) = r.maps.get_mut(R::TYPE) {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(other) = other.as_any_mut().downcast_mut::&lt;<span class="self">Self</span>&gt;() {
-                <span class="self">self</span>.extend(other.drain());
-            }
-        }
-    }
-}
 
 <span class="doccomment">/// A struct that keeps lists of resources that are no longer needed by the user.
 </span><span class="attr">#[derive(Default)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ResourceMaps {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) maps: FastHashMap&lt;ResourceType, Box&lt;<span class="kw">dyn </span>ResourceMap&gt;&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ResourceMaps&lt;A: HalApi&gt; {
+    <span class="kw">pub </span>buffers: FastHashMap&lt;BufferId, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>staging_buffers: FastHashMap&lt;StagingBufferId, Arc&lt;StagingBuffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>textures: FastHashMap&lt;TextureId, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>texture_views: FastHashMap&lt;TextureViewId, Arc&lt;TextureView&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>samplers: FastHashMap&lt;SamplerId, Arc&lt;Sampler&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>bind_groups: FastHashMap&lt;BindGroupId, Arc&lt;BindGroup&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>bind_group_layouts: FastHashMap&lt;BindGroupLayoutId, Arc&lt;BindGroupLayout&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>render_pipelines: FastHashMap&lt;RenderPipelineId, Arc&lt;RenderPipeline&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>compute_pipelines: FastHashMap&lt;ComputePipelineId, Arc&lt;ComputePipeline&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>pipeline_layouts: FastHashMap&lt;PipelineLayoutId, Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>render_bundles: FastHashMap&lt;RenderBundleId, Arc&lt;RenderBundle&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>query_sets: FastHashMap&lt;QuerySetId, Arc&lt;QuerySet&lt;A&gt;&gt;&gt;,
 }
 
-<span class="kw">impl </span>ResourceMaps {
-    <span class="kw">fn </span>add_type&lt;Id, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self
-    </span><span class="kw">where
-        </span>Id: id::TypedId,
-        R: Resource&lt;Id&gt;,
-    {
-        <span class="kw">let </span>map = FastHashMap::&lt;Id, Arc&lt;R&gt;&gt;::default();
-        <span class="self">self</span>.maps.insert(R::TYPE, Box::new(map));
-        <span class="self">self
-    </span>}
-    <span class="kw">fn </span>map_mut&lt;Id, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;
-    <span class="kw">where
-        </span>Id: id::TypedId,
-        R: Resource&lt;Id&gt;,
-    {
-        <span class="kw">let </span>map = <span class="self">self
-            </span>.maps
-            .entry(R::TYPE)
-            .or_insert_with(|| Box::&lt;FastHashMap&lt;Id, Arc&lt;R&gt;&gt;&gt;::default());
-        <span class="kw">let </span>any_map = map.as_mut().as_any_mut();
-        <span class="kw">let </span>map = any_map.downcast_mut::&lt;FastHashMap&lt;Id, Arc&lt;R&gt;&gt;&gt;().unwrap();
-        map
+<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceMaps&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        ResourceMaps {
+            buffers: FastHashMap::default(),
+            staging_buffers: FastHashMap::default(),
+            textures: FastHashMap::default(),
+            texture_views: FastHashMap::default(),
+            samplers: FastHashMap::default(),
+            bind_groups: FastHashMap::default(),
+            bind_group_layouts: FastHashMap::default(),
+            render_pipelines: FastHashMap::default(),
+            compute_pipelines: FastHashMap::default(),
+            pipeline_layouts: FastHashMap::default(),
+            render_bundles: FastHashMap::default(),
+            query_sets: FastHashMap::default(),
+        }
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;A: HalApi&gt;() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>maps = <span class="self">Self</span>::default();
-        maps.add_type::&lt;BufferId, Buffer&lt;A&gt;&gt;();
-        maps.add_type::&lt;StagingBufferId, StagingBuffer&lt;A&gt;&gt;();
-        maps.add_type::&lt;TextureId, Texture&lt;A&gt;&gt;();
-        maps.add_type::&lt;TextureViewId, TextureView&lt;A&gt;&gt;();
-        maps.add_type::&lt;SamplerId, Sampler&lt;A&gt;&gt;();
-        maps.add_type::&lt;BindGroupId, BindGroup&lt;A&gt;&gt;();
-        maps.add_type::&lt;BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;();
-        maps.add_type::&lt;RenderPipelineId, RenderPipeline&lt;A&gt;&gt;();
-        maps.add_type::&lt;ComputePipelineId, ComputePipeline&lt;A&gt;&gt;();
-        maps.add_type::&lt;PipelineLayoutId, PipelineLayout&lt;A&gt;&gt;();
-        maps.add_type::&lt;RenderBundleId, RenderBundle&lt;A&gt;&gt;();
-        maps.add_type::&lt;QuerySetId, QuerySet&lt;A&gt;&gt;();
-        maps
-    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.maps.iter_mut().for_each(|(_t, map)| map.clear_map());
+        <span class="kw">let </span>ResourceMaps {
+            buffers,
+            staging_buffers,
+            textures,
+            texture_views,
+            samplers,
+            bind_groups,
+            bind_group_layouts,
+            render_pipelines,
+            compute_pipelines,
+            pipeline_layouts,
+            render_bundles,
+            query_sets,
+        } = <span class="self">self</span>;
+        buffers.clear();
+        staging_buffers.clear();
+        textures.clear();
+        texture_views.clear();
+        samplers.clear();
+        bind_groups.clear();
+        bind_group_layouts.clear();
+        render_pipelines.clear();
+        compute_pipelines.clear();
+        pipeline_layouts.clear();
+        render_bundles.clear();
+        query_sets.clear();
     }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>other: <span class="self">Self</span>) {
-        <span class="self">self</span>.maps.iter_mut().for_each(|(_t, map)| {
-            map.extend_map(<span class="kw-2">&amp;mut </span>other);
-        });
+        <span class="kw">let </span>ResourceMaps {
+            buffers,
+            staging_buffers,
+            textures,
+            texture_views,
+            samplers,
+            bind_groups,
+            bind_group_layouts,
+            render_pipelines,
+            compute_pipelines,
+            pipeline_layouts,
+            render_bundles,
+            query_sets,
+        } = <span class="self">self</span>;
+        buffers.extend(other.buffers.drain());
+        staging_buffers.extend(other.staging_buffers.drain());
+        textures.extend(other.textures.drain());
+        texture_views.extend(other.texture_views.drain());
+        samplers.extend(other.samplers.drain());
+        bind_groups.extend(other.bind_groups.drain());
+        bind_group_layouts.extend(other.bind_group_layouts.drain());
+        render_pipelines.extend(other.render_pipelines.drain());
+        compute_pipelines.extend(other.compute_pipelines.drain());
+        pipeline_layouts.extend(other.pipeline_layouts.drain());
+        render_bundles.extend(other.render_bundles.drain());
+        query_sets.extend(other.query_sets.drain());
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert&lt;Id, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id, r: Arc&lt;R&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self
-    </span><span class="kw">where
-        </span>Id: id::TypedId,
-        R: Resource&lt;Id&gt;,
-    {
-        <span class="self">self</span>.map_mut().insert(id, r);
-        <span class="self">self
-    </span>}
 }
 
 <span class="doccomment">/// Resources used by a queue submission, and work to be done once it completes.
@@ -1091,7 +1119,7 @@
     /// This includes things like temporary resources and resources that are
     /// used by submitted commands but have been dropped by the user (meaning that
     /// this submission is their last reference.)
-    </span>last_resources: ResourceMaps,
+    </span>last_resources: ResourceMaps&lt;A&gt;,
 
     <span class="doccomment">/// Buffers to be mapped once this submission has completed.
     </span>mapped: Vec&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
@@ -1165,7 +1193,7 @@
 
     <span class="doccomment">/// Resources whose user handle has died (i.e. drop/destroy has been called)
     /// and will likely be ready for destruction soon.
-    </span><span class="kw">pub </span>suspected_resources: ResourceMaps,
+    </span><span class="kw">pub </span>suspected_resources: ResourceMaps&lt;A&gt;,
 
     <span class="doccomment">/// Resources used by queue submissions still in flight. One entry per
     /// submission, with older submissions appearing before younger.
@@ -1180,7 +1208,7 @@
     /// These are freed by `LifeTracker::cleanup`, which is called from periodic
     /// maintenance functions like `Global::device_poll`, and when a device is
     /// destroyed.
-    </span>free_resources: ResourceMaps,
+    </span>free_resources: ResourceMaps&lt;A&gt;,
 
     <span class="doccomment">/// Buffers the user has asked us to map, and which are not used by any
     /// queue submission still in flight.
@@ -1204,9 +1232,9 @@
             mapped: Vec::new(),
             future_suspected_buffers: Vec::new(),
             future_suspected_textures: Vec::new(),
-            suspected_resources: ResourceMaps::new::&lt;A&gt;(),
+            suspected_resources: ResourceMaps::new(),
             active: Vec::new(),
-            free_resources: ResourceMaps::new::&lt;A&gt;(),
+            free_resources: ResourceMaps::new(),
             ready_to_map: Vec::new(),
             work_done_closures: SmallVec::new(),
             device_lost_closure: <span class="prelude-val">None</span>,
@@ -1225,17 +1253,19 @@
         temp_resources: <span class="kw">impl </span>Iterator&lt;Item = TempResource&lt;A&gt;&gt;,
         encoders: Vec&lt;EncoderInFlight&lt;A&gt;&gt;,
     ) {
-        <span class="kw">let </span><span class="kw-2">mut </span>last_resources = ResourceMaps::new::&lt;A&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>last_resources = ResourceMaps::new();
         <span class="kw">for </span>res <span class="kw">in </span>temp_resources {
             <span class="kw">match </span>res {
                 TempResource::Buffer(raw) =&gt; {
-                    last_resources.insert(raw.as_info().id(), raw);
+                    last_resources.buffers.insert(raw.as_info().id(), raw);
                 }
                 TempResource::StagingBuffer(raw) =&gt; {
-                    last_resources.insert(raw.as_info().id(), raw);
+                    last_resources
+                        .staging_buffers
+                        .insert(raw.as_info().id(), raw);
                 }
                 TempResource::Texture(raw) =&gt; {
-                    last_resources.insert(raw.as_info().id(), raw);
+                    last_resources.textures.insert(raw.as_info().id(), raw);
                 }
             }
         }
@@ -1251,10 +1281,12 @@
 
     <span class="kw">pub fn </span>post_submit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_buffers.drain(..).take(<span class="number">1</span>) {
-            <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+            <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
         }
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_textures.drain(..).take(<span class="number">1</span>) {
-            <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+            <span class="self">self</span>.suspected_resources
+                .textures
+                .insert(v.as_info().id(), v);
         }
     }
 
@@ -1330,13 +1362,13 @@
             .map_or(<span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources, |a| <span class="kw-2">&amp;mut </span>a.last_resources);
         <span class="kw">match </span>temp_resource {
             TempResource::Buffer(raw) =&gt; {
-                resources.insert(raw.as_info().id(), raw);
+                resources.buffers.insert(raw.as_info().id(), raw);
             }
             TempResource::StagingBuffer(raw) =&gt; {
-                resources.insert(raw.as_info().id(), raw);
+                resources.staging_buffers.insert(raw.as_info().id(), raw);
             }
             TempResource::Texture(raw) =&gt; {
-                resources.insert(raw.as_info().id(), raw);
+                resources.textures.insert(raw.as_info().id(), raw);
             }
         }
     }
@@ -1359,8 +1391,9 @@
     <span class="kw">fn </span>triage_resources&lt;Id, R, T&gt;(
         resources_map: <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;,
         active: <span class="kw-2">&amp;mut </span>[ActiveSubmission&lt;A&gt;],
-        free_resources: <span class="kw-2">&amp;mut </span>ResourceMaps,
+        free_resources: <span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;,
         trackers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ResourceTracker&lt;Id, R&gt;,
+        get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;,
         <span class="kw-2">mut </span>on_remove: T,
     ) -&gt; Vec&lt;Arc&lt;R&gt;&gt;
     <span class="kw">where
@@ -1380,7 +1413,7 @@
             <span class="kw">if </span>is_removed {
                 on_remove(<span class="kw-2">&amp;</span>id, resource);
                 removed_resources.push(resource.clone());
-                non_referenced_resources.insert(id, resource.clone());
+                get_resource_map(non_referenced_resources).insert(id, resource.clone());
             }
             !is_removed
         });
@@ -1393,12 +1426,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.render_bundles;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.bundles,
+            |maps| <span class="kw-2">&amp;mut </span>maps.render_bundles,
             |_bundle_id, _bundle| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1408,19 +1442,27 @@
         );
         removed_resources.drain(..).for_each(|bundle| {
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.buffers.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.textures.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .textures
+                    .insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.bind_groups.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .bind_groups
+                    .insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.render_pipelines.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .render_pipelines
+                    .insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.query_sets.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .query_sets
+                    .insert(v.as_info().id(), v);
             }
         });
         <span class="self">self
@@ -1432,12 +1474,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.bind_groups;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resource = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.bind_groups,
+            |maps| <span class="kw-2">&amp;mut </span>maps.bind_groups,
             |_bind_group_id, _bind_group| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1447,16 +1490,22 @@
         );
         removed_resource.drain(..).for_each(|bind_group| {
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.buffers.drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.textures.drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .textures
+                    .insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.views.drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .texture_views
+                    .insert(v.as_info().id(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.samplers.drain_resources() {
-                <span class="self">self</span>.suspected_resources.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .samplers
+                    .insert(v.as_info().id(), v);
             }
             <span class="comment">//Releasing safely unused resources to decrement refcount
             </span>bind_group.used_buffer_ranges.write().clear();
@@ -1464,6 +1513,7 @@
             bind_group.dynamic_binding_info.write().clear();
 
             <span class="self">self</span>.suspected_resources
+                .bind_group_layouts
                 .insert(bind_group.layout.as_info().id(), bind_group.layout.clone());
         });
         <span class="self">self
@@ -1475,12 +1525,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.texture_views;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.views,
+            |maps| <span class="kw-2">&amp;mut </span>maps.texture_views,
             |_texture_view_id, _texture_view| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1492,6 +1543,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>lock = texture_view.parent.write();
             <span class="kw">if let </span><span class="prelude-val">Some</span>(parent_texture) = lock.take() {
                 <span class="self">self</span>.suspected_resources
+                    .textures
                     .insert(parent_texture.as_info().id(), parent_texture);
             }
         });
@@ -1504,12 +1556,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.textures;
         <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.textures,
+            |maps| <span class="kw-2">&amp;mut </span>maps.textures,
             |_texture_id, _texture| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1526,12 +1579,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.samplers;
         <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.samplers,
+            |maps| <span class="kw-2">&amp;mut </span>maps.samplers,
             |_sampler_id, _sampler| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1548,12 +1602,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.buffers;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.buffers,
+            |maps| <span class="kw-2">&amp;mut </span>maps.buffers,
             |_buffer_id, _buffer| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1567,6 +1622,7 @@
             } = <span class="kw-2">*</span>buffer.map_state.lock()
             {
                 <span class="self">self</span>.free_resources
+                    .buffers
                     .insert(stage_buffer.as_info().id(), stage_buffer.clone());
             }
         });
@@ -1579,12 +1635,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.compute_pipelines;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.compute_pipelines,
+            |maps| <span class="kw-2">&amp;mut </span>maps.compute_pipelines,
             |_compute_pipeline_id, _compute_pipeline| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1593,7 +1650,7 @@
             },
         );
         removed_resources.drain(..).for_each(|compute_pipeline| {
-            <span class="self">self</span>.suspected_resources.insert(
+            <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
                 compute_pipeline.layout.as_info().id(),
                 compute_pipeline.layout.clone(),
             );
@@ -1607,12 +1664,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.render_pipelines;
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.render_pipelines,
+            |maps| <span class="kw-2">&amp;mut </span>maps.render_pipelines,
             |_render_pipeline_id, _render_pipeline| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1621,7 +1679,7 @@
             },
         );
         removed_resources.drain(..).for_each(|render_pipeline| {
-            <span class="self">self</span>.suspected_resources.insert(
+            <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
                 render_pipeline.layout.as_info().id(),
                 render_pipeline.layout.clone(),
             );
@@ -1635,7 +1693,7 @@
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = Vec::new();
         <span class="self">self</span>.suspected_resources
-            .map_mut::&lt;PipelineLayoutId, PipelineLayout&lt;A&gt;&gt;()
+            .pipeline_layouts
             .retain(|_pipeline_layout_id, pipeline_layout| {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
@@ -1647,6 +1705,7 @@
         removed_resources.drain(..).for_each(|pipeline_layout| {
             <span class="kw">for </span>bgl <span class="kw">in </span><span class="kw-2">&amp;</span>pipeline_layout.bind_group_layouts {
                 <span class="self">self</span>.suspected_resources
+                    .bind_group_layouts
                     .insert(bgl.as_info().id(), bgl.clone());
             }
         });
@@ -1657,9 +1716,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.suspected_resources
-            .map_mut::&lt;BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;()
-            .retain(|bind_group_layout_id, bind_group_layout| {
+        <span class="self">self</span>.suspected_resources.bind_group_layouts.retain(
+            |bind_group_layout_id, bind_group_layout| {
                 <span class="comment">//Note: this has to happen after all the suspected pipelines are destroyed
                 //Note: nothing else can bump the refcount since the guard is locked exclusively
                 //Note: same BGL can appear multiple times in the list, but only the last
@@ -1669,20 +1727,23 @@
                     t.add(trace::Action::DestroyBindGroupLayout(<span class="kw-2">*</span>bind_group_layout_id));
                 }
                 <span class="self">self</span>.free_resources
+                    .bind_group_layouts
                     .insert(<span class="kw-2">*</span>bind_group_layout_id, bind_group_layout.clone());
                 <span class="bool-val">false
-            </span>});
+            </span>},
+        );
         <span class="self">self
     </span>}
 
     <span class="kw">fn </span>triage_suspected_query_sets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-        <span class="kw">let </span>resource_map = <span class="self">self</span>.suspected_resources.map_mut();
+        <span class="kw">let </span>resource_map = <span class="kw-2">&amp;mut </span><span class="self">self</span>.suspected_resources.query_sets;
         <span class="self">Self</span>::triage_resources(
             resource_map,
             <span class="self">self</span>.active.as_mut_slice(),
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.free_resources,
             <span class="kw-2">&amp;mut </span>trackers.query_sets,
+            |maps| <span class="kw-2">&amp;mut </span>maps.query_sets,
             |_query_set_id, _query_set| {},
         );
         <span class="self">self
@@ -1690,9 +1751,10 @@
 
     <span class="kw">fn </span>triage_suspected_staging_buffers(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.suspected_resources
-            .map_mut::&lt;StagingBufferId, StagingBuffer&lt;A&gt;&gt;()
+            .staging_buffers
             .retain(|staging_buffer_id, staging_buffer| {
                 <span class="self">self</span>.free_resources
+                    .staging_buffers
                     .insert(<span class="kw-2">*</span>staging_buffer_id, staging_buffer.clone());
                 <span class="bool-val">false
             </span>});
@@ -1850,7 +1912,9 @@
             <span class="kw">if </span>is_removed {
                 <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Idle;
                 <span class="macro">log::trace!</span>(<span class="string">"Buffer ready to map {:?} is not tracked anymore"</span>, buffer_id);
-                <span class="self">self</span>.free_resources.insert(buffer_id, buffer.clone());
+                <span class="self">self</span>.free_resources
+                    .buffers
+                    .insert(buffer_id, buffer.clone());
             } <span class="kw">else </span>{
                 <span class="kw">let </span>mapping = <span class="kw">match </span>std::mem::replace(
                     <span class="kw-2">&amp;mut *</span>buffer.map_state.lock(),
