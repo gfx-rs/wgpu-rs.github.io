@@ -1307,6 +1307,10 @@
 <a href="#1306" id="1306">1306</a>
 <a href="#1307" id="1307">1307</a>
 <a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1403,16 +1407,20 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug
     <span class="kw">where
         </span>Id: Debug,
     {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.id.as_ref() {
-            <span class="macro">format!</span>(<span class="string">"[{}] {:?}"</span>, <span class="self">self</span>.label, id)
-        } <span class="kw">else </span>{
-            <span class="macro">format!</span>(<span class="string">"[{}]"</span>, <span class="self">self</span>.label)
+        <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
+            <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
         }
-    }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="kw-2">&amp;</span><span class="self">self</span>.id {
+            <span class="kw">return </span>id;
+        }
+
+        <span class="kw-2">&amp;</span><span class="string">""
+    </span>}
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id {
         <span class="self">self</span>.id.unwrap()
@@ -1718,7 +1726,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Buffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer {}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer {:?}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -1947,7 +1955,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.lock().take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw StagingBuffer {}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw StagingBuffer {:?}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -2029,7 +2037,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Texture&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture {}"</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">use </span>hal::Device;
         <span class="kw">let </span><span class="kw-2">mut </span>clear_mode = <span class="self">self</span>.clear_mode.write();
         <span class="kw">let </span>clear_mode = <span class="kw-2">&amp;mut *</span>clear_mode;
@@ -2361,7 +2369,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>TextureView&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView {}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView {:?}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_texture_view(raw);
@@ -2482,7 +2490,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Sampler&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Sampler {}"</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Sampler {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
@@ -2579,7 +2587,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>QuerySet&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw QuerySet {}"</span>, <span class="self">self</span>.info.label());
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw QuerySet {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
