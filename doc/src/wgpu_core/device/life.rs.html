@@ -977,6 +977,48 @@
 <a href="#976" id="976">976</a>
 <a href="#977" id="977">977</a>
 <a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -993,7 +1035,10 @@
         TextureViewId,
     },
     pipeline::{ComputePipeline, RenderPipeline},
-    resource::{<span class="self">self</span>, Buffer, QuerySet, Resource, Sampler, StagingBuffer, Texture, TextureView},
+    resource::{
+        <span class="self">self</span>, Buffer, DestroyedBuffer, QuerySet, Resource, Sampler, StagingBuffer, Texture,
+        TextureView,
+    },
     track::{ResourceTracker, Tracker},
     FastHashMap, SubmissionIndex,
 };
@@ -1018,6 +1063,7 @@
     <span class="kw">pub </span>pipeline_layouts: FastHashMap&lt;PipelineLayoutId, Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
     <span class="kw">pub </span>render_bundles: FastHashMap&lt;RenderBundleId, Arc&lt;RenderBundle&lt;A&gt;&gt;&gt;,
     <span class="kw">pub </span>query_sets: FastHashMap&lt;QuerySetId, Arc&lt;QuerySet&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>destroyed_buffers: FastHashMap&lt;BufferId, Arc&lt;DestroyedBuffer&lt;A&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ResourceMaps&lt;A&gt; {
@@ -1035,6 +1081,7 @@
             pipeline_layouts: FastHashMap::default(),
             render_bundles: FastHashMap::default(),
             query_sets: FastHashMap::default(),
+            destroyed_buffers: FastHashMap::default(),
         }
     }
 
@@ -1052,6 +1099,7 @@
             pipeline_layouts,
             render_bundles,
             query_sets,
+            destroyed_buffers,
         } = <span class="self">self</span>;
         buffers.clear();
         staging_buffers.clear();
@@ -1065,6 +1113,7 @@
         pipeline_layouts.clear();
         render_bundles.clear();
         query_sets.clear();
+        destroyed_buffers.clear();
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>other: <span class="self">Self</span>) {
@@ -1081,6 +1130,7 @@
             pipeline_layouts,
             render_bundles,
             query_sets,
+            destroyed_buffers,
         } = <span class="self">self</span>;
         buffers.extend(other.buffers.drain());
         staging_buffers.extend(other.staging_buffers.drain());
@@ -1094,6 +1144,7 @@
         pipeline_layouts.extend(other.pipeline_layouts.drain());
         render_bundles.extend(other.render_bundles.drain());
         query_sets.extend(other.query_sets.drain());
+        destroyed_buffers.extend(other.destroyed_buffers.drain());
     }
 }
 
@@ -1260,6 +1311,11 @@
                         .staging_buffers
                         .insert(raw.as_info().id(), raw);
                 }
+                TempResource::DestroyedBuffer(destroyed) =&gt; {
+                    last_resources
+                        .destroyed_buffers
+                        .insert(destroyed.id, destroyed);
+                }
                 TempResource::Texture(raw) =&gt; {
                     last_resources.textures.insert(raw.as_info().id(), raw);
                 }
@@ -1362,6 +1418,9 @@
             }
             TempResource::StagingBuffer(raw) =&gt; {
                 resources.staging_buffers.insert(raw.as_info().id(), raw);
+            }
+            TempResource::DestroyedBuffer(destroyed) =&gt; {
+                resources.destroyed_buffers.insert(destroyed.id, destroyed);
             }
             TempResource::Texture(raw) =&gt; {
                 resources.textures.insert(raw.as_info().id(), raw);
@@ -1621,6 +1680,27 @@
         <span class="self">self
     </span>}
 
+    <span class="kw">fn </span>triage_suspected_destroyed_buffers(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>trace: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>trace::Trace&gt;,
+    ) {
+        <span class="kw">for </span>(id, buffer) <span class="kw">in </span><span class="self">self</span>.suspected_resources.destroyed_buffers.drain() {
+            <span class="kw">let </span>submit_index = buffer.submission_index;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = <span class="self">self</span>.active.iter_mut().find(|a| a.index == submit_index) {
+                resources
+                    .last_resources
+                    .destroyed_buffers
+                    .insert(id, buffer);
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.free_resources.destroyed_buffers.insert(id, buffer);
+            }
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>t) = <span class="kw-2">*</span>trace {
+                t.add(trace::Action::DestroyBuffer(id));
+            }
+        }
+    }
+
     <span class="kw">fn </span>triage_suspected_compute_pipelines(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
@@ -1847,6 +1927,10 @@
         );
         <span class="self">self</span>.triage_suspected_buffers(
             trackers,
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw-2">&amp;mut </span>trace,
+        );
+        <span class="self">self</span>.triage_suspected_destroyed_buffers(
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw-2">&amp;mut </span>trace,
         );

@@ -1322,6 +1322,49 @@
 <a href="#1321" id="1321">1321</a>
 <a href="#1322" id="1322">1322</a>
 <a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1737,7 +1780,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Buffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer {:?}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Deallocate raw Buffer (dropped) {:?}"</span>, <span class="self">self</span>.info.label());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -1875,14 +1918,25 @@
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             trace.add(trace::Action::FreeBuffer(buffer_id));
         }
-        <span class="comment">// Note: a future commit will replace this with a read guard
-        // and actually snatch the buffer.
-        </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-        <span class="kw">if </span><span class="self">self</span>.raw.get(<span class="kw-2">&amp;</span>snatch_guard).is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
-        }
 
-        <span class="kw">let </span>temp = queue::TempResource::Buffer(<span class="self">self</span>.clone());
+        <span class="kw">let </span>temp = {
+            <span class="kw">let </span>snatch_guard = device.snatchable_lock.write();
+            <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.raw.snatch(snatch_guard) {
+                <span class="prelude-val">Some</span>(raw) =&gt; raw,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
+                }
+            };
+
+            queue::TempResource::DestroyedBuffer(Arc::new(DestroyedBuffer {
+                raw: <span class="prelude-val">Some</span>(raw),
+                device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
+                submission_index: <span class="self">self</span>.info.submission_index(),
+                id: <span class="self">self</span>.info.id.unwrap(),
+                label: <span class="self">self</span>.info.label.clone(),
+            }))
+        };
+
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
         <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
         <span class="kw">if </span>pending_writes.dst_buffers.contains_key(<span class="kw-2">&amp;</span>buffer_id) {
@@ -1926,6 +1980,38 @@
 
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BufferId&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+}
+
+<span class="doccomment">/// A buffer that has been marked as destroyed and is staged for actual deletion soon.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>DestroyedBuffer&lt;A: HalApi&gt; {
+    raw: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
+    device: Arc&lt;Device&lt;A&gt;&gt;,
+    label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) id: BufferId,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) submission_index: u64,
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; DestroyedBuffer&lt;A&gt; {
+    <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug {
+        <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
+            <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
+        }
+
+        <span class="kw-2">&amp;</span><span class="self">self</span>.id
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>DestroyedBuffer&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="macro">resource_log!</span>(<span class="string">"Deallocate raw Buffer (destroyed) {:?}"</span>, <span class="self">self</span>.label());
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_buffer(raw);
+            }
+        }
     }
 }
 
