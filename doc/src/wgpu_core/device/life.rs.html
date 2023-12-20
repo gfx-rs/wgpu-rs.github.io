@@ -1019,6 +1019,49 @@
 <a href="#1018" id="1018">1018</a>
 <a href="#1019" id="1019">1019</a>
 <a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1262,7 +1305,7 @@
     </span>ready_to_map: Vec&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
 
     <span class="doccomment">/// Queue "on_submitted_work_done" closures that were initiated for while there is no
-    /// currently pending submissions. These cannot be immeidately invoked as they
+    /// currently pending submissions. These cannot be immediately invoked as they
     /// must happen _after_ all mapped buffer callbacks are mapped, so we defer them
     /// here until the next time the device is maintained.
     </span>work_done_closures: SmallVec&lt;[SubmittedWorkDoneClosure; <span class="number">1</span>]&gt;,
@@ -2038,5 +2081,48 @@
         }
         pending_callbacks
     }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// This is called when the device is lost, which makes every associated
+        // resource invalid and unusable. This is an opportunity to release all of
+        // the underlying gpu resources, even though the objects remain visible to
+        // the user agent. We purge this memory naturally when resources have been
+        // moved into the appropriate buckets, so this function just needs to
+        // initiate movement into those buckets, and it can do that by calling
+        // "destroy" on all the resources we know about which aren't already marked
+        // for cleanup.
+
+        // During these iterations, we discard all errors. We don't care!
+
+        // Destroy all the mapped buffers.
+        </span><span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.mapped {
+            <span class="kw">let _ </span>= buffer.destroy();
+        }
+
+        <span class="comment">// Destroy all the unmapped buffers.
+        </span><span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.ready_to_map {
+            <span class="kw">let _ </span>= buffer.destroy();
+        }
+
+        <span class="comment">// Destroy all the future_suspected_buffers.
+        </span><span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.future_suspected_buffers {
+            <span class="kw">let _ </span>= buffer.destroy();
+        }
+
+        <span class="comment">// Destroy the buffers in all active submissions.
+        </span><span class="kw">for </span>submission <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.active {
+            <span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span>submission.mapped {
+                <span class="kw">let _ </span>= buffer.destroy();
+            }
+        }
+
+        <span class="comment">// Destroy all the future_suspected_textures.
+        // TODO: texture.destroy is not implemented
+        /*
+        for texture in &amp;self.future_suspected_textures {
+            let _ = texture.destroy();
+        }
+        */
+    </span>}
 }
 </code></pre></div></section></main></body></html>

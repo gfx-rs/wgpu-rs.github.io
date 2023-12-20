@@ -3430,6 +3430,17 @@
 <a href="#3429" id="3429">3429</a>
 <a href="#3430" id="3430">3430</a>
 <a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a>
+<a href="#3434" id="3434">3434</a>
+<a href="#3435" id="3435">3435</a>
+<a href="#3436" id="3436">3436</a>
+<a href="#3437" id="3437">3437</a>
+<a href="#3438" id="3438">3438</a>
+<a href="#3439" id="3439">3439</a>
+<a href="#3440" id="3440">3440</a>
+<a href="#3441" id="3441">3441</a>
+<a href="#3442" id="3442">3442</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3813,15 +3824,19 @@
         // our caller. This will complete the steps for both destroy and for
         // "lose the device".
         </span><span class="kw">let </span><span class="kw-2">mut </span>device_lost_invocations = SmallVec::new();
-        <span class="kw">if </span>!<span class="self">self</span>.is_valid()
-            &amp;&amp; life_tracker.queue_empty()
-            &amp;&amp; life_tracker.device_lost_closure.is_some()
-        {
-            device_lost_invocations.push(DeviceLostInvocation {
-                closure: life_tracker.device_lost_closure.take().unwrap(),
-                reason: DeviceLostReason::Destroyed,
-                message: String::new(),
-            });
+        <span class="kw">if </span>!<span class="self">self</span>.is_valid() &amp;&amp; life_tracker.queue_empty() {
+            <span class="comment">// We can release gpu resources associated with this device.
+            </span>life_tracker.release_gpu_resources();
+
+            <span class="comment">// If we have a DeviceLostClosure, build an invocation with the
+            // reason DeviceLostReason::Destroyed and no message.
+            </span><span class="kw">if </span>life_tracker.device_lost_closure.is_some() {
+                device_lost_invocations.push(DeviceLostInvocation {
+                    closure: life_tracker.device_lost_closure.take().unwrap(),
+                    reason: DeviceLostReason::Destroyed,
+                    message: String::new(),
+                });
+            }
         }
 
         <span class="kw">let </span>closures = UserClosures {
@@ -6794,9 +6809,13 @@
         </span><span class="self">self</span>.valid.store(<span class="bool-val">false</span>, Ordering::Release);
 
         <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
-        </span><span class="kw">let </span>closure = <span class="self">self</span>.lock_life().device_lost_closure.take();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>life_lock = <span class="self">self</span>.lock_life();
+        <span class="kw">let </span>closure = life_lock.device_lost_closure.take();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = closure {
+            <span class="comment">// It's important to not hold the lock while calling the closure.
+            </span>drop(life_lock);
             device_lost_closure.call(DeviceLostReason::Unknown, message.to_string());
+            life_lock = <span class="self">self</span>.lock_life();
         }
 
         <span class="comment">// 2) Complete any outstanding mapAsync() steps.
@@ -6806,7 +6825,10 @@
         // since that will prevent any new work from being added to the queues.
         // Future calls to poll_devices will continue to check the work queues
         // until they are cleared, and then drop the device.
-    </span>}
+
+        // Eagerly release GPU resources.
+        </span>life_lock.release_gpu_resources();
+    }
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Device&lt;A&gt; {
