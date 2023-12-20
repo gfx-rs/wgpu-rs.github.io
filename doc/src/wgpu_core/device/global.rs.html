@@ -2534,8 +2534,6 @@
 <a href="#2533" id="2533">2533</a>
 <a href="#2534" id="2534">2534</a>
 <a href="#2535" id="2535">2535</a>
-<a href="#2536" id="2536">2536</a>
-<a href="#2537" id="2537">2537</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3025,10 +3023,15 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>buffer_guard = hub.buffers.write();
-        <span class="kw">let </span>buffer = buffer_guard
-            .get_and_mark_destroyed(buffer_id)
-            .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = {
+            <span class="kw">let </span><span class="kw-2">mut </span>buffer_guard = hub.buffers.write();
+            buffer_guard
+                .get_and_mark_destroyed(buffer_id)
+                .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?
+        </span>};
+
+        <span class="kw">let _ </span>= buffer.unmap();
+
         buffer.destroy()
     }
 
@@ -3038,37 +3041,40 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = hub.buffers.unregister(buffer_id) {
-            <span class="kw">if </span>buffer.ref_count() == <span class="number">1 </span>{
-                buffer.destroy().ok();
+        <span class="kw">let </span>buffer = <span class="kw">match </span>hub.buffers.unregister(buffer_id) {
+            <span class="prelude-val">Some</span>(buffer) =&gt; buffer,
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">return</span>;
             }
+        };
 
-            <span class="kw">let </span>last_submit_index = buffer.info.submission_index();
+        <span class="kw">let _ </span>= buffer.unmap();
 
-            <span class="kw">let </span>device = buffer.device.clone();
+        <span class="kw">let </span>last_submit_index = buffer.info.submission_index();
 
-            <span class="kw">if </span>device
-                .pending_writes
-                .lock()
-                .as_ref()
-                .unwrap()
-                .dst_buffers
-                .contains_key(<span class="kw-2">&amp;</span>buffer_id)
-            {
-                device.lock_life().future_suspected_buffers.push(buffer);
-            } <span class="kw">else </span>{
-                device
-                    .lock_life()
-                    .suspected_resources
-                    .buffers
-                    .insert(buffer_id, buffer);
-            }
+        <span class="kw">let </span>device = buffer.device.clone();
 
-            <span class="kw">if </span>wait {
-                <span class="kw">match </span>device.wait_for_submit(last_submit_index) {
-                    <span class="prelude-val">Ok</span>(()) =&gt; (),
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">"Failed to wait for buffer {:?}: {}"</span>, buffer_id, e),
-                }
+        <span class="kw">if </span>device
+            .pending_writes
+            .lock()
+            .as_ref()
+            .unwrap()
+            .dst_buffers
+            .contains_key(<span class="kw-2">&amp;</span>buffer_id)
+        {
+            device.lock_life().future_suspected_buffers.push(buffer);
+        } <span class="kw">else </span>{
+            device
+                .lock_life()
+                .suspected_resources
+                .buffers
+                .insert(buffer_id, buffer);
+        }
+
+        <span class="kw">if </span>wait {
+            <span class="kw">match </span>device.wait_for_submit(last_submit_index) {
+                <span class="prelude-val">Ok</span>(()) =&gt; (),
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">log::error!</span>(<span class="string">"Failed to wait for buffer {:?}: {}"</span>, buffer_id, e),
             }
         }
     }
@@ -5049,28 +5055,18 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"unmap"</span>, <span class="string">"Buffer"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Buffer::unmap {buffer_id:?}"</span>);
 
-        <span class="kw">let </span>closure;
-        {
-            <span class="comment">// Restrict the locks to this scope.
-            </span><span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-            <span class="kw">let </span>buffer = hub
-                .buffers
-                .get(buffer_id)
-                .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
-            <span class="kw">if </span>!buffer.device.is_valid() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
-            }
-            closure = buffer.buffer_unmap_inner()
+        <span class="kw">let </span>buffer = hub
+            .buffers
+            .get(buffer_id)
+            .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>!buffer.device.is_valid() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
         }
 
-        <span class="comment">// Note: outside the scope where locks are held when calling the callback
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>operation, status)) = closure<span class="question-mark">? </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
-                callback.call(status);
-            }
-        }
-        <span class="prelude-val">Ok</span>(())
+        buffer.unmap()
     }
 }
 </code></pre></div></section></main></body></html>
