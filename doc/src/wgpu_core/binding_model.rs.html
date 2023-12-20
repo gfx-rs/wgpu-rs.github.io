@@ -917,6 +917,12 @@
 <a href="#916" id="916">916</a>
 <a href="#917" id="917">917</a>
 <a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT},
     error::{ErrorFormatter, PrettyError},
@@ -928,6 +934,7 @@
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log,
+    snatch::SnatchGuard,
     track::{BindGroupStates, UsageConflict},
     validation::{MissingBufferUsageError, MissingTextureUsageError},
     FastHashMap, Label,
@@ -1754,8 +1761,13 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroup&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::BindGroup {
-        <span class="self">self</span>.raw.as_ref().unwrap()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::BindGroup&gt; {
+        <span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_buffer_ranges {
+            <span class="comment">// Clippy insist on writing it this way. The idea is to return None
+            // if any of the raw buffer is not valid anymore.
+            </span><span class="kw">let _ </span>= buffer.buffer.raw(guard)<span class="question-mark">?</span>;
+        }
+        <span class="self">self</span>.raw.as_ref()
     }
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_dynamic_bindings(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

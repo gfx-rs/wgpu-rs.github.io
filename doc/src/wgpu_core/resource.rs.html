@@ -1326,8 +1326,6 @@
 <a href="#1325" id="1325">1325</a>
 <a href="#1326" id="1326">1326</a>
 <a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a>
-<a href="#1329" id="1329">1329</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1753,8 +1751,8 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Buffer&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="kw-2">&amp;</span>A::Buffer {
-        <span class="self">self</span>.raw.get(guard).unwrap()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Buffer&gt; {
+        <span class="self">self</span>.raw.get(guard)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>buffer_unmap_inner(
@@ -1764,6 +1762,9 @@
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+        <span class="kw">let </span>raw_buf = <span class="self">self
+            </span>.raw(<span class="kw-2">&amp;</span>snatch_guard)
+            .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
         <span class="kw">let </span>buffer_id = <span class="self">self</span>.info.id();
         <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Idle"</span>, buffer_id);
         <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), resource::BufferMapState::Idle) {
@@ -1788,16 +1789,11 @@
                 <span class="kw">if </span>needs_flush {
                     <span class="kw">unsafe </span>{
                         device.raw().flush_mapped_ranges(
-                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
+                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard).unwrap(),
                             iter::once(<span class="number">0</span>..<span class="self">self</span>.size),
                         );
                     }
                 }
-
-                <span class="kw">let </span>raw_buf = <span class="self">self
-                    </span>.raw
-                    .get(<span class="kw-2">&amp;</span>snatch_guard)
-                    .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
 
                 <span class="self">self</span>.info
                     .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
@@ -1807,7 +1803,7 @@
                     size,
                 });
                 <span class="kw">let </span>transition_src = hal::BufferBarrier {
-                    buffer: stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
+                    buffer: stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard).unwrap(),
                     usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
                 };
                 <span class="kw">let </span>transition_dst = hal::BufferBarrier {
@@ -1823,7 +1819,7 @@
                     );
                     <span class="kw">if </span><span class="self">self</span>.size &gt; <span class="number">0 </span>{
                         encoder.copy_buffer_to_buffer(
-                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
+                            stage_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard).unwrap(),
                             raw_buf,
                             region.into_iter(),
                         );
@@ -1858,7 +1854,7 @@
                 <span class="kw">unsafe </span>{
                     device
                         .raw()
-                        .unmap_buffer(<span class="self">self</span>.raw(<span class="kw-2">&amp;</span>snatch_guard))
+                        .unmap_buffer(raw_buf)
                         .map_err(DeviceError::from)<span class="question-mark">?
                 </span>};
             }

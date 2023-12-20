@@ -501,8 +501,6 @@
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
 <a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
@@ -845,17 +843,17 @@
     kind: HostMap,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ptr::NonNull&lt;u8&gt;, BufferAccessError&gt; {
     <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+    <span class="kw">let </span>raw_buffer = buffer
+        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+        .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
     <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{
-        raw.map_buffer(buffer.raw(<span class="kw-2">&amp;</span>snatch_guard), offset..offset + size)
+        raw.map_buffer(raw_buffer, offset..offset + size)
             .map_err(DeviceError::from)<span class="question-mark">?
     </span>};
 
     <span class="kw-2">*</span>buffer.sync_mapped_writes.lock() = <span class="kw">match </span>kind {
         HostMap::Read <span class="kw">if </span>!mapping.is_coherent =&gt; <span class="kw">unsafe </span>{
-            raw.invalidate_mapped_ranges(
-                buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
-                iter::once(offset..offset + size),
-            );
+            raw.invalidate_mapped_ranges(raw_buffer, iter::once(offset..offset + size));
             <span class="prelude-val">None
         </span>},
         HostMap::Write <span class="kw">if </span>!mapping.is_coherent =&gt; <span class="prelude-val">Some</span>(offset..offset + size),
@@ -895,9 +893,7 @@
         mapped[fill_range].fill(<span class="number">0</span>);
 
         <span class="kw">if </span>zero_init_needs_flush_now {
-            <span class="kw">unsafe </span>{
-                raw.flush_mapped_ranges(buffer.raw(<span class="kw-2">&amp;</span>snatch_guard), iter::once(uninitialized))
-            };
+            <span class="kw">unsafe </span>{ raw.flush_mapped_ranges(raw_buffer, iter::once(uninitialized)) };
         }
     }
 

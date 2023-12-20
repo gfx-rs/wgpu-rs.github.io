@@ -2535,6 +2535,7 @@
 <a href="#2534" id="2534">2534</a>
 <a href="#2535" id="2535">2535</a>
 <a href="#2536" id="2536">2536</a>
+<a href="#2537" id="2537">2537</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2765,11 +2766,8 @@
                 };
 
                 <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-                <span class="kw">let </span>mapping = <span class="kw">match unsafe </span>{
-                    device
-                        .raw()
-                        .map_buffer(stage.raw(<span class="kw-2">&amp;</span>snatch_guard), <span class="number">0</span>..stage.size)
-                } {
+                <span class="kw">let </span>stage_raw = stage.raw(<span class="kw-2">&amp;</span>snatch_guard).unwrap();
+                <span class="kw">let </span>mapping = <span class="kw">match unsafe </span>{ device.raw().map_buffer(stage_raw, <span class="number">0</span>..stage.size) } {
                     <span class="prelude-val">Ok</span>(mapping) =&gt; mapping,
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         to_destroy.push(buffer);
@@ -2938,7 +2936,9 @@
             });
         }
 
-        <span class="kw">let </span>raw_buf = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
+        <span class="kw">let </span>raw_buf = buffer
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
+            .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>mapping = device
                 .raw()
@@ -2988,7 +2988,9 @@
         check_buffer_usage(buffer.usage, wgt::BufferUsages::MAP_READ)<span class="question-mark">?</span>;
         <span class="comment">//assert!(buffer isn't used by the GPU);
 
-        </span><span class="kw">let </span>raw_buf = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
+        </span><span class="kw">let </span>raw_buf = buffer
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
+            .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>mapping = device
                 .raw()

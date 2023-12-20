@@ -1076,6 +1076,9 @@
 <a href="#1075" id="1075">1075</a>
 <a href="#1076" id="1076">1076</a>
 <a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -1266,8 +1269,8 @@
 </span><span class="kw">pub enum </span>ComputePassErrorInner {
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
-    <span class="attr">#[error(<span class="string">"Bind group {0:?} is invalid"</span>)]
-    </span>InvalidBindGroup(id::BindGroupId),
+    <span class="attr">#[error(<span class="string">"Bind group at index {0:?} is invalid"</span>)]
+    </span>InvalidBindGroup(usize),
     <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
     </span>InvalidDevice(DeviceId),
     <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
@@ -1310,9 +1313,6 @@
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
         fmt.error(<span class="self">self</span>);
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::InvalidBindGroup(id) =&gt; {
-                fmt.bind_group_label(<span class="kw-2">&amp;</span>id);
-            }
             <span class="self">Self</span>::InvalidPipeline(id) =&gt; {
                 fmt.compute_pipeline_label(<span class="kw-2">&amp;</span>id);
             }
@@ -1598,7 +1598,7 @@
                     <span class="kw">let </span>bind_group = tracker
                         .bind_groups
                         .add_single(<span class="kw-2">&amp;*</span>bind_group_guard, bind_group_id)
-                        .ok_or(ComputePassErrorInner::InvalidBindGroup(bind_group_id))
+                        .ok_or(ComputePassErrorInner::InvalidBindGroup(index <span class="kw">as </span>usize))
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                     bind_group
                         .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
@@ -1628,7 +1628,10 @@
                         <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                         <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                <span class="kw">let </span>raw_bg = group.raw();
+                                <span class="kw">let </span>raw_bg = group
+                                    .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                                    .ok_or(ComputePassErrorInner::InvalidBindGroup(i))
+                                    .map_pass_err(scope)<span class="question-mark">?</span>;
                                 <span class="kw">unsafe </span>{
                                     raw.set_bind_group(
                                         pipeline_layout,
@@ -1672,7 +1675,10 @@
                         <span class="kw">if </span>!entries.is_empty() {
                             <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                    <span class="kw">let </span>raw_bg = group.raw();
+                                    <span class="kw">let </span>raw_bg = group
+                                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                                        .ok_or(ComputePassErrorInner::InvalidBindGroup(i))
+                                        .map_pass_err(scope)<span class="question-mark">?</span>;
                                     <span class="kw">unsafe </span>{
                                         raw.set_bind_group(
                                             pipeline.layout.raw(),

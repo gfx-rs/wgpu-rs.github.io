@@ -494,6 +494,10 @@
 <a href="#493" id="493">493</a>
 <a href="#494" id="494">494</a>
 <a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -975,12 +979,16 @@
             MemoryInitKind::ImplicitlyInitialized,
         ));
 
+        <span class="kw">let </span>raw_dst_buffer = dst_buffer
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
+            .ok_or(QueryError::InvalidBuffer(destination))<span class="question-mark">?</span>;
+
         <span class="kw">unsafe </span>{
             raw_encoder.transition_buffers(dst_barrier.into_iter());
             raw_encoder.copy_query_results(
                 query_set.raw(),
                 start_query..end_query,
-                dst_buffer.raw(<span class="kw-2">&amp;</span>snatch_guard),
+                raw_dst_buffer,
                 destination_offset,
                 wgt::BufferSize::new_unchecked(stride <span class="kw">as </span>u64),
             );

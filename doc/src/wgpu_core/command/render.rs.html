@@ -2819,6 +2819,17 @@
 <a href="#2818" id="2818">2818</a>
 <a href="#2819" id="2819">2819</a>
 <a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
+<a href="#2825" id="2825">2825</a>
+<a href="#2826" id="2826">2826</a>
+<a href="#2827" id="2827">2827</a>
+<a href="#2828" id="2828">2828</a>
+<a href="#2829" id="2829">2829</a>
+<a href="#2830" id="2830">2830</a>
+<a href="#2831" id="2831">2831</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use crate</span>::{
     api_log,
@@ -3397,6 +3408,8 @@
     </span>SurfaceTextureDropped,
     <span class="attr">#[error(<span class="string">"Not enough memory left for render pass"</span>)]
     </span>OutOfMemory,
+    <span class="attr">#[error(<span class="string">"The bind group at index {0:?} is invalid"</span>)]
+    </span>InvalidBindGroup(usize),
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only depth"</span>)]
     </span>InvalidDepthOps,
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only stencil"</span>)]
@@ -4305,7 +4318,10 @@
                             <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                             <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                    <span class="kw">let </span>raw_bg = group.raw();
+                                    <span class="kw">let </span>raw_bg = group
+                                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                                        .ok_or(RenderPassErrorInner::InvalidBindGroup(i))
+                                        .map_pass_err(scope)<span class="question-mark">?</span>;
                                     <span class="kw">unsafe </span>{
                                         raw.set_bind_group(
                                             pipeline_layout,
@@ -4383,7 +4399,10 @@
                             <span class="kw">if </span>!entries.is_empty() {
                                 <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                        <span class="kw">let </span>raw_bg = group.raw();
+                                        <span class="kw">let </span>raw_bg = group
+                                            .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                                            .ok_or(RenderPassErrorInner::InvalidBindGroup(i))
+                                            .map_pass_err(scope)<span class="question-mark">?</span>;
                                         <span class="kw">unsafe </span>{
                                             raw.set_bind_group(
                                                 pipeline.layout.raw(),
@@ -5152,6 +5171,9 @@
                             .map_err(|e| <span class="kw">match </span>e {
                                 ExecutionError::DestroyedBuffer(id) =&gt; {
                                     RenderCommandError::DestroyedBuffer(id)
+                                }
+                                ExecutionError::InvalidBindGroup(id) =&gt; {
+                                    RenderCommandError::InvalidBindGroup(id)
                                 }
                                 ExecutionError::Unimplemented(what) =&gt; {
                                     RenderCommandError::Unimplemented(what)
