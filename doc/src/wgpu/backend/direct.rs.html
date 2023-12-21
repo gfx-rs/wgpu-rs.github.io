@@ -3203,10 +3203,6 @@
 <a href="#3202" id="3202">3202</a>
 <a href="#3203" id="3203">3203</a>
 <a href="#3204" id="3204">3204</a>
-<a href="#3205" id="3205">3205</a>
-<a href="#3206" id="3206">3206</a>
-<a href="#3207" id="3207">3207</a>
-<a href="#3208" id="3208">3208</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -6273,9 +6269,7 @@
     </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
 {
     <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
-        <span class="comment">// If the id32 feature is enabled in wgpu-core, this will make sure that the id fits in a NonZeroU32.
-        </span><span class="attr">#[allow(clippy::useless_conversion)]
-        </span><span class="kw">let </span>id = id.id().try_into().expect(<span class="string">"Id exceeded 32-bits"</span>);
+        <span class="kw">let </span>id = id.id();
         <span class="comment">// SAFETY: The id was created via the impl below
         </span><span class="kw">unsafe </span>{ <span class="self">Self</span>::from_raw(id) }
     }
@@ -6286,9 +6280,7 @@
     </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
 {
     <span class="kw">fn </span>from(id: wgc::id::Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
-        <span class="comment">// If the id32 feature is enabled in wgpu-core, the conversion is not useless
-        </span><span class="attr">#[allow(clippy::useless_conversion)]
-        </span><span class="kw">let </span>id = id.into_raw().into();
+        <span class="kw">let </span>id = id.into_raw();
         <span class="self">Self</span>::from_global_id(id)
     }
 }
