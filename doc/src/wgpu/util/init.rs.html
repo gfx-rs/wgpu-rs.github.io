@@ -136,14 +136,16 @@
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgt::{Backends, PowerPreference, RequestAdapterOptions};
 
 <span class="kw">use crate</span>::{Adapter, Instance, Surface};
 
-<span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), feature = <span class="string">"wgc"</span>))]
+<span class="attr">#[cfg(not(webgpu))]
+#[cfg_attr(docsrs, doc(cfg(all())))]
 </span><span class="kw">pub use </span>wgc::instance::parse_backends_from_comma_list;
 <span class="doccomment">/// Always returns WEBGPU on wasm over webgpu.
-</span><span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(feature = <span class="string">"wgc"</span>)))]
+</span><span class="attr">#[cfg(webgpu)]
 </span><span class="kw">pub fn </span>parse_backends_from_comma_list(_string: <span class="kw-2">&amp;</span>str) -&gt; Backends {
     Backends::BROWSER_WEBGPU
 }
@@ -175,7 +177,7 @@
 }
 
 <span class="doccomment">/// Initialize the adapter obeying the WGPU_ADAPTER_NAME environment variable.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+</span><span class="attr">#[cfg(native)]
 </span><span class="kw">pub fn </span>initialize_adapter_from_env(
     instance: <span class="kw-2">&amp;</span>Instance,
     compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
@@ -207,7 +209,7 @@
 }
 
 <span class="doccomment">/// Initialize the adapter obeying the WGPU_ADAPTER_NAME environment variable.
-</span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+</span><span class="attr">#[cfg(not(native))]
 </span><span class="kw">pub fn </span>initialize_adapter_from_env(
     _instance: <span class="kw-2">&amp;</span>Instance,
     _compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
