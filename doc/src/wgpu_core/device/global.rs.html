@@ -2544,9 +2544,6 @@
 <a href="#2542" id="2542">2542</a>
 <a href="#2543" id="2543">2543</a>
 <a href="#2544" id="2544">2544</a>
-<a href="#2545" id="2545">2545</a>
-<a href="#2546" id="2546">2546</a>
-<a href="#2547" id="2547">2547</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3685,8 +3682,7 @@
                 trace.add(trace::Action::CreateBindGroup(fid.id(), desc.clone()));
             }
 
-            <span class="kw">let </span>bind_group_layout_guard = hub.bind_group_layouts.read();
-            <span class="kw">let </span>bind_group_layout = <span class="kw">match </span>bind_group_layout_guard.get(desc.layout) {
+            <span class="kw">let </span>bind_group_layout = <span class="kw">match </span>hub.bind_group_layouts.get(desc.layout) {
                 <span class="prelude-val">Ok</span>(layout) =&gt; layout,
                 <span class="prelude-val">Err</span>(..) =&gt; <span class="kw">break </span>binding_model::CreateBindGroupError::InvalidLayout,
             };
@@ -3695,7 +3691,7 @@
                 <span class="kw">break </span>DeviceError::WrongDevice.into();
             }
 
-            <span class="kw">let </span>bind_group = <span class="kw">match </span>device.create_bind_group(bind_group_layout, desc, hub) {
+            <span class="kw">let </span>bind_group = <span class="kw">match </span>device.create_bind_group(<span class="kw-2">&amp;</span>bind_group_layout, desc, hub) {
                 <span class="prelude-val">Ok</span>(bind_group) =&gt; bind_group,
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
@@ -4328,9 +4324,7 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>pipeline_guard = hub.compute_pipelines.read();
-
-            <span class="kw">let </span>pipeline = <span class="kw">match </span>pipeline_guard.get(pipeline_id) {
+            <span class="kw">let </span>pipeline = <span class="kw">match </span>hub.compute_pipelines.get(pipeline_id) {
                 <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
             };
