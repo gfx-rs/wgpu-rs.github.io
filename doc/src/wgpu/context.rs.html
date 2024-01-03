@@ -4027,8 +4027,6 @@
 <a href="#4025" id="4025">4025</a>
 <a href="#4026" id="4026">4026</a>
 <a href="#4027" id="4027">4027</a>
-<a href="#4028" id="4028">4028</a>
-<a href="#4029" id="4029">4029</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -5046,13 +5044,11 @@
         pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
     );
-    <span class="kw">fn </span>render_pass_execute_bundles&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="kw">fn </span>render_pass_execute_bundles(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
-        render_bundles: Box&lt;
-            <span class="kw">dyn </span>Iterator&lt;Item = (<span class="self">Self</span>::RenderBundleId, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>::RenderBundleData)&gt; + <span class="lifetime">'a</span>,
-        &gt;,
+        render_bundles: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (<span class="self">Self</span>::RenderBundleId, <span class="kw-2">&amp;</span><span class="self">Self</span>::RenderBundleData)&gt;,
     );
 }
 
@@ -5607,11 +5603,11 @@
         dest: <span class="kw">crate</span>::ImageCopyTextureTagged&lt;<span class="lifetime">'_</span>&gt;,
         size: wgt::Extent3d,
     );
-    <span class="kw">fn </span>queue_submit&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="kw">fn </span>queue_submit(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt; + <span class="lifetime">'a</span>&gt;,
+        command_buffers: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;,
     ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;);
     <span class="kw">fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; f32;
     <span class="kw">fn </span>queue_on_submitted_work_done(
@@ -6015,11 +6011,11 @@
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
     );
-    <span class="kw">fn </span>render_pass_execute_bundles&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="kw">fn </span>render_pass_execute_bundles(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ObjectId, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Data)&gt; + <span class="lifetime">'a</span>&gt;,
+        render_bundles: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span>ObjectId, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data)&gt;,
     );
 }
 
@@ -7056,15 +7052,15 @@
         Context::queue_copy_external_image_to_texture(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, source, dest, size)
     }
 
-    <span class="kw">fn </span>queue_submit&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="kw">fn </span>queue_submit(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt; + <span class="lifetime">'a</span>&gt;,
+        command_buffers: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;,
     ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;) {
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
         <span class="kw">let </span>queue_data = downcast_ref(queue_data);
-        <span class="kw">let </span>command_buffers = command_buffers.into_iter().map(|(id, data)| {
+        <span class="kw">let </span>command_buffers = command_buffers.map(|(id, data)| {
             <span class="kw">let </span>command_buffer_data: &lt;T <span class="kw">as </span>Context&gt;::CommandBufferData = <span class="kw-2">*</span>data.downcast().unwrap();
             (&lt;T::CommandBufferId&gt;::from(id), command_buffer_data)
         });
@@ -8017,19 +8013,19 @@
         Context::render_pass_end_pipeline_statistics_query(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data)
     }
 
-    <span class="kw">fn </span>render_pass_execute_bundles&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="kw">fn </span>render_pass_execute_bundles(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ObjectId, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Data)&gt; + <span class="lifetime">'a</span>&gt;,
+        render_bundles: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span>ObjectId, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data)&gt;,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>pass = &lt;T::RenderPassId&gt;::from(<span class="kw-2">*</span>pass);
         <span class="kw">let </span>pass_data = downcast_mut::&lt;T::RenderPassData&gt;(pass_data);
-        <span class="kw">let </span>render_bundles = Box::new(render_bundles.into_iter().map(|(id, data)| {
+        <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles.map(|(id, data)| {
             <span class="kw">let </span>render_bundle_data: <span class="kw-2">&amp;</span>&lt;T <span class="kw">as </span>Context&gt;::RenderBundleData = downcast_ref(data);
             (&lt;T::RenderBundleId&gt;::from(<span class="kw-2">*</span>id), render_bundle_data)
-        }));
-        Context::render_pass_execute_bundles(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data, render_bundles)
+        });
+        Context::render_pass_execute_bundles(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data, <span class="kw-2">&amp;mut </span>render_bundles)
     }
 }
 
