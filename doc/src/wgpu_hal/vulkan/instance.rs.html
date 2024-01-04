@@ -999,9 +999,16 @@
 <a href="#997" id="997">997</a>
 <a href="#998" id="998">998</a>
 <a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
+    str::FromStr,
     sync::Arc,
     thread,
 };
@@ -1856,11 +1863,16 @@
                 {
                     <span class="comment">// Check if mesa driver and version less than 21.2
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(version) = exposed.info.driver_info.split_once(<span class="string">"Mesa "</span>).map(|s| {
-                        s.<span class="number">1</span>.rsplit_once(<span class="string">'.'</span>)
-                            .map(|v| v.<span class="number">0</span>.parse::&lt;f32&gt;().unwrap_or_default())
-                            .unwrap_or_default()
+                        <span class="kw">let </span><span class="kw-2">mut </span>components = s.<span class="number">1</span>.split(<span class="string">'.'</span>);
+                        <span class="kw">let </span>major = components.next().and_then(|s| u8::from_str(s).ok());
+                        <span class="kw">let </span>minor = components.next().and_then(|s| u8::from_str(s).ok());
+                        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(major), <span class="prelude-val">Some</span>(minor)) = (major, minor) {
+                            (major, minor)
+                        } <span class="kw">else </span>{
+                            (<span class="number">0</span>, <span class="number">0</span>)
+                        }
                     }) {
-                        <span class="kw">if </span>version &lt; <span class="number">21.2 </span>{
+                        <span class="kw">if </span>version &lt; (<span class="number">21</span>, <span class="number">2</span>) {
                             <span class="comment">// See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
                             </span><span class="macro">log::warn!</span>(
                                 <span class="string">"Disabling presentation on '{}' (id {:?}) due to NV Optimus and Intel Mesa &lt; v21.2"</span>,
