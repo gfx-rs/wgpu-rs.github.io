@@ -1992,6 +1992,16 @@
 <a href="#1990" id="1990">1990</a>
 <a href="#1991" id="1991">1991</a>
 <a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
+<a href="#1999" id="1999">1999</a>
+<a href="#2000" id="2000">2000</a>
+<a href="#2001" id="2001">2001</a>
+<a href="#2002" id="2002">2002</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -3705,7 +3715,17 @@
                 .framebuffer_stencil_sample_counts
                 .min(limits.sampled_image_stencil_sample_counts)
         } <span class="kw">else </span>{
-            <span class="kw">match </span>format.sample_type(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>).unwrap() {
+            <span class="kw">let </span>first_aspect = format_aspect
+                .iter()
+                .next()
+                .expect(<span class="string">"All texture should at least one aspect"</span>)
+                .map();
+
+            <span class="comment">// We should never get depth or stencil out of this, due to the above.
+            </span><span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::DepthOnly);
+            <span class="macro">assert_ne!</span>(first_aspect, wgt::TextureAspect::StencilOnly);
+
+            <span class="kw">match </span>format.sample_type(<span class="prelude-val">Some</span>(first_aspect), <span class="prelude-val">None</span>).unwrap() {
                 wgt::TextureSampleType::Float { .. } =&gt; limits
                     .framebuffer_color_sample_counts
                     .min(limits.sampled_image_color_sample_counts),
