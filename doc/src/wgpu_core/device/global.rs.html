@@ -2540,10 +2540,6 @@
 <a href="#2538" id="2538">2538</a>
 <a href="#2539" id="2539">2539</a>
 <a href="#2540" id="2540">2540</a>
-<a href="#2541" id="2541">2541</a>
-<a href="#2542" id="2542">2542</a>
-<a href="#2543" id="2543">2543</a>
-<a href="#2544" id="2544">2544</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3033,12 +3029,11 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>buffer = {
-            <span class="kw">let </span><span class="kw-2">mut </span>buffer_guard = hub.buffers.write();
-            buffer_guard
-                .get_and_mark_destroyed(buffer_id)
-                .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>buffer = hub
+            .buffers
+            .write()
+            .get_and_mark_destroyed(buffer_id)
+            .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
         <span class="kw">let _ </span>= buffer.unmap();
 
@@ -3229,8 +3224,7 @@
         <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>device_guard = hub.devices.read();
-            <span class="kw">let </span>device = <span class="kw">match </span>device_guard.get(device_id) {
+            <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
@@ -3278,8 +3272,9 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>texture_guard = hub.textures.write();
-        <span class="kw">let </span>texture = texture_guard
+        <span class="kw">let </span>texture = hub
+            .textures
+            .write()
             .get_and_mark_destroyed(texture_id)
             .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
@@ -3621,12 +3616,9 @@
                 trace.add(trace::Action::CreatePipelineLayout(fid.id(), desc.clone()));
             }
 
-            <span class="kw">let </span>layout = {
-                <span class="kw">let </span>bgl_guard = hub.bind_group_layouts.read();
-                <span class="kw">match </span>device.create_pipeline_layout(desc, <span class="kw-2">&amp;*</span>bgl_guard) {
-                    <span class="prelude-val">Ok</span>(layout) =&gt; layout,
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
-                }
+            <span class="kw">let </span>layout = <span class="kw">match </span>device.create_pipeline_layout(desc, <span class="kw-2">&amp;</span>hub.bind_group_layouts) {
+                <span class="prelude-val">Ok</span>(layout) =&gt; layout,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(layout);

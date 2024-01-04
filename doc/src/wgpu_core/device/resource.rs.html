@@ -3397,6 +3397,11 @@
 <a href="#3395" id="3395">3395</a>
 <a href="#3396" id="3396">3396</a>
 <a href="#3397" id="3397">3397</a>
+<a href="#3398" id="3398">3398</a>
+<a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -5756,7 +5761,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_pipeline_layout(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         desc: <span class="kw-2">&amp;</span>binding_model::PipelineLayoutDescriptor,
-        bgl_guard: <span class="kw-2">&amp;</span>Storage&lt;BindGroupLayout&lt;A&gt;, id::BindGroupLayoutId&gt;,
+        bgl_registry: <span class="kw-2">&amp;</span>Registry&lt;id::BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;binding_model::PipelineLayout&lt;A&gt;, binding_model::CreatePipelineLayoutError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreatePipelineLayoutError <span class="kw">as </span>Error;
 
@@ -5809,31 +5814,38 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>count_validator = binding_model::BindingTypeMaxCountValidator::default();
 
-        <span class="comment">// validate total resource counts
-        </span><span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>desc.bind_group_layouts.iter() {
-            <span class="kw">let </span><span class="prelude-val">Ok</span>(bind_group_layout) = bgl_guard.get(id) <span class="kw">else </span>{
+        <span class="comment">// Collect references to the BGLs
+        </span><span class="kw">let </span><span class="kw-2">mut </span>bind_group_layouts = ArrayVec::new();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>desc.bind_group_layouts.iter() {
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(bgl) = bgl_registry.get(id) <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidBindGroupLayout(id));
             };
 
-            <span class="kw">if </span>bind_group_layout.device.as_info().id() != <span class="self">self</span>.as_info().id() {
+            bind_group_layouts.push(bgl);
+        }
+
+        <span class="comment">// Validate total resource counts and check for a matching device
+        </span><span class="kw">for </span>bgl <span class="kw">in </span><span class="kw-2">&amp;</span>bind_group_layouts {
+            <span class="kw">if </span>bgl.device.as_info().id() != <span class="self">self</span>.as_info().id() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
             }
 
-            count_validator.merge(<span class="kw-2">&amp;</span>bind_group_layout.binding_count_validator);
+            count_validator.merge(<span class="kw-2">&amp;</span>bgl.binding_count_validator);
         }
+
         count_validator
             .validate(<span class="kw-2">&amp;</span><span class="self">self</span>.limits)
             .map_err(Error::TooManyBindings)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>bgl_vec = desc
-            .bind_group_layouts
+        <span class="kw">let </span>raw_bind_group_layouts = bind_group_layouts
             .iter()
-            .map(|<span class="kw-2">&amp;</span>id| bgl_guard.get(id).unwrap().raw())
-            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            .map(|bgl| bgl.raw())
+            .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { hal::MAX_BIND_GROUPS }&gt;&gt;();
+
         <span class="kw">let </span>hal_desc = hal::PipelineLayoutDescriptor {
             label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             flags: hal::PipelineLayoutFlags::FIRST_VERTEX_INSTANCE,
-            bind_group_layouts: <span class="kw-2">&amp;</span>bgl_vec,
+            bind_group_layouts: <span class="kw-2">&amp;</span>raw_bind_group_layouts,
             push_constant_ranges: desc.push_constant_ranges.as_ref(),
         };
 
@@ -5845,15 +5857,13 @@
                 .map_err(DeviceError::from)<span class="question-mark">?
         </span>};
 
+        drop(raw_bind_group_layouts);
+
         <span class="prelude-val">Ok</span>(binding_model::PipelineLayout {
             raw: <span class="prelude-val">Some</span>(raw),
             device: <span class="self">self</span>.clone(),
             info: ResourceInfo::new(desc.label.borrow_or_default()),
-            bind_group_layouts: desc
-                .bind_group_layouts
-                .iter()
-                .map(|<span class="kw-2">&amp;</span>id| bgl_guard.get(id).unwrap().clone())
-                .collect(),
+            bind_group_layouts,
             push_constant_ranges: desc.push_constant_ranges.iter().cloned().collect(),
         })
     }
@@ -5894,7 +5904,7 @@
             bind_group_layouts: Cow::Borrowed(<span class="kw-2">&amp;</span>ids.group_ids[..group_count]),
             push_constant_ranges: Cow::Borrowed(<span class="kw-2">&amp;</span>[]), <span class="comment">//TODO?
         </span>};
-        <span class="kw">let </span>layout = <span class="self">self</span>.create_pipeline_layout(<span class="kw-2">&amp;</span>layout_desc, <span class="kw-2">&amp;</span>bgl_registry.read())<span class="question-mark">?</span>;
+        <span class="kw">let </span>layout = <span class="self">self</span>.create_pipeline_layout(<span class="kw-2">&amp;</span>layout_desc, bgl_registry)<span class="question-mark">?</span>;
         pipeline_layout_registry.force_replace(ids.root_id, layout);
         <span class="prelude-val">Ok</span>(pipeline_layout_registry.get(ids.root_id).unwrap())
     }
