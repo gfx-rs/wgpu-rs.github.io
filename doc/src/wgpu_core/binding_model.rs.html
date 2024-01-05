@@ -934,6 +934,9 @@
 <a href="#932" id="932">932</a>
 <a href="#933" id="933">933</a>
 <a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
@@ -1783,10 +1786,13 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroup&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::BindGroup&gt; {
-        <span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_buffer_ranges {
-            <span class="comment">// Clippy insist on writing it this way. The idea is to return None
-            // if any of the raw buffer is not valid anymore.
-            </span><span class="kw">let _ </span>= buffer.buffer.raw(guard)<span class="question-mark">?</span>;
+        <span class="comment">// Clippy insist on writing it this way. The idea is to return None
+        // if any of the raw buffer is not valid anymore.
+        </span><span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_buffer_ranges {
+            <span class="kw">let _ </span>= buffer.buffer.raw(guard)<span class="question-mark">?</span>;
+        }
+        <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_texture_ranges {
+            <span class="kw">let _ </span>= texture.texture.raw(guard)<span class="question-mark">?</span>;
         }
         <span class="self">self</span>.raw.as_ref()
     }
