@@ -1382,14 +1382,14 @@
     identity::{GlobalIdentityHandlerFactory, IdentityManager},
     init_tracker::{BufferInitTracker, TextureInitTracker},
     resource, resource_log,
-    snatch::{SnatchGuard, Snatchable},
+    snatch::{ExclusiveSnatchGuard, SnatchGuard, Snatchable},
     track::TextureSelector,
     validation::MissingBufferUsageError,
     Label, SubmissionIndex,
 };
 
 <span class="kw">use </span>hal::CommandEncoder;
-<span class="kw">use </span>parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+<span class="kw">use </span>parking_lot::{Mutex, RwLock};
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::WasmNotSendSync;
@@ -2077,7 +2077,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>TextureInner&lt;A: HalApi&gt; {
     Native {
-        raw: <span class="prelude-ty">Option</span>&lt;A::Texture&gt;,
+        raw: A::Texture,
     },
     Surface {
         raw: <span class="prelude-ty">Option</span>&lt;A::SurfaceTexture&gt;,
@@ -2087,12 +2087,10 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureInner&lt;A&gt; {
-    <span class="kw">pub fn </span>as_raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt; {
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Native { raw: <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>tex) } =&gt; <span class="prelude-val">Some</span>(tex),
-            <span class="self">Self</span>::Surface {
-                raw: <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>tex), ..
-            } =&gt; <span class="prelude-val">Some</span>(tex.borrow()),
+    <span class="kw">pub fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Native { raw } =&gt; <span class="prelude-val">Some</span>(raw),
+            <span class="self">Self</span>::Surface { raw: <span class="prelude-val">Some</span>(tex), .. } =&gt; <span class="prelude-val">Some</span>(tex.borrow()),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -2116,7 +2114,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Texture&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: RwLock&lt;<span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Snatchable&lt;TextureInner&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) desc: wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hal_usage: hal::TextureUses,
@@ -2157,11 +2155,8 @@
             }
             <span class="kw">_ </span>=&gt; {}
         };
-        <span class="kw">if </span><span class="self">self</span>.inner.read().is_none() {
-            <span class="kw">return</span>;
-        }
-        <span class="kw">let </span>inner = <span class="self">self</span>.inner.write().take().unwrap();
-        <span class="kw">if let </span>TextureInner::Native { raw: <span class="prelude-val">Some</span>(raw) } = inner {
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(TextureInner::Native { raw }) = <span class="self">self</span>.inner.take() {
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.device.raw().destroy_texture(raw);
             }
@@ -2170,11 +2165,15 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Texture&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
-        <span class="self">self</span>.inner.read()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Texture&gt; {
+        <span class="self">self</span>.inner.get(snatch_guard)<span class="question-mark">?</span>.raw()
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt; {
-        <span class="self">self</span>.inner.write()
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
+        guard: <span class="kw-2">&amp;mut </span>ExclusiveSnatchGuard,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>TextureInner&lt;A&gt;&gt; {
+        <span class="self">self</span>.inner.get_mut(guard)
     }
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_clear_view&lt;<span class="lifetime">'a</span>&gt;(
         clear_mode: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TextureClearMode&lt;A&gt;,
@@ -2218,9 +2217,10 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Texture::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>texture = { hub.textures.try_get(id).ok().flatten() };
-        <span class="kw">let </span>inner = texture.as_ref().unwrap().inner();
-        <span class="kw">let </span>hal_texture = inner.as_ref().unwrap().as_raw();
+        <span class="kw">let </span>texture_opt = { hub.textures.try_get(id).ok().flatten() };
+        <span class="kw">let </span>texture = texture_opt.as_ref().unwrap();
+        <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
+        <span class="kw">let </span>hal_texture = texture.raw(<span class="kw-2">&amp;</span>snatch_guard);
 
         hal_texture_callback(hal_texture);
     }

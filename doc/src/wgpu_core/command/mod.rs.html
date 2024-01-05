@@ -953,11 +953,11 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"drain_barriers"</span>);
 
         <span class="kw">let </span>buffer_barriers = base.buffers.drain_transitions(snatch_guard);
-        <span class="kw">let </span>(transitions, textures) = base.textures.drain_transitions();
+        <span class="kw">let </span>(transitions, textures) = base.textures.drain_transitions(snatch_guard);
         <span class="kw">let </span>texture_barriers = transitions
             .into_iter()
             .enumerate()
-            .map(|(i, p)| p.into_hal(textures[i].as_ref().unwrap()));
+            .map(|(i, p)| p.into_hal(textures[i].unwrap().raw().unwrap()));
 
         <span class="kw">unsafe </span>{
             raw.transition_buffers(buffer_barriers);

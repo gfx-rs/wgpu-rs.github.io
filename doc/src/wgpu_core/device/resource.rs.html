@@ -3399,9 +3399,6 @@
 <a href="#3397" id="3397">3397</a>
 <a href="#3398" id="3398">3398</a>
 <a href="#3399" id="3399">3399</a>
-<a href="#3400" id="3400">3400</a>
-<a href="#3401" id="3401">3401</a>
-<a href="#3402" id="3402">3402</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3991,9 +3988,7 @@
         <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
 
         Texture {
-            inner: RwLock::new(<span class="prelude-val">Some</span>(resource::TextureInner::Native {
-                raw: <span class="prelude-val">Some</span>(hal_texture),
-            })),
+            inner: Snatchable::new(resource::TextureInner::Native { raw: hal_texture }),
             device: <span class="self">self</span>.clone(),
             desc: desc.map_label(|<span class="kw">_</span>| ()),
             hal_usage,
@@ -4311,15 +4306,14 @@
         texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         desc: <span class="kw-2">&amp;</span>resource::TextureViewDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TextureView&lt;A&gt;, resource::CreateTextureViewError&gt; {
-        <span class="kw">let </span>inner = texture.inner();
-        <span class="kw">let </span>texture_raw = inner
-            .as_ref()
-            .unwrap()
-            .as_raw()
+        <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
+
+        <span class="kw">let </span>texture_raw = texture
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(resource::CreateTextureViewError::InvalidTexture)<span class="question-mark">?</span>;
+
         <span class="comment">// resolve TextureViewDescriptor defaults
         // https://gpuweb.github.io/gpuweb/#abstract-opdef-resolving-gputextureviewdescriptor-defaults
-
         </span><span class="kw">let </span>resolved_format = desc.format.unwrap_or_else(|| {
             texture
                 .desc

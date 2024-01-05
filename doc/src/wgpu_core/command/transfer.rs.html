@@ -1223,16 +1223,6 @@
 <a href="#1221" id="1221">1221</a>
 <a href="#1222" id="1222">1222</a>
 <a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
-<a href="#1226" id="1226">1226</a>
-<a href="#1227" id="1227">1227</a>
-<a href="#1228" id="1228">1228</a>
-<a href="#1229" id="1229">1229</a>
-<a href="#1230" id="1230">1230</a>
-<a href="#1231" id="1231">1231</a>
-<a href="#1232" id="1232">1232</a>
-<a href="#1233" id="1233">1233</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -2046,18 +2036,15 @@
             .textures
             .set_single(<span class="kw-2">&amp;</span>dst_texture, dst_range, hal::TextureUses::COPY_DST)
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>dst_inner = dst_texture.inner();
-        <span class="kw">let </span>dst_raw = dst_inner
-            .as_ref()
-            .unwrap()
-            .as_raw()
+        <span class="kw">let </span>dst_raw = dst_texture
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst_texture.desc.usage.contains(TextureUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(destination.texture)).into(),
             );
         }
-        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(dst_inner.as_ref().unwrap()));
+        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(dst_raw));
 
         <span class="kw">if </span>!dst_base.aspect.is_one() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyAspectNotOne.into());
@@ -2186,11 +2173,8 @@
             .textures
             .set_single(<span class="kw-2">&amp;</span>src_texture, src_range, hal::TextureUses::COPY_SRC)
             .ok_or(TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>src_inner = src_texture.inner();
-        <span class="kw">let </span>src_raw = src_inner
-            .as_ref()
-            .unwrap()
-            .as_raw()
+        <span class="kw">let </span>src_raw = src_texture
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
         <span class="kw">if </span>!src_texture.desc.usage.contains(TextureUsages::COPY_SRC) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
@@ -2208,7 +2192,7 @@
             }
             .into());
         }
-        <span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(src_inner.as_ref().unwrap()));
+        <span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(src_raw));
 
         <span class="kw">let </span>(dst_buffer, dst_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
@@ -2312,6 +2296,8 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDevice(cmd_buf.device.as_info().id()).into());
         }
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
@@ -2336,12 +2322,10 @@
             .textures
             .get(source.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>src_inner = src_texture.inner();
         <span class="kw">let </span>dst_texture = hub
             .textures
             .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>dst_inner = dst_texture.inner();
 
         <span class="comment">// src and dst texture format must be copy-compatible
         // https://gpuweb.github.io/gpuweb/#copy-compatible
@@ -2403,10 +2387,8 @@
             .textures
             .set_single(<span class="kw-2">&amp;</span>src_texture, src_range, hal::TextureUses::COPY_SRC)
             .ok_or(TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>src_raw = src_inner
-            .as_ref()
-            .unwrap()
-            .as_raw()
+        <span class="kw">let </span>src_raw = src_texture
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
         <span class="kw">if </span>!src_texture.desc.usage.contains(TextureUsages::COPY_SRC) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
@@ -2415,7 +2397,7 @@
         <span class="comment">//TODO: try to avoid this the collection. It's needed because both
         // `src_pending` and `dst_pending` try to hold `trackers.textures` mutably.
         </span><span class="kw">let </span><span class="kw-2">mut </span>barriers: ArrayVec&lt;<span class="kw">_</span>, <span class="number">2</span>&gt; = src_pending
-            .map(|pending| pending.into_hal(src_inner.as_ref().unwrap()))
+            .map(|pending| pending.into_hal(src_raw))
             .collect();
 
         <span class="kw">let </span>dst_pending = cmd_buf_data
@@ -2423,10 +2405,8 @@
             .textures
             .set_single(<span class="kw-2">&amp;</span>dst_texture, dst_range, hal::TextureUses::COPY_DST)
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
-        <span class="kw">let </span>dst_raw = dst_inner
-            .as_ref()
-            .unwrap()
-            .as_raw()
+        <span class="kw">let </span>dst_raw = dst_texture
+            .raw(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst_texture.desc.usage.contains(TextureUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -2434,7 +2414,7 @@
             );
         }
 
-        barriers.extend(dst_pending.map(|pending| pending.into_hal(dst_inner.as_ref().unwrap())));
+        barriers.extend(dst_pending.map(|pending| pending.into_hal(dst_raw)));
 
         <span class="kw">let </span>hal_copy_size = hal::CopyExtent {
             width: src_copy_size.width.min(dst_copy_size.width),

@@ -442,6 +442,9 @@
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -471,6 +474,7 @@ extract it from the hub.
     identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::TextureInitTracker,
     resource::{<span class="self">self</span>, ResourceInfo},
+    snatch::Snatchable,
     track,
 };
 
@@ -659,11 +663,11 @@ extract it from the hub.
                 <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
                 <span class="kw">let </span>present = presentation.as_mut().unwrap();
                 <span class="kw">let </span>texture = resource::Texture {
-                    inner: RwLock::new(<span class="prelude-val">Some</span>(resource::TextureInner::Surface {
+                    inner: Snatchable::new(resource::TextureInner::Surface {
                         raw: <span class="prelude-val">Some</span>(ast.texture),
                         parent_id: surface_id,
                         has_work: AtomicBool::new(<span class="bool-val">false</span>),
-                    })),
+                    }),
                     device: device.clone(),
                     desc: texture_desc,
                     hal_usage,
@@ -769,8 +773,9 @@ extract it from the hub.
 
             <span class="kw">let </span>texture = hub.textures.unregister(texture_id);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
+                <span class="kw">let </span><span class="kw-2">mut </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">let </span>suf = A::get_surface(<span class="kw-2">&amp;</span>surface);
-                <span class="kw">let </span><span class="kw-2">mut </span>inner = texture.inner_mut();
+                <span class="kw">let </span><span class="kw-2">mut </span>inner = texture.inner_mut(<span class="kw-2">&amp;mut </span>exclusive_snatch_guard);
                 <span class="kw">let </span>inner = inner.as_mut().unwrap();
 
                 <span class="kw">match </span><span class="kw-2">*</span>inner {
@@ -864,13 +869,14 @@ extract it from the hub.
             <span class="kw">let </span>texture = hub.textures.unregister(texture_id);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
                 <span class="kw">let </span>suf = A::get_surface(<span class="kw-2">&amp;</span>surface);
-                <span class="kw">match </span><span class="kw-2">*</span>texture.inner_mut().as_mut().take().as_mut().unwrap() {
-                    <span class="kw-2">&amp;mut </span>resource::TextureInner::Surface {
-                        <span class="kw-2">ref mut </span>raw,
-                        <span class="kw-2">ref </span>parent_id,
+                <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
+                <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {
+                    resource::TextureInner::Surface {
+                        <span class="kw-2">mut </span>raw,
+                        parent_id,
                         has_work: <span class="kw">_</span>,
                     } =&gt; {
-                        <span class="kw">if </span>surface_id == <span class="kw-2">*</span>parent_id {
+                        <span class="kw">if </span>surface_id == parent_id {
                             <span class="kw">unsafe </span>{ suf.unwrap().raw.discard_texture(raw.take().unwrap()) };
                         } <span class="kw">else </span>{
                             <span class="macro">log::warn!</span>(<span class="string">"Surface texture is outdated"</span>);

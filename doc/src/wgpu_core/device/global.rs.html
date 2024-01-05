@@ -2538,8 +2538,6 @@
 <a href="#2536" id="2536">2536</a>
 <a href="#2537" id="2537">2537</a>
 <a href="#2538" id="2538">2538</a>
-<a href="#2539" id="2539">2539</a>
-<a href="#2540" id="2540">2540</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3287,21 +3285,19 @@
 
         <span class="kw">let </span>last_submit_index = texture.info.submission_index();
 
-        <span class="kw">if let </span>resource::TextureInner::Native { <span class="kw-2">ref </span>raw } = <span class="kw-2">*</span>texture.inner().as_ref().unwrap() {
-            <span class="kw">if </span>!raw.is_none() {
-                <span class="kw">let </span>temp = queue::TempResource::Texture(texture.clone());
-                <span class="kw">let </span><span class="kw-2">mut </span>guard = device.pending_writes.lock();
-                <span class="kw">let </span>pending_writes = guard.as_mut().unwrap();
-                <span class="kw">if </span>pending_writes.dst_textures.contains_key(<span class="kw-2">&amp;</span>texture_id) {
-                    pending_writes.temp_resources.push(temp);
-                } <span class="kw">else </span>{
-                    drop(guard);
-                    device
-                        .lock_life()
-                        .schedule_resource_destruction(temp, last_submit_index);
-                }
+        <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(resource::TextureInner::Native { .. }) = texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
+            <span class="kw">let </span>temp = queue::TempResource::Texture(texture.clone());
+            <span class="kw">let </span><span class="kw-2">mut </span>guard = device.pending_writes.lock();
+            <span class="kw">let </span>pending_writes = guard.as_mut().unwrap();
+            <span class="kw">if </span>pending_writes.dst_textures.contains_key(<span class="kw-2">&amp;</span>texture_id) {
+                pending_writes.temp_resources.push(temp);
             } <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
+                drop(guard);
+                device
+                    .lock_life()
+                    .schedule_resource_destruction(temp, last_submit_index);
             }
         }
 

@@ -491,8 +491,6 @@
 <a href="#489" id="489">489</a>
 <a href="#490" id="490">490</a>
 <a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -747,11 +745,9 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     alignments: <span class="kw-2">&amp;</span>hal::Alignments,
     zero_buffer: <span class="kw-2">&amp;</span>A::Buffer,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
-    <span class="kw">let </span>dst_inner = dst_texture.inner();
-    <span class="kw">let </span>dst_raw = dst_inner
-        .as_ref()
-        .unwrap()
-        .as_raw()
+    <span class="kw">let </span>snatch_guard = dst_texture.device.snatchable_lock.read();
+    <span class="kw">let </span>dst_raw = dst_texture
+        .raw(<span class="kw-2">&amp;</span>snatch_guard)
         .ok_or_else(|| ClearError::InvalidTexture(dst_texture.as_info().id()))<span class="question-mark">?</span>;
 
     <span class="comment">// Issue the right barrier.
@@ -791,7 +787,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     </span><span class="kw">let </span>dst_barrier = texture_tracker
         .set_single(dst_texture, selector, clear_usage)
         .unwrap()
-        .map(|pending| pending.into_hal(dst_inner.as_ref().unwrap()));
+        .map(|pending| pending.into_hal(dst_raw));
     <span class="kw">unsafe </span>{
         encoder.transition_textures(dst_barrier.into_iter());
     }
