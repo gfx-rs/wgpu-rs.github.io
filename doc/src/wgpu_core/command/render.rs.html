@@ -4144,11 +4144,11 @@
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS);
         <span class="kw">let </span>label = hal_label(base.label, <span class="self">self</span>.instance.flags);
 
-        <span class="kw">let </span>init_scope = PassErrorScope::Pass(encoder_id);
+        <span class="kw">let </span>pass_scope = PassErrorScope::Pass(encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(init_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(pass_scope)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
@@ -4168,7 +4168,7 @@
             }
 
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost).map_pass_err(init_scope);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost).map_pass_err(pass_scope);
             }
 
             <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
@@ -4181,10 +4181,10 @@
             <span class="comment">// We automatically keep extending command buffers over time, and because
             // we want to insert a command buffer _before_ what we're about to record,
             // we need to make sure to close the previous one.
-            </span>encoder.close();
+            </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             <span class="comment">// We will reset this to `Recording` if we succeed, acts as a fail-safe.
             </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
-            encoder.open_pass(label);
+            encoder.open_pass(label).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>bundle_guard = hub.render_bundles.read();
             <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
@@ -4215,7 +4215,7 @@
                 <span class="kw-2">&amp;*</span>texture_guard,
                 <span class="kw-2">&amp;*</span>query_set_guard,
             )
-            .map_pass_err(init_scope)<span class="question-mark">?</span>;
+            .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             tracker.set_size(
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>buffer_guard),
@@ -5196,9 +5196,9 @@
 
             <span class="macro">log::trace!</span>(<span class="string">"Merging renderpass into cmd_buf {:?}"</span>, encoder_id);
             <span class="kw">let </span>(trackers, pending_discard_init_fixups) =
-                info.finish(raw).map_pass_err(init_scope)<span class="question-mark">?</span>;
+                info.finish(raw).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-            encoder.close();
+            encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             (trackers, pending_discard_init_fixups)
         };
 
@@ -5213,7 +5213,7 @@
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
 
         {
-            <span class="kw">let </span>transit = encoder.open();
+            <span class="kw">let </span>transit = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             fixup_discarded_surfaces(
                 pending_discard_init_fixups.into_iter(),
@@ -5241,7 +5241,7 @@
         }
 
         <span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
-        encoder.close_and_swap();
+        encoder.close_and_swap().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

@@ -1079,7 +1079,11 @@
 <a href="#1078" id="1078">1078</a>
 <a href="#1079" id="1079">1079</a>
 <a href="#1080" id="1080">1080</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
+<span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
     binding_model::{
@@ -1268,6 +1272,8 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>ComputePassErrorInner {
     <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
+    <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Bind group at index {0:?} is invalid"</span>)]
     </span>InvalidBindGroup(usize),
@@ -1447,17 +1453,17 @@
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
-        <span class="kw">let </span>init_scope = PassErrorScope::Pass(encoder_id);
+        <span class="kw">let </span>pass_scope = PassErrorScope::Pass(encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(init_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(pass_scope)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::InvalidDevice(
                 cmd_buf.device.as_info().id(),
             ))
-            .map_pass_err(init_scope);
+            .map_pass_err(pass_scope);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
@@ -1480,10 +1486,10 @@
         <span class="comment">// We automatically keep extending command buffers over time, and because
         // we want to insert a command buffer _before_ what we're about to record,
         // we need to make sure to close the previous one.
-        </span>encoder.close();
+        </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
         <span class="comment">// will be reset to true if recording is done without errors
         </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
-        <span class="kw">let </span>raw = encoder.open();
+        <span class="kw">let </span>raw = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
         <span class="kw">let </span>pipeline_guard = hub.compute_pipelines.read();
@@ -1507,7 +1513,7 @@
                 .query_sets
                 .add_single(<span class="kw-2">&amp;*</span>query_set_guard, tw.query_set)
                 .ok_or(ComputePassErrorInner::InvalidQuerySet(tw.query_set))
-                .map_pass_err(init_scope)<span class="question-mark">?</span>;
+                .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="comment">// Unlike in render passes we can't delay resetting the query sets since
             // there is no auxillary pass.
@@ -1943,12 +1949,12 @@
         </span><span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
 
         <span class="comment">// Stop the current command buffer.
-        </span>encoder.close();
+        </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="comment">// Create a new command buffer, which we will insert _before_ the body of the compute pass.
         //
         // Use that buffer to insert barriers and clear discarded images.
-        </span><span class="kw">let </span>transit = encoder.open();
+        </span><span class="kw">let </span>transit = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
         fixup_discarded_surfaces(
             pending_discard_init_fixups.into_iter(),
             transit,
@@ -1962,7 +1968,7 @@
             <span class="kw-2">&amp;</span>snatch_guard,
         );
         <span class="comment">// Close the command buffer, and swap it with the previous.
-        </span>encoder.close_and_swap();
+        </span>encoder.close_and_swap().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

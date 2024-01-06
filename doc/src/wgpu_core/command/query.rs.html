@@ -498,12 +498,16 @@
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     command::{CommandBuffer, CommandEncoderError},
+    device::DeviceError,
     global::Global,
     hal_api::HalApi,
     id::{<span class="self">self</span>, Id, TypedId},
@@ -604,6 +608,8 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueryError {
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Error encountered while trying to use queries"</span>)]
@@ -867,7 +873,7 @@
         <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
 
-        <span class="kw">let </span>raw_encoder = encoder.open();
+        <span class="kw">let </span>raw_encoder = encoder.open()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>query_set_guard = hub.query_sets.read();
         <span class="kw">let </span>query_set = tracker
@@ -909,7 +915,7 @@
         <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
         <span class="kw">let </span>buffer_memory_init_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions;
-        <span class="kw">let </span>raw_encoder = encoder.open();
+        <span class="kw">let </span>raw_encoder = encoder.open()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>destination_offset % wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Resolve(ResolveError::BufferOffsetAlignment));

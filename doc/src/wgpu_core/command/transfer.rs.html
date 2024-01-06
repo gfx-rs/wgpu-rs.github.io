@@ -1222,13 +1222,20 @@
 <a href="#1221" id="1221">1221</a>
 <a href="#1222" id="1222">1222</a>
 <a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     api_log,
     command::{clear_texture, CommandBuffer, CommandEncoderError},
     conv,
-    device::{Device, MissingDownlevelFlags},
+    device::{Device, DeviceError, MissingDownlevelFlags},
     error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
@@ -1249,7 +1256,7 @@
 
 <span class="kw">use </span>std::{iter, sync::Arc};
 
-<span class="kw">use super</span>::{memory_init::CommandBufferTextureMemoryActions, CommandEncoder};
+<span class="kw">use super</span>::{memory_init::CommandBufferTextureMemoryActions, ClearError, CommandEncoder};
 
 <span class="kw">pub type </span>ImageCopyBuffer = wgt::ImageCopyBuffer&lt;BufferId&gt;;
 <span class="kw">pub type </span>ImageCopyTexture = wgt::ImageCopyTexture&lt;TextureId&gt;;
@@ -1359,7 +1366,7 @@
         dst_format: wgt::TextureFormat,
     },
     <span class="attr">#[error(transparent)]
-    </span>MemoryInitFailure(<span class="attr">#[from] </span><span class="kw">super</span>::ClearError),
+    </span>MemoryInitFailure(<span class="attr">#[from] </span>ClearError),
     <span class="attr">#[error(<span class="string">"Cannot encode this copy because of a missing downelevel flag"</span>)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
     <span class="attr">#[error(<span class="string">"Source texture sample count must be 1, got {sample_count}"</span>)]
@@ -1408,6 +1415,12 @@
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Copy error"</span>)]
     </span>Transfer(<span class="attr">#[from] </span>TransferError),
+}
+
+<span class="kw">impl </span>From&lt;DeviceError&gt; <span class="kw">for </span>CopyError {
+    <span class="kw">fn </span>from(err: DeviceError) -&gt; <span class="self">Self </span>{
+        CopyError::Encoder(CommandEncoderError::Device(err))
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_texture_selector&lt;A: HalApi&gt;(
@@ -1671,7 +1684,7 @@
     copy_texture: <span class="kw-2">&amp;</span>ImageCopyTexture,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
-) {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
     <span class="kw">let </span>init_action = TextureInitTrackerAction {
         texture: texture.clone(),
         range: TextureInitRange {
@@ -1687,7 +1700,7 @@
 
     <span class="comment">// In rare cases we may need to insert an init operation immediately onto the command buffer.
     </span><span class="kw">if </span>!immediate_inits.is_empty() {
-        <span class="kw">let </span>cmd_buf_raw = encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = encoder.open()<span class="question-mark">?</span>;
         <span class="kw">for </span>init <span class="kw">in </span>immediate_inits {
             clear_texture(
                 <span class="kw-2">&amp;</span>init.texture,
@@ -1699,10 +1712,11 @@
                 <span class="kw-2">&amp;mut </span>trackers.textures,
                 <span class="kw-2">&amp;</span>device.alignments,
                 device.zero_buffer.as_ref().unwrap(),
-            )
-            .unwrap();
+            )<span class="question-mark">?</span>;
         }
     }
+
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Prepare a transfer's source texture.
@@ -1727,7 +1741,7 @@
         source,
         copy_size,
         texture,
-    );
+    )<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -1767,7 +1781,7 @@
         destination,
         copy_size,
         texture,
-    );
+    )<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -1931,7 +1945,7 @@
             dst_offset: destination_offset,
             size: wgt::BufferSize::new(size).unwrap(),
         };
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             cmd_buf_raw.transition_buffers(src_barrier.into_iter().chain(dst_barrier));
             cmd_buf_raw.copy_buffer_to_buffer(src_raw, dst_raw, iter::once(region));
@@ -2091,7 +2105,7 @@
             }
         });
 
-        <span class="kw">let </span>cmd_buf_raw = encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = encoder.open()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             cmd_buf_raw.transition_textures(dst_barrier.into_iter());
             cmd_buf_raw.transition_buffers(src_barrier.into_iter());
@@ -2259,7 +2273,7 @@
                 size: hal_copy_size,
             }
         });
-        <span class="kw">let </span>cmd_buf_raw = encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = encoder.open()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             cmd_buf_raw.transition_buffers(dst_barrier.into_iter());
             cmd_buf_raw.transition_textures(src_barrier.into_iter());
@@ -2431,7 +2445,7 @@
                 size: hal_copy_size,
             }
         });
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             cmd_buf_raw.transition_textures(barriers.into_iter());
             cmd_buf_raw.copy_texture_to_texture(

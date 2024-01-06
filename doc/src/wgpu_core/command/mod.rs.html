@@ -724,6 +724,21 @@
 <a href="#723" id="723">723</a>
 <a href="#724" id="724">724</a>
 <a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -744,7 +759,7 @@
 
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
-<span class="kw">use </span><span class="kw">crate</span>::device::Device;
+<span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError};
 <span class="kw">use </span><span class="kw">crate</span>::error::{ErrorFormatter, PrettyError};
 <span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
 <span class="kw">use </span><span class="kw">crate</span>::id::CommandBufferId;
@@ -784,20 +799,24 @@
 <span class="comment">//TODO: handle errors better
 </span><span class="kw">impl</span>&lt;A: HalApi&gt; CommandEncoder&lt;A&gt; {
     <span class="doccomment">/// Closes the live encoder
-    </span><span class="kw">fn </span>close_and_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+    </span><span class="kw">fn </span>close_and_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
-            <span class="kw">let </span>new = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding().unwrap() };
+            <span class="kw">let </span>new = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding()<span class="question-mark">? </span>};
             <span class="self">self</span>.list.insert(<span class="self">self</span>.list.len() - <span class="number">1</span>, new);
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+    <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
-            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding().unwrap() };
+            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding()<span class="question-mark">? </span>};
             <span class="self">self</span>.list.push(cmd_buf);
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>discard(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -807,18 +826,21 @@
         }
     }
 
-    <span class="kw">fn </span>open(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>A::CommandEncoder {
+    <span class="kw">fn </span>open(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder, DeviceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
             <span class="kw">let </span>label = <span class="self">self</span>.label.as_deref();
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label).unwrap() };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label)<span class="question-mark">? </span>};
         }
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.raw
+
+        <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.raw)
     }
 
-    <span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label).unwrap() };
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label)<span class="question-mark">? </span>};
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -845,10 +867,13 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; CommandBufferMutable&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open_encoder_and_tracker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;mut </span>A::CommandEncoder, <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;) {
-        <span class="kw">let </span>encoder = <span class="self">self</span>.encoder.open();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open_encoder_and_tracker(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;mut </span>A::CommandEncoder, <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;), DeviceError&gt; {
+        <span class="kw">let </span>encoder = <span class="self">self</span>.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span><span class="self">self</span>.trackers;
-        (encoder, tracker)
+
+        <span class="prelude-val">Ok</span>((encoder, tracker))
     }
 }
 
@@ -1127,6 +1152,8 @@
     </span>Invalid,
     <span class="attr">#[error(<span class="string">"Command encoder must be active"</span>)]
     </span>NotRecording,
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
 }
 
 <span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
@@ -1145,13 +1172,16 @@
                 <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
                 <span class="kw">match </span>cmd_buf_data.status {
                     CommandEncoderStatus::Recording =&gt; {
-                        cmd_buf_data.encoder.close();
-                        cmd_buf_data.status = CommandEncoderStatus::Finished;
-                        <span class="comment">//Note: if we want to stop tracking the swapchain texture view,
-                        // this is the place to do it.
-                        </span><span class="macro">log::trace!</span>(<span class="string">"Command buffer {:?}"</span>, encoder_id);
-                        <span class="prelude-val">None
-                    </span>}
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.encoder.close() {
+                            <span class="prelude-val">Some</span>(e.into())
+                        } <span class="kw">else </span>{
+                            cmd_buf_data.status = CommandEncoderStatus::Finished;
+                            <span class="comment">//Note: if we want to stop tracking the swapchain texture view,
+                            // this is the place to do it.
+                            </span><span class="macro">log::trace!</span>(<span class="string">"Command buffer {:?}"</span>, encoder_id);
+                            <span class="prelude-val">None
+                        </span>}
+                    }
                     CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Some</span>(CommandEncoderError::NotRecording),
                     CommandEncoderStatus::Error =&gt; {
                         cmd_buf_data.encoder.discard();
@@ -1183,7 +1213,7 @@
             list.push(TraceCommand::PushDebugGroup(label.to_string()));
         }
 
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">if </span>!<span class="self">self
             </span>.instance
             .flags
@@ -1220,7 +1250,7 @@
             .flags
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
         {
-            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open();
+            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
             <span class="kw">unsafe </span>{
                 cmd_buf_raw.insert_debug_marker(label);
             }
@@ -1246,7 +1276,7 @@
             list.push(TraceCommand::PopDebugGroup);
         }
 
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open();
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">if </span>!<span class="self">self
             </span>.instance
             .flags
