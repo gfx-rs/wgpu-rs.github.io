@@ -2001,7 +2001,7 @@ index format changes.
                     }
 
                     <span class="comment">// Identify the next `num_dynamic_offsets` entries from `base.dynamic_offsets`.
-                    </span><span class="kw">let </span>num_dynamic_offsets = num_dynamic_offsets <span class="kw">as </span>usize;
+                    </span><span class="kw">let </span>num_dynamic_offsets = num_dynamic_offsets;
                     <span class="kw">let </span>offsets_range =
                         next_dynamic_offset..next_dynamic_offset + num_dynamic_offsets;
                     next_dynamic_offset = offsets_range.end;
@@ -2508,10 +2508,10 @@ index format changes.
                             pipeline_layout.as_ref().unwrap().raw(),
                             index,
                             raw_bg,
-                            <span class="kw-2">&amp;</span>offsets[..num_dynamic_offsets <span class="kw">as </span>usize],
+                            <span class="kw-2">&amp;</span>offsets[..num_dynamic_offsets],
                         )
                     };
-                    offsets = <span class="kw-2">&amp;</span>offsets[num_dynamic_offsets <span class="kw">as </span>usize..];
+                    offsets = <span class="kw-2">&amp;</span>offsets[num_dynamic_offsets..];
                 }
                 RenderCommand::SetPipeline(pipeline_id) =&gt; {
                     <span class="kw">let </span>render_pipelines = trackers.render_pipelines.read();
@@ -3093,7 +3093,7 @@ index format changes.
                         <span class="kw">return </span><span class="prelude-val">Some</span>(RenderCommand::SetBindGroup {
                             index: i.try_into().unwrap(),
                             bind_group_id: contents.bind_group.as_info().id(),
-                            num_dynamic_offsets: (offsets.end - offsets.start) <span class="kw">as </span>u8,
+                            num_dynamic_offsets: offsets.end - offsets.start,
                         });
                     }
                 }
@@ -3196,7 +3196,7 @@ index format changes.
 
         bundle.base.commands.push(RenderCommand::SetBindGroup {
             index,
-            num_dynamic_offsets: offset_length.try_into().unwrap(),
+            num_dynamic_offsets: offset_length,
             bind_group_id,
         });
     }

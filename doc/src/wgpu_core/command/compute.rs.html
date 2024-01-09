@@ -1135,7 +1135,7 @@
 </span><span class="kw">pub enum </span>ComputeCommand {
     SetBindGroup {
         index: u32,
-        num_dynamic_offsets: u8,
+        num_dynamic_offsets: usize,
         bind_group_id: id::BindGroupId,
     },
     SetPipeline(id::ComputePipelineId),
@@ -1596,10 +1596,10 @@
 
                     temp_offsets.clear();
                     temp_offsets.extend_from_slice(
-                        <span class="kw-2">&amp;</span>base.dynamic_offsets[dynamic_offset_count
-                            ..dynamic_offset_count + (num_dynamic_offsets <span class="kw">as </span>usize)],
+                        <span class="kw-2">&amp;</span>base.dynamic_offsets
+                            [dynamic_offset_count..dynamic_offset_count + num_dynamic_offsets],
                     );
-                    dynamic_offset_count += num_dynamic_offsets <span class="kw">as </span>usize;
+                    dynamic_offset_count += num_dynamic_offsets;
 
                     <span class="kw">let </span>bind_group = tracker
                         .bind_groups
@@ -2008,7 +2008,7 @@
 
         pass.base.commands.push(ComputeCommand::SetBindGroup {
             index,
-            num_dynamic_offsets: offset_length.try_into().unwrap(),
+            num_dynamic_offsets: offset_length,
             bind_group_id,
         });
     }
