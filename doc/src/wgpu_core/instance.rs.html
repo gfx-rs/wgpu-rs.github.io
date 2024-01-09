@@ -1400,8 +1400,8 @@
         <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(<span class="kw">_</span>: A, instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, surface: AnySurface) {
             <span class="kw">unsafe </span>{
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = surface.take::&lt;A&gt;() {
-                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(suf) = Arc::try_unwrap(surface) {
-                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(raw) = Arc::try_unwrap(suf.raw) {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(suf) = Arc::into_inner(surface) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = Arc::into_inner(suf.raw) {
                             instance.as_ref().unwrap().destroy_surface(raw);
                         } <span class="kw">else </span>{
                             <span class="macro">panic!</span>(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
@@ -2045,7 +2045,7 @@
         }
 
         <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.unregister(id);
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(surface) = Arc::try_unwrap(surface.unwrap()) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = Arc::into_inner(surface.unwrap()) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
                 <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
                 </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
