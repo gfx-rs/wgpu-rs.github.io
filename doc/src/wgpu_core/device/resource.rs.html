@@ -3398,6 +3398,15 @@
 <a href="#3397" id="3397">3397</a>
 <a href="#3398" id="3398">3398</a>
 <a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
+<a href="#3404" id="3404">3404</a>
+<a href="#3405" id="3405">3405</a>
+<a href="#3406" id="3406">3406</a>
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -5232,7 +5241,16 @@
                 }
                 (size.get(), end)
             }
-            <span class="prelude-val">None </span>=&gt; (buffer.size - bb.offset, buffer.size),
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">if </span>buffer.size &lt; bb.offset {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BindingRangeTooLarge {
+                        buffer: bb.buffer_id,
+                        range: bb.offset..bb.offset,
+                        size: buffer.size,
+                    });
+                }
+                (buffer.size - bb.offset, buffer.size)
+            }
         };
 
         <span class="kw">if </span>bind_size &gt; range_limit <span class="kw">as </span>u64 {
