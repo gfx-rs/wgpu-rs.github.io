@@ -1687,6 +1687,20 @@
 <a href="#1686" id="1686">1686</a>
 <a href="#1687" id="1687">1687</a>
 <a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1767,7 +1781,9 @@ index format changes.
 
 </span><span class="attr">#![allow(clippy::reversed_empty_ranges)]
 
-</span><span class="kw">use crate</span>::{
+#[cfg(feature = <span class="string">"trace"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
+<span class="kw">use crate</span>::{
     binding_model::{buffer_binding_type_alignment, BindGroup, BindGroupLayout, PipelineLayout},
     command::{
         BasePass, BindGroupStateChange, ColorAttachmentError, DrawError, MapPassErr,
@@ -1785,6 +1801,7 @@ index format changes.
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
     pipeline::{<span class="self">self</span>, PipelineFlags, RenderPipeline},
     resource::{Resource, ResourceInfo, ResourceType},
+    resource_log,
     track::RenderBundleScope,
     validation::check_buffer_usage,
     Label, LabelHelpers,
@@ -2450,6 +2467,17 @@ index format changes.
     <span class="kw">pub</span>(<span class="kw">super</span>) context: RenderPassContext,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;RenderBundleId&gt;,
     discard_hal_labels: bool,
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>RenderBundle&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw RenderBundle {:?}"</span>, <span class="self">self</span>.info.label());
+
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
+            t.add(trace::Action::DestroyRenderBundle(<span class="self">self</span>.info.id()));
+        }
+    }
 }
 
 <span class="attr">#[cfg(any(
