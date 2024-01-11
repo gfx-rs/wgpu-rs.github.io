@@ -1480,6 +1480,14 @@
 <a href="#1479" id="1479">1479</a>
 <a href="#1480" id="1480">1480</a>
 <a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1915,6 +1923,10 @@
         <span class="self">self</span>.raw.get(guard)
     }
 
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_destroyed(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; bool {
+        <span class="self">self</span>.raw.get(guard).is_none()
+    }
+
     <span class="comment">// Note: This must not be called while holding a lock.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unmap(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), BufferAccessError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>operation, status)) = <span class="self">self</span>.unmap_inner()<span class="question-mark">? </span>{
@@ -2298,6 +2310,10 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Texture&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Texture&gt; {
         <span class="self">self</span>.inner.get(snatch_guard)<span class="question-mark">?</span>.raw()
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_destroyed(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; bool {
+        <span class="self">self</span>.inner.get(guard).is_none()
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">'a</span>&gt;(

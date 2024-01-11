@@ -2508,6 +2508,30 @@
 <a href="#2507" id="2507">2507</a>
 <a href="#2508" id="2508">2508</a>
 <a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
+<a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a>
+<a href="#2527" id="2527">2527</a>
+<a href="#2528" id="2528">2528</a>
+<a href="#2529" id="2529">2529</a>
+<a href="#2530" id="2530">2530</a>
+<a href="#2531" id="2531">2531</a>
+<a href="#2532" id="2532">2532</a>
+<a href="#2533" id="2533">2533</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2999,8 +3023,7 @@
 
         <span class="kw">let </span>buffer = hub
             .buffers
-            .write()
-            .get_and_mark_destroyed(buffer_id)
+            .get(buffer_id)
             .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
         <span class="kw">let _ </span>= buffer.unmap();
@@ -3242,8 +3265,7 @@
 
         <span class="kw">let </span>texture = hub
             .textures
-            .write()
-            .get_and_mark_destroyed(texture_id)
+            .get(texture_id)
             .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
         texture.destroy()
@@ -3309,6 +3331,12 @@
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>resource::CreateTextureViewError::InvalidTexture,
             };
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>texture.device;
+            {
+                <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+                <span class="kw">if </span>texture.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
+                    <span class="kw">break </span>resource::CreateTextureViewError::InvalidTexture;
+                }
+            }
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 trace.add(trace::Action::CreateTextureView {
@@ -4896,6 +4924,12 @@
                     },
                 ));
             }
+
+            <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+            <span class="kw">if </span>buffer.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::Destroyed));
+            }
+
             {
                 <span class="kw">let </span>map_state = <span class="kw-2">&amp;mut *</span>buffer.map_state.lock();
                 <span class="kw-2">*</span>map_state = <span class="kw">match </span><span class="kw-2">*</span>map_state {
@@ -4920,9 +4954,10 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = buffer.device.as_ref().trackers.lock();
                 trackers.buffers.set_single(<span class="kw-2">&amp;</span>buffer, internal_use);
                 <span class="comment">//TODO: Check if draining ALL buffers is correct!
-                </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-                <span class="kw">let _ </span>= trackers.buffers.drain_transitions(<span class="kw-2">&amp;</span>snatch_guard);
+                </span><span class="kw">let _ </span>= trackers.buffers.drain_transitions(<span class="kw-2">&amp;</span>snatch_guard);
             }
+
+            drop(snatch_guard);
 
             buffer
         };
@@ -4947,6 +4982,13 @@
             .buffers
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
+
+        {
+            <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+            <span class="kw">if </span>buffer.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(BufferAccessError::Destroyed);
+            }
+        }
 
         <span class="kw">let </span>range_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
             size
@@ -5009,6 +5051,12 @@
             .buffers
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+        <span class="kw">if </span>buffer.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BufferAccessError::Destroyed);
+        }
+        drop(snatch_guard);
 
         <span class="kw">if </span>!buffer.device.is_valid() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
