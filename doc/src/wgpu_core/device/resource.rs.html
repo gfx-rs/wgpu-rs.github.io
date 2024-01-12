@@ -3720,25 +3720,6 @@
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
-        {
-            <span class="comment">// Normally, `temp_suspected` exists only to save heap
-            // allocations: it's cleared at the start of the function
-            // call, and cleared by the end. But `Global::queue_submit` is
-            // fallible; if it exits early, it may leave some resources in
-            // `temp_suspected`.
-            </span><span class="kw">let </span>temp_suspected = <span class="self">self
-                </span>.temp_suspected
-                .lock()
-                .replace(ResourceMaps::new())
-                .unwrap();
-
-            <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life();
-            life_tracker.suspected_resources.extend(temp_suspected);
-
-            life_tracker.triage_suspected(<span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
-            life_tracker.triage_mapped();
-        }
-
         <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
             <span class="kw">let </span>index_to_wait_for = <span class="kw">match </span>maintain {
                 wgt::Maintain::WaitForSubmissionIndex(submission_index) =&gt; {
@@ -3771,6 +3752,25 @@
             last_done_index,
             <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
         );
+
+        {
+            <span class="comment">// Normally, `temp_suspected` exists only to save heap
+            // allocations: it's cleared at the start of the function
+            // call, and cleared by the end. But `Global::queue_submit` is
+            // fallible; if it exits early, it may leave some resources in
+            // `temp_suspected`.
+            </span><span class="kw">let </span>temp_suspected = <span class="self">self
+                </span>.temp_suspected
+                .lock()
+                .replace(ResourceMaps::new())
+                .unwrap();
+
+            life_tracker.suspected_resources.extend(temp_suspected);
+
+            life_tracker.triage_suspected(<span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
+            life_tracker.triage_mapped();
+        }
+
         <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
 
         <span class="comment">// Detect if we have been destroyed and now need to lose the device.
