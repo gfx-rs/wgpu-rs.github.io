@@ -1701,6 +1701,7 @@
 <a href="#1700" id="1700">1700</a>
 <a href="#1701" id="1701">1701</a>
 <a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -2199,7 +2200,7 @@ index format changes.
                     <span class="kw">let </span>pipeline = state.pipeline(scope)<span class="question-mark">?</span>;
                     <span class="kw">let </span>used_bind_groups = pipeline.used_bind_groups;
                     <span class="kw">let </span>vertex_limits = state.vertex_limits(pipeline);
-                    <span class="kw">let </span>last_vertex = first_vertex + vertex_count;
+                    <span class="kw">let </span>last_vertex = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
                     <span class="kw">if </span>last_vertex &gt; vertex_limits.vertex_limit {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexBeyondLimit {
                             last_vertex,
@@ -2208,7 +2209,7 @@ index format changes.
                         })
                         .map_pass_err(scope);
                     }
-                    <span class="kw">let </span>last_instance = first_instance + instance_count;
+                    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
                     <span class="kw">if </span>last_instance &gt; vertex_limits.instance_limit {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
                             last_instance,
@@ -2242,7 +2243,7 @@ index format changes.
                     <span class="comment">//TODO: validate that base_vertex + max_index() is within the provided range
                     </span><span class="kw">let </span>vertex_limits = state.vertex_limits(pipeline);
                     <span class="kw">let </span>index_limit = index.limit();
-                    <span class="kw">let </span>last_index = first_index + index_count;
+                    <span class="kw">let </span>last_index = first_index <span class="kw">as </span>u64 + index_count <span class="kw">as </span>u64;
                     <span class="kw">if </span>last_index &gt; index_limit {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::IndexBeyondLimit {
                             last_index,
@@ -2250,7 +2251,7 @@ index format changes.
                         })
                         .map_pass_err(scope);
                     }
-                    <span class="kw">let </span>last_instance = first_instance + instance_count;
+                    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
                     <span class="kw">if </span>last_instance &gt; vertex_limits.instance_limit {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
                             last_instance,
@@ -2741,12 +2742,13 @@ index format changes.
     <span class="doccomment">/// Return the number of entries in the current index buffer.
     ///
     /// Panic if no index buffer has been set.
-    </span><span class="kw">fn </span>limit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    </span><span class="kw">fn </span>limit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="kw">let </span>bytes_per_index = <span class="kw">match </span><span class="self">self</span>.format {
             wgt::IndexFormat::Uint16 =&gt; <span class="number">2</span>,
             wgt::IndexFormat::Uint32 =&gt; <span class="number">4</span>,
         };
-        ((<span class="self">self</span>.range.end - <span class="self">self</span>.range.start) / bytes_per_index) <span class="kw">as </span>u32
+
+        (<span class="self">self</span>.range.end - <span class="self">self</span>.range.start) / bytes_per_index
     }
 
     <span class="doccomment">/// Generate a `SetIndexBuffer` command to prepare for an indexed draw
@@ -2830,11 +2832,11 @@ index format changes.
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>VertexLimitState {
     <span class="doccomment">/// Length of the shortest vertex rate vertex buffer
-    </span>vertex_limit: u32,
+    </span>vertex_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest vertex rate vertex buffer is bound to
     </span>vertex_limit_slot: u32,
     <span class="doccomment">/// Length of the shortest instance rate vertex buffer
-    </span>instance_limit: u32,
+    </span>instance_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest instance rate vertex buffer is bound to
     </span>instance_limit_slot: u32,
 }
@@ -2933,14 +2935,14 @@ index format changes.
 <span class="kw">impl</span>&lt;A: HalApi&gt; State&lt;A&gt; {
     <span class="kw">fn </span>vertex_limits(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>PipelineState&lt;A&gt;) -&gt; VertexLimitState {
         <span class="kw">let </span><span class="kw-2">mut </span>vert_state = VertexLimitState {
-            vertex_limit: u32::MAX,
+            vertex_limit: u32::MAX <span class="kw">as </span>u64,
             vertex_limit_slot: <span class="number">0</span>,
-            instance_limit: u32::MAX,
+            instance_limit: u32::MAX <span class="kw">as </span>u64,
             instance_limit_slot: <span class="number">0</span>,
         };
         <span class="kw">for </span>(idx, (vbs, step)) <span class="kw">in </span><span class="self">self</span>.vertex.iter().zip(<span class="kw-2">&amp;</span>pipeline.steps).enumerate() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>vbs) = <span class="kw-2">*</span>vbs {
-                <span class="kw">let </span>limit = ((vbs.range.end - vbs.range.start) / step.stride) <span class="kw">as </span>u32;
+                <span class="kw">let </span>limit = (vbs.range.end - vbs.range.start) / step.stride;
                 <span class="kw">match </span>step.mode {
                     wgt::VertexStepMode::Vertex =&gt; {
                         <span class="kw">if </span>limit &lt; vert_state.vertex_limit {

@@ -2830,6 +2830,8 @@
 <a href="#2829" id="2829">2829</a>
 <a href="#2830" id="2830">2830</a>
 <a href="#2831" id="2831">2831</a>
+<a href="#2832" id="2832">2832</a>
+<a href="#2833" id="2833">2833</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use crate</span>::{
     api_log,
@@ -3153,7 +3155,7 @@
     bound_buffer_view: <span class="prelude-ty">Option</span>&lt;(id::BufferId, Range&lt;BufferAddress&gt;)&gt;,
     format: <span class="prelude-ty">Option</span>&lt;IndexFormat&gt;,
     pipeline_format: <span class="prelude-ty">Option</span>&lt;IndexFormat&gt;,
-    limit: u32,
+    limit: u64,
 }
 
 <span class="kw">impl </span>IndexState {
@@ -3167,7 +3169,8 @@
                     IndexFormat::Uint16 =&gt; <span class="number">1</span>,
                     IndexFormat::Uint32 =&gt; <span class="number">2</span>,
                 };
-                ((range.end - range.start) &gt;&gt; shift) <span class="kw">as </span>u32
+
+                (range.end - range.start) &gt;&gt; shift
             }
             <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
         }
@@ -3201,11 +3204,11 @@
 </span><span class="kw">struct </span>VertexState {
     inputs: ArrayVec&lt;VertexBufferState, { hal::MAX_VERTEX_BUFFERS }&gt;,
     <span class="doccomment">/// Length of the shortest vertex rate vertex buffer
-    </span>vertex_limit: u32,
+    </span>vertex_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest vertex rate vertex buffer is bound to
     </span>vertex_limit_slot: u32,
     <span class="doccomment">/// Length of the shortest instance rate vertex buffer
-    </span>instance_limit: u32,
+    </span>instance_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest instance rate vertex buffer is bound to
     </span>instance_limit_slot: u32,
     <span class="doccomment">/// Total amount of buffers required by the pipeline.
@@ -3214,13 +3217,16 @@
 
 <span class="kw">impl </span>VertexState {
     <span class="kw">fn </span>update_limits(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.vertex_limit = u32::MAX;
-        <span class="self">self</span>.instance_limit = u32::MAX;
+        <span class="comment">// Ensure that the limits are always smaller than u32::MAX so that
+        // interger overlows can be prevented via saturating additions.
+        </span><span class="kw">let </span>max = u32::MAX <span class="kw">as </span>u64;
+        <span class="self">self</span>.vertex_limit = max;
+        <span class="self">self</span>.instance_limit = max;
         <span class="kw">for </span>(idx, vbs) <span class="kw">in </span><span class="self">self</span>.inputs.iter().enumerate() {
             <span class="kw">if </span>vbs.step.stride == <span class="number">0 </span>|| !vbs.bound {
                 <span class="kw">continue</span>;
             }
-            <span class="kw">let </span>limit = (vbs.total_size / vbs.step.stride) <span class="kw">as </span>u32;
+            <span class="kw">let </span>limit = vbs.total_size / vbs.step.stride;
             <span class="kw">match </span>vbs.step.mode {
                 VertexStepMode::Vertex =&gt; {
                     <span class="kw">if </span>limit &lt; <span class="self">self</span>.vertex_limit {
@@ -4723,7 +4729,7 @@
                         };
                         state.is_ready(indexed).map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>last_vertex = first_vertex + vertex_count;
+                        <span class="kw">let </span>last_vertex = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
                         <span class="kw">let </span>vertex_limit = state.vertex.vertex_limit;
                         <span class="kw">if </span>last_vertex &gt; vertex_limit {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexBeyondLimit {
@@ -4733,7 +4739,7 @@
                             })
                             .map_pass_err(scope);
                         }
-                        <span class="kw">let </span>last_instance = first_instance + instance_count;
+                        <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
                         <span class="kw">let </span>instance_limit = state.vertex.instance_limit;
                         <span class="kw">if </span>last_instance &gt; instance_limit {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
@@ -4765,9 +4771,7 @@
                         };
                         state.is_ready(indexed).map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="comment">//TODO: validate that base_vertex + max_index() is
-                        // within the provided range
-                        </span><span class="kw">let </span>last_index = first_index + index_count;
+                        <span class="kw">let </span>last_index = first_index <span class="kw">as </span>u64 + index_count <span class="kw">as </span>u64;
                         <span class="kw">let </span>index_limit = state.index.limit;
                         <span class="kw">if </span>last_index &gt; index_limit {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::IndexBeyondLimit {
@@ -4776,7 +4780,7 @@
                             })
                             .map_pass_err(scope);
                         }
-                        <span class="kw">let </span>last_instance = first_instance + instance_count;
+                        <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
                         <span class="kw">let </span>instance_limit = state.vertex.instance_limit;
                         <span class="kw">if </span>last_instance &gt; instance_limit {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
