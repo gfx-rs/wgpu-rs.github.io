@@ -4022,10 +4022,6 @@
 <a href="#4021" id="4021">4021</a>
 <a href="#4022" id="4022">4022</a>
 <a href="#4023" id="4023">4023</a>
-<a href="#4024" id="4024">4024</a>
-<a href="#4025" id="4025">4025</a>
-<a href="#4026" id="4026">4026</a>
-<a href="#4027" id="4027">4027</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4042,8 +4038,8 @@
     PipelineLayoutDescriptor, QuerySetDescriptor, RenderBundleDescriptor,
     RenderBundleEncoderDescriptor, RenderPassDescriptor, RenderPipelineDescriptor,
     RequestAdapterOptions, RequestDeviceError, SamplerDescriptor, ShaderModuleDescriptor,
-    ShaderModuleDescriptorSpirV, Texture, TextureDescriptor, TextureViewDescriptor,
-    UncapturedErrorHandler,
+    ShaderModuleDescriptorSpirV, SurfaceTargetUnsafe, Texture, TextureDescriptor,
+    TextureViewDescriptor, UncapturedErrorHandler,
 };
 
 <span class="doccomment">/// Meta trait for an id tracked by a context.
@@ -4126,8 +4122,7 @@
     <span class="kw">fn </span>init(instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self</span>;
     <span class="kw">unsafe fn </span>instance_create_surface(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        display_handle: raw_window_handle::RawDisplayHandle,
-        window_handle: raw_window_handle::RawWindowHandle,
+        target: SurfaceTargetUnsafe,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::SurfaceId, <span class="self">Self</span>::SurfaceData), <span class="kw">crate</span>::CreateSurfaceError&gt;;
     <span class="kw">fn </span>instance_request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -5171,8 +5166,7 @@
 
     <span class="kw">unsafe fn </span>instance_create_surface(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        display_handle: raw_window_handle::RawDisplayHandle,
-        window_handle: raw_window_handle::RawWindowHandle,
+        target: SurfaceTargetUnsafe,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;), <span class="kw">crate</span>::CreateSurfaceError&gt;;
     <span class="attr">#[allow(clippy::type_complexity)]
     </span><span class="kw">fn </span>instance_request_adapter(
@@ -6029,11 +6023,9 @@
 
     <span class="kw">unsafe fn </span>instance_create_surface(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        display_handle: raw_window_handle::RawDisplayHandle,
-        window_handle: raw_window_handle::RawWindowHandle,
+        target: SurfaceTargetUnsafe,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;), <span class="kw">crate</span>::CreateSurfaceError&gt; {
-        <span class="kw">let </span>(surface, data) =
-            <span class="kw">unsafe </span>{ Context::instance_create_surface(<span class="self">self</span>, display_handle, window_handle) }<span class="question-mark">?</span>;
+        <span class="kw">let </span>(surface, data) = <span class="kw">unsafe </span>{ Context::instance_create_surface(<span class="self">self</span>, target) }<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((surface.into(), Box::new(data) <span class="kw">as _</span>))
     }
 

@@ -5116,24 +5116,6 @@
 <a href="#5115" id="5115">5115</a>
 <a href="#5116" id="5116">5116</a>
 <a href="#5117" id="5117">5117</a>
-<a href="#5118" id="5118">5118</a>
-<a href="#5119" id="5119">5119</a>
-<a href="#5120" id="5120">5120</a>
-<a href="#5121" id="5121">5121</a>
-<a href="#5122" id="5122">5122</a>
-<a href="#5123" id="5123">5123</a>
-<a href="#5124" id="5124">5124</a>
-<a href="#5125" id="5125">5125</a>
-<a href="#5126" id="5126">5126</a>
-<a href="#5127" id="5127">5127</a>
-<a href="#5128" id="5128">5128</a>
-<a href="#5129" id="5129">5129</a>
-<a href="#5130" id="5130">5130</a>
-<a href="#5131" id="5131">5131</a>
-<a href="#5132" id="5132">5132</a>
-<a href="#5133" id="5133">5133</a>
-<a href="#5134" id="5134">5134</a>
-<a href="#5135" id="5135">5135</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5501,7 +5483,7 @@
 /// serves a similar role.
 </span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">'window</span>&gt; {
     context: Arc&lt;C&gt;,
-    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WasmNotSendSync + <span class="lifetime">'window</span>&gt;&gt;,
+    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
     id: ObjectId,
     data: Box&lt;Data&gt;,
     <span class="comment">// Stores the latest `SurfaceConfiguration` that was set using `Surface::configure`.
@@ -5542,6 +5524,149 @@
         <span class="kw">if </span>!thread::panicking() {
             <span class="self">self</span>.context.surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
         }
+    }
+}
+
+<span class="doccomment">/// Super trait for window handles as used in [`SurfaceTarget`].
+</span><span class="kw">pub trait </span>WindowHandle: HasWindowHandle + HasDisplayHandle + WasmNotSendSync {}
+
+<span class="kw">impl</span>&lt;T&gt; WindowHandle <span class="kw">for </span>T <span class="kw">where </span>T: HasWindowHandle + HasDisplayHandle + WasmNotSendSync {}
+
+<span class="doccomment">/// The window/canvas/surface/swap-chain/etc. a surface is attached to, for use with safe surface creation.
+///
+/// This is either a window or an actual web canvas depending on the platform and
+/// enabled features.
+/// Refer to the individual variants for more information.
+///
+/// See also [`SurfaceTargetUnsafe`] for unsafe variants.
+</span><span class="attr">#[non_exhaustive]
+</span><span class="kw">pub enum </span>SurfaceTarget&lt;<span class="lifetime">'window</span>&gt; {
+    <span class="doccomment">/// Window handle producer.
+    ///
+    /// If the specified display and window handle are not supported by any of the backends, then the surface
+    /// will not be supported by any adapters.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: surface creation returns an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
+    ///
+    /// # Panics
+    ///
+    /// - On macOS/Metal: will panic if not called on the main thread.
+    /// - On web: will panic if the `raw_window_handle` does not properly refer to a
+    ///   canvas element.
+    </span>Window(Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;),
+
+    <span class="doccomment">/// Surface from a `web_sys::HtmlCanvasElement`.
+    ///
+    /// The `canvas` argument must be a valid `&lt;canvas&gt;` element to
+    /// create a surface upon.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: surface creation will return an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
+    </span><span class="attr">#[cfg(any(webgpu, webgl))]
+    </span>Canvas(web_sys::HtmlCanvasElement),
+
+    <span class="doccomment">/// Surface from a `web_sys::OffscreenCanvas`.
+    ///
+    /// The `canvas` argument must be a valid `OffscreenCanvas` object
+    /// to create a surface upon.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: surface creation will return an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
+    </span><span class="attr">#[cfg(any(webgpu, webgl))]
+    </span>OffscreenCanvas(web_sys::OffscreenCanvas),
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; From&lt;T&gt; <span class="kw">for </span>SurfaceTarget&lt;<span class="lifetime">'a</span>&gt;
+<span class="kw">where
+    </span>T: WindowHandle + <span class="lifetime">'a</span>,
+{
+    <span class="kw">fn </span>from(window: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Window(Box::new(window))
+    }
+}
+
+<span class="doccomment">/// The window/canvas/surface/swap-chain/etc. a surface is attached to, for use with unsafe surface creation.
+///
+/// This is either a window or an actual web canvas depending on the platform and
+/// enabled features.
+/// Refer to the individual variants for more information.
+///
+/// See also [`SurfaceTarget`] for safe variants.
+</span><span class="attr">#[non_exhaustive]
+</span><span class="kw">pub enum </span>SurfaceTargetUnsafe {
+    <span class="doccomment">/// Raw window &amp; display handle.
+    ///
+    /// If the specified display and window handle are not supported by any of the backends, then the surface
+    /// will not be supported by any adapters.
+    ///
+    /// # Safety
+    ///
+    /// - `raw_window_handle` &amp; `raw_display_handle` must be valid objects to create a surface upon.
+    /// - `raw_window_handle` &amp; `raw_display_handle` must remain valid until after the returned
+    ///    [`Surface`] is  dropped.
+    </span>RawHandle {
+        <span class="doccomment">/// Raw display handle, underlying display must outlive the surface created from this.
+        </span>raw_display_handle: raw_window_handle::RawDisplayHandle,
+
+        <span class="doccomment">/// Raw display handle, underlying window must outlive the surface created from this.
+        </span>raw_window_handle: raw_window_handle::RawWindowHandle,
+    },
+
+    <span class="doccomment">/// Surface from `CoreAnimationLayer`.
+    ///
+    /// # Safety
+    ///
+    /// - layer must be a valid object to create a surface upon.
+    </span><span class="attr">#[cfg(metal)]
+    </span>CoreAnimationLayer(<span class="kw-2">*mut </span>std::ffi::c_void),
+
+    <span class="doccomment">/// Surface from `IDCompositionVisual`.
+    ///
+    /// # Safety
+    ///
+    /// - visual must be a valid IDCompositionVisual to create a surface upon.
+    </span><span class="attr">#[cfg(dx12)]
+    </span>CompositionVisual(<span class="kw-2">*mut </span>std::ffi::c_void),
+
+    <span class="doccomment">/// Surface from DX12 `SurfaceHandle`.
+    ///
+    /// # Safety
+    ///
+    /// - surface_handle must be a valid SurfaceHandle to create a surface upon.
+    </span><span class="attr">#[cfg(dx12)]
+    </span>SurfaceHandle(<span class="kw-2">*mut </span>std::ffi::c_void),
+
+    <span class="doccomment">/// Surface from DX12 `SwapChainPanel`.
+    ///
+    /// # Safety
+    ///
+    /// - visual must be a valid SwapChainPanel to create a surface upon.
+    </span><span class="attr">#[cfg(dx12)]
+    </span>SwapChainPanel(<span class="kw-2">*mut </span>std::ffi::c_void),
+}
+
+<span class="kw">impl </span>SurfaceTargetUnsafe {
+    <span class="doccomment">/// Creates a [`SurfaceTargetUnsafe::RawHandle`] from a window.
+    ///
+    /// # Safety
+    ///
+    /// - `window` must outlive the resulting surface target
+    ///   (and subsequently the surface created for this target).
+    </span><span class="kw">pub unsafe fn </span>from_window&lt;T&gt;(window: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, raw_window_handle::HandleError&gt;
+    <span class="kw">where
+        </span>T: HasDisplayHandle + HasWindowHandle,
+    {
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::RawHandle {
+            raw_display_handle: window.display_handle()<span class="question-mark">?</span>.as_raw(),
+            raw_window_handle: window.window_handle()<span class="question-mark">?</span>.as_raw(),
+        })
     }
 }
 
@@ -6876,258 +7001,97 @@
         }
     }
 
-    <span class="doccomment">/// Creates a surface from a raw window handle.
+    <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc..
     ///
-    /// If the specified display and window handle are not supported by any of the backends, then the surface
-    /// will not be supported by any adapters.
+    /// See [`SurfaceTarget`] for what targets are supported.
+    /// See [`Instance::create_surface`] for surface creation with unsafe target variants.
     ///
-    /// If a reference is passed in `window`, the returned [`Surface`] will
-    /// hold a lifetime to it. Owned values will return a [`Surface&lt;'static&gt;`]
-    /// instead.
-    ///
-    /// # Errors
-    ///
-    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
-    ///   or declines to provide GPU access (such as due to a resource shortage).
-    ///
-    /// # Panics
-    ///
-    /// - On macOS/Metal: will panic if not called on the main thread.
-    /// - On web: will panic if the `raw_window_handle` does not properly refer to a
-    ///   canvas element.
-    </span><span class="kw">pub fn </span>create_surface&lt;<span class="lifetime">'window</span>, W&gt;(
+    /// Most commonly used are window handles (or provider of windows handles)
+    /// which can be passed directly as they're automatically converted to [`SurfaceTarget`].
+    </span><span class="kw">pub fn </span>create_surface&lt;<span class="lifetime">'window</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        window: W,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'window</span>&gt;, CreateSurfaceError&gt;
-    <span class="kw">where
-        </span>W: HasWindowHandle + HasDisplayHandle + WasmNotSendSync + <span class="lifetime">'window</span>,
-    {
-        <span class="kw">let </span><span class="kw-2">mut </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_surface_from_raw(<span class="kw-2">&amp;</span>window) }<span class="question-mark">?</span>;
-        surface._surface = <span class="prelude-val">Some</span>(Box::new(window));
+        target: <span class="kw">impl </span>Into&lt;SurfaceTarget&lt;<span class="lifetime">'window</span>&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'window</span>&gt;, CreateSurfaceError&gt; {
+        <span class="comment">// Handle origin (i.e. window) to optionally take ownership of to make the surface outlast the window.
+        </span><span class="kw">let </span>handle_origin;
+
+        <span class="kw">let </span>target = target.into();
+        <span class="kw">let </span><span class="kw-2">mut </span>surface = <span class="kw">match </span>target {
+            SurfaceTarget::Window(window) =&gt; <span class="kw">unsafe </span>{
+                <span class="kw">let </span>surface = <span class="self">self</span>.create_surface_unsafe(
+                    SurfaceTargetUnsafe::from_window(<span class="kw-2">&amp;</span>window).map_err(|e| CreateSurfaceError {
+                        inner: CreateSurfaceErrorKind::RawHandle(e),
+                    })<span class="question-mark">?</span>,
+                );
+                handle_origin = <span class="prelude-val">Some</span>(window);
+
+                surface
+            }<span class="question-mark">?</span>,
+
+            <span class="attr">#[cfg(any(webgpu, webgl))]
+            </span>SurfaceTarget::Canvas(canvas) =&gt; {
+                handle_origin = <span class="prelude-val">None</span>;
+
+                <span class="kw">let </span>value: <span class="kw-2">&amp;</span>wasm_bindgen::JsValue = <span class="kw-2">&amp;</span>canvas;
+                <span class="kw">let </span>obj = std::ptr::NonNull::from(value).cast();
+                <span class="kw">let </span>raw_window_handle = raw_window_handle::WebCanvasWindowHandle::new(obj).into();
+                <span class="kw">let </span>raw_display_handle = raw_window_handle::WebDisplayHandle::new().into();
+
+                <span class="comment">// Note that we need to call this while we still have `value` around.
+                // This is safe without storing canvas to `handle_origin` since the surface will create a copy internally.
+                </span><span class="kw">unsafe </span>{
+                    <span class="self">self</span>.create_surface_unsafe(SurfaceTargetUnsafe::RawHandle {
+                        raw_display_handle,
+                        raw_window_handle,
+                    })
+                }<span class="question-mark">?
+            </span>}
+
+            <span class="attr">#[cfg(any(webgpu, webgl))]
+            </span>SurfaceTarget::OffscreenCanvas(canvas) =&gt; {
+                handle_origin = <span class="prelude-val">None</span>;
+
+                <span class="kw">let </span>value: <span class="kw-2">&amp;</span>wasm_bindgen::JsValue = <span class="kw-2">&amp;</span>canvas;
+                <span class="kw">let </span>obj = std::ptr::NonNull::from(value).cast();
+                <span class="kw">let </span>raw_window_handle =
+                    raw_window_handle::WebOffscreenCanvasWindowHandle::new(obj).into();
+                <span class="kw">let </span>raw_display_handle = raw_window_handle::WebDisplayHandle::new().into();
+
+                <span class="comment">// Note that we need to call this while we still have `value` around.
+                // This is safe without storing canvas to `handle_origin` since the surface will create a copy internally.
+                </span><span class="kw">unsafe </span>{
+                    <span class="self">self</span>.create_surface_unsafe(SurfaceTargetUnsafe::RawHandle {
+                        raw_display_handle,
+                        raw_window_handle,
+                    })
+                }<span class="question-mark">?
+            </span>}
+        };
+
+        surface._surface = handle_origin;
+
         <span class="prelude-val">Ok</span>(surface)
     }
 
-    <span class="doccomment">/// An alternative version to [`create_surface()`](Self::create_surface)
-    /// which has no lifetime requirements to `window` and doesn't require
-    /// [`Send`] or [`Sync`] (on non-Wasm targets). This makes it `unsafe`
-    /// instead and always returns a [`Surface&lt;'static&gt;`].
+    <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc. using an unsafe target.
     ///
-    /// See [`create_surface()`](Self::create_surface) for more details.
+    /// See [`SurfaceTargetUnsafe`] for what targets are supported.
+    /// See [`Instance::create_surface`] for surface creation with safe target variants.
     ///
     /// # Safety
     ///
-    /// - `raw_window_handle` must be a valid object to create a surface upon.
-    /// - `raw_window_handle` must remain valid until after the returned [`Surface`] is
-    ///   dropped.
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_raw&lt;W&gt;(
+    /// - See respective [`SurfaceTargetUnsafe`] variants for safety requirements.
+    </span><span class="kw">pub unsafe fn </span>create_surface_unsafe&lt;<span class="lifetime">'window</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;</span>W,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'static</span>&gt;, CreateSurfaceError&gt;
-    <span class="kw">where
-        </span>W: HasWindowHandle + HasDisplayHandle,
-    {
-        <span class="kw">let </span>raw_display_handle = window
-            .display_handle()
-            .map_err(|e| CreateSurfaceError {
-                inner: CreateSurfaceErrorKind::RawHandle(e),
-            })<span class="question-mark">?
-            </span>.as_raw();
-        <span class="kw">let </span>raw_window_handle = window
-            .window_handle()
-            .map_err(|e| CreateSurfaceError {
-                inner: CreateSurfaceErrorKind::RawHandle(e),
-            })<span class="question-mark">?
-            </span>.as_raw();
-        <span class="kw">let </span>(id, data) = <span class="kw">unsafe </span>{
-            DynContext::instance_create_surface(
-                <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-                raw_display_handle,
-                raw_window_handle,
-            )
-        }<span class="question-mark">?</span>;
+        target: SurfaceTargetUnsafe,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'window</span>&gt;, CreateSurfaceError&gt; {
+        <span class="kw">let </span>(id, data) = <span class="kw">unsafe </span>{ <span class="self">self</span>.context.instance_create_surface(target) }<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
             _surface: <span class="prelude-val">None</span>,
             id,
             data,
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        })
-    }
-
-    <span class="doccomment">/// Creates a surface from `CoreAnimationLayer`.
-    ///
-    /// # Safety
-    ///
-    /// - layer must be a valid object to create a surface upon.
-    </span><span class="attr">#[cfg(metal)]
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_core_animation_layer(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        layer: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface&lt;<span class="lifetime">'static</span>&gt; {
-        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.context
-                .as_any()
-                .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-                .unwrap()
-                .create_surface_from_core_animation_layer(layer)
-        };
-        Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            id: ObjectId::from(surface.id()),
-            data: Box::new(surface),
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        }
-    }
-
-    <span class="doccomment">/// Creates a surface from `IDCompositionVisual`.
-    ///
-    /// # Safety
-    ///
-    /// - visual must be a valid IDCompositionVisual to create a surface upon.
-    </span><span class="attr">#[cfg(dx12)]
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_visual(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        visual: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface&lt;<span class="lifetime">'static</span>&gt; {
-        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.context
-                .as_any()
-                .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-                .unwrap()
-                .create_surface_from_visual(visual)
-        };
-        Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            id: ObjectId::from(surface.id()),
-            data: Box::new(surface),
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        }
-    }
-
-    <span class="doccomment">/// Creates a surface from `SurfaceHandle`.
-    ///
-    /// # Safety
-    ///
-    /// - surface_handle must be a valid SurfaceHandle to create a surface upon.
-    </span><span class="attr">#[cfg(dx12)]
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_surface_handle(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface&lt;<span class="lifetime">'static</span>&gt; {
-        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.context
-                .as_any()
-                .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-                .unwrap()
-                .create_surface_from_surface_handle(surface_handle)
-        };
-        Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            id: ObjectId::from(surface.id()),
-            data: Box::new(surface),
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        }
-    }
-
-    <span class="doccomment">/// Creates a surface from `SwapChainPanel`.
-    ///
-    /// # Safety
-    ///
-    /// - visual must be a valid SwapChainPanel to create a surface upon.
-    </span><span class="attr">#[cfg(dx12)]
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_swap_chain_panel(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface&lt;<span class="lifetime">'static</span>&gt; {
-        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.context
-                .as_any()
-                .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-                .unwrap()
-                .create_surface_from_swap_chain_panel(swap_chain_panel)
-        };
-        Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            id: ObjectId::from(surface.id()),
-            data: Box::new(surface),
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        }
-    }
-
-    <span class="doccomment">/// Creates a surface from a `web_sys::HtmlCanvasElement`.
-    ///
-    /// The `canvas` argument must be a valid `&lt;canvas&gt;` element to
-    /// create a surface upon.
-    ///
-    /// # Errors
-    ///
-    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
-    ///   or declines to provide GPU access (such as due to a resource shortage).
-    </span><span class="attr">#[cfg(any(webgpu, webgl))]
-    </span><span class="kw">pub fn </span>create_surface_from_canvas(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        canvas: web_sys::HtmlCanvasElement,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'static</span>&gt;, CreateSurfaceError&gt; {
-        <span class="kw">let </span>surface = <span class="self">self
-            </span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-            .unwrap()
-            .instance_create_surface_from_canvas(canvas)<span class="question-mark">?</span>;
-
-        <span class="comment">// TODO: This is ugly, a way to create things from a native context needs to be made nicer.
-        </span><span class="prelude-val">Ok</span>(Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(webgl)]
-            </span>id: ObjectId::from(surface.id()),
-            <span class="attr">#[cfg(webgl)]
-            </span>data: Box::new(surface),
-            <span class="attr">#[cfg(webgpu)]
-            </span>id: ObjectId::UNUSED,
-            <span class="attr">#[cfg(webgpu)]
-            </span>data: Box::new(surface.<span class="number">1</span>),
-            config: Mutex::new(<span class="prelude-val">None</span>),
-        })
-    }
-
-    <span class="doccomment">/// Creates a surface from a `web_sys::OffscreenCanvas`.
-    ///
-    /// The `canvas` argument must be a valid `OffscreenCanvas` object
-    /// to create a surface upon.
-    ///
-    /// # Errors
-    ///
-    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
-    ///   or declines to provide GPU access (such as due to a resource shortage).
-    </span><span class="attr">#[cfg(any(webgpu, webgl))]
-    </span><span class="kw">pub fn </span>create_surface_from_offscreen_canvas(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        canvas: web_sys::OffscreenCanvas,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'static</span>&gt;, CreateSurfaceError&gt; {
-        <span class="kw">let </span>surface = <span class="self">self
-            </span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-            .unwrap()
-            .instance_create_surface_from_offscreen_canvas(canvas)<span class="question-mark">?</span>;
-
-        <span class="comment">// TODO: This is ugly, a way to create things from a native context needs to be made nicer.
-        </span><span class="prelude-val">Ok</span>(Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(webgl)]
-            </span>id: ObjectId::from(surface.id()),
-            <span class="attr">#[cfg(webgl)]
-            </span>data: Box::new(surface),
-            <span class="attr">#[cfg(webgpu)]
-            </span>id: ObjectId::UNUSED,
-            <span class="attr">#[cfg(webgpu)]
-            </span>data: Box::new(surface.<span class="number">1</span>),
             config: Mutex::new(<span class="prelude-val">None</span>),
         })
     }
