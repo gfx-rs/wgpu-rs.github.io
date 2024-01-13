@@ -628,6 +628,8 @@
 <a href="#627" id="627">627</a>
 <a href="#628" id="628">628</a>
 <a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgpu::{Instance, Surface};
@@ -1242,7 +1244,9 @@
 
                 <span class="kw">let </span>dst_buffer_slice = dst_buffer.slice(..);
                 dst_buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
-                ctx.device.poll(wgpu::Maintain::Wait);
+                ctx.async_poll(wgpu::Maintain::wait())
+                    .<span class="kw">await
+                    </span>.panic_on_timeout();
                 <span class="kw">let </span>bytes = dst_buffer_slice.get_mapped_range().to_vec();
 
                 wgpu_test::image::compare_image_output(

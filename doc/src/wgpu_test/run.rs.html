@@ -111,7 +111,12 @@
 <a href="#110" id="110">110</a>
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::panic::AssertUnwindSafe;
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{panic::AssertUnwindSafe, sync::Arc};
 
 <span class="kw">use </span>futures_lite::FutureExt;
 <span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
@@ -131,7 +136,7 @@
     <span class="kw">pub </span>adapter: Adapter,
     <span class="kw">pub </span>adapter_info: wgpu::AdapterInfo,
     <span class="kw">pub </span>adapter_downlevel_capabilities: wgpu::DownlevelCapabilities,
-    <span class="kw">pub </span>device: Device,
+    <span class="kw">pub </span>device: Arc&lt;Device&gt;,
     <span class="kw">pub </span>device_features: wgpu::Features,
     <span class="kw">pub </span>device_limits: wgpu::Limits,
     <span class="kw">pub </span>queue: Queue,
@@ -171,6 +176,9 @@
         <span class="kw">return</span>;
     }
 
+    <span class="comment">// Print the name of the test.
+    </span><span class="macro">log::info!</span>(<span class="string">"TEST: {}"</span>, config.name);
+
     <span class="kw">let </span>(device, queue) = pollster::block_on(initialize_device(
         <span class="kw-2">&amp;</span>adapter,
         config.params.required_features,
@@ -182,7 +190,7 @@
         adapter,
         adapter_info,
         adapter_downlevel_capabilities,
-        device,
+        device: Arc::new(device),
         device_features: config.params.required_features,
         device_limits: config.params.required_limits.clone(),
         queue,
@@ -222,5 +230,7 @@
     </span><span class="kw">if </span>expectations_match_failures(<span class="kw-2">&amp;</span>test_info.failures, failures) == ExpectationMatchResult::Panic {
         <span class="macro">panic!</span>();
     }
+    <span class="comment">// Print the name of the test.
+    </span><span class="macro">log::info!</span>(<span class="string">"TEST FINISHED: {}"</span>, config.name);
 }
 </code></pre></div></section></main></body></html>

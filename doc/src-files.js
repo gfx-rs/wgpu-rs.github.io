@@ -8,7 +8,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["wgpu_examples",["",[["boids",[],["mod.rs"]],["bunnymark",[],["mod.rs"]],["conservative_raster",[],["mod.rs"]],["cube",[],["mod.rs"]],["hello",[],["mod.rs"]],["hello_compute",[],["mod.rs"]],["hello_synchronization",[],["mod.rs"]],["hello_triangle",[],["mod.rs"]],["hello_windows",[],["mod.rs"]],["hello_workgroups",[],["mod.rs"]],["mipmap",[],["mod.rs"]],["msaa_line",[],["mod.rs"]],["render_to_texture",[],["mod.rs"]],["repeated_compute",[],["mod.rs"]],["shadow",[],["mod.rs"]],["skybox",[],["mod.rs"]],["srgb_blend",[],["mod.rs"]],["stencil_triangles",[],["mod.rs"]],["storage_texture",[],["mod.rs"]],["texture_arrays",[],["mod.rs"]],["timestamp_queries",[],["mod.rs"]],["uniform_values",[],["mod.rs"]],["water",[],["mod.rs","point_gen.rs"]]],["framework.rs","lib.rs","utils.rs"]]],\
 ["wgpu_hal",["",[["auxil",[],["mod.rs","renderdoc.rs"]],["gles",[],["adapter.rs","command.rs","conv.rs","device.rs","egl.rs","mod.rs","queue.rs"]],["vulkan",[],["adapter.rs","command.rs","conv.rs","device.rs","instance.rs","mod.rs"]]],["empty.rs","lib.rs"]]],\
 ["wgpu_macros",["",[],["lib.rs"]]],\
-["wgpu_test",["",[],["config.rs","expectations.rs","image.rs","init.rs","isolation.rs","lib.rs","native.rs","params.rs","report.rs","run.rs"]]],\
+["wgpu_test",["",[],["config.rs","expectations.rs","image.rs","init.rs","isolation.rs","lib.rs","native.rs","params.rs","poll.rs","report.rs","run.rs"]]],\
 ["wgpu_types",["",[],["assertions.rs","lib.rs","math.rs"]]]\
 ]'));
 createSrcSidebar();

@@ -4022,6 +4022,10 @@
 <a href="#4021" id="4021">4021</a>
 <a href="#4022" id="4022">4022</a>
 <a href="#4023" id="4023">4023</a>
+<a href="#4024" id="4024">4024</a>
+<a href="#4025" id="4025">4025</a>
+<a href="#4026" id="4026">4026</a>
+<a href="#4027" id="4027">4027</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4034,8 +4038,8 @@
 <span class="kw">use crate</span>::{
     AnyWasmNotSendSync, BindGroupDescriptor, BindGroupLayoutDescriptor, Buffer, BufferAsyncError,
     BufferDescriptor, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
-    DeviceDescriptor, Error, ErrorFilter, ImageCopyBuffer, ImageCopyTexture, Maintain, MapMode,
-    PipelineLayoutDescriptor, QuerySetDescriptor, RenderBundleDescriptor,
+    DeviceDescriptor, Error, ErrorFilter, ImageCopyBuffer, ImageCopyTexture, Maintain,
+    MaintainResult, MapMode, PipelineLayoutDescriptor, QuerySetDescriptor, RenderBundleDescriptor,
     RenderBundleEncoderDescriptor, RenderPassDescriptor, RenderPipelineDescriptor,
     RequestAdapterOptions, RequestDeviceError, SamplerDescriptor, ShaderModuleDescriptor,
     ShaderModuleDescriptorSpirV, SurfaceTargetUnsafe, Texture, TextureDescriptor,
@@ -4311,7 +4315,7 @@
         device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
         device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         maintain: Maintain,
-    ) -&gt; bool;
+    ) -&gt; MaintainResult;
     <span class="kw">fn </span>device_on_uncaptured_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
@@ -5333,8 +5337,12 @@
     <span class="kw">fn </span>device_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>device_mark_lost(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data, message: <span class="kw-2">&amp;</span>str);
     <span class="kw">fn </span>queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
-    <span class="kw">fn </span>device_poll(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data, maintain: Maintain)
-        -&gt; bool;
+    <span class="kw">fn </span>device_poll(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span>ObjectId,
+        device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        maintain: Maintain,
+    ) -&gt; MaintainResult;
     <span class="kw">fn </span>device_on_uncaptured_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>ObjectId,
@@ -6423,7 +6431,7 @@
         device: <span class="kw-2">&amp;</span>ObjectId,
         device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         maintain: Maintain,
-    ) -&gt; bool {
+    ) -&gt; MaintainResult {
         <span class="kw">let </span>device = &lt;T::DeviceId&gt;::from(<span class="kw-2">*</span>device);
         <span class="kw">let </span>device_data = downcast_ref(device_data);
         Context::device_poll(<span class="self">self</span>, <span class="kw-2">&amp;</span>device, device_data, maintain)

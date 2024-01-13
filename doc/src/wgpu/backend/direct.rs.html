@@ -3143,6 +3143,9 @@
 <a href="#3142" id="3142">3142</a>
 <a href="#3143" id="3143">3143</a>
 <a href="#3144" id="3144">3144</a>
+<a href="#3145" id="3145">3145</a>
+<a href="#3146" id="3146">3146</a>
+<a href="#3147" id="3147">3147</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::mismatched_target_os)]
 
 </span><span class="kw">use crate</span>::{
@@ -4548,8 +4551,8 @@
         <span class="attr">#[cfg(any(native, emscripten))]
         </span>{
             <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-            <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_poll(<span class="kw-2">*</span>device, wgt::Maintain::Wait)) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; (),
+            <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_poll(<span class="kw-2">*</span>device, wgt::Maintain::wait())) {
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">"Device::drop"</span>),
             }
             <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_drop(<span class="kw-2">*</span>device));
@@ -4590,14 +4593,17 @@
         device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
         _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         maintain: <span class="kw">crate</span>::Maintain,
-    ) -&gt; bool {
+    ) -&gt; wgt::MaintainResult {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>maintain_inner = maintain.map_index(|i| <span class="kw-2">*</span>i.<span class="number">1</span>.as_ref().downcast_ref().unwrap());
         <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_poll(
             <span class="kw-2">*</span>device,
             maintain_inner
         )) {
-            <span class="prelude-val">Ok</span>(queue_empty) =&gt; queue_empty,
+            <span class="prelude-val">Ok</span>(done) =&gt; <span class="kw">match </span>done {
+                <span class="bool-val">true </span>=&gt; wgt::MaintainResult::SubmissionQueueEmpty,
+                <span class="bool-val">false </span>=&gt; wgt::MaintainResult::Ok,
+            },
             <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">"Device::poll"</span>),
         }
     }

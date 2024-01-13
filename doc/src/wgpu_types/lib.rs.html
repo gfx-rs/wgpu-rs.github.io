@@ -7036,6 +7036,45 @@
 <a href="#7035" id="7035">7035</a>
 <a href="#7036" id="7036">7036</a>
 <a href="#7037" id="7037">7037</a>
+<a href="#7038" id="7038">7038</a>
+<a href="#7039" id="7039">7039</a>
+<a href="#7040" id="7040">7040</a>
+<a href="#7041" id="7041">7041</a>
+<a href="#7042" id="7042">7042</a>
+<a href="#7043" id="7043">7043</a>
+<a href="#7044" id="7044">7044</a>
+<a href="#7045" id="7045">7045</a>
+<a href="#7046" id="7046">7046</a>
+<a href="#7047" id="7047">7047</a>
+<a href="#7048" id="7048">7048</a>
+<a href="#7049" id="7049">7049</a>
+<a href="#7050" id="7050">7050</a>
+<a href="#7051" id="7051">7051</a>
+<a href="#7052" id="7052">7052</a>
+<a href="#7053" id="7053">7053</a>
+<a href="#7054" id="7054">7054</a>
+<a href="#7055" id="7055">7055</a>
+<a href="#7056" id="7056">7056</a>
+<a href="#7057" id="7057">7057</a>
+<a href="#7058" id="7058">7058</a>
+<a href="#7059" id="7059">7059</a>
+<a href="#7060" id="7060">7060</a>
+<a href="#7061" id="7061">7061</a>
+<a href="#7062" id="7062">7062</a>
+<a href="#7063" id="7063">7063</a>
+<a href="#7064" id="7064">7064</a>
+<a href="#7065" id="7065">7065</a>
+<a href="#7066" id="7066">7066</a>
+<a href="#7067" id="7067">7067</a>
+<a href="#7068" id="7068">7068</a>
+<a href="#7069" id="7069">7069</a>
+<a href="#7070" id="7070">7070</a>
+<a href="#7071" id="7071">7071</a>
+<a href="#7072" id="7072">7072</a>
+<a href="#7073" id="7073">7073</a>
+<a href="#7074" id="7074">7074</a>
+<a href="#7075" id="7075">7075</a>
+<a href="#7076" id="7076">7076</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -11318,10 +11357,10 @@
 <span class="doccomment">/// Passed to `Device::poll` to control how and if it should block.
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub enum </span>Maintain&lt;T&gt; {
-    <span class="doccomment">/// On native backends, block until the given submission has
+    <span class="doccomment">/// On wgpu-core based backends, block until the given submission has
     /// completed execution, and any callbacks have been invoked.
     ///
-    /// On the web, this has no effect. Callbacks are invoked from the
+    /// On WebGPU, this has no effect. Callbacks are invoked from the
     /// window event loop.
     </span>WaitForSubmissionIndex(T),
     <span class="doccomment">/// Same as WaitForSubmissionIndex but waits for the most recent submission.
@@ -11331,6 +11370,22 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; Maintain&lt;T&gt; {
+    <span class="doccomment">/// Construct a wait variant
+    </span><span class="kw">pub fn </span>wait() -&gt; <span class="self">Self </span>{
+        <span class="comment">// This function seems a little silly, but it is useful to allow
+        // &lt;https://github.com/gfx-rs/wgpu/pull/5012&gt; to be split up, as
+        // it has meaning in that PR.
+        </span><span class="self">Self</span>::Wait
+    }
+
+    <span class="doccomment">/// Construct a WaitForSubmissionIndex variant
+    </span><span class="kw">pub fn </span>wait_for(submission_index: T) -&gt; <span class="self">Self </span>{
+        <span class="comment">// This function seems a little silly, but it is useful to allow
+        // &lt;https://github.com/gfx-rs/wgpu/pull/5012&gt; to be split up, as
+        // it has meaning in that PR.
+        </span><span class="self">Self</span>::WaitForSubmissionIndex(submission_index)
+    }
+
     <span class="doccomment">/// This maintain represents a wait of some kind.
     </span><span class="kw">pub fn </span>is_wait(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
@@ -11349,6 +11404,29 @@
             <span class="self">Self</span>::Wait =&gt; Maintain::Wait,
             <span class="self">Self</span>::Poll =&gt; Maintain::Poll,
         }
+    }
+}
+
+<span class="doccomment">/// Result of a maintain operation.
+</span><span class="kw">pub enum </span>MaintainResult {
+    <span class="doccomment">/// There are no active submissions in flight as of the beginning of the poll call.
+    /// Other submissions may have been queued on other threads at the same time.
+    ///
+    /// This implies that the given poll is complete.
+    </span>SubmissionQueueEmpty,
+    <span class="doccomment">/// More information coming soon &lt;https://github.com/gfx-rs/wgpu/pull/5012&gt;
+    </span><span class="prelude-val">Ok</span>,
+}
+
+<span class="kw">impl </span>MaintainResult {
+    <span class="doccomment">/// Returns true if the result is [`Self::SubmissionQueueEmpty`]`.
+    </span><span class="kw">pub fn </span>is_queue_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::SubmissionQueueEmpty)
+    }
+
+    <span class="doccomment">/// Panics if the MaintainResult is not Ok.
+    </span><span class="kw">pub fn </span>panic_on_timeout(<span class="self">self</span>) {
+        <span class="kw">let _ </span>= <span class="self">self</span>;
     }
 }
 

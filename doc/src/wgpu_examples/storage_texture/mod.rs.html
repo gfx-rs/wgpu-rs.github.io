@@ -326,7 +326,7 @@
     <span class="kw">let </span>buffer_slice = output_staging_buffer.slice(..);
     <span class="kw">let </span>(sender, receiver) = flume::bounded(<span class="number">1</span>);
     buffer_slice.map_async(wgpu::MapMode::Read, <span class="kw">move </span>|r| sender.send(r).unwrap());
-    device.poll(wgpu::Maintain::Wait);
+    device.poll(wgpu::Maintain::wait()).panic_on_timeout();
     receiver.recv_async().<span class="kw">await</span>.unwrap().unwrap();
     <span class="macro">log::info!</span>(<span class="string">"Output buffer mapped"</span>);
     {

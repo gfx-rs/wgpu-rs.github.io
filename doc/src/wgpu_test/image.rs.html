@@ -632,12 +632,26 @@
 <a href="#631" id="631">631</a>
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Image comparison utilities
 
 </span><span class="kw">use </span>std::{borrow::Cow, ffi::OsStr, path::Path};
 
 <span class="kw">use </span>wgpu::util::{align_to, DeviceExt};
 <span class="kw">use </span>wgpu::<span class="kw-2">*</span>;
+
+<span class="kw">use </span><span class="kw">crate</span>::TestingContext;
 
 <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">async fn </span>read_png(path: <span class="kw">impl </span>AsRef&lt;Path&gt;, width: u32, height: u32) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
@@ -1197,15 +1211,15 @@
         copy_texture_to_buffer(device, encoder, texture, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_stencil);
     }
 
-    <span class="kw">fn </span>retrieve_buffer(
+    <span class="kw">async fn </span>retrieve_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        device: <span class="kw-2">&amp;</span>Device,
+        ctx: <span class="kw-2">&amp;</span>TestingContext,
         buffer: <span class="kw-2">&amp;</span>Buffer,
         aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;,
     ) -&gt; Vec&lt;u8&gt; {
         <span class="kw">let </span>buffer_slice = buffer.slice(..);
         buffer_slice.map_async(MapMode::Read, |<span class="kw">_</span>| ());
-        device.poll(Maintain::Wait);
+        ctx.async_poll(Maintain::wait()).<span class="kw">await</span>.panic_on_timeout();
         <span class="kw">let </span>(block_width, block_height) = <span class="self">self</span>.texture_format.block_dimensions();
         <span class="kw">let </span>expected_bytes_per_row = (<span class="self">self</span>.texture_width / block_width)
             * <span class="self">self</span>.texture_format.block_copy_size(aspect).unwrap_or(<span class="number">4</span>);
@@ -1234,26 +1248,36 @@
         </span>}
     }
 
-    <span class="kw">pub fn </span>are_zero(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; bool {
-        <span class="kw">let </span>is_zero = |device: <span class="kw-2">&amp;</span>Device, buffer: <span class="kw-2">&amp;</span>Buffer, aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;| -&gt; bool {
-            <span class="kw">let </span>is_zero = <span class="self">self
-                </span>.retrieve_buffer(device, buffer, aspect)
-                .iter()
-                .all(|b| <span class="kw-2">*</span>b == <span class="number">0</span>);
-            buffer.unmap();
-            is_zero
-        };
+    <span class="kw">async fn </span>is_zero(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;</span>TestingContext,
+        buffer: <span class="kw-2">&amp;</span>Buffer,
+        aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;,
+    ) -&gt; bool {
+        <span class="kw">let </span>is_zero = <span class="self">self
+            </span>.retrieve_buffer(ctx, buffer, aspect)
+            .<span class="kw">await
+            </span>.iter()
+            .all(|b| <span class="kw-2">*</span>b == <span class="number">0</span>);
+        buffer.unmap();
+        is_zero
+    }
 
-        <span class="kw">let </span>buffer_zero = is_zero(device, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer, <span class="self">self</span>.buffer_aspect());
+    <span class="kw">pub async fn </span>are_zero(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;</span>TestingContext) -&gt; bool {
+        <span class="kw">let </span>buffer_zero = <span class="self">self</span>.is_zero(ctx, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer, <span class="self">self</span>.buffer_aspect()).<span class="kw">await</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>stencil_buffer_zero = <span class="bool-val">true</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_stencil {
-            stencil_buffer_zero = is_zero(device, buffer, <span class="prelude-val">Some</span>(TextureAspect::StencilOnly));
+            stencil_buffer_zero = <span class="self">self
+                </span>.is_zero(ctx, buffer, <span class="prelude-val">Some</span>(TextureAspect::StencilOnly))
+                .<span class="kw">await</span>;
         };
         buffer_zero &amp;&amp; stencil_buffer_zero
     }
 
-    <span class="kw">pub fn </span>assert_buffer_contents(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, expected_data: <span class="kw-2">&amp;</span>[u8]) {
-        <span class="kw">let </span>result_buffer = <span class="self">self</span>.retrieve_buffer(device, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer, <span class="self">self</span>.buffer_aspect());
+    <span class="kw">pub async fn </span>assert_buffer_contents(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;</span>TestingContext, expected_data: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="kw">let </span>result_buffer = <span class="self">self
+            </span>.retrieve_buffer(ctx, <span class="kw-2">&amp;</span><span class="self">self</span>.buffer, <span class="self">self</span>.buffer_aspect())
+            .<span class="kw">await</span>;
         <span class="macro">assert!</span>(
             result_buffer.len() &gt;= expected_data.len(),
             <span class="string">"Result buffer ({}) smaller than expected buffer ({})"</span>,
