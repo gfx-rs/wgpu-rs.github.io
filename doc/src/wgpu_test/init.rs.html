@@ -137,6 +137,16 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
 <span class="kw">use </span>wgt::{Backends, Features, Limits};
 
@@ -155,7 +165,17 @@
     //
     // We can potentially work support back into the test runner in the future, but as the adapters are matched up
     // based on adapter index, removing some backends messes up the indexes in annoying ways.
-    </span><span class="kw">let </span>backends = Backends::all();
+    //
+    // WORKAROUND for https://github.com/rust-lang/cargo/issues/7160:
+    // `--no-default-features` is not passed through correctly to the test runner.
+    // We use it whenever we want to explicitly run with webgl instead of webgpu.
+    // To "disable" webgpu regardless, we do this by removing the webgpu backend whenever we see
+    // the webgl feature.
+    </span><span class="kw">let </span>backends = <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"webgl"</span>) {
+        Backends::all() - Backends::BROWSER_WEBGPU
+    } <span class="kw">else </span>{
+        Backends::all()
+    };
     <span class="kw">let </span>dx12_shader_compiler = wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default();
     <span class="kw">let </span>gles_minor_version = wgpu::util::gles_minor_version_from_env().unwrap_or_default();
     Instance::new(wgpu::InstanceDescriptor {
