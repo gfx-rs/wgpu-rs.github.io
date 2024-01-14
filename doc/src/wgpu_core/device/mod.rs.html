@@ -482,8 +482,6 @@
 <a href="#481" id="481">481</a>
 <a href="#482" id="482">482</a>
 <a href="#483" id="483">483</a>
-<a href="#484" id="484">484</a>
-<a href="#485" id="485">485</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
@@ -698,13 +696,13 @@
 
 <span class="kw">pub struct </span>DeviceLostClosureRust {
     <span class="kw">pub </span>callback: DeviceLostCallback,
-    called: bool,
+    consumed: bool,
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>DeviceLostClosureRust {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!<span class="self">self</span>.called {
-            <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureRust must be called before it is dropped."</span>);
+        <span class="kw">if </span>!<span class="self">self</span>.consumed {
+            <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureRust must be consumed before it is dropped."</span>);
         }
     }
 }
@@ -713,7 +711,7 @@
 </span><span class="kw">pub struct </span>DeviceLostClosureC {
     <span class="kw">pub </span>callback: <span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn</span>(user_data: <span class="kw-2">*mut </span>u8, reason: u8, message: <span class="kw-2">*const </span>c_char),
     <span class="kw">pub </span>user_data: <span class="kw-2">*mut </span>u8,
-    called: bool,
+    consumed: bool,
 }
 
 <span class="attr">#[cfg(send_sync)]
@@ -721,8 +719,8 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>DeviceLostClosureC {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!<span class="self">self</span>.called {
-            <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureC must be called before it is dropped."</span>);
+        <span class="kw">if </span>!<span class="self">self</span>.consumed {
+            <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureC must be consumed before it is dropped."</span>);
         }
     }
 }
@@ -748,7 +746,7 @@
     <span class="kw">pub fn </span>from_rust(callback: DeviceLostCallback) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>inner = DeviceLostClosureRust {
             callback,
-            called: <span class="bool-val">false</span>,
+            consumed: <span class="bool-val">false</span>,
         };
         <span class="self">Self </span>{
             inner: DeviceLostClosureInner::Rust { inner },
@@ -762,14 +760,18 @@
     ///
     /// - Both pointers must point to `'static` data, as the callback may happen at
     ///   an unspecified time.
-    </span><span class="kw">pub unsafe fn </span>from_c(closure: DeviceLostClosureC) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub unsafe fn </span>from_c(<span class="kw-2">mut </span>closure: DeviceLostClosureC) -&gt; <span class="self">Self </span>{
         <span class="comment">// Build an inner with the values from closure, ensuring that
-        // inner.called is false.
+        // inner.consumed is false.
         </span><span class="kw">let </span>inner = DeviceLostClosureC {
             callback: closure.callback,
             user_data: closure.user_data,
-            called: <span class="bool-val">false</span>,
+            consumed: <span class="bool-val">false</span>,
         };
+
+        <span class="comment">// Mark the original closure as consumed, so we can safely drop it.
+        </span>closure.consumed = <span class="bool-val">true</span>;
+
         <span class="self">Self </span>{
             inner: DeviceLostClosureInner::C { inner },
         }
@@ -778,19 +780,13 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>call(<span class="self">self</span>, reason: DeviceLostReason, message: String) {
         <span class="kw">match </span><span class="self">self</span>.inner {
             DeviceLostClosureInner::Rust { <span class="kw-2">mut </span>inner } =&gt; {
-                <span class="kw">if </span>inner.called {
-                    <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureRust must only be called once."</span>);
-                }
-                inner.called = <span class="bool-val">true</span>;
+                inner.consumed = <span class="bool-val">true</span>;
 
                 (inner.callback)(reason, message)
             }
             <span class="comment">// SAFETY: the contract of the call to from_c says that this unsafe is sound.
             </span>DeviceLostClosureInner::C { <span class="kw-2">mut </span>inner } =&gt; <span class="kw">unsafe </span>{
-                <span class="kw">if </span>inner.called {
-                    <span class="macro">panic!</span>(<span class="string">"DeviceLostClosureC must only be called once."</span>);
-                }
-                inner.called = <span class="bool-val">true</span>;
+                inner.consumed = <span class="bool-val">true</span>;
 
                 <span class="comment">// Ensure message is structured as a null-terminated C string. It only
                 // needs to live as long as the callback invocation.
