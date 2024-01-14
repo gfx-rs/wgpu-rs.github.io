@@ -1378,9 +1378,6 @@
 <a href="#1377" id="1377">1377</a>
 <a href="#1378" id="1378">1378</a>
 <a href="#1379" id="1379">1379</a>
-<a href="#1380" id="1380">1380</a>
-<a href="#1381" id="1381">1381</a>
-<a href="#1382" id="1382">1382</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
 
@@ -1411,10 +1408,10 @@
 
 <span class="kw">type </span>WlDisplayDisconnectFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(display: <span class="kw-2">*const </span>raw::c_void);
 
-<span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
+<span class="attr">#[cfg(not(Emscripten))]
 </span><span class="kw">type </span>EglInstance = khronos_egl::DynamicInstance&lt;khronos_egl::EGL1_4&gt;;
 
-<span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+<span class="attr">#[cfg(Emscripten)]
 </span><span class="kw">type </span>EglInstance = khronos_egl::Instance&lt;khronos_egl::Static&gt;;
 
 <span class="kw">type </span>WlEglWindowCreateFun = <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn</span>(
@@ -1817,9 +1814,9 @@
     </span>version: (i32, i32),
     supports_native_window: bool,
     config: khronos_egl::Config,
-    <span class="attr">#[cfg_attr(target_os = <span class="string">"emscripten"</span>, allow(dead_code))]
+    <span class="attr">#[cfg_attr(Emscripten, allow(dead_code))]
     </span>wl_display: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>raw::c_void&gt;,
-    <span class="attr">#[cfg_attr(target_os = <span class="string">"emscripten"</span>, allow(dead_code))]
+    <span class="attr">#[cfg_attr(Emscripten, allow(dead_code))]
     </span>force_gles_minor_version: wgt::Gles3MinorVersion,
     <span class="doccomment">/// Method by which the framebuffer should support srgb
     </span>srgb_kind: SrgbFrameBufferKind,
@@ -1952,7 +1949,7 @@
         // and creating dummy pbuffer surface if not.
         </span><span class="kw">let </span>pbuffer = <span class="kw">if </span>version &gt;= (<span class="number">1</span>, <span class="number">5</span>)
             || display_extensions.contains(<span class="string">"EGL_KHR_surfaceless_context"</span>)
-            || <span class="macro">cfg!</span>(target_os = <span class="string">"emscripten"</span>)
+            || <span class="macro">cfg!</span>(Emscripten)
         {
             <span class="macro">log::debug!</span>(<span class="string">"\tEGL context: +surfaceless"</span>);
             <span class="prelude-val">None
@@ -2058,11 +2055,11 @@
 <span class="kw">impl </span><span class="kw">crate</span>::Instance&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span>Instance {
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Init OpenGL (EGL) Backend"</span>);
-        <span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+        <span class="attr">#[cfg(Emscripten)]
         </span><span class="kw">let </span>egl_result: <span class="prelude-ty">Result</span>&lt;EglInstance, khronos_egl::Error&gt; =
             <span class="prelude-val">Ok</span>(khronos_egl::Instance::new(khronos_egl::Static));
 
-        <span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
+        <span class="attr">#[cfg(not(Emscripten))]
         </span><span class="kw">let </span>egl_result = <span class="kw">if </span><span class="macro">cfg!</span>(windows) {
             <span class="kw">unsafe </span>{
                 khronos_egl::DynamicInstance::&lt;khronos_egl::EGL1_4&gt;::load_required_from_filename(
@@ -2115,10 +2112,10 @@
             <span class="prelude-val">None
         </span>};
 
-        <span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
+        <span class="attr">#[cfg(not(Emscripten))]
         </span><span class="kw">let </span>egl1_5 = egl.upcast::&lt;khronos_egl::EGL1_5&gt;();
 
-        <span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+        <span class="attr">#[cfg(Emscripten)]
         </span><span class="kw">let </span>egl1_5: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;EglInstance&gt;&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>egl);
 
         <span class="kw">let </span>(display, display_owner, wsi_kind) =
@@ -2225,10 +2222,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">use </span>raw_window_handle::RawWindowHandle <span class="kw">as </span>Rwh;
 
-        <span class="attr">#[cfg_attr(
-            any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"emscripten"</span>),
-            allow(unused_mut)
-        )]
+        <span class="attr">#[cfg_attr(any(target_os = <span class="string">"android"</span>, Emscripten), allow(unused_mut))]
         </span><span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock();
 
         <span class="kw">match </span>(window_handle, display_handle) {
@@ -2258,7 +2252,7 @@
                     )));
                 }
             }
-            <span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
+            <span class="attr">#[cfg(not(Emscripten))]
             </span>(Rwh::Wayland(<span class="kw">_</span>), raw_window_handle::RawDisplayHandle::Wayland(display_handle)) =&gt; {
                 <span class="kw">if </span>inner
                     .wl_display
@@ -2303,7 +2297,7 @@
                     drop(old_inner);
                 }
             }
-            <span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+            <span class="attr">#[cfg(Emscripten)]
             </span>(Rwh::Web(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             other =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(<span class="macro">format!</span>(
@@ -2555,7 +2549,7 @@
                         wl_window = <span class="prelude-val">Some</span>(window);
                         window
                     }
-                    <span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+                    <span class="attr">#[cfg(Emscripten)]
                     </span>(WindowKind::Unknown, Rwh::Web(handle)) =&gt; handle.id <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void,
                     (WindowKind::Unknown, Rwh::Win32(handle)) =&gt; {
                         handle.hwnd.get() <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void
@@ -2612,10 +2606,10 @@
                 }
                 attributes.push(khronos_egl::ATTRIB_NONE <span class="kw">as </span>i32);
 
-                <span class="attr">#[cfg(not(target_os = <span class="string">"emscripten"</span>))]
+                <span class="attr">#[cfg(not(Emscripten))]
                 </span><span class="kw">let </span>egl1_5 = <span class="self">self</span>.egl.instance.upcast::&lt;khronos_egl::EGL1_5&gt;();
 
-                <span class="attr">#[cfg(target_os = <span class="string">"emscripten"</span>)]
+                <span class="attr">#[cfg(Emscripten)]
                 </span><span class="kw">let </span>egl1_5: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;EglInstance&gt;&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.egl.instance);
 
                 <span class="comment">// Careful, we can still be in 1.4 version even if `upcast` succeeds

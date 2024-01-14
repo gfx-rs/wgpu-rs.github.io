@@ -1534,24 +1534,6 @@
 <a href="#1533" id="1533">1533</a>
 <a href="#1534" id="1534">1534</a>
 <a href="#1535" id="1535">1535</a>
-<a href="#1536" id="1536">1536</a>
-<a href="#1537" id="1537">1537</a>
-<a href="#1538" id="1538">1538</a>
-<a href="#1539" id="1539">1539</a>
-<a href="#1540" id="1540">1540</a>
-<a href="#1541" id="1541">1541</a>
-<a href="#1542" id="1542">1542</a>
-<a href="#1543" id="1543">1543</a>
-<a href="#1544" id="1544">1544</a>
-<a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
-<a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
-<a href="#1553" id="1553">1553</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1625,13 +1607,7 @@
     <span class="kw">pub </span>user_data: <span class="kw-2">*mut </span>u8,
 }
 
-<span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">"wasm32"</span>),
-    all(
-        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-        not(target_feature = <span class="string">"atomics"</span>)
-    )
-))]
+<span class="attr">#[cfg(send_sync)]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>SubmittedWorkDoneClosureC {}
 
 <span class="kw">pub struct </span>SubmittedWorkDoneClosure {
@@ -1640,21 +1616,9 @@
     </span>inner: SubmittedWorkDoneClosureInner,
 }
 
-<span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">"wasm32"</span>),
-    all(
-        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-        not(target_feature = <span class="string">"atomics"</span>)
-    )
-))]
+<span class="attr">#[cfg(send_sync)]
 </span><span class="kw">type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">'static</span>&gt;;
-<span class="attr">#[cfg(not(any(
-    not(target_arch = <span class="string">"wasm32"</span>),
-    all(
-        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-        not(target_feature = <span class="string">"atomics"</span>)
-    )
-)))]
+<span class="attr">#[cfg(not(send_sync))]
 </span><span class="kw">type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + <span class="lifetime">'static</span>&gt;;
 
 <span class="kw">enum </span>SubmittedWorkDoneClosureInner {
@@ -2465,7 +2429,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(target_os = <span class="string">"emscripten"</span>)))]
+    <span class="attr">#[cfg(webgl)]
     </span><span class="kw">pub fn </span>queue_copy_external_image_to_texture&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,

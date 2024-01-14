@@ -1810,14 +1810,6 @@
 <a href="#1809" id="1809">1809</a>
 <a href="#1810" id="1810">1810</a>
 <a href="#1811" id="1811">1811</a>
-<a href="#1812" id="1812">1812</a>
-<a href="#1813" id="1813">1813</a>
-<a href="#1814" id="1814">1814</a>
-<a href="#1815" id="1815">1815</a>
-<a href="#1816" id="1816">1816</a>
-<a href="#1817" id="1817">1817</a>
-<a href="#1818" id="1818">1818</a>
-<a href="#1819" id="1819">1819</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -1929,7 +1921,7 @@
             <span class="kw">super</span>::TextureInner::Texture { raw, target } =&gt; {
                 <span class="kw">let </span>num_layers = view.array_layers.end - view.array_layers.start;
                 <span class="kw">if </span>num_layers &gt; <span class="number">1 </span>{
-                    <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, target_os = <span class="string">"unknown"</span>))]
+                    <span class="attr">#[cfg(webgl)]
                     </span><span class="kw">unsafe </span>{
                         gl.framebuffer_texture_multiview_ovr(
                             fbo_target,
@@ -1963,7 +1955,7 @@
                     };
                 }
             }
-            <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(target_os = <span class="string">"emscripten"</span>)))]
+            <span class="attr">#[cfg(webgl)]
             </span><span class="kw">super</span>::TextureInner::ExternalFramebuffer { <span class="kw-2">ref </span>inner } =&gt; <span class="kw">unsafe </span>{
                 gl.bind_external_framebuffer(glow::FRAMEBUFFER, inner);
             },
@@ -2252,7 +2244,7 @@
                     <span class="kw">unsafe </span>{ gl.bind_buffer(copy_dst_target, <span class="prelude-val">None</span>) };
                 }
             }
-            <span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, not(target_os = <span class="string">"emscripten"</span>)))]
+            <span class="attr">#[cfg(webgl)]
             </span>C::CopyExternalImageToTexture {
                 <span class="kw-2">ref </span>src,
                 dst,
@@ -3625,16 +3617,8 @@
     </span>}
 }
 
-<span class="attr">#[cfg(all(
-    target_arch = <span class="string">"wasm32"</span>,
-    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-    not(target_feature = <span class="string">"atomics"</span>)
-))]
+<span class="attr">#[cfg(send_sync)]
 </span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Queue {}
-<span class="attr">#[cfg(all(
-    target_arch = <span class="string">"wasm32"</span>,
-    feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-    not(target_feature = <span class="string">"atomics"</span>)
-))]
+<span class="attr">#[cfg(send_sync)]
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Queue {}
 </code></pre></div></section></main></body></html>

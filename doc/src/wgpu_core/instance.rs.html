@@ -1256,13 +1256,13 @@
 </span><span class="kw">pub struct </span>Instance {
     <span class="attr">#[allow(dead_code)]
     </span><span class="kw">pub </span>name: String,
-    <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+    <span class="attr">#[cfg(vulkan)]
     </span><span class="kw">pub </span>vulkan: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Vulkan&gt;&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+    <span class="attr">#[cfg(metal)]
     </span><span class="kw">pub </span>metal: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Metal&gt;&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+    <span class="attr">#[cfg(dx12)]
     </span><span class="kw">pub </span>dx12: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Dx12&gt;&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+    <span class="attr">#[cfg(gles)]
     </span><span class="kw">pub </span>gl: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Gles&gt;&gt;,
     <span class="kw">pub </span>flags: wgt::InstanceFlags,
 }
@@ -1299,13 +1299,13 @@
 
         <span class="self">Self </span>{
             name: name.to_string(),
-            <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+            <span class="attr">#[cfg(vulkan)]
             </span>vulkan: init(hal::api::Vulkan, <span class="kw-2">&amp;</span>instance_desc),
-            <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+            <span class="attr">#[cfg(metal)]
             </span>metal: init(hal::api::Metal, <span class="kw-2">&amp;</span>instance_desc),
-            <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+            <span class="attr">#[cfg(dx12)]
             </span>dx12: init(hal::api::Dx12, <span class="kw-2">&amp;</span>instance_desc),
-            <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+            <span class="attr">#[cfg(gles)]
             </span>gl: init(hal::api::Gles, <span class="kw-2">&amp;</span>instance_desc),
             flags: instance_desc.flags,
         }
@@ -1328,13 +1328,13 @@
             }
         }
         <span class="kw">match </span>surface.raw.backend() {
-            <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+            <span class="attr">#[cfg(vulkan)]
             </span>Backend::Vulkan =&gt; destroy(hal::api::Vulkan, <span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.raw),
-            <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+            <span class="attr">#[cfg(metal)]
             </span>Backend::Metal =&gt; destroy(hal::api::Metal, <span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.raw),
-            <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+            <span class="attr">#[cfg(dx12)]
             </span>Backend::Dx12 =&gt; destroy(hal::api::Dx12, <span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.raw),
-            <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+            <span class="attr">#[cfg(gles)]
             </span>Backend::Gl =&gt; destroy(hal::api::Gles, <span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.raw),
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
@@ -1691,22 +1691,22 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>hal_surface: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;AnySurface, hal::InstanceError&gt;&gt; = <span class="prelude-val">None</span>;
 
-        <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+        <span class="attr">#[cfg(vulkan)]
         </span><span class="kw">if </span>hal_surface.is_none() {
             hal_surface =
                 init::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan, display_handle, window_handle);
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+        <span class="attr">#[cfg(metal)]
         </span><span class="kw">if </span>hal_surface.is_none() {
             hal_surface =
                 init::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal, display_handle, window_handle);
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+        <span class="attr">#[cfg(dx12)]
         </span><span class="kw">if </span>hal_surface.is_none() {
             hal_surface =
                 init::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12, display_handle, window_handle);
         }
-        <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+        <span class="attr">#[cfg(gles)]
         </span><span class="kw">if </span>hal_surface.is_none() {
             hal_surface = init::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl, display_handle, window_handle);
         }
@@ -1727,7 +1727,7 @@
     <span class="doccomment">/// # Safety
     ///
     /// `layer` must be a valid pointer.
-    </span><span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+    </span><span class="attr">#[cfg(metal)]
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_metal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         layer: <span class="kw-2">*mut </span>std::ffi::c_void,
@@ -1759,7 +1759,7 @@
         id
     }
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+    <span class="attr">#[cfg(dx12)]
     </span><span class="doccomment">/// # Safety
     ///
     /// The visual must be valid and able to be used to make a swapchain with.
@@ -1790,7 +1790,7 @@
         id
     }
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+    <span class="attr">#[cfg(dx12)]
     </span><span class="doccomment">/// # Safety
     ///
     /// The surface_handle must be valid and able to be used to make a swapchain with.
@@ -1823,7 +1823,7 @@
         id
     }
 
-    <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+    <span class="attr">#[cfg(dx12)]
     </span><span class="doccomment">/// # Safety
     ///
     /// The swap_chain_panel must be valid and able to be used to make a swapchain with.
@@ -1877,13 +1877,13 @@
         <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.unregister(id);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = Arc::into_inner(surface.unwrap()) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
-                <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+                <span class="attr">#[cfg(vulkan)]
                 </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+                <span class="attr">#[cfg(metal)]
                 </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+                <span class="attr">#[cfg(dx12)]
                 </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+                <span class="attr">#[cfg(gles)]
                 </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
             }
 
@@ -1927,23 +1927,23 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>adapters = Vec::new();
 
-        <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+        <span class="attr">#[cfg(vulkan)]
         </span><span class="self">self</span>.enumerate(
             hal::api::Vulkan,
             <span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan,
             <span class="kw-2">&amp;</span>inputs,
             <span class="kw-2">&amp;mut </span>adapters,
         );
-        <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+        <span class="attr">#[cfg(metal)]
         </span><span class="self">self</span>.enumerate(
             hal::api::Metal,
             <span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal,
             <span class="kw-2">&amp;</span>inputs,
             <span class="kw-2">&amp;mut </span>adapters,
         );
-        <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+        <span class="attr">#[cfg(dx12)]
         </span><span class="self">self</span>.enumerate(hal::api::Dx12, <span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12, <span class="kw-2">&amp;</span>inputs, <span class="kw-2">&amp;mut </span>adapters);
-        <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+        <span class="attr">#[cfg(gles)]
         </span><span class="self">self</span>.enumerate(hal::api::Gles, <span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl, <span class="kw-2">&amp;</span>inputs, <span class="kw-2">&amp;mut </span>adapters);
 
         adapters
@@ -2025,7 +2025,7 @@
         <span class="kw">let </span>compatible_surface = compatible_surface.as_ref().map(|surface| surface.as_ref());
         <span class="kw">let </span><span class="kw-2">mut </span>device_types = Vec::new();
 
-        <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+        <span class="attr">#[cfg(vulkan)]
         </span><span class="kw">let </span>(id_vulkan, adapters_vk) = gather(
             hal::api::Vulkan,
             <span class="self">self</span>.instance.vulkan.as_ref(),
@@ -2034,7 +2034,7 @@
             desc.force_fallback_adapter,
             <span class="kw-2">&amp;mut </span>device_types,
         );
-        <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+        <span class="attr">#[cfg(metal)]
         </span><span class="kw">let </span>(id_metal, adapters_metal) = gather(
             hal::api::Metal,
             <span class="self">self</span>.instance.metal.as_ref(),
@@ -2043,7 +2043,7 @@
             desc.force_fallback_adapter,
             <span class="kw-2">&amp;mut </span>device_types,
         );
-        <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+        <span class="attr">#[cfg(dx12)]
         </span><span class="kw">let </span>(id_dx12, adapters_dx12) = gather(
             hal::api::Dx12,
             <span class="self">self</span>.instance.dx12.as_ref(),
@@ -2052,7 +2052,7 @@
             desc.force_fallback_adapter,
             <span class="kw-2">&amp;mut </span>device_types,
         );
-        <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+        <span class="attr">#[cfg(gles)]
         </span><span class="kw">let </span>(id_gl, adapters_gl) = gather(
             hal::api::Gles,
             <span class="self">self</span>.instance.gl.as_ref(),
@@ -2113,19 +2113,19 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>selected = preferred_gpu.unwrap_or(<span class="number">0</span>);
-        <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+        <span class="attr">#[cfg(vulkan)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.select(<span class="kw-2">&amp;mut </span>selected, id_vulkan, adapters_vk) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(id);
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+        <span class="attr">#[cfg(metal)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.select(<span class="kw-2">&amp;mut </span>selected, id_metal, adapters_metal) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(id);
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+        <span class="attr">#[cfg(dx12)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.select(<span class="kw-2">&amp;mut </span>selected, id_dx12, adapters_dx12) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(id);
         }
-        <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+        <span class="attr">#[cfg(gles)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.select(<span class="kw-2">&amp;mut </span>selected, id_gl, adapters_gl) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(id);
         }
@@ -2149,13 +2149,13 @@
 
         <span class="kw">let </span>(id, _adapter): (<span class="kw">crate</span>::id::Id&lt;Adapter&lt;hal::empty::Api&gt;&gt;, Arc&lt;Adapter&lt;A&gt;&gt;) =
             <span class="kw">match </span>A::VARIANT {
-                <span class="attr">#[cfg(all(feature = <span class="string">"vulkan"</span>, not(target_arch = <span class="string">"wasm32"</span>)))]
+                <span class="attr">#[cfg(vulkan)]
                 </span>Backend::Vulkan =&gt; fid.assign(Adapter::new(hal_adapter)),
-                <span class="attr">#[cfg(all(feature = <span class="string">"metal"</span>, any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"ios"</span>)))]
+                <span class="attr">#[cfg(metal)]
                 </span>Backend::Metal =&gt; fid.assign(Adapter::new(hal_adapter)),
-                <span class="attr">#[cfg(all(feature = <span class="string">"dx12"</span>, windows))]
+                <span class="attr">#[cfg(dx12)]
                 </span>Backend::Dx12 =&gt; fid.assign(Adapter::new(hal_adapter)),
-                <span class="attr">#[cfg(feature = <span class="string">"gles"</span>)]
+                <span class="attr">#[cfg(gles)]
                 </span>Backend::Gl =&gt; fid.assign(Adapter::new(hal_adapter)),
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
