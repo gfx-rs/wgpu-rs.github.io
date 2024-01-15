@@ -5172,6 +5172,12 @@
 <a href="#5171" id="5171">5171</a>
 <a href="#5172" id="5172">5172</a>
 <a href="#5173" id="5173">5173</a>
+<a href="#5174" id="5174">5174</a>
+<a href="#5175" id="5175">5175</a>
+<a href="#5176" id="5176">5176</a>
+<a href="#5177" id="5177">5177</a>
+<a href="#5178" id="5178">5178</a>
+<a href="#5179" id="5179">5179</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -6892,6 +6898,7 @@
     ///
     /// Which feature makes this method return true depends on the target platform:
     /// * MacOS/iOS: `metal`, `vulkan-portability` or `angle`
+    /// * Wasm32: `webgpu`, `webgl` or Emscripten target.
     /// * All other: Always returns true
     ///
     /// TODO: Right now it's otherwise not possible yet to opt-out of all features on most platforms.
@@ -6909,7 +6916,7 @@
                 || <span class="macro">cfg!</span>(feature = <span class="string">"angle"</span>)
         <span class="comment">// On the web, either WebGPU or WebGL must be enabled.
         </span>} <span class="kw">else if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) {
-            <span class="macro">cfg!</span>(feature = <span class="string">"webgpu"</span>) || <span class="macro">cfg!</span>(feature = <span class="string">"webgl"</span>)
+            <span class="macro">cfg!</span>(feature = <span class="string">"webgpu"</span>) || <span class="macro">cfg!</span>(feature = <span class="string">"webgl"</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">"emscripten"</span>)
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>}
@@ -6945,12 +6952,17 @@
         }
 
         <span class="attr">#[cfg(webgpu)]
-        </span><span class="kw">if </span>_instance_desc.backends.contains(Backends::BROWSER_WEBGPU)
-            &amp;&amp; <span class="kw">crate</span>::backend::get_browser_gpu_property().map_or(<span class="bool-val">false</span>, |gpu| !gpu.is_undefined())
-        {
-            <span class="kw">return </span><span class="self">Self </span>{
-                context: Arc::from(<span class="kw">crate</span>::backend::ContextWebGpu::init(_instance_desc)),
-            };
+        </span>{
+            <span class="kw">let </span>is_only_available_backend = !<span class="macro">cfg!</span>(wgpu_core);
+            <span class="kw">let </span>requested_webgpu = _instance_desc.backends.contains(Backends::BROWSER_WEBGPU);
+            <span class="kw">let </span>support_webgpu =
+                <span class="kw">crate</span>::backend::get_browser_gpu_property().map_or(<span class="bool-val">false</span>, |gpu| !gpu.is_undefined());
+
+            <span class="kw">if </span>is_only_available_backend || (requested_webgpu &amp;&amp; support_webgpu) {
+                <span class="kw">return </span><span class="self">Self </span>{
+                    context: Arc::from(<span class="kw">crate</span>::backend::ContextWebGpu::init(_instance_desc)),
+                };
+            }
         }
 
         <span class="attr">#[cfg(wgpu_core)]
