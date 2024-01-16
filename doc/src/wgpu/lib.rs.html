@@ -5178,6 +5178,47 @@
 <a href="#5177" id="5177">5177</a>
 <a href="#5178" id="5178">5178</a>
 <a href="#5179" id="5179">5179</a>
+<a href="#5180" id="5180">5180</a>
+<a href="#5181" id="5181">5181</a>
+<a href="#5182" id="5182">5182</a>
+<a href="#5183" id="5183">5183</a>
+<a href="#5184" id="5184">5184</a>
+<a href="#5185" id="5185">5185</a>
+<a href="#5186" id="5186">5186</a>
+<a href="#5187" id="5187">5187</a>
+<a href="#5188" id="5188">5188</a>
+<a href="#5189" id="5189">5189</a>
+<a href="#5190" id="5190">5190</a>
+<a href="#5191" id="5191">5191</a>
+<a href="#5192" id="5192">5192</a>
+<a href="#5193" id="5193">5193</a>
+<a href="#5194" id="5194">5194</a>
+<a href="#5195" id="5195">5195</a>
+<a href="#5196" id="5196">5196</a>
+<a href="#5197" id="5197">5197</a>
+<a href="#5198" id="5198">5198</a>
+<a href="#5199" id="5199">5199</a>
+<a href="#5200" id="5200">5200</a>
+<a href="#5201" id="5201">5201</a>
+<a href="#5202" id="5202">5202</a>
+<a href="#5203" id="5203">5203</a>
+<a href="#5204" id="5204">5204</a>
+<a href="#5205" id="5205">5205</a>
+<a href="#5206" id="5206">5206</a>
+<a href="#5207" id="5207">5207</a>
+<a href="#5208" id="5208">5208</a>
+<a href="#5209" id="5209">5209</a>
+<a href="#5210" id="5210">5210</a>
+<a href="#5211" id="5211">5211</a>
+<a href="#5212" id="5212">5212</a>
+<a href="#5213" id="5213">5213</a>
+<a href="#5214" id="5214">5214</a>
+<a href="#5215" id="5215">5215</a>
+<a href="#5216" id="5216">5216</a>
+<a href="#5217" id="5217">5217</a>
+<a href="#5218" id="5218">5218</a>
+<a href="#5219" id="5219">5219</a>
+<a href="#5220" id="5220">5220</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5187,25 +5228,28 @@
 </span><span class="doccomment">//!
 //! ### Backends
 //!
-//! ⚠️ WIP: Not all backends can be manually configured today. On Windows &amp; Linux the Vulkan &amp; GLES
-//! backends are always enabled. See [#3514](https://github.com/gfx-rs/wgpu/issues/3514) for more
+//! ⚠️ WIP: Not all backends can be manually configured today. On Windows &amp; Linux the **Vulkan &amp; GLES
+//! backends are always enabled**. See [#3514](https://github.com/gfx-rs/wgpu/issues/3514) for more
 //! details.
 //!
 //! - **`dx12`** _(enabled by default)_ ---   Enables the DX12 backend on Windows.
 //! - **`metal`** _(enabled by default)_ --- Enables the Metal backend on macOS &amp; iOS.
-//! - **`angle`** --- Enables the GLES backend via [ANGLE](https://github.com/google/angle) on macOS
-//!   using.
+//! - **`webgpu`** _(enabled by default)_ --- Enables the WebGPU backend on Wasm. Disabled when targeting `emscripten`.
+//! - **`angle`** --- Enables the GLES backend via [ANGLE](https://github.com/google/angle) on macOS.
 //! - **`vulkan-portability`** --- Enables the Vulkan backend on macOS &amp; iOS.
-//! - **`webgpu`** --- Enables the WebGPU backend on Wasm. Disabled when targeting `emscripten`.
-//! - **`webgl`** --- Enables the GLES backend on Wasm
-//!
+//! - **`webgl`** --- Enables the GLES backend on Wasm.
 //!     - ⚠️ WIP: Currently will also enable GLES dependencies on any other targets.
+//!
+//! **Note:** In the documentation, if you see that an item depends on a backend,
+//! it means that the item is only available when that backend is enabled _and_ the backend
+//! is supported on the current platform.
 //!
 //! ### Shading language support
 //!
+//! - **`wgsl`** _(enabled by default)_ --- Enable accepting WGSL shaders as input.
 //! - **`spirv`** --- Enable accepting SPIR-V shaders as input.
 //! - **`glsl`** --- Enable accepting GLSL shaders as input.
-//! - **`wgsl`** _(enabled by default)_ --- Enable accepting WGSL shaders as input.
+//! - **`naga-ir`** --- Enable accepting Naga IR shaders as input.
 //!
 //! ### Logging &amp; Tracing
 //!
@@ -5228,6 +5272,14 @@
 //!   artificially mark them as `Send` and `Sync` anyways to make it easier to write cross-platform
 //!   code. This is technically _very_ unsafe in a multithreaded environment, but on a wasm binary
 //!   compiled without atomics we know we are definitely not in a multithreaded environment.
+//!
+//! ### Feature Aliases
+//!
+//! These features aren't actually features on the crate itself, but a convenient shorthand for
+//! complicated cases.
+//!
+//! - **`wgpu_core`** --- Enabled when there is any non-webgpu backend enabled on the platform.
+//! - **`naga`** ---- Enabled when any non-wgsl shader input is enabled.
 //!
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -5280,14 +5332,44 @@
     QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
 };
 
-<span class="attr">#[cfg(not(webgpu))]
-#[doc(hidden)]
-</span><span class="kw">pub use </span>::hal;
-<span class="attr">#[cfg(feature = <span class="string">"naga"</span>)]
-</span><span class="kw">pub use </span>::naga;
-<span class="attr">#[cfg(not(webgpu))]
-#[doc(hidden)]
+<span class="doccomment">/// Re-export of our `wgpu-core` dependency.
+///
+</span><span class="attr">#[cfg(wgpu_core)]
+#[doc(inline)]
 </span><span class="kw">pub use </span>::wgc <span class="kw">as </span>core;
+
+<span class="doccomment">/// Re-export of our `wgpu-hal` dependency.
+///
+///
+</span><span class="attr">#[cfg(wgpu_core)]
+#[doc(inline)]
+</span><span class="kw">pub use </span>::hal;
+
+<span class="doccomment">/// Re-export of our `naga` dependency.
+///
+</span><span class="attr">#[cfg(wgpu_core)]
+#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+#[doc(inline)]
+</span><span class="comment">// We re-export wgpu-core's re-export of naga, as we may not have direct access to it.
+</span><span class="kw">pub use </span>::wgc::naga;
+<span class="doccomment">/// Re-export of our `naga` dependency.
+///
+</span><span class="attr">#[cfg(all(not(wgpu_core), naga))]
+#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+#[doc(inline)]
+</span><span class="comment">// If that's not available, we re-export our own.
+</span><span class="kw">pub use </span>naga;
+
+<span class="attr">#[doc(inline)]
+</span><span class="doccomment">/// Re-export of our `raw-window-handle` dependency.
+///
+</span><span class="kw">pub use </span>raw_window_handle <span class="kw">as </span>rwh;
+
+<span class="doccomment">/// Re-export of our `web-sys` dependency.
+///
+</span><span class="attr">#[cfg(any(webgl, webgpu))]
+#[doc(inline)]
+</span><span class="kw">pub use </span>web_sys;
 
 <span class="comment">// wasm-only types, we try to keep as many types non-platform
 // specific, but these need to depend on web-sys.
@@ -5824,7 +5906,7 @@
 ///
 /// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
 /// only WGSL source code strings are accepted.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">"naga"</span>, allow(clippy::large_enum_variant))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"naga-ir"</span>, allow(clippy::large_enum_variant))]
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ShaderSource&lt;<span class="lifetime">'a</span>&gt; {
@@ -5849,7 +5931,7 @@
     </span><span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
     </span>Wgsl(Cow&lt;<span class="lifetime">'a</span>, str&gt;),
     <span class="doccomment">/// Naga module.
-    </span><span class="attr">#[cfg(feature = <span class="string">"naga"</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"naga-ir"</span>)]
     </span>Naga(Cow&lt;<span class="lifetime">'static</span>, naga::Module&gt;),
     <span class="doccomment">/// Dummy variant because `Naga` doesn't have a lifetime and without enough active features it
     /// could be the last one active.

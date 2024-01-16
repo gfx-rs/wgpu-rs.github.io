@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["dot","glsl","hlsl","msl","spv","wgsl"],"struct":["RayFlag"]};

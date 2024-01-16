@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["glsl","spv","wgsl"],"struct":["SymbolTable","Typifier"]};
