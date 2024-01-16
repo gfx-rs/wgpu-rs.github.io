@@ -378,6 +378,16 @@
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library safely implements WebGPU on native platforms.
 //! It is designed for integration into browsers, as well as wrapping
 //! into other language-specific user-friendly libraries.
@@ -687,13 +697,23 @@ platform supports."</span>;
 /// [`Id`]: id::Id
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>gfx_select {
-    (<span class="macro-nonterminal">$id</span>:expr =&gt; <span class="macro-nonterminal">$global</span>:ident.<span class="macro-nonterminal">$method</span>:ident( $(<span class="macro-nonterminal">$param</span>:expr),* )) =&gt; {
+    <span class="comment">// Simple two-component expression, like `self.0.method(..)`.
+    </span>(<span class="macro-nonterminal">$id</span>:expr =&gt; <span class="macro-nonterminal">$c0</span>:ident.<span class="macro-nonterminal">$c1</span>:tt.<span class="macro-nonterminal">$method</span>:ident <span class="macro-nonterminal">$params</span>:tt) =&gt; {
+        <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_select!</span>(<span class="macro-nonterminal">$id </span>=&gt; {<span class="macro-nonterminal">$c0</span>.<span class="macro-nonterminal">$c1</span>}, <span class="macro-nonterminal">$method $params</span>)
+    };
+
+    <span class="comment">// Simple identifier-only expression, like `global.method(..)`.
+    </span>(<span class="macro-nonterminal">$id</span>:expr =&gt; <span class="macro-nonterminal">$c0</span>:ident.<span class="macro-nonterminal">$method</span>:ident <span class="macro-nonterminal">$params</span>:tt) =&gt; {
+        <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_select!</span>(<span class="macro-nonterminal">$id </span>=&gt; {<span class="macro-nonterminal">$c0</span>}, <span class="macro-nonterminal">$method $params</span>)
+    };
+
+    (<span class="macro-nonterminal">$id</span>:expr =&gt; {$(<span class="macro-nonterminal">$c</span>:tt)<span class="kw-2">*</span>}, <span class="macro-nonterminal">$method</span>:ident <span class="macro-nonterminal">$params</span>:tt) =&gt; {
         <span class="kw">match </span><span class="macro-nonterminal">$id</span>.backend() {
-            wgt::Backend::Vulkan =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_vulkan!</span>(<span class="macro-nonterminal">$global</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Vulkan</span>&gt;( $(<span class="macro-nonterminal">$param</span>),* )),
-            wgt::Backend::Metal =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_metal!</span>(<span class="macro-nonterminal">$global</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Metal</span>&gt;( $(<span class="macro-nonterminal">$param</span>),* )),
-            wgt::Backend::Dx12 =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_dx12!</span>(<span class="macro-nonterminal">$global</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Dx12</span>&gt;( $(<span class="macro-nonterminal">$param</span>),* )),
-            wgt::Backend::Gl =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_gles!</span>(<span class="macro-nonterminal">$global</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Gles</span>&gt;( $(<span class="macro-nonterminal">$param</span>),+ )),
-            wgt::Backend::Empty =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_empty!</span>(<span class="macro-nonterminal">$global</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Empty</span>&gt;( $(<span class="macro-nonterminal">$param</span>),+ )),
+            wgt::Backend::Vulkan =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_vulkan!</span>($(<span class="macro-nonterminal">$c</span>)<span class="kw-2">*</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Vulkan</span>&gt; <span class="macro-nonterminal">$params</span>),
+            wgt::Backend::Metal =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_metal!</span>($(<span class="macro-nonterminal">$c</span>)<span class="kw-2">*</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Metal</span>&gt; <span class="macro-nonterminal">$params</span>),
+            wgt::Backend::Dx12 =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_dx12!</span>($(<span class="macro-nonterminal">$c</span>)<span class="kw-2">*</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Dx12</span>&gt; <span class="macro-nonterminal">$params</span>),
+            wgt::Backend::Gl =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_gles!</span>($(<span class="macro-nonterminal">$c</span>)<span class="kw-2">*</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Gles</span>&gt; <span class="macro-nonterminal">$params</span>),
+            wgt::Backend::Empty =&gt; <span class="macro-nonterminal">$</span><span class="macro">crate::gfx_if_empty!</span>($(<span class="macro-nonterminal">$c</span>)<span class="kw-2">*</span>.<span class="macro-nonterminal">$method</span>::&lt;<span class="macro-nonterminal">$crate::api::Empty</span>&gt; <span class="macro-nonterminal">$params</span>),
             other =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected backend {:?}"</span>, other),
         }
     };
