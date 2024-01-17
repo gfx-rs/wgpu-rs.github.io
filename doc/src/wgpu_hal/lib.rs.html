@@ -1603,6 +1603,9 @@
 <a href="#1602" id="1602">1602</a>
 <a href="#1603" id="1603">1603</a>
 <a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -2527,11 +2530,14 @@
     /// Must be at least one.
     </span><span class="kw">pub </span>formats: Vec&lt;wgt::TextureFormat&gt;,
 
-    <span class="doccomment">/// Range for the swap chain sizes.
+    <span class="doccomment">/// Range for the number of queued frames.
     ///
-    /// - `swap_chain_sizes.start` must be at least 1.
-    /// - `swap_chain_sizes.end` must be larger or equal to `swap_chain_sizes.start`.
-    </span><span class="kw">pub </span>swap_chain_sizes: RangeInclusive&lt;u32&gt;,
+    /// This adjusts either the swapchain frame count to value + 1 - or sets SetMaximumFrameLatency to the value given,
+    /// or uses a wait-for-present in the acquire method to limit rendering such that it acts like it's a value + 1 swapchain frame set.
+    ///
+    /// - `maximum_frame_latency.start` must be at least 1.
+    /// - `maximum_frame_latency.end` must be larger or equal to `maximum_frame_latency.start`.
+    </span><span class="kw">pub </span>maximum_frame_latency: RangeInclusive&lt;u32&gt;,
 
     <span class="doccomment">/// Current extent of the surface, if known.
     </span><span class="kw">pub </span>current_extent: <span class="prelude-ty">Option</span>&lt;wgt::Extent3d&gt;,
@@ -2857,9 +2863,9 @@
 
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SurfaceConfiguration {
-    <span class="doccomment">/// Number of textures in the swap chain. Must be in
-    /// `SurfaceCapabilities::swap_chain_size` range.
-    </span><span class="kw">pub </span>swap_chain_size: u32,
+    <span class="doccomment">/// Maximum number of queued frames. Must be in
+    /// `SurfaceCapabilities::maximum_frame_latency` range.
+    </span><span class="kw">pub </span>maximum_frame_latency: u32,
     <span class="doccomment">/// Vertical synchronization mode.
     </span><span class="kw">pub </span>present_mode: wgt::PresentMode,
     <span class="doccomment">/// Alpha composition mode.
