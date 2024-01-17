@@ -561,7 +561,64 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
-</pre></div><pre class="rust"><code><span class="doccomment">/// Conditions under which a test should fail or be skipped.
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+
+<span class="doccomment">/// Conditions under which a test should fail or be skipped.
 ///
 /// By passing a `FailureCase` to [`TestParameters::expect_fail`][expect_fail], you can
 /// mark a test as expected to fail under the indicated conditions. By
@@ -578,7 +635,7 @@
 ///     vendor: None,
 ///     adapter: Some("RTX"),
 ///     driver: None,
-///     reasons: vec![FailureReason::ValidationError(Some("Some error substring"))],
+///     reasons: vec![FailureReason::validation_error().with_message("Some error substring")],
 ///     behavior: FailureBehavior::AssertFailure,
 /// }
 /// # ;
@@ -721,7 +778,7 @@
     <span class="doccomment">/// Return the reasons why this case should fail.
     </span><span class="kw">pub fn </span>reasons(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[FailureReason] {
         <span class="kw">if </span><span class="self">self</span>.reasons.is_empty() {
-            std::array::from_ref(<span class="kw-2">&amp;</span>FailureReason::Any)
+            std::array::from_ref(<span class="kw-2">&amp;</span>FailureReason::ANY)
         } <span class="kw">else </span>{
             <span class="kw-2">&amp;</span><span class="self">self</span>.reasons
         }
@@ -733,7 +790,8 @@
     ///
     /// If multiple reasons are pushed, will match any of them.
     </span><span class="kw">pub fn </span>validation_error(<span class="kw-2">mut </span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.reasons.push(FailureReason::ValidationError(<span class="prelude-val">Some</span>(msg)));
+        <span class="self">self</span>.reasons
+            .push(FailureReason::validation_error().with_message(msg));
         <span class="self">self
     </span>}
 
@@ -743,7 +801,7 @@
     ///
     /// If multiple reasons are pushed, will match any of them.
     </span><span class="kw">pub fn </span>panic(<span class="kw-2">mut </span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.reasons.push(FailureReason::Panic(<span class="prelude-val">Some</span>(msg)));
+        <span class="self">self</span>.reasons.push(FailureReason::panic().with_message(msg));
         <span class="self">self
     </span>}
 
@@ -810,43 +868,16 @@
     <span class="doccomment">/// Returns true if the given failure "satisfies" this failure case.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>matches_failure(<span class="kw-2">&amp;</span><span class="self">self</span>, failure: <span class="kw-2">&amp;</span>FailureResult) -&gt; bool {
         <span class="kw">for </span>reason <span class="kw">in </span><span class="self">self</span>.reasons() {
-            <span class="kw">let </span>result = <span class="kw">match </span>(reason, failure) {
-                (FailureReason::Any, <span class="kw">_</span>) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">"Matched failure case: Wildcard"</span>);
-                    <span class="bool-val">true
-                </span>}
-                (FailureReason::ValidationError(<span class="prelude-val">None</span>), FailureResult::ValidationError(<span class="kw">_</span>)) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">"Matched failure case: Any Validation Error"</span>);
-                    <span class="bool-val">true
-                </span>}
-                (
-                    FailureReason::ValidationError(<span class="prelude-val">Some</span>(expected)),
-                    FailureResult::ValidationError(<span class="prelude-val">Some</span>(actual)),
-                ) =&gt; {
-                    <span class="kw">let </span>result = actual.to_lowercase().contains(<span class="kw-2">&amp;</span>expected.to_lowercase());
-                    <span class="kw">if </span>result {
-                        <span class="macro">log::error!</span>(
-                            <span class="string">"Matched failure case: Validation Error containing \"{}\""</span>,
-                            expected
-                        );
-                    }
-                    result
-                }
-                (FailureReason::Panic(<span class="prelude-val">None</span>), FailureResult::Panic(<span class="kw">_</span>)) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">"Matched failure case: Any Panic"</span>);
-                    <span class="bool-val">true
-                </span>}
-                (FailureReason::Panic(<span class="prelude-val">Some</span>(expected)), FailureResult::Panic(<span class="prelude-val">Some</span>(actual))) =&gt; {
-                    <span class="kw">let </span>result = actual.to_lowercase().contains(<span class="kw-2">&amp;</span>expected.to_lowercase());
-                    <span class="kw">if </span>result {
-                        <span class="macro">log::error!</span>(<span class="string">"Matched failure case: Panic containing \"{}\""</span>, expected);
-                    }
-                    result
-                }
-                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-            };
+            <span class="kw">let </span>kind_matched = reason.kind.map_or(<span class="bool-val">true</span>, |kind| kind == failure.kind);
 
-            <span class="kw">if </span>result {
+            <span class="kw">let </span>message_matched =
+                reason
+                    .message
+                    .map_or(<span class="bool-val">true</span>, |message| <span class="macro">matches!</span>(<span class="kw-2">&amp;</span>failure.message, <span class="prelude-val">Some</span>(actual) <span class="kw">if </span>actual.to_lowercase().contains(<span class="kw-2">&amp;</span>message.to_lowercase())));
+
+            <span class="kw">if </span>kind_matched &amp;&amp; message_matched {
+                <span class="kw">let </span>message = failure.message.as_deref().unwrap_or(<span class="string">"*no message*"</span>);
+                <span class="macro">log::error!</span>(<span class="string">"Matched {} {message}"</span>, failure.kind);
                 <span class="kw">return </span><span class="bool-val">true</span>;
             }
         }
@@ -871,18 +902,54 @@
 ///
 /// If the test fails for a different reason, the given FailureCase will be ignored.
 </span><span class="attr">#[derive(Default, Debug, Clone, PartialEq)]
-</span><span class="kw">pub enum </span>FailureReason {
-    <span class="doccomment">/// Matches any failure.
-    </span><span class="attr">#[default]
-    </span>Any,
-    <span class="doccomment">/// Matches validation errors raised from the backend validation.
+</span><span class="kw">pub struct </span>FailureReason {
+    <span class="doccomment">/// Match a particular kind of failure result.
     ///
-    /// If a string is provided, matches only validation errors that contain the string.
-    </span>ValidationError(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;),
-    <span class="doccomment">/// A panic was raised.
+    /// If `None`, match any result kind.
+    </span>kind: <span class="prelude-ty">Option</span>&lt;FailureResultKind&gt;,
+    <span class="doccomment">/// Match a particular message of a failure result.
     ///
-    /// If a string is provided, matches only panics that contain the string.
-    </span>Panic(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;),
+    /// If `None`, matches any message. If `Some`, a case-insensitive sub-string
+    /// test is performed. Allowing `"error occured"` to match a message like
+    /// `"An unexpected Error occured!"`.
+    </span>message: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
+}
+
+<span class="kw">impl </span>FailureReason {
+    <span class="doccomment">/// Match any failure reason.
+    </span><span class="kw">const </span>ANY: <span class="self">Self </span>= <span class="self">Self </span>{
+        kind: <span class="prelude-val">None</span>,
+        message: <span class="prelude-val">None</span>,
+    };
+
+    <span class="doccomment">/// Match a validation error.
+    </span><span class="attr">#[allow(dead_code)] </span><span class="comment">// Not constructed on wasm
+    </span><span class="kw">pub fn </span>validation_error() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: <span class="prelude-val">Some</span>(FailureResultKind::ValidationError),
+            message: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Match a panic.
+    </span><span class="kw">pub fn </span>panic() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: <span class="prelude-val">Some</span>(FailureResultKind::Panic),
+            message: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Match an error with a message.
+    ///
+    /// If specified, a case-insensitive sub-string test is performed. Allowing
+    /// `"error occured"` to match a message like `"An unexpected Error
+    /// occured!"`.
+    </span><span class="kw">pub fn </span>with_message(<span class="self">self</span>, message: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            message: <span class="prelude-val">Some</span>(message),
+            ..<span class="self">self
+        </span>}
+    }
 }
 
 <span class="attr">#[derive(Default, Clone)]
@@ -899,11 +966,53 @@
     </span>Ignore,
 }
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FailureResult {
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FailureResultKind {
     <span class="attr">#[allow(dead_code)] </span><span class="comment">// Not constructed on wasm
-    </span>ValidationError(<span class="prelude-ty">Option</span>&lt;String&gt;),
-    Panic(<span class="prelude-ty">Option</span>&lt;String&gt;),
+    </span>ValidationError,
+    Panic,
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>FailureResultKind {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            FailureResultKind::ValidationError =&gt; <span class="macro">write!</span>(f, <span class="string">"Validation Error"</span>),
+            FailureResultKind::Panic =&gt; <span class="macro">write!</span>(f, <span class="string">"Panic"</span>),
+        }
+    }
+}
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FailureResult {
+    kind: FailureResultKind,
+    message: <span class="prelude-ty">Option</span>&lt;String&gt;,
+}
+
+<span class="kw">impl </span>FailureResult {
+    <span class="doccomment">/// Failure result is a panic.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>panic() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: FailureResultKind::Panic,
+            message: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Failure result is a validation error.
+    </span><span class="attr">#[allow(dead_code)] </span><span class="comment">// Not constructed on wasm
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validation_error() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: FailureResultKind::ValidationError,
+            message: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Message associated with a failure result.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>with_message(<span class="self">self</span>, message: <span class="kw">impl </span>fmt::Display) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: <span class="self">self</span>.kind,
+            message: <span class="prelude-val">Some</span>(message.to_string()),
+        }
+    }
 }
 
 <span class="attr">#[derive(PartialEq, Clone, Copy, Debug)]
@@ -956,7 +1065,8 @@
     </span><span class="kw">if </span>!actual.is_empty() {
         result = ExpectationMatchResult::Panic;
         <span class="kw">for </span>failure <span class="kw">in </span>actual {
-            <span class="macro">log::error!</span>(<span class="string">"Unexpected failure due to: {:?}"</span>, failure);
+            <span class="kw">let </span>message = failure.message.as_deref().unwrap_or(<span class="string">"*no message*"</span>);
+            <span class="macro">log::error!</span>(<span class="string">"{}: {message}"</span>, failure.kind);
         }
     }
 
@@ -972,11 +1082,11 @@
     };
 
     <span class="kw">fn </span>validation_err(msg: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; FailureResult {
-        FailureResult::ValidationError(<span class="prelude-val">Some</span>(String::from(msg)))
+        FailureResult::validation_error().with_message(msg)
     }
 
     <span class="kw">fn </span>panic(msg: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; FailureResult {
-        FailureResult::Panic(<span class="prelude-val">Some</span>(String::from(msg)))
+        FailureResult::panic().with_message(msg)
     }
 
     <span class="attr">#[test]
@@ -986,7 +1096,7 @@
         <span class="comment">// -- Unexpected failure --
 
         </span><span class="kw">let </span>expectation = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::ValidationError(<span class="prelude-val">None</span>)];
+        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::validation_error()];
 
         <span class="macro">assert_eq!</span>(
             <span class="kw">super</span>::expectations_match_failures(<span class="kw-2">&amp;</span>expectation, actual),
@@ -1006,7 +1116,7 @@
         <span class="comment">// -- Expected failure (validation) --
 
         </span><span class="kw">let </span>expectation = <span class="macro">vec!</span>[FailureCase::always()];
-        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::ValidationError(<span class="prelude-val">None</span>)];
+        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::validation_error()];
 
         <span class="macro">assert_eq!</span>(
             <span class="kw">super</span>::expectations_match_failures(<span class="kw-2">&amp;</span>expectation, actual),
@@ -1016,7 +1126,7 @@
         <span class="comment">// -- Expected failure (panic) --
 
         </span><span class="kw">let </span>expectation = <span class="macro">vec!</span>[FailureCase::always()];
-        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::Panic(<span class="prelude-val">None</span>)];
+        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::panic()];
 
         <span class="macro">assert_eq!</span>(
             <span class="kw">super</span>::expectations_match_failures(<span class="kw-2">&amp;</span>expectation, actual),
@@ -1032,9 +1142,9 @@
 
         </span><span class="kw">let </span>expectation: Vec&lt;FailureCase&gt; =
             <span class="macro">vec!</span>[FailureCase::always().validation_error(<span class="string">"Some StrIng"</span>)];
-        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::ValidationError(<span class="prelude-val">Some</span>(String::from(
+        <span class="kw">let </span>actual = <span class="macro">vec!</span>[FailureResult::validation_error().with_message(
             <span class="string">"a very long string that contains sOmE sTrInG of different capitalization"</span>,
-        )))];
+        )];
 
         <span class="macro">assert_eq!</span>(
             <span class="kw">super</span>::expectations_match_failures(<span class="kw-2">&amp;</span>expectation, actual),

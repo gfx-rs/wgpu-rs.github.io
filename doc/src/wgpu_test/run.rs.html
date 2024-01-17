@@ -116,6 +116,12 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{panic::AssertUnwindSafe, sync::Arc};
 
 <span class="kw">use </span>futures_lite::FutureExt;
@@ -204,23 +210,29 @@
         .<span class="kw">await</span>;
 
     <span class="kw">if let </span><span class="prelude-val">Err</span>(panic) = panic_res {
-        <span class="kw">let </span>panic_str = panic.downcast_ref::&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;();
-        <span class="kw">let </span>panic_string = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>panic_str) = panic_str {
-            <span class="prelude-val">Some</span>(panic_str.to_string())
+        <span class="kw">let </span>message = panic
+            .downcast_ref::&lt;<span class="kw-2">&amp;</span>str&gt;()
+            .copied()
+            .or_else(|| panic.downcast_ref::&lt;String&gt;().map(String::as_str));
+
+        <span class="kw">let </span>result = FailureResult::panic();
+
+        <span class="kw">let </span>result = <span class="kw">if let </span><span class="prelude-val">Some</span>(panic_str) = message {
+            result.with_message(panic_str)
         } <span class="kw">else </span>{
-            panic.downcast_ref::&lt;String&gt;().cloned()
+            result
         };
 
-        failures.push(FailureResult::Panic(panic_string))
+        failures.push(result)
     }
 
     <span class="comment">// Check whether any validation errors were reported during the test run.
     </span><span class="macro">cfg_if::cfg_if!</span>(
         <span class="kw">if </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), target_os = <span class="string">"emscripten"</span>))] </span>{
-            failures.extend(wgpu::hal::VALIDATION_CANARY.get_and_reset().into_iter().map(|msg| FailureResult::ValidationError(<span class="prelude-val">Some</span>(msg))));
+            failures.extend(wgpu::hal::VALIDATION_CANARY.get_and_reset().into_iter().map(|msg| FailureResult::validation_error().with_message(msg)));
         } <span class="kw">else if </span><span class="attr">#[cfg(all(target_arch = <span class="string">"wasm32"</span>, feature = <span class="string">"webgl"</span>))] </span>{
             <span class="kw">if </span>_surface_guard.unwrap().check_for_unreported_errors() {
-                failures.push(FailureResult::ValidationError(<span class="prelude-val">None</span>));
+                failures.push(FailureResult::validation_error());
             }
         } <span class="kw">else </span>{
         }
