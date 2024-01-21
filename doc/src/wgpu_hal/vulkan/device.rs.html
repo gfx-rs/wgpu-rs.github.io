@@ -2342,6 +2342,15 @@
 <a href="#2341" id="2341">2341</a>
 <a href="#2342" id="2342">2342</a>
 <a href="#2343" id="2343">2343</a>
+<a href="#2344" id="2344">2344</a>
+<a href="#2345" id="2345">2345</a>
+<a href="#2346" id="2346">2346</a>
+<a href="#2347" id="2347">2347</a>
+<a href="#2348" id="2348">2348</a>
+<a href="#2349" id="2349">2349</a>
+<a href="#2350" id="2350">2350</a>
+<a href="#2351" id="2351">2351</a>
+<a href="#2352" id="2352">2352</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2971,8 +2980,16 @@
         <span class="kw">let </span>images =
             <span class="kw">unsafe </span>{ functor.get_swapchain_images(raw) }.map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>vk_info = vk::FenceCreateInfo::builder().build();
-        <span class="kw">let </span>fence = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_fence(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+        <span class="comment">// NOTE: It's important that we define at least images.len() + 1 wait
+        // semaphores, since we prospectively need to provide the call to
+        // acquire the next image with an unsignaled semaphore.
+        </span><span class="kw">let </span>surface_semaphores = (<span class="number">0</span>..images.len() + <span class="number">1</span>)
+            .map(|<span class="kw">_</span>| <span class="kw">unsafe </span>{
+                <span class="self">self</span>.shared
+                    .raw
+                    .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::builder(), <span class="prelude-val">None</span>)
+            })
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
             .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Swapchain {
@@ -2980,10 +2997,11 @@
             raw_flags,
             functor,
             device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared),
-            fence,
             images,
             config: config.clone(),
             view_formats: wgt_view_formats,
+            surface_semaphores,
+            next_surface_index: <span class="number">0</span>,
         })
     }
 

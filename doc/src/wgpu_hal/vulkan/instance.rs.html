@@ -1004,6 +1004,12 @@
 <a href="#1003" id="1003">1003</a>
 <a href="#1004" id="1004">1004</a>
 <a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1175,7 +1181,7 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The device must have been made idle before calling this function.
-    </span><span class="kw">unsafe fn </span>release_resources(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>ash::Device) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">unsafe fn </span>release_resources(<span class="kw-2">mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ash::Device) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">"Swapchain::release_resources"</span>);
         {
             <span class="macro">profiling::scope!</span>(<span class="string">"vkDeviceWaitIdle"</span>);
@@ -1183,7 +1189,13 @@
             // the presentation work is done, we are forced to wait until the device is idle.
             </span><span class="kw">let _ </span>= <span class="kw">unsafe </span>{ device.device_wait_idle() };
         };
-        <span class="kw">unsafe </span>{ device.destroy_fence(<span class="self">self</span>.fence, <span class="prelude-val">None</span>) };
+
+        <span class="kw">for </span>semaphore <span class="kw">in </span><span class="self">self</span>.surface_semaphores.drain(..) {
+            <span class="kw">unsafe </span>{
+                device.destroy_semaphore(semaphore, <span class="prelude-val">None</span>);
+            }
+        }
+
         <span class="self">self
     </span>}
 }
@@ -1940,10 +1952,12 @@
             timeout_ns = u64::MAX;
         }
 
+        <span class="kw">let </span>wait_semaphore = sc.surface_semaphores[sc.next_surface_index];
+
         <span class="comment">// will block if no image is available
         </span><span class="kw">let </span>(index, suboptimal) = <span class="kw">match unsafe </span>{
             sc.functor
-                .acquire_next_image(sc.raw, timeout_ns, vk::Semaphore::null(), sc.fence)
+                .acquire_next_image(sc.raw, timeout_ns, wait_semaphore, vk::Fence::null())
         } {
             <span class="comment">// We treat `VK_SUBOPTIMAL_KHR` as `VK_SUCCESS` on Android.
             // See the comment in `Queue::present`.
@@ -1963,16 +1977,13 @@
             }
         };
 
+        sc.next_surface_index += <span class="number">1</span>;
+        sc.next_surface_index %= sc.surface_semaphores.len();
+
         <span class="comment">// special case for Intel Vulkan returning bizzare values (ugh)
         </span><span class="kw">if </span>sc.device.vendor_id == <span class="kw">crate</span>::auxil::db::intel::VENDOR &amp;&amp; index &gt; <span class="number">0x100 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::SurfaceError::Outdated);
         }
-
-        <span class="kw">let </span>fences = <span class="kw-2">&amp;</span>[sc.fence];
-
-        <span class="kw">unsafe </span>{ sc.device.raw.wait_for_fences(fences, <span class="bool-val">true</span>, !<span class="number">0</span>) }
-            .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
-        <span class="kw">unsafe </span>{ sc.device.raw.reset_fences(fences) }.map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
         <span class="comment">// https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkRenderPassBeginInfo.html#VUID-VkRenderPassBeginInfo-framebuffer-03209
         </span><span class="kw">let </span>raw_flags = <span class="kw">if </span>sc
@@ -2000,6 +2011,7 @@
                 },
                 view_formats: sc.view_formats.clone(),
             },
+            wait_semaphore,
         };
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">crate</span>::AcquiredSurfaceTexture {
             texture,

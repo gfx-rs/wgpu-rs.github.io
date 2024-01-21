@@ -1534,6 +1534,39 @@
 <a href="#1533" id="1533">1533</a>
 <a href="#1534" id="1534">1534</a>
 <a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1560,6 +1593,7 @@
 
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>, Queue <span class="kw">as _</span>};
 <span class="kw">use </span>parking_lot::Mutex;
+<span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span>std::{
     iter, mem, ptr,
@@ -2651,9 +2685,12 @@
                 .fetch_add(<span class="number">1</span>, Ordering::Relaxed)
                 + <span class="number">1</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
+
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::new();
 
             <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures_owned = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::new();
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>command_buffer_guard = hub.command_buffers.write();
@@ -2753,8 +2790,17 @@
                                         <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
                                     }
                                     <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; <span class="bool-val">false</span>,
-                                    <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>has_work, .. }) =&gt; {
+                                    <span class="prelude-val">Some</span>(TextureInner::Surface {
+                                        <span class="kw-2">ref </span>has_work,
+                                        <span class="kw-2">ref </span>raw,
+                                        ..
+                                    }) =&gt; {
                                         has_work.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+
+                                        <span class="kw">if </span>raw.is_some() {
+                                            submit_surface_textures_owned.push(texture.clone());
+                                        }
+
                                         <span class="bool-val">true
                                     </span>}
                                 };
@@ -2945,8 +2991,17 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
                         }
                         <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; {}
-                        <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>has_work, .. }) =&gt; {
+                        <span class="prelude-val">Some</span>(TextureInner::Surface {
+                            <span class="kw-2">ref </span>has_work,
+                            <span class="kw-2">ref </span>raw,
+                            ..
+                        }) =&gt; {
                             has_work.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+
+                            <span class="kw">if </span>raw.is_some() {
+                                submit_surface_textures_owned.push(texture.clone());
+                            }
+
                             <span class="kw">unsafe </span>{
                                 used_surface_textures
                                     .merge_single(texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
@@ -2985,12 +3040,23 @@
                         .flat_map(|pool_execution| pool_execution.cmd_buffers.iter()),
                 )
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures =
+                SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::with_capacity(submit_surface_textures_owned.len());
+
+            <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span>submit_surface_textures_owned {
+                submit_surface_textures.extend(<span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
+                    <span class="prelude-val">Some</span>(TextureInner::Surface { raw, .. }) =&gt; raw.as_ref(),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                });
+            }
+
             <span class="kw">unsafe </span>{
                 queue
                     .raw
                     .as_ref()
                     .unwrap()
-                    .submit(<span class="kw-2">&amp;</span>refs, <span class="prelude-val">Some</span>((fence, submit_index)))
+                    .submit(<span class="kw-2">&amp;</span>refs, <span class="kw-2">&amp;</span>submit_surface_textures, <span class="prelude-val">Some</span>((fence, submit_index)))
                     .map_err(DeviceError::from)<span class="question-mark">?</span>;
             }
 
