@@ -3399,6 +3399,24 @@
 <a href="#3398" id="3398">3398</a>
 <a href="#3399" id="3399">3399</a>
 <a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
+<a href="#3404" id="3404">3404</a>
+<a href="#3405" id="3405">3405</a>
+<a href="#3406" id="3406">3406</a>
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
+<a href="#3414" id="3414">3414</a>
+<a href="#3415" id="3415">3415</a>
+<a href="#3416" id="3416">3416</a>
+<a href="#3417" id="3417">3417</a>
+<a href="#3418" id="3418">3418</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3781,7 +3799,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>device_lost_invocations = SmallVec::new();
         <span class="kw">if </span>!<span class="self">self</span>.is_valid() &amp;&amp; life_tracker.queue_empty() {
             <span class="comment">// We can release gpu resources associated with this device.
-            </span>life_tracker.release_gpu_resources();
+            </span><span class="self">self</span>.release_gpu_resources();
 
             <span class="comment">// If we have a DeviceLostClosure, build an invocation with the
             // reason DeviceLostReason::Destroyed and no message.
@@ -6732,7 +6750,6 @@
             <span class="comment">// It's important to not hold the lock while calling the closure.
             </span>drop(life_lock);
             device_lost_closure.call(DeviceLostReason::Unknown, message.to_string());
-            life_lock = <span class="self">self</span>.lock_life();
         }
 
         <span class="comment">// 2) Complete any outstanding mapAsync() steps.
@@ -6744,7 +6761,26 @@
         // until they are cleared, and then drop the device.
 
         // Eagerly release GPU resources.
-        </span>life_lock.release_gpu_resources();
+        </span><span class="self">self</span>.release_gpu_resources();
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="comment">// This is called when the device is lost, which makes every associated
+        // resource invalid and unusable. This is an opportunity to release all of
+        // the underlying gpu resources, even though the objects remain visible to
+        // the user agent. We purge this memory naturally when resources have been
+        // moved into the appropriate buckets, so this function just needs to
+        // initiate movement into those buckets, and it can do that by calling
+        // "destroy" on all the resources we know about.
+
+        // During these iterations, we discard all errors. We don't care!
+        </span><span class="kw">let </span>trackers = <span class="self">self</span>.trackers.lock();
+        <span class="kw">for </span>buffer <span class="kw">in </span>trackers.buffers.used_resources() {
+            <span class="kw">let _ </span>= buffer.destroy();
+        }
+        <span class="kw">for </span>texture <span class="kw">in </span>trackers.textures.used_resources() {
+            <span class="kw">let _ </span>= texture.destroy();
+        }
     }
 }
 
