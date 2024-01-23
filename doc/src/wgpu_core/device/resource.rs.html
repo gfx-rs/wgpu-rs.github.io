@@ -3417,6 +3417,32 @@
 <a href="#3416" id="3416">3416</a>
 <a href="#3417" id="3417">3417</a>
 <a href="#3418" id="3418">3418</a>
+<a href="#3419" id="3419">3419</a>
+<a href="#3420" id="3420">3420</a>
+<a href="#3421" id="3421">3421</a>
+<a href="#3422" id="3422">3422</a>
+<a href="#3423" id="3423">3423</a>
+<a href="#3424" id="3424">3424</a>
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
+<a href="#3429" id="3429">3429</a>
+<a href="#3430" id="3430">3430</a>
+<a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a>
+<a href="#3434" id="3434">3434</a>
+<a href="#3435" id="3435">3435</a>
+<a href="#3436" id="3436">3436</a>
+<a href="#3437" id="3437">3437</a>
+<a href="#3438" id="3438">3438</a>
+<a href="#3439" id="3439">3439</a>
+<a href="#3440" id="3440">3440</a>
+<a href="#3441" id="3441">3441</a>
+<a href="#3442" id="3442">3442</a>
+<a href="#3443" id="3443">3443</a>
+<a href="#3444" id="3444">3444</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4728,9 +4754,35 @@
         <span class="kw">let </span>(module, source) = <span class="kw">match </span>source {
             <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
             </span>pipeline::ShaderModuleSource::Wgsl(code) =&gt; {
-                <span class="macro">profiling::scope!</span>(<span class="string">"naga::wgsl::parse_str"</span>);
+                <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::wgsl::parse_str"</span>);
                 <span class="kw">let </span>module = naga::front::wgsl::parse_str(<span class="kw-2">&amp;</span>code).map_err(|inner| {
                     pipeline::CreateShaderModuleError::Parsing(pipeline::ShaderError {
+                        source: code.to_string(),
+                        label: desc.label.as_ref().map(|l| l.to_string()),
+                        inner: Box::new(inner),
+                    })
+                })<span class="question-mark">?</span>;
+                (Cow::Owned(module), code.into_owned())
+            }
+            <span class="attr">#[cfg(feature = <span class="string">"spirv"</span>)]
+            </span>pipeline::ShaderModuleSource::SpirV(spv, options) =&gt; {
+                <span class="kw">let </span>parser = naga::front::spv::Frontend::new(spv.iter().cloned(), <span class="kw-2">&amp;</span>options);
+                <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::spv::Frontend"</span>);
+                <span class="kw">let </span>module = parser.parse().map_err(|inner| {
+                    pipeline::CreateShaderModuleError::ParsingSpirV(pipeline::ShaderError {
+                        source: String::new(),
+                        label: desc.label.as_ref().map(|l| l.to_string()),
+                        inner: Box::new(inner),
+                    })
+                })<span class="question-mark">?</span>;
+                (Cow::Owned(module), String::new())
+            }
+            <span class="attr">#[cfg(feature = <span class="string">"glsl"</span>)]
+            </span>pipeline::ShaderModuleSource::Glsl(code, options) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>parser = naga::front::glsl::Frontend::default();
+                <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::glsl::Frontend.parse"</span>);
+                <span class="kw">let </span>module = parser.parse(<span class="kw-2">&amp;</span>options, <span class="kw-2">&amp;</span>code).map_err(|inner| {
+                    pipeline::CreateShaderModuleError::ParsingGlsl(pipeline::ShaderError {
                         source: code.to_string(),
                         label: desc.label.as_ref().map(|l| l.to_string()),
                         inner: Box::new(inner),

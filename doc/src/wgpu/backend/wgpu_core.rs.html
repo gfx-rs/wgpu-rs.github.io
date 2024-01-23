@@ -3052,12 +3052,6 @@
 <a href="#3051" id="3051">3051</a>
 <a href="#3052" id="3052">3052</a>
 <a href="#3053" id="3053">3053</a>
-<a href="#3054" id="3054">3054</a>
-<a href="#3055" id="3055">3055</a>
-<a href="#3056" id="3056">3056</a>
-<a href="#3057" id="3057">3057</a>
-<a href="#3058" id="3058">3058</a>
-<a href="#3059" id="3059">3059</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3904,9 +3898,7 @@
                     </span>strict_capabilities: <span class="bool-val">true</span>,
                     block_ctx_dump_prefix: <span class="prelude-val">None</span>,
                 };
-                <span class="kw">let </span>parser = naga::front::spv::Frontend::new(spv.iter().cloned(), <span class="kw-2">&amp;</span>options);
-                <span class="kw">let </span>module = parser.parse().unwrap();
-                wgc::pipeline::ShaderModuleSource::Naga(Owned(module))
+                wgc::pipeline::ShaderModuleSource::SpirV(Borrowed(spv), options)
             }
             <span class="attr">#[cfg(feature = <span class="string">"glsl"</span>)]
             </span>ShaderSource::Glsl {
@@ -3914,12 +3906,8 @@
                 stage,
                 defines,
             } =&gt; {
-                <span class="comment">// Parse the given shader code and store its representation.
-                </span><span class="kw">let </span>options = naga::front::glsl::Options { stage, defines };
-                <span class="kw">let </span><span class="kw-2">mut </span>parser = naga::front::glsl::Frontend::default();
-                <span class="kw">let </span>module = parser.parse(<span class="kw-2">&amp;</span>options, shader).unwrap();
-
-                wgc::pipeline::ShaderModuleSource::Naga(Owned(module))
+                <span class="kw">let </span>options = naga::front::glsl::Options { stage, defines };
+                wgc::pipeline::ShaderModuleSource::Glsl(Borrowed(shader), options)
             }
             <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
             </span>ShaderSource::Wgsl(<span class="kw-2">ref </span>code) =&gt; wgc::pipeline::ShaderModuleSource::Wgsl(Borrowed(code)),

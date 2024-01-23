@@ -128,8 +128,37 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::ModuleState;
 <span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
+<span class="kw">use </span>codespan_reporting::diagnostic::Diagnostic;
+<span class="kw">use </span>codespan_reporting::files::SimpleFile;
+<span class="kw">use </span>codespan_reporting::term;
+<span class="kw">use </span>termcolor::{NoColor, WriteColor};
 
 <span class="attr">#[derive(Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>Error {
@@ -256,5 +285,26 @@
          come from a binding)"
     </span>)]
     </span>NonBindingArrayOfImageOrSamplers,
+}
+
+<span class="kw">impl </span>Error {
+    <span class="kw">pub fn </span>emit_to_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str) {
+        <span class="self">self</span>.emit_to_writer_with_path(writer, source, <span class="string">"glsl"</span>);
+    }
+
+    <span class="kw">pub fn </span>emit_to_writer_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span>path = path.to_string();
+        <span class="kw">let </span>files = SimpleFile::new(path, source);
+        <span class="kw">let </span>config = codespan_reporting::term::Config::default();
+        <span class="kw">let </span>diagnostic = Diagnostic::error().with_message(<span class="macro">format!</span>(<span class="string">"{self:?}"</span>));
+
+        term::emit(writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span>diagnostic).expect(<span class="string">"cannot write error"</span>);
+    }
+
+    <span class="kw">pub fn </span>emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; String {
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
+        <span class="self">self</span>.emit_to_writer(<span class="kw-2">&amp;mut </span>writer, source);
+        String::from_utf8(writer.into_inner()).unwrap()
+    }
 }
 </code></pre></div></section></main></body></html>
