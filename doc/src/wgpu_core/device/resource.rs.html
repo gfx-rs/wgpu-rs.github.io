@@ -3439,10 +3439,6 @@
 <a href="#3438" id="3438">3438</a>
 <a href="#3439" id="3439">3439</a>
 <a href="#3440" id="3440">3440</a>
-<a href="#3441" id="3441">3441</a>
-<a href="#3442" id="3442">3442</a>
-<a href="#3443" id="3443">3443</a>
-<a href="#3444" id="3444">3444</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4623,7 +4619,7 @@
 
         <span class="prelude-val">Ok</span>(TextureView {
             raw: <span class="prelude-val">Some</span>(raw),
-            parent: RwLock::new(<span class="prelude-val">Some</span>(texture.clone())),
+            parent: texture.clone(),
             device: <span class="self">self</span>.clone(),
             desc: resource::HalTextureViewDescriptor {
                 texture_format: texture.desc.format,
@@ -5363,17 +5359,13 @@
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
         used_texture_ranges: <span class="kw-2">&amp;mut </span>Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), binding_model::CreateBindGroupError&gt; {
-        <span class="kw">let </span>texture = view.parent.read();
-        <span class="kw">let </span>texture_id = texture.as_ref().unwrap().as_info().id();
+        <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>view.parent;
+        <span class="kw">let </span>texture_id = texture.as_info().id();
         <span class="comment">// Careful here: the texture may no longer have its own ref count,
         // if it was deleted by the user.
         </span><span class="kw">let </span>texture = used
             .textures
-            .add_single(
-                texture.as_ref().unwrap(),
-                <span class="prelude-val">Some</span>(view.selector.clone()),
-                internal_use,
-            )
+            .add_single(texture, <span class="prelude-val">Some</span>(view.selector.clone()), internal_use)
             .ok_or(binding_model::CreateBindGroupError::InvalidTexture(
                 texture_id,
             ))<span class="question-mark">?</span>;

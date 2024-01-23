@@ -3548,7 +3548,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureView&lt;A&gt; {
     <span class="kw">fn </span>to_render_attachment(<span class="kw-2">&amp;</span><span class="self">self</span>, usage: hal::TextureUses) -&gt; RenderAttachment&lt;A&gt; {
         RenderAttachment {
-            texture: <span class="self">self</span>.parent.read().as_ref().unwrap().clone(),
+            texture: <span class="self">self</span>.parent.clone(),
             selector: <span class="kw-2">&amp;</span><span class="self">self</span>.selector,
             usage,
         }
@@ -3583,7 +3583,7 @@
         <span class="kw">if </span>channel.load_op == LoadOp::Load {
             pending_discard_init_fixups.extend(texture_memory_actions.register_init_action(
                 <span class="kw-2">&amp;</span>TextureInitTrackerAction {
-                    texture: view.parent.read().as_ref().unwrap().clone(),
+                    texture: view.parent.clone(),
                     range: TextureInitRange::from(view.selector.clone()),
                     <span class="comment">// Note that this is needed even if the target is discarded,
                     </span>kind: MemoryInitKind::NeedsInitializedMemory,
@@ -3592,7 +3592,7 @@
         } <span class="kw">else if </span>channel.store_op == StoreOp::Store {
             <span class="comment">// Clear + Store
             </span>texture_memory_actions.register_implicit_init(
-                view.parent.read().as_ref().unwrap(),
+                <span class="kw-2">&amp;</span>view.parent,
                 TextureInitRange::from(view.selector.clone()),
             );
         }
@@ -3601,7 +3601,7 @@
             // discard right away be alright since the texture can't be used
             // during the pass anyways
             </span>texture_memory_actions.discard(TextureSurfaceDiscard {
-                texture: view.parent.read().as_ref().unwrap().clone(),
+                texture: view.parent.clone(),
                 mip_level: view.selector.mips.start,
                 layer: view.selector.layers.start,
             });
@@ -3770,7 +3770,7 @@
                 <span class="kw">if </span>need_init_beforehand {
                     pending_discard_init_fixups.extend(
                         texture_memory_actions.register_init_action(<span class="kw-2">&amp;</span>TextureInitTrackerAction {
-                            texture: view.parent.read().as_ref().unwrap().clone(),
+                            texture: view.parent.clone(),
                             range: TextureInitRange::from(view.selector.clone()),
                             kind: MemoryInitKind::NeedsInitializedMemory,
                         }),
@@ -3788,7 +3788,7 @@
                 </span><span class="kw">if </span>at.depth.store_op != at.stencil.store_op {
                     <span class="kw">if </span>!need_init_beforehand {
                         texture_memory_actions.register_implicit_init(
-                            view.parent.read().as_ref().unwrap(),
+                            <span class="kw-2">&amp;</span>view.parent,
                             TextureInitRange::from(view.selector.clone()),
                         );
                     }
@@ -3803,7 +3803,7 @@
                 } <span class="kw">else if </span>at.depth.store_op == StoreOp::Discard {
                     <span class="comment">// Both are discarded using the regular path.
                     </span>discarded_surfaces.push(TextureSurfaceDiscard {
-                        texture: view.parent.read().as_ref().unwrap().clone(),
+                        texture: view.parent.clone(),
                         mip_level: view.selector.mips.start,
                         layer: view.selector.layers.start,
                     });
@@ -3929,7 +3929,7 @@
                 }
 
                 texture_memory_actions.register_implicit_init(
-                    resolve_view.parent.read().as_ref().unwrap(),
+                    <span class="kw-2">&amp;</span>resolve_view.parent,
                     TextureInitRange::from(resolve_view.selector.clone()),
                 );
                 render_attachments
