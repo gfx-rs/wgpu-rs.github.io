@@ -1797,18 +1797,18 @@
             .push(TempResource::StagingBuffer(buffer));
     }
 
-    <span class="attr">#[must_use]
-    </span><span class="kw">fn </span>pre_submit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::CommandBuffer&gt; {
+    <span class="kw">fn </span>pre_submit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::CommandBuffer&gt;, DeviceError&gt; {
         <span class="self">self</span>.dst_buffers.clear();
         <span class="self">self</span>.dst_textures.clear();
         <span class="kw">if </span><span class="self">self</span>.is_active {
-            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding().unwrap() };
+            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding()<span class="question-mark">? </span>};
             <span class="self">self</span>.is_active = <span class="bool-val">false</span>;
             <span class="self">self</span>.executing_command_buffers.push(cmd_buf);
-            <span class="self">self</span>.executing_command_buffers.last()
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>}
+
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.executing_command_buffers.last());
+        }
+
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
     <span class="attr">#[must_use]
@@ -3032,8 +3032,8 @@
             }
 
             <span class="kw">let </span>refs = pending_writes
-                .pre_submit()
-                .into_iter()
+                .pre_submit()<span class="question-mark">?
+                </span>.into_iter()
                 .chain(
                     active_executions
                         .iter()
