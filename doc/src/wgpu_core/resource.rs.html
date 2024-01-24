@@ -1458,6 +1458,32 @@
 <a href="#1457" id="1457">1457</a>
 <a href="#1458" id="1458">1458</a>
 <a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1494,7 +1520,7 @@
     ptr::NonNull,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc,
+        Arc, Weak,
     },
 };
 
@@ -2201,6 +2227,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) full_range: TextureSelector,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;TextureId&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: RwLock&lt;TextureClearMode&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;Vec&lt;Weak&lt;TextureView&lt;A&gt;&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Texture&lt;A&gt; {
@@ -2312,8 +2339,14 @@
                 }
             };
 
+            <span class="kw">let </span>views = {
+                <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.views.lock();
+                std::mem::take(<span class="kw-2">&amp;mut *</span>guard)
+            };
+
             queue::TempResource::DestroyedTexture(Arc::new(DestroyedTexture {
                 raw: <span class="prelude-val">Some</span>(raw),
+                views,
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 submission_index: <span class="self">self</span>.info.submission_index(),
                 id: <span class="self">self</span>.info.id.unwrap(),
@@ -2430,6 +2463,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>DestroyedTexture&lt;A: HalApi&gt; {
     raw: <span class="prelude-ty">Option</span>&lt;A::Texture&gt;,
+    views: Vec&lt;Weak&lt;TextureView&lt;A&gt;&gt;&gt;,
     device: Arc&lt;Device&lt;A&gt;&gt;,
     label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) id: TextureId,
@@ -2448,6 +2482,24 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>DestroyedTexture&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
+        <span class="kw">for </span>view <span class="kw">in </span><span class="self">self</span>.views.drain(..) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(view) = view.upgrade() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(device.snatchable_lock.write()) {
+                    <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView (destroyed) {:?}"</span>, view.label());
+
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
+                        t.add(trace::Action::DestroyTextureView(view.info.id()));
+                    }
+
+                    <span class="kw">unsafe </span>{
+                        <span class="kw">use </span>hal::Device;
+                        <span class="self">self</span>.device.raw().destroy_texture_view(raw_view);
+                    }
+                }
+            }
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture (destroyed) {:?}"</span>, <span class="self">self</span>.label());
 
@@ -2630,7 +2682,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>TextureView&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::TextureView&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Snatchable&lt;A::TextureView&gt;,
     <span class="comment">// if it's a surface texture - it's none
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) parent: Arc&lt;Texture&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
@@ -2663,8 +2715,8 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureView&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::TextureView {
-        <span class="self">self</span>.raw.as_ref().unwrap()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::TextureView&gt; {
+        <span class="self">self</span>.raw.get(snatch_guard)
     }
 }
 

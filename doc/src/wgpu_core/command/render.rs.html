@@ -2832,7 +2832,22 @@
 <a href="#2831" id="2831">2831</a>
 <a href="#2832" id="2832">2832</a>
 <a href="#2833" id="2833">2833</a>
+<a href="#2834" id="2834">2834</a>
+<a href="#2835" id="2835">2835</a>
+<a href="#2836" id="2836">2836</a>
+<a href="#2837" id="2837">2837</a>
+<a href="#2838" id="2838">2838</a>
+<a href="#2839" id="2839">2839</a>
+<a href="#2840" id="2840">2840</a>
+<a href="#2841" id="2841">2841</a>
+<a href="#2842" id="2842">2842</a>
+<a href="#2843" id="2843">2843</a>
+<a href="#2844" id="2844">2844</a>
+<a href="#2845" id="2845">2845</a>
+<a href="#2846" id="2846">2846</a>
+<a href="#2847" id="2847">2847</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
+<span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
     api_log,
     binding_model::BindError,
@@ -3367,6 +3382,8 @@
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
     </span>InvalidAttachment(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
+    </span>InvalidResolveTarget(id::TextureViewId),
     <span class="attr">#[error(<span class="string">"The format of the depth-stencil attachment ({0:?}) is not a depth-stencil format"</span>)]
     </span>InvalidDepthStencilAttachmentFormat(wgt::TextureFormat),
     <span class="attr">#[error(<span class="string">"The format of the {location} ({format:?}) is not resolvable"</span>)]
@@ -3623,6 +3640,7 @@
         buffer_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;, id::BufferId&gt;,
         texture_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Texture&lt;A&gt;, id::TextureId&gt;,
         query_set_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;QuerySet&lt;A&gt;, id::QuerySetId&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RenderPassErrorInner&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"RenderPassInfo::start"</span>);
 
@@ -3827,7 +3845,9 @@
 
             depth_stencil = <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                 target: hal::Attachment {
-                    view: view.raw(),
+                    view: view
+                        .raw(snatch_guard)
+                        .ok_or_else(|| RenderPassErrorInner::InvalidAttachment(view.info.id()))<span class="question-mark">?</span>,
                     usage,
                 },
                 depth_ops: at.depth.hal_ops(),
@@ -3936,14 +3956,18 @@
                     .push(resolve_view.to_render_attachment(hal::TextureUses::COLOR_TARGET));
 
                 hal_resolve_target = <span class="prelude-val">Some</span>(hal::Attachment {
-                    view: resolve_view.raw(),
+                    view: resolve_view.raw(snatch_guard).ok_or_else(|| {
+                        RenderPassErrorInner::InvalidResolveTarget(resolve_view.info.id())
+                    })<span class="question-mark">?</span>,
                     usage: hal::TextureUses::COLOR_TARGET,
                 });
             }
 
             colors.push(<span class="prelude-val">Some</span>(hal::ColorAttachment {
                 target: hal::Attachment {
-                    view: color_view.raw(),
+                    view: color_view.raw(snatch_guard).ok_or_else(|| {
+                        RenderPassErrorInner::InvalidAttachment(color_view.info.id())
+                    })<span class="question-mark">?</span>,
                     usage: hal::TextureUses::COLOR_TARGET,
                 },
                 resolve_target: hal_resolve_target,
@@ -4043,6 +4067,7 @@
     <span class="kw">fn </span>finish(
         <span class="kw-2">mut </span><span class="self">self</span>,
         raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UsageScope&lt;A&gt;, SurfacesInDiscardState&lt;A&gt;), RenderPassErrorInner&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"RenderPassInfo::finish"</span>);
         <span class="kw">unsafe </span>{
@@ -4090,7 +4115,9 @@
                 color_attachments: <span class="kw-2">&amp;</span>[],
                 depth_stencil_attachment: <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                     target: hal::Attachment {
-                        view: view.raw(),
+                        view: view.raw(snatch_guard).ok_or_else(|| {
+                            RenderPassErrorInner::InvalidAttachment(view.info.id())
+                        })<span class="question-mark">?</span>,
                         usage: hal::TextureUses::DEPTH_STENCIL_WRITE,
                     },
                     depth_ops,
@@ -4220,6 +4247,7 @@
                 <span class="kw-2">&amp;*</span>buffer_guard,
                 <span class="kw-2">&amp;*</span>texture_guard,
                 <span class="kw-2">&amp;*</span>query_set_guard,
+                <span class="kw-2">&amp;</span>snatch_guard,
             )
             .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
@@ -5200,7 +5228,7 @@
 
             <span class="macro">log::trace!</span>(<span class="string">"Merging renderpass into cmd_buf {:?}"</span>, encoder_id);
             <span class="kw">let </span>(trackers, pending_discard_init_fixups) =
-                info.finish(raw).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+                info.finish(raw, <span class="kw-2">&amp;</span>snatch_guard).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             (trackers, pending_discard_init_fixups)
