@@ -1690,6 +1690,12 @@
 <a href="#1689" id="1689">1689</a>
 <a href="#1690" id="1690">1690</a>
 <a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -2206,9 +2212,12 @@ index format changes.
                         })
                         .map_pass_err(scope);
                     }
-                    commands.extend(state.flush_vertices());
-                    commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(command);
+
+                    <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; vertex_count &gt; <span class="number">0 </span>{
+                        commands.extend(state.flush_vertices());
+                        commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                        commands.push(command);
+                    }
                 }
                 RenderCommand::DrawIndexed {
                     index_count,
@@ -2248,10 +2257,13 @@ index format changes.
                         })
                         .map_pass_err(scope);
                     }
-                    commands.extend(state.flush_index());
-                    commands.extend(state.flush_vertices());
-                    commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(command);
+
+                    <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; index_count &gt; <span class="number">0 </span>{
+                        commands.extend(state.flush_index());
+                        commands.extend(state.flush_vertices());
+                        commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                        commands.push(command);
+                    }
                 }
                 RenderCommand::MultiDrawIndirect {
                     buffer_id,
