@@ -970,7 +970,7 @@
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log,
-    snatch::SnatchGuard,
+    snatch::{SnatchGuard, Snatchable},
     track::{BindGroupStates, UsageConflict},
     validation::{MissingBufferUsageError, MissingTextureUsageError},
     Label,
@@ -1790,7 +1790,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>BindGroup&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::BindGroup&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Snatchable&lt;A::BindGroup&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupId&gt;,
@@ -1831,7 +1831,7 @@
         <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_texture_ranges {
             <span class="kw">let _ </span>= texture.texture.raw(guard)<span class="question-mark">?</span>;
         }
-        <span class="self">self</span>.raw.as_ref()
+        <span class="self">self</span>.raw.get(guard)
     }
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_dynamic_bindings(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

@@ -3444,6 +3444,9 @@
 <a href="#3443" id="3443">3443</a>
 <a href="#3444" id="3444">3444</a>
 <a href="#3445" id="3445">3445</a>
+<a href="#3446" id="3446">3446</a>
+<a href="#3447" id="3447">3447</a>
+<a href="#3448" id="3448">3448</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4012,6 +4015,7 @@
             sync_mapped_writes: Mutex::new(<span class="prelude-val">None</span>),
             map_state: Mutex::new(resource::BufferMapState::Idle),
             info: ResourceInfo::new(desc.label.borrow_or_default()),
+            bind_groups: Mutex::new(Vec::new()),
         })
     }
 
@@ -4042,6 +4046,7 @@
             info: ResourceInfo::new(desc.label.borrow_or_default()),
             clear_mode: RwLock::new(clear_mode),
             views: Mutex::new(Vec::new()),
+            bind_groups: Mutex::new(Vec::new()),
         }
     }
 
@@ -4061,6 +4066,7 @@
             sync_mapped_writes: Mutex::new(<span class="prelude-val">None</span>),
             map_state: Mutex::new(resource::BufferMapState::Idle),
             info: ResourceInfo::new(desc.label.borrow_or_default()),
+            bind_groups: Mutex::new(Vec::new()),
         }
     }
 
@@ -5645,7 +5651,7 @@
         </span>};
 
         <span class="prelude-val">Ok</span>(binding_model::BindGroup {
-            raw: <span class="prelude-val">Some</span>(raw),
+            raw: Snatchable::new(raw),
             device: <span class="self">self</span>.clone(),
             layout: layout.clone(),
             info: ResourceInfo::new(desc.label.borrow_or_default()),
