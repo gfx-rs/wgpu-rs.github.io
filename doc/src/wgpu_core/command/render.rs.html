@@ -2855,6 +2855,9 @@
 <a href="#2854" id="2854">2854</a>
 <a href="#2855" id="2855">2855</a>
 <a href="#2856" id="2856">2856</a>
+<a href="#2857" id="2857">2857</a>
+<a href="#2858" id="2858">2858</a>
+<a href="#2859" id="2859">2859</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -3218,6 +3221,7 @@
         total_size: <span class="number">0</span>,
         step: pipeline::VertexStep {
             stride: <span class="number">0</span>,
+            last_stride: <span class="number">0</span>,
             mode: VertexStepMode::Vertex,
         },
         bound: <span class="bool-val">false</span>,
@@ -3241,11 +3245,13 @@
 
 <span class="kw">impl </span>VertexState {
     <span class="kw">fn </span>update_limits(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// Ensure that the limits are always smaller than u32::MAX so that
-        // interger overlows can be prevented via saturating additions.
-        </span><span class="kw">let </span>max = u32::MAX <span class="kw">as </span>u64;
-        <span class="self">self</span>.vertex_limit = max;
-        <span class="self">self</span>.instance_limit = max;
+        <span class="comment">// TODO: This isn't entirely spec-compliant.
+        // We currently require that the buffer range can fit `stride` * count bytes.
+        // The spec, however, lets a buffer be a bit smaller as long as the size of the
+        // last element fits in it (the last element can be smaller than the stride between
+        // elements).
+        </span><span class="self">self</span>.vertex_limit = u32::MAX <span class="kw">as </span>u64;
+        <span class="self">self</span>.instance_limit = u32::MAX <span class="kw">as </span>u64;
         <span class="kw">for </span>(idx, vbs) <span class="kw">in </span><span class="self">self</span>.inputs.iter().enumerate() {
             <span class="kw">if </span>vbs.step.stride == <span class="number">0 </span>|| !vbs.bound {
                 <span class="kw">continue</span>;

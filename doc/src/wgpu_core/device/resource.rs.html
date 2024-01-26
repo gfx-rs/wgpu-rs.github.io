@@ -3447,6 +3447,11 @@
 <a href="#3446" id="3446">3446</a>
 <a href="#3447" id="3447">3447</a>
 <a href="#3448" id="3448">3448</a>
+<a href="#3449" id="3449">3449</a>
+<a href="#3450" id="3450">3450</a>
+<a href="#3451" id="3451">3451</a>
+<a href="#3452" id="3452">3452</a>
+<a href="#3453" id="3453">3453</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -6166,8 +6171,13 @@
         <span class="kw">let </span><span class="kw-2">mut </span>shader_expects_dual_source_blending = <span class="bool-val">false</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pipeline_expects_dual_source_blending = <span class="bool-val">false</span>;
         <span class="kw">for </span>(i, vb_state) <span class="kw">in </span>desc.vertex.buffers.iter().enumerate() {
+            <span class="kw">let </span><span class="kw-2">mut </span>last_stride = <span class="number">0</span>;
+            <span class="kw">for </span>attribute <span class="kw">in </span>vb_state.attributes.iter() {
+                last_stride = last_stride.max(attribute.offset + attribute.format.size());
+            }
             vertex_steps.push(pipeline::VertexStep {
                 stride: vb_state.array_stride,
+                last_stride,
                 mode: vb_state.step_mode,
             });
             <span class="kw">if </span>vb_state.attributes.is_empty() {

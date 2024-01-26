@@ -1696,6 +1696,30 @@
 <a href="#1695" id="1695">1695</a>
 <a href="#1696" id="1696">1696</a>
 <a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1794,7 +1818,7 @@ index format changes.
     hub::Hub,
     id::{<span class="self">self</span>, RenderBundleId},
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
-    pipeline::{<span class="self">self</span>, PipelineFlags, RenderPipeline},
+    pipeline::{PipelineFlags, RenderPipeline, VertexStep},
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log,
     track::RenderBundleScope,
@@ -1807,6 +1831,91 @@ index format changes.
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
+
+<span class="doccomment">/// https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-draw
+</span><span class="kw">fn </span>validate_draw(
+    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&gt;],
+    step: <span class="kw-2">&amp;</span>[VertexStep],
+    first_vertex: u32,
+    vertex_count: u32,
+    first_instance: u32,
+    instance_count: u32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), DrawError&gt; {
+    <span class="kw">let </span>vertices_end = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
+    <span class="kw">let </span>instances_end = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
+
+    <span class="kw">for </span>(idx, (vbs, step)) <span class="kw">in </span>vertex.iter().zip(step).enumerate() {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(vbs) = vbs <span class="kw">else </span>{
+            <span class="kw">continue</span>;
+        };
+
+        <span class="kw">let </span>stride_count = <span class="kw">match </span>step.mode {
+            wgt::VertexStepMode::Vertex =&gt; vertices_end,
+            wgt::VertexStepMode::Instance =&gt; instances_end,
+        };
+
+        <span class="kw">if </span>stride_count == <span class="number">0 </span>{
+            <span class="kw">continue</span>;
+        }
+
+        <span class="kw">let </span>offset = (stride_count - <span class="number">1</span>) * step.stride + step.last_stride;
+        <span class="kw">let </span>limit = vbs.range.end - vbs.range.start;
+        <span class="kw">if </span>offset &gt; limit {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexOutOfBounds {
+                step_mode: step.mode,
+                offset,
+                limit,
+                slot: idx <span class="kw">as </span>u32,
+            });
+        }
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="comment">// See https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-drawindexed
+</span><span class="kw">fn </span>validate_indexed_draw(
+    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&gt;],
+    step: <span class="kw-2">&amp;</span>[VertexStep],
+    index_state: <span class="kw-2">&amp;</span>IndexState,
+    first_index: u32,
+    index_count: u32,
+    first_instance: u32,
+    instance_count: u32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), DrawError&gt; {
+    <span class="kw">let </span>last_index = first_index <span class="kw">as </span>u64 + index_count <span class="kw">as </span>u64;
+    <span class="kw">let </span>index_limit = index_state.limit();
+    <span class="kw">if </span>last_index &lt;= index_limit {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::IndexBeyondLimit {
+            last_index,
+            index_limit,
+        });
+    }
+
+    <span class="kw">let </span>stride_count = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
+    <span class="kw">for </span>(idx, (vbs, step)) <span class="kw">in </span>vertex.iter().zip(step).enumerate() {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(vbs) = vbs <span class="kw">else </span>{
+            <span class="kw">continue</span>;
+        };
+
+        <span class="kw">if </span>stride_count == <span class="number">0 </span>|| step.mode != wgt::VertexStepMode::Instance {
+            <span class="kw">continue</span>;
+        }
+
+        <span class="kw">let </span>offset = (stride_count - <span class="number">1</span>) * step.stride + step.last_stride;
+        <span class="kw">let </span>limit = vbs.range.end - vbs.range.start;
+        <span class="kw">if </span>offset &gt; limit {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexOutOfBounds {
+                step_mode: step.mode,
+                offset,
+                limit,
+                slot: idx <span class="kw">as </span>u32,
+            });
+        }
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}
 
 <span class="doccomment">/// Describes a [`RenderBundleEncoder`].
 </span><span class="attr">#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -2193,25 +2302,15 @@ index format changes.
                     };
                     <span class="kw">let </span>pipeline = state.pipeline(scope)<span class="question-mark">?</span>;
                     <span class="kw">let </span>used_bind_groups = pipeline.used_bind_groups;
-                    <span class="kw">let </span>vertex_limits = state.vertex_limits(pipeline);
-                    <span class="kw">let </span>last_vertex = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
-                    <span class="kw">if </span>last_vertex &gt; vertex_limits.vertex_limit {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexBeyondLimit {
-                            last_vertex,
-                            vertex_limit: vertex_limits.vertex_limit,
-                            slot: vertex_limits.vertex_limit_slot,
-                        })
-                        .map_pass_err(scope);
-                    }
-                    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
-                    <span class="kw">if </span>last_instance &gt; vertex_limits.instance_limit {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
-                            last_instance,
-                            instance_limit: vertex_limits.instance_limit,
-                            slot: vertex_limits.instance_limit_slot,
-                        })
-                        .map_pass_err(scope);
-                    }
+
+                    validate_draw(
+                        <span class="kw-2">&amp;</span>state.vertex[..],
+                        <span class="kw-2">&amp;</span>pipeline.steps,
+                        first_vertex,
+                        vertex_count,
+                        first_instance,
+                        instance_count,
+                    ).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; vertex_count &gt; <span class="number">0 </span>{
                         commands.extend(state.flush_vertices());
@@ -2237,26 +2336,16 @@ index format changes.
                         <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>index) =&gt; index,
                         <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::MissingIndexBuffer).map_pass_err(scope),
                     };
-                    <span class="comment">//TODO: validate that base_vertex + max_index() is within the provided range
-                    </span><span class="kw">let </span>vertex_limits = state.vertex_limits(pipeline);
-                    <span class="kw">let </span>index_limit = index.limit();
-                    <span class="kw">let </span>last_index = first_index <span class="kw">as </span>u64 + index_count <span class="kw">as </span>u64;
-                    <span class="kw">if </span>last_index &gt; index_limit {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::IndexBeyondLimit {
-                            last_index,
-                            index_limit,
-                        })
-                        .map_pass_err(scope);
-                    }
-                    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
-                    <span class="kw">if </span>last_instance &gt; vertex_limits.instance_limit {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
-                            last_instance,
-                            instance_limit: vertex_limits.instance_limit,
-                            slot: vertex_limits.instance_limit_slot,
-                        })
-                        .map_pass_err(scope);
-                    }
+
+                    validate_indexed_draw(
+                        <span class="kw-2">&amp;</span>state.vertex[..],
+                        <span class="kw-2">&amp;</span>pipeline.steps,
+                        index,
+                        first_index,
+                        index_count,
+                        first_instance,
+                        instance_count,
+                    ).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; index_count &gt; <span class="number">0 </span>{
                         commands.extend(state.flush_index());
@@ -2817,18 +2906,6 @@ index format changes.
     </span>is_dirty: bool,
 }
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>VertexLimitState {
-    <span class="doccomment">/// Length of the shortest vertex rate vertex buffer
-    </span>vertex_limit: u64,
-    <span class="doccomment">/// Buffer slot which the shortest vertex rate vertex buffer is bound to
-    </span>vertex_limit_slot: u32,
-    <span class="doccomment">/// Length of the shortest instance rate vertex buffer
-    </span>instance_limit: u64,
-    <span class="doccomment">/// Buffer slot which the shortest instance rate vertex buffer is bound to
-    </span>instance_limit_slot: u32,
-}
-
 <span class="doccomment">/// The bundle's current pipeline, and some cached information needed for validation.
 </span><span class="kw">struct </span>PipelineState&lt;A: HalApi&gt; {
     <span class="doccomment">/// The pipeline
@@ -2836,7 +2913,7 @@ index format changes.
 
     <span class="doccomment">/// How this pipeline's vertex shader traverses each vertex buffer, indexed
     /// by vertex buffer slot number.
-    </span>steps: Vec&lt;pipeline::VertexStep&gt;,
+    </span>steps: Vec&lt;VertexStep&gt;,
 
     <span class="doccomment">/// Ranges of push constants this pipeline uses, copied from the pipeline
     /// layout.
@@ -2921,35 +2998,6 @@ index format changes.
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; State&lt;A&gt; {
-    <span class="kw">fn </span>vertex_limits(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>PipelineState&lt;A&gt;) -&gt; VertexLimitState {
-        <span class="kw">let </span><span class="kw-2">mut </span>vert_state = VertexLimitState {
-            vertex_limit: u32::MAX <span class="kw">as </span>u64,
-            vertex_limit_slot: <span class="number">0</span>,
-            instance_limit: u32::MAX <span class="kw">as </span>u64,
-            instance_limit_slot: <span class="number">0</span>,
-        };
-        <span class="kw">for </span>(idx, (vbs, step)) <span class="kw">in </span><span class="self">self</span>.vertex.iter().zip(<span class="kw-2">&amp;</span>pipeline.steps).enumerate() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>vbs) = <span class="kw-2">*</span>vbs {
-                <span class="kw">let </span>limit = (vbs.range.end - vbs.range.start) / step.stride;
-                <span class="kw">match </span>step.mode {
-                    wgt::VertexStepMode::Vertex =&gt; {
-                        <span class="kw">if </span>limit &lt; vert_state.vertex_limit {
-                            vert_state.vertex_limit = limit;
-                            vert_state.vertex_limit_slot = idx <span class="kw">as _</span>;
-                        }
-                    }
-                    wgt::VertexStepMode::Instance =&gt; {
-                        <span class="kw">if </span>limit &lt; vert_state.instance_limit {
-                            vert_state.instance_limit = limit;
-                            vert_state.instance_limit_slot = idx <span class="kw">as _</span>;
-                        }
-                    }
-                }
-            }
-        }
-        vert_state
-    }
-
     <span class="doccomment">/// Return the id of the current pipeline, if any.
     </span><span class="kw">fn </span>pipeline_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;id::RenderPipelineId&gt; {
         <span class="self">self</span>.pipeline.as_ref().map(|p| p.pipeline.as_info().id())
