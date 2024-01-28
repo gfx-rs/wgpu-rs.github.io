@@ -2851,13 +2851,6 @@
 <a href="#2850" id="2850">2850</a>
 <a href="#2851" id="2851">2851</a>
 <a href="#2852" id="2852">2852</a>
-<a href="#2853" id="2853">2853</a>
-<a href="#2854" id="2854">2854</a>
-<a href="#2855" id="2855">2855</a>
-<a href="#2856" id="2856">2856</a>
-<a href="#2857" id="2857">2857</a>
-<a href="#2858" id="2858">2858</a>
-<a href="#2859" id="2859">2859</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -2900,9 +2893,9 @@
     TextureViewDimension, VertexStepMode,
 };
 
-<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>))]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>))]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span>std::sync::Arc;
@@ -2916,8 +2909,7 @@
 <span class="doccomment">/// Operation to perform to the output attachment at the start of a renderpass.
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 </span><span class="kw">pub enum </span>LoadOp {
     <span class="doccomment">/// Clear the output attachment with the clear color. Clearing is faster than loading.
@@ -2929,8 +2921,7 @@
 <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 </span><span class="kw">pub enum </span>StoreOp {
     <span class="doccomment">/// Discards the content of the render target.
@@ -2944,8 +2935,7 @@
 <span class="doccomment">/// Describes an individual channel within a render pass, such as color, depth, or stencil.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>PassChannel&lt;V&gt; {
     <span class="doccomment">/// Operation to perform to the output attachment at the start of a
     /// renderpass.
@@ -2982,8 +2972,7 @@
 <span class="doccomment">/// Describes a color attachment to a render pass.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>RenderPassColorAttachment {
     <span class="doccomment">/// The view to use as an attachment.
     </span><span class="kw">pub </span>view: id::TextureViewId,
@@ -2996,8 +2985,7 @@
 <span class="doccomment">/// Describes a depth/stencil attachment to a render pass.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>RenderPassDepthStencilAttachment {
     <span class="doccomment">/// The view to use as an attachment.
     </span><span class="kw">pub </span>view: id::TextureViewId,
@@ -3048,8 +3036,7 @@
 <span class="doccomment">/// Location to write a timestamp to (beginning or end of the pass).
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
 </span><span class="kw">pub enum </span>RenderPassTimestampLocation {
     Beginning = <span class="number">0</span>,
@@ -3059,8 +3046,7 @@
 <span class="doccomment">/// Describes the writing of timestamp values in a render pass.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>RenderPassTimestampWrites {
     <span class="doccomment">/// The query set to write the timestamp to.
     </span><span class="kw">pub </span>query_set: id::QuerySetId,
@@ -3084,7 +3070,7 @@
     </span><span class="kw">pub </span>occlusion_query_set: <span class="prelude-ty">Option</span>&lt;id::QuerySetId&gt;,
 }
 
-<span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(Deserialize, Serialize))]
+<span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Deserialize, Serialize))]
 </span><span class="kw">pub struct </span>RenderPass {
     base: BasePass&lt;RenderCommand&gt;,
     parent_id: id::CommandEncoderId,
@@ -3094,9 +3080,9 @@
     occlusion_query_set_id: <span class="prelude-ty">Option</span>&lt;id::QuerySetId&gt;,
 
     <span class="comment">// Resource binding dedupe state.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip))]
     </span>current_bind_groups: BindGroupStateChange,
-    <span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip))]
     </span>current_pipeline: StateChange&lt;id::RenderPipelineId&gt;,
 }
 

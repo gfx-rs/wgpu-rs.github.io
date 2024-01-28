@@ -1074,14 +1074,6 @@
 <a href="#1073" id="1073">1073</a>
 <a href="#1074" id="1074">1074</a>
 <a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
-<a href="#1079" id="1079">1079</a>
-<a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a>
-<a href="#1082" id="1082">1082</a>
-<a href="#1083" id="1083">1083</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
 <span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
@@ -1113,9 +1105,9 @@
 };
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
-<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>))]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>))]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span>thiserror::Error;
@@ -1124,14 +1116,7 @@
 
 <span class="attr">#[doc(hidden)]
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>),
-    derive(serde::Serialize)
-)]
-#[cfg_attr(
-    any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>),
-    derive(serde::Deserialize)
-)]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub enum </span>ComputeCommand {
     SetBindGroup {
         index: u32,
@@ -1182,16 +1167,16 @@
     EndPipelineStatisticsQuery,
 }
 
-<span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, derive(serde::Deserialize, serde::Serialize))]
+<span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>ComputePass {
     base: BasePass&lt;ComputeCommand&gt;,
     parent_id: id::CommandEncoderId,
     timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&gt;,
 
     <span class="comment">// Resource binding dedupe state.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip))]
     </span>current_bind_groups: BindGroupStateChange,
-    <span class="attr">#[cfg_attr(feature = <span class="string">"serial-pass"</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip))]
     </span>current_pipeline: StateChange&lt;id::ComputePipelineId&gt;,
 }
 
@@ -1235,8 +1220,7 @@
 <span class="doccomment">/// Describes the writing of timestamp values in a compute pass.
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"trace"</span>), derive(Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serial-pass"</span>, feature = <span class="string">"replay"</span>), derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ComputePassTimestampWrites {
     <span class="doccomment">/// The query set to write the timestamps to.
     </span><span class="kw">pub </span>query_set: id::QuerySetId,
