@@ -949,6 +949,9 @@
 <a href="#948" id="948">948</a>
 <a href="#949" id="949">949</a>
 <a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -957,10 +960,7 @@
     },
     error::{ErrorFormatter, PrettyError},
     hal_api::HalApi,
-    id::{
-        BindGroupId, BindGroupLayoutId, BufferId, PipelineLayoutId, SamplerId, TextureId,
-        TextureViewId,
-    },
+    id::{BindGroupLayoutId, BufferId, SamplerId, TextureId, TextureViewId},
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log,
@@ -1392,7 +1392,7 @@
     </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [wgt::BindGroupLayoutEntry]&gt;,
 }
 
-<span class="kw">pub type </span>BindGroupLayouts&lt;A&gt; = <span class="kw">crate</span>::storage::Storage&lt;BindGroupLayout&lt;A&gt;, BindGroupLayoutId&gt;;
+<span class="kw">pub type </span>BindGroupLayouts&lt;A&gt; = <span class="kw">crate</span>::storage::Storage&lt;BindGroupLayout&lt;A&gt;&gt;;
 
 <span class="doccomment">/// Bind group layout.
 </span><span class="attr">#[derive(Debug)]
@@ -1409,7 +1409,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) origin: bgl::Origin,
     <span class="attr">#[allow(unused)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding_count_validator: BindingTypeMaxCountValidator,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupLayoutId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupLayout&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
@@ -1433,14 +1433,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupLayoutId&gt; <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroupLayout"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupLayoutId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::BindGroupLayout;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BindGroupLayoutId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 
@@ -1553,7 +1555,7 @@
 </span><span class="kw">pub struct </span>PipelineLayout&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::PipelineLayout&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;PipelineLayoutId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;PipelineLayout&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: ArrayVec&lt;Arc&lt;BindGroupLayout&lt;A&gt;&gt;, { hal::MAX_BIND_GROUPS }&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) push_constant_ranges: ArrayVec&lt;wgt::PushConstantRange, { SHADER_STAGE_COUNT }&gt;,
 }
@@ -1667,14 +1669,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;PipelineLayoutId&gt; <span class="kw">for </span>PipelineLayout&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>PipelineLayout&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"PipelineLayout"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;PipelineLayoutId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::PipelineLayout;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;PipelineLayoutId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -1781,7 +1785,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Snatchable&lt;A::BindGroup&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroup&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used: BindGroupStates&lt;A&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_buffer_ranges: Vec&lt;BufferInitTrackerAction&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_texture_ranges: Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
@@ -1870,14 +1874,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupId&gt; <span class="kw">for </span>BindGroup&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>BindGroup&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroup"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::BindGroup;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BindGroupId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }

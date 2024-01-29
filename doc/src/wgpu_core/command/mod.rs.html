@@ -732,6 +732,8 @@
 <a href="#731" id="731">731</a>
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -874,7 +876,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     limits: wgt::Limits,
     support_clear_texture: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;CommandBufferId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;CommandBuffer&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Mutex&lt;<span class="prelude-ty">Option</span>&lt;CommandBufferMutable&lt;A&gt;&gt;&gt;,
 }
 
@@ -989,7 +991,7 @@
         id: id::CommandEncoderId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
         <span class="kw">let </span>storage = hub.command_buffers.read();
-        <span class="kw">match </span>storage.get(id) {
+        <span class="kw">match </span>storage.get(id.transmute()) {
             <span class="prelude-val">Ok</span>(cmd_buf) =&gt; <span class="kw">match </span>cmd_buf.data.lock().as_ref().unwrap().status {
                 CommandEncoderStatus::Recording =&gt; <span class="prelude-val">Ok</span>(cmd_buf.clone()),
                 CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
@@ -1030,14 +1032,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;CommandBufferId&gt; <span class="kw">for </span>CommandBuffer&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>CommandBuffer&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"CommandBuffer"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;CommandBufferId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::CommandBuffer;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;CommandBufferId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 
@@ -1152,7 +1156,7 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>error = <span class="kw">match </span>hub.command_buffers.get(encoder_id) {
+        <span class="kw">let </span>error = <span class="kw">match </span>hub.command_buffers.get(encoder_id.transmute()) {
             <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
                 <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
@@ -1178,7 +1182,7 @@
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(CommandEncoderError::Invalid),
         };
 
-        (encoder_id, error)
+        (encoder_id.transmute(), error)
     }
 
     <span class="kw">pub fn </span>command_encoder_push_debug_group&lt;A: HalApi&gt;(
@@ -1434,7 +1438,7 @@
         <span class="comment">// This error is not in the error chain, only notes are needed
         </span><span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Pass(id) =&gt; {
-                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id);
+                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id.transmute());
             }
             <span class="self">Self</span>::SetBindGroup(id) =&gt; {
                 fmt.bind_group_label(<span class="kw-2">&amp;</span>id);

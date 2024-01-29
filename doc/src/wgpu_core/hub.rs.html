@@ -329,15 +329,16 @@
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Allocating resource ids, and tracking the resources they refer to.
 
 The `wgpu_core` API uses identifiers of type [`Id&lt;R&gt;`] to refer to
 resources of type `R`. For example, [`id::DeviceId`] is an alias for
-`Id&lt;Device&lt;Empty&gt;&gt;`, and [`id::BufferId`] is an alias for
-`Id&lt;Buffer&lt;Empty&gt;&gt;`. `Id` implements `Copy`, `Hash`, `Eq`, `Ord`, and
+`Id&lt;markers::Device&gt;`, and [`id::BufferId`] is an alias for
+`Id&lt;markers::Buffer&gt;`. `Id` implements `Copy`, `Hash`, `Eq`, `Ord`, and
 of course `Debug`.
+
+[`id::DeviceId`]: crate::id::DeviceId
+[`id::BufferId`]: crate::id::BufferId
 
 Each `Id` contains not only an index for the resource it denotes but
 also a Backend indicating which `wgpu` backend it belongs to. You
@@ -376,7 +377,7 @@ impl&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
         &amp;self,
         device_id: id::DeviceId,
         desc: &amp;resource::BufferDescriptor,
-        id_in: Input&lt;G, id::BufferId&gt;,
+        id_in: Input&lt;G&gt;,
     ) -&gt; (id::BufferId, Option&lt;resource::CreateBufferError&gt;) {
         /* ... */
     }
@@ -448,7 +449,6 @@ flagged as errors as well.
     command::{CommandBuffer, RenderBundle},
     device::{queue::Queue, Device},
     hal_api::HalApi,
-    id,
     identity::GlobalIdentityHandlerFactory,
     instance::{Adapter, HalSurface, Surface},
     pipeline::{ComputePipeline, RenderPipeline, ShaderModule},
@@ -510,23 +510,23 @@ flagged as errors as well.
 ///
 /// [`A::hub(global)`]: HalApi::hub
 </span><span class="kw">pub struct </span>Hub&lt;A: HalApi&gt; {
-    <span class="kw">pub </span>adapters: Registry&lt;id::AdapterId, Adapter&lt;A&gt;&gt;,
-    <span class="kw">pub </span>devices: Registry&lt;id::DeviceId, Device&lt;A&gt;&gt;,
-    <span class="kw">pub </span>queues: Registry&lt;id::QueueId, Queue&lt;A&gt;&gt;,
-    <span class="kw">pub </span>pipeline_layouts: Registry&lt;id::PipelineLayoutId, PipelineLayout&lt;A&gt;&gt;,
-    <span class="kw">pub </span>shader_modules: Registry&lt;id::ShaderModuleId, ShaderModule&lt;A&gt;&gt;,
-    <span class="kw">pub </span>bind_group_layouts: Registry&lt;id::BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;,
-    <span class="kw">pub </span>bind_groups: Registry&lt;id::BindGroupId, BindGroup&lt;A&gt;&gt;,
-    <span class="kw">pub </span>command_buffers: Registry&lt;id::CommandBufferId, CommandBuffer&lt;A&gt;&gt;,
-    <span class="kw">pub </span>render_bundles: Registry&lt;id::RenderBundleId, RenderBundle&lt;A&gt;&gt;,
-    <span class="kw">pub </span>render_pipelines: Registry&lt;id::RenderPipelineId, RenderPipeline&lt;A&gt;&gt;,
-    <span class="kw">pub </span>compute_pipelines: Registry&lt;id::ComputePipelineId, ComputePipeline&lt;A&gt;&gt;,
-    <span class="kw">pub </span>query_sets: Registry&lt;id::QuerySetId, QuerySet&lt;A&gt;&gt;,
-    <span class="kw">pub </span>buffers: Registry&lt;id::BufferId, Buffer&lt;A&gt;&gt;,
-    <span class="kw">pub </span>staging_buffers: Registry&lt;id::StagingBufferId, StagingBuffer&lt;A&gt;&gt;,
-    <span class="kw">pub </span>textures: Registry&lt;id::TextureId, Texture&lt;A&gt;&gt;,
-    <span class="kw">pub </span>texture_views: Registry&lt;id::TextureViewId, TextureView&lt;A&gt;&gt;,
-    <span class="kw">pub </span>samplers: Registry&lt;id::SamplerId, Sampler&lt;A&gt;&gt;,
+    <span class="kw">pub </span>adapters: Registry&lt;Adapter&lt;A&gt;&gt;,
+    <span class="kw">pub </span>devices: Registry&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub </span>queues: Registry&lt;Queue&lt;A&gt;&gt;,
+    <span class="kw">pub </span>pipeline_layouts: Registry&lt;PipelineLayout&lt;A&gt;&gt;,
+    <span class="kw">pub </span>shader_modules: Registry&lt;ShaderModule&lt;A&gt;&gt;,
+    <span class="kw">pub </span>bind_group_layouts: Registry&lt;BindGroupLayout&lt;A&gt;&gt;,
+    <span class="kw">pub </span>bind_groups: Registry&lt;BindGroup&lt;A&gt;&gt;,
+    <span class="kw">pub </span>command_buffers: Registry&lt;CommandBuffer&lt;A&gt;&gt;,
+    <span class="kw">pub </span>render_bundles: Registry&lt;RenderBundle&lt;A&gt;&gt;,
+    <span class="kw">pub </span>render_pipelines: Registry&lt;RenderPipeline&lt;A&gt;&gt;,
+    <span class="kw">pub </span>compute_pipelines: Registry&lt;ComputePipeline&lt;A&gt;&gt;,
+    <span class="kw">pub </span>query_sets: Registry&lt;QuerySet&lt;A&gt;&gt;,
+    <span class="kw">pub </span>buffers: Registry&lt;Buffer&lt;A&gt;&gt;,
+    <span class="kw">pub </span>staging_buffers: Registry&lt;StagingBuffer&lt;A&gt;&gt;,
+    <span class="kw">pub </span>textures: Registry&lt;Texture&lt;A&gt;&gt;,
+    <span class="kw">pub </span>texture_views: Registry&lt;TextureView&lt;A&gt;&gt;,
+    <span class="kw">pub </span>samplers: Registry&lt;Sampler&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Hub&lt;A&gt; {
@@ -555,11 +555,7 @@ flagged as errors as well.
     <span class="comment">//TODO: instead of having a hacky `with_adapters` parameter,
     // we should have `clear_device(device_id)` that specifically destroys
     // everything related to a logical device.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_guard: <span class="kw-2">&amp;</span>Storage&lt;Surface, id::SurfaceId&gt;,
-        with_adapters: bool,
-    ) {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_guard: <span class="kw-2">&amp;</span>Storage&lt;Surface&gt;, with_adapters: bool) {
         <span class="kw">use </span>hal::Surface;
 
         <span class="kw">let </span><span class="kw-2">mut </span>devices = <span class="self">self</span>.devices.write();

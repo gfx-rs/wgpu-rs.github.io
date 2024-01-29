@@ -191,11 +191,12 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
-    id::{<span class="self">self</span>},
+    id::{<span class="self">self</span>, Id, Marker},
     Epoch, FastHashMap, Index,
 };
 <span class="kw">use </span>std::{fmt::Debug, marker::PhantomData, sync::Arc};
@@ -240,10 +241,10 @@
     ///
     /// The backend is incorporated into the id, so that ids allocated with
     /// different `backend` values are always distinct.
-    </span><span class="kw">pub fn </span>alloc&lt;I: id::TypedId&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, backend: Backend) -&gt; I {
+    </span><span class="kw">pub fn </span>alloc&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, backend: Backend) -&gt; Id&lt;T&gt; {
         <span class="self">self</span>.count += <span class="number">1</span>;
         <span class="kw">match </span><span class="self">self</span>.free.pop() {
-            <span class="prelude-val">Some</span>((index, epoch)) =&gt; I::zip(index, epoch + <span class="number">1</span>, backend),
+            <span class="prelude-val">Some</span>((index, epoch)) =&gt; Id::zip(index, epoch + <span class="number">1</span>, backend),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>epoch = <span class="number">1</span>;
                 <span class="kw">let </span>used = <span class="self">self</span>.used.entry(epoch).or_insert_with(Default::default);
@@ -253,12 +254,12 @@
                     <span class="number">0
                 </span>};
                 used.push(index);
-                I::zip(index, epoch, backend)
+                Id::zip(index, epoch, backend)
             }
         }
     }
 
-    <span class="kw">pub fn </span>mark_as_used&lt;I: id::TypedId&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I) -&gt; I {
+    <span class="kw">pub fn </span>mark_as_used&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T&gt;) -&gt; Id&lt;T&gt; {
         <span class="self">self</span>.count += <span class="number">1</span>;
         <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
         <span class="kw">let </span>used = <span class="self">self</span>.used.entry(epoch).or_insert_with(Default::default);
@@ -267,7 +268,7 @@
     }
 
     <span class="doccomment">/// Free `id`. It will never be returned from `alloc` again.
-    </span><span class="kw">pub fn </span>release&lt;I: id::TypedId&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I) {
+    </span><span class="kw">pub fn </span>release&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T&gt;) {
         <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
         <span class="self">self</span>.free.push((index, epoch));
         <span class="self">self</span>.count -= <span class="number">1</span>;
@@ -279,24 +280,24 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>IdentityManager&lt;I: id::TypedId&gt; {
+</span><span class="kw">pub struct </span>IdentityManager&lt;T: Marker&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) values: Mutex&lt;IdentityValues&gt;,
-    _phantom: PhantomData&lt;I&gt;,
+    _phantom: PhantomData&lt;T&gt;,
 }
 
-<span class="kw">impl</span>&lt;I: id::TypedId&gt; IdentityManager&lt;I&gt; {
-    <span class="kw">pub fn </span>process(<span class="kw-2">&amp;</span><span class="self">self</span>, backend: Backend) -&gt; I {
+<span class="kw">impl</span>&lt;T: Marker&gt; IdentityManager&lt;T&gt; {
+    <span class="kw">pub fn </span>process(<span class="kw-2">&amp;</span><span class="self">self</span>, backend: Backend) -&gt; Id&lt;T&gt; {
         <span class="self">self</span>.values.lock().alloc(backend)
     }
-    <span class="kw">pub fn </span>mark_as_used(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; I {
+    <span class="kw">pub fn </span>mark_as_used(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T&gt;) -&gt; Id&lt;T&gt; {
         <span class="self">self</span>.values.lock().mark_as_used(id)
     }
-    <span class="kw">pub fn </span>free(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) {
+    <span class="kw">pub fn </span>free(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T&gt;) {
         <span class="self">self</span>.values.lock().release(id)
     }
 }
 
-<span class="kw">impl</span>&lt;I: id::TypedId&gt; IdentityManager&lt;I&gt; {
+<span class="kw">impl</span>&lt;T: Marker&gt; IdentityManager&lt;T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             values: Mutex::new(IdentityValues::default()),
@@ -308,7 +309,7 @@
 <span class="doccomment">/// A type that can produce [`IdentityManager`] filters for ids of type `I`.
 ///
 /// See the module-level documentation for details.
-</span><span class="kw">pub trait </span>IdentityHandlerFactory&lt;I: id::TypedId&gt; {
+</span><span class="kw">pub trait </span>IdentityHandlerFactory&lt;T: Marker&gt; {
     <span class="kw">type </span>Input: Copy;
     <span class="doccomment">/// Create an [`IdentityManager&lt;I&gt;`] implementation that can
     /// transform proto-ids into ids of type `I`.
@@ -316,11 +317,11 @@
     /// and are not generated by wgpu
     ///
     /// [`IdentityManager&lt;I&gt;`]: IdentityManager
-    </span><span class="kw">fn </span>spawn(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;IdentityManager&lt;I&gt;&gt; {
+    </span><span class="kw">fn </span>spawn(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;IdentityManager&lt;T&gt;&gt; {
         Arc::new(IdentityManager::new())
     }
     <span class="kw">fn </span>autogenerate_ids() -&gt; bool;
-    <span class="kw">fn </span>input_to_id(id_in: <span class="self">Self</span>::Input) -&gt; I;
+    <span class="kw">fn </span>input_to_id(id_in: <span class="self">Self</span>::Input) -&gt; Id&lt;T&gt;;
 }
 
 <span class="doccomment">/// A global identity handler factory based on [`IdentityManager`].
@@ -331,13 +332,13 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>IdentityManagerFactory;
 
-<span class="kw">impl</span>&lt;I: id::TypedId&gt; IdentityHandlerFactory&lt;I&gt; <span class="kw">for </span>IdentityManagerFactory {
+<span class="kw">impl</span>&lt;T: Marker&gt; IdentityHandlerFactory&lt;T&gt; <span class="kw">for </span>IdentityManagerFactory {
     <span class="kw">type </span>Input = ();
     <span class="kw">fn </span>autogenerate_ids() -&gt; bool {
         <span class="bool-val">true
     </span>}
 
-    <span class="kw">fn </span>input_to_id(_id_in: <span class="self">Self</span>::Input) -&gt; I {
+    <span class="kw">fn </span>input_to_id(_id_in: <span class="self">Self</span>::Input) -&gt; Id&lt;T&gt; {
         <span class="macro">unreachable!</span>(<span class="string">"It should not be called"</span>)
     }
 }
@@ -345,23 +346,25 @@
 <span class="doccomment">/// A factory that can build [`IdentityManager`]s for all resource
 /// types.
 </span><span class="kw">pub trait </span>GlobalIdentityHandlerFactory:
-    IdentityHandlerFactory&lt;id::AdapterId&gt;
-    + IdentityHandlerFactory&lt;id::DeviceId&gt;
-    + IdentityHandlerFactory&lt;id::PipelineLayoutId&gt;
-    + IdentityHandlerFactory&lt;id::ShaderModuleId&gt;
-    + IdentityHandlerFactory&lt;id::BindGroupLayoutId&gt;
-    + IdentityHandlerFactory&lt;id::BindGroupId&gt;
-    + IdentityHandlerFactory&lt;id::CommandBufferId&gt;
-    + IdentityHandlerFactory&lt;id::RenderBundleId&gt;
-    + IdentityHandlerFactory&lt;id::RenderPipelineId&gt;
-    + IdentityHandlerFactory&lt;id::ComputePipelineId&gt;
-    + IdentityHandlerFactory&lt;id::QuerySetId&gt;
-    + IdentityHandlerFactory&lt;id::BufferId&gt;
-    + IdentityHandlerFactory&lt;id::StagingBufferId&gt;
-    + IdentityHandlerFactory&lt;id::TextureId&gt;
-    + IdentityHandlerFactory&lt;id::TextureViewId&gt;
-    + IdentityHandlerFactory&lt;id::SamplerId&gt;
-    + IdentityHandlerFactory&lt;id::SurfaceId&gt;
+    IdentityHandlerFactory&lt;id::markers::Adapter&gt;
+    + IdentityHandlerFactory&lt;id::markers::Device&gt;
+    + IdentityHandlerFactory&lt;id::markers::PipelineLayout&gt;
+    + IdentityHandlerFactory&lt;id::markers::ShaderModule&gt;
+    + IdentityHandlerFactory&lt;id::markers::BindGroupLayout&gt;
+    + IdentityHandlerFactory&lt;id::markers::BindGroup&gt;
+    + IdentityHandlerFactory&lt;id::markers::CommandBuffer&gt;
+    + IdentityHandlerFactory&lt;id::markers::RenderBundle&gt;
+    + IdentityHandlerFactory&lt;id::markers::RenderPipeline&gt;
+    + IdentityHandlerFactory&lt;id::markers::ComputePipeline&gt;
+    + IdentityHandlerFactory&lt;id::markers::QuerySet&gt;
+    + IdentityHandlerFactory&lt;id::markers::Buffer&gt;
+    + IdentityHandlerFactory&lt;id::markers::StagingBuffer&gt;
+    + IdentityHandlerFactory&lt;id::markers::Texture&gt;
+    + IdentityHandlerFactory&lt;id::markers::TextureView&gt;
+    + IdentityHandlerFactory&lt;id::markers::Sampler&gt;
+    + IdentityHandlerFactory&lt;id::markers::Surface&gt;
+    + IdentityHandlerFactory&lt;id::markers::Queue&gt;
+    + IdentityHandlerFactory&lt;id::markers::CommandEncoder&gt;
 {
 }
 
@@ -371,8 +374,7 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_epoch_end_of_life() {
-    <span class="kw">use </span>id::TypedId <span class="kw">as _</span>;
-    <span class="kw">let </span>man = IdentityManager::&lt;id::BufferId&gt;::new();
+    <span class="kw">let </span>man = IdentityManager::&lt;id::markers::Buffer&gt;::new();
     <span class="kw">let </span>forced_id = man.mark_as_used(id::BufferId::zip(<span class="number">0</span>, <span class="number">1</span>, Backend::Empty));
     <span class="macro">assert_eq!</span>(forced_id.unzip().<span class="number">0</span>, <span class="number">0</span>);
     <span class="kw">let </span>id1 = man.process(Backend::Empty);

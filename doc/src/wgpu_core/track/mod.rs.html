@@ -616,10 +616,6 @@
 <a href="#615" id="615">615</a>
 <a href="#616" id="616">616</a>
 <a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -726,7 +722,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">use crate</span>::{
     binding_model, command, conv,
     hal_api::HalApi,
-    id::{<span class="self">self</span>, TypedId},
+    id::{<span class="self">self</span>, Id},
     pipeline, resource,
     snatch::SnatchGuard,
     storage::Storage,
@@ -804,8 +800,6 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="doccomment">/// All flags that are exclusive.
     </span><span class="kw">const </span>EXCLUSIVE: <span class="self">Self</span>;
 
-    <span class="doccomment">/// The relevant resource ID type.
-    </span><span class="kw">type </span>Id: Copy + fmt::Debug + TypedId;
     <span class="doccomment">/// The selector used by this resource.
     </span><span class="kw">type </span>Selector: fmt::Debug;
 
@@ -942,8 +936,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BindGroupStates&lt;A: HalApi&gt; {
     <span class="kw">pub </span>buffers: BufferBindGroupState&lt;A&gt;,
     <span class="kw">pub </span>textures: TextureBindGroupState&lt;A&gt;,
-    <span class="kw">pub </span>views: StatelessBindGroupSate&lt;id::TextureViewId, resource::TextureView&lt;A&gt;&gt;,
-    <span class="kw">pub </span>samplers: StatelessBindGroupSate&lt;id::SamplerId, resource::Sampler&lt;A&gt;&gt;,
+    <span class="kw">pub </span>views: StatelessBindGroupSate&lt;resource::TextureView&lt;A&gt;&gt;,
+    <span class="kw">pub </span>samplers: StatelessBindGroupSate&lt;resource::Sampler&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroupStates&lt;A&gt; {
@@ -976,20 +970,19 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="kw">pub </span>buffers: RwLock&lt;BufferUsageScope&lt;A&gt;&gt;,
     <span class="kw">pub </span>textures: RwLock&lt;TextureUsageScope&lt;A&gt;&gt;,
     <span class="comment">// Don't need to track views and samplers, they are never used directly, only by bind groups.
-    </span><span class="kw">pub </span>bind_groups: RwLock&lt;StatelessTracker&lt;A, id::BindGroupId, binding_model::BindGroup&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>render_pipelines:
-        RwLock&lt;StatelessTracker&lt;A, id::RenderPipelineId, pipeline::RenderPipeline&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>query_sets: RwLock&lt;StatelessTracker&lt;A, id::QuerySetId, resource::QuerySet&lt;A&gt;&gt;&gt;,
+    </span><span class="kw">pub </span>bind_groups: RwLock&lt;StatelessTracker&lt;A, binding_model::BindGroup&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>render_pipelines: RwLock&lt;StatelessTracker&lt;A, pipeline::RenderPipeline&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>query_sets: RwLock&lt;StatelessTracker&lt;A, resource::QuerySet&lt;A&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; RenderBundleScope&lt;A&gt; {
     <span class="doccomment">/// Create the render bundle scope and pull the maximum IDs from the hubs.
     </span><span class="kw">pub fn </span>new(
-        buffers: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;, id::BufferId&gt;,
-        textures: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;, id::TextureId&gt;,
-        bind_groups: <span class="kw-2">&amp;</span>Storage&lt;binding_model::BindGroup&lt;A&gt;, id::BindGroupId&gt;,
-        render_pipelines: <span class="kw-2">&amp;</span>Storage&lt;pipeline::RenderPipeline&lt;A&gt;, id::RenderPipelineId&gt;,
-        query_sets: <span class="kw-2">&amp;</span>Storage&lt;resource::QuerySet&lt;A&gt;, id::QuerySetId&gt;,
+        buffers: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;&gt;,
+        textures: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;&gt;,
+        bind_groups: <span class="kw-2">&amp;</span>Storage&lt;binding_model::BindGroup&lt;A&gt;&gt;,
+        render_pipelines: <span class="kw-2">&amp;</span>Storage&lt;pipeline::RenderPipeline&lt;A&gt;&gt;,
+        query_sets: <span class="kw-2">&amp;</span>Storage&lt;resource::QuerySet&lt;A&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>value = <span class="self">Self </span>{
             buffers: RwLock::new(BufferUsageScope::new()),
@@ -1046,8 +1039,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">impl</span>&lt;A: HalApi&gt; UsageScope&lt;A&gt; {
     <span class="doccomment">/// Create the render bundle scope and pull the maximum IDs from the hubs.
     </span><span class="kw">pub fn </span>new(
-        buffers: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;, id::BufferId&gt;,
-        textures: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;, id::TextureId&gt;,
+        buffers: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;&gt;,
+        textures: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="self">Self </span>{
             buffers: BufferUsageScope::new(),
@@ -1103,25 +1096,24 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ResourceTracker&lt;Id, R&gt;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ResourceTracker&lt;R&gt;
 <span class="kw">where
-    </span>Id: TypedId,
-    R: resource::Resource&lt;Id&gt;,
+    </span>R: resource::Resource,
 {
-    <span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id) -&gt; bool;
+    <span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;R::Marker&gt;) -&gt; bool;
 }
 
 <span class="doccomment">/// A full double sided tracker used by CommandBuffers and the Device.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Tracker&lt;A: HalApi&gt; {
     <span class="kw">pub </span>buffers: BufferTracker&lt;A&gt;,
     <span class="kw">pub </span>textures: TextureTracker&lt;A&gt;,
-    <span class="kw">pub </span>views: StatelessTracker&lt;A, id::TextureViewId, resource::TextureView&lt;A&gt;&gt;,
-    <span class="kw">pub </span>samplers: StatelessTracker&lt;A, id::SamplerId, resource::Sampler&lt;A&gt;&gt;,
-    <span class="kw">pub </span>bind_groups: StatelessTracker&lt;A, id::BindGroupId, binding_model::BindGroup&lt;A&gt;&gt;,
-    <span class="kw">pub </span>compute_pipelines: StatelessTracker&lt;A, id::ComputePipelineId, pipeline::ComputePipeline&lt;A&gt;&gt;,
-    <span class="kw">pub </span>render_pipelines: StatelessTracker&lt;A, id::RenderPipelineId, pipeline::RenderPipeline&lt;A&gt;&gt;,
-    <span class="kw">pub </span>bundles: StatelessTracker&lt;A, id::RenderBundleId, command::RenderBundle&lt;A&gt;&gt;,
-    <span class="kw">pub </span>query_sets: StatelessTracker&lt;A, id::QuerySetId, resource::QuerySet&lt;A&gt;&gt;,
+    <span class="kw">pub </span>views: StatelessTracker&lt;A, resource::TextureView&lt;A&gt;&gt;,
+    <span class="kw">pub </span>samplers: StatelessTracker&lt;A, resource::Sampler&lt;A&gt;&gt;,
+    <span class="kw">pub </span>bind_groups: StatelessTracker&lt;A, binding_model::BindGroup&lt;A&gt;&gt;,
+    <span class="kw">pub </span>compute_pipelines: StatelessTracker&lt;A, pipeline::ComputePipeline&lt;A&gt;&gt;,
+    <span class="kw">pub </span>render_pipelines: StatelessTracker&lt;A, pipeline::RenderPipeline&lt;A&gt;&gt;,
+    <span class="kw">pub </span>bundles: StatelessTracker&lt;A, command::RenderBundle&lt;A&gt;&gt;,
+    <span class="kw">pub </span>query_sets: StatelessTracker&lt;A, resource::QuerySet&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Tracker&lt;A&gt; {
@@ -1142,15 +1134,15 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="doccomment">/// Pull the maximum IDs from the hubs.
     </span><span class="kw">pub fn </span>set_size(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;, id::BufferId&gt;&gt;,
-        textures: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;, id::TextureId&gt;&gt;,
-        views: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::TextureView&lt;A&gt;, id::TextureViewId&gt;&gt;,
-        samplers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Sampler&lt;A&gt;, id::SamplerId&gt;&gt;,
-        bind_groups: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;binding_model::BindGroup&lt;A&gt;, id::BindGroupId&gt;&gt;,
-        compute_pipelines: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;pipeline::ComputePipeline&lt;A&gt;, id::ComputePipelineId&gt;&gt;,
-        render_pipelines: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;pipeline::RenderPipeline&lt;A&gt;, id::RenderPipelineId&gt;&gt;,
-        bundles: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;command::RenderBundle&lt;A&gt;, id::RenderBundleId&gt;&gt;,
-        query_sets: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::QuerySet&lt;A&gt;, id::QuerySetId&gt;&gt;,
+        buffers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;&gt;&gt;,
+        textures: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;&gt;&gt;,
+        views: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::TextureView&lt;A&gt;&gt;&gt;,
+        samplers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::Sampler&lt;A&gt;&gt;&gt;,
+        bind_groups: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;binding_model::BindGroup&lt;A&gt;&gt;&gt;,
+        compute_pipelines: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;pipeline::ComputePipeline&lt;A&gt;&gt;&gt;,
+        render_pipelines: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;pipeline::RenderPipeline&lt;A&gt;&gt;&gt;,
+        bundles: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;command::RenderBundle&lt;A&gt;&gt;&gt;,
+        query_sets: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Storage&lt;resource::QuerySet&lt;A&gt;&gt;&gt;,
     ) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = buffers {
             <span class="self">self</span>.buffers.set_size(buffers.len());

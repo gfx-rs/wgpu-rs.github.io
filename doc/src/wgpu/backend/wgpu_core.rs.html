@@ -3052,6 +3052,7 @@
 <a href="#3051" id="3051">3051</a>
 <a href="#3052" id="3052">3052</a>
 <a href="#3053" id="3053">3053</a>
+<a href="#3054" id="3054">3054</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3078,7 +3079,6 @@
 };
 <span class="kw">use </span>wgc::command::{bundle_ffi::<span class="kw-2">*</span>, compute_ffi::<span class="kw-2">*</span>, render_ffi::<span class="kw-2">*</span>};
 <span class="kw">use </span>wgc::device::DeviceLostClosure;
-<span class="kw">use </span>wgc::id::TypedId;
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="kw">const </span>LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"label"</span>;
@@ -3658,7 +3658,7 @@
             id: queue_id,
             error_sink,
         };
-        ready(<span class="prelude-val">Ok</span>((device_id, device, device_id, queue)))
+        ready(<span class="prelude-val">Ok</span>((device_id, device, device_id.transmute(), queue)))
     }
 
     <span class="kw">fn </span>instance_poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; bool {
@@ -4859,7 +4859,8 @@
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="macro">wgc::gfx_select!</span>(
             encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_run_compute_pass(<span class="kw-2">*</span>encoder, pass_data)
         ) {
-            <span class="kw">let </span>name = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(<span class="kw-2">*</span>encoder));
+            <span class="kw">let </span>name =
+                <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.transmute()));
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,
@@ -4942,7 +4943,8 @@
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
             <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_run_render_pass(<span class="kw-2">*</span>encoder, pass_data))
         {
-            <span class="kw">let </span>name = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(<span class="kw-2">*</span>encoder));
+            <span class="kw">let </span>name =
+                <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.transmute()));
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,
@@ -5976,10 +5978,10 @@
 
 <span class="kw">impl</span>&lt;T&gt; From&lt;ObjectId&gt; <span class="kw">for </span>wgc::id::Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: wgc::id::Marker,
 {
     <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>id = id.id();
+        <span class="kw">let </span>id = wgc::id::RawId::from_non_zero(id.id());
         <span class="comment">// SAFETY: The id was created via the impl below
         </span><span class="kw">unsafe </span>{ <span class="self">Self</span>::from_raw(id) }
     }
@@ -5987,10 +5989,10 @@
 
 <span class="kw">impl</span>&lt;T&gt; From&lt;wgc::id::Id&lt;T&gt;&gt; <span class="kw">for </span>ObjectId
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: wgc::id::Marker,
 {
     <span class="kw">fn </span>from(id: wgc::id::Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>id = id.into_raw();
+        <span class="kw">let </span>id = id.into_raw().into_non_zero();
         <span class="self">Self</span>::from_global_id(id)
     }
 }

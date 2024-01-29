@@ -1527,6 +1527,16 @@
 <a href="#1526" id="1526">1526</a>
 <a href="#1527" id="1527">1527</a>
 <a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1537,10 +1547,7 @@
     },
     global::Global,
     hal_api::HalApi,
-    id::{
-        AdapterId, BufferId, DeviceId, QuerySetId, SamplerId, StagingBufferId, SurfaceId,
-        TextureId, TextureViewId, TypedId,
-    },
+    id::{AdapterId, BufferId, DeviceId, Id, Marker, SurfaceId, TextureId},
     identity::{GlobalIdentityHandlerFactory, IdentityManager},
     init_tracker::{BufferInitTracker, TextureInitTracker},
     resource, resource_log,
@@ -1588,9 +1595,9 @@
 /// [`Device`]: crate::device::resource::Device
 /// [`Buffer`]: crate::resource::Buffer
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ResourceInfo&lt;Id: TypedId&gt; {
-    id: <span class="prelude-ty">Option</span>&lt;Id&gt;,
-    identity: <span class="prelude-ty">Option</span>&lt;Arc&lt;IdentityManager&lt;Id&gt;&gt;&gt;,
+</span><span class="kw">pub struct </span>ResourceInfo&lt;T: Resource&gt; {
+    id: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;,
+    identity: <span class="prelude-ty">Option</span>&lt;Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;&gt;,
     <span class="doccomment">/// The index of the last queue submission in which the resource
     /// was used.
     ///
@@ -1604,7 +1611,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
-<span class="kw">impl</span>&lt;Id: TypedId&gt; Drop <span class="kw">for </span>ResourceInfo&lt;Id&gt; {
+<span class="kw">impl</span>&lt;T: Resource&gt; Drop <span class="kw">for </span>ResourceInfo&lt;T&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(identity) = <span class="self">self</span>.identity.as_ref() {
             <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
@@ -1613,7 +1620,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Id: TypedId&gt; ResourceInfo&lt;Id&gt; {
+<span class="kw">impl</span>&lt;T: Resource&gt; ResourceInfo&lt;T&gt; {
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -1626,7 +1633,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug
     <span class="kw">where
-        </span>Id: Debug,
+        </span>Id&lt;T::Marker&gt;: Debug,
     {
         <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
             <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
@@ -1639,11 +1646,11 @@
         <span class="kw-2">&amp;</span><span class="string">""
     </span>}
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
         <span class="self">self</span>.id.unwrap()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id, identity: <span class="kw-2">&amp;</span>Arc&lt;IdentityManager&lt;Id&gt;&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, identity: <span class="kw-2">&amp;</span>Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;) {
         <span class="self">self</span>.id = <span class="prelude-val">Some</span>(id);
         <span class="self">self</span>.identity = <span class="prelude-val">Some</span>(identity.clone());
     }
@@ -1662,10 +1669,11 @@
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>ResourceType = <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
 
-<span class="kw">pub trait </span>Resource&lt;Id: TypedId&gt;: <span class="lifetime">'static </span>+ WasmNotSendSync {
+<span class="kw">pub trait </span>Resource: <span class="lifetime">'static </span>+ Sized + WasmNotSendSync {
+    <span class="kw">type </span>Marker: Marker;
     <span class="kw">const </span>TYPE: ResourceType;
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;Id&gt;;
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;Id&gt;;
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
     <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="self">self</span>.as_info().label.clone()
     }
@@ -1906,7 +1914,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
     <span class="kw">pub</span>(<span class="kw">crate</span>) initialization_status: RwLock&lt;BufferInitTracker&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) sync_mapped_writes: Mutex&lt;<span class="prelude-ty">Option</span>&lt;hal::MemoryRange&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BufferId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Buffer&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) map_state: Mutex&lt;BufferMapState&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;&gt;,
 }
@@ -2121,14 +2129,16 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BufferId&gt; <span class="kw">for </span>Buffer&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Buffer&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Buffer"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BufferId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Buffer;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BufferId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -2222,7 +2232,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_coherent: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;StagingBufferId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;StagingBuffer&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
@@ -2237,14 +2247,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;StagingBufferId&gt; <span class="kw">for </span>StagingBuffer&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>StagingBuffer&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"StagingBuffer"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;StagingBufferId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::StagingBuffer;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;StagingBufferId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 
@@ -2302,7 +2314,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) format_features: wgt::TextureFormatFeatures,
     <span class="kw">pub</span>(<span class="kw">crate</span>) initialization_status: RwLock&lt;TextureInitTracker&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) full_range: TextureSelector,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;TextureId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Texture&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: RwLock&lt;TextureClearMode&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;Vec&lt;Weak&lt;TextureView&lt;A&gt;&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;&gt;,
@@ -2695,14 +2707,16 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;TextureId&gt; <span class="kw">for </span>Texture&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Texture&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Texture"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;TextureId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Texture;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;TextureId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -2780,7 +2794,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) render_extent: <span class="prelude-ty">Result</span>&lt;wgt::Extent3d, TextureViewNotRenderableReason&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) samples: u32,
     <span class="kw">pub</span>(<span class="kw">crate</span>) selector: TextureSelector,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;TextureViewId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;TextureView&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>TextureView&lt;A&gt; {
@@ -2858,14 +2872,16 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TextureViewDestroyError {}
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;TextureViewId&gt; <span class="kw">for </span>TextureView&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>TextureView&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"TextureView"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;TextureViewId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::TextureView;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;TextureViewId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -2903,7 +2919,7 @@
 </span><span class="kw">pub struct </span>Sampler&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::Sampler&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;SamplerId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;<span class="self">Self</span>&gt;,
     <span class="doccomment">/// `true` if this is a comparison sampler
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) comparison: bool,
     <span class="doccomment">/// `true` if this is a filtering sampler
@@ -2977,14 +2993,16 @@
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;SamplerId&gt; <span class="kw">for </span>Sampler&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Sampler&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Sampler"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;SamplerId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Sampler;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;SamplerId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -3008,7 +3026,7 @@
 </span><span class="kw">pub struct </span>QuerySet&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::QuerySet&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;QuerySetId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;<span class="self">Self</span>&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) desc: wgt::QuerySetDescriptor&lt;()&gt;,
 }
 
@@ -3029,14 +3047,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;QuerySetId&gt; <span class="kw">for </span>QuerySet&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>QuerySet&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"QuerySet"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;QuerySetId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::QuerySet;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;QuerySetId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }

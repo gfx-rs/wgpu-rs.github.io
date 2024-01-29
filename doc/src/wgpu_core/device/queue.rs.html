@@ -1567,6 +1567,9 @@
 <a href="#1566" id="1566">1566</a>
 <a href="#1567" id="1567">1567</a>
 <a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1581,6 +1584,7 @@
     global::Global,
     hal_api::HalApi,
     hal_label,
+    id::markers,
     id::{<span class="self">self</span>, QueueId},
     identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
@@ -1606,17 +1610,19 @@
 <span class="kw">pub struct </span>Queue&lt;A: HalApi&gt; {
     <span class="kw">pub </span>device: <span class="prelude-ty">Option</span>&lt;Arc&lt;Device&lt;A&gt;&gt;&gt;,
     <span class="kw">pub </span>raw: <span class="prelude-ty">Option</span>&lt;A::Queue&gt;,
-    <span class="kw">pub </span>info: ResourceInfo&lt;QueueId&gt;,
+    <span class="kw">pub </span>info: ResourceInfo&lt;Queue&lt;A&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;QueueId&gt; <span class="kw">for </span>Queue&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Queue&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Queue"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;QueueId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Queue;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;QueueId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
@@ -2005,7 +2011,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
         buffer_size: wgt::BufferSize,
-        id_in: Input&lt;G, id::StagingBufferId&gt;,
+        id_in: Input&lt;G, markers::StagingBuffer&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(id::StagingBufferId, <span class="kw-2">*mut </span>u8), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::create_staging_buffer"</span>);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -2020,7 +2026,7 @@
         <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
             prepare_staging_buffer(device, buffer_size.get(), device.instance_flags)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>fid = hub.staging_buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.staging_buffers.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
         <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(staging_buffer);
         <span class="macro">resource_log!</span>(<span class="string">"Queue::create_staging_buffer {id:?}"</span>);
 
@@ -2238,7 +2244,7 @@
             .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst.device.as_info().id() != queue_id {
+        <span class="kw">if </span>dst.device.as_info().id() != queue_id.transmute() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
         }
 
@@ -2719,7 +2725,7 @@
                             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                         };
 
-                        <span class="kw">if </span>cmdbuf.device.as_info().id() != queue_id {
+                        <span class="kw">if </span>cmdbuf.device.as_info().id() != queue_id.transmute() {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
                         }
 

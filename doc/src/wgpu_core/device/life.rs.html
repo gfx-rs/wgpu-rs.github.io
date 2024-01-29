@@ -830,7 +830,6 @@
 <a href="#829" id="829">829</a>
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -840,7 +839,7 @@
     },
     hal_api::HalApi,
     id::{
-        <span class="self">self</span>, BindGroupId, BindGroupLayoutId, BufferId, ComputePipelineId, PipelineLayoutId,
+        <span class="self">self</span>, BindGroupId, BindGroupLayoutId, BufferId, ComputePipelineId, Id, PipelineLayoutId,
         QuerySetId, RenderBundleId, RenderPipelineId, SamplerId, StagingBufferId, TextureId,
         TextureViewId,
     },
@@ -1252,15 +1251,14 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; LifetimeTracker&lt;A&gt; {
-    <span class="kw">fn </span>triage_resources&lt;Id, R&gt;(
-        resources_map: <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;,
+    <span class="kw">fn </span>triage_resources&lt;R&gt;(
+        resources_map: <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id&lt;R::Marker&gt;, Arc&lt;R&gt;&gt;,
         active: <span class="kw-2">&amp;mut </span>[ActiveSubmission&lt;A&gt;],
-        trackers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ResourceTracker&lt;Id, R&gt;,
-        get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id, Arc&lt;R&gt;&gt;,
+        trackers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ResourceTracker&lt;R&gt;,
+        get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id&lt;R::Marker&gt;, Arc&lt;R&gt;&gt;,
     ) -&gt; Vec&lt;Arc&lt;R&gt;&gt;
     <span class="kw">where
-        </span>Id: id::TypedId,
-        R: Resource&lt;Id&gt;,
+        </span>R: Resource,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = Vec::new();
         resources_map.retain(|<span class="kw-2">&amp;</span>id, resource| {

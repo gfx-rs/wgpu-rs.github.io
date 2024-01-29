@@ -250,7 +250,7 @@
 <a href="#249" id="249">249</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `ResourceMetadata` type.
 
-</span><span class="kw">use crate</span>::{hal_api::HalApi, id::TypedId, resource::Resource, Epoch};
+</span><span class="kw">use crate</span>::{hal_api::HalApi, resource::Resource, Epoch};
 <span class="kw">use </span>bit_vec::BitVec;
 <span class="kw">use </span>std::{borrow::Cow, marker::PhantomData, mem, sync::Arc};
 <span class="kw">use </span>wgt::strict_assert;
@@ -263,7 +263,7 @@
 /// members, but a bit vector tracks occupancy, so iteration touches
 /// only occupied elements.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ResourceMetadata&lt;A: HalApi, I: TypedId, T: Resource&lt;I&gt;&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ResourceMetadata&lt;A: HalApi, T: Resource&gt; {
     <span class="doccomment">/// If the resource with index `i` is a member, `owned[i]` is `true`.
     </span>owned: BitVec&lt;usize&gt;,
 
@@ -271,10 +271,10 @@
     </span>resources: Vec&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt;&gt;,
 
     <span class="doccomment">/// This tells Rust that this type should be covariant with `A`.
-    </span>_phantom: PhantomData&lt;(A, I)&gt;,
+    </span>_phantom: PhantomData&lt;A&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi, I: TypedId, T: Resource&lt;I&gt;&gt; ResourceMetadata&lt;A, I, T&gt; {
+<span class="kw">impl</span>&lt;A: HalApi, T: Resource&gt; ResourceMetadata&lt;A, T&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             owned: BitVec::default(),
@@ -422,15 +422,15 @@
 ///
 /// This is used to abstract over the various places
 /// trackers can get new resource metadata from.
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>ResourceMetadataProvider&lt;<span class="lifetime">'a</span>, A: HalApi, I: TypedId, T: Resource&lt;I&gt;&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>ResourceMetadataProvider&lt;<span class="lifetime">'a</span>, A: HalApi, T: Resource&gt; {
     <span class="doccomment">/// Comes directly from explicit values.
     </span>Direct { resource: Cow&lt;<span class="lifetime">'a</span>, Arc&lt;T&gt;&gt; },
     <span class="doccomment">/// Comes from another metadata tracker.
     </span>Indirect {
-        metadata: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ResourceMetadata&lt;A, I, T&gt;,
+        metadata: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ResourceMetadata&lt;A, T&gt;,
     },
 }
-<span class="kw">impl</span>&lt;A: HalApi, I: TypedId, T: Resource&lt;I&gt;&gt; ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, I, T&gt; {
+<span class="kw">impl</span>&lt;A: HalApi, T: Resource&gt; ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, A, T&gt; {
     <span class="doccomment">/// Get the epoch and an owned refcount from this.
     ///
     /// # Safety

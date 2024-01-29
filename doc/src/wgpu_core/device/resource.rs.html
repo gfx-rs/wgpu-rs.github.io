@@ -3452,6 +3452,8 @@
 <a href="#3451" id="3451">3451</a>
 <a href="#3452" id="3452">3452</a>
 <a href="#3453" id="3453">3453</a>
+<a href="#3454" id="3454">3454</a>
+<a href="#3455" id="3455">3455</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3466,7 +3468,7 @@
     hal_api::HalApi,
     hal_label,
     hub::Hub,
-    id::{<span class="self">self</span>, DeviceId, QueueId},
+    id::QueueId,
     init_tracker::{
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTracker, TextureInitTrackerAction,
@@ -3544,7 +3546,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) queue_id: RwLock&lt;<span class="prelude-ty">Option</span>&lt;QueueId&gt;&gt;,
     queue_to_drop: RwLock&lt;<span class="prelude-ty">Option</span>&lt;A::Queue&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) zero_buffer: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;DeviceId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Device&lt;A&gt;&gt;,
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: Mutex&lt;<span class="prelude-ty">Option</span>&lt;CommandAllocator&lt;A&gt;&gt;&gt;,
     <span class="comment">//Note: The submission index here corresponds to the last submission that is done.
@@ -5239,7 +5241,7 @@
         dynamic_binding_info: <span class="kw-2">&amp;mut </span>Vec&lt;binding_model::BindGroupDynamicBindingData&gt;,
         late_buffer_binding_sizes: <span class="kw-2">&amp;mut </span>FastHashMap&lt;u32, wgt::BufferSize&gt;,
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;, id::BufferId&gt;,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
         snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
@@ -5840,7 +5842,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_pipeline_layout(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         desc: <span class="kw-2">&amp;</span>binding_model::PipelineLayoutDescriptor,
-        bgl_registry: <span class="kw-2">&amp;</span>Registry&lt;id::BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;,
+        bgl_registry: <span class="kw-2">&amp;</span>Registry&lt;BindGroupLayout&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;binding_model::PipelineLayout&lt;A&gt;, binding_model::CreatePipelineLayoutError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreatePipelineLayoutError <span class="kw">as </span>Error;
 
@@ -5953,8 +5955,8 @@
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         implicit_context: <span class="prelude-ty">Option</span>&lt;ImplicitPipelineContext&gt;,
         <span class="kw-2">mut </span>derived_group_layouts: ArrayVec&lt;bgl::EntryMap, { hal::MAX_BIND_GROUPS }&gt;,
-        bgl_registry: <span class="kw-2">&amp;</span>Registry&lt;id::BindGroupLayoutId, BindGroupLayout&lt;A&gt;&gt;,
-        pipeline_layout_registry: <span class="kw-2">&amp;</span>Registry&lt;id::PipelineLayoutId, binding_model::PipelineLayout&lt;A&gt;&gt;,
+        bgl_registry: <span class="kw-2">&amp;</span>Registry&lt;BindGroupLayout&lt;A&gt;&gt;,
+        pipeline_layout_registry: <span class="kw-2">&amp;</span>Registry&lt;binding_model::PipelineLayout&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;binding_model::PipelineLayout&lt;A&gt;&gt;, pipeline::ImplicitLayoutError&gt; {
         <span class="kw">while </span>derived_group_layouts
             .last()
@@ -6894,14 +6896,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;DeviceId&gt; <span class="kw">for </span>Device&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Device&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Device"</span>;
 
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;DeviceId&gt; {
+    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Device;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;DeviceId&gt; {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }

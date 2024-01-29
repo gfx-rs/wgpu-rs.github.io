@@ -302,9 +302,86 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Epoch, Index};
 <span class="kw">use </span>std::{
-    any::Any,
     cmp::Ordering,
     fmt::{<span class="self">self</span>, Debug},
     hash::Hash,
@@ -313,15 +390,74 @@
 <span class="kw">use </span>wgt::{Backend, WasmNotSendSync};
 
 <span class="kw">type </span>IdType = u64;
-<span class="kw">type </span>NonZeroId = std::num::NonZeroU64;
 <span class="kw">type </span>ZippedIndex = Index;
+<span class="kw">type </span>NonZeroId = std::num::NonZeroU64;
 
 <span class="kw">const </span>INDEX_BITS: usize = std::mem::size_of::&lt;ZippedIndex&gt;() * <span class="number">8</span>;
 <span class="kw">const </span>EPOCH_BITS: usize = INDEX_BITS - BACKEND_BITS;
 <span class="kw">const </span>BACKEND_BITS: usize = <span class="number">3</span>;
 <span class="kw">const </span>BACKEND_SHIFT: usize = INDEX_BITS * <span class="number">2 </span>- BACKEND_BITS;
 <span class="kw">pub const </span>EPOCH_MASK: u32 = (<span class="number">1 </span>&lt;&lt; (EPOCH_BITS)) - <span class="number">1</span>;
-<span class="kw">type </span>Dummy = hal::api::Empty;
+
+<span class="doccomment">/// The raw underlying representation of an identifier.
+</span><span class="attr">#[repr(transparent)]
+#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"trace"</span>), derive(serde::Serialize))]
+#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>), derive(serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">"trace"</span>, serde(into = <span class="string">"SerialId"</span>))]
+#[cfg_attr(feature = <span class="string">"replay"</span>, serde(from = <span class="string">"SerialId"</span>))]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub struct </span>RawId(NonZeroId);
+
+<span class="kw">impl </span>RawId {
+    <span class="attr">#[doc(hidden)]
+    #[inline]
+    </span><span class="kw">pub fn </span>from_non_zero(non_zero: NonZeroId) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(non_zero)
+    }
+
+    <span class="attr">#[doc(hidden)]
+    #[inline]
+    </span><span class="kw">pub fn </span>into_non_zero(<span class="self">self</span>) -&gt; NonZeroId {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
+
+    <span class="doccomment">/// Zip together an identifier and return its raw underlying representation.
+    </span><span class="kw">pub fn </span>zip(index: Index, epoch: Epoch, backend: Backend) -&gt; RawId {
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, epoch &gt;&gt; EPOCH_BITS);
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, (index <span class="kw">as </span>IdType) &gt;&gt; INDEX_BITS);
+        <span class="kw">let </span>v = index <span class="kw">as </span>IdType
+            | ((epoch <span class="kw">as </span>IdType) &lt;&lt; INDEX_BITS)
+            | ((backend <span class="kw">as </span>IdType) &lt;&lt; BACKEND_SHIFT);
+        <span class="self">Self</span>(NonZeroId::new(v).unwrap())
+    }
+
+    <span class="doccomment">/// Unzip a raw identifier into its components.
+    </span><span class="attr">#[allow(trivial_numeric_casts)]
+    </span><span class="kw">pub fn </span>unzip(<span class="self">self</span>) -&gt; (Index, Epoch, Backend) {
+        (
+            (<span class="self">self</span>.<span class="number">0</span>.get() <span class="kw">as </span>ZippedIndex) <span class="kw">as </span>Index,
+            (((<span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; INDEX_BITS) <span class="kw">as </span>ZippedIndex) &amp; (EPOCH_MASK <span class="kw">as </span>ZippedIndex)) <span class="kw">as </span>Index,
+            <span class="self">self</span>.backend(),
+        )
+    }
+
+    <span class="kw">pub fn </span>backend(<span class="self">self</span>) -&gt; Backend {
+        <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; (BACKEND_SHIFT) <span class="kw">as </span>u8 {
+            <span class="number">0 </span>=&gt; Backend::Empty,
+            <span class="number">1 </span>=&gt; Backend::Vulkan,
+            <span class="number">2 </span>=&gt; Backend::Metal,
+            <span class="number">3 </span>=&gt; Backend::Dx12,
+            <span class="number">4 </span>=&gt; Backend::Gl,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
+}
+
+<span class="doccomment">/// Coerce a slice of identifiers into a slice of raw identifiers.
+</span><span class="kw">pub fn </span>into_raw_slice&lt;T: Marker&gt;(ids: <span class="kw-2">&amp;</span>[Id&lt;T&gt;]) -&gt; <span class="kw-2">&amp;</span>[RawId] {
+    <span class="comment">// SAFETY: Any Id&lt;T&gt; is repr(transparent) over `RawId`.
+    </span><span class="kw">unsafe </span>{ std::slice::from_raw_parts(ids.as_ptr().cast(), ids.len()) }
+}
 
 <span class="doccomment">/// An identifier for a wgpu object.
 ///
@@ -353,21 +489,13 @@
 /// [`Registry`]: crate::hub::Registry
 /// [`Empty`]: hal::api::Empty
 </span><span class="attr">#[repr(transparent)]
-#[cfg_attr(feature = <span class="string">"trace"</span>, derive(serde::Serialize), serde(into = <span class="string">"SerialId"</span>))]
+#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"trace"</span>), derive(serde::Serialize))]
+#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>), derive(serde::Deserialize))]
 #[cfg_attr(
-    feature = <span class="string">"replay"</span>,
-    derive(serde::Deserialize),
-    serde(from = <span class="string">"SerialId"</span>)
+    any(feature = <span class="string">"serde"</span>, feature = <span class="string">"trace"</span>, feature = <span class="string">"replay"</span>),
+    serde(transparent)
 )]
-#[cfg_attr(
-    all(feature = <span class="string">"serde"</span>, not(feature = <span class="string">"trace"</span>)),
-    derive(serde::Serialize)
-)]
-#[cfg_attr(
-    all(feature = <span class="string">"serde"</span>, not(feature = <span class="string">"replay"</span>)),
-    derive(serde::Deserialize)
-)]
-</span><span class="kw">pub struct </span>Id&lt;T: <span class="lifetime">'static </span>+ WasmNotSendSync&gt;(NonZeroId, PhantomData&lt;T&gt;);
+</span><span class="kw">pub struct </span>Id&lt;T: Marker&gt;(RawId, PhantomData&lt;T&gt;);
 
 <span class="comment">// This type represents Id in a more readable (and editable) way.
 </span><span class="attr">#[allow(dead_code)]
@@ -376,38 +504,39 @@
     <span class="comment">// The only variant forces RON to not ignore "Id"
     </span>Id(Index, Epoch, Backend),
 }
+
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; From&lt;Id&lt;T&gt;&gt; <span class="kw">for </span>SerialId
-<span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
-{
-    <span class="kw">fn </span>from(id: Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
+</span><span class="kw">impl </span>From&lt;RawId&gt; <span class="kw">for </span>SerialId {
+    <span class="kw">fn </span>from(id: RawId) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(index, epoch, backend) = id.unzip();
         <span class="self">Self</span>::Id(index, epoch, backend)
     }
 }
+
 <span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
-</span><span class="kw">impl</span>&lt;T&gt; From&lt;SerialId&gt; <span class="kw">for </span>Id&lt;T&gt;
-<span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
-{
+</span><span class="kw">impl </span>From&lt;SerialId&gt; <span class="kw">for </span>RawId {
     <span class="kw">fn </span>from(id: SerialId) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>id {
-            SerialId::Id(index, epoch, backend) =&gt; TypedId::zip(index, epoch, backend),
+            SerialId::Id(index, epoch, backend) =&gt; RawId::zip(index, epoch, backend),
         }
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
     <span class="doccomment">/// # Safety
     ///
     /// The raw id must be valid for the type.
-    </span><span class="kw">pub unsafe fn </span>from_raw(raw: NonZeroId) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub unsafe fn </span>from_raw(raw: RawId) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(raw, PhantomData)
     }
+
+    <span class="doccomment">/// Coerce the identifiers into its raw underlying representation.
+    </span><span class="kw">pub fn </span>into_raw(<span class="self">self</span>) -&gt; RawId {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
 
     <span class="attr">#[allow(dead_code)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dummy(index: u32) -&gt; <span class="self">Self </span>{
@@ -419,32 +548,61 @@
         <span class="self">self</span>.backend() != Backend::Empty
     }
 
-    <span class="kw">pub fn </span>backend(<span class="self">self</span>) -&gt; Backend {
-        <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; (BACKEND_SHIFT) <span class="kw">as </span>u8 {
-            <span class="number">0 </span>=&gt; Backend::Empty,
-            <span class="number">1 </span>=&gt; Backend::Vulkan,
-            <span class="number">2 </span>=&gt; Backend::Metal,
-            <span class="number">3 </span>=&gt; Backend::Dx12,
-            <span class="number">4 </span>=&gt; Backend::Gl,
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
+    <span class="doccomment">/// Get the backend this identifier corresponds to.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>backend(<span class="self">self</span>) -&gt; Backend {
+        <span class="self">self</span>.<span class="number">0</span>.backend()
+    }
+
+    <span class="doccomment">/// Transmute this identifier to one with a different marker trait.
+    ///
+    /// Legal use is governed through a sealed trait, however it's correctness
+    /// depends on the current implementation of `wgpu-core`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>transmute&lt;U: <span class="self">self</span>::transmute::Transmute&lt;T&gt;&gt;(<span class="self">self</span>) -&gt; Id&lt;U&gt; {
+        Id(<span class="self">self</span>.<span class="number">0</span>, PhantomData)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>zip(index: Index, epoch: Epoch, backend: Backend) -&gt; <span class="self">Self </span>{
+        Id(RawId::zip(index, epoch, backend), PhantomData)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>unzip(<span class="self">self</span>) -&gt; (Index, Epoch, Backend) {
+        <span class="self">self</span>.<span class="number">0</span>.unzip()
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Copy <span class="kw">for </span>Id&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync {}
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>transmute {
+    <span class="comment">// This trait is effectively sealed to prevent illegal transmutes.
+    </span><span class="kw">pub trait </span>Transmute&lt;U&gt;: <span class="kw">super</span>::Marker {}
+
+    <span class="comment">// Self-transmute is always legal.
+    </span><span class="kw">impl</span>&lt;T&gt; Transmute&lt;T&gt; <span class="kw">for </span>T <span class="kw">where </span>T: <span class="kw">super</span>::Marker {}
+
+    <span class="comment">// TODO: Remove these once queues have their own identifiers.
+    </span><span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::Queue&gt; <span class="kw">for </span><span class="kw">super</span>::markers::Device {}
+    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::Device&gt; <span class="kw">for </span><span class="kw">super</span>::markers::Queue {}
+    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::CommandBuffer&gt; <span class="kw">for </span><span class="kw">super</span>::markers::CommandEncoder {}
+    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::CommandEncoder&gt; <span class="kw">for </span><span class="kw">super</span>::markers::CommandBuffer {}
+}
+
+<span class="kw">impl</span>&lt;T&gt; Copy <span class="kw">for </span>Id&lt;T&gt; <span class="kw">where </span>T: Marker {}
 
 <span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw-2">*</span><span class="self">self
     </span>}
 }
 
 <span class="kw">impl</span>&lt;T&gt; Debug <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">let </span>(index, epoch, backend) = <span class="self">self</span>.unzip();
@@ -463,107 +621,105 @@
 
 <span class="kw">impl</span>&lt;T&gt; Hash <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
-    <span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
         <span class="self">self</span>.<span class="number">0</span>.hash(state);
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; PartialEq <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
-    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="self">self</span>.<span class="number">0 </span>== other.<span class="number">0
     </span>}
 }
 
-<span class="kw">impl</span>&lt;T&gt; Eq <span class="kw">for </span>Id&lt;T&gt; <span class="kw">where </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync {}
+<span class="kw">impl</span>&lt;T&gt; Eq <span class="kw">for </span>Id&lt;T&gt; <span class="kw">where </span>T: Marker {}
 
 <span class="kw">impl</span>&lt;T&gt; PartialOrd <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
-    <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
         <span class="self">self</span>.<span class="number">0</span>.partial_cmp(<span class="kw-2">&amp;</span>other.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; Ord <span class="kw">for </span>Id&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
+    </span>T: Marker,
 {
-    <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
         <span class="self">self</span>.<span class="number">0</span>.cmp(<span class="kw-2">&amp;</span>other.<span class="number">0</span>)
     }
 }
 
-<span class="doccomment">/// Trait carrying methods for direct `Id` access.
+<span class="doccomment">/// Marker trait used to determine which types uniquely identify a resource.
 ///
-/// Most `wgpu-core` clients should not use this trait. Unusual clients that
-/// need to construct `Id` values directly, or access their components, like the
-/// WGPU recording player, may use this trait to do so.
-</span><span class="kw">pub trait </span>TypedId: Copy + Debug + Any + <span class="lifetime">'static </span>+ WasmNotSendSync + Eq + Hash {
-    <span class="kw">fn </span>zip(index: Index, epoch: Epoch, backend: Backend) -&gt; <span class="self">Self</span>;
-    <span class="kw">fn </span>unzip(<span class="self">self</span>) -&gt; (Index, Epoch, Backend);
-    <span class="kw">fn </span>into_raw(<span class="self">self</span>) -&gt; NonZeroId;
+/// For example, `Device&lt;A&gt;` will have the same type of identifier as
+/// `Device&lt;B&gt;` because `Device&lt;T&gt;` for any `T` defines the same maker type.
+</span><span class="kw">pub trait </span>Marker: <span class="lifetime">'static </span>+ WasmNotSendSync {}
+
+<span class="comment">// This allows `()` to be used as a marker type for tests.
+//
+// We don't want these in production code, since they essentially remove type
+// safety, like how identifiers across different types can be compared.
+</span><span class="attr">#[cfg(test)]
+</span><span class="kw">impl </span>Marker <span class="kw">for </span>() {}
+
+<span class="doccomment">/// Define identifiers for each resource.
+</span><span class="macro">macro_rules! </span>ids {
+    ($(
+        $(<span class="attr">#[$(<span class="macro-nonterminal">$meta</span>:meta)<span class="kw-2">*</span>]</span>)*
+        <span class="kw">pub type </span><span class="macro-nonterminal">$name</span>:ident <span class="macro-nonterminal">$marker</span>:ident;
+    )<span class="kw-2">*</span>) =&gt; {
+        <span class="doccomment">/// Marker types for each resource.
+        </span><span class="kw">pub mod </span>markers {
+            $(
+                <span class="attr">#[derive(Debug)]
+                </span><span class="kw">pub enum </span><span class="macro-nonterminal">$marker </span>{}
+                <span class="kw">impl </span><span class="kw">super</span>::Marker <span class="kw">for </span><span class="macro-nonterminal">$marker </span>{}
+            )*
+        }
+
+        $(
+            $(<span class="attr">#[$(<span class="macro-nonterminal">$meta</span>)<span class="kw-2">*</span>]</span>)*
+            <span class="kw">pub type </span><span class="macro-nonterminal">$name </span>= Id&lt;<span class="self">self</span>::markers::<span class="macro-nonterminal">$marker</span>&gt;;
+        )*
+    }
 }
 
-<span class="attr">#[allow(trivial_numeric_casts)]
-</span><span class="kw">impl</span>&lt;T&gt; TypedId <span class="kw">for </span>Id&lt;T&gt;
-<span class="kw">where
-    </span>T: <span class="lifetime">'static </span>+ WasmNotSendSync,
-{
-    <span class="kw">fn </span>zip(index: Index, epoch: Epoch, backend: Backend) -&gt; <span class="self">Self </span>{
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, epoch &gt;&gt; EPOCH_BITS);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, (index <span class="kw">as </span>IdType) &gt;&gt; INDEX_BITS);
-        <span class="kw">let </span>v = index <span class="kw">as </span>IdType
-            | ((epoch <span class="kw">as </span>IdType) &lt;&lt; INDEX_BITS)
-            | ((backend <span class="kw">as </span>IdType) &lt;&lt; BACKEND_SHIFT);
-        Id(NonZeroId::new(v).unwrap(), PhantomData)
-    }
-
-    <span class="kw">fn </span>unzip(<span class="self">self</span>) -&gt; (Index, Epoch, Backend) {
-        (
-            (<span class="self">self</span>.<span class="number">0</span>.get() <span class="kw">as </span>ZippedIndex) <span class="kw">as </span>Index,
-            (((<span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; INDEX_BITS) <span class="kw">as </span>ZippedIndex) &amp; (EPOCH_MASK <span class="kw">as </span>ZippedIndex)) <span class="kw">as </span>Index,
-            <span class="self">self</span>.backend(),
-        )
-    }
-
-    <span class="kw">fn </span>into_raw(<span class="self">self</span>) -&gt; NonZeroId {
-        <span class="self">self</span>.<span class="number">0
-    </span>}
+<span class="macro">ids! </span>{
+    <span class="kw">pub type </span>AdapterId Adapter;
+    <span class="kw">pub type </span>SurfaceId Surface;
+    <span class="kw">pub type </span>DeviceId Device;
+    <span class="kw">pub type </span>QueueId Queue;
+    <span class="kw">pub type </span>BufferId Buffer;
+    <span class="kw">pub type </span>StagingBufferId StagingBuffer;
+    <span class="kw">pub type </span>TextureViewId TextureView;
+    <span class="kw">pub type </span>TextureId Texture;
+    <span class="kw">pub type </span>SamplerId Sampler;
+    <span class="kw">pub type </span>BindGroupLayoutId BindGroupLayout;
+    <span class="kw">pub type </span>PipelineLayoutId PipelineLayout;
+    <span class="kw">pub type </span>BindGroupId BindGroup;
+    <span class="kw">pub type </span>ShaderModuleId ShaderModule;
+    <span class="kw">pub type </span>RenderPipelineId RenderPipeline;
+    <span class="kw">pub type </span>ComputePipelineId ComputePipeline;
+    <span class="kw">pub type </span>CommandEncoderId CommandEncoder;
+    <span class="kw">pub type </span>CommandBufferId CommandBuffer;
+    <span class="kw">pub type </span>RenderPassEncoderId RenderPassEncoder;
+    <span class="kw">pub type </span>ComputePassEncoderId ComputePassEncoder;
+    <span class="kw">pub type </span>RenderBundleEncoderId RenderBundleEncoder;
+    <span class="kw">pub type </span>RenderBundleId RenderBundle;
+    <span class="kw">pub type </span>QuerySetId QuerySet;
 }
-
-<span class="kw">pub type </span>AdapterId = Id&lt;<span class="kw">crate</span>::instance::Adapter&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>SurfaceId = Id&lt;<span class="kw">crate</span>::instance::Surface&gt;;
-<span class="comment">// Device
-</span><span class="kw">pub type </span>DeviceId = Id&lt;<span class="kw">crate</span>::device::Device&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>QueueId = DeviceId;
-<span class="comment">// Resource
-</span><span class="kw">pub type </span>BufferId = Id&lt;<span class="kw">crate</span>::resource::Buffer&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>StagingBufferId = Id&lt;<span class="kw">crate</span>::resource::StagingBuffer&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>TextureViewId = Id&lt;<span class="kw">crate</span>::resource::TextureView&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>TextureId = Id&lt;<span class="kw">crate</span>::resource::Texture&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>SamplerId = Id&lt;<span class="kw">crate</span>::resource::Sampler&lt;Dummy&gt;&gt;;
-<span class="comment">// Binding model
-</span><span class="kw">pub type </span>BindGroupLayoutId = Id&lt;<span class="kw">crate</span>::binding_model::BindGroupLayout&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>PipelineLayoutId = Id&lt;<span class="kw">crate</span>::binding_model::PipelineLayout&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>BindGroupId = Id&lt;<span class="kw">crate</span>::binding_model::BindGroup&lt;Dummy&gt;&gt;;
-<span class="comment">// Pipeline
-</span><span class="kw">pub type </span>ShaderModuleId = Id&lt;<span class="kw">crate</span>::pipeline::ShaderModule&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>RenderPipelineId = Id&lt;<span class="kw">crate</span>::pipeline::RenderPipeline&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>ComputePipelineId = Id&lt;<span class="kw">crate</span>::pipeline::ComputePipeline&lt;Dummy&gt;&gt;;
-<span class="comment">// Command
-</span><span class="kw">pub type </span>CommandEncoderId = CommandBufferId;
-<span class="kw">pub type </span>CommandBufferId = Id&lt;<span class="kw">crate</span>::command::CommandBuffer&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>RenderPassEncoderId = <span class="kw-2">*mut </span><span class="kw">crate</span>::command::RenderPass;
-<span class="kw">pub type </span>ComputePassEncoderId = <span class="kw-2">*mut </span><span class="kw">crate</span>::command::ComputePass;
-<span class="kw">pub type </span>RenderBundleEncoderId = <span class="kw-2">*mut </span><span class="kw">crate</span>::command::RenderBundleEncoder;
-<span class="kw">pub type </span>RenderBundleId = Id&lt;<span class="kw">crate</span>::command::RenderBundle&lt;Dummy&gt;&gt;;
-<span class="kw">pub type </span>QuerySetId = Id&lt;<span class="kw">crate</span>::resource::QuerySet&lt;Dummy&gt;&gt;;
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_id_backend() {
@@ -574,7 +730,7 @@
         Backend::Dx12,
         Backend::Gl,
     ] {
-        <span class="kw">let </span>id: Id&lt;()&gt; = Id::zip(<span class="number">1</span>, <span class="number">0</span>, b);
+        <span class="kw">let </span>id = <span class="kw">crate</span>::id::Id::&lt;()&gt;::zip(<span class="number">1</span>, <span class="number">0</span>, b);
         <span class="kw">let </span>(_id, _epoch, backend) = id.unzip();
         <span class="macro">assert_eq!</span>(id.backend(), b);
         <span class="macro">assert_eq!</span>(backend, b);
@@ -596,7 +752,7 @@
     <span class="kw">for </span><span class="kw-2">&amp;</span>i <span class="kw">in </span><span class="kw-2">&amp;</span>indexes {
         <span class="kw">for </span><span class="kw-2">&amp;</span>e <span class="kw">in </span><span class="kw-2">&amp;</span>epochs {
             <span class="kw">for </span><span class="kw-2">&amp;</span>b <span class="kw">in </span><span class="kw-2">&amp;</span>backends {
-                <span class="kw">let </span>id: Id&lt;()&gt; = Id::zip(i, e, b);
+                <span class="kw">let </span>id = <span class="kw">crate</span>::id::Id::&lt;()&gt;::zip(i, e, b);
                 <span class="kw">let </span>(index, epoch, backend) = id.unzip();
                 <span class="macro">assert_eq!</span>(index, i);
                 <span class="macro">assert_eq!</span>(epoch, e);

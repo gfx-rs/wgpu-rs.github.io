@@ -2556,6 +2556,12 @@
 <a href="#2555" id="2555">2555</a>
 <a href="#2556" id="2556">2556</a>
 <a href="#2557" id="2557">2557</a>
+<a href="#2558" id="2558">2558</a>
+<a href="#2559" id="2559">2559</a>
+<a href="#2560" id="2560">2560</a>
+<a href="#2561" id="2561">2561</a>
+<a href="#2562" id="2562">2562</a>
+<a href="#2563" id="2563">2563</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2566,6 +2572,7 @@
     },
     global::Global,
     hal_api::HalApi,
+    id::markers,
     id::{<span class="self">self</span>, AdapterId, DeviceId, QueueId, SurfaceId},
     identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::TextureInitTracker,
@@ -2704,12 +2711,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
-        id_in: Input&lt;G, id::BufferId&gt;,
+        id_in: Input&lt;G, markers::Buffer&gt;,
     ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;CreateBufferError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span><span class="kw-2">mut </span>to_destroy: ArrayVec&lt;resource::Buffer&lt;A&gt;, <span class="number">2</span>&gt; = ArrayVec::new();
         <span class="kw">let </span>error = <span class="kw">loop </span>{
@@ -2867,20 +2874,20 @@
     /// [`device_create_buffer`]: Global::device_create_buffer
     /// [`usage`]: https://www.w3.org/TR/webgpu/#dom-gputexturedescriptor-usage
     /// [`wgpu_types::BufferUsages`]: wgt::BufferUsages
-    </span><span class="kw">pub fn </span>create_buffer_error&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: Input&lt;G, id::BufferId&gt;, label: Label) {
+    </span><span class="kw">pub fn </span>create_buffer_error&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: Input&lt;G, markers::Buffer&gt;, label: Label) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
 
     <span class="kw">pub fn </span>create_render_bundle_error&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id_in: Input&lt;G, id::RenderBundleId&gt;,
+        id_in: Input&lt;G, markers::RenderBundle&gt;,
         label: Label,
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.render_bundles.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.render_bundles.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
@@ -2888,9 +2895,9 @@
     <span class="doccomment">/// Assign `id_in` an error with the given `label`.
     ///
     /// See `create_buffer_error` for more context and explaination.
-    </span><span class="kw">pub fn </span>create_texture_error&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: Input&lt;G, id::TextureId&gt;, label: Label) {
+    </span><span class="kw">pub fn </span>create_texture_error&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: Input&lt;G, markers::Texture&gt;, label: Label) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         fid.assign_error(label.borrow_or_default());
     }
@@ -3103,13 +3110,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
-        id_in: Input&lt;G, id::TextureId&gt;,
+        id_in: Input&lt;G, markers::Texture&gt;,
     ) -&gt; (id::TextureId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_texture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3157,13 +3164,13 @@
         hal_texture: A::Texture,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
-        id_in: Input&lt;G, id::TextureId&gt;,
+        id_in: Input&lt;G, markers::Texture&gt;,
     ) -&gt; (id::TextureId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_texture_from_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3231,12 +3238,12 @@
         hal_buffer: A::Buffer,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
-        id_in: Input&lt;G, id::BufferId&gt;,
+        id_in: Input&lt;G, markers::Buffer&gt;,
     ) -&gt; (id::BufferId, <span class="prelude-ty">Option</span>&lt;CreateBufferError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.buffers.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3341,13 +3348,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture_id: id::TextureId,
         desc: <span class="kw-2">&amp;</span>resource::TextureViewDescriptor,
-        id_in: Input&lt;G, id::TextureViewId&gt;,
+        id_in: Input&lt;G, markers::TextureView&gt;,
     ) -&gt; (id::TextureViewId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureViewError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Texture::create_view"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.texture_views.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.texture_views.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>texture = <span class="kw">match </span>hub.textures.get(texture_id) {
@@ -3431,12 +3438,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::SamplerDescriptor,
-        id_in: Input&lt;G, id::SamplerId&gt;,
+        id_in: Input&lt;G, markers::Sampler&gt;,
     ) -&gt; (id::SamplerId, <span class="prelude-ty">Option</span>&lt;resource::CreateSamplerError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_sampler"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.samplers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.samplers.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3492,7 +3499,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>binding_model::BindGroupLayoutDescriptor,
-        id_in: Input&lt;G, id::BindGroupLayoutId&gt;,
+        id_in: Input&lt;G, markers::BindGroupLayout&gt;,
     ) -&gt; (
         id::BindGroupLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::CreateBindGroupLayoutError&gt;,
@@ -3500,7 +3507,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group_layout"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3562,7 +3569,7 @@
             <span class="kw">return </span>(id.unwrap(), <span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -3591,7 +3598,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>binding_model::PipelineLayoutDescriptor,
-        id_in: Input&lt;G, id::PipelineLayoutId&gt;,
+        id_in: Input&lt;G, markers::PipelineLayout&gt;,
     ) -&gt; (
         id::PipelineLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::CreatePipelineLayoutError&gt;,
@@ -3599,7 +3606,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_pipeline_layout"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.pipeline_layouts.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.pipeline_layouts.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3652,12 +3659,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>binding_model::BindGroupDescriptor,
-        id_in: Input&lt;G, id::BindGroupId&gt;,
+        id_in: Input&lt;G, markers::BindGroup&gt;,
     ) -&gt; (id::BindGroupId, <span class="prelude-ty">Option</span>&lt;binding_model::CreateBindGroupError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.bind_groups.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.bind_groups.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3736,7 +3743,7 @@
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor,
         source: pipeline::ShaderModuleSource,
-        id_in: Input&lt;G, id::ShaderModuleId&gt;,
+        id_in: Input&lt;G, markers::ShaderModule&gt;,
     ) -&gt; (
         id::ShaderModuleId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateShaderModuleError&gt;,
@@ -3744,7 +3751,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3814,7 +3821,7 @@
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor,
         source: Cow&lt;[u32]&gt;,
-        id_in: Input&lt;G, id::ShaderModuleId&gt;,
+        id_in: Input&lt;G, markers::ShaderModule&gt;,
     ) -&gt; (
         id::ShaderModuleId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateShaderModuleError&gt;,
@@ -3822,7 +3829,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.shader_modules.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3876,12 +3883,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>wgt::CommandEncoderDescriptor&lt;Label&gt;,
-        id_in: Input&lt;G, id::CommandEncoderId&gt;,
+        id_in: Input&lt;G, markers::CommandEncoder&gt;,
     ) -&gt; (id::CommandEncoderId, <span class="prelude-ty">Option</span>&lt;DeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_command_encoder"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.command_buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub
+            .command_buffers
+            .prepare::&lt;G, markers::CommandEncoder&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3917,11 +3926,11 @@
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(command_buffer);
             <span class="macro">api_log!</span>(<span class="string">"Device::create_command_encoder -&gt; {id:?}"</span>);
-            <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
+            <span class="kw">return </span>(id.transmute(), <span class="prelude-val">None</span>);
         };
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
-        (id, <span class="prelude-val">Some</span>(error))
+        (id.transmute(), <span class="prelude-val">Some</span>(error))
     }
 
     <span class="kw">pub fn </span>command_buffer_label&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: id::CommandBufferId) -&gt; String {
@@ -3934,7 +3943,10 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(cmd_buf) = hub.command_buffers.unregister(command_encoder_id) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cmd_buf) = hub
+            .command_buffers
+            .unregister(command_encoder_id.transmute())
+        {
             cmd_buf
                 .device
                 .untrack(<span class="kw-2">&amp;</span>cmd_buf.data.lock().as_ref().unwrap().trackers);
@@ -3944,7 +3956,7 @@
     <span class="kw">pub fn </span>command_buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_buffer_id: id::CommandBufferId) {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandBuffer::drop"</span>);
         <span class="macro">api_log!</span>(<span class="string">"CommandBuffer::drop {command_buffer_id:?}"</span>);
-        <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id)
+        <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id.transmute())
     }
 
     <span class="kw">pub fn </span>device_create_render_bundle_encoder(
@@ -3952,7 +3964,7 @@
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>command::RenderBundleEncoderDescriptor,
     ) -&gt; (
-        id::RenderBundleEncoderId,
+        <span class="kw-2">*mut </span>command::RenderBundleEncoder,
         <span class="prelude-ty">Option</span>&lt;command::CreateRenderBundleError&gt;,
     ) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_render_bundle_encoder"</span>);
@@ -3968,13 +3980,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bundle_encoder: command::RenderBundleEncoder,
         desc: <span class="kw-2">&amp;</span>command::RenderBundleDescriptor,
-        id_in: Input&lt;G, id::RenderBundleId&gt;,
+        id_in: Input&lt;G, markers::RenderBundle&gt;,
     ) -&gt; (id::RenderBundleId, <span class="prelude-ty">Option</span>&lt;command::RenderBundleError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"RenderBundleEncoder::finish"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.render_bundles.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.render_bundles.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(bundle_encoder.parent()) {
@@ -4038,12 +4050,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
-        id_in: Input&lt;G, id::QuerySetId&gt;,
+        id_in: Input&lt;G, markers::QuerySet&gt;,
     ) -&gt; (id::QuerySetId, <span class="prelude-ty">Option</span>&lt;resource::CreateQuerySetError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_query_set"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.query_sets.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.query_sets.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -4112,7 +4124,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>pipeline::RenderPipelineDescriptor,
-        id_in: Input&lt;G, id::RenderPipelineId&gt;,
+        id_in: Input&lt;G, markers::RenderPipeline&gt;,
         implicit_pipeline_ids: <span class="prelude-ty">Option</span>&lt;ImplicitPipelineIds&lt;G&gt;&gt;,
     ) -&gt; (
         id::RenderPipelineId,
@@ -4122,7 +4134,7 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.render_pipelines.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.render_pipelines.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         <span class="kw">let </span>implicit_error_context = implicit_context.clone();
 
@@ -4191,7 +4203,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pipeline_id: id::RenderPipelineId,
         index: u32,
-        id_in: Input&lt;G, id::BindGroupLayoutId&gt;,
+        id_in: Input&lt;G, markers::BindGroupLayout&gt;,
     ) -&gt; (
         id::BindGroupLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::GetBindGroupLayoutError&gt;,
@@ -4206,7 +4218,7 @@
             <span class="kw">let </span>id = <span class="kw">match </span>pipeline.layout.bind_group_layouts.get(index <span class="kw">as </span>usize) {
                 <span class="prelude-val">Some</span>(bg) =&gt; hub
                     .bind_group_layouts
-                    .prepare::&lt;G&gt;(id_in)
+                    .prepare::&lt;G, <span class="kw">_</span>&gt;(id_in)
                     .assign_existing(bg),
                 <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
             };
@@ -4215,7 +4227,7 @@
 
         <span class="kw">let </span>id = hub
             .bind_group_layouts
-            .prepare::&lt;G&gt;(id_in)
+            .prepare::&lt;G, <span class="kw">_</span>&gt;(id_in)
             .assign_error(<span class="string">"&lt;derived&gt;"</span>);
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -4250,7 +4262,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
         desc: <span class="kw-2">&amp;</span>pipeline::ComputePipelineDescriptor,
-        id_in: Input&lt;G, id::ComputePipelineId&gt;,
+        id_in: Input&lt;G, markers::ComputePipeline&gt;,
         implicit_pipeline_ids: <span class="prelude-ty">Option</span>&lt;ImplicitPipelineIds&lt;G&gt;&gt;,
     ) -&gt; (
         id::ComputePipelineId,
@@ -4260,7 +4272,7 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.compute_pipelines.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>fid = hub.compute_pipelines.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         <span class="kw">let </span>implicit_error_context = implicit_context.clone();
 
@@ -4324,7 +4336,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pipeline_id: id::ComputePipelineId,
         index: u32,
-        id_in: Input&lt;G, id::BindGroupLayoutId&gt;,
+        id_in: Input&lt;G, markers::BindGroupLayout&gt;,
     ) -&gt; (
         id::BindGroupLayoutId,
         <span class="prelude-ty">Option</span>&lt;binding_model::GetBindGroupLayoutError&gt;,
@@ -4340,7 +4352,7 @@
             <span class="kw">let </span>id = <span class="kw">match </span>pipeline.layout.bind_group_layouts.get(index <span class="kw">as </span>usize) {
                 <span class="prelude-val">Some</span>(bg) =&gt; hub
                     .bind_group_layouts
-                    .prepare::&lt;G&gt;(id_in)
+                    .prepare::&lt;G, <span class="kw">_</span>&gt;(id_in)
                     .assign_existing(bg),
                 <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
             };
@@ -4350,7 +4362,7 @@
 
         <span class="kw">let </span>id = hub
             .bind_group_layouts
-            .prepare::&lt;G&gt;(id_in)
+            .prepare::&lt;G, <span class="kw">_</span>&gt;(id_in)
             .assign_error(<span class="string">"&lt;derived&gt;"</span>);
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -4676,7 +4688,7 @@
 
         <span class="kw">let </span>(closures, queue_empty) = {
             <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
-                <span class="kw">if </span>submission_index.queue_id != device_id {
+                <span class="kw">if </span>submission_index.queue_id != device_id.transmute() {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
                         submission_index.queue_id,
                         device_id,

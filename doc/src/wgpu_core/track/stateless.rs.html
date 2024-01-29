@@ -237,30 +237,36 @@
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Stateless Trackers
  *
  * Stateless trackers don't have any state, so make no
  * distinction between a usage scope and a full tracker.
 !*/
 
-</span><span class="kw">use </span>std::{marker::PhantomData, sync::Arc};
+</span><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use crate</span>::{
-    hal_api::HalApi, id::TypedId, resource::Resource, resource_log, storage::Storage,
+    hal_api::HalApi, id::Id, resource::Resource, resource_log, storage::Storage,
     track::ResourceMetadata,
 };
 
 <span class="kw">use </span><span class="kw">super</span>::ResourceTracker;
 
+<span class="doccomment">/// Satisfy clippy.
+</span><span class="kw">type </span>Pair&lt;T&gt; = (Id&lt;&lt;T <span class="kw">as </span>Resource&gt;::Marker&gt;, Arc&lt;T&gt;);
+
 <span class="doccomment">/// Stores all the resources that a bind group stores.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessBindGroupSate&lt;Id: TypedId, T: Resource&lt;Id&gt;&gt; {
-    resources: Mutex&lt;Vec&lt;(Id, Arc&lt;T&gt;)&gt;&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessBindGroupSate&lt;T: Resource&gt; {
+    resources: Mutex&lt;Vec&lt;Pair&lt;T&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;Id: TypedId, T: Resource&lt;Id&gt;&gt; StatelessBindGroupSate&lt;Id, T&gt; {
+<span class="kw">impl</span>&lt;T: Resource&gt; StatelessBindGroupSate&lt;T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             resources: Mutex::new(Vec::new()),
@@ -297,7 +303,7 @@
     }
 
     <span class="doccomment">/// Adds the given resource.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;T, Id&gt;, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
+    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;T&gt;, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="kw">let </span>resource = storage.get(id).ok()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>resources = <span class="self">self</span>.resources.lock();
@@ -309,14 +315,11 @@
 
 <span class="doccomment">/// Stores all resource state within a command buffer or device.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessTracker&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; {
-    metadata: ResourceMetadata&lt;A, Id, T&gt;,
-    _phantom: PhantomData&lt;Id&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessTracker&lt;A: HalApi, T: Resource&gt; {
+    metadata: ResourceMetadata&lt;A, T&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; ResourceTracker&lt;Id, T&gt;
-    <span class="kw">for </span>StatelessTracker&lt;A, Id, T&gt;
-{
+<span class="kw">impl</span>&lt;A: HalApi, T: Resource&gt; ResourceTracker&lt;T&gt; <span class="kw">for </span>StatelessTracker&lt;A, T&gt; {
     <span class="doccomment">/// Try to remove the given resource from the tracker iff we have the last reference to the
     /// resource and the epoch matches.
     ///
@@ -324,7 +327,7 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id) -&gt; bool {
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; bool {
         <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.metadata.size() {
@@ -359,11 +362,10 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; StatelessTracker&lt;A, Id, T&gt; {
+<span class="kw">impl</span>&lt;A: HalApi, T: Resource&gt; StatelessTracker&lt;A, T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             metadata: ResourceMetadata::new(),
-            _phantom: PhantomData,
         }
     }
 
@@ -403,7 +405,7 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id, resource: Arc&lt;T&gt;) {
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, resource: Arc&lt;T&gt;) {
         <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
 
@@ -420,7 +422,11 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;T, Id&gt;, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;T&gt;&gt; {
+    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;T&gt;,
+        id: Id&lt;T::Marker&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;T&gt;&gt; {
         <span class="kw">let </span>resource = storage.get(id).ok()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
@@ -461,7 +467,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;T&gt;&gt; {
+    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;T&gt;&gt; {
         <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
