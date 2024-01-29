@@ -441,9 +441,6 @@
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -468,10 +465,7 @@ extract it from the hub.
     device::{DeviceError, MissingDownlevelFlags, WaitIdleError},
     global::Global,
     hal_api::HalApi,
-    hal_label,
-    id::markers,
-    id::{SurfaceId, TextureId},
-    identity::{GlobalIdentityHandlerFactory, Input},
+    hal_label, id,
     init_tracker::TextureInitTracker,
     resource::{<span class="self">self</span>, ResourceInfo},
     snatch::Snatchable,
@@ -489,7 +483,7 @@ extract it from the hub.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Presentation {
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: AnyDevice,
     <span class="kw">pub</span>(<span class="kw">crate</span>) config: wgt::SurfaceConfiguration&lt;Vec&lt;wgt::TextureFormat&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) acquired_texture: <span class="prelude-ty">Option</span>&lt;TextureId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) acquired_texture: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -565,20 +559,20 @@ extract it from the hub.
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>SurfaceOutput {
     <span class="kw">pub </span>status: Status,
-    <span class="kw">pub </span>texture_id: <span class="prelude-ty">Option</span>&lt;TextureId&gt;,
+    <span class="kw">pub </span>texture_id: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
+<span class="kw">impl </span>Global {
     <span class="kw">pub fn </span>surface_get_current_texture&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_id: SurfaceId,
-        texture_id_in: Input&lt;G, markers::Texture&gt;,
+        surface_id: id::SurfaceId,
+        texture_id_in: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceOutput, SurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::get_next_texture"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>fid = hub.textures.prepare::&lt;G, <span class="kw">_</span>&gt;(texture_id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare(texture_id_in);
 
         <span class="kw">let </span>surface = <span class="self">self
             </span>.surfaces
@@ -727,7 +721,7 @@ extract it from the hub.
 
     <span class="kw">pub fn </span>surface_present&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_id: SurfaceId,
+        surface_id: id::SurfaceId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::present"</span>);
 
@@ -825,7 +819,7 @@ extract it from the hub.
 
     <span class="kw">pub fn </span>surface_texture_discard&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_id: SurfaceId,
+        surface_id: id::SurfaceId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::discard"</span>);
 

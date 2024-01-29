@@ -3041,18 +3041,6 @@
 <a href="#3040" id="3040">3040</a>
 <a href="#3041" id="3041">3041</a>
 <a href="#3042" id="3042">3042</a>
-<a href="#3043" id="3043">3043</a>
-<a href="#3044" id="3044">3044</a>
-<a href="#3045" id="3045">3045</a>
-<a href="#3046" id="3046">3046</a>
-<a href="#3047" id="3047">3047</a>
-<a href="#3048" id="3048">3048</a>
-<a href="#3049" id="3049">3049</a>
-<a href="#3050" id="3050">3050</a>
-<a href="#3051" id="3051">3051</a>
-<a href="#3052" id="3052">3052</a>
-<a href="#3053" id="3053">3053</a>
-<a href="#3054" id="3054">3054</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3083,7 +3071,7 @@
 
 <span class="kw">const </span>LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"label"</span>;
 
-<span class="kw">pub struct </span>ContextWgpuCore(wgc::global::Global&lt;wgc::identity::IdentityManagerFactory&gt;);
+<span class="kw">pub struct </span>ContextWgpuCore(wgc::global::Global);
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>ContextWgpuCore {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -3101,13 +3089,7 @@
 
 <span class="kw">impl </span>ContextWgpuCore {
     <span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: wgc::hal_api::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(<span class="kw">unsafe </span>{
-            wgc::global::Global::from_hal_instance::&lt;A&gt;(
-                <span class="string">"wgpu"</span>,
-                wgc::identity::IdentityManagerFactory,
-                hal_instance,
-            )
-        })
+        <span class="self">Self</span>(<span class="kw">unsafe </span>{ wgc::global::Global::from_hal_instance::&lt;A&gt;(<span class="string">"wgpu"</span>, hal_instance) })
     }
 
     <span class="doccomment">/// # Safety
@@ -3118,25 +3100,23 @@
     }
 
     <span class="kw">pub unsafe fn </span>from_core_instance(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(<span class="kw">unsafe </span>{
-            wgc::global::Global::from_instance(wgc::identity::IdentityManagerFactory, core_instance)
-        })
+        <span class="self">Self</span>(<span class="kw">unsafe </span>{ wgc::global::Global::from_instance(core_instance) })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>global(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgc::global::Global&lt;wgc::identity::IdentityManagerFactory&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>global(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgc::global::Global {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
     </span>}
 
     <span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, backends: wgt::Backends) -&gt; Vec&lt;wgc::id::AdapterId&gt; {
         <span class="self">self</span>.<span class="number">0
-            </span>.enumerate_adapters(wgc::instance::AdapterInputs::Mask(backends, |<span class="kw">_</span>| ()))
+            </span>.enumerate_adapters(wgc::instance::AdapterInputs::Mask(backends, |<span class="kw">_</span>| <span class="prelude-val">None</span>))
     }
 
     <span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_adapter: hal::ExposedAdapter&lt;A&gt;,
     ) -&gt; wgc::id::AdapterId {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.create_adapter_from_hal(hal_adapter, ()) }
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.create_adapter_from_hal(hal_adapter, <span class="prelude-val">None</span>) }
     }
 
     <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;
@@ -3167,8 +3147,8 @@
                 hal_device,
                 <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
                 trace_dir,
-                (),
-                (),
+                <span class="prelude-val">None</span>,
+                <span class="prelude-val">None</span>,
             )
         };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
@@ -3196,7 +3176,7 @@
         <span class="kw">let </span>descriptor = desc.map_label_and_view_formats(|l| l.map(Borrowed), |v| v.to_vec());
         <span class="kw">let </span>(id, error) = <span class="kw">unsafe </span>{
             <span class="self">self</span>.<span class="number">0
-                </span>.create_texture_from_hal::&lt;A&gt;(hal_texture, device.id, <span class="kw-2">&amp;</span>descriptor, ())
+                </span>.create_texture_from_hal::&lt;A&gt;(hal_texture, device.id, <span class="kw-2">&amp;</span>descriptor, <span class="prelude-val">None</span>)
         };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
@@ -3224,7 +3204,7 @@
                 hal_buffer,
                 device.id,
                 <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-                (),
+                <span class="prelude-val">None</span>,
             )
         };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
@@ -3564,11 +3544,7 @@
     <span class="kw">type </span>PopErrorScopeFuture = Ready&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Error&gt;&gt;;
 
     <span class="kw">fn </span>init(instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(wgc::global::Global::new(
-            <span class="string">"wgpu"</span>,
-            wgc::identity::IdentityManagerFactory,
-            instance_desc,
-        ))
+        <span class="self">Self</span>(wgc::global::Global::new(<span class="string">"wgpu"</span>, instance_desc))
     }
 
     <span class="kw">unsafe fn </span>instance_create_surface(
@@ -3581,29 +3557,29 @@
                 raw_window_handle,
             } =&gt; <span class="kw">unsafe </span>{
                 <span class="self">self</span>.<span class="number">0
-                    </span>.instance_create_surface(raw_display_handle, raw_window_handle, ())<span class="question-mark">?
+                    </span>.instance_create_surface(raw_display_handle, raw_window_handle, <span class="prelude-val">None</span>)<span class="question-mark">?
             </span>},
 
             <span class="attr">#[cfg(metal)]
             </span>SurfaceTargetUnsafe::CoreAnimationLayer(layer) =&gt; <span class="kw">unsafe </span>{
-                <span class="self">self</span>.<span class="number">0</span>.instance_create_surface_metal(layer, ())
+                <span class="self">self</span>.<span class="number">0</span>.instance_create_surface_metal(layer, <span class="prelude-val">None</span>)
             },
 
             <span class="attr">#[cfg(dx12)]
             </span>SurfaceTargetUnsafe::CompositionVisual(visual) =&gt; <span class="kw">unsafe </span>{
-                <span class="self">self</span>.<span class="number">0</span>.instance_create_surface_from_visual(visual, ())
+                <span class="self">self</span>.<span class="number">0</span>.instance_create_surface_from_visual(visual, <span class="prelude-val">None</span>)
             },
 
             <span class="attr">#[cfg(dx12)]
             </span>SurfaceTargetUnsafe::SurfaceHandle(surface_handle) =&gt; <span class="kw">unsafe </span>{
                 <span class="self">self</span>.<span class="number">0
-                    </span>.instance_create_surface_from_surface_handle(surface_handle, ())
+                    </span>.instance_create_surface_from_surface_handle(surface_handle, <span class="prelude-val">None</span>)
             },
 
             <span class="attr">#[cfg(dx12)]
             </span>SurfaceTargetUnsafe::SwapChainPanel(swap_chain_panel) =&gt; <span class="kw">unsafe </span>{
                 <span class="self">self</span>.<span class="number">0
-                    </span>.instance_create_surface_from_swap_chain_panel(swap_chain_panel, ())
+                    </span>.instance_create_surface_from_swap_chain_panel(swap_chain_panel, <span class="prelude-val">None</span>)
             },
         };
 
@@ -3626,7 +3602,7 @@
                 force_fallback_adapter: options.force_fallback_adapter,
                 compatible_surface: options.compatible_surface.map(|surface| surface.id.into()),
             },
-            wgc::instance::AdapterInputs::Mask(wgt::Backends::all(), |<span class="kw">_</span>| ()),
+            wgc::instance::AdapterInputs::Mask(wgt::Backends::all(), |<span class="kw">_</span>| <span class="prelude-val">None</span>),
         );
         ready(id.ok().map(|id| (id, ())))
     }
@@ -3642,9 +3618,9 @@
             <span class="kw-2">*</span>adapter,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
             trace_dir,
-            (),
-            ()
-        ));
+            <span class="prelude-val">None</span>,
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
             <span class="kw">return </span>ready(<span class="prelude-val">Err</span>(err.into()));
         }
@@ -3796,7 +3772,7 @@
             .lock()
             .expect(<span class="string">"Surface was not configured?"</span>);
         <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(
-            device_id =&gt; <span class="self">self</span>.<span class="number">0</span>.surface_get_current_texture(<span class="kw-2">*</span>surface, ())
+            device_id =&gt; <span class="self">self</span>.<span class="number">0</span>.surface_get_current_texture(<span class="kw-2">*</span>surface, <span class="prelude-val">None</span>)
         ) {
             <span class="prelude-val">Ok</span>(wgc::present::SurfaceOutput { status, texture_id }) =&gt; {
                 <span class="kw">let </span>(id, data) = {
@@ -3916,7 +3892,7 @@
             ShaderSource::Dummy(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">"found `ShaderSource::Dummy`"</span>),
         };
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(
-            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_shader_module(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, source, ())
+            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_shader_module(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, source, <span class="prelude-val">None</span>)
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
@@ -3943,7 +3919,7 @@
             </span>shader_bound_checks: <span class="kw">unsafe </span>{ wgt::ShaderBoundChecks::unchecked() },
         };
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(
-            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_shader_module_spirv(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, Borrowed(<span class="kw-2">&amp;</span>desc.source), ())
+            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_shader_module_spirv(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, Borrowed(<span class="kw-2">&amp;</span>desc.source), <span class="prelude-val">None</span>)
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
@@ -3968,7 +3944,7 @@
             entries: Borrowed(desc.entries),
         };
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(
-            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_bind_group_layout(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, ())
+            device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_bind_group_layout(<span class="kw-2">*</span>device, <span class="kw-2">&amp;</span>descriptor, <span class="prelude-val">None</span>)
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
@@ -4082,8 +4058,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_bind_group(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>descriptor,
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4124,8 +4100,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_pipeline_layout(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>descriptor,
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4159,8 +4135,8 @@
         <span class="kw">let </span>implicit_pipeline_ids = <span class="kw">match </span>desc.layout {
             <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(wgc::device::ImplicitPipelineIds {
-                root_id: (),
-                group_ids: <span class="kw-2">&amp;</span>[(); wgc::MAX_BIND_GROUPS],
+                root_id: <span class="prelude-val">None</span>,
+                group_ids: <span class="kw-2">&amp;</span>[<span class="prelude-val">None</span>; wgc::MAX_BIND_GROUPS],
             }),
         };
         <span class="kw">let </span>descriptor = pipe::RenderPipelineDescriptor {
@@ -4189,7 +4165,7 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_render_pipeline(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>descriptor,
-            (),
+            <span class="prelude-val">None</span>,
             implicit_pipeline_ids
         ));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
@@ -4218,8 +4194,8 @@
         <span class="kw">let </span>implicit_pipeline_ids = <span class="kw">match </span>desc.layout {
             <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(wgc::device::ImplicitPipelineIds {
-                root_id: (),
-                group_ids: <span class="kw-2">&amp;</span>[(); wgc::MAX_BIND_GROUPS],
+                root_id: <span class="prelude-val">None</span>,
+                group_ids: <span class="kw-2">&amp;</span>[<span class="prelude-val">None</span>; wgc::MAX_BIND_GROUPS],
             }),
         };
         <span class="kw">let </span>descriptor = pipe::ComputePipelineDescriptor {
@@ -4234,7 +4210,7 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_compute_pipeline(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>descriptor,
-            (),
+            <span class="prelude-val">None</span>,
             implicit_pipeline_ids
         ));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
@@ -4265,8 +4241,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_buffer(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4293,8 +4269,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_texture(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>wgt_desc,
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4338,8 +4314,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_sampler(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>descriptor,
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4360,8 +4336,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_query_set(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>device_data.error_sink, cause, <span class="string">"Device::create_query_set"</span>);
         }
@@ -4376,8 +4352,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_create_command_encoder(
             <span class="kw-2">*</span>device,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
@@ -4575,7 +4551,7 @@
             },
         };
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(
-            texture =&gt; <span class="self">self</span>.<span class="number">0</span>.texture_create_view(<span class="kw-2">*</span>texture, <span class="kw-2">&amp;</span>descriptor, ())
+            texture =&gt; <span class="self">self</span>.<span class="number">0</span>.texture_create_view(<span class="kw-2">*</span>texture, <span class="kw-2">&amp;</span>descriptor, <span class="prelude-val">None</span>)
         );
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
@@ -4709,7 +4685,7 @@
         _pipeline_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::ComputePipelineData,
         index: u32,
     ) -&gt; (<span class="self">Self</span>::BindGroupLayoutId, <span class="self">Self</span>::BindGroupLayoutData) {
-        <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; <span class="self">self</span>.<span class="number">0</span>.compute_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, ()));
+        <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; <span class="self">self</span>.<span class="number">0</span>.compute_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, <span class="prelude-val">None</span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
             <span class="macro">panic!</span>(<span class="string">"Error reflecting bind group {index}: {err}"</span>);
         }
@@ -4722,7 +4698,7 @@
         _pipeline_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::RenderPipelineData,
         index: u32,
     ) -&gt; (<span class="self">Self</span>::BindGroupLayoutId, <span class="self">Self</span>::BindGroupLayoutData) {
-        <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; <span class="self">self</span>.<span class="number">0</span>.render_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, ()));
+        <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; <span class="self">self</span>.<span class="number">0</span>.render_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, <span class="prelude-val">None</span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
             <span class="macro">panic!</span>(<span class="string">"Error reflecting bind group {index}: {err}"</span>);
         }
@@ -5119,8 +5095,8 @@
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(encoder_data.parent() =&gt; <span class="self">self</span>.<span class="number">0</span>.render_bundle_encoder_finish(
             encoder_data,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-            ()
-        ));
+            <span class="prelude-val">None
+        </span>));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
             <span class="self">self</span>.handle_error_fatal(err, <span class="string">"RenderBundleEncoder::finish"</span>);
         }
@@ -5173,7 +5149,7 @@
         size: wgt::BufferSize,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::context::QueueWriteBuffer&gt;&gt; {
         <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(
-            <span class="kw-2">*</span>queue =&gt; <span class="self">self</span>.<span class="number">0</span>.queue_create_staging_buffer(<span class="kw-2">*</span>queue, size, ())
+            <span class="kw-2">*</span>queue =&gt; <span class="self">self</span>.<span class="number">0</span>.queue_create_staging_buffer(<span class="kw-2">*</span>queue, size, <span class="prelude-val">None</span>)
         ) {
             <span class="prelude-val">Ok</span>((buffer_id, ptr)) =&gt; <span class="prelude-val">Some</span>(Box::new(QueueWriteBuffer {
                 buffer_id,

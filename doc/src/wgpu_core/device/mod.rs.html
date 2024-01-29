@@ -479,15 +479,11 @@
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
     hub::Hub,
-    id,
-    id::markers,
-    identity::{GlobalIdentityHandlerFactory, Input},
+    id::{BindGroupLayoutId, PipelineLayoutId},
     resource::{Buffer, BufferAccessResult},
     resource::{BufferAccessError, BufferMapOperation},
     resource_log, Label, DOWNLEVEL_ERROR_MESSAGE,
@@ -942,23 +938,23 @@
 <span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub struct </span>ImplicitPipelineContext {
-    <span class="kw">pub </span>root_id: id::PipelineLayoutId,
-    <span class="kw">pub </span>group_ids: ArrayVec&lt;id::BindGroupLayoutId, { hal::MAX_BIND_GROUPS }&gt;,
+    <span class="kw">pub </span>root_id: PipelineLayoutId,
+    <span class="kw">pub </span>group_ids: ArrayVec&lt;BindGroupLayoutId, { hal::MAX_BIND_GROUPS }&gt;,
 }
 
-<span class="kw">pub struct </span>ImplicitPipelineIds&lt;<span class="lifetime">'a</span>, G: GlobalIdentityHandlerFactory&gt; {
-    <span class="kw">pub </span>root_id: Input&lt;G, markers::PipelineLayout&gt;,
-    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Input&lt;G, markers::BindGroupLayout&gt;],
+<span class="kw">pub struct </span>ImplicitPipelineIds&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>root_id: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
+    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;BindGroupLayoutId&gt;],
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; ImplicitPipelineIds&lt;<span class="lifetime">'_</span>, G&gt; {
+<span class="kw">impl </span>ImplicitPipelineIds&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>prepare&lt;A: HalApi&gt;(<span class="self">self</span>, hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;) -&gt; ImplicitPipelineContext {
         ImplicitPipelineContext {
-            root_id: hub.pipeline_layouts.prepare::&lt;G, <span class="kw">_</span>&gt;(<span class="self">self</span>.root_id).into_id(),
+            root_id: hub.pipeline_layouts.prepare(<span class="self">self</span>.root_id).into_id(),
             group_ids: <span class="self">self
                 </span>.group_ids
                 .iter()
-                .map(|id_in| hub.bind_group_layouts.prepare::&lt;G, <span class="kw">_</span>&gt;(<span class="kw-2">*</span>id_in).into_id())
+                .map(|id_in| hub.bind_group_layouts.prepare(<span class="kw-2">*</span>id_in).into_id())
                 .collect(),
         }
     }

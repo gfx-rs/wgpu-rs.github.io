@@ -1188,17 +1188,6 @@
 <a href="#1187" id="1187">1187</a>
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
-<a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
-<a href="#1198" id="1198">1198</a>
-<a href="#1199" id="1199">1199</a>
-<a href="#1200" id="1200">1200</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -1208,8 +1197,7 @@
     global::Global,
     hal_api::HalApi,
     id::markers,
-    id::{AdapterId, DeviceId, QueueId, SurfaceId},
-    identity::{GlobalIdentityHandlerFactory, Input},
+    id::{AdapterId, DeviceId, Id, Marker, QueueId, SurfaceId},
     present::Presentation,
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log, LabelHelpers, DOWNLEVEL_WARNING_MESSAGE,
@@ -1358,7 +1346,7 @@
 <span class="kw">impl </span>Resource <span class="kw">for </span>Surface {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Surface"</span>;
 
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Surface;
+    <span class="kw">type </span>Marker = markers::Surface;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1589,7 +1577,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Adapter&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Adapter"</span>;
 
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Adapter;
+    <span class="kw">type </span>Marker = markers::Adapter;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info
@@ -1640,15 +1628,15 @@
     </span>UnsupportedFeature(wgt::Features),
 }
 
-<span class="kw">pub enum </span>AdapterInputs&lt;<span class="lifetime">'a</span>, I&gt; {
-    IdSet(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[I], <span class="kw">fn</span>(<span class="kw-2">&amp;</span>I) -&gt; Backend),
-    Mask(Backends, <span class="kw">fn</span>(Backend) -&gt; I),
+<span class="kw">pub enum </span>AdapterInputs&lt;<span class="lifetime">'a</span>, M: Marker&gt; {
+    IdSet(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Id&lt;M&gt;]),
+    Mask(Backends, <span class="kw">fn</span>(Backend) -&gt; <span class="prelude-ty">Option</span>&lt;Id&lt;M&gt;&gt;),
 }
 
-<span class="kw">impl</span>&lt;I: Copy&gt; AdapterInputs&lt;<span class="lifetime">'_</span>, I&gt; {
-    <span class="kw">fn </span>find(<span class="kw-2">&amp;</span><span class="self">self</span>, b: Backend) -&gt; <span class="prelude-ty">Option</span>&lt;I&gt; {
+<span class="kw">impl</span>&lt;M: Marker&gt; AdapterInputs&lt;<span class="lifetime">'_</span>, M&gt; {
+    <span class="kw">fn </span>find(<span class="kw-2">&amp;</span><span class="self">self</span>, b: Backend) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Option</span>&lt;Id&lt;M&gt;&gt;&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::IdSet(ids, <span class="kw-2">ref </span>fun) =&gt; ids.iter().find(|id| fun(id) == b).copied(),
+            <span class="self">Self</span>::IdSet(ids) =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(ids.iter().find(|id| id.backend() == b).copied()<span class="question-mark">?</span>)),
             <span class="self">Self</span>::Mask(bits, <span class="kw-2">ref </span>fun) =&gt; {
                 <span class="kw">if </span>bits.contains(b.into()) {
                     <span class="prelude-val">Some</span>(fun(b))
@@ -1673,7 +1661,7 @@
     </span>InvalidSurface(SurfaceId),
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
+<span class="kw">impl </span>Global {
     <span class="doccomment">/// # Safety
     ///
     /// - `display_handle` must be a valid object to create a surface upon.
@@ -1684,7 +1672,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
-        id_in: Input&lt;G, markers::Surface&gt;,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, hal::InstanceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface"</span>);
 
@@ -1732,7 +1720,7 @@
             raw: hal_surface,
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
         <span class="prelude-val">Ok</span>(id)
     }
 
@@ -1743,7 +1731,7 @@
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_metal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         layer: <span class="kw-2">*mut </span>std::ffi::c_void,
-        id_in: Input&lt;G, markers::Surface&gt;,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; SurfaceId {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_metal"</span>);
 
@@ -1767,7 +1755,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
         id
     }
 
@@ -1778,7 +1766,7 @@
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_visual(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         visual: <span class="kw-2">*mut </span>std::ffi::c_void,
-        id_in: Input&lt;G, markers::Surface&gt;,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; SurfaceId {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_visual"</span>);
 
@@ -1798,7 +1786,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
         id
     }
 
@@ -1809,7 +1797,7 @@
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_surface_handle(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
-        id_in: Input&lt;G, markers::Surface&gt;,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; SurfaceId {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_surface_handle"</span>);
 
@@ -1831,7 +1819,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
         id
     }
 
@@ -1842,7 +1830,7 @@
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_swap_chain_panel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
-        id_in: Input&lt;G, markers::Surface&gt;,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; SurfaceId {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_swap_chain_panel"</span>);
 
@@ -1864,7 +1852,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G, <span class="kw">_</span>&gt;(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
         id
     }
 
@@ -1873,11 +1861,7 @@
 
         <span class="macro">api_log!</span>(<span class="string">"Surface::drop {id:?}"</span>);
 
-        <span class="kw">fn </span>unconfigure&lt;G: GlobalIdentityHandlerFactory, A: HalApi&gt;(
-            global: <span class="kw-2">&amp;</span>Global&lt;G&gt;,
-            surface: <span class="kw-2">&amp;</span>AnySurface,
-            present: <span class="kw-2">&amp;</span>Presentation,
-        ) {
+        <span class="kw">fn </span>unconfigure&lt;A: HalApi&gt;(global: <span class="kw-2">&amp;</span>Global, surface: <span class="kw-2">&amp;</span>AnySurface, present: <span class="kw-2">&amp;</span>Presentation) {
             <span class="kw">let </span>hub = HalApi::hub(global);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(hal_surface) = surface.downcast_ref::&lt;A&gt;() {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(device) = present.device.downcast_ref::&lt;A&gt;() {
@@ -1890,13 +1874,13 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = Arc::into_inner(surface.unwrap()) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
                 <span class="attr">#[cfg(vulkan)]
-                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                </span>unconfigure::&lt;hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
                 <span class="attr">#[cfg(metal)]
-                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                </span>unconfigure::&lt;hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
                 <span class="attr">#[cfg(dx12)]
-                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                </span>unconfigure::&lt;hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
                 <span class="attr">#[cfg(gles)]
-                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                </span>unconfigure::&lt;hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
             }
 
             <span class="self">self</span>.instance.destroy_surface(surface);
@@ -1909,7 +1893,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: A,
         instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;,
-        inputs: <span class="kw-2">&amp;</span>AdapterInputs&lt;Input&lt;G, markers::Adapter&gt;&gt;,
+        inputs: <span class="kw-2">&amp;</span>AdapterInputs&lt;markers::Adapter&gt;,
         list: <span class="kw-2">&amp;mut </span>Vec&lt;AdapterId&gt;,
     ) {
         <span class="kw">let </span>inst = <span class="kw">match </span><span class="kw-2">*</span>instance {
@@ -1928,15 +1912,12 @@
         <span class="kw">for </span>raw <span class="kw">in </span>hal_adapters {
             <span class="kw">let </span>adapter = Adapter::new(raw);
             <span class="macro">log::info!</span>(<span class="string">"Adapter {:?} {:?}"</span>, A::VARIANT, adapter.raw.info);
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = hub.adapters.prepare::&lt;G, <span class="kw">_</span>&gt;(id_backend).assign(adapter);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = hub.adapters.prepare(id_backend).assign(adapter);
             list.push(id);
         }
     }
 
-    <span class="kw">pub fn </span>enumerate_adapters(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        inputs: AdapterInputs&lt;Input&lt;G, markers::Adapter&gt;&gt;,
-    ) -&gt; Vec&lt;AdapterId&gt; {
+    <span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, inputs: AdapterInputs&lt;markers::Adapter&gt;) -&gt; Vec&lt;AdapterId&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::enumerate_adapters"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Instance::enumerate_adapters"</span>);
 
@@ -1967,7 +1948,7 @@
     <span class="kw">fn </span>select&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         selected: <span class="kw-2">&amp;mut </span>usize,
-        new_id: <span class="prelude-ty">Option</span>&lt;Input&lt;G, markers::Adapter&gt;&gt;,
+        new_id: <span class="prelude-ty">Option</span>&lt;AdapterId&gt;,
         <span class="kw-2">mut </span>list: Vec&lt;hal::ExposedAdapter&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;AdapterId&gt; {
         <span class="kw">match </span>selected.checked_sub(list.len()) {
@@ -1978,10 +1959,7 @@
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>adapter = Adapter::new(list.swap_remove(<span class="kw-2">*</span>selected));
                 <span class="macro">log::info!</span>(<span class="string">"Adapter {:?} {:?}"</span>, A::VARIANT, adapter.raw.info);
-                <span class="kw">let </span>(id, <span class="kw">_</span>) = HalApi::hub(<span class="self">self</span>)
-                    .adapters
-                    .prepare::&lt;G, <span class="kw">_</span>&gt;(new_id.unwrap())
-                    .assign(adapter);
+                <span class="kw">let </span>(id, <span class="kw">_</span>) = HalApi::hub(<span class="self">self</span>).adapters.prepare(new_id).assign(adapter);
                 <span class="prelude-val">Some</span>(id)
             }
         }
@@ -1990,22 +1968,22 @@
     <span class="kw">pub fn </span>request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>RequestAdapterOptions,
-        inputs: AdapterInputs&lt;Input&lt;G, markers::Adapter&gt;&gt;,
+        inputs: AdapterInputs&lt;markers::Adapter&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;AdapterId, RequestAdapterError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::request_adapter"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Instance::request_adapter"</span>);
 
-        <span class="kw">fn </span>gather&lt;A: HalApi, I: Copy&gt;(
+        <span class="kw">fn </span>gather&lt;A: HalApi&gt;(
             <span class="kw">_</span>: A,
             instance: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt;,
-            inputs: <span class="kw-2">&amp;</span>AdapterInputs&lt;I&gt;,
+            inputs: <span class="kw-2">&amp;</span>AdapterInputs&lt;markers::Adapter&gt;,
             compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&gt;,
             force_software: bool,
             device_types: <span class="kw-2">&amp;mut </span>Vec&lt;wgt::DeviceType&gt;,
-        ) -&gt; (<span class="prelude-ty">Option</span>&lt;I&gt;, Vec&lt;hal::ExposedAdapter&lt;A&gt;&gt;) {
+        ) -&gt; (<span class="prelude-ty">Option</span>&lt;Id&lt;markers::Adapter&gt;&gt;, Vec&lt;hal::ExposedAdapter&lt;A&gt;&gt;) {
             <span class="kw">let </span>id = inputs.find(A::VARIANT);
-            <span class="kw">match </span>instance {
-                <span class="prelude-val">Some</span>(inst) <span class="kw">if </span>id.is_some() =&gt; {
+            <span class="kw">match </span>(id, instance) {
+                (<span class="prelude-val">Some</span>(id), <span class="prelude-val">Some</span>(inst)) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters() };
                     <span class="kw">if </span>force_software {
                         adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
@@ -2025,7 +2003,7 @@
                     device_types.extend(adapters.iter().map(|ad| ad.info.device_type));
                     (id, adapters)
                 }
-                <span class="kw">_ </span>=&gt; (id, Vec::new()),
+                <span class="kw">_ </span>=&gt; (<span class="prelude-val">None</span>, Vec::new()),
             }
         }
 
@@ -2156,11 +2134,11 @@
     </span><span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_adapter: hal::ExposedAdapter&lt;A&gt;,
-        input: Input&lt;G, markers::Adapter&gt;,
+        input: <span class="prelude-ty">Option</span>&lt;AdapterId&gt;,
     ) -&gt; AdapterId {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_adapter_from_hal"</span>);
 
-        <span class="kw">let </span>fid = A::hub(<span class="self">self</span>).adapters.prepare::&lt;G, <span class="kw">_</span>&gt;(input);
+        <span class="kw">let </span>fid = A::hub(<span class="self">self</span>).adapters.prepare(input);
 
         <span class="kw">let </span>(id, _adapter): (<span class="kw">_</span>, Arc&lt;Adapter&lt;A&gt;&gt;) = <span class="kw">match </span>A::VARIANT {
             <span class="attr">#[cfg(vulkan)]
@@ -2267,21 +2245,21 @@
     }
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
+<span class="kw">impl </span>Global {
     <span class="kw">pub fn </span>adapter_request_device&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter_id: AdapterId,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-        device_id_in: Input&lt;G, markers::Device&gt;,
-        queue_id_in: Input&lt;G, markers::Queue&gt;,
+        device_id_in: <span class="prelude-ty">Option</span>&lt;DeviceId&gt;,
+        queue_id_in: <span class="prelude-ty">Option</span>&lt;QueueId&gt;,
     ) -&gt; (DeviceId, QueueId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Adapter::request_device"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Adapter::request_device"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>device_fid = hub.devices.prepare::&lt;G, markers::Device&gt;(device_id_in);
-        <span class="kw">let </span>queue_fid = hub.queues.prepare::&lt;G, markers::Queue&gt;(queue_id_in);
+        <span class="kw">let </span>device_fid = hub.devices.prepare(device_id_in);
+        <span class="kw">let </span>queue_fid = hub.queues.prepare(queue_id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {
@@ -2322,14 +2300,14 @@
         hal_device: OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-        device_id_in: Input&lt;G, markers::Device&gt;,
-        queue_id_in: Input&lt;G, markers::Queue&gt;,
+        device_id_in: <span class="prelude-ty">Option</span>&lt;DeviceId&gt;,
+        queue_id_in: <span class="prelude-ty">Option</span>&lt;QueueId&gt;,
     ) -&gt; (DeviceId, QueueId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::create_device_from_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>devices_fid = hub.devices.prepare::&lt;G, markers::Device&gt;(device_id_in);
-        <span class="kw">let </span>queues_fid = hub.queues.prepare::&lt;G, markers::Queue&gt;(queue_id_in);
+        <span class="kw">let </span>devices_fid = hub.devices.prepare(device_id_in);
+        <span class="kw">let </span>queues_fid = hub.queues.prepare(queue_id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {

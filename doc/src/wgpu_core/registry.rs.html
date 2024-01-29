@@ -199,17 +199,14 @@
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
-    id::{<span class="self">self</span>, Id, Marker},
-    identity::{IdentityHandlerFactory, IdentityManager},
+    id::Id,
+    identity::IdentityManager,
     resource::Resource,
     storage::{Element, InvalidId, Storage},
 };
@@ -248,16 +245,16 @@
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; Registry&lt;T&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;F: IdentityHandlerFactory&lt;T::Marker&gt;&gt;(backend: Backend, factory: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(backend: Backend) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            identity: factory.spawn(),
+            identity: Arc::new(IdentityManager::new()),
             storage: RwLock::new(Storage::new()),
             backend,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>without_backend&lt;F: IdentityHandlerFactory&lt;T::Marker&gt;&gt;(factory: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(Backend::Empty, factory)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>without_backend() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(Backend::Empty)
     }
 }
 
@@ -312,17 +309,14 @@
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; Registry&lt;T&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare&lt;F, U: Marker&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: F::Input) -&gt; FutureId&lt;T&gt;
-    <span class="kw">where
-        </span>F: IdentityHandlerFactory&lt;U&gt;,
-        T::Marker: id::transmute::Transmute&lt;U&gt;,
-    {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;) -&gt; FutureId&lt;T&gt; {
         FutureId {
-            id: <span class="kw">if </span>F::autogenerate_ids() {
-                <span class="self">self</span>.identity.process(<span class="self">self</span>.backend)
-            } <span class="kw">else </span>{
-                <span class="self">self</span>.identity
-                    .mark_as_used(F::input_to_id(id_in).transmute())
+            id: <span class="kw">match </span>id_in {
+                <span class="prelude-val">Some</span>(id_in) =&gt; {
+                    <span class="self">self</span>.identity.mark_as_used(id_in);
+                    id_in
+                }
+                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.identity.process(<span class="self">self</span>.backend),
             },
             identity: <span class="self">self</span>.identity.clone(),
             data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,

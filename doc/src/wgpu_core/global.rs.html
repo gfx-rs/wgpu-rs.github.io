@@ -171,23 +171,13 @@
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, sync::Arc};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     hub::{HubReport, Hubs},
-    identity::GlobalIdentityHandlerFactory,
     instance::{Instance, Surface},
     registry::{Registry, RegistryReport},
     resource_log,
@@ -226,38 +216,31 @@
     }
 }
 
-<span class="kw">pub struct </span>Global&lt;G: GlobalIdentityHandlerFactory&gt; {
+<span class="kw">pub struct </span>Global {
     <span class="kw">pub </span>instance: Instance,
     <span class="kw">pub </span>surfaces: Registry&lt;Surface&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hubs: Hubs,
-    _phantom: PhantomData&lt;G&gt;,
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
-    <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span>str, factory: G, instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>Global {
+    <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span>str, instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::new"</span>);
         <span class="self">Self </span>{
             instance: Instance::new(name, instance_desc),
-            surfaces: Registry::without_backend(<span class="kw-2">&amp;</span>factory),
-            hubs: Hubs::new(<span class="kw-2">&amp;</span>factory),
-            _phantom: PhantomData,
+            surfaces: Registry::without_backend(),
+            hubs: Hubs::new(),
         }
     }
 
     <span class="doccomment">/// # Safety
     ///
     /// Refer to the creation of wgpu-hal Instance for every backend.
-    </span><span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: HalApi&gt;(
-        name: <span class="kw-2">&amp;</span>str,
-        factory: G,
-        hal_instance: A::Instance,
-    ) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: HalApi&gt;(name: <span class="kw-2">&amp;</span>str, hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::new"</span>);
         <span class="self">Self </span>{
             instance: A::create_instance_from_hal(name, hal_instance),
-            surfaces: Registry::without_backend(<span class="kw-2">&amp;</span>factory),
-            hubs: Hubs::new(<span class="kw-2">&amp;</span>factory),
-            _phantom: PhantomData,
+            surfaces: Registry::without_backend(),
+            hubs: Hubs::new(),
         }
     }
 
@@ -271,13 +254,12 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The raw handles obtained from the Instance must not be manually destroyed
-    </span><span class="kw">pub unsafe fn </span>from_instance(factory: G, instance: Instance) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub unsafe fn </span>from_instance(instance: Instance) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::new"</span>);
         <span class="self">Self </span>{
             instance,
-            surfaces: Registry::without_backend(<span class="kw-2">&amp;</span>factory),
-            hubs: Hubs::new(<span class="kw-2">&amp;</span>factory),
-            _phantom: PhantomData,
+            surfaces: Registry::without_backend(),
+            hubs: Hubs::new(),
         }
     }
 
@@ -319,7 +301,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Drop <span class="kw">for </span>Global&lt;G&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>Global {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::drop"</span>);
         <span class="macro">resource_log!</span>(<span class="string">"Global::drop"</span>);
@@ -357,7 +339,7 @@
 }
 
 <span class="attr">#[cfg(send_sync)]
-</span><span class="kw">fn </span>_test_send_sync(global: <span class="kw-2">&amp;</span>Global&lt;<span class="kw">crate</span>::identity::IdentityManagerFactory&gt;) {
+</span><span class="kw">fn </span>_test_send_sync(global: <span class="kw-2">&amp;</span>Global) {
     <span class="kw">fn </span>test_internal&lt;T: Send + Sync&gt;(<span class="kw">_</span>: T) {}
     test_internal(global)
 }
