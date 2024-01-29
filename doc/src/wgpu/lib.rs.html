@@ -5224,6 +5224,25 @@
 <a href="#5223" id="5223">5223</a>
 <a href="#5224" id="5224">5224</a>
 <a href="#5225" id="5225">5225</a>
+<a href="#5226" id="5226">5226</a>
+<a href="#5227" id="5227">5227</a>
+<a href="#5228" id="5228">5228</a>
+<a href="#5229" id="5229">5229</a>
+<a href="#5230" id="5230">5230</a>
+<a href="#5231" id="5231">5231</a>
+<a href="#5232" id="5232">5232</a>
+<a href="#5233" id="5233">5233</a>
+<a href="#5234" id="5234">5234</a>
+<a href="#5235" id="5235">5235</a>
+<a href="#5236" id="5236">5236</a>
+<a href="#5237" id="5237">5237</a>
+<a href="#5238" id="5238">5238</a>
+<a href="#5239" id="5239">5239</a>
+<a href="#5240" id="5240">5240</a>
+<a href="#5241" id="5241">5241</a>
+<a href="#5242" id="5242">5242</a>
+<a href="#5243" id="5243">5243</a>
+<a href="#5244" id="5244">5244</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5389,6 +5408,8 @@
     </span>OutOfMemory,
     <span class="doccomment">/// Catch only validation errors.
     </span>Validation,
+    <span class="doccomment">/// Catch only internal errors.
+    </span>Internal,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(ErrorFilter: Send, Sync);
 
@@ -10369,6 +10390,21 @@
         <span class="doccomment">/// Description of the validation error.
         </span>description: String,
     },
+    <span class="doccomment">/// Internal error. Used for signalling any failures not explicitly expected by WebGPU.
+    ///
+    /// These could be due to internal implementation or system limits being reached.
+    </span>Internal {
+        <span class="doccomment">/// Lower level source of the error.
+        </span><span class="attr">#[cfg(send_sync)]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
+        </span>source: Box&lt;<span class="kw">dyn </span>error::Error + Send + <span class="lifetime">'static</span>&gt;,
+        <span class="doccomment">/// Lower level source of the error.
+        </span><span class="attr">#[cfg(not(send_sync))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
+        </span>source: Box&lt;<span class="kw">dyn </span>error::Error + <span class="lifetime">'static</span>&gt;,
+        <span class="doccomment">/// Description of the internal GPU error.
+        </span>description: String,
+    },
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Error: Send);
@@ -10378,6 +10414,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             Error::OutOfMemory { source } =&gt; <span class="prelude-val">Some</span>(source.as_ref()),
             Error::Validation { source, .. } =&gt; <span class="prelude-val">Some</span>(source.as_ref()),
+            Error::Internal { source, .. } =&gt; <span class="prelude-val">Some</span>(source.as_ref()),
         }
     }
 }
@@ -10387,6 +10424,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             Error::OutOfMemory { .. } =&gt; f.write_str(<span class="string">"Out of Memory"</span>),
             Error::Validation { description, .. } =&gt; f.write_str(description),
+            Error::Internal { description, .. } =&gt; f.write_str(description),
         }
     }
 }
