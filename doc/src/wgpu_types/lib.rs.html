@@ -7053,6 +7053,17 @@
 <a href="#7052" id="7052">7052</a>
 <a href="#7053" id="7053">7053</a>
 <a href="#7054" id="7054">7054</a>
+<a href="#7055" id="7055">7055</a>
+<a href="#7056" id="7056">7056</a>
+<a href="#7057" id="7057">7057</a>
+<a href="#7058" id="7058">7058</a>
+<a href="#7059" id="7059">7059</a>
+<a href="#7060" id="7060">7060</a>
+<a href="#7061" id="7061">7061</a>
+<a href="#7062" id="7062">7062</a>
+<a href="#7063" id="7063">7063</a>
+<a href="#7064" id="7064">7064</a>
+<a href="#7065" id="7065">7065</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -7950,6 +7961,14 @@
         /// This mainly applies to a Vulkan driver's compliance version. If the major compliance version
         /// is `0`, then the driver is ignored. This flag allows that driver to be enabled for testing.
         </span><span class="kw">const </span>ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Enable GPU-based validation. Currently, this only changes behavior on the DX12
+        /// backend.
+        ///
+        /// Supported platforms:
+        ///
+        /// - D3D12; called ["GPU-based validation", or
+        ///   "GBV"](https://web.archive.org/web/20230206120404/https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-d3d12-debug-layer-gpu-based-validation)
+        </span><span class="kw">const </span>GPU_BASED_VALIDATION = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 }
 
@@ -7960,9 +7979,9 @@
 }
 
 <span class="kw">impl </span>InstanceFlags {
-    <span class="doccomment">/// Enable debugging and validation flags.
+    <span class="doccomment">/// Enable recommended debugging and validation flags.
     </span><span class="kw">pub fn </span>debugging() -&gt; <span class="self">Self </span>{
-        InstanceFlags::DEBUG | InstanceFlags::VALIDATION
+        InstanceFlags::DEBUG | InstanceFlags::VALIDATION | InstanceFlags::GPU_BASED_VALIDATION
     }
 
     <span class="doccomment">/// Infer good defaults from the build type
@@ -8004,6 +8023,9 @@
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(bit) = env(<span class="string">"WGPU_ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER"</span>) {
             <span class="self">self</span>.set(<span class="self">Self</span>::ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER, bit);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(bit) = env(<span class="string">"WGPU_GPU_BASED_VALIDATION"</span>) {
+            <span class="self">self</span>.set(<span class="self">Self</span>::GPU_BASED_VALIDATION, bit);
         }
 
         <span class="self">self
