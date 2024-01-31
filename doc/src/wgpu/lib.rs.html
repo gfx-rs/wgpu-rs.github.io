@@ -5243,6 +5243,29 @@
 <a href="#5242" id="5242">5242</a>
 <a href="#5243" id="5243">5243</a>
 <a href="#5244" id="5244">5244</a>
+<a href="#5245" id="5245">5245</a>
+<a href="#5246" id="5246">5246</a>
+<a href="#5247" id="5247">5247</a>
+<a href="#5248" id="5248">5248</a>
+<a href="#5249" id="5249">5249</a>
+<a href="#5250" id="5250">5250</a>
+<a href="#5251" id="5251">5251</a>
+<a href="#5252" id="5252">5252</a>
+<a href="#5253" id="5253">5253</a>
+<a href="#5254" id="5254">5254</a>
+<a href="#5255" id="5255">5255</a>
+<a href="#5256" id="5256">5256</a>
+<a href="#5257" id="5257">5257</a>
+<a href="#5258" id="5258">5258</a>
+<a href="#5259" id="5259">5259</a>
+<a href="#5260" id="5260">5260</a>
+<a href="#5261" id="5261">5261</a>
+<a href="#5262" id="5262">5262</a>
+<a href="#5263" id="5263">5263</a>
+<a href="#5264" id="5264">5264</a>
+<a href="#5265" id="5265">5265</a>
+<a href="#5266" id="5266">5266</a>
+<a href="#5267" id="5267">5267</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -6993,39 +7016,62 @@
     /// # Panics
     ///
     /// If no backend feature for the active target platform is enabled,
-    /// this method will panic, see [`Instance::any_backend_feature_enabled()`].
+    /// this method will panic, see [`Instance::enabled_backend_features()`].
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(InstanceDescriptor::default())
     }
 }
 
 <span class="kw">impl </span>Instance {
-    <span class="doccomment">/// Returns `true` if any backend feature is enabled for the current build configuration.
+    <span class="doccomment">/// Returns which backends can be picked for the current build configuration.
     ///
-    /// Which feature makes this method return true depends on the target platform:
-    /// * MacOS/iOS: `metal`, `vulkan-portability` or `angle`
-    /// * Wasm32: `webgpu`, `webgl` or Emscripten target.
-    /// * All other: Always returns true
+    /// The returned set depends on a combination of target platform and enabled features.
+    /// This does *not* do any runtime checks and is exclusively based on compile time information.
     ///
-    /// TODO: Right now it's otherwise not possible yet to opt-out of all features on most platforms.
+    /// `InstanceDescriptor::backends` does not need to be a subset of this,
+    /// but any backend that is not in this set, will not be picked.
+    ///
+    /// TODO: Right now it's otherwise not possible yet to opt-out of all features on some platforms.
     /// See &lt;https://github.com/gfx-rs/wgpu/issues/3514&gt;
-    /// * Windows: always enables Vulkan and GLES with no way to opt out
-    /// * Linux: always enables Vulkan and GLES with no way to opt out
-    </span><span class="kw">pub const fn </span>any_backend_feature_enabled() -&gt; bool {
-        <span class="comment">// Method intentionally kept verbose to keep it a bit easier to follow!
+    /// * Windows/Linux/Android: always enables Vulkan and GLES with no way to opt out
+    </span><span class="kw">pub const fn </span>enabled_backend_features() -&gt; Backends {
+        <span class="kw">let </span><span class="kw-2">mut </span>backends = Backends::empty();
 
-        // On macOS and iOS, at least one of Metal, Vulkan or GLES backend must be enabled.
-        </span><span class="kw">let </span>is_mac_or_ios = <span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">"ios"</span>);
-        <span class="kw">if </span>is_mac_or_ios {
-            <span class="macro">cfg!</span>(feature = <span class="string">"metal"</span>)
-                || <span class="macro">cfg!</span>(feature = <span class="string">"vulkan-portability"</span>)
-                || <span class="macro">cfg!</span>(feature = <span class="string">"angle"</span>)
-        <span class="comment">// On the web, either WebGPU or WebGL must be enabled.
-        </span>} <span class="kw">else if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) {
-            <span class="macro">cfg!</span>(feature = <span class="string">"webgpu"</span>) || <span class="macro">cfg!</span>(feature = <span class="string">"webgl"</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">"emscripten"</span>)
+        <span class="kw">if </span><span class="macro">cfg!</span>(native) {
+            <span class="kw">if </span><span class="macro">cfg!</span>(metal) {
+                backends = backends.union(Backends::METAL);
+            }
+            <span class="kw">if </span><span class="macro">cfg!</span>(dx12) {
+                backends = backends.union(Backends::DX12);
+            }
+
+            <span class="comment">// Windows, Android, Linux currently always enable Vulkan and OpenGL.
+            // See &lt;https://github.com/gfx-rs/wgpu/issues/3514&gt;
+            </span><span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"windows"</span>) || <span class="macro">cfg!</span>(unix) {
+                backends = backends.union(Backends::VULKAN).union(Backends::GL);
+            }
+
+            <span class="comment">// Vulkan on Mac/iOS is only available through vulkan-portability.
+            </span><span class="kw">if </span>(<span class="macro">cfg!</span>(target_os = <span class="string">"ios"</span>) || <span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>))
+                &amp;&amp; <span class="macro">cfg!</span>(feature = <span class="string">"vulkan-portability"</span>)
+            {
+                backends = backends.union(Backends::VULKAN);
+            }
+
+            <span class="comment">// GL Vulkan on Mac is only available through angle.
+            </span><span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>) &amp;&amp; <span class="macro">cfg!</span>(feature = <span class="string">"angle"</span>) {
+                backends = backends.union(Backends::VULKAN);
+            }
         } <span class="kw">else </span>{
-            <span class="bool-val">true
-        </span>}
+            <span class="kw">if </span><span class="macro">cfg!</span>(webgpu) {
+                backends = backends.union(Backends::BROWSER_WEBGPU);
+            }
+            <span class="kw">if </span><span class="macro">cfg!</span>(webgl) {
+                backends = backends.union(Backends::GL);
+            }
+        }
+
+        backends
     }
 
     <span class="doccomment">/// Create an new instance of wgpu.
@@ -7047,13 +7093,13 @@
     /// # Panics
     ///
     /// If no backend feature for the active target platform is enabled,
-    /// this method will panic, see [`Instance::any_backend_feature_enabled()`].
+    /// this method will panic, see [`Instance::enabled_backend_features()`].
     </span><span class="attr">#[allow(unreachable_code)]
     </span><span class="kw">pub fn </span>new(_instance_desc: InstanceDescriptor) -&gt; <span class="self">Self </span>{
-        <span class="kw">if </span>!<span class="self">Self</span>::any_backend_feature_enabled() {
+        <span class="kw">if </span><span class="self">Self</span>::enabled_backend_features().is_empty() {
             <span class="macro">panic!</span>(
                 <span class="string">"No wgpu backend feature that is implemented for the target platform was enabled. \
-                 See `wgpu::Instance::any_backend_feature_enabled()` for more information."
+                 See `wgpu::Instance::enabled_backend_features()` for more information."
             </span>);
         }
 
@@ -7079,7 +7125,7 @@
         }
 
         <span class="macro">unreachable!</span>(
-            <span class="string">"Earlier check of `any_backend_feature_enabled` should have prevented getting here!"
+            <span class="string">"Earlier check of `enabled_backend_features` should have prevented getting here!"
         </span>);
     }
 
