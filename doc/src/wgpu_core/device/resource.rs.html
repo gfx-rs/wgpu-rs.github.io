@@ -3454,6 +3454,11 @@
 <a href="#3453" id="3453">3453</a>
 <a href="#3454" id="3454">3454</a>
 <a href="#3455" id="3455">3455</a>
+<a href="#3456" id="3456">3456</a>
+<a href="#3457" id="3457">3457</a>
+<a href="#3458" id="3458">3458</a>
+<a href="#3459" id="3459">3459</a>
+<a href="#3460" id="3460">3460</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -6889,6 +6894,11 @@
             current_index,
             <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
         );
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = life_tracker.device_lost_closure.take() {
+            <span class="comment">// It's important to not hold the lock while calling the closure.
+            </span>drop(life_tracker);
+            device_lost_closure.call(DeviceLostReason::Dropped, <span class="string">"Device is dying."</span>.to_string());
+        }
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{
             <span class="kw-2">*</span><span class="self">self</span>.trace.lock() = <span class="prelude-val">None</span>;

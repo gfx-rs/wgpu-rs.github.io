@@ -2552,6 +2552,12 @@
 <a href="#2551" id="2551">2551</a>
 <a href="#2552" id="2552">2552</a>
 <a href="#2553" id="2553">2553</a>
+<a href="#2554" id="2554">2554</a>
+<a href="#2555" id="2555">2555</a>
+<a href="#2556" id="2556">2556</a>
+<a href="#2557" id="2557">2557</a>
+<a href="#2558" id="2558">2558</a>
+<a href="#2559" id="2559">2559</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4820,8 +4826,8 @@
         }
     }
 
-    <span class="comment">// This closure will be called exactly once during "lose the device"
-    // or when the device is dropped, if it was never lost.
+    <span class="comment">// This closure will be called exactly once during "lose the device",
+    // or when it is replaced.
     </span><span class="kw">pub fn </span>device_set_device_lost_closure&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
@@ -4831,6 +4837,12 @@
 
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(device_id) {
             <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = device.lock_life();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(existing_closure) = life_tracker.device_lost_closure.take() {
+                <span class="comment">// It's important to not hold the lock while calling the closure.
+                </span>drop(life_tracker);
+                existing_closure.call(DeviceLostReason::ReplacedCallback, <span class="string">""</span>.to_string());
+                life_tracker = device.lock_life();
+            }
             life_tracker.device_lost_closure = <span class="prelude-val">Some</span>(device_lost_closure);
         }
     }
