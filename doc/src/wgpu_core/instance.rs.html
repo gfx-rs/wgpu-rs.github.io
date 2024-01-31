@@ -1188,6 +1188,14 @@
 <a href="#1187" id="1187">1187</a>
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -1661,6 +1669,15 @@
     </span>InvalidSurface(SurfaceId),
 }
 
+<span class="attr">#[derive(Clone, Debug, Error)]
+#[non_exhaustive]
+</span><span class="kw">pub enum </span>CreateSurfaceError {
+    <span class="attr">#[error(<span class="string">"No backend is available"</span>)]
+    </span>NoSupportedBackend,
+    <span class="attr">#[error(transparent)]
+    </span>InstanceError(<span class="attr">#[from] </span>hal::InstanceError),
+}
+
 <span class="kw">impl </span>Global {
     <span class="doccomment">/// # Safety
     ///
@@ -1673,7 +1690,7 @@
         display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, hal::InstanceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface"</span>);
 
         <span class="kw">fn </span>init&lt;A: HalApi&gt;(
@@ -1711,8 +1728,7 @@
             hal_surface = init::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl, display_handle, window_handle);
         }
 
-        <span class="comment">//  This is only None if there's no instance at all.
-        </span><span class="kw">let </span>hal_surface = hal_surface.unwrap()<span class="question-mark">?</span>;
+        <span class="kw">let </span>hal_surface = hal_surface.ok_or(CreateSurfaceError::NoSupportedBackend)<span class="question-mark">??</span>;
 
         <span class="kw">let </span>surface = Surface {
             presentation: Mutex::new(<span class="prelude-val">None</span>),
