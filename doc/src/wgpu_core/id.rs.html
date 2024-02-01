@@ -386,6 +386,10 @@
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Epoch, Index};
 <span class="kw">use </span>std::{
     cmp::Ordering,
@@ -407,10 +411,16 @@
 
 <span class="doccomment">/// The raw underlying representation of an identifier.
 </span><span class="attr">#[repr(transparent)]
-#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"trace"</span>), derive(serde::Serialize))]
-#[cfg_attr(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>), derive(serde::Deserialize))]
-#[cfg_attr(feature = <span class="string">"trace"</span>, serde(into = <span class="string">"SerialId"</span>))]
-#[cfg_attr(feature = <span class="string">"replay"</span>, serde(from = <span class="string">"SerialId"</span>))]
+#[cfg_attr(
+    any(feature = <span class="string">"serde"</span>, feature = <span class="string">"trace"</span>),
+    derive(serde::Serialize),
+    serde(into = <span class="string">"SerialId"</span>)
+)]
+#[cfg_attr(
+    any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>),
+    derive(serde::Deserialize),
+    serde(from = <span class="string">"SerialId"</span>)
+)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">pub struct </span>RawId(NonZeroId);
 
@@ -517,16 +527,14 @@
     </span>Id(Index, Epoch, Backend),
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-</span><span class="kw">impl </span>From&lt;RawId&gt; <span class="kw">for </span>SerialId {
+<span class="kw">impl </span>From&lt;RawId&gt; <span class="kw">for </span>SerialId {
     <span class="kw">fn </span>from(id: RawId) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(index, epoch, backend) = id.unzip();
         <span class="self">Self</span>::Id(index, epoch, backend)
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
-</span><span class="kw">impl </span>From&lt;SerialId&gt; <span class="kw">for </span>RawId {
+<span class="kw">impl </span>From&lt;SerialId&gt; <span class="kw">for </span>RawId {
     <span class="kw">fn </span>from(id: SerialId) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>id {
             SerialId::Id(index, epoch, backend) =&gt; RawId::zip(index, epoch, backend),
