@@ -1173,29 +1173,6 @@
 <a href="#1172" id="1172">1172</a>
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
-<a href="#1175" id="1175">1175</a>
-<a href="#1176" id="1176">1176</a>
-<a href="#1177" id="1177">1177</a>
-<a href="#1178" id="1178">1178</a>
-<a href="#1179" id="1179">1179</a>
-<a href="#1180" id="1180">1180</a>
-<a href="#1181" id="1181">1181</a>
-<a href="#1182" id="1182">1182</a>
-<a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a>
-<a href="#1185" id="1185">1185</a>
-<a href="#1186" id="1186">1186</a>
-<a href="#1187" id="1187">1187</a>
-<a href="#1188" id="1188">1188</a>
-<a href="#1189" id="1189">1189</a>
-<a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -1219,11 +1196,6 @@
 
 <span class="kw">pub type </span>RequestAdapterOptions = wgt::RequestAdapterOptions&lt;SurfaceId&gt;;
 <span class="kw">type </span>HalInstance&lt;A&gt; = &lt;A <span class="kw">as </span>hal::Api&gt;::Instance;
-<span class="comment">//TODO: remove this
-</span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>HalSurface&lt;A: HalApi&gt; {
-    <span class="kw">pub </span>raw: Arc&lt;A::Surface&gt;,
-}
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[error(<span class="string">"Limit '{name}' value {requested} is better than allowed {allowed}"</span>)]
@@ -1316,30 +1288,22 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: Surface) {
-        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(<span class="kw">_</span>: A, instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, surface: AnySurface) {
+        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, surface: AnySurface) {
             <span class="kw">unsafe </span>{
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = surface.take::&lt;A&gt;() {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(suf) = Arc::into_inner(surface) {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = Arc::into_inner(suf.raw) {
-                            instance.as_ref().unwrap().destroy_surface(raw);
-                        } <span class="kw">else </span>{
-                            <span class="macro">panic!</span>(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
-                        }
-                    } <span class="kw">else </span>{
-                        <span class="macro">panic!</span>(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
-                    }
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(suf) = surface.take::&lt;A&gt;() {
+                    instance.as_ref().unwrap().destroy_surface(suf);
                 }
             }
         }
         <span class="kw">match </span>surface.raw.backend() {
             <span class="attr">#[cfg(vulkan)]
-            </span>Backend::Vulkan =&gt; destroy(hal::api::Vulkan, <span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.raw),
+            </span>Backend::Vulkan =&gt; destroy::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.raw),
             <span class="attr">#[cfg(metal)]
-            </span>Backend::Metal =&gt; destroy(hal::api::Metal, <span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.raw),
+            </span>Backend::Metal =&gt; destroy::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.raw),
             <span class="attr">#[cfg(dx12)]
-            </span>Backend::Dx12 =&gt; destroy(hal::api::Dx12, <span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.raw),
+            </span>Backend::Dx12 =&gt; destroy::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.raw),
             <span class="attr">#[cfg(gles)]
-            </span>Backend::Gl =&gt; destroy(hal::api::Gles, <span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.raw),
+            </span>Backend::Gl =&gt; destroy::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.raw),
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }
@@ -1380,7 +1344,7 @@
             adapter
                 .raw
                 .adapter
-                .surface_capabilities(<span class="kw-2">&amp;</span>suf.raw)
+                .surface_capabilities(suf)
                 .ok_or(GetSurfaceSupportError::Unsupported)<span class="question-mark">?
         </span>};
 
@@ -1421,7 +1385,7 @@
         // This could occur if the user is running their app on Wayland but Vulkan does not support
         // VK_KHR_wayland_surface.
         </span><span class="kw">match </span>suf {
-            <span class="prelude-val">Some</span>(suf) =&gt; <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.adapter.surface_capabilities(<span class="kw-2">&amp;</span>suf.raw) }.is_some(),
+            <span class="prelude-val">Some</span>(suf) =&gt; <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.adapter.surface_capabilities(suf) }.is_some(),
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         }
     }
@@ -1700,7 +1664,7 @@
         ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;AnySurface, hal::InstanceError&gt;&gt; {
             inst.as_ref().map(|inst| <span class="kw">unsafe </span>{
                 <span class="kw">match </span>inst.create_surface(display_handle, window_handle) {
-                    <span class="prelude-val">Ok</span>(raw) =&gt; <span class="prelude-val">Ok</span>(AnySurface::new(HalSurface::&lt;A&gt; { raw: Arc::new(raw) })),
+                    <span class="prelude-val">Ok</span>(raw) =&gt; <span class="prelude-val">Ok</span>(AnySurface::new::&lt;A&gt;(raw)),
                     <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
                 }
             })
@@ -1755,19 +1719,17 @@
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
             raw: {
-                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Metal&gt; = <span class="self">self
+                <span class="kw">let </span>hal_surface = <span class="self">self
                     </span>.instance
                     .metal
                     .as_ref()
-                    .map(|inst| HalSurface {
-                        raw: Arc::new(
-                            <span class="comment">// we don't want to link to metal-rs for this
-                            </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
-                            </span>inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) }),
-                        ), <span class="comment">//acquired_texture: None,
-                    </span>})
+                    .map(|inst| {
+                        <span class="comment">// we don't want to link to metal-rs for this
+                        </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
+                        </span>inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) })
+                    })
                     .unwrap();
-                AnySurface::new(hal_surface)
+                AnySurface::new::&lt;hal::api::Metal&gt;(hal_surface)
             },
         };
 
@@ -1790,15 +1752,13 @@
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
             raw: {
-                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                <span class="kw">let </span>hal_surface = <span class="self">self
                     </span>.instance
                     .dx12
                     .as_ref()
-                    .map(|inst| HalSurface {
-                        raw: Arc::new(<span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) }),
-                    })
+                    .map(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) })
                     .unwrap();
-                AnySurface::new(hal_surface)
+                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
             },
         };
 
@@ -1821,17 +1781,13 @@
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
             raw: {
-                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                <span class="kw">let </span>hal_surface = <span class="self">self
                     </span>.instance
                     .dx12
                     .as_ref()
-                    .map(|inst| HalSurface {
-                        raw: Arc::new(<span class="kw">unsafe </span>{
-                            inst.create_surface_from_surface_handle(surface_handle)
-                        }),
-                    })
+                    .map(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_surface_handle(surface_handle) })
                     .unwrap();
-                AnySurface::new(hal_surface)
+                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
             },
         };
 
@@ -1854,17 +1810,15 @@
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
             raw: {
-                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                <span class="kw">let </span>hal_surface = <span class="self">self
                     </span>.instance
                     .dx12
                     .as_ref()
-                    .map(|inst| HalSurface {
-                        raw: Arc::new(<span class="kw">unsafe </span>{
-                            inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>)
-                        }),
+                    .map(|inst| <span class="kw">unsafe </span>{
+                        inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>)
                     })
                     .unwrap();
-                AnySurface::new(hal_surface)
+                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
             },
         };
 
@@ -2012,7 +1966,7 @@
                             </span>surface.is_some()
                                 &amp;&amp; exposed
                                     .adapter
-                                    .surface_capabilities(<span class="kw-2">&amp;</span>surface.unwrap().raw)
+                                    .surface_capabilities(surface.unwrap())
                                     .is_some()
                         });
                     }

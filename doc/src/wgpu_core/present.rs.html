@@ -440,7 +440,6 @@
 <a href="#439" id="439">439</a>
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -606,7 +605,6 @@ extract it from the hub.
         <span class="kw">let </span>suf = A::get_surface(surface.as_ref());
         <span class="kw">let </span>(texture_id, status) = <span class="kw">match unsafe </span>{
             suf.unwrap()
-                .raw
                 .acquire_texture(<span class="prelude-val">Some</span>(std::time::Duration::from_millis(
                     FRAME_TIMEOUT_MS <span class="kw">as </span>u64,
                 )))
@@ -782,7 +780,7 @@ extract it from the hub.
                             <span class="prelude-val">Err</span>(hal::SurfaceError::Lost)
                         } <span class="kw">else if </span>!has_work.load(Ordering::Relaxed) {
                             <span class="macro">log::error!</span>(<span class="string">"No work has been submitted for this frame"</span>);
-                            <span class="kw">unsafe </span>{ suf.unwrap().raw.discard_texture(raw.take().unwrap()) };
+                            <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw.take().unwrap()) };
                             <span class="prelude-val">Err</span>(hal::SurfaceError::Outdated)
                         } <span class="kw">else </span>{
                             <span class="kw">unsafe </span>{
@@ -790,7 +788,7 @@ extract it from the hub.
                                     .raw
                                     .as_ref()
                                     .unwrap()
-                                    .present(<span class="kw-2">&amp;</span>suf.unwrap().raw, raw.take().unwrap())
+                                    .present(suf.unwrap(), raw.take().unwrap())
                             }
                         }
                     }
@@ -870,7 +868,7 @@ extract it from the hub.
                         has_work: <span class="kw">_</span>,
                     } =&gt; {
                         <span class="kw">if </span>surface_id == parent_id {
-                            <span class="kw">unsafe </span>{ suf.unwrap().raw.discard_texture(raw.take().unwrap()) };
+                            <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw.take().unwrap()) };
                         } <span class="kw">else </span>{
                             <span class="macro">log::warn!</span>(<span class="string">"Surface texture is outdated"</span>);
                         }

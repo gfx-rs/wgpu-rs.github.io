@@ -120,7 +120,7 @@
 <span class="kw">use crate</span>::{
     global::Global,
     hub::Hub,
-    instance::{HalSurface, Instance, Surface},
+    instance::{Instance, Surface},
 };
 
 <span class="kw">pub trait </span>HalApi: hal::Api + <span class="lifetime">'static </span>+ WasmNotSendSync {
@@ -128,7 +128,7 @@
     <span class="kw">fn </span>create_instance_from_hal(name: <span class="kw-2">&amp;</span>str, hal_instance: <span class="self">Self</span>::Instance) -&gt; Instance;
     <span class="kw">fn </span>instance_as_hal(instance: <span class="kw-2">&amp;</span>Instance) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Instance&gt;;
     <span class="kw">fn </span>hub(global: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt;;
+    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt;;
 }
 
 <span class="kw">impl </span>HalApi <span class="kw">for </span>hal::api::Empty {
@@ -142,7 +142,7 @@
     <span class="kw">fn </span>hub(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt; {
         <span class="macro">unimplemented!</span>(<span class="string">"called empty api"</span>)
     }
-    <span class="kw">fn </span>get_surface(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt; {
+    <span class="kw">fn </span>get_surface(<span class="kw">_</span>: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt; {
         <span class="macro">unimplemented!</span>(<span class="string">"called empty api"</span>)
     }
 }
@@ -163,8 +163,8 @@
     <span class="kw">fn </span>hub(global: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span>global.hubs.vulkan
     }
-    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt; {
-        surface.raw.downcast_ref()
+    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt; {
+        surface.raw.downcast_ref::&lt;<span class="self">Self</span>&gt;()
     }
 }
 
@@ -184,8 +184,8 @@
     <span class="kw">fn </span>hub(global: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span>global.hubs.metal
     }
-    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt; {
-        surface.raw.downcast_ref()
+    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt; {
+        surface.raw.downcast_ref::&lt;<span class="self">Self</span>&gt;()
     }
 }
 
@@ -205,8 +205,8 @@
     <span class="kw">fn </span>hub(global: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span>global.hubs.dx12
     }
-    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt; {
-        surface.raw.downcast_ref()
+    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt; {
+        surface.raw.downcast_ref::&lt;<span class="self">Self</span>&gt;()
     }
 }
 
@@ -227,8 +227,8 @@
     <span class="kw">fn </span>hub(global: <span class="kw-2">&amp;</span>Global) -&gt; <span class="kw-2">&amp;</span>Hub&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span>global.hubs.gl
     }
-    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HalSurface&lt;<span class="self">Self</span>&gt;&gt; {
-        surface.raw.downcast_ref()
+    <span class="kw">fn </span>get_surface(surface: <span class="kw-2">&amp;</span>Surface) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Surface&gt; {
+        surface.raw.downcast_ref::&lt;<span class="self">Self</span>&gt;()
     }
 }
 </code></pre></div></section></main></body></html>

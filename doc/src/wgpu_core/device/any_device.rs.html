@@ -75,75 +75,127 @@
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Device;
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>wgt::Backend;
+
+<span class="kw">use </span><span class="kw">super</span>::Device;
 <span class="doccomment">/// The `AnyDevice` type: a pointer to a `Device&lt;A&gt;` for any backend `A`.
 </span><span class="kw">use </span><span class="kw">crate</span>::hal_api::HalApi;
 
-<span class="kw">use </span>std::any::Any;
 <span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::mem::ManuallyDrop;
+<span class="kw">use </span>std::ptr::NonNull;
 <span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">struct </span>AnyDeviceVtable {
+    <span class="comment">// We oppurtunistically store the backend here, since we now it will be used
+    // with backend selection and it can be stored in static memory.
+    </span>backend: Backend,
+    <span class="comment">// Drop glue which knows how to drop the stored data.
+    </span>drop: <span class="kw">unsafe fn</span>(<span class="kw-2">*mut </span>()),
+}
 
 <span class="doccomment">/// A pointer to a `Device&lt;A&gt;`, for any backend `A`.
 ///
-/// Any `AnyDevice` is just like an `Arc&lt;Device&lt;A&gt;&gt;`, except that the
-/// `A` type parameter is erased. To access the `Device`, you must
-/// downcast to a particular backend with the \[`downcast_ref`\] or
-/// \[`downcast_clone`\] methods.
-</span><span class="kw">pub struct </span>AnyDevice(Arc&lt;<span class="kw">dyn </span>Any + <span class="lifetime">'static</span>&gt;);
+/// Any `AnyDevice` is just like an `Arc&lt;Device&lt;A&gt;&gt;`, except that the `A` type
+/// parameter is erased. To access the `Device`, you must downcast to a
+/// particular backend with the \[`downcast_ref`\] or \[`downcast_clone`\]
+/// methods.
+</span><span class="kw">pub struct </span>AnyDevice {
+    data: NonNull&lt;()&gt;,
+    vtable: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>AnyDeviceVtable,
+}
 
 <span class="kw">impl </span>AnyDevice {
     <span class="doccomment">/// Return an `AnyDevice` that holds an owning `Arc` pointer to `device`.
     </span><span class="kw">pub fn </span>new&lt;A: HalApi&gt;(device: Arc&lt;Device&lt;A&gt;&gt;) -&gt; AnyDevice {
-        AnyDevice(device)
+        <span class="kw">unsafe fn </span>drop_glue&lt;A: HalApi&gt;(ptr: <span class="kw-2">*mut </span>()) {
+            <span class="comment">// Drop the arc this instance is holding.
+            </span><span class="kw">unsafe </span>{
+                <span class="kw">_ </span>= Arc::from_raw(ptr.cast::&lt;A::Surface&gt;());
+            }
+        }
+
+        <span class="comment">// SAFETY: The pointer returned by Arc::into_raw is gauranteed to be
+        // non-null.
+        </span><span class="kw">let </span>data = <span class="kw">unsafe </span>{ NonNull::new_unchecked(Arc::into_raw(device).cast_mut()) };
+
+        AnyDevice {
+            data: data.cast(),
+            vtable: <span class="kw-2">&amp;</span>AnyDeviceVtable {
+                backend: A::VARIANT,
+                drop: drop_glue::&lt;A&gt;,
+            },
+        }
     }
 
     <span class="doccomment">/// If `self` is an `Arc&lt;Device&lt;A&gt;&gt;`, return a reference to the
     /// device.
     </span><span class="kw">pub fn </span>downcast_ref&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Device&lt;A&gt;&gt; {
-        <span class="self">self</span>.<span class="number">0</span>.downcast_ref::&lt;Device&lt;A&gt;&gt;()
+        <span class="kw">if </span><span class="self">self</span>.vtable.backend != A::VARIANT {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+
+        <span class="comment">// SAFETY: We just checked the instance above implicitly by the backend
+        // that it was statically constructed through.
+        </span><span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(<span class="self">self</span>.data.as_ptr().cast::&lt;Device&lt;A&gt;&gt;()) })
     }
 
     <span class="doccomment">/// If `self` is an `Arc&lt;Device&lt;A&gt;&gt;`, return a clone of that.
     </span><span class="kw">pub fn </span>downcast_clone&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;Device&lt;A&gt;&gt;&gt; {
-        <span class="comment">// `Arc::downcast` returns `Arc&lt;T&gt;`, but requires that `T` be `Sync` and
-        // `Send`, and this is not the case for `Device` in wasm builds.
+        <span class="kw">if </span><span class="self">self</span>.vtable.backend != A::VARIANT {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+
+        <span class="comment">// We need to prevent the destructor of the arc from running, since it
+        // refers to the instance held by this object. Dropping it would
+        // invalidate this object.
         //
-        // But as far as I can see, `Arc::downcast` has no particular reason to
-        // require that `T` be `Sync` and `Send`; the steps used here are sound.
-        </span><span class="kw">if </span>(<span class="self">self</span>.<span class="number">0</span>).is::&lt;Device&lt;A&gt;&gt;() {
-            <span class="comment">// Get an owned Arc.
-            </span><span class="kw">let </span>clone = <span class="self">self</span>.<span class="number">0</span>.clone();
-            <span class="comment">// Turn the `Arc`, which is a pointer to an `ArcInner` struct, into
-            // a pointer to the `ArcInner`'s `data` field. Carry along the
-            // vtable from the original `Arc`.
-            </span><span class="kw">let </span>raw_erased: <span class="kw-2">*const </span>(<span class="kw">dyn </span>Any + <span class="lifetime">'static</span>) = Arc::into_raw(clone);
-            <span class="comment">// Remove the vtable, and supply the concrete type of the `data`.
-            </span><span class="kw">let </span>raw_typed: <span class="kw-2">*const </span>Device&lt;A&gt; = raw_erased.cast::&lt;Device&lt;A&gt;&gt;();
-            <span class="comment">// Convert the pointer to the `data` field back into a pointer to
-            // the `ArcInner`, and restore reference-counting behavior.
-            </span><span class="kw">let </span>arc_typed: Arc&lt;Device&lt;A&gt;&gt; = <span class="kw">unsafe </span>{
-                <span class="comment">// Safety:
-                // - We checked that the `dyn Any` was indeed a `Device&lt;A&gt;` above.
-                // - We're calling `Arc::from_raw` on the same pointer returned
-                //   by `Arc::into_raw`, except that we stripped off the vtable
-                //   pointer.
-                // - The pointer must still be live, because we've borrowed `self`,
-                //   which holds another reference to it.
-                // - The format of a `ArcInner&lt;dyn Any&gt;` must be the same as
-                //   that of an `ArcInner&lt;Device&lt;A&gt;&gt;`, or else `AnyDevice::new`
-                //   wouldn't be possible.
-                </span>Arc::from_raw(raw_typed)
-            };
-            <span class="prelude-val">Some</span>(arc_typed)
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>}
+        // SAFETY: We just checked the instance above implicitly by the backend
+        // that it was statically constructed through.
+        </span><span class="kw">let </span>this =
+            ManuallyDrop::new(<span class="kw">unsafe </span>{ Arc::from_raw(<span class="self">self</span>.data.as_ptr().cast::&lt;Device&lt;A&gt;&gt;()) });
+
+        <span class="comment">// Cloning it increases the reference count, and we return a new arc
+        // instance.
+        </span><span class="prelude-val">Some</span>((<span class="kw-2">*</span>this).clone())
+    }
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>AnyDevice {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{ (<span class="self">self</span>.vtable.drop)(<span class="self">self</span>.data.as_ptr()) }
     }
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AnyDevice {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        f.write_str(<span class="string">"AnyDevice"</span>)
+        <span class="macro">write!</span>(f, <span class="string">"AnyDevice&lt;{}&gt;"</span>, <span class="self">self</span>.vtable.backend)
     }
 }
 
