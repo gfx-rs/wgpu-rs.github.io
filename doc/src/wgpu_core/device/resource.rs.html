@@ -3461,6 +3461,17 @@
 <a href="#3460" id="3460">3460</a>
 <a href="#3461" id="3461">3461</a>
 <a href="#3462" id="3462">3462</a>
+<a href="#3463" id="3463">3463</a>
+<a href="#3464" id="3464">3464</a>
+<a href="#3465" id="3465">3465</a>
+<a href="#3466" id="3466">3466</a>
+<a href="#3467" id="3467">3467</a>
+<a href="#3468" id="3468">3468</a>
+<a href="#3469" id="3469">3469</a>
+<a href="#3470" id="3470">3470</a>
+<a href="#3471" id="3471">3471</a>
+<a href="#3472" id="3472">3472</a>
+<a href="#3473" id="3473">3473</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3835,15 +3846,19 @@
 
         <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
 
+        <span class="kw">let </span>queue_empty = life_tracker.queue_empty();
+
         <span class="comment">// Detect if we have been destroyed and now need to lose the device.
         // If we are invalid (set at start of destroy) and our queue is empty,
         // and we have a DeviceLostClosure, return the closure to be called by
         // our caller. This will complete the steps for both destroy and for
         // "lose the device".
         </span><span class="kw">let </span><span class="kw-2">mut </span>device_lost_invocations = SmallVec::new();
-        <span class="kw">if </span>!<span class="self">self</span>.is_valid() &amp;&amp; life_tracker.queue_empty() {
-            <span class="comment">// We can release gpu resources associated with this device.
-            </span><span class="self">self</span>.release_gpu_resources();
+        <span class="kw">let </span><span class="kw-2">mut </span>should_release_gpu_resource = <span class="bool-val">false</span>;
+        <span class="kw">if </span>!<span class="self">self</span>.is_valid() &amp;&amp; queue_empty {
+            <span class="comment">// We can release gpu resources associated with this device (but not
+            // while holding the life_tracker lock).
+            </span>should_release_gpu_resource = <span class="bool-val">true</span>;
 
             <span class="comment">// If we have a DeviceLostClosure, build an invocation with the
             // reason DeviceLostReason::Destroyed and no message.
@@ -3856,12 +3871,19 @@
             }
         }
 
+        <span class="comment">// Don't hold the lock while calling release_gpu_resources.
+        </span>drop(life_tracker);
+
+        <span class="kw">if </span>should_release_gpu_resource {
+            <span class="self">self</span>.release_gpu_resources();
+        }
+
         <span class="kw">let </span>closures = UserClosures {
             mappings: mapping_closures,
             submissions: submission_closures,
             device_lost_invocations,
         };
-        <span class="prelude-val">Ok</span>((closures, life_tracker.queue_empty()))
+        <span class="prelude-val">Ok</span>((closures, queue_empty))
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>untrack(<span class="kw-2">&amp;</span><span class="self">self</span>, trackers: <span class="kw-2">&amp;</span>Tracker&lt;A&gt;) {
