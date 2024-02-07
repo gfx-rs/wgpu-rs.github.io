@@ -3472,15 +3472,73 @@
 <a href="#3471" id="3471">3471</a>
 <a href="#3472" id="3472">3472</a>
 <a href="#3473" id="3473">3473</a>
+<a href="#3474" id="3474">3474</a>
+<a href="#3475" id="3475">3475</a>
+<a href="#3476" id="3476">3476</a>
+<a href="#3477" id="3477">3477</a>
+<a href="#3478" id="3478">3478</a>
+<a href="#3479" id="3479">3479</a>
+<a href="#3480" id="3480">3480</a>
+<a href="#3481" id="3481">3481</a>
+<a href="#3482" id="3482">3482</a>
+<a href="#3483" id="3483">3483</a>
+<a href="#3484" id="3484">3484</a>
+<a href="#3485" id="3485">3485</a>
+<a href="#3486" id="3486">3486</a>
+<a href="#3487" id="3487">3487</a>
+<a href="#3488" id="3488">3488</a>
+<a href="#3489" id="3489">3489</a>
+<a href="#3490" id="3490">3490</a>
+<a href="#3491" id="3491">3491</a>
+<a href="#3492" id="3492">3492</a>
+<a href="#3493" id="3493">3493</a>
+<a href="#3494" id="3494">3494</a>
+<a href="#3495" id="3495">3495</a>
+<a href="#3496" id="3496">3496</a>
+<a href="#3497" id="3497">3497</a>
+<a href="#3498" id="3498">3498</a>
+<a href="#3499" id="3499">3499</a>
+<a href="#3500" id="3500">3500</a>
+<a href="#3501" id="3501">3501</a>
+<a href="#3502" id="3502">3502</a>
+<a href="#3503" id="3503">3503</a>
+<a href="#3504" id="3504">3504</a>
+<a href="#3505" id="3505">3505</a>
+<a href="#3506" id="3506">3506</a>
+<a href="#3507" id="3507">3507</a>
+<a href="#3508" id="3508">3508</a>
+<a href="#3509" id="3509">3509</a>
+<a href="#3510" id="3510">3510</a>
+<a href="#3511" id="3511">3511</a>
+<a href="#3512" id="3512">3512</a>
+<a href="#3513" id="3513">3513</a>
+<a href="#3514" id="3514">3514</a>
+<a href="#3515" id="3515">3515</a>
+<a href="#3516" id="3516">3516</a>
+<a href="#3517" id="3517">3517</a>
+<a href="#3518" id="3518">3518</a>
+<a href="#3519" id="3519">3519</a>
+<a href="#3520" id="3520">3520</a>
+<a href="#3521" id="3521">3521</a>
+<a href="#3522" id="3522">3522</a>
+<a href="#3523" id="3523">3523</a>
+<a href="#3524" id="3524">3524</a>
+<a href="#3525" id="3525">3525</a>
+<a href="#3526" id="3526">3526</a>
+<a href="#3527" id="3527">3527</a>
+<a href="#3528" id="3528">3528</a>
+<a href="#3529" id="3529">3529</a>
+<a href="#3530" id="3530">3530</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
-    binding_model::{<span class="self">self</span>, BindGroupLayout, BindGroupLayoutEntryError},
+    binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
     command, conv,
-    device::life::{LifetimeTracker, WaitIdleError},
-    device::queue::PendingWrites,
     device::{
-        bgl, AttachmentData, CommandAllocator, DeviceLostInvocation, MissingDownlevelFlags,
+        bgl,
+        life::{LifetimeTracker, WaitIdleError},
+        queue::PendingWrites,
+        AttachmentData, CommandAllocator, DeviceLostInvocation, MissingDownlevelFlags,
         MissingFeatures, RenderPassContext, CLEANUP_WAIT_MS,
     },
     hal_api::HalApi,
@@ -3495,10 +3553,9 @@
     pipeline,
     pool::ResourcePool,
     registry::Registry,
-    resource::ResourceInfo,
     resource::{
-        <span class="self">self</span>, Buffer, QuerySet, Resource, ResourceType, Sampler, Texture, TextureView,
-        TextureViewNotRenderableReason,
+        <span class="self">self</span>, Buffer, QuerySet, Resource, ResourceInfo, ResourceType, Sampler, Texture,
+        TextureView, TextureViewNotRenderableReason,
     },
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
@@ -3522,7 +3579,7 @@
     num::NonZeroU32,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Arc,
+        Arc, Weak,
     },
 };
 
@@ -3603,8 +3660,14 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) downlevel: wgt::DownlevelCapabilities,
     <span class="kw">pub</span>(<span class="kw">crate</span>) instance_flags: wgt::InstanceFlags,
     <span class="kw">pub</span>(<span class="kw">crate</span>) pending_writes: Mutex&lt;<span class="prelude-ty">Option</span>&lt;PendingWrites&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) deferred_destroy: Mutex&lt;Vec&lt;DeferredDestroy&lt;A&gt;&gt;&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DeferredDestroy&lt;A: HalApi&gt; {
+    TextureView(Weak&lt;TextureView&lt;A&gt;&gt;),
+    BindGroup(Weak&lt;BindGroup&lt;A&gt;&gt;),
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; std::fmt::Debug <span class="kw">for </span>Device&lt;A&gt; {
@@ -3759,6 +3822,7 @@
             downlevel,
             instance_flags,
             pending_writes: Mutex::new(<span class="prelude-val">Some</span>(pending_writes)),
+            deferred_destroy: Mutex::new(Vec::new()),
         })
     }
 
@@ -3772,6 +3836,56 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lock_life&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; MutexGuard&lt;<span class="lifetime">'a</span>, LifetimeTracker&lt;A&gt;&gt; {
         <span class="self">self</span>.life_tracker.lock()
+    }
+
+    <span class="doccomment">/// Run some destroy operations that were deferred.
+    ///
+    /// Destroying the resources requires taking a write lock on the device's snatch lock,
+    /// so a good reason for deferring resource destruction is when we don't know for sure
+    /// how risky it is to take the lock (typically, it shouldn't be taken from the drop
+    /// implementation of a reference-counted structure).
+    /// The snatch lock must not be held while this function is called.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>deferred_resource_destruction(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.deferred_destroy.lock().pop() {
+            <span class="kw">match </span>item {
+                DeferredDestroy::TextureView(view) =&gt; {
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(view) = view.upgrade() <span class="kw">else </span>{
+                        <span class="kw">continue</span>;
+                    };
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(<span class="self">self</span>.snatchable_lock.write()) <span class="kw">else </span>{
+                        <span class="kw">continue</span>;
+                    };
+
+                    <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView (destroyed) {:?}"</span>, view.label());
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.trace.lock().as_mut() {
+                        t.add(trace::Action::DestroyTextureView(view.info.id()));
+                    }
+                    <span class="kw">unsafe </span>{
+                        <span class="kw">use </span>hal::Device;
+                        <span class="self">self</span>.raw().destroy_texture_view(raw_view);
+                    }
+                }
+                DeferredDestroy::BindGroup(bind_group) =&gt; {
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.upgrade() <span class="kw">else </span>{
+                        <span class="kw">continue</span>;
+                    };
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_bind_group) = bind_group.raw.snatch(<span class="self">self</span>.snatchable_lock.write()) <span class="kw">else </span>{
+                        <span class="kw">continue</span>;
+                    };
+
+                    <span class="macro">resource_log!</span>(<span class="string">"Destroy raw BindGroup (destroyed) {:?}"</span>, bind_group.label());
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.trace.lock().as_mut() {
+                        t.add(trace::Action::DestroyBindGroup(bind_group.info.id()));
+                    }
+                    <span class="kw">unsafe </span>{
+                        <span class="kw">use </span>hal::Device;
+                        <span class="self">self</span>.raw().destroy_bind_group(raw_bind_group);
+                    }
+                }
+            }
+        }
     }
 
     <span class="doccomment">/// Check this device for completed commands.
@@ -5446,7 +5560,7 @@
         layout: <span class="kw-2">&amp;</span>Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
         desc: <span class="kw-2">&amp;</span>binding_model::BindGroupDescriptor,
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;binding_model::BindGroup&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BindGroup&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindingResource <span class="kw">as </span>Br, CreateBindGroupError <span class="kw">as </span>Error};
         {
             <span class="comment">// Check that the number of entries in the descriptor matches
@@ -5686,7 +5800,7 @@
                 .map_err(DeviceError::from)<span class="question-mark">?
         </span>};
 
-        <span class="prelude-val">Ok</span>(binding_model::BindGroup {
+        <span class="prelude-val">Ok</span>(BindGroup {
             raw: Snatchable::new(raw),
             device: <span class="self">self</span>.clone(),
             layout: layout.clone(),

@@ -2553,6 +2553,11 @@
 <a href="#2552" id="2552">2552</a>
 <a href="#2553" id="2553">2553</a>
 <a href="#2554" id="2554">2554</a>
+<a href="#2555" id="2555">2555</a>
+<a href="#2556" id="2556">2556</a>
+<a href="#2557" id="2557">2557</a>
+<a href="#2558" id="2558">2558</a>
+<a href="#2559" id="2559">2559</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4662,6 +4667,12 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
         <span class="macro">api_log!</span>(<span class="string">"Device::poll"</span>);
 
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span>device = hub
+            .devices
+            .get(device_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>(closures, queue_empty) = {
             <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
                 <span class="kw">if </span>submission_index.queue_id != device_id.transmute() {
@@ -4672,15 +4683,14 @@
                 }
             }
 
-            <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-            <span class="kw">let </span>device = hub
-                .devices
-                .get(device_id)
-                .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
             <span class="kw">let </span>fence = device.fence.read();
             <span class="kw">let </span>fence = fence.as_ref().unwrap();
             device.maintain(fence, maintain)<span class="question-mark">?
         </span>};
+
+        <span class="comment">// Some deferred destroys are scheduled in maintain so run this right after
+        // to avoid holding on to them until the next device poll.
+        </span>device.deferred_resource_destruction();
 
         closures.fire();
 
