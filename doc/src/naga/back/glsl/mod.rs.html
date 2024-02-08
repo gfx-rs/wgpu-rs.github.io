@@ -4514,23 +4514,6 @@
 <a href="#4513" id="4513">4513</a>
 <a href="#4514" id="4514">4514</a>
 <a href="#4515" id="4515">4515</a>
-<a href="#4516" id="4516">4516</a>
-<a href="#4517" id="4517">4517</a>
-<a href="#4518" id="4518">4518</a>
-<a href="#4519" id="4519">4519</a>
-<a href="#4520" id="4520">4520</a>
-<a href="#4521" id="4521">4521</a>
-<a href="#4522" id="4522">4522</a>
-<a href="#4523" id="4523">4523</a>
-<a href="#4524" id="4524">4524</a>
-<a href="#4525" id="4525">4525</a>
-<a href="#4526" id="4526">4526</a>
-<a href="#4527" id="4527">4527</a>
-<a href="#4528" id="4528">4528</a>
-<a href="#4529" id="4529">4529</a>
-<a href="#4530" id="4530">4530</a>
-<a href="#4531" id="4531">4531</a>
-<a href="#4532" id="4532">4532</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -5178,16 +5161,6 @@ to output a [`Module`](crate::Module) into glsl
         // extensions to appear before being used, even though extensions are part of the
         // preprocessor not the processor ¯\_(ツ)_/¯
         </span><span class="self">self</span>.features.write(<span class="self">self</span>.options, <span class="kw-2">&amp;mut </span><span class="self">self</span>.out)<span class="question-mark">?</span>;
-
-        <span class="comment">// Write the additional extensions
-        </span><span class="kw">if </span><span class="self">self
-            </span>.options
-            .writer_flags
-            .contains(WriterFlags::TEXTURE_SHADOW_LOD)
-        {
-            <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_shadow_lod.txt
-            </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"#extension GL_EXT_texture_shadow_lod : require"</span>)<span class="question-mark">?</span>;
-        }
 
         <span class="comment">// glsl es requires a precision to be specified for floats and ints
         // TODO: Should this be user configurable?
@@ -7153,51 +7126,49 @@ to output a [`Module`](crate::Module) into glsl
                 level,
                 depth_ref,
             } =&gt; {
-                <span class="kw">let </span>dim = <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(image, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                    TypeInner::Image { dim, .. } =&gt; dim,
+                <span class="kw">let </span>(dim, class, arrayed) = <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(image, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
+                    TypeInner::Image {
+                        dim,
+                        class,
+                        arrayed,
+                        ..
+                    } =&gt; (dim, class, arrayed),
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
-
-                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::Cube
-                    &amp;&amp; array_index.is_some()
-                    &amp;&amp; depth_ref.is_some()
-                {
-                    <span class="kw">match </span>level {
-                        <span class="kw">crate</span>::SampleLevel::Zero
-                        | <span class="kw">crate</span>::SampleLevel::Exact(<span class="kw">_</span>)
-                        | <span class="kw">crate</span>::SampleLevel::Gradient { .. }
-                        | <span class="kw">crate</span>::SampleLevel::Bias(<span class="kw">_</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(String::from(
-                                <span class="string">"gsamplerCubeArrayShadow isn't supported in textureGrad, \
-                                 textureLod or texture with bias"</span>,
-                            )))
-                        }
-                        <span class="kw">crate</span>::SampleLevel::Auto =&gt; {}
+                <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="prelude-val">None</span>;
+                <span class="kw">if </span>dim == <span class="kw">crate</span>::ImageDimension::Cube {
+                    <span class="kw">if </span>offset.is_some() {
+                        err = <span class="prelude-val">Some</span>(<span class="string">"gsamplerCube[Array][Shadow] doesn't support texture sampling with offsets"</span>);
+                    }
+                    <span class="kw">if </span>arrayed
+                        &amp;&amp; <span class="macro">matches!</span>(class, <span class="kw">crate</span>::ImageClass::Depth { .. })
+                        &amp;&amp; <span class="macro">matches!</span>(level, <span class="kw">crate</span>::SampleLevel::Gradient { .. })
+                    {
+                        err = <span class="prelude-val">Some</span>(<span class="string">"samplerCubeArrayShadow don't support textureGrad"</span>);
                     }
                 }
+                <span class="kw">if </span>gather.is_some() &amp;&amp; level != <span class="kw">crate</span>::SampleLevel::Zero {
+                    err = <span class="prelude-val">Some</span>(<span class="string">"textureGather doesn't support LOD parameters"</span>);
+                }
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = err {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(String::from(err)));
+                }
 
-                <span class="comment">// textureLod on sampler2DArrayShadow and samplerCubeShadow does not exist in GLSL.
-                // To emulate this, we will have to use textureGrad with a constant gradient of 0.
-                </span><span class="kw">let </span>workaround_lod_array_shadow_as_grad = (array_index.is_some()
-                    || dim == <span class="kw">crate</span>::ImageDimension::Cube)
-                    &amp;&amp; depth_ref.is_some()
-                    &amp;&amp; gather.is_none()
-                    &amp;&amp; !<span class="self">self
-                        </span>.options
-                        .writer_flags
-                        .contains(WriterFlags::TEXTURE_SHADOW_LOD);
+                <span class="comment">// `textureLod[Offset]` on `sampler2DArrayShadow` and `samplerCubeShadow` does not exist in GLSL,
+                // unless `GL_EXT_texture_shadow_lod` is present.
+                // But if the target LOD is zero, we can emulate that by using `textureGrad[Offset]` with a constant gradient of 0.
+                </span><span class="kw">let </span>workaround_lod_with_grad = ((dim == <span class="kw">crate</span>::ImageDimension::Cube &amp;&amp; !arrayed)
+                    || (dim == <span class="kw">crate</span>::ImageDimension::D2 &amp;&amp; arrayed))
+                    &amp;&amp; level == <span class="kw">crate</span>::SampleLevel::Zero
+                    &amp;&amp; <span class="macro">matches!</span>(class, <span class="kw">crate</span>::ImageClass::Depth { .. })
+                    &amp;&amp; !<span class="self">self</span>.features.contains(Features::TEXTURE_SHADOW_LOD);
 
-                <span class="comment">//Write the function to be used depending on the sample level
+                <span class="comment">// Write the function to be used depending on the sample level
                 </span><span class="kw">let </span>fun_name = <span class="kw">match </span>level {
                     <span class="kw">crate</span>::SampleLevel::Zero <span class="kw">if </span>gather.is_some() =&gt; <span class="string">"textureGather"</span>,
+                    <span class="kw">crate</span>::SampleLevel::Zero <span class="kw">if </span>workaround_lod_with_grad =&gt; <span class="string">"textureGrad"</span>,
                     <span class="kw">crate</span>::SampleLevel::Auto | <span class="kw">crate</span>::SampleLevel::Bias(<span class="kw">_</span>) =&gt; <span class="string">"texture"</span>,
-                    <span class="kw">crate</span>::SampleLevel::Zero | <span class="kw">crate</span>::SampleLevel::Exact(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">if </span>workaround_lod_array_shadow_as_grad {
-                            <span class="string">"textureGrad"
-                        </span>} <span class="kw">else </span>{
-                            <span class="string">"textureLod"
-                        </span>}
-                    }
+                    <span class="kw">crate</span>::SampleLevel::Zero | <span class="kw">crate</span>::SampleLevel::Exact(<span class="kw">_</span>) =&gt; <span class="string">"textureLod"</span>,
                     <span class="kw">crate</span>::SampleLevel::Gradient { .. } =&gt; <span class="string">"textureGrad"</span>,
                 };
                 <span class="kw">let </span>offset_name = <span class="kw">match </span>offset {
@@ -7260,7 +7231,7 @@ to output a [`Module`](crate::Module) into glsl
                     </span><span class="kw">crate</span>::SampleLevel::Auto =&gt; (),
                     <span class="comment">// Zero needs level set to 0
                     </span><span class="kw">crate</span>::SampleLevel::Zero =&gt; {
-                        <span class="kw">if </span>workaround_lod_array_shadow_as_grad {
+                        <span class="kw">if </span>workaround_lod_with_grad {
                             <span class="kw">let </span>vec_dim = <span class="kw">match </span>dim {
                                 <span class="kw">crate</span>::ImageDimension::Cube =&gt; <span class="number">3</span>,
                                 <span class="kw">_ </span>=&gt; <span class="number">2</span>,
@@ -7272,13 +7243,8 @@ to output a [`Module`](crate::Module) into glsl
                     }
                     <span class="comment">// Exact and bias require another argument
                     </span><span class="kw">crate</span>::SampleLevel::Exact(expr) =&gt; {
-                        <span class="kw">if </span>workaround_lod_array_shadow_as_grad {
-                            <span class="macro">log::warn!</span>(<span class="string">"Unable to `textureLod` a shadow array, ignoring the LOD"</span>);
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", vec2(0,0), vec2(0,0)"</span>)<span class="question-mark">?</span>;
-                        } <span class="kw">else </span>{
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.write_expr(expr, ctx)<span class="question-mark">?</span>;
-                        }
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(expr, ctx)<span class="question-mark">?</span>;
                     }
                     <span class="kw">crate</span>::SampleLevel::Bias(<span class="kw">_</span>) =&gt; {
                         <span class="comment">// This needs to be done after the offset writing
