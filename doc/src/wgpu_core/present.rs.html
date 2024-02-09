@@ -427,19 +427,6 @@
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
 <a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a>
-<a href="#441" id="441">441</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -451,10 +438,7 @@ When this texture is presented, we remove it from the device tracker as well as
 extract it from the hub.
 !*/
 
-</span><span class="kw">use </span>std::{
-    borrow::Borrow,
-    sync::atomic::{AtomicBool, Ordering},
-};
+</span><span class="kw">use </span>std::borrow::Borrow;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
@@ -655,7 +639,6 @@ extract it from the hub.
                     inner: Snatchable::new(resource::TextureInner::Surface {
                         raw: <span class="prelude-val">Some</span>(ast.texture),
                         parent_id: surface_id,
-                        has_work: AtomicBool::new(<span class="bool-val">false</span>),
                     }),
                     device: device.clone(),
                     desc: texture_desc,
@@ -773,15 +756,10 @@ extract it from the hub.
                     resource::TextureInner::Surface {
                         <span class="kw-2">ref mut </span>raw,
                         <span class="kw-2">ref </span>parent_id,
-                        <span class="kw-2">ref </span>has_work,
                     } =&gt; {
                         <span class="kw">if </span>surface_id != <span class="kw-2">*</span>parent_id {
                             <span class="macro">log::error!</span>(<span class="string">"Presented frame is from a different surface"</span>);
                             <span class="prelude-val">Err</span>(hal::SurfaceError::Lost)
-                        } <span class="kw">else if </span>!has_work.load(Ordering::Relaxed) {
-                            <span class="macro">log::error!</span>(<span class="string">"No work has been submitted for this frame"</span>);
-                            <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw.take().unwrap()) };
-                            <span class="prelude-val">Err</span>(hal::SurfaceError::Outdated)
                         } <span class="kw">else </span>{
                             <span class="kw">unsafe </span>{
                                 queue
@@ -862,11 +840,7 @@ extract it from the hub.
                 <span class="kw">let </span>suf = A::get_surface(<span class="kw-2">&amp;</span>surface);
                 <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {
-                    resource::TextureInner::Surface {
-                        <span class="kw-2">mut </span>raw,
-                        parent_id,
-                        has_work: <span class="kw">_</span>,
-                    } =&gt; {
+                    resource::TextureInner::Surface { <span class="kw-2">mut </span>raw, parent_id } =&gt; {
                         <span class="kw">if </span>surface_id == parent_id {
                             <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw.take().unwrap()) };
                         } <span class="kw">else </span>{
