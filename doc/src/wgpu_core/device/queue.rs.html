@@ -1556,6 +1556,13 @@
 <a href="#1555" id="1555">1555</a>
 <a href="#1556" id="1556">1556</a>
 <a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1746,18 +1753,25 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PendingWrites&lt;A: HalApi&gt; {
     <span class="kw">pub </span>command_encoder: A::CommandEncoder,
-    <span class="kw">pub </span>is_active: bool,
+
+    <span class="doccomment">/// True if `command_encoder` is in the "recording" state, as
+    /// described in the docs for the [`wgpu_hal::CommandEncoder`]
+    /// trait.
+    </span><span class="kw">pub </span>is_recording: bool,
+
     <span class="kw">pub </span>temp_resources: Vec&lt;TempResource&lt;A&gt;&gt;,
     <span class="kw">pub </span>dst_buffers: FastHashMap&lt;id::BufferId, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
     <span class="kw">pub </span>dst_textures: FastHashMap&lt;id::TextureId, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>executing_command_buffers: Vec&lt;A::CommandBuffer&gt;,
+
+    <span class="doccomment">/// All command buffers allocated from `command_encoder`.
+    </span><span class="kw">pub </span>executing_command_buffers: Vec&lt;A::CommandBuffer&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; PendingWrites&lt;A&gt; {
     <span class="kw">pub fn </span>new(command_encoder: A::CommandEncoder) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             command_encoder,
-            is_active: <span class="bool-val">false</span>,
+            is_recording: <span class="bool-val">false</span>,
             temp_resources: Vec::new(),
             dst_buffers: FastHashMap::default(),
             dst_textures: FastHashMap::default(),
@@ -1767,7 +1781,7 @@
 
     <span class="kw">pub fn </span>dispose(<span class="kw-2">mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) {
         <span class="kw">unsafe </span>{
-            <span class="kw">if </span><span class="self">self</span>.is_active {
+            <span class="kw">if </span><span class="self">self</span>.is_recording {
                 <span class="self">self</span>.command_encoder.discard_encoding();
             }
             <span class="self">self</span>.command_encoder
@@ -1790,9 +1804,9 @@
     <span class="kw">fn </span>pre_submit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::CommandBuffer&gt;, DeviceError&gt; {
         <span class="self">self</span>.dst_buffers.clear();
         <span class="self">self</span>.dst_textures.clear();
-        <span class="kw">if </span><span class="self">self</span>.is_active {
+        <span class="kw">if </span><span class="self">self</span>.is_recording {
             <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding()<span class="question-mark">? </span>};
-            <span class="self">self</span>.is_active = <span class="bool-val">false</span>;
+            <span class="self">self</span>.is_recording = <span class="bool-val">false</span>;
             <span class="self">self</span>.executing_command_buffers.push(cmd_buf);
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.executing_command_buffers.last());
@@ -1820,23 +1834,23 @@
     }
 
     <span class="kw">pub fn </span>activate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>A::CommandEncoder {
-        <span class="kw">if </span>!<span class="self">self</span>.is_active {
+        <span class="kw">if </span>!<span class="self">self</span>.is_recording {
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.command_encoder
                     .begin_encoding(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) PendingWrites"</span>))
                     .unwrap();
             }
-            <span class="self">self</span>.is_active = <span class="bool-val">true</span>;
+            <span class="self">self</span>.is_recording = <span class="bool-val">true</span>;
         }
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.command_encoder
     }
 
     <span class="kw">pub fn </span>deactivate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span><span class="self">self</span>.is_active {
+        <span class="kw">if </span><span class="self">self</span>.is_recording {
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.command_encoder.discard_encoding();
             }
-            <span class="self">self</span>.is_active = <span class="bool-val">false</span>;
+            <span class="self">self</span>.is_recording = <span class="bool-val">false</span>;
         }
     }
 }
