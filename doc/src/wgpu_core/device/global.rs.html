@@ -2558,6 +2558,26 @@
 <a href="#2557" id="2557">2557</a>
 <a href="#2558" id="2558">2558</a>
 <a href="#2559" id="2559">2559</a>
+<a href="#2560" id="2560">2560</a>
+<a href="#2561" id="2561">2561</a>
+<a href="#2562" id="2562">2562</a>
+<a href="#2563" id="2563">2563</a>
+<a href="#2564" id="2564">2564</a>
+<a href="#2565" id="2565">2565</a>
+<a href="#2566" id="2566">2566</a>
+<a href="#2567" id="2567">2567</a>
+<a href="#2568" id="2568">2568</a>
+<a href="#2569" id="2569">2569</a>
+<a href="#2570" id="2570">2570</a>
+<a href="#2571" id="2571">2571</a>
+<a href="#2572" id="2572">2572</a>
+<a href="#2573" id="2573">2573</a>
+<a href="#2574" id="2574">2574</a>
+<a href="#2575" id="2575">2575</a>
+<a href="#2576" id="2576">2576</a>
+<a href="#2577" id="2577">2577</a>
+<a href="#2578" id="2578">2578</a>
+<a href="#2579" id="2579">2579</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2586,9 +2606,7 @@
 
 <span class="kw">use </span>std::{
     borrow::Cow,
-    iter,
-    ops::Range,
-    ptr,
+    iter, ptr,
     sync::{atomic::Ordering, Arc},
 };
 
@@ -4896,15 +4914,18 @@
     <span class="kw">pub fn </span>buffer_map_async&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer_id: id::BufferId,
-        range: Range&lt;BufferAddress&gt;,
+        offset: BufferAddress,
+        size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
         op: BufferMapOperation,
     ) -&gt; BufferAccessResult {
-        <span class="macro">api_log!</span>(<span class="string">"Buffer::map_async {buffer_id:?} range {range:?} op: {op:?}"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Buffer::map_async {buffer_id:?} offset {offset:?} size {size:?} op: {op:?}"</span>);
 
         <span class="comment">// User callbacks must not be called while holding buffer_map_async_inner's locks, so we
         // defer the error callback if it needs to be called immediately (typically when running
         // into errors).
-        </span><span class="kw">if let </span><span class="prelude-val">Err</span>((<span class="kw-2">mut </span>operation, err)) = <span class="self">self</span>.buffer_map_async_inner::&lt;A&gt;(buffer_id, range, op) {
+        </span><span class="kw">if let </span><span class="prelude-val">Err</span>((<span class="kw-2">mut </span>operation, err)) =
+            <span class="self">self</span>.buffer_map_async_inner::&lt;A&gt;(buffer_id, offset, size, op)
+        {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
                 callback.call(<span class="prelude-val">Err</span>(err.clone()));
             }
@@ -4920,7 +4941,8 @@
     </span><span class="kw">fn </span>buffer_map_async_inner&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer_id: id::BufferId,
-        range: Range&lt;BufferAddress&gt;,
+        offset: BufferAddress,
+        size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
         op: BufferMapOperation,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), (BufferMapOperation, BufferAccessError)&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::map_async"</span>);
@@ -4932,22 +4954,43 @@
             HostMap::Write =&gt; (wgt::BufferUsages::MAP_WRITE, hal::BufferUses::MAP_WRITE),
         };
 
-        <span class="kw">if </span>range.start % wgt::MAP_ALIGNMENT != <span class="number">0 </span>|| range.end % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::UnalignedRange));
-        }
-
         <span class="kw">let </span>buffer = {
-            <span class="kw">let </span>buffer = hub
-                .buffers
-                .get(buffer_id)
-                .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid);
+            <span class="kw">let </span>buffer = hub.buffers.get(buffer_id);
 
             <span class="kw">let </span>buffer = <span class="kw">match </span>buffer {
                 <span class="prelude-val">Ok</span>(b) =&gt; b,
-                <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>((op, e));
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::Invalid));
                 }
             };
+            {
+                <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+                <span class="kw">if </span>buffer.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::Destroyed));
+                }
+            }
+
+            <span class="kw">let </span>range_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
+                size
+            } <span class="kw">else if </span>offset &gt; buffer.size {
+                <span class="number">0
+            </span>} <span class="kw">else </span>{
+                buffer.size - offset
+            };
+
+            <span class="kw">if </span>offset % wgt::MAP_ALIGNMENT != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::UnalignedOffset { offset }));
+            }
+            <span class="kw">if </span>range_size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::UnalignedRangeSize { range_size }));
+            }
+
+            <span class="kw">let </span>range = offset..(offset + range_size);
+
+            <span class="kw">if </span>range.start % wgt::MAP_ALIGNMENT != <span class="number">0 </span>|| range.end % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0
+            </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::UnalignedRange));
+            }
 
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>buffer.device;
             <span class="kw">if </span>!device.is_valid() {
@@ -4977,11 +5020,6 @@
                 ));
             }
 
-            <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-            <span class="kw">if </span>buffer.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>((op, BufferAccessError::Destroyed));
-            }
-
             {
                 <span class="kw">let </span>map_state = <span class="kw-2">&amp;mut *</span>buffer.map_state.lock();
                 <span class="kw-2">*</span>map_state = <span class="kw">match </span><span class="kw-2">*</span>map_state {
@@ -5001,6 +5039,8 @@
                     }
                 };
             }
+
+            <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = buffer.device.as_ref().trackers.lock();
