@@ -3529,6 +3529,20 @@
 <a href="#3528" id="3528">3528</a>
 <a href="#3529" id="3529">3529</a>
 <a href="#3530" id="3530">3530</a>
+<a href="#3531" id="3531">3531</a>
+<a href="#3532" id="3532">3532</a>
+<a href="#3533" id="3533">3533</a>
+<a href="#3534" id="3534">3534</a>
+<a href="#3535" id="3535">3535</a>
+<a href="#3536" id="3536">3536</a>
+<a href="#3537" id="3537">3537</a>
+<a href="#3538" id="3538">3538</a>
+<a href="#3539" id="3539">3539</a>
+<a href="#3540" id="3540">3540</a>
+<a href="#3541" id="3541">3541</a>
+<a href="#3542" id="3542">3542</a>
+<a href="#3543" id="3543">3543</a>
+<a href="#3544" id="3544">3544</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3561,7 +3575,9 @@
     snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
     track::{BindGroupStates, TextureSelector, Tracker},
-    validation::{<span class="self">self</span>, check_buffer_usage, check_texture_usage},
+    validation::{
+        <span class="self">self</span>, check_buffer_usage, check_texture_usage, validate_color_attachment_bytes_per_sample,
+    },
     FastHashMap, LabelHelpers <span class="kw">as _</span>, SubmissionIndex,
 };
 
@@ -6280,11 +6296,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>shader_binding_sizes = FastHashMap::default();
 
         <span class="kw">let </span>num_attachments = desc.fragment.as_ref().map(|f| f.targets.len()).unwrap_or(<span class="number">0</span>);
-        <span class="kw">if </span>num_attachments &gt; hal::MAX_COLOR_ATTACHMENTS {
+        <span class="kw">let </span>max_attachments = <span class="self">self</span>.limits.max_color_attachments <span class="kw">as </span>usize;
+        <span class="kw">if </span>num_attachments &gt; max_attachments {
             <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::ColorAttachment(
                 command::ColorAttachmentError::TooMany {
                     given: num_attachments,
-                    limit: hal::MAX_COLOR_ATTACHMENTS,
+                    limit: max_attachments,
                 },
             ));
         }
@@ -6490,12 +6507,23 @@
                             }
                         }
                     }
+
                     <span class="kw">break </span><span class="prelude-val">None</span>;
                 };
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::ColorState(i <span class="kw">as </span>u8, e));
                 }
             }
+        }
+
+        <span class="kw">let </span>limit = <span class="self">self</span>.limits.max_color_attachment_bytes_per_sample;
+        <span class="kw">let </span>formats = color_targets
+            .iter()
+            .map(|cs| cs.as_ref().map(|cs| cs.format));
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(total) = validate_color_attachment_bytes_per_sample(formats, limit) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::ColorAttachment(
+                command::ColorAttachmentError::TooManyBytesPerSample { total, limit },
+            ));
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ds) = depth_stencil_state {

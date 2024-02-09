@@ -1253,6 +1253,32 @@
 <a href="#1252" id="1252">1252</a>
 <a href="#1253" id="1253">1253</a>
 <a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, FastHashMap, FastHashSet};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
@@ -2506,5 +2532,31 @@
             .ok_or(StageError::MissingEntryPoint(pair.<span class="number">1</span>))
             .map(|ep| ep.dual_source_blending)
     }
+}
+
+<span class="comment">// https://gpuweb.github.io/gpuweb/#abstract-opdef-calculating-color-attachment-bytes-per-sample
+</span><span class="kw">pub fn </span>validate_color_attachment_bytes_per_sample(
+    attachment_formats: <span class="kw">impl </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;wgt::TextureFormat&gt;&gt;,
+    limit: u32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), u32&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>total_bytes_per_sample = <span class="number">0</span>;
+    <span class="kw">for </span>format <span class="kw">in </span>attachment_formats {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(format) = format <span class="kw">else </span>{ <span class="kw">continue</span>; };
+
+        <span class="kw">let </span>byte_cost = format.target_pixel_byte_cost().unwrap();
+        <span class="kw">let </span>alignment = format.target_component_alignment().unwrap();
+
+        <span class="kw">let </span>rem = total_bytes_per_sample % alignment;
+        <span class="kw">if </span>rem != <span class="number">0 </span>{
+            total_bytes_per_sample += alignment - rem;
+        }
+        total_bytes_per_sample += byte_cost;
+    }
+
+    <span class="kw">if </span>total_bytes_per_sample &gt; limit {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(total_bytes_per_sample);
+    }
+
+    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>

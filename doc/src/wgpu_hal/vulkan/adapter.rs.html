@@ -2005,6 +2005,15 @@
 <a href="#2004" id="2004">2004</a>
 <a href="#2005" id="2005">2005</a>
 <a href="#2006" id="2006">2006</a>
+<a href="#2007" id="2007">2007</a>
+<a href="#2008" id="2008">2008</a>
+<a href="#2009" id="2009">2009</a>
+<a href="#2010" id="2010">2010</a>
+<a href="#2011" id="2011">2011</a>
+<a href="#2012" id="2012">2012</a>
+<a href="#2013" id="2013">2013</a>
+<a href="#2014" id="2014">2014</a>
+<a href="#2015" id="2015">2015</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2834,6 +2843,11 @@
                 u64::MAX
             };
 
+        <span class="comment">// TODO: programmatically determine this, if possible. It's unclear whether we can
+        // as of https://github.com/gpuweb/gpuweb/issues/2965#issuecomment-1361315447.
+        // We could increase the limit when we aren't on a tiled GPU.
+        </span><span class="kw">let </span>max_color_attachment_bytes_per_sample = <span class="number">32</span>;
+
         wgt::Limits {
             max_texture_dimension_1d: limits.max_image_dimension1_d,
             max_texture_dimension_2d: limits.max_image_dimension2_d,
@@ -2869,6 +2883,10 @@
             max_inter_stage_shader_components: limits
                 .max_vertex_output_components
                 .min(limits.max_fragment_input_components),
+            max_color_attachments: limits
+                .max_color_attachments
+                .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>u32),
+            max_color_attachment_bytes_per_sample,
             max_compute_workgroup_storage_size: limits.max_compute_shared_memory_size,
             max_compute_invocations_per_workgroup: limits.max_compute_work_group_invocations,
             max_compute_workgroup_size_x: max_compute_workgroup_sizes[<span class="number">0</span>],

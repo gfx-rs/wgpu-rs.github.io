@@ -1217,6 +1217,17 @@
 <a href="#1216" id="1216">1216</a>
 <a href="#1217" id="1217">1217</a>
 <a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1871,6 +1882,15 @@
             <span class="number">0
         </span>};
 
+        <span class="kw">let </span>max_color_attachments = <span class="kw">unsafe </span>{
+            gl.get_parameter_i32(glow::MAX_COLOR_ATTACHMENTS)
+                .min(gl.get_parameter_i32(glow::MAX_DRAW_BUFFERS))
+                .min(<span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS <span class="kw">as </span>i32) <span class="kw">as </span>u32
+        };
+
+        <span class="comment">// TODO: programmatically determine this.
+        </span><span class="kw">let </span>max_color_attachment_bytes_per_sample = <span class="number">32</span>;
+
         <span class="kw">let </span>limits = wgt::Limits {
             max_texture_dimension_1d: max_texture_size,
             max_texture_dimension_2d: max_texture_size,
@@ -1941,6 +1961,8 @@
             max_inter_stage_shader_components: <span class="kw">unsafe </span>{
                 gl.get_parameter_i32(glow::MAX_VARYING_COMPONENTS)
             } <span class="kw">as </span>u32,
+            max_color_attachments,
+            max_color_attachment_bytes_per_sample,
             max_compute_workgroup_storage_size: <span class="kw">if </span>supports_work_group_params {
                 (<span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_COMPUTE_SHARED_MEMORY_SIZE) } <span class="kw">as </span>u32)
             } <span class="kw">else </span>{
