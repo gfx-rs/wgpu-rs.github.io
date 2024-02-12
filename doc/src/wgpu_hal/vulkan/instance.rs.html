@@ -1010,6 +1010,47 @@
 <a href="#1009" id="1009">1009</a>
 <a href="#1010" id="1010">1010</a>
 <a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1223,6 +1264,22 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.shared
     }
 
+    <span class="kw">fn </span>enumerate_instance_extension_properties(
+        entry: <span class="kw-2">&amp;</span>ash::Entry,
+        layer_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>CStr&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;vk::ExtensionProperties&gt;, <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="kw">let </span>instance_extensions = {
+            <span class="macro">profiling::scope!</span>(<span class="string">"vkEnumerateInstanceExtensionProperties"</span>);
+            entry.enumerate_instance_extension_properties(layer_name)
+        };
+        instance_extensions.map_err(|e| {
+            <span class="kw">crate</span>::InstanceError::with_source(
+                String::from(<span class="string">"enumerate_instance_extension_properties() failed"</span>),
+                e,
+            )
+        })
+    }
+
     <span class="doccomment">/// Return the instance extension names wgpu would like to enable.
     ///
     /// Return a vector of the names of instance extensions actually available
@@ -1241,16 +1298,7 @@
         _instance_api_version: u32,
         flags: wgt::InstanceFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">let </span>instance_extensions = {
-            <span class="macro">profiling::scope!</span>(<span class="string">"vkEnumerateInstanceExtensionProperties"</span>);
-            entry.enumerate_instance_extension_properties(<span class="prelude-val">None</span>)
-        };
-        <span class="kw">let </span>instance_extensions = instance_extensions.map_err(|e| {
-            <span class="kw">crate</span>::InstanceError::with_source(
-                String::from(<span class="string">"enumerate_instance_extension_properties() failed"</span>),
-                e,
-            )
-        })<span class="question-mark">?</span>;
+        <span class="kw">let </span>instance_extensions = <span class="self">Self</span>::enumerate_instance_extension_properties(entry, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Check our extensions against the available extensions
         </span><span class="kw">let </span><span class="kw-2">mut </span>extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt; = Vec::new();
@@ -1655,6 +1703,30 @@
                 .find(|inst_layer| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(name))
         }
 
+        <span class="kw">let </span>validation_layer_name =
+            CStr::from_bytes_with_nul(<span class="string">b"VK_LAYER_KHRONOS_validation\0"</span>).unwrap();
+        <span class="kw">let </span>validation_layer_properties = find_layer(<span class="kw-2">&amp;</span>instance_layers, validation_layer_name);
+        <span class="kw">let </span>validation_features_are_enabled = || {
+            validation_layer_properties.is_some().then(|| {
+                <span class="kw">let </span>exts = <span class="self">Self</span>::enumerate_instance_extension_properties(
+                    <span class="kw-2">&amp;</span>entry,
+                    <span class="prelude-val">Some</span>(validation_layer_name),
+                )<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>ext_names = exts
+                    .iter()
+                    .filter_map(|ext| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>ext.extension_name));
+                <span class="kw">let </span>found =
+                    ext_names.any(|ext_name| ext_name == vk::ExtValidationFeaturesFn::name());
+                <span class="prelude-val">Ok</span>(found)
+            })
+        };
+        <span class="kw">let </span>should_enable_gpu_based_validation = desc
+            .flags
+            .intersects(wgt::InstanceFlags::GPU_BASED_VALIDATION)
+            &amp;&amp; validation_features_are_enabled()
+                .transpose()<span class="question-mark">?
+                </span>.unwrap_or(<span class="bool-val">false</span>);
+
         <span class="kw">let </span>nv_optimus_layer = CStr::from_bytes_with_nul(<span class="string">b"VK_LAYER_NV_optimus\0"</span>).unwrap();
         <span class="kw">let </span>has_nv_optimus = find_layer(<span class="kw-2">&amp;</span>instance_layers, nv_optimus_layer).is_some();
 
@@ -1665,10 +1737,10 @@
 
         <span class="comment">// Request validation layer if asked.
         </span><span class="kw">let </span><span class="kw-2">mut </span>debug_utils = <span class="prelude-val">None</span>;
-        <span class="kw">if </span>desc.flags.intersects(wgt::InstanceFlags::VALIDATION) {
-            <span class="kw">let </span>validation_layer_name =
-                CStr::from_bytes_with_nul(<span class="string">b"VK_LAYER_KHRONOS_validation\0"</span>).unwrap();
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_properties) = find_layer(<span class="kw-2">&amp;</span>instance_layers, validation_layer_name) {
+        <span class="kw">if </span>desc.flags.intersects(wgt::InstanceFlags::VALIDATION)
+            || should_enable_gpu_based_validation
+        {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_properties) = validation_layer_properties {
                 layers.push(validation_layer_name);
 
                 <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
@@ -1766,6 +1838,16 @@
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>(<span class="kw">_</span>, <span class="kw-2">ref mut </span>vk_create_info)) = debug_utils.as_mut() {
                 create_info = create_info.push_next(vk_create_info);
+            }
+
+            <span class="kw">let </span><span class="kw-2">mut </span>gpu_assisted_validation = vk::ValidationFeaturesEXT::builder()
+                .enabled_validation_features(<span class="kw-2">&amp;</span>[
+                    vk::ValidationFeatureEnableEXT::GPU_ASSISTED,
+                    vk::ValidationFeatureEnableEXT::GPU_ASSISTED_RESERVE_BINDING_SLOT,
+                    vk::ValidationFeatureEnableEXT::SYNCHRONIZATION_VALIDATION,
+                ]);
+            <span class="kw">if </span>should_enable_gpu_based_validation {
+                create_info = create_info.push_next(<span class="kw-2">&amp;mut </span>gpu_assisted_validation);
             }
 
             <span class="kw">unsafe </span>{
