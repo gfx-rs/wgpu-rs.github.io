@@ -500,13 +500,20 @@
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     command::{CommandBuffer, CommandEncoderError},
-    device::DeviceError,
+    device::{DeviceError, MissingFeatures},
     global::Global,
     hal_api::HalApi,
     id::{<span class="self">self</span>, Id},
@@ -610,6 +617,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
+    <span class="attr">#[error(transparent)]
+    </span>MissingFeature(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(<span class="string">"Error encountered while trying to use queries"</span>)]
     </span>Use(<span class="attr">#[from] </span>QueryUseError),
     <span class="attr">#[error(<span class="string">"Error encountered while trying to resolve a query"</span>)]
@@ -857,6 +866,11 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
+
+        cmd_buf
+            .device
+            .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 

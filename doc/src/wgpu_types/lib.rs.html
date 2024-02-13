@@ -7176,6 +7176,21 @@
 <a href="#7175" id="7175">7175</a>
 <a href="#7176" id="7176">7176</a>
 <a href="#7177" id="7177">7177</a>
+<a href="#7178" id="7178">7178</a>
+<a href="#7179" id="7179">7179</a>
+<a href="#7180" id="7180">7180</a>
+<a href="#7181" id="7181">7181</a>
+<a href="#7182" id="7182">7182</a>
+<a href="#7183" id="7183">7183</a>
+<a href="#7184" id="7184">7184</a>
+<a href="#7185" id="7185">7185</a>
+<a href="#7186" id="7186">7186</a>
+<a href="#7187" id="7187">7187</a>
+<a href="#7188" id="7188">7188</a>
+<a href="#7189" id="7189">7189</a>
+<a href="#7190" id="7190">7190</a>
+<a href="#7191" id="7191">7191</a>
+<a href="#7192" id="7192">7192</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -7424,8 +7439,8 @@
     </span><span class="attr">#[repr(transparent)]
     #[derive(Default)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-    </span><span class="kw">pub struct </span>Features: u64 {
-        <span class="comment">//
+    </span><span class="kw">pub struct </span>Features: u128 { <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/5247): consider making this an `enumset`
+        //
         // ---- Start numbering at 1 &lt;&lt; 0 ----
         //
         // WebGPU features:
@@ -7449,11 +7464,12 @@
         /// all work before the query is finished.
         ///
         /// This feature allows the use of
-        /// - [`CommandEncoder::write_timestamp`]
         /// - [`RenderPassDescriptor::timestamp_writes`]
         /// - [`ComputePassDescriptor::timestamp_writes`]
         /// to write out timestamps.
-        /// For timestamps within passes refer to [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`]
+        ///
+        /// For arbitrary timestamp write commands on encoders refer to [`Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`].
+        /// For arbitrary timestamp write commands on passes refer to [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`].
         ///
         /// They must be resolved using [`CommandEncoder::resolve_query_sets`] into a buffer,
         /// then the result must be multiplied by the timestamp period [`Queue::get_timestamp_period`]
@@ -7670,9 +7686,23 @@
         ///
         /// This is a native only feature with a [proposal](https://github.com/gpuweb/gpuweb/blob/0008bd30da2366af88180b511a5d0d0c1dffbc36/proposals/pipeline-statistics-query.md) for the web.
         </span><span class="kw">const </span>PIPELINE_STATISTICS_QUERY = <span class="number">1 </span>&lt;&lt; <span class="number">32</span>;
-        <span class="doccomment">/// Allows for timestamp queries inside render passes.
+        <span class="doccomment">/// Allows for timestamp queries directly on command encoders.
         ///
         /// Implies [`Features::TIMESTAMP_QUERY`] is supported.
+        ///
+        /// Additionally allows for timestamp writes on command encoders
+        /// using  [`CommandEncoder::write_timestamp`].
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        /// - DX12
+        /// - Metal
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>TIMESTAMP_QUERY_INSIDE_ENCODERS = <span class="number">1 </span>&lt;&lt; <span class="number">33</span>;
+        <span class="doccomment">/// Allows for timestamp queries directly on command encoders.
+        ///
+        /// Implies [`Features::TIMESTAMP_QUERY`] &amp; [`Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`] is supported.
         ///
         /// Additionally allows for timestamp queries to be used inside render &amp; compute passes using:
         /// - [`RenderPassEncoder::write_timestamp`]
@@ -7686,7 +7716,7 @@
         /// This is generally not available on tile-based rasterization GPUs.
         ///
         /// This is a native only feature with a [proposal](https://github.com/gpuweb/gpuweb/blob/0008bd30da2366af88180b511a5d0d0c1dffbc36/proposals/timestamp-query-inside-passes.md) for the web.
-        </span><span class="kw">const </span>TIMESTAMP_QUERY_INSIDE_PASSES = <span class="number">1 </span>&lt;&lt; <span class="number">33</span>;
+        </span><span class="kw">const </span>TIMESTAMP_QUERY_INSIDE_PASSES = <span class="number">1 </span>&lt;&lt; <span class="number">34</span>;
         <span class="doccomment">/// Webgpu only allows the MAP_READ and MAP_WRITE buffer usage to be matched with
         /// COPY_DST and COPY_SRC respectively. This removes this requirement.
         ///
@@ -7700,7 +7730,7 @@
         /// - Metal
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>MAPPABLE_PRIMARY_BUFFERS = <span class="number">1 </span>&lt;&lt; <span class="number">34</span>;
+        </span><span class="kw">const </span>MAPPABLE_PRIMARY_BUFFERS = <span class="number">1 </span>&lt;&lt; <span class="number">35</span>;
         <span class="doccomment">/// Allows the user to create uniform arrays of textures in shaders:
         ///
         /// ex.
@@ -7723,7 +7753,7 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>TEXTURE_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">35</span>;
+        </span><span class="kw">const </span>TEXTURE_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">36</span>;
         <span class="doccomment">/// Allows the user to create arrays of buffers in shaders:
         ///
         /// ex.
@@ -7745,7 +7775,7 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>BUFFER_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">36</span>;
+        </span><span class="kw">const </span>BUFFER_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">37</span>;
         <span class="doccomment">/// Allows the user to create uniform arrays of storage buffers or textures in shaders,
         /// if resp. [`Features::BUFFER_BINDING_ARRAY`] or [`Features::TEXTURE_BINDING_ARRAY`]
         /// is supported.
@@ -7758,7 +7788,7 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>STORAGE_RESOURCE_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">37</span>;
+        </span><span class="kw">const </span>STORAGE_RESOURCE_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">38</span>;
         <span class="doccomment">/// Allows shaders to index sampled texture and storage buffer resource arrays with dynamically non-uniform values:
         ///
         /// ex. `texture_array[vertex_data]`
@@ -7783,7 +7813,7 @@
         /// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)'s shaderSampledImageArrayNonUniformIndexing &amp; shaderStorageBufferArrayNonUniformIndexing feature)
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING = <span class="number">1 </span>&lt;&lt; <span class="number">38</span>;
+        </span><span class="kw">const </span>SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING = <span class="number">1 </span>&lt;&lt; <span class="number">39</span>;
         <span class="doccomment">/// Allows shaders to index uniform buffer and storage texture resource arrays with dynamically non-uniform values:
         ///
         /// ex. `texture_array[vertex_data]`
@@ -7808,11 +7838,11 @@
         /// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)'s shaderUniformBufferArrayNonUniformIndexing &amp; shaderStorageTextureArrayNonUniformIndexing feature)
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING = <span class="number">1 </span>&lt;&lt; <span class="number">39</span>;
+        </span><span class="kw">const </span>UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING = <span class="number">1 </span>&lt;&lt; <span class="number">40</span>;
         <span class="doccomment">/// Allows the user to create bind groups containing arrays with less bindings than the BindGroupLayout.
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>PARTIALLY_BOUND_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">40</span>;
+        </span><span class="kw">const </span>PARTIALLY_BOUND_BINDING_ARRAY = <span class="number">1 </span>&lt;&lt; <span class="number">41</span>;
         <span class="doccomment">/// Allows the user to call [`RenderPass::multi_draw_indirect`] and [`RenderPass::multi_draw_indexed_indirect`].
         ///
         /// Allows multiple indirect calls to be dispatched from a single buffer.
@@ -7826,7 +7856,7 @@
         ///
         /// [`RenderPass::multi_draw_indirect`]: ../wgpu/struct.RenderPass.html#method.multi_draw_indirect
         /// [`RenderPass::multi_draw_indexed_indirect`]: ../wgpu/struct.RenderPass.html#method.multi_draw_indexed_indirect
-        </span><span class="kw">const </span>MULTI_DRAW_INDIRECT = <span class="number">1 </span>&lt;&lt; <span class="number">41</span>;
+        </span><span class="kw">const </span>MULTI_DRAW_INDIRECT = <span class="number">1 </span>&lt;&lt; <span class="number">42</span>;
         <span class="doccomment">/// Allows the user to call [`RenderPass::multi_draw_indirect_count`] and [`RenderPass::multi_draw_indexed_indirect_count`].
         ///
         /// This allows the use of a buffer containing the actual number of draw calls.
@@ -7839,7 +7869,7 @@
         ///
         /// [`RenderPass::multi_draw_indirect_count`]: ../wgpu/struct.RenderPass.html#method.multi_draw_indirect_count
         /// [`RenderPass::multi_draw_indexed_indirect_count`]: ../wgpu/struct.RenderPass.html#method.multi_draw_indexed_indirect_count
-        </span><span class="kw">const </span>MULTI_DRAW_INDIRECT_COUNT = <span class="number">1 </span>&lt;&lt; <span class="number">42</span>;
+        </span><span class="kw">const </span>MULTI_DRAW_INDIRECT_COUNT = <span class="number">1 </span>&lt;&lt; <span class="number">43</span>;
         <span class="doccomment">/// Allows the use of push constants: small, fast bits of memory that can be updated
         /// inside a [`RenderPass`].
         ///
@@ -7859,7 +7889,7 @@
         /// [`RenderPass`]: ../wgpu/struct.RenderPass.html
         /// [`PipelineLayoutDescriptor`]: ../wgpu/struct.PipelineLayoutDescriptor.html
         /// [`RenderPass::set_push_constants`]: ../wgpu/struct.RenderPass.html#method.set_push_constants
-        </span><span class="kw">const </span>PUSH_CONSTANTS = <span class="number">1 </span>&lt;&lt; <span class="number">43</span>;
+        </span><span class="kw">const </span>PUSH_CONSTANTS = <span class="number">1 </span>&lt;&lt; <span class="number">44</span>;
         <span class="doccomment">/// Allows the use of [`AddressMode::ClampToBorder`] with a border color
         /// of [`SamplerBorderColor::Zero`].
         ///
@@ -7870,7 +7900,7 @@
         /// - OpenGL
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>ADDRESS_MODE_CLAMP_TO_ZERO = <span class="number">1 </span>&lt;&lt; <span class="number">44</span>;
+        </span><span class="kw">const </span>ADDRESS_MODE_CLAMP_TO_ZERO = <span class="number">1 </span>&lt;&lt; <span class="number">45</span>;
         <span class="doccomment">/// Allows the use of [`AddressMode::ClampToBorder`] with a border color
         /// other than [`SamplerBorderColor::Zero`].
         ///
@@ -7881,7 +7911,7 @@
         /// - OpenGL
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>ADDRESS_MODE_CLAMP_TO_BORDER = <span class="number">1 </span>&lt;&lt; <span class="number">45</span>;
+        </span><span class="kw">const </span>ADDRESS_MODE_CLAMP_TO_BORDER = <span class="number">1 </span>&lt;&lt; <span class="number">46</span>;
         <span class="doccomment">/// Allows the user to set [`PolygonMode::Line`] in [`PrimitiveState::polygon_mode`]
         ///
         /// This allows drawing polygons/triangles as lines (wireframe) instead of filled
@@ -7892,7 +7922,7 @@
         /// - Metal
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>POLYGON_MODE_LINE = <span class="number">1 </span>&lt;&lt; <span class="number">46</span>;
+        </span><span class="kw">const </span>POLYGON_MODE_LINE = <span class="number">1 </span>&lt;&lt; <span class="number">47</span>;
         <span class="doccomment">/// Allows the user to set [`PolygonMode::Point`] in [`PrimitiveState::polygon_mode`]
         ///
         /// This allows only drawing the vertices of polygons/triangles instead of filled
@@ -7901,7 +7931,7 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>POLYGON_MODE_POINT = <span class="number">1 </span>&lt;&lt; <span class="number">47</span>;
+        </span><span class="kw">const </span>POLYGON_MODE_POINT = <span class="number">1 </span>&lt;&lt; <span class="number">48</span>;
         <span class="doccomment">/// Allows the user to set a overestimation-conservative-rasterization in [`PrimitiveState::conservative`]
         ///
         /// Processing of degenerate triangles/lines is hardware specific.
@@ -7911,7 +7941,7 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>CONSERVATIVE_RASTERIZATION = <span class="number">1 </span>&lt;&lt; <span class="number">48</span>;
+        </span><span class="kw">const </span>CONSERVATIVE_RASTERIZATION = <span class="number">1 </span>&lt;&lt; <span class="number">49</span>;
         <span class="doccomment">/// Enables bindings of writable storage buffers and textures visible to vertex shaders.
         ///
         /// Note: some (tiled-based) platforms do not support vertex shaders with any side-effects.
@@ -7920,14 +7950,14 @@
         /// - All
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>VERTEX_WRITABLE_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">49</span>;
+        </span><span class="kw">const </span>VERTEX_WRITABLE_STORAGE = <span class="number">1 </span>&lt;&lt; <span class="number">50</span>;
         <span class="doccomment">/// Enables clear to zero for textures.
         ///
         /// Supported platforms:
         /// - All
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>CLEAR_TEXTURE = <span class="number">1 </span>&lt;&lt; <span class="number">50</span>;
+        </span><span class="kw">const </span>CLEAR_TEXTURE = <span class="number">1 </span>&lt;&lt; <span class="number">51</span>;
         <span class="doccomment">/// Enables creating shader modules from SPIR-V binary data (unsafe).
         ///
         /// SPIR-V data is not parsed or interpreted in any way; you can use
@@ -7939,7 +7969,7 @@
         /// Vulkan implementation.
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SPIRV_SHADER_PASSTHROUGH = <span class="number">1 </span>&lt;&lt; <span class="number">51</span>;
+        </span><span class="kw">const </span>SPIRV_SHADER_PASSTHROUGH = <span class="number">1 </span>&lt;&lt; <span class="number">52</span>;
         <span class="doccomment">/// Enables multiview render passes and `builtin(view_index)` in vertex shaders.
         ///
         /// Supported platforms:
@@ -7947,7 +7977,7 @@
         /// - OpenGL (web only)
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>MULTIVIEW = <span class="number">1 </span>&lt;&lt; <span class="number">52</span>;
+        </span><span class="kw">const </span>MULTIVIEW = <span class="number">1 </span>&lt;&lt; <span class="number">53</span>;
         <span class="doccomment">/// Enables using 64-bit types for vertex attributes.
         ///
         /// Requires SHADER_FLOAT64.
@@ -7955,7 +7985,7 @@
         /// Supported Platforms: N/A
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>VERTEX_ATTRIBUTE_64BIT = <span class="number">1 </span>&lt;&lt; <span class="number">53</span>;
+        </span><span class="kw">const </span>VERTEX_ATTRIBUTE_64BIT = <span class="number">1 </span>&lt;&lt; <span class="number">54</span>;
         <span class="doccomment">/// Allows vertex shaders to have outputs which are not consumed
         /// by the fragment shader.
         ///
@@ -7963,7 +7993,7 @@
         /// - Vulkan
         /// - Metal
         /// - OpenGL
-        </span><span class="kw">const </span>SHADER_UNUSED_VERTEX_OUTPUT = <span class="number">1 </span>&lt;&lt; <span class="number">54</span>;
+        </span><span class="kw">const </span>SHADER_UNUSED_VERTEX_OUTPUT = <span class="number">1 </span>&lt;&lt; <span class="number">55</span>;
         <span class="doccomment">/// Allows for creation of textures of format [`TextureFormat::NV12`]
         ///
         /// Supported platforms:
@@ -7971,16 +8001,16 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>TEXTURE_FORMAT_NV12 = <span class="number">1 </span>&lt;&lt; <span class="number">55</span>;
+        </span><span class="kw">const </span>TEXTURE_FORMAT_NV12 = <span class="number">1 </span>&lt;&lt; <span class="number">56</span>;
         <span class="doccomment">/// Allows for the creation of ray-tracing acceleration structures.
         ///
         /// Supported platforms:
         /// - Vulkan
         ///
         /// This is a native-only feature.
-        </span><span class="kw">const </span>RAY_TRACING_ACCELERATION_STRUCTURE = <span class="number">1 </span>&lt;&lt; <span class="number">56</span>;
+        </span><span class="kw">const </span>RAY_TRACING_ACCELERATION_STRUCTURE = <span class="number">1 </span>&lt;&lt; <span class="number">57</span>;
 
-        <span class="comment">// 57 available
+        <span class="comment">// 58 available
 
         // Shader:
 
@@ -7990,7 +8020,7 @@
         /// - Vulkan
         ///
         /// This is a native-only feature.
-        </span><span class="kw">const </span>RAY_QUERY = <span class="number">1 </span>&lt;&lt; <span class="number">58</span>;
+        </span><span class="kw">const </span>RAY_QUERY = <span class="number">1 </span>&lt;&lt; <span class="number">59</span>;
         <span class="doccomment">/// Enables 64-bit floating point types in SPIR-V shaders.
         ///
         /// Note: even when supported by GPU hardware, 64-bit floating point operations are
@@ -8000,14 +8030,14 @@
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SHADER_F64 = <span class="number">1 </span>&lt;&lt; <span class="number">59</span>;
+        </span><span class="kw">const </span>SHADER_F64 = <span class="number">1 </span>&lt;&lt; <span class="number">60</span>;
         <span class="doccomment">/// Allows shaders to use i16. Not currently supported in `naga`, only available through `spirv-passthrough`.
         ///
         /// Supported platforms:
         /// - Vulkan
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SHADER_I16 = <span class="number">1 </span>&lt;&lt; <span class="number">60</span>;
+        </span><span class="kw">const </span>SHADER_I16 = <span class="number">1 </span>&lt;&lt; <span class="number">61</span>;
         <span class="doccomment">/// Enables `builtin(primitive_index)` in fragment shaders.
         ///
         /// Note: enables geometry processing for pipelines using the builtin.
@@ -8021,14 +8051,14 @@
         /// - OpenGL (some)
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SHADER_PRIMITIVE_INDEX = <span class="number">1 </span>&lt;&lt; <span class="number">61</span>;
+        </span><span class="kw">const </span>SHADER_PRIMITIVE_INDEX = <span class="number">1 </span>&lt;&lt; <span class="number">62</span>;
         <span class="doccomment">/// Allows shaders to use the `early_depth_test` attribute.
         ///
         /// Supported platforms:
         /// - GLES 3.1+
         ///
         /// This is a native only feature.
-        </span><span class="kw">const </span>SHADER_EARLY_DEPTH_TEST = <span class="number">1 </span>&lt;&lt; <span class="number">62</span>;
+        </span><span class="kw">const </span>SHADER_EARLY_DEPTH_TEST = <span class="number">1 </span>&lt;&lt; <span class="number">63</span>;
         <span class="doccomment">/// Allows two outputs from a shader to be used for blending.
         /// Note that dual-source blending doesn't support multiple render targets.
         ///
@@ -8039,7 +8069,7 @@
         /// - Metal (with MSL 1.2+)
         /// - Vulkan (with dualSrcBlend)
         /// - DX12
-        </span><span class="kw">const </span>DUAL_SOURCE_BLENDING = <span class="number">1 </span>&lt;&lt; <span class="number">63</span>;
+        </span><span class="kw">const </span>DUAL_SOURCE_BLENDING = <span class="number">1 </span>&lt;&lt; <span class="number">64</span>;
     }
 }
 
