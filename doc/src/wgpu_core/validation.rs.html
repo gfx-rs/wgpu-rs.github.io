@@ -1279,7 +1279,23 @@
 <a href="#1278" id="1278">1278</a>
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, FastHashMap, FastHashSet};
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+    device::bgl,
+    id::{markers::Buffer, Id},
+    FastHashMap, FastHashSet,
+};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
 <span class="kw">use </span>thiserror::Error;
@@ -1415,8 +1431,11 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">"Buffer usage is {actual:?} which does not contain required usage {expected:?}"</span>)]
+#[error(
+    <span class="string">"Usage flags {actual:?} for buffer {id:?} do not contain required usage flags {expected:?}"
+</span>)]
 </span><span class="kw">pub struct </span>MissingBufferUsageError {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) id: Id&lt;Buffer&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) actual: wgt::BufferUsages,
     <span class="kw">pub</span>(<span class="kw">crate</span>) expected: wgt::BufferUsages,
 }
@@ -1424,11 +1443,16 @@
 <span class="doccomment">/// Checks that the given buffer usage contains the required buffer usage,
 /// returns an error otherwise.
 </span><span class="kw">pub fn </span>check_buffer_usage(
+    id: Id&lt;Buffer&gt;,
     actual: wgt::BufferUsages,
     expected: wgt::BufferUsages,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MissingBufferUsageError&gt; {
     <span class="kw">if </span>!actual.contains(expected) {
-        <span class="prelude-val">Err</span>(MissingBufferUsageError { actual, expected })
+        <span class="prelude-val">Err</span>(MissingBufferUsageError {
+            id,
+            actual,
+            expected,
+        })
     } <span class="kw">else </span>{
         <span class="prelude-val">Ok</span>(())
     }

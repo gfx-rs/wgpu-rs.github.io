@@ -2867,6 +2867,14 @@
 <a href="#2866" id="2866">2866</a>
 <a href="#2867" id="2867">2867</a>
 <a href="#2868" id="2868">2868</a>
+<a href="#2869" id="2869">2869</a>
+<a href="#2870" id="2870">2870</a>
+<a href="#2871" id="2871">2871</a>
+<a href="#2872" id="2872">2872</a>
+<a href="#2873" id="2873">2873</a>
+<a href="#2874" id="2874">2874</a>
+<a href="#2875" id="2875">2875</a>
+<a href="#2876" id="2876">2876</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -4546,7 +4554,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
                         }
 
-                        check_buffer_usage(buffer.usage, BufferUsages::INDEX)
+                        check_buffer_usage(buffer_id, buffer.usage, BufferUsages::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
                             .raw
@@ -4608,7 +4616,7 @@
                             .map_pass_err(scope);
                         }
 
-                        check_buffer_usage(buffer.usage, BufferUsages::VERTEX)
+                        check_buffer_usage(buffer_id, buffer.usage, BufferUsages::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
                             .raw
@@ -4905,8 +4913,12 @@
                             .buffers
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(indirect_buffer.usage, BufferUsages::INDIRECT)
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        check_buffer_usage(
+                            buffer_id,
+                            indirect_buffer.usage,
+                            BufferUsages::INDIRECT,
+                        )
+                        .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>indirect_raw = indirect_buffer
                             .raw
                             .get(<span class="kw-2">&amp;</span>snatch_guard)
@@ -4977,8 +4989,12 @@
                             .buffers
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(indirect_buffer.usage, BufferUsages::INDIRECT)
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        check_buffer_usage(
+                            buffer_id,
+                            indirect_buffer.usage,
+                            BufferUsages::INDIRECT,
+                        )
+                        .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>indirect_raw = indirect_buffer
                             .raw
                             .get(<span class="kw-2">&amp;</span>snatch_guard)
@@ -4994,7 +5010,7 @@
                                 hal::BufferUses::INDIRECT,
                             )
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(count_buffer.usage, BufferUsages::INDIRECT)
+                        check_buffer_usage(buffer_id, count_buffer.usage, BufferUsages::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>count_raw = count_buffer
                             .raw
