@@ -673,6 +673,14 @@
 <a href="#672" id="672">672</a>
 <a href="#673" id="673">673</a>
 <a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle},
     front::spv::{BlockContext, BodyIndex},
@@ -967,277 +975,285 @@
         );
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ep) = <span class="self">self</span>.lookup_entry_point.remove(<span class="kw-2">&amp;</span>fun_id) {
-            <span class="comment">// create a wrapping function
-            </span><span class="kw">let </span><span class="kw-2">mut </span>function = <span class="kw">crate</span>::Function {
-                name: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}_wrap"</span>, ep.name)),
+            <span class="self">self</span>.deferred_entry_points.push((ep, fun_id));
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>process_entry_point(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Module,
+        ep: <span class="kw">super</span>::EntryPoint,
+        fun_id: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="comment">// create a wrapping function
+        </span><span class="kw">let </span><span class="kw-2">mut </span>function = <span class="kw">crate</span>::Function {
+            name: <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}_wrap"</span>, ep.name)),
+            arguments: Vec::new(),
+            result: <span class="prelude-val">None</span>,
+            local_variables: Arena::new(),
+            expressions: Arena::new(),
+            named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
+            body: <span class="kw">crate</span>::Block::new(),
+        };
+
+        <span class="comment">// 1. copy the inputs from arguments to privates
+        </span><span class="kw">for </span><span class="kw-2">&amp;</span>v_id <span class="kw">in </span>ep.variable_ids.iter() {
+            <span class="kw">let </span>lvar = <span class="self">self</span>.lookup_variable.lookup(v_id)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="kw">super</span>::Variable::Input(<span class="kw-2">ref </span>arg) = lvar.inner {
+                <span class="kw">let </span>span = module.global_variables.get_span(lvar.handle);
+                <span class="kw">let </span>arg_expr = function.expressions.append(
+                    <span class="kw">crate</span>::Expression::FunctionArgument(function.arguments.len() <span class="kw">as </span>u32),
+                    span,
+                );
+                <span class="kw">let </span>load_expr = <span class="kw">if </span>arg.ty == module.global_variables[lvar.handle].ty {
+                    arg_expr
+                } <span class="kw">else </span>{
+                    <span class="comment">// The only case where the type is different is if we need to treat
+                    // unsigned integer as signed.
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                    emitter.start(<span class="kw-2">&amp;</span>function.expressions);
+                    <span class="kw">let </span>handle = function.expressions.append(
+                        <span class="kw">crate</span>::Expression::As {
+                            expr: arg_expr,
+                            kind: <span class="kw">crate</span>::ScalarKind::Sint,
+                            convert: <span class="prelude-val">Some</span>(<span class="number">4</span>),
+                        },
+                        span,
+                    );
+                    function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
+                    handle
+                };
+                function.body.push(
+                    <span class="kw">crate</span>::Statement::Store {
+                        pointer: function
+                            .expressions
+                            .append(<span class="kw">crate</span>::Expression::GlobalVariable(lvar.handle), span),
+                        value: load_expr,
+                    },
+                    span,
+                );
+
+                <span class="kw">let </span><span class="kw-2">mut </span>arg = arg.clone();
+                <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Fragment {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = arg.binding {
+                        binding.apply_default_interpolation(<span class="kw-2">&amp;</span>module.types[arg.ty].inner);
+                    }
+                }
+                function.arguments.push(arg);
+            }
+        }
+        <span class="comment">// 2. call the wrapped function
+        </span><span class="kw">let </span>fake_id = !(module.entry_points.len() <span class="kw">as </span>u32); <span class="comment">// doesn't matter, as long as it's not a collision
+        </span><span class="kw">let </span>dummy_handle = <span class="self">self</span>.add_call(fake_id, fun_id);
+        function.body.push(
+            <span class="kw">crate</span>::Statement::Call {
+                function: dummy_handle,
                 arguments: Vec::new(),
                 result: <span class="prelude-val">None</span>,
-                local_variables: Arena::new(),
-                expressions: Arena::new(),
-                named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
-                body: <span class="kw">crate</span>::Block::new(),
-            };
+            },
+            <span class="kw">crate</span>::Span::default(),
+        );
 
-            <span class="comment">// 1. copy the inputs from arguments to privates
-            </span><span class="kw">for </span><span class="kw-2">&amp;</span>v_id <span class="kw">in </span>ep.variable_ids.iter() {
-                <span class="kw">let </span>lvar = <span class="self">self</span>.lookup_variable.lookup(v_id)<span class="question-mark">?</span>;
-                <span class="kw">if let </span><span class="kw">super</span>::Variable::Input(<span class="kw-2">ref </span>arg) = lvar.inner {
-                    <span class="kw">let </span>span = module.global_variables.get_span(lvar.handle);
-                    <span class="kw">let </span>arg_expr = function.expressions.append(
-                        <span class="kw">crate</span>::Expression::FunctionArgument(function.arguments.len() <span class="kw">as </span>u32),
+        <span class="comment">// 3. copy the outputs from privates to the result
+        </span><span class="kw">let </span><span class="kw-2">mut </span>members = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>components = Vec::new();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>v_id <span class="kw">in </span>ep.variable_ids.iter() {
+            <span class="kw">let </span>lvar = <span class="self">self</span>.lookup_variable.lookup(v_id)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="kw">super</span>::Variable::Output(<span class="kw-2">ref </span>result) = lvar.inner {
+                <span class="kw">let </span>span = module.global_variables.get_span(lvar.handle);
+                <span class="kw">let </span>expr_handle = function
+                    .expressions
+                    .append(<span class="kw">crate</span>::Expression::GlobalVariable(lvar.handle), span);
+
+                <span class="comment">// Cull problematic builtins of gl_PerVertex.
+                // See the docs for `Frontend::gl_per_vertex_builtin_access`.
+                </span>{
+                    <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>module.types[result.ty];
+                    <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Struct {
+                        members: <span class="kw-2">ref </span>original_members,
+                        span,
+                    } = ty.inner
+                    {
+                        <span class="kw">let </span><span class="kw-2">mut </span>new_members = <span class="prelude-val">None</span>;
+                        <span class="kw">for </span>(idx, member) <span class="kw">in </span>original_members.iter().enumerate() {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(built_in)) = member.binding {
+                                <span class="kw">if </span>!<span class="self">self</span>.gl_per_vertex_builtin_access.contains(<span class="kw-2">&amp;</span>built_in) {
+                                    new_members.get_or_insert_with(|| original_members.clone())
+                                        [idx]
+                                        .binding = <span class="prelude-val">None</span>;
+                                }
+                            }
+                        }
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(new_members) = new_members {
+                            module.types.replace(
+                                result.ty,
+                                <span class="kw">crate</span>::Type {
+                                    name: ty.name.clone(),
+                                    inner: <span class="kw">crate</span>::TypeInner::Struct {
+                                        members: new_members,
+                                        span,
+                                    },
+                                },
+                            );
+                        }
+                    }
+                }
+
+                <span class="kw">match </span>module.types[result.ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Struct {
+                        members: <span class="kw-2">ref </span>sub_members,
+                        ..
+                    } =&gt; {
+                        <span class="kw">for </span>(index, sm) <span class="kw">in </span>sub_members.iter().enumerate() {
+                            <span class="kw">if </span>sm.binding.is_none() {
+                                <span class="kw">continue</span>;
+                            }
+                            <span class="kw">let </span><span class="kw-2">mut </span>sm = sm.clone();
+
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = sm.binding {
+                                <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex {
+                                    binding.apply_default_interpolation(<span class="kw-2">&amp;</span>module.types[sm.ty].inner);
+                                }
+                            }
+
+                            members.push(sm);
+
+                            components.push(function.expressions.append(
+                                <span class="kw">crate</span>::Expression::AccessIndex {
+                                    base: expr_handle,
+                                    index: index <span class="kw">as </span>u32,
+                                },
+                                span,
+                            ));
+                        }
+                    }
+                    <span class="kw-2">ref </span>inner =&gt; {
+                        <span class="kw">let </span><span class="kw-2">mut </span>binding = result.binding.clone();
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = binding {
+                            <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex {
+                                binding.apply_default_interpolation(inner);
+                            }
+                        }
+
+                        members.push(<span class="kw">crate</span>::StructMember {
+                            name: <span class="prelude-val">None</span>,
+                            ty: result.ty,
+                            binding,
+                            offset: <span class="number">0</span>,
+                        });
+                        <span class="comment">// populate just the globals first, then do `Load` in a
+                        // separate step, so that we can get a range.
+                        </span>components.push(expr_handle);
+                    }
+                }
+            }
+        }
+
+        <span class="kw">for </span>(member_index, member) <span class="kw">in </span>members.iter().enumerate() {
+            <span class="kw">match </span>member.binding {
+                <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::Position { .. }))
+                    <span class="kw">if </span><span class="self">self</span>.options.adjust_coordinate_space =&gt;
+                {
+                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                    emitter.start(<span class="kw-2">&amp;</span>function.expressions);
+                    <span class="kw">let </span>global_expr = components[member_index];
+                    <span class="kw">let </span>span = function.expressions.get_span(global_expr);
+                    <span class="kw">let </span>access_expr = function.expressions.append(
+                        <span class="kw">crate</span>::Expression::AccessIndex {
+                            base: global_expr,
+                            index: <span class="number">1</span>,
+                        },
                         span,
                     );
-                    <span class="kw">let </span>load_expr = <span class="kw">if </span>arg.ty == module.global_variables[lvar.handle].ty {
-                        arg_expr
-                    } <span class="kw">else </span>{
-                        <span class="comment">// The only case where the type is different is if we need to treat
-                        // unsigned integer as signed.
-                        </span><span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
-                        emitter.start(<span class="kw-2">&amp;</span>function.expressions);
-                        <span class="kw">let </span>handle = function.expressions.append(
-                            <span class="kw">crate</span>::Expression::As {
-                                expr: arg_expr,
-                                kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                                convert: <span class="prelude-val">Some</span>(<span class="number">4</span>),
-                            },
-                            span,
-                        );
-                        function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
-                        handle
-                    };
+                    <span class="kw">let </span>load_expr = function.expressions.append(
+                        <span class="kw">crate</span>::Expression::Load {
+                            pointer: access_expr,
+                        },
+                        span,
+                    );
+                    <span class="kw">let </span>neg_expr = function.expressions.append(
+                        <span class="kw">crate</span>::Expression::Unary {
+                            op: <span class="kw">crate</span>::UnaryOperator::Negate,
+                            expr: load_expr,
+                        },
+                        span,
+                    );
+                    function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
                     function.body.push(
                         <span class="kw">crate</span>::Statement::Store {
-                            pointer: function
-                                .expressions
-                                .append(<span class="kw">crate</span>::Expression::GlobalVariable(lvar.handle), span),
-                            value: load_expr,
+                            pointer: access_expr,
+                            value: neg_expr,
                         },
                         span,
                     );
-
-                    <span class="kw">let </span><span class="kw-2">mut </span>arg = arg.clone();
-                    <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Fragment {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = arg.binding {
-                            binding.apply_default_interpolation(<span class="kw-2">&amp;</span>module.types[arg.ty].inner);
-                        }
-                    }
-                    function.arguments.push(arg);
                 }
+                <span class="kw">_ </span>=&gt; {}
             }
-            <span class="comment">// 2. call the wrapped function
-            </span><span class="kw">let </span>fake_id = !(module.entry_points.len() <span class="kw">as </span>u32); <span class="comment">// doesn't matter, as long as it's not a collision
-            </span><span class="kw">let </span>dummy_handle = <span class="self">self</span>.add_call(fake_id, fun_id);
-            function.body.push(
-                <span class="kw">crate</span>::Statement::Call {
-                    function: dummy_handle,
-                    arguments: Vec::new(),
-                    result: <span class="prelude-val">None</span>,
-                },
-                <span class="kw">crate</span>::Span::default(),
-            );
-
-            <span class="comment">// 3. copy the outputs from privates to the result
-            </span><span class="kw">let </span><span class="kw-2">mut </span>members = Vec::new();
-            <span class="kw">let </span><span class="kw-2">mut </span>components = Vec::new();
-            <span class="kw">for </span><span class="kw-2">&amp;</span>v_id <span class="kw">in </span>ep.variable_ids.iter() {
-                <span class="kw">let </span>lvar = <span class="self">self</span>.lookup_variable.lookup(v_id)<span class="question-mark">?</span>;
-                <span class="kw">if let </span><span class="kw">super</span>::Variable::Output(<span class="kw-2">ref </span>result) = lvar.inner {
-                    <span class="kw">let </span>span = module.global_variables.get_span(lvar.handle);
-                    <span class="kw">let </span>expr_handle = function
-                        .expressions
-                        .append(<span class="kw">crate</span>::Expression::GlobalVariable(lvar.handle), span);
-
-                    <span class="comment">// Cull problematic builtins of gl_PerVertex.
-                    // See the docs for `Frontend::gl_per_vertex_builtin_access`.
-                    </span>{
-                        <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>module.types[result.ty];
-                        <span class="kw">match </span>ty.inner {
-                            <span class="kw">crate</span>::TypeInner::Struct {
-                                members: <span class="kw-2">ref </span>original_members,
-                                span,
-                            } <span class="kw">if </span>ty.name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"gl_PerVertex"</span>) =&gt; {
-                                <span class="kw">let </span><span class="kw-2">mut </span>new_members = original_members.clone();
-                                <span class="kw">for </span>member <span class="kw">in </span><span class="kw-2">&amp;mut </span>new_members {
-                                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(built_in)) = member.binding
-                                    {
-                                        <span class="kw">if </span>!<span class="self">self</span>.gl_per_vertex_builtin_access.contains(<span class="kw-2">&amp;</span>built_in) {
-                                            member.binding = <span class="prelude-val">None
-                                        </span>}
-                                    }
-                                }
-                                <span class="kw">if </span><span class="kw-2">&amp;</span>new_members != original_members {
-                                    module.types.replace(
-                                        result.ty,
-                                        <span class="kw">crate</span>::Type {
-                                            name: ty.name.clone(),
-                                            inner: <span class="kw">crate</span>::TypeInner::Struct {
-                                                members: new_members,
-                                                span,
-                                            },
-                                        },
-                                    );
-                                }
-                            }
-                            <span class="kw">_ </span>=&gt; {}
-                        }
-                    }
-
-                    <span class="kw">match </span>module.types[result.ty].inner {
-                        <span class="kw">crate</span>::TypeInner::Struct {
-                            members: <span class="kw-2">ref </span>sub_members,
-                            ..
-                        } =&gt; {
-                            <span class="kw">for </span>(index, sm) <span class="kw">in </span>sub_members.iter().enumerate() {
-                                <span class="kw">if </span>sm.binding.is_none() {
-                                    <span class="kw">continue</span>;
-                                }
-                                <span class="kw">let </span><span class="kw-2">mut </span>sm = sm.clone();
-
-                                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = sm.binding {
-                                    <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex {
-                                        binding.apply_default_interpolation(
-                                            <span class="kw-2">&amp;</span>module.types[sm.ty].inner,
-                                        );
-                                    }
-                                }
-
-                                members.push(sm);
-
-                                components.push(function.expressions.append(
-                                    <span class="kw">crate</span>::Expression::AccessIndex {
-                                        base: expr_handle,
-                                        index: index <span class="kw">as </span>u32,
-                                    },
-                                    span,
-                                ));
-                            }
-                        }
-                        <span class="kw-2">ref </span>inner =&gt; {
-                            <span class="kw">let </span><span class="kw-2">mut </span>binding = result.binding.clone();
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>binding) = binding {
-                                <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex {
-                                    binding.apply_default_interpolation(inner);
-                                }
-                            }
-
-                            members.push(<span class="kw">crate</span>::StructMember {
-                                name: <span class="prelude-val">None</span>,
-                                ty: result.ty,
-                                binding,
-                                offset: <span class="number">0</span>,
-                            });
-                            <span class="comment">// populate just the globals first, then do `Load` in a
-                            // separate step, so that we can get a range.
-                            </span>components.push(expr_handle);
-                        }
-                    }
-                }
-            }
-
-            <span class="kw">for </span>(member_index, member) <span class="kw">in </span>members.iter().enumerate() {
-                <span class="kw">match </span>member.binding {
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::Position { .. }))
-                        <span class="kw">if </span><span class="self">self</span>.options.adjust_coordinate_space =&gt;
-                    {
-                        <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
-                        emitter.start(<span class="kw-2">&amp;</span>function.expressions);
-                        <span class="kw">let </span>global_expr = components[member_index];
-                        <span class="kw">let </span>span = function.expressions.get_span(global_expr);
-                        <span class="kw">let </span>access_expr = function.expressions.append(
-                            <span class="kw">crate</span>::Expression::AccessIndex {
-                                base: global_expr,
-                                index: <span class="number">1</span>,
-                            },
-                            span,
-                        );
-                        <span class="kw">let </span>load_expr = function.expressions.append(
-                            <span class="kw">crate</span>::Expression::Load {
-                                pointer: access_expr,
-                            },
-                            span,
-                        );
-                        <span class="kw">let </span>neg_expr = function.expressions.append(
-                            <span class="kw">crate</span>::Expression::Unary {
-                                op: <span class="kw">crate</span>::UnaryOperator::Negate,
-                                expr: load_expr,
-                            },
-                            span,
-                        );
-                        function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
-                        function.body.push(
-                            <span class="kw">crate</span>::Statement::Store {
-                                pointer: access_expr,
-                                value: neg_expr,
-                            },
-                            span,
-                        );
-                    }
-                    <span class="kw">_ </span>=&gt; {}
-                }
-            }
-
-            <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
-            emitter.start(<span class="kw-2">&amp;</span>function.expressions);
-            <span class="kw">for </span>component <span class="kw">in </span>components.iter_mut() {
-                <span class="kw">let </span>load_expr = <span class="kw">crate</span>::Expression::Load {
-                    pointer: <span class="kw-2">*</span>component,
-                };
-                <span class="kw">let </span>span = function.expressions.get_span(<span class="kw-2">*</span>component);
-                <span class="kw-2">*</span>component = function.expressions.append(load_expr, span);
-            }
-
-            <span class="kw">match </span>members[..] {
-                [] =&gt; {}
-                [<span class="kw-2">ref </span>member] =&gt; {
-                    function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
-                    <span class="kw">let </span>span = function.expressions.get_span(components[<span class="number">0</span>]);
-                    function.body.push(
-                        <span class="kw">crate</span>::Statement::Return {
-                            value: components.first().cloned(),
-                        },
-                        span,
-                    );
-                    function.result = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::FunctionResult {
-                        ty: member.ty,
-                        binding: member.binding.clone(),
-                    });
-                }
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">let </span>span = <span class="kw">crate</span>::Span::total_span(
-                        components.iter().map(|h| function.expressions.get_span(<span class="kw-2">*</span>h)),
-                    );
-                    <span class="kw">let </span>ty = module.types.insert(
-                        <span class="kw">crate</span>::Type {
-                            name: <span class="prelude-val">None</span>,
-                            inner: <span class="kw">crate</span>::TypeInner::Struct {
-                                members,
-                                span: <span class="number">0xFFFF</span>, <span class="comment">// shouldn't matter
-                            </span>},
-                        },
-                        span,
-                    );
-                    <span class="kw">let </span>result_expr = function
-                        .expressions
-                        .append(<span class="kw">crate</span>::Expression::Compose { ty, components }, span);
-                    function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
-                    function.body.push(
-                        <span class="kw">crate</span>::Statement::Return {
-                            value: <span class="prelude-val">Some</span>(result_expr),
-                        },
-                        span,
-                    );
-                    function.result = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::FunctionResult { ty, binding: <span class="prelude-val">None </span>});
-                }
-            }
-
-            module.entry_points.push(<span class="kw">crate</span>::EntryPoint {
-                name: ep.name,
-                stage: ep.stage,
-                early_depth_test: ep.early_depth_test,
-                workgroup_size: ep.workgroup_size,
-                function,
-            });
         }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+        emitter.start(<span class="kw-2">&amp;</span>function.expressions);
+        <span class="kw">for </span>component <span class="kw">in </span>components.iter_mut() {
+            <span class="kw">let </span>load_expr = <span class="kw">crate</span>::Expression::Load {
+                pointer: <span class="kw-2">*</span>component,
+            };
+            <span class="kw">let </span>span = function.expressions.get_span(<span class="kw-2">*</span>component);
+            <span class="kw-2">*</span>component = function.expressions.append(load_expr, span);
+        }
+
+        <span class="kw">match </span>members[..] {
+            [] =&gt; {}
+            [<span class="kw-2">ref </span>member] =&gt; {
+                function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
+                <span class="kw">let </span>span = function.expressions.get_span(components[<span class="number">0</span>]);
+                function.body.push(
+                    <span class="kw">crate</span>::Statement::Return {
+                        value: components.first().cloned(),
+                    },
+                    span,
+                );
+                function.result = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::FunctionResult {
+                    ty: member.ty,
+                    binding: member.binding.clone(),
+                });
+            }
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">let </span>span = <span class="kw">crate</span>::Span::total_span(
+                    components.iter().map(|h| function.expressions.get_span(<span class="kw-2">*</span>h)),
+                );
+                <span class="kw">let </span>ty = module.types.insert(
+                    <span class="kw">crate</span>::Type {
+                        name: <span class="prelude-val">None</span>,
+                        inner: <span class="kw">crate</span>::TypeInner::Struct {
+                            members,
+                            span: <span class="number">0xFFFF</span>, <span class="comment">// shouldn't matter
+                        </span>},
+                    },
+                    span,
+                );
+                <span class="kw">let </span>result_expr = function
+                    .expressions
+                    .append(<span class="kw">crate</span>::Expression::Compose { ty, components }, span);
+                function.body.extend(emitter.finish(<span class="kw-2">&amp;</span>function.expressions));
+                function.body.push(
+                    <span class="kw">crate</span>::Statement::Return {
+                        value: <span class="prelude-val">Some</span>(result_expr),
+                    },
+                    span,
+                );
+                function.result = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::FunctionResult { ty, binding: <span class="prelude-val">None </span>});
+            }
+        }
+
+        module.entry_points.push(<span class="kw">crate</span>::EntryPoint {
+            name: ep.name,
+            stage: ep.stage,
+            early_depth_test: ep.early_depth_test,
+            workgroup_size: ep.workgroup_size,
+            function,
+        });
 
         <span class="prelude-val">Ok</span>(())
     }

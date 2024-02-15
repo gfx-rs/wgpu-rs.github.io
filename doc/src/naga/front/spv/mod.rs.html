@@ -5352,9 +5352,6 @@
 <a href="#5351" id="5351">5351</a>
 <a href="#5352" id="5352">5352</a>
 <a href="#5353" id="5353">5353</a>
-<a href="#5354" id="5354">5354</a>
-<a href="#5355" id="5355">5355</a>
-<a href="#5356" id="5356">5356</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -5934,6 +5931,9 @@ This value then gets used instead of `OpLoad` result later on.
     lookup_function_type: FastHashMap&lt;spirv::Word, LookupFunctionType&gt;,
     lookup_function: FastHashMap&lt;spirv::Word, LookupFunction&gt;,
     lookup_entry_point: FastHashMap&lt;spirv::Word, EntryPoint&gt;,
+    <span class="comment">// When parsing functions, each entry point function gets an entry here so that additional
+    // processing for them can be performed after all function parsing.
+    </span>deferred_entry_points: Vec&lt;(EntryPoint, spirv::Word)&gt;,
     <span class="comment">//Note: each `OpFunctionCall` gets a single entry here, indexed by the
     // dummy `Handle&lt;crate::Function&gt;` of the call site.
     </span>deferred_function_calls: Vec&lt;spirv::Word&gt;,
@@ -5985,6 +5985,7 @@ This value then gets used instead of `OpLoad` result later on.
             lookup_function_type: FastHashMap::default(),
             lookup_function: FastHashMap::default(),
             lookup_entry_point: FastHashMap::default(),
+            deferred_entry_points: Vec::default(),
             deferred_function_calls: Vec::default(),
             dummy_functions: Arena::new(),
             function_call_graph: GraphMap::new(),
@@ -6918,12 +6919,10 @@ This value then gets used instead of `OpLoad` result later on.
                                     span,
                                 );
 
-                                <span class="kw">if </span>ty.name.as_deref() == <span class="prelude-val">Some</span>(<span class="string">"gl_PerVertex"</span>) {
-                                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(built_in)) =
-                                        members[index <span class="kw">as </span>usize].binding
-                                    {
-                                        <span class="self">self</span>.gl_per_vertex_builtin_access.insert(built_in);
-                                    }
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(built_in)) =
+                                    members[index <span class="kw">as </span>usize].binding
+                                {
+                                    <span class="self">self</span>.gl_per_vertex_builtin_access.insert(built_in);
                                 }
 
                                 AccessExpression {
@@ -9313,6 +9312,12 @@ This value then gets used instead of `OpLoad` result later on.
             </span>}<span class="question-mark">?</span>;
         }
 
+        <span class="comment">// Do entry point specific processing after all functions are parsed so that we can
+        // cull unused problematic builtins of gl_PerVertex.
+        </span><span class="kw">for </span>(ep, fun_id) <span class="kw">in </span>core::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.deferred_entry_points) {
+            <span class="self">self</span>.process_entry_point(<span class="kw-2">&amp;mut </span>module, ep, fun_id)<span class="question-mark">?</span>;
+        }
+
         <span class="macro">log::info!</span>(<span class="string">"Patching..."</span>);
         {
             <span class="kw">let </span><span class="kw-2">mut </span>nodes = petgraph::algo::toposort(<span class="kw-2">&amp;</span><span class="self">self</span>.function_call_graph, <span class="prelude-val">None</span>)
@@ -10438,7 +10443,7 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="prelude-val">None
         </span>};
         <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
-        <span class="kw">let </span><span class="kw-2">mut </span>dec = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
+        <span class="kw">let </span>dec = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
 
         <span class="kw">let </span>original_ty = <span class="self">self</span>.lookup_type.lookup(type_id)<span class="question-mark">?</span>.handle;
         <span class="kw">let </span><span class="kw-2">mut </span>ty = original_ty;
@@ -10483,17 +10488,6 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>access) =&gt; ExtendedClass::Global(<span class="kw">crate</span>::AddressSpace::Storage { access }),
             <span class="prelude-val">None </span>=&gt; map_storage_class(storage_class)<span class="question-mark">?</span>,
         };
-
-        <span class="comment">// Fix empty name for gl_PerVertex struct generated by glslang
-        </span><span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Pointer { .. } = module.types[original_ty].inner {
-            <span class="kw">if </span>ext_class == ExtendedClass::Input || ext_class == ExtendedClass::Output {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>dec_name) = dec.name {
-                    <span class="kw">if </span>dec_name.is_empty() {
-                        dec.name = <span class="prelude-val">Some</span>(<span class="string">"perVertexStruct"</span>.to_string())
-                    }
-                }
-            }
-        }
 
         <span class="kw">let </span>(inner, var) = <span class="kw">match </span>ext_class {
             ExtendedClass::Global(<span class="kw-2">mut </span>space) =&gt; {
