@@ -498,14 +498,6 @@ function __wbg_get_imports() {
         const ret = getObject(arg0).now();
         return ret;
     };
-    imports.wbg.__wbg_Window_49d0f8a0a2a9051b = function(arg0) {
-        const ret = getObject(arg0).Window;
-        return addHeapObject(ret);
-    };
-    imports.wbg.__wbg_WorkerGlobalScope_5d11124ab834f1be = function(arg0) {
-        const ret = getObject(arg0).WorkerGlobalScope;
-        return addHeapObject(ret);
-    };
     imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
         const obj = getObject(arg1);
         const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -513,6 +505,14 @@ function __wbg_get_imports() {
         var len1 = WASM_VECTOR_LEN;
         getInt32Memory0()[arg0 / 4 + 1] = len1;
         getInt32Memory0()[arg0 / 4 + 0] = ptr1;
+    };
+    imports.wbg.__wbg_Window_49d0f8a0a2a9051b = function(arg0) {
+        const ret = getObject(arg0).Window;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_WorkerGlobalScope_5d11124ab834f1be = function(arg0) {
+        const ret = getObject(arg0).WorkerGlobalScope;
+        return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_is_function = function(arg0) {
         const ret = typeof(getObject(arg0)) === 'function';
@@ -2502,11 +2502,11 @@ function __wbg_get_imports() {
         const ret = makeMutClosure(arg0, arg1, 723, __wbg_adapter_56);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper16770 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 829, __wbg_adapter_59);
+    imports.wbg.__wbindgen_closure_wrapper17505 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 739, __wbg_adapter_59);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper18176 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper18015 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 1663, __wbg_adapter_62);
         return addHeapObject(ret);
     };
