@@ -128,14 +128,38 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
     id::{Id, Marker},
-    Epoch, FastHashMap, Index,
+    Epoch, Index,
 };
 <span class="kw">use </span>std::{fmt::Debug, marker::PhantomData};
+
+<span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
+</span><span class="kw">enum </span>IdSource {
+    External,
+    Allocated,
+    <span class="prelude-val">None</span>,
+}
 
 <span class="doccomment">/// A simple structure to allocate [`Id`] identifiers.
 ///
@@ -164,12 +188,15 @@
 /// [`Backend`]: wgt::Backend;
 /// [`alloc`]: IdentityManager::alloc
 /// [`free`]: IdentityManager::free
-</span><span class="attr">#[derive(Debug, Default)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>IdentityValues {
     free: Vec&lt;(Index, Epoch)&gt;,
-    <span class="comment">//sorted by Index
-    </span>used: FastHashMap&lt;Epoch, Vec&lt;Index&gt;&gt;,
+    next_index: Index,
     count: usize,
+    <span class="comment">// Sanity check: The allocation logic works under the assumption that we don't
+    // do a mix of allocating ids from here and providing ids manually for the same
+    // storage container.
+    </span>id_source: IdSource,
 }
 
 <span class="kw">impl </span>IdentityValues {
@@ -178,35 +205,41 @@
     /// The backend is incorporated into the id, so that ids allocated with
     /// different `backend` values are always distinct.
     </span><span class="kw">pub fn </span>alloc&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, backend: Backend) -&gt; Id&lt;T&gt; {
+        <span class="macro">assert!</span>(
+            <span class="self">self</span>.id_source != IdSource::External,
+            <span class="string">"Mix of internally allocated and externally provided IDs"
+        </span>);
+        <span class="self">self</span>.id_source = IdSource::Allocated;
+
         <span class="self">self</span>.count += <span class="number">1</span>;
         <span class="kw">match </span><span class="self">self</span>.free.pop() {
             <span class="prelude-val">Some</span>((index, epoch)) =&gt; Id::zip(index, epoch + <span class="number">1</span>, backend),
             <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>index = <span class="self">self</span>.next_index;
+                <span class="self">self</span>.next_index += <span class="number">1</span>;
                 <span class="kw">let </span>epoch = <span class="number">1</span>;
-                <span class="kw">let </span>used = <span class="self">self</span>.used.entry(epoch).or_insert_with(Default::default);
-                <span class="kw">let </span>index = <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = used.iter().max_by_key(|v| <span class="kw-2">*</span>v) {
-                    i + <span class="number">1
-                </span>} <span class="kw">else </span>{
-                    <span class="number">0
-                </span>};
-                used.push(index);
                 Id::zip(index, epoch, backend)
             }
         }
     }
 
     <span class="kw">pub fn </span>mark_as_used&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T&gt;) -&gt; Id&lt;T&gt; {
+        <span class="macro">assert!</span>(
+            <span class="self">self</span>.id_source != IdSource::Allocated,
+            <span class="string">"Mix of internally allocated and externally provided IDs"
+        </span>);
+        <span class="self">self</span>.id_source = IdSource::External;
+
         <span class="self">self</span>.count += <span class="number">1</span>;
-        <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
-        <span class="kw">let </span>used = <span class="self">self</span>.used.entry(epoch).or_insert_with(Default::default);
-        used.push(index);
         id
     }
 
     <span class="doccomment">/// Free `id`. It will never be returned from `alloc` again.
     </span><span class="kw">pub fn </span>release&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T&gt;) {
-        <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
-        <span class="self">self</span>.free.push((index, epoch));
+        <span class="kw">if let </span>IdSource::Allocated = <span class="self">self</span>.id_source {
+            <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
+            <span class="self">self</span>.free.push((index, epoch));
+        }
         <span class="self">self</span>.count -= <span class="number">1</span>;
     }
 
@@ -236,7 +269,12 @@
 <span class="kw">impl</span>&lt;T: Marker&gt; IdentityManager&lt;T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            values: Mutex::new(IdentityValues::default()),
+            values: Mutex::new(IdentityValues {
+                free: Vec::new(),
+                next_index: <span class="number">0</span>,
+                count: <span class="number">0</span>,
+                id_source: IdSource::None,
+            }),
             _phantom: PhantomData,
         }
     }
@@ -245,16 +283,12 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_epoch_end_of_life() {
     <span class="kw">use </span><span class="kw">crate</span>::id;
-
     <span class="kw">let </span>man = IdentityManager::&lt;id::markers::Buffer&gt;::new();
-    <span class="kw">let </span>forced_id = man.mark_as_used(id::BufferId::zip(<span class="number">0</span>, <span class="number">1</span>, Backend::Empty));
-    <span class="macro">assert_eq!</span>(forced_id.unzip().<span class="number">0</span>, <span class="number">0</span>);
     <span class="kw">let </span>id1 = man.process(Backend::Empty);
-    <span class="macro">assert_eq!</span>(id1.unzip().<span class="number">0</span>, <span class="number">1</span>);
+    <span class="macro">assert_eq!</span>(id1.unzip(), (<span class="number">0</span>, <span class="number">1</span>, Backend::Empty));
     man.free(id1);
     <span class="kw">let </span>id2 = man.process(Backend::Empty);
     <span class="comment">// confirm that the epoch 1 is no longer re-used
-    </span><span class="macro">assert_eq!</span>(id2.unzip().<span class="number">0</span>, <span class="number">1</span>);
-    <span class="macro">assert_eq!</span>(id2.unzip().<span class="number">1</span>, <span class="number">2</span>);
+    </span><span class="macro">assert_eq!</span>(id2.unzip(), (<span class="number">0</span>, <span class="number">2</span>, Backend::Empty));
 }
 </code></pre></div></section></main></body></html>
