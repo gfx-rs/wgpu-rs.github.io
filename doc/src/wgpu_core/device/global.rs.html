@@ -2578,7 +2578,6 @@
 <a href="#2577" id="2577">2577</a>
 <a href="#2578" id="2578">2578</a>
 <a href="#2579" id="2579">2579</a>
-<a href="#2580" id="2580">2580</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3911,9 +3910,8 @@
             <span class="kw">if </span>!device.is_valid() {
                 <span class="kw">break </span>DeviceError::Lost;
             }
-            <span class="kw">let </span>queue = <span class="kw">match </span>hub.queues.get(device.queue_id.read().unwrap()) {
-                <span class="prelude-val">Ok</span>(queue) =&gt; queue,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::InvalidQueueId,
+            <span class="kw">let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() <span class="kw">else </span>{
+                <span class="kw">break </span>DeviceError::InvalidQueueId;
             };
             <span class="kw">let </span>encoder = <span class="kw">match </span>device
                 .command_allocator

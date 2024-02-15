@@ -3543,6 +3543,14 @@
 <a href="#3542" id="3542">3542</a>
 <a href="#3543" id="3543">3543</a>
 <a href="#3544" id="3544">3544</a>
+<a href="#3545" id="3545">3545</a>
+<a href="#3546" id="3546">3546</a>
+<a href="#3547" id="3547">3547</a>
+<a href="#3548" id="3548">3548</a>
+<a href="#3549" id="3549">3549</a>
+<a href="#3550" id="3550">3550</a>
+<a href="#3551" id="3551">3551</a>
+<a href="#3552" id="3552">3552</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3558,7 +3566,6 @@
     hal_api::HalApi,
     hal_label,
     hub::Hub,
-    id::QueueId,
     init_tracker::{
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTracker, TextureInitTrackerAction,
@@ -3583,6 +3590,7 @@
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>};
+<span class="kw">use </span>once_cell::sync::OnceCell;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
 
 <span class="kw">use </span>smallvec::SmallVec;
@@ -3601,7 +3609,7 @@
 
 <span class="kw">use super</span>::{
     life::{<span class="self">self</span>, ResourceMaps},
-    queue::{<span class="self">self</span>},
+    queue::{<span class="self">self</span>, Queue},
     DeviceDescriptor, DeviceError, ImplicitPipelineContext, UserClosures, ENTRYPOINT_FAILURE_ERROR,
     IMPLICIT_BIND_GROUP_LAYOUT_ERROR_LABEL, ZERO_BUFFER_SIZE,
 };
@@ -3634,8 +3642,8 @@
 </span><span class="kw">pub struct </span>Device&lt;A: HalApi&gt; {
     raw: <span class="prelude-ty">Option</span>&lt;A::Device&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) adapter: Arc&lt;Adapter&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) queue_id: RwLock&lt;<span class="prelude-ty">Option</span>&lt;QueueId&gt;&gt;,
-    queue_to_drop: RwLock&lt;<span class="prelude-ty">Option</span>&lt;A::Queue&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) queue: OnceCell&lt;Weak&lt;Queue&lt;A&gt;&gt;&gt;,
+    queue_to_drop: OnceCell&lt;A::Queue&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) zero_buffer: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Device&lt;A&gt;&gt;,
 
@@ -3707,7 +3715,7 @@
         <span class="kw">unsafe </span>{
             raw.destroy_buffer(<span class="self">self</span>.zero_buffer.take().unwrap());
             raw.destroy_fence(<span class="self">self</span>.fence.write().take().unwrap());
-            <span class="kw">let </span>queue = <span class="self">self</span>.queue_to_drop.write().take().unwrap();
+            <span class="kw">let </span>queue = <span class="self">self</span>.queue_to_drop.take().unwrap();
             raw.exit(queue);
         }
     }
@@ -3805,8 +3813,8 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             raw: <span class="prelude-val">Some</span>(raw_device),
             adapter: adapter.clone(),
-            queue_id: RwLock::new(<span class="prelude-val">None</span>),
-            queue_to_drop: RwLock::new(<span class="prelude-val">None</span>),
+            queue: OnceCell::new(),
+            queue_to_drop: OnceCell::new(),
             zero_buffer: <span class="prelude-val">Some</span>(zero_buffer),
             info: ResourceInfo::new(<span class="string">"&lt;device&gt;"</span>),
             command_allocator: Mutex::new(<span class="prelude-val">Some</span>(com_alloc)),
@@ -3847,7 +3855,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_queue(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: A::Queue) {
-        <span class="self">self</span>.queue_to_drop.write().replace(queue);
+        <span class="macro">assert!</span>(<span class="self">self</span>.queue_to_drop.set(queue).is_ok());
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lock_life&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; MutexGuard&lt;<span class="lifetime">'a</span>, LifetimeTracker&lt;A&gt;&gt; {
@@ -3902,6 +3910,14 @@
                 }
             }
         }
+    }
+
+    <span class="kw">pub fn </span>get_queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;Queue&lt;A&gt;&gt;&gt; {
+        <span class="self">self</span>.queue.get().as_ref()<span class="question-mark">?</span>.upgrade()
+    }
+
+    <span class="kw">pub fn </span>set_queue(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: Arc&lt;Queue&lt;A&gt;&gt;) {
+        <span class="macro">assert!</span>(<span class="self">self</span>.queue.set(Arc::downgrade(<span class="kw-2">&amp;</span>queue)).is_ok());
     }
 
     <span class="doccomment">/// Check this device for completed commands.
