@@ -1719,11 +1719,6 @@
 <a href="#1718" id="1718">1718</a>
 <a href="#1719" id="1719">1719</a>
 <a href="#1720" id="1720">1720</a>
-<a href="#1721" id="1721">1721</a>
-<a href="#1722" id="1722">1722</a>
-<a href="#1723" id="1723">1723</a>
-<a href="#1724" id="1724">1724</a>
-<a href="#1725" id="1725">1725</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1823,7 +1818,7 @@ index format changes.
     id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
     pipeline::{PipelineFlags, RenderPipeline, VertexStep},
-    resource::{Resource, ResourceInfo, ResourceType},
+    resource::{Buffer, Resource, ResourceInfo, ResourceType},
     resource_log,
     track::RenderBundleScope,
     validation::check_buffer_usage,
@@ -1836,9 +1831,11 @@ index format changes.
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
+<span class="kw">use </span><span class="kw">super</span>::ArcRenderCommand;
+
 <span class="doccomment">/// https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-draw
-</span><span class="kw">fn </span>validate_draw(
-    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&gt;],
+</span><span class="kw">fn </span>validate_draw&lt;A: HalApi&gt;(
+    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&lt;A&gt;&gt;],
     step: <span class="kw-2">&amp;</span>[VertexStep],
     first_vertex: u32,
     vertex_count: u32,
@@ -1878,10 +1875,10 @@ index format changes.
 }
 
 <span class="comment">// See https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-drawindexed
-</span><span class="kw">fn </span>validate_indexed_draw(
-    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&gt;],
+</span><span class="kw">fn </span>validate_indexed_draw&lt;A: HalApi&gt;(
+    vertex: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;VertexState&lt;A&gt;&gt;],
     step: <span class="kw-2">&amp;</span>[VertexStep],
-    index_state: <span class="kw-2">&amp;</span>IndexState,
+    index_state: <span class="kw-2">&amp;</span>IndexState&lt;A&gt;,
     first_index: u32,
     index_count: u32,
     first_instance: u32,
@@ -2200,7 +2197,7 @@ index format changes.
 
                     <span class="kw">let </span>pipeline_state = PipelineState::new(pipeline);
 
-                    commands.push(command);
+                    commands.push(ArcRenderCommand::SetPipeline(pipeline.clone()));
 
                     <span class="comment">// If this pipeline uses push constants, zero out their values.
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(iter) = pipeline_state.zero_push_constants() {
@@ -2237,7 +2234,7 @@ index format changes.
                         offset..end,
                         MemoryInitKind::NeedsInitializedMemory,
                     ));
-                    state.set_index_buffer(buffer_id, index_format, offset..end);
+                    state.set_index_buffer(buffer.clone(), index_format, offset..end);
                 }
                 RenderCommand::SetVertexBuffer {
                     slot,
@@ -2276,13 +2273,13 @@ index format changes.
                         offset..end,
                         MemoryInitKind::NeedsInitializedMemory,
                     ));
-                    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer_id, offset..end));
+                    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer.clone(), offset..end));
                 }
                 RenderCommand::SetPushConstant {
                     stages,
                     offset,
                     size_bytes,
-                    values_offset: <span class="kw">_</span>,
+                    values_offset,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
                     <span class="kw">let </span>end_offset = offset + size_bytes;
@@ -2293,7 +2290,7 @@ index format changes.
                         .validate_push_constant_ranges(stages, offset, end_offset)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    commands.push(command);
+                    commands.push(ArcRenderCommand::SetPushConstant { stages, offset, size_bytes, values_offset });
                 }
                 RenderCommand::Draw {
                     vertex_count,
@@ -2321,14 +2318,19 @@ index format changes.
                     <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; vertex_count &gt; <span class="number">0 </span>{
                         commands.extend(state.flush_vertices());
                         commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                        commands.push(command);
+                        commands.push(ArcRenderCommand::Draw {
+                            vertex_count,
+                            instance_count,
+                            first_vertex,
+                            first_instance,
+                        });
                     }
                 }
                 RenderCommand::DrawIndexed {
                     index_count,
                     instance_count,
                     first_index,
-                    base_vertex: <span class="kw">_</span>,
+                    base_vertex,
                     first_instance,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
@@ -2357,7 +2359,7 @@ index format changes.
                         commands.extend(state.flush_index());
                         commands.extend(state.flush_vertices());
                         commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                        commands.push(command);
+                        commands.push(ArcRenderCommand::DrawIndexed { index_count, instance_count, first_index, base_vertex, first_instance });
                     }
                 }
                 RenderCommand::MultiDrawIndirect {
@@ -2397,7 +2399,7 @@ index format changes.
 
                     commands.extend(state.flush_vertices());
                     commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(command);
+                    commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: <span class="prelude-val">None</span>, indexed: <span class="bool-val">false </span>});
                 }
                 RenderCommand::MultiDrawIndirect {
                     buffer_id,
@@ -2442,7 +2444,7 @@ index format changes.
                     commands.extend(index.flush());
                     commands.extend(state.flush_vertices());
                     commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(command);
+                    commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: <span class="prelude-val">None</span>, indexed: <span class="bool-val">true </span>});
                 }
                 RenderCommand::MultiDrawIndirect { .. }
                 | RenderCommand::MultiDrawIndirectCount { .. } =&gt; <span class="macro">unimplemented!</span>(),
@@ -2553,7 +2555,7 @@ index format changes.
 </span><span class="kw">pub struct </span>RenderBundle&lt;A: HalApi&gt; {
     <span class="comment">// Normalized command stream. It can be executed verbatim,
     // without re-binding anything on the pipeline change.
-    </span>base: BasePass&lt;RenderCommand&gt;,
+    </span>base: BasePass&lt;ArcRenderCommand&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">super</span>) is_depth_read_only: bool,
     <span class="kw">pub</span>(<span class="kw">super</span>) is_stencil_read_only: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
@@ -2592,7 +2594,6 @@ index format changes.
     /// All the validation has already been done by this point.
     /// The only failure condition is if some of the used buffers are destroyed.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>execute(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
-        <span class="kw">let </span>trackers = <span class="kw-2">&amp;</span><span class="self">self</span>.used;
         <span class="kw">let </span><span class="kw-2">mut </span>offsets = <span class="self">self</span>.base.dynamic_offsets.as_slice();
         <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout = <span class="prelude-val">None</span>::&lt;Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;;
         <span class="kw">if </span>!<span class="self">self</span>.discard_hal_labels {
@@ -2603,74 +2604,65 @@ index format changes.
 
         <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
 
+        <span class="kw">use </span>ArcRenderCommand <span class="kw">as </span>Cmd;
         <span class="kw">for </span>command <span class="kw">in </span><span class="self">self</span>.base.commands.iter() {
-            <span class="kw">match </span><span class="kw-2">*</span>command {
-                RenderCommand::SetBindGroup {
+            <span class="kw">match </span>command {
+                Cmd::SetBindGroup {
                     index,
                     num_dynamic_offsets,
-                    bind_group_id,
+                    bind_group,
                 } =&gt; {
-                    <span class="kw">let </span>bind_groups = trackers.bind_groups.read();
-                    <span class="kw">let </span>bind_group = bind_groups.get(bind_group_id).unwrap();
                     <span class="kw">let </span>raw_bg = bind_group
                         .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ExecutionError::InvalidBindGroup(bind_group_id))<span class="question-mark">?</span>;
+                        .ok_or(ExecutionError::InvalidBindGroup(bind_group.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{
                         raw.set_bind_group(
                             pipeline_layout.as_ref().unwrap().raw(),
-                            index,
+                            <span class="kw-2">*</span>index,
                             raw_bg,
-                            <span class="kw-2">&amp;</span>offsets[..num_dynamic_offsets],
+                            <span class="kw-2">&amp;</span>offsets[..<span class="kw-2">*</span>num_dynamic_offsets],
                         )
                     };
-                    offsets = <span class="kw-2">&amp;</span>offsets[num_dynamic_offsets..];
+                    offsets = <span class="kw-2">&amp;</span>offsets[<span class="kw-2">*</span>num_dynamic_offsets..];
                 }
-                RenderCommand::SetPipeline(pipeline_id) =&gt; {
-                    <span class="kw">let </span>render_pipelines = trackers.render_pipelines.read();
-                    <span class="kw">let </span>pipeline = render_pipelines.get(pipeline_id).unwrap();
+                Cmd::SetPipeline(pipeline) =&gt; {
                     <span class="kw">unsafe </span>{ raw.set_render_pipeline(pipeline.raw()) };
 
                     pipeline_layout = <span class="prelude-val">Some</span>(pipeline.layout.clone());
                 }
-                RenderCommand::SetIndexBuffer {
-                    buffer_id,
+                Cmd::SetIndexBuffer {
+                    buffer,
                     index_format,
                     offset,
                     size,
                 } =&gt; {
-                    <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer: <span class="kw-2">&amp;</span>A::Buffer = buffers
-                        .get(buffer_id)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?
-                        </span>.raw(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>buffer: <span class="kw-2">&amp;</span>A::Buffer = buffer
+                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
-                        offset,
-                        size,
+                        offset: <span class="kw-2">*</span>offset,
+                        size: <span class="kw-2">*</span>size,
                     };
-                    <span class="kw">unsafe </span>{ raw.set_index_buffer(bb, index_format) };
+                    <span class="kw">unsafe </span>{ raw.set_index_buffer(bb, <span class="kw-2">*</span>index_format) };
                 }
-                RenderCommand::SetVertexBuffer {
+                Cmd::SetVertexBuffer {
                     slot,
-                    buffer_id,
+                    buffer,
                     offset,
                     size,
                 } =&gt; {
-                    <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers
-                        .get(buffer_id)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?
-                        </span>.raw(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>buffer = buffer
+                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
-                        offset,
-                        size,
+                        offset: <span class="kw-2">*</span>offset,
+                        size: <span class="kw-2">*</span>size,
                     };
-                    <span class="kw">unsafe </span>{ raw.set_vertex_buffer(slot, bb) };
+                    <span class="kw">unsafe </span>{ raw.set_vertex_buffer(<span class="kw-2">*</span>slot, bb) };
                 }
-                RenderCommand::SetPushConstant {
+                Cmd::SetPushConstant {
                     stages,
                     offset,
                     size_bytes,
@@ -2678,7 +2670,7 @@ index format changes.
                 } =&gt; {
                     <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap();
 
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(values_offset) = values_offset {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(values_offset) = <span class="kw-2">*</span>values_offset {
                         <span class="kw">let </span>values_end_offset =
                             (values_offset + size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
                         <span class="kw">let </span>data_slice = <span class="kw-2">&amp;</span><span class="self">self</span>.base.push_constant_data
@@ -2687,20 +2679,20 @@ index format changes.
                         <span class="kw">unsafe </span>{
                             raw.set_push_constants(
                                 pipeline_layout.raw(),
-                                stages,
-                                offset,
+                                <span class="kw-2">*</span>stages,
+                                <span class="kw-2">*</span>offset,
                                 data_slice,
                             )
                         }
                     } <span class="kw">else </span>{
                         <span class="kw">super</span>::push_constant_clear(
-                            offset,
-                            size_bytes,
+                            <span class="kw-2">*</span>offset,
+                            <span class="kw-2">*</span>size_bytes,
                             |clear_offset, clear_data| {
                                 <span class="kw">unsafe </span>{
                                     raw.set_push_constants(
                                         pipeline_layout.raw(),
-                                        stages,
+                                        <span class="kw-2">*</span>stages,
                                         clear_offset,
                                         clear_data,
                                     )
@@ -2709,15 +2701,22 @@ index format changes.
                         );
                     }
                 }
-                RenderCommand::Draw {
+                Cmd::Draw {
                     vertex_count,
                     instance_count,
                     first_vertex,
                     first_instance,
                 } =&gt; {
-                    <span class="kw">unsafe </span>{ raw.draw(first_vertex, vertex_count, first_instance, instance_count) };
+                    <span class="kw">unsafe </span>{
+                        raw.draw(
+                            <span class="kw-2">*</span>first_vertex,
+                            <span class="kw-2">*</span>vertex_count,
+                            <span class="kw-2">*</span>first_instance,
+                            <span class="kw-2">*</span>instance_count,
+                        )
+                    };
                 }
-                RenderCommand::DrawIndexed {
+                Cmd::DrawIndexed {
                     index_count,
                     instance_count,
                     first_index,
@@ -2726,63 +2725,54 @@ index format changes.
                 } =&gt; {
                     <span class="kw">unsafe </span>{
                         raw.draw_indexed(
-                            first_index,
-                            index_count,
-                            base_vertex,
-                            first_instance,
-                            instance_count,
+                            <span class="kw-2">*</span>first_index,
+                            <span class="kw-2">*</span>index_count,
+                            <span class="kw-2">*</span>base_vertex,
+                            <span class="kw-2">*</span>first_instance,
+                            <span class="kw-2">*</span>instance_count,
                         )
                     };
                 }
-                RenderCommand::MultiDrawIndirect {
-                    buffer_id,
+                Cmd::MultiDrawIndirect {
+                    buffer,
                     offset,
                     count: <span class="prelude-val">None</span>,
                     indexed: <span class="bool-val">false</span>,
                 } =&gt; {
-                    <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers
-                        .get(buffer_id)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?
-                        </span>.raw(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?</span>;
-                    <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, offset, <span class="number">1</span>) };
+                    <span class="kw">let </span>buffer = buffer
+                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
+                    <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }
-                RenderCommand::MultiDrawIndirect {
-                    buffer_id,
+                Cmd::MultiDrawIndirect {
+                    buffer,
                     offset,
                     count: <span class="prelude-val">None</span>,
                     indexed: <span class="bool-val">true</span>,
                 } =&gt; {
-                    <span class="kw">let </span>buffers = trackers.buffers.read();
-                    <span class="kw">let </span>buffer = buffers
-                        .get(buffer_id)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?
-                        </span>.raw(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))<span class="question-mark">?</span>;
-                    <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, offset, <span class="number">1</span>) };
+                    <span class="kw">let </span>buffer = buffer
+                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
+                    <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }
-                RenderCommand::MultiDrawIndirect { .. }
-                | RenderCommand::MultiDrawIndirectCount { .. } =&gt; {
+                Cmd::MultiDrawIndirect { .. } | Cmd::MultiDrawIndirectCount { .. } =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"multi-draw-indirect"</span>))
                 }
-                RenderCommand::PushDebugGroup { .. }
-                | RenderCommand::InsertDebugMarker { .. }
-                | RenderCommand::PopDebugGroup =&gt; {
+                Cmd::PushDebugGroup { .. } | Cmd::InsertDebugMarker { .. } | Cmd::PopDebugGroup =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"debug-markers"</span>))
                 }
-                RenderCommand::WriteTimestamp { .. }
-                | RenderCommand::BeginOcclusionQuery { .. }
-                | RenderCommand::EndOcclusionQuery
-                | RenderCommand::BeginPipelineStatisticsQuery { .. }
-                | RenderCommand::EndPipelineStatisticsQuery =&gt; {
+                Cmd::WriteTimestamp { .. }
+                | Cmd::BeginOcclusionQuery { .. }
+                | Cmd::EndOcclusionQuery
+                | Cmd::BeginPipelineStatisticsQuery { .. }
+                | Cmd::EndPipelineStatisticsQuery =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"queries"</span>))
                 }
-                RenderCommand::ExecuteBundle(<span class="kw">_</span>)
-                | RenderCommand::SetBlendConstant(<span class="kw">_</span>)
-                | RenderCommand::SetStencilReference(<span class="kw">_</span>)
-                | RenderCommand::SetViewport { .. }
-                | RenderCommand::SetScissor(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+                Cmd::ExecuteBundle(<span class="kw">_</span>)
+                | Cmd::SetBlendConstant(<span class="kw">_</span>)
+                | Cmd::SetStencilReference(<span class="kw">_</span>)
+                | Cmd::SetViewport { .. }
+                | Cmd::SetScissor(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
             }
         }
 
@@ -2816,14 +2806,14 @@ index format changes.
 /// and calls [`State::flush_index`] before any indexed draw command to produce
 /// a `SetIndexBuffer` command if one is necessary.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>IndexState {
-    buffer: id::BufferId,
+</span><span class="kw">struct </span>IndexState&lt;A: HalApi&gt; {
+    buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
     format: wgt::IndexFormat,
     range: Range&lt;wgt::BufferAddress&gt;,
     is_dirty: bool,
 }
 
-<span class="kw">impl </span>IndexState {
+<span class="kw">impl</span>&lt;A: HalApi&gt; IndexState&lt;A&gt; {
     <span class="doccomment">/// Return the number of entries in the current index buffer.
     ///
     /// Panic if no index buffer has been set.
@@ -2838,11 +2828,11 @@ index format changes.
 
     <span class="doccomment">/// Generate a `SetIndexBuffer` command to prepare for an indexed draw
     /// command, if needed.
-    </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RenderCommand&gt; {
+    </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ArcRenderCommand&lt;A&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_dirty {
             <span class="self">self</span>.is_dirty = <span class="bool-val">false</span>;
-            <span class="prelude-val">Some</span>(RenderCommand::SetIndexBuffer {
-                buffer_id: <span class="self">self</span>.buffer,
+            <span class="prelude-val">Some</span>(ArcRenderCommand::SetIndexBuffer {
+                buffer: <span class="self">self</span>.buffer.clone(),
                 index_format: <span class="self">self</span>.format,
                 offset: <span class="self">self</span>.range.start,
                 size: wgt::BufferSize::new(<span class="self">self</span>.range.end - <span class="self">self</span>.range.start),
@@ -2863,14 +2853,14 @@ index format changes.
 ///
 /// [`flush`]: IndexState::flush
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>VertexState {
-    buffer: id::BufferId,
+</span><span class="kw">struct </span>VertexState&lt;A: HalApi&gt; {
+    buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
     range: Range&lt;wgt::BufferAddress&gt;,
     is_dirty: bool,
 }
 
-<span class="kw">impl </span>VertexState {
-    <span class="kw">fn </span>new(buffer: id::BufferId, range: Range&lt;wgt::BufferAddress&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;A: HalApi&gt; VertexState&lt;A&gt; {
+    <span class="kw">fn </span>new(buffer: Arc&lt;Buffer&lt;A&gt;&gt;, range: Range&lt;wgt::BufferAddress&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buffer,
             range,
@@ -2881,12 +2871,12 @@ index format changes.
     <span class="doccomment">/// Generate a `SetVertexBuffer` command for this slot, if necessary.
     ///
     /// `slot` is the index of the vertex buffer slot that `self` tracks.
-    </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32) -&gt; <span class="prelude-ty">Option</span>&lt;RenderCommand&gt; {
+    </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32) -&gt; <span class="prelude-ty">Option</span>&lt;ArcRenderCommand&lt;A&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_dirty {
             <span class="self">self</span>.is_dirty = <span class="bool-val">false</span>;
-            <span class="prelude-val">Some</span>(RenderCommand::SetVertexBuffer {
+            <span class="prelude-val">Some</span>(ArcRenderCommand::SetVertexBuffer {
                 slot,
-                buffer_id: <span class="self">self</span>.buffer,
+                buffer: <span class="self">self</span>.buffer.clone(),
                 offset: <span class="self">self</span>.range.start,
                 size: wgt::BufferSize::new(<span class="self">self</span>.range.end - <span class="self">self</span>.range.start),
             })
@@ -2948,7 +2938,7 @@ index format changes.
 
     <span class="doccomment">/// Return a sequence of commands to zero the push constant ranges this
     /// pipeline uses. If no initialization is necessary, return `None`.
-    </span><span class="kw">fn </span>zero_push_constants(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt;&gt; {
+    </span><span class="kw">fn </span>zero_push_constants(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Iterator&lt;Item = ArcRenderCommand&lt;A&gt;&gt;&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.push_constant_ranges.is_empty() {
             <span class="kw">let </span>nonoverlapping_ranges =
                 <span class="kw">super</span>::bind::compute_nonoverlapping_ranges(<span class="kw-2">&amp;</span><span class="self">self</span>.push_constant_ranges);
@@ -2956,7 +2946,7 @@ index format changes.
             <span class="prelude-val">Some</span>(
                 nonoverlapping_ranges
                     .into_iter()
-                    .map(|range| RenderCommand::SetPushConstant {
+                    .map(|range| ArcRenderCommand::SetPushConstant {
                         stages: range.stages,
                         offset: range.range.start,
                         size_bytes: range.range.end - range.range.start,
@@ -2990,11 +2980,11 @@ index format changes.
     </span>bind: ArrayVec&lt;<span class="prelude-ty">Option</span>&lt;BindState&lt;A&gt;&gt;, { hal::MAX_BIND_GROUPS }&gt;,
 
     <span class="doccomment">/// The state of each vertex buffer slot.
-    </span>vertex: ArrayVec&lt;<span class="prelude-ty">Option</span>&lt;VertexState&gt;, { hal::MAX_VERTEX_BUFFERS }&gt;,
+    </span>vertex: ArrayVec&lt;<span class="prelude-ty">Option</span>&lt;VertexState&lt;A&gt;&gt;, { hal::MAX_VERTEX_BUFFERS }&gt;,
 
     <span class="doccomment">/// The current index buffer, if one has been set. We flush this state
     /// before indexed draw commands.
-    </span>index: <span class="prelude-ty">Option</span>&lt;IndexState&gt;,
+    </span>index: <span class="prelude-ty">Option</span>&lt;IndexState&lt;A&gt;&gt;,
 
     <span class="doccomment">/// Dynamic offset values used by the cleaned-up command sequence.
     ///
@@ -3104,13 +3094,13 @@ index format changes.
     <span class="doccomment">/// Set the bundle's current index buffer and its associated parameters.
     </span><span class="kw">fn </span>set_index_buffer(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: id::BufferId,
+        buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
         format: wgt::IndexFormat,
         range: Range&lt;wgt::BufferAddress&gt;,
     ) {
         <span class="kw">match </span><span class="self">self</span>.index {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>current)
-                <span class="kw">if </span>current.buffer == buffer
+                <span class="kw">if </span>Arc::ptr_eq(<span class="kw-2">&amp;</span>current.buffer, <span class="kw-2">&amp;</span>buffer)
                     &amp;&amp; current.format == format
                     &amp;&amp; current.range == range =&gt;
             {
@@ -3129,11 +3119,11 @@ index format changes.
 
     <span class="doccomment">/// Generate a `SetIndexBuffer` command to prepare for an indexed draw
     /// command, if needed.
-    </span><span class="kw">fn </span>flush_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;RenderCommand&gt; {
+    </span><span class="kw">fn </span>flush_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ArcRenderCommand&lt;A&gt;&gt; {
         <span class="self">self</span>.index.as_mut().and_then(|index| index.flush())
     }
 
-    <span class="kw">fn </span>flush_vertices(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">'_ </span>{
+    <span class="kw">fn </span>flush_vertices(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = ArcRenderCommand&lt;A&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.vertex
             .iter_mut()
             .enumerate()
@@ -3145,7 +3135,7 @@ index format changes.
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         used_bind_groups: usize,
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = RenderCommand&gt; + <span class="lifetime">'_ </span>{
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = ArcRenderCommand&lt;A&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="comment">// Append each dirty bind group's dynamic offsets to `flat_dynamic_offsets`.
         </span><span class="kw">for </span>contents <span class="kw">in </span><span class="self">self</span>.bind[..used_bind_groups].iter().flatten() {
             <span class="kw">if </span>contents.is_dirty {
@@ -3164,9 +3154,9 @@ index format changes.
                     <span class="kw">if </span>contents.is_dirty {
                         contents.is_dirty = <span class="bool-val">false</span>;
                         <span class="kw">let </span>offsets = <span class="kw-2">&amp;</span>contents.dynamic_offsets;
-                        <span class="kw">return </span><span class="prelude-val">Some</span>(RenderCommand::SetBindGroup {
+                        <span class="kw">return </span><span class="prelude-val">Some</span>(ArcRenderCommand::SetBindGroup {
                             index: i.try_into().unwrap(),
-                            bind_group_id: contents.bind_group.as_info().id(),
+                            bind_group: contents.bind_group.clone(),
                             num_dynamic_offsets: offsets.end - offsets.start,
                         });
                     }
