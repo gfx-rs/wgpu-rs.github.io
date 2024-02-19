@@ -1502,6 +1502,9 @@
 <a href="#1501" id="1501">1501</a>
 <a href="#1502" id="1502">1502</a>
 <a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2698,13 +2701,16 @@
                     <span class="kw">let </span>sampler = desc.samplers[entry.resource_index <span class="kw">as </span>usize];
                     <span class="kw">super</span>::RawBinding::Sampler(sampler.raw)
                 }
-                wgt::BindingType::Texture { .. } =&gt; {
+                wgt::BindingType::Texture { view_dimension, .. } =&gt; {
                     <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
                     <span class="kw">if </span>view.array_layers.start != <span class="number">0 </span>{
                         <span class="macro">log::error!</span>(<span class="string">"Unable to create a sampled texture binding for non-zero array layer.\n{}"</span>,
                             <span class="string">"This is an implementation problem of wgpu-hal/gles backend."</span>)
                     }
                     <span class="kw">let </span>(raw, target) = view.inner.as_native();
+
+                    <span class="kw">super</span>::Texture::log_failing_target_heuristics(view_dimension, target);
+
                     <span class="kw">super</span>::RawBinding::Texture {
                         raw,
                         target,
