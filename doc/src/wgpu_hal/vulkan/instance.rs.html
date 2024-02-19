@@ -1051,6 +1051,20 @@
 <a href="#1050" id="1050">1050</a>
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1059,6 +1073,7 @@
     thread,
 };
 
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{
     extensions::{ext, khr},
     vk,
@@ -1706,26 +1721,27 @@
         <span class="kw">let </span>validation_layer_name =
             CStr::from_bytes_with_nul(<span class="string">b"VK_LAYER_KHRONOS_validation\0"</span>).unwrap();
         <span class="kw">let </span>validation_layer_properties = find_layer(<span class="kw-2">&amp;</span>instance_layers, validation_layer_name);
-        <span class="kw">let </span>validation_features_are_enabled = || {
-            validation_layer_properties.is_some().then(|| {
-                <span class="kw">let </span>exts = <span class="self">Self</span>::enumerate_instance_extension_properties(
-                    <span class="kw-2">&amp;</span>entry,
-                    <span class="prelude-val">Some</span>(validation_layer_name),
-                )<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>ext_names = exts
-                    .iter()
-                    .filter_map(|ext| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>ext.extension_name));
-                <span class="kw">let </span>found =
-                    ext_names.any(|ext_name| ext_name == vk::ExtValidationFeaturesFn::name());
-                <span class="prelude-val">Ok</span>(found)
-            })
-        };
+
+        <span class="comment">// Determine if VK_EXT_validation_features is available, so we can enable
+        // GPU assisted validation and synchronization validation.
+        </span><span class="kw">let </span>validation_features_are_enabled = <span class="kw">if </span>validation_layer_properties.is_some() {
+            <span class="comment">// Get the all the instance extension properties.
+            </span><span class="kw">let </span>exts =
+                <span class="self">Self</span>::enumerate_instance_extension_properties(<span class="kw-2">&amp;</span>entry, <span class="prelude-val">Some</span>(validation_layer_name))<span class="question-mark">?</span>;
+            <span class="comment">// Convert all the names of the extensions into an iterator of CStrs.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>ext_names = exts
+                .iter()
+                .filter_map(|ext| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>ext.extension_name));
+            <span class="comment">// Find the validation features extension.
+            </span>ext_names.any(|ext_name| ext_name == vk::ExtValidationFeaturesFn::name())
+        } <span class="kw">else </span>{
+            <span class="bool-val">false
+        </span>};
+
         <span class="kw">let </span>should_enable_gpu_based_validation = desc
             .flags
             .intersects(wgt::InstanceFlags::GPU_BASED_VALIDATION)
-            &amp;&amp; validation_features_are_enabled()
-                .transpose()<span class="question-mark">?
-                </span>.unwrap_or(<span class="bool-val">false</span>);
+            &amp;&amp; validation_features_are_enabled;
 
         <span class="kw">let </span>nv_optimus_layer = CStr::from_bytes_with_nul(<span class="string">b"VK_LAYER_NV_optimus\0"</span>).unwrap();
         <span class="kw">let </span>has_nv_optimus = find_layer(<span class="kw-2">&amp;</span>instance_layers, nv_optimus_layer).is_some();
@@ -1840,14 +1856,26 @@
                 create_info = create_info.push_next(vk_create_info);
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>gpu_assisted_validation = vk::ValidationFeaturesEXT::builder()
-                .enabled_validation_features(<span class="kw-2">&amp;</span>[
-                    vk::ValidationFeatureEnableEXT::GPU_ASSISTED,
-                    vk::ValidationFeatureEnableEXT::GPU_ASSISTED_RESERVE_BINDING_SLOT,
-                    vk::ValidationFeatureEnableEXT::SYNCHRONIZATION_VALIDATION,
-                ]);
-            <span class="kw">if </span>should_enable_gpu_based_validation {
-                create_info = create_info.push_next(<span class="kw-2">&amp;mut </span>gpu_assisted_validation);
+            <span class="comment">// Enable explicit validation features if available
+            </span><span class="kw">let </span><span class="kw-2">mut </span>validation_features;
+            <span class="kw">let </span><span class="kw-2">mut </span>validation_feature_list: ArrayVec&lt;<span class="kw">_</span>, <span class="number">3</span>&gt;;
+            <span class="kw">if </span>validation_features_are_enabled {
+                validation_feature_list = ArrayVec::new();
+
+                <span class="comment">// Always enable synchronization validation
+                </span>validation_feature_list
+                    .push(vk::ValidationFeatureEnableEXT::SYNCHRONIZATION_VALIDATION);
+
+                <span class="comment">// Only enable GPU assisted validation if requested.
+                </span><span class="kw">if </span>should_enable_gpu_based_validation {
+                    validation_feature_list.push(vk::ValidationFeatureEnableEXT::GPU_ASSISTED);
+                    validation_feature_list
+                        .push(vk::ValidationFeatureEnableEXT::GPU_ASSISTED_RESERVE_BINDING_SLOT);
+                }
+
+                validation_features = vk::ValidationFeaturesEXT::builder()
+                    .enabled_validation_features(<span class="kw-2">&amp;</span>validation_feature_list);
+                create_info = create_info.push_next(<span class="kw-2">&amp;mut </span>validation_features);
             }
 
             <span class="kw">unsafe </span>{
