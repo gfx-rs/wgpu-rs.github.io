@@ -492,6 +492,13 @@
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
 <a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -533,6 +540,11 @@
     </span>UnalignedFillSize(BufferAddress),
     <span class="attr">#[error(<span class="string">"Buffer offset {0:?} is not a multiple of `COPY_BUFFER_ALIGNMENT`"</span>)]
     </span>UnalignedBufferOffset(BufferAddress),
+    <span class="attr">#[error(<span class="string">"Clear starts at offset {start_offset} with size of {requested_size}, but these added together exceed `u64::MAX`"</span>)]
+    </span>OffsetPlusSizeExceeds64BitBounds {
+        start_offset: BufferAddress,
+        requested_size: BufferAddress,
+    },
     <span class="attr">#[error(<span class="string">"Clear of {start_offset}..{end_offset} would end up overrunning the bounds of the buffer of size {buffer_size}"</span>)]
     </span>BufferOverrun {
         start_offset: BufferAddress,
@@ -611,25 +623,27 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         </span><span class="kw">if </span>offset % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedBufferOffset(offset));
         }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-            <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedFillSize(size));
-            }
-            <span class="kw">let </span>destination_end_offset = offset + size;
-            <span class="kw">if </span>destination_end_offset &gt; dst_buffer.size {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::BufferOverrun {
+
+        <span class="kw">let </span>size = size.unwrap_or(dst_buffer.size.saturating_sub(offset));
+        <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::UnalignedFillSize(size));
+        }
+        <span class="kw">let </span>end_offset =
+            offset
+                .checked_add(size)
+                .ok_or(ClearError::OffsetPlusSizeExceeds64BitBounds {
                     start_offset: offset,
-                    end_offset: destination_end_offset,
-                    buffer_size: dst_buffer.size,
-                });
-            }
+                    requested_size: size,
+                })<span class="question-mark">?</span>;
+        <span class="kw">if </span>end_offset &gt; dst_buffer.size {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::BufferOverrun {
+                start_offset: offset,
+                end_offset,
+                buffer_size: dst_buffer.size,
+            });
         }
 
-        <span class="kw">let </span>end = <span class="kw">match </span>size {
-            <span class="prelude-val">Some</span>(size) =&gt; offset + size,
-            <span class="prelude-val">None </span>=&gt; dst_buffer.size,
-        };
-        <span class="kw">if </span>offset == end {
+        <span class="kw">if </span>offset == end_offset {
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring fill_buffer of size 0"</span>);
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
@@ -638,7 +652,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         </span>cmd_buf_data.buffer_memory_init_actions.extend(
             dst_buffer.initialization_status.read().create_action(
                 <span class="kw-2">&amp;</span>dst_buffer,
-                offset..end,
+                offset..end_offset,
                 MemoryInitKind::ImplicitlyInitialized,
             ),
         );
@@ -648,7 +662,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             cmd_buf_raw.transition_buffers(dst_barrier.into_iter());
-            cmd_buf_raw.clear_buffer(dst_raw, offset..end);
+            cmd_buf_raw.clear_buffer(dst_raw, offset..end_offset);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -860,7 +874,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="macro">assert!</span>(
             max_rows_per_copy &gt; <span class="number">0</span>,
             <span class="string">"Zero buffer size is too small to fill a single row \
-                 of a texture with format {:?} and desc {:?}"</span>,
+            of a texture with format {:?} and desc {:?}"</span>,
             texture_desc.format,
             texture_desc.size
         );
