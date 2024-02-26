@@ -4514,6 +4514,28 @@
 <a href="#4513" id="4513">4513</a>
 <a href="#4514" id="4514">4514</a>
 <a href="#4515" id="4515">4515</a>
+<a href="#4516" id="4516">4516</a>
+<a href="#4517" id="4517">4517</a>
+<a href="#4518" id="4518">4518</a>
+<a href="#4519" id="4519">4519</a>
+<a href="#4520" id="4520">4520</a>
+<a href="#4521" id="4521">4521</a>
+<a href="#4522" id="4522">4522</a>
+<a href="#4523" id="4523">4523</a>
+<a href="#4524" id="4524">4524</a>
+<a href="#4525" id="4525">4525</a>
+<a href="#4526" id="4526">4526</a>
+<a href="#4527" id="4527">4527</a>
+<a href="#4528" id="4528">4528</a>
+<a href="#4529" id="4529">4529</a>
+<a href="#4530" id="4530">4530</a>
+<a href="#4531" id="4531">4531</a>
+<a href="#4532" id="4532">4532</a>
+<a href="#4533" id="4533">4533</a>
+<a href="#4534" id="4534">4534</a>
+<a href="#4535" id="4535">4535</a>
+<a href="#4536" id="4536">4536</a>
+<a href="#4537" id="4537">4537</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -7654,7 +7676,29 @@ to output a [`Module`](crate::Module) into glsl
                     </span>Mf::Abs =&gt; <span class="string">"abs"</span>,
                     Mf::Min =&gt; <span class="string">"min"</span>,
                     Mf::Max =&gt; <span class="string">"max"</span>,
-                    Mf::Clamp =&gt; <span class="string">"clamp"</span>,
+                    Mf::Clamp =&gt; {
+                        <span class="kw">let </span>scalar_kind = ctx
+                            .resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types)
+                            .scalar_kind()
+                            .unwrap();
+                        <span class="kw">match </span>scalar_kind {
+                            <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="string">"clamp"</span>,
+                            <span class="comment">// Clamp is undefined if min &gt; max. In practice this means it can use a median-of-three
+                            // instruction to determine the value. This is fine according to the WGSL spec for float
+                            // clamp, but integer clamp _must_ use min-max. As such we write out min/max.
+                            </span><span class="kw">_ </span>=&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(max("</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(arg1.unwrap(), ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"), "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_expr(arg2.unwrap(), ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
+                        }
+                    }
                     Mf::Saturate =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"clamp("</span>)<span class="question-mark">?</span>;
 

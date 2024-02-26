@@ -2367,6 +2367,35 @@
 <a href="#2366" id="2366">2366</a>
 <a href="#2367" id="2367">2367</a>
 <a href="#2368" id="2368">2368</a>
+<a href="#2369" id="2369">2369</a>
+<a href="#2370" id="2370">2370</a>
+<a href="#2371" id="2371">2371</a>
+<a href="#2372" id="2372">2372</a>
+<a href="#2373" id="2373">2373</a>
+<a href="#2374" id="2374">2374</a>
+<a href="#2375" id="2375">2375</a>
+<a href="#2376" id="2376">2376</a>
+<a href="#2377" id="2377">2377</a>
+<a href="#2378" id="2378">2378</a>
+<a href="#2379" id="2379">2379</a>
+<a href="#2380" id="2380">2380</a>
+<a href="#2381" id="2381">2381</a>
+<a href="#2382" id="2382">2382</a>
+<a href="#2383" id="2383">2383</a>
+<a href="#2384" id="2384">2384</a>
+<a href="#2385" id="2385">2385</a>
+<a href="#2386" id="2386">2386</a>
+<a href="#2387" id="2387">2387</a>
+<a href="#2388" id="2388">2388</a>
+<a href="#2389" id="2389">2389</a>
+<a href="#2390" id="2390">2390</a>
+<a href="#2391" id="2391">2391</a>
+<a href="#2392" id="2392">2392</a>
+<a href="#2393" id="2393">2393</a>
+<a href="#2394" id="2394">2394</a>
+<a href="#2395" id="2395">2395</a>
+<a href="#2396" id="2396">2396</a>
+<a href="#2397" id="2397">2397</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3100,12 +3129,41 @@ Implementations for `BlockContext` methods.
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::UMax,
                         other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected max({:?})"</span>, other),
                     }),
-                    Mf::Clamp =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::GLOp::FClamp,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::SClamp,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::UClamp,
+                    Mf::Clamp =&gt; <span class="kw">match </span>arg_scalar_kind {
+                        <span class="comment">// Clamp is undefined if min &gt; max. In practice this means it can use a median-of-three
+                        // instruction to determine the value. This is fine according to the WGSL spec for float
+                        // clamp, but integer clamp _must_ use min-max. As such we write out min/max.
+                        </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; MathOp::Ext(spirv::GLOp::FClamp),
+                        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {
+                            <span class="kw">let </span>(min_op, max_op) = <span class="kw">match </span>arg_scalar_kind {
+                                <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; {
+                                    (spirv::GLOp::SMin, spirv::GLOp::SMax)
+                                }
+                                <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
+                                    (spirv::GLOp::UMin, spirv::GLOp::UMax)
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                            };
+
+                            <span class="kw">let </span>max_id = <span class="self">self</span>.gen_id();
+                            block.body.push(Instruction::ext_inst(
+                                <span class="self">self</span>.writer.gl450_ext_inst_id,
+                                max_op,
+                                result_type_id,
+                                max_id,
+                                <span class="kw-2">&amp;</span>[arg0_id, arg1_id],
+                            ));
+
+                            MathOp::Custom(Instruction::ext_inst(
+                                <span class="self">self</span>.writer.gl450_ext_inst_id,
+                                min_op,
+                                result_type_id,
+                                id,
+                                <span class="kw-2">&amp;</span>[max_id, arg2_id],
+                            ))
+                        }
                         other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected max({:?})"</span>, other),
-                    }),
+                    },
                     Mf::Saturate =&gt; {
                         <span class="kw">let </span>(maybe_size, scalar) = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; (<span class="prelude-val">Some</span>(size), scalar),
