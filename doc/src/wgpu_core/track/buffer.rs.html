@@ -812,17 +812,6 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -832,7 +821,7 @@
 
 </span><span class="kw">use </span>std::{borrow::Cow, marker::PhantomData, sync::Arc};
 
-<span class="kw">use super</span>::{PendingTransition, ResourceTracker};
+<span class="kw">use super</span>::{PendingTransition, ResourceTracker, TrackerIndex};
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     id::BufferId,
@@ -889,16 +878,16 @@
     </span><span class="attr">#[allow(clippy::pattern_type_mismatch)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
-        buffers.sort_unstable_by_key(|(b, <span class="kw">_</span>)| b.as_info().id().unzip().<span class="number">0</span>);
+        buffers.sort_unstable_by_key(|(b, <span class="kw">_</span>)| b.as_info().tracker_index());
     }
 
     <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
     </span><span class="attr">#[allow(clippy::pattern_type_mismatch)]
-    </span><span class="kw">pub fn </span>used_ids(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferId&gt; + <span class="lifetime">'_ </span>{
+    </span><span class="kw">pub fn </span>used_tracker_indices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = TrackerIndex&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">let </span>buffers = <span class="self">self</span>.buffers.lock();
         buffers
             .iter()
-            .map(|(<span class="kw-2">ref </span>b, <span class="kw">_</span>)| b.as_info().id())
+            .map(|(<span class="kw-2">ref </span>b, <span class="kw">_</span>)| b.as_info().tracker_index())
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             .into_iter()
     }
@@ -992,7 +981,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
         <span class="kw">let </span>buffers = bind_group.buffers.lock();
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>resource, state) <span class="kw">in </span><span class="kw-2">&amp;*</span>buffers {
-            <span class="kw">let </span>index = resource.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+            <span class="kw">let </span>index = resource.as_info().tracker_index().as_usize();
 
             <span class="kw">unsafe </span>{
                 insert_or_merge(
@@ -1066,7 +1055,7 @@
             .get(id)
             .map_err(|<span class="kw">_</span>| UsageConflict::BufferInvalid { id })<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>index = buffer.info.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -1103,7 +1092,7 @@
     temp: Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker&lt;Buffer&lt;A&gt;&gt; <span class="kw">for </span>BufferTracker&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker <span class="kw">for </span>BufferTracker&lt;A&gt; {
     <span class="doccomment">/// Try to remove the buffer `id` from this tracker if it is otherwise unused.
     ///
     /// A buffer is 'otherwise unused' when the only references to it are:
@@ -1124,8 +1113,8 @@
     /// [`Device::trackers`]: crate::device::Device
     /// [`self.metadata`]: BufferTracker::metadata
     /// [`Hub::buffers`]: crate::hub::Hub::buffers
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BufferId) -&gt; bool {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool {
+        <span class="kw">let </span>index = index.as_usize();
 
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="bool-val">false</span>;
@@ -1140,16 +1129,10 @@
                 //so it's already been released from user and so it's not inside Registry\Storage
                 </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
                     <span class="self">self</span>.metadata.remove(index);
-                    <span class="macro">log::trace!</span>(<span class="string">"Buffer {:?} is not tracked anymore"</span>, id,);
                     <span class="kw">return </span><span class="bool-val">true</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">log::trace!</span>(
-                        <span class="string">"Buffer {:?} is still referenced from {}"</span>,
-                        id,
-                        existing_ref_count
-                    );
-                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
+
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
         <span class="bool-val">true
@@ -1215,8 +1198,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BufferId, resource: Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
+        <span class="kw">let </span>index = resource.info.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -1251,7 +1234,7 @@
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>set_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) -&gt; SetSingleResult&lt;A&gt; {
-        <span class="kw">let </span>index: usize = buffer.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>index: usize = buffer.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -1372,16 +1355,15 @@
     </span><span class="kw">pub unsafe fn </span>set_and_remove_from_usage_scope_sparse(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scope: <span class="kw-2">&amp;mut </span>BufferUsageScope&lt;A&gt;,
-        id_source: <span class="kw">impl </span>IntoIterator&lt;Item = BufferId&gt;,
+        index_source: <span class="kw">impl </span>IntoIterator&lt;Item = TrackerIndex&gt;,
     ) {
         <span class="kw">let </span>incoming_size = scope.state.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start.len() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
-        <span class="kw">for </span>id <span class="kw">in </span>id_source {
-            <span class="kw">let </span>(index32, <span class="kw">_</span>, <span class="kw">_</span>) = id.unzip();
-            <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+        <span class="kw">for </span>index <span class="kw">in </span>index_source {
+            <span class="kw">let </span>index = index.as_usize();
 
             scope.tracker_assert_in_bounds(index);
 
@@ -1410,8 +1392,8 @@
     }
 
     <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BufferId) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: TrackerIndex) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
+        <span class="kw">let </span>index = index.as_usize();
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
@@ -1596,11 +1578,7 @@
 
     <span class="kw">if </span>invalid_resource_state(merged_state) {
         <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_buffer(
-            BufferId::zip(
-                index32,
-                <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
-                A::VARIANT,
-            ),
+            <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
             <span class="kw-2">*</span>current_state,
             new_state,
         ));

@@ -1074,12 +1074,10 @@
 <a href="#1073" id="1073">1073</a>
 <a href="#1074" id="1074">1074</a>
 <a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
 <span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
+<span class="kw">use </span><span class="kw">crate</span>::track::TrackerIndex;
 <span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1384,7 +1382,7 @@
         raw_encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
         base_trackers: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         bind_group_guard: <span class="kw-2">&amp;</span>Storage&lt;BindGroup&lt;A&gt;&gt;,
-        indirect_buffer: <span class="prelude-ty">Option</span>&lt;id::BufferId&gt;,
+        indirect_buffer: <span class="prelude-ty">Option</span>&lt;TrackerIndex&gt;,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
         <span class="kw">for </span>id <span class="kw">in </span><span class="self">self</span>.binder.list_active() {
@@ -1481,12 +1479,11 @@
         <span class="kw">let </span>pipeline_guard = hub.compute_pipelines.read();
         <span class="kw">let </span>query_set_guard = hub.query_sets.read();
         <span class="kw">let </span>buffer_guard = hub.buffers.read();
-        <span class="kw">let </span>texture_guard = hub.textures.read();
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
             binder: Binder::new(),
             pipeline: <span class="prelude-val">None</span>,
-            scope: UsageScope::new(<span class="kw-2">&amp;*</span>buffer_guard, <span class="kw-2">&amp;*</span>texture_guard),
+            scope: UsageScope::new(<span class="kw-2">&amp;</span>device.tracker_indices),
             debug_scope_depth: <span class="number">0</span>,
         };
         <span class="kw">let </span><span class="kw-2">mut </span>temp_offsets = Vec::new();
@@ -1531,17 +1528,14 @@
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
-        tracker.set_size(
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>buffer_guard),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>texture_guard),
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>bind_group_guard),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>pipeline_guard),
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>query_set_guard),
-        );
+        <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
+        tracker.buffers.set_size(indices.buffers.size());
+        tracker.textures.set_size(indices.textures.size());
+        tracker.bind_groups.set_size(indices.bind_groups.size());
+        tracker
+            .compute_pipelines
+            .set_size(indices.compute_pipelines.size());
+        tracker.query_sets.set_size(indices.query_sets.size());
 
         <span class="kw">let </span>discard_hal_labels = <span class="self">self
             </span>.instance
@@ -1836,7 +1830,7 @@
                             raw,
                             <span class="kw-2">&amp;mut </span>intermediate_trackers,
                             <span class="kw-2">&amp;*</span>bind_group_guard,
-                            <span class="prelude-val">Some</span>(buffer_id),
+                            <span class="prelude-val">Some</span>(indirect_buffer.as_info().tracker_index()),
                             <span class="kw-2">&amp;</span>snatch_guard,
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;

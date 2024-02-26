@@ -1505,6 +1505,21 @@
 <a href="#1504" id="1504">1504</a>
 <a href="#1505" id="1505">1505</a>
 <a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1516,11 +1531,10 @@
     global::Global,
     hal_api::HalApi,
     id::{AdapterId, BufferId, DeviceId, Id, Marker, SurfaceId, TextureId},
-    identity::IdentityManager,
     init_tracker::{BufferInitTracker, TextureInitTracker},
     resource, resource_log,
     snatch::{ExclusiveSnatchGuard, SnatchGuard, Snatchable},
-    track::TextureSelector,
+    track::{SharedTrackerIndexAllocator, TextureSelector, TrackerIndex},
     validation::MissingBufferUsageError,
     Label, SubmissionIndex,
 };
@@ -1565,7 +1579,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ResourceInfo&lt;T: Resource&gt; {
     id: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;,
-    identity: <span class="prelude-ty">Option</span>&lt;Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;&gt;,
+    tracker_index: TrackerIndex,
+    tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
     <span class="doccomment">/// The index of the last queue submission in which the resource
     /// was used.
     ///
@@ -1581,19 +1596,26 @@
 
 <span class="kw">impl</span>&lt;T: Resource&gt; Drop <span class="kw">for </span>ResourceInfo&lt;T&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(identity) = <span class="self">self</span>.identity.as_ref() {
-            <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-            identity.free(<span class="kw-2">*</span>id);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(indices) = <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices {
+            indices.free(<span class="self">self</span>.tracker_index);
         }
     }
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; ResourceInfo&lt;T&gt; {
     <span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        label: <span class="kw-2">&amp;</span>str,
+        tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>tracker_index = tracker_indices
+            .as_ref()
+            .map(|indices| indices.alloc())
+            .unwrap_or(TrackerIndex::INVALID);
         <span class="self">Self </span>{
             id: <span class="prelude-val">None</span>,
-            identity: <span class="prelude-val">None</span>,
+            tracker_index,
+            tracker_indices,
             submission_index: AtomicUsize::new(<span class="number">0</span>),
             label: label.to_string(),
         }
@@ -1618,9 +1640,13 @@
         <span class="self">self</span>.id.unwrap()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, identity: <span class="kw-2">&amp;</span>Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>tracker_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TrackerIndex {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.tracker_index != TrackerIndex::INVALID);
+        <span class="self">self</span>.tracker_index
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) {
         <span class="self">self</span>.id = <span class="prelude-val">Some</span>(id);
-        <span class="self">self</span>.identity = <span class="prelude-val">Some</span>(identity.clone());
     }
 
     <span class="doccomment">/// Record that this resource will be used by the queue submission with the
@@ -2058,6 +2084,7 @@
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 submission_index: <span class="self">self</span>.info.submission_index(),
                 id: <span class="self">self</span>.info.id.unwrap(),
+                tracker_index: <span class="self">self</span>.info.tracker_index(),
                 label: <span class="self">self</span>.info.label.clone(),
                 bind_groups,
             }))
@@ -2118,6 +2145,7 @@
     device: Arc&lt;Device&lt;A&gt;&gt;,
     label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) id: BufferId,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracker_index: TrackerIndex,
     <span class="kw">pub</span>(<span class="kw">crate</span>) submission_index: u64,
     bind_groups: Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;,
 }
@@ -2392,6 +2420,7 @@
                 views,
                 bind_groups,
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
+                tracker_index: <span class="self">self</span>.info.tracker_index(),
                 submission_index: <span class="self">self</span>.info.submission_index(),
                 id: <span class="self">self</span>.info.id.unwrap(),
                 label: <span class="self">self</span>.info.label.clone(),
@@ -2509,6 +2538,7 @@
     device: Arc&lt;Device&lt;A&gt;&gt;,
     label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) id: TextureId,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracker_index: TrackerIndex,
     <span class="kw">pub</span>(<span class="kw">crate</span>) submission_index: u64,
 }
 

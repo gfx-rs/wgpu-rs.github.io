@@ -1563,6 +1563,15 @@
 <a href="#1562" id="1562">1562</a>
 <a href="#1563" id="1563">1563</a>
 <a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1875,7 +1884,10 @@
         raw: Mutex::new(<span class="prelude-val">Some</span>(buffer)),
         device: device.clone(),
         size,
-        info: ResourceInfo::new(<span class="string">"&lt;StagingBuffer&gt;"</span>),
+        info: ResourceInfo::new(
+            <span class="string">"&lt;StagingBuffer&gt;"</span>,
+            <span class="prelude-val">Some</span>(device.tracker_indices.staging_buffers.clone()),
+        ),
         is_coherent: mapping.is_coherent,
     };
 
@@ -2760,11 +2772,13 @@
 
                             <span class="comment">// update submission IDs
                             </span><span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
-                                <span class="kw">let </span>id = buffer.info.id();
+                                <span class="kw">let </span>tracker_index = buffer.info.tracker_index();
                                 <span class="kw">let </span>raw_buf = <span class="kw">match </span>buffer.raw.get(<span class="kw-2">&amp;</span>snatch_guard) {
                                     <span class="prelude-val">Some</span>(raw) =&gt; raw,
                                     <span class="prelude-val">None </span>=&gt; {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(id));
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(
+                                            buffer.info.id(),
+                                        ));
                                     }
                                 };
                                 buffer.info.use_at(submit_index);
@@ -2779,19 +2793,25 @@
                                         .as_mut()
                                         .unwrap()
                                         .buffers
-                                        .insert(id, buffer.clone());
+                                        .insert(tracker_index, buffer.clone());
                                 } <span class="kw">else </span>{
                                     <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
                                         BufferMapState::Idle =&gt; (),
-                                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(id)),
+                                        <span class="kw">_ </span>=&gt; {
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(
+                                                buffer.info.id(),
+                                            ))
+                                        }
                                     }
                                 }
                             }
                             <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_trackers.textures.used_resources() {
-                                <span class="kw">let </span>id = texture.info.id();
+                                <span class="kw">let </span>tracker_index = texture.info.tracker_index();
                                 <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
                                     <span class="prelude-val">None </span>=&gt; {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(
+                                            texture.info.id(),
+                                        ));
                                     }
                                     <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; <span class="bool-val">false</span>,
                                     <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>raw, .. }) =&gt; {
@@ -2808,7 +2828,7 @@
                                         .as_mut()
                                         .unwrap()
                                         .textures
-                                        .insert(id, texture.clone());
+                                        .insert(tracker_index, texture.clone());
                                 }
                                 <span class="kw">if </span>should_extend {
                                     <span class="kw">unsafe </span>{
@@ -2821,11 +2841,10 @@
                             <span class="kw">for </span>texture_view <span class="kw">in </span>cmd_buf_trackers.views.used_resources() {
                                 texture_view.info.use_at(submit_index);
                                 <span class="kw">if </span>texture_view.is_unique() {
-                                    temp_suspected
-                                        .as_mut()
-                                        .unwrap()
-                                        .texture_views
-                                        .insert(texture_view.as_info().id(), texture_view.clone());
+                                    temp_suspected.as_mut().unwrap().texture_views.insert(
+                                        texture_view.as_info().tracker_index(),
+                                        texture_view.clone(),
+                                    );
                                 }
                             }
                             {
@@ -2845,7 +2864,7 @@
                                             .as_mut()
                                             .unwrap()
                                             .bind_groups
-                                            .insert(bg.as_info().id(), bg.clone());
+                                            .insert(bg.as_info().tracker_index(), bg.clone());
                                     }
                                 }
                             }
@@ -2856,7 +2875,7 @@
                                 compute_pipeline.info.use_at(submit_index);
                                 <span class="kw">if </span>compute_pipeline.is_unique() {
                                     temp_suspected.as_mut().unwrap().compute_pipelines.insert(
-                                        compute_pipeline.as_info().id(),
+                                        compute_pipeline.as_info().tracker_index(),
                                         compute_pipeline.clone(),
                                     );
                                 }
@@ -2867,7 +2886,7 @@
                                 render_pipeline.info.use_at(submit_index);
                                 <span class="kw">if </span>render_pipeline.is_unique() {
                                     temp_suspected.as_mut().unwrap().render_pipelines.insert(
-                                        render_pipeline.as_info().id(),
+                                        render_pipeline.as_info().tracker_index(),
                                         render_pipeline.clone(),
                                     );
                                 }
@@ -2875,11 +2894,10 @@
                             <span class="kw">for </span>query_set <span class="kw">in </span>cmd_buf_trackers.query_sets.used_resources() {
                                 query_set.info.use_at(submit_index);
                                 <span class="kw">if </span>query_set.is_unique() {
-                                    temp_suspected
-                                        .as_mut()
-                                        .unwrap()
-                                        .query_sets
-                                        .insert(query_set.as_info().id(), query_set.clone());
+                                    temp_suspected.as_mut().unwrap().query_sets.insert(
+                                        query_set.as_info().tracker_index(),
+                                        query_set.clone(),
+                                    );
                                 }
                             }
                             <span class="kw">for </span>bundle <span class="kw">in </span>cmd_buf_trackers.bundles.used_resources() {
@@ -2900,7 +2918,7 @@
                                         .as_mut()
                                         .unwrap()
                                         .render_bundles
-                                        .insert(bundle.as_info().id(), bundle.clone());
+                                        .insert(bundle.as_info().tracker_index(), bundle.clone());
                                 }
                             }
                         }

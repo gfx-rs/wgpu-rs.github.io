@@ -2869,12 +2869,6 @@
 <a href="#2868" id="2868">2868</a>
 <a href="#2869" id="2869">2869</a>
 <a href="#2870" id="2870">2870</a>
-<a href="#2871" id="2871">2871</a>
-<a href="#2872" id="2872">2872</a>
-<a href="#2873" id="2873">2873</a>
-<a href="#2874" id="2874">2874</a>
-<a href="#2875" id="2875">2875</a>
-<a href="#2876" id="2876">2876</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -2899,7 +2893,7 @@
     hal_label, id,
     init_tracker::{MemoryInitKind, TextureInitRange, TextureInitTrackerAction},
     pipeline::{<span class="self">self</span>, PipelineFlags},
-    resource::{Buffer, QuerySet, Texture, TextureView, TextureViewNotRenderableReason},
+    resource::{QuerySet, Texture, TextureView, TextureViewNotRenderableReason},
     storage::Storage,
     track::{TextureSelector, Tracker, UsageConflict, UsageScope},
     validation::{
@@ -3678,8 +3672,6 @@
         texture_memory_actions: <span class="kw-2">&amp;mut </span>CommandBufferTextureMemoryActions&lt;A&gt;,
         pending_query_resets: <span class="kw-2">&amp;mut </span>QueryResetMap&lt;A&gt;,
         view_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;TextureView&lt;A&gt;&gt;,
-        buffer_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
-        texture_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Texture&lt;A&gt;&gt;,
         query_set_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;QuerySet&lt;A&gt;&gt;,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RenderPassErrorInner&gt; {
@@ -4093,7 +4085,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             context,
-            usage_scope: UsageScope::new(buffer_guard, texture_guard),
+            usage_scope: UsageScope::new(<span class="kw-2">&amp;</span>device.tracker_indices),
             render_attachments,
             is_depth_read_only,
             is_stencil_read_only,
@@ -4265,7 +4257,6 @@
             <span class="kw">let </span>render_pipeline_guard = hub.render_pipelines.read();
             <span class="kw">let </span>query_set_guard = hub.query_sets.read();
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
-            <span class="kw">let </span>texture_guard = hub.textures.read();
             <span class="kw">let </span>view_guard = hub.texture_views.read();
 
             <span class="macro">log::trace!</span>(
@@ -4285,24 +4276,21 @@
                 texture_memory_actions,
                 pending_query_resets,
                 <span class="kw-2">&amp;*</span>view_guard,
-                <span class="kw-2">&amp;*</span>buffer_guard,
-                <span class="kw-2">&amp;*</span>texture_guard,
                 <span class="kw-2">&amp;*</span>query_set_guard,
                 <span class="kw-2">&amp;</span>snatch_guard,
             )
             .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-            tracker.set_size(
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>buffer_guard),
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>texture_guard),
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>view_guard),
-                <span class="prelude-val">None</span>,
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>bind_group_guard),
-                <span class="prelude-val">None</span>,
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>render_pipeline_guard),
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>bundle_guard),
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>query_set_guard),
-            );
+            <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
+            tracker.buffers.set_size(indices.buffers.size());
+            tracker.textures.set_size(indices.textures.size());
+            tracker.views.set_size(indices.texture_views.size());
+            tracker.bind_groups.set_size(indices.bind_groups.size());
+            tracker
+                .render_pipelines
+                .set_size(indices.render_pipelines.size());
+            tracker.bundles.set_size(indices.bundles.size());
+            tracker.query_sets.set_size(indices.query_sets.size());
 
             <span class="kw">let </span>raw = <span class="kw-2">&amp;mut </span>encoder.raw;
 

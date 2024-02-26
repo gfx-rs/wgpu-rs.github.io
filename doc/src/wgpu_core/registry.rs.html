@@ -198,7 +198,6 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
@@ -261,7 +260,6 @@
 <span class="attr">#[must_use]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FutureId&lt;<span class="lifetime">'a</span>, T: Resource&gt; {
     id: Id&lt;T::Marker&gt;,
-    identity: Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;,
     data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>RwLock&lt;Storage&lt;T&gt;&gt;,
 }
 
@@ -276,7 +274,7 @@
     }
 
     <span class="kw">pub fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>value: T) -&gt; Arc&lt;T&gt; {
-        value.as_info_mut().set_id(<span class="self">self</span>.id, <span class="kw-2">&amp;</span><span class="self">self</span>.identity);
+        value.as_info_mut().set_id(<span class="self">self</span>.id);
         Arc::new(value)
     }
 
@@ -318,7 +316,6 @@
                 }
                 <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.identity.process(<span class="self">self</span>.backend),
             },
-            identity: <span class="self">self</span>.identity.clone(),
             data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,
         }
     }
@@ -326,7 +323,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>request(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FutureId&lt;T&gt; {
         FutureId {
             id: <span class="self">self</span>.identity.process(<span class="self">self</span>.backend),
-            identity: <span class="self">self</span>.identity.clone(),
             data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,
         }
     }
@@ -343,11 +339,12 @@
         <span class="self">self</span>.storage.write()
     }
     <span class="kw">pub fn </span>unregister_locked(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, storage: <span class="kw-2">&amp;mut </span>Storage&lt;T&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+        <span class="self">self</span>.identity.free(id);
         storage.remove(id)
     }
     <span class="kw">pub fn </span>force_replace(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, <span class="kw-2">mut </span>value: T) {
         <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
-        value.as_info_mut().set_id(id, <span class="kw-2">&amp;</span><span class="self">self</span>.identity);
+        value.as_info_mut().set_id(id);
         storage.force_replace(id, value)
     }
     <span class="kw">pub fn </span>force_replace_with_error(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, label: <span class="kw-2">&amp;</span>str) {
@@ -356,6 +353,7 @@
         storage.insert_error(id, label);
     }
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unregister(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+        <span class="self">self</span>.identity.free(id);
         <span class="kw">let </span>value = <span class="self">self</span>.storage.write().remove(id);
         <span class="comment">//Returning None is legal if it's an error ID
         </span>value

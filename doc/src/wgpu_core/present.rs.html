@@ -426,6 +426,14 @@
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -648,7 +656,7 @@ extract it from the hub.
                         layers: <span class="number">0</span>..<span class="number">1</span>,
                         mips: <span class="number">0</span>..<span class="number">1</span>,
                     },
-                    info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>),
+                    info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
                     clear_mode: RwLock::new(resource::TextureClearMode::Surface {
                         clear_view: <span class="prelude-val">Some</span>(clear_view),
                     }),
@@ -664,7 +672,7 @@ extract it from the hub.
                     </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
                     trackers
                         .textures
-                        .insert_single(id, resource, hal::TextureUses::UNINITIALIZED);
+                        .insert_single(resource, hal::TextureUses::UNINITIALIZED);
                 }
 
                 <span class="kw">if </span>present.acquired_texture.is_some() {
@@ -741,10 +749,13 @@ extract it from the hub.
                 <span class="string">"Removing swapchain texture {:?} from the device tracker"</span>,
                 texture_id
             );
-            device.trackers.lock().textures.remove(texture_id);
-
             <span class="kw">let </span>texture = hub.textures.unregister(texture_id);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
+                device
+                    .trackers
+                    .lock()
+                    .textures
+                    .remove(texture.info.tracker_index());
                 <span class="kw">let </span><span class="kw-2">mut </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">let </span>suf = A::get_surface(<span class="kw-2">&amp;</span>surface);
                 <span class="kw">let </span><span class="kw-2">mut </span>inner = texture.inner_mut(<span class="kw-2">&amp;mut </span>exclusive_snatch_guard);
@@ -831,10 +842,15 @@ extract it from the hub.
                 <span class="string">"Removing swapchain texture {:?} from the device tracker"</span>,
                 texture_id
             );
-            device.trackers.lock().textures.remove(texture_id);
 
             <span class="kw">let </span>texture = hub.textures.unregister(texture_id);
+
             <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
+                device
+                    .trackers
+                    .lock()
+                    .textures
+                    .remove(texture.info.tracker_index());
                 <span class="kw">let </span>suf = A::get_surface(<span class="kw-2">&amp;</span>surface);
                 <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {

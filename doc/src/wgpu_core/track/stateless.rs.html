@@ -214,15 +214,6 @@
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Stateless Trackers
  *
  * Stateless trackers don't have any state, so make no
@@ -235,7 +226,7 @@
 
 <span class="kw">use crate</span>::{id::Id, resource::Resource, resource_log, storage::Storage, track::ResourceMetadata};
 
-<span class="kw">use </span><span class="kw">super</span>::ResourceTracker;
+<span class="kw">use super</span>::{ResourceTracker, TrackerIndex};
 
 <span class="doccomment">/// Satisfy clippy.
 </span><span class="kw">type </span>Pair&lt;T&gt; = (Id&lt;&lt;T <span class="kw">as </span>Resource&gt;::Marker&gt;, Arc&lt;T&gt;);
@@ -299,7 +290,7 @@
     metadata: ResourceMetadata&lt;T&gt;,
 }
 
-<span class="kw">impl</span>&lt;T: Resource&gt; ResourceTracker&lt;T&gt; <span class="kw">for </span>StatelessTracker&lt;T&gt; {
+<span class="kw">impl</span>&lt;T: Resource&gt; ResourceTracker <span class="kw">for </span>StatelessTracker&lt;T&gt; {
     <span class="doccomment">/// Try to remove the given resource from the tracker iff we have the last reference to the
     /// resource and the epoch matches.
     ///
@@ -307,14 +298,14 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; bool {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool {
+        <span class="kw">let </span>index = index.as_usize();
 
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="macro">resource_log!</span>(<span class="string">"StatelessTracker::remove_abandoned {id:?}"</span>);
+        <span class="macro">resource_log!</span>(<span class="string">"StatelessTracker::remove_abandoned {index:?}"</span>);
 
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
@@ -325,17 +316,10 @@
                 //so it's already been released from user and so it's not inside Registry\Storage
                 </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
                     <span class="self">self</span>.metadata.remove(index);
-                    <span class="macro">log::trace!</span>(<span class="string">"{} {:?} is not tracked anymore"</span>, T::TYPE, id,);
                     <span class="kw">return </span><span class="bool-val">true</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">log::trace!</span>(
-                        <span class="string">"{} {:?} is still referenced from {}"</span>,
-                        T::TYPE,
-                        id,
-                        existing_ref_count
-                    );
-                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
+
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
         <span class="bool-val">true
@@ -385,9 +369,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, resource: Arc&lt;T&gt;) {
-        <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;T&gt;) {
+        <span class="kw">let </span>index = resource.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -409,8 +392,7 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;T&gt;&gt; {
         <span class="kw">let </span>resource = storage.get(id).ok()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+        <span class="kw">let </span>index = resource.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 

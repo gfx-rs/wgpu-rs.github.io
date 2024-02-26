@@ -1470,27 +1470,6 @@
 <a href="#1469" id="1469">1469</a>
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
-<a href="#1472" id="1472">1472</a>
-<a href="#1473" id="1473">1473</a>
-<a href="#1474" id="1474">1474</a>
-<a href="#1475" id="1475">1475</a>
-<a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a>
-<a href="#1478" id="1478">1478</a>
-<a href="#1479" id="1479">1479</a>
-<a href="#1480" id="1480">1480</a>
-<a href="#1481" id="1481">1481</a>
-<a href="#1482" id="1482">1482</a>
-<a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-<a href="#1487" id="1487">1487</a>
-<a href="#1488" id="1488">1488</a>
-<a href="#1489" id="1489">1489</a>
-<a href="#1490" id="1490">1490</a>
-<a href="#1491" id="1491">1491</a>
-<a href="#1492" id="1492">1492</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are significantly more complicated than
@@ -1512,10 +1491,11 @@
  *   will treat the contents as junk.
 !*/
 
-</span><span class="kw">use super</span>::{range::RangedStates, PendingTransition, PendingTransitionList, ResourceTracker};
+</span><span class="kw">use super</span>::{
+    range::RangedStates, PendingTransition, PendingTransitionList, ResourceTracker, TrackerIndex,
+};
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
-    id::TextureId,
     resource::{Resource, Texture, TextureInner},
     snatch::SnatchGuard,
     track::{
@@ -1666,7 +1646,7 @@
     /// accesses will be in a constant ascending order.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
-        textures.sort_unstable_by_key(|v| v.texture.as_info().id().unzip().<span class="number">0</span>);
+        textures.sort_unstable_by_key(|v| v.texture.as_info().tracker_index());
     }
 
     <span class="doccomment">/// Returns a list of all textures tracked. May contain duplicates.
@@ -1852,7 +1832,7 @@
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
         new_state: TextureUses,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
-        <span class="kw">let </span>index = texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
@@ -1886,7 +1866,7 @@
     _phantom: PhantomData&lt;A&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker&lt;Texture&lt;A&gt;&gt; <span class="kw">for </span>TextureTracker&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker <span class="kw">for </span>TextureTracker&lt;A&gt; {
     <span class="doccomment">/// Try to remove the given resource from the tracker iff we have the last reference to the
     /// resource and the epoch matches.
     ///
@@ -1894,10 +1874,10 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId) -&gt; bool {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool {
+        <span class="kw">let </span>index = index.as_usize();
 
-        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+        <span class="kw">if </span>index &gt;= <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
@@ -1912,16 +1892,10 @@
                     <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.metadata.remove(index);
-                    <span class="macro">log::trace!</span>(<span class="string">"Texture {:?} is not tracked anymore"</span>, id,);
                     <span class="kw">return </span><span class="bool-val">true</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">log::trace!</span>(
-                        <span class="string">"Texture {:?} is still referenced from {}"</span>,
-                        id,
-                        existing_ref_count
-                    );
-                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
+
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
         <span class="bool-val">true
@@ -2011,8 +1985,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId, resource: Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
+        <span class="kw">let </span>index = resource.info.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2053,7 +2027,7 @@
         selector: TextureSelector,
         new_state: TextureUses,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Drain&lt;<span class="lifetime">'_</span>, PendingTransition&lt;TextureUses&gt;&gt;&gt; {
-        <span class="kw">let </span>index = texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2187,7 +2161,7 @@
 
         <span class="kw">let </span>textures = bind_group_state.textures.lock();
         <span class="kw">for </span>t <span class="kw">in </span>textures.iter() {
-            <span class="kw">let </span>index = t.texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+            <span class="kw">let </span>index = t.texture.as_info().tracker_index().as_usize();
             scope.tracker_assert_in_bounds(index);
 
             <span class="kw">if unsafe </span>{ !scope.metadata.contains_unchecked(index) } {
@@ -2220,10 +2194,10 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId) -&gt; bool {
-        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool {
+        <span class="kw">let </span>index = index.as_usize();
 
-        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+        <span class="kw">if </span>index &gt;= <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
@@ -2573,11 +2547,7 @@
 
             <span class="kw">if </span>invalid_resource_state(merged_state) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                    TextureId::zip(
-                        index <span class="kw">as _</span>,
-                        <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
-                        A::VARIANT,
-                    ),
+                    <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
                     texture_selector.clone(),
                     <span class="kw-2">*</span>current_simple,
                     new_simple,
@@ -2604,11 +2574,7 @@
 
                 <span class="kw">if </span>invalid_resource_state(merged_state) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                        TextureId::zip(
-                            index <span class="kw">as _</span>,
-                            <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
-                            A::VARIANT,
-                        ),
+                        <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
                         selector,
                         <span class="kw-2">*</span>current_simple,
                         new_state,
@@ -2649,11 +2615,7 @@
 
                     <span class="kw">if </span>invalid_resource_state(merged_state) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                            TextureId::zip(
-                                index <span class="kw">as _</span>,
-                                <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
-                                A::VARIANT,
-                            ),
+                            <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
                             TextureSelector {
                                 mips: mip_id..mip_id + <span class="number">1</span>,
                                 layers: layers.clone(),
@@ -2694,11 +2656,7 @@
 
                         <span class="kw">if </span>invalid_resource_state(merged_state) {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                                TextureId::zip(
-                                    index <span class="kw">as _</span>,
-                                    <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
-                                    A::VARIANT,
-                                ),
+                                <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
                                 TextureSelector {
                                     mips: mip_id..mip_id + <span class="number">1</span>,
                                     layers: layers.clone(),

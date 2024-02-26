@@ -830,6 +830,21 @@
 <a href="#829" id="829">829</a>
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -838,17 +853,13 @@
         DeviceError, DeviceLostClosure,
     },
     hal_api::HalApi,
-    id::{
-        <span class="self">self</span>, BindGroupId, BindGroupLayoutId, BufferId, ComputePipelineId, Id, PipelineLayoutId,
-        QuerySetId, RenderBundleId, RenderPipelineId, SamplerId, StagingBufferId, TextureId,
-        TextureViewId,
-    },
+    id,
     pipeline::{ComputePipeline, RenderPipeline},
     resource::{
         <span class="self">self</span>, Buffer, DestroyedBuffer, DestroyedTexture, QuerySet, Resource, Sampler,
         StagingBuffer, Texture, TextureView,
     },
-    track::{ResourceTracker, Tracker},
+    track::{ResourceTracker, Tracker, TrackerIndex},
     FastHashMap, SubmissionIndex,
 };
 <span class="kw">use </span>smallvec::SmallVec;
@@ -860,20 +871,20 @@
 <span class="doccomment">/// A struct that keeps lists of resources that are no longer needed by the user.
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ResourceMaps&lt;A: HalApi&gt; {
-    <span class="kw">pub </span>buffers: FastHashMap&lt;BufferId, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>staging_buffers: FastHashMap&lt;StagingBufferId, Arc&lt;StagingBuffer&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>textures: FastHashMap&lt;TextureId, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>texture_views: FastHashMap&lt;TextureViewId, Arc&lt;TextureView&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>samplers: FastHashMap&lt;SamplerId, Arc&lt;Sampler&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>bind_groups: FastHashMap&lt;BindGroupId, Arc&lt;BindGroup&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>bind_group_layouts: FastHashMap&lt;BindGroupLayoutId, Arc&lt;BindGroupLayout&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>render_pipelines: FastHashMap&lt;RenderPipelineId, Arc&lt;RenderPipeline&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>compute_pipelines: FastHashMap&lt;ComputePipelineId, Arc&lt;ComputePipeline&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>pipeline_layouts: FastHashMap&lt;PipelineLayoutId, Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>render_bundles: FastHashMap&lt;RenderBundleId, Arc&lt;RenderBundle&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>query_sets: FastHashMap&lt;QuerySetId, Arc&lt;QuerySet&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>destroyed_buffers: FastHashMap&lt;BufferId, Arc&lt;DestroyedBuffer&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>destroyed_textures: FastHashMap&lt;TextureId, Arc&lt;DestroyedTexture&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>staging_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;StagingBuffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>texture_views: FastHashMap&lt;TrackerIndex, Arc&lt;TextureView&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>samplers: FastHashMap&lt;TrackerIndex, Arc&lt;Sampler&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>bind_groups: FastHashMap&lt;TrackerIndex, Arc&lt;BindGroup&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>bind_group_layouts: FastHashMap&lt;TrackerIndex, Arc&lt;BindGroupLayout&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>render_pipelines: FastHashMap&lt;TrackerIndex, Arc&lt;RenderPipeline&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>compute_pipelines: FastHashMap&lt;TrackerIndex, Arc&lt;ComputePipeline&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>pipeline_layouts: FastHashMap&lt;TrackerIndex, Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>render_bundles: FastHashMap&lt;TrackerIndex, Arc&lt;RenderBundle&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>query_sets: FastHashMap&lt;TrackerIndex, Arc&lt;QuerySet&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>destroyed_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;DestroyedBuffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>destroyed_textures: FastHashMap&lt;TrackerIndex, Arc&lt;DestroyedTexture&lt;A&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ResourceMaps&lt;A&gt; {
@@ -1108,25 +1119,29 @@
         <span class="kw">for </span>res <span class="kw">in </span>temp_resources {
             <span class="kw">match </span>res {
                 TempResource::Buffer(raw) =&gt; {
-                    last_resources.buffers.insert(raw.as_info().id(), raw);
+                    last_resources
+                        .buffers
+                        .insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::StagingBuffer(raw) =&gt; {
                     last_resources
                         .staging_buffers
-                        .insert(raw.as_info().id(), raw);
+                        .insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::DestroyedBuffer(destroyed) =&gt; {
                     last_resources
                         .destroyed_buffers
-                        .insert(destroyed.id, destroyed);
+                        .insert(destroyed.tracker_index, destroyed);
                 }
                 TempResource::Texture(raw) =&gt; {
-                    last_resources.textures.insert(raw.as_info().id(), raw);
+                    last_resources
+                        .textures
+                        .insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::DestroyedTexture(destroyed) =&gt; {
                     last_resources
                         .destroyed_textures
-                        .insert(destroyed.id, destroyed);
+                        .insert(destroyed.tracker_index, destroyed);
                 }
             }
         }
@@ -1142,12 +1157,14 @@
 
     <span class="kw">pub fn </span>post_submit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_buffers.drain(..).take(<span class="number">1</span>) {
-            <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
+            <span class="self">self</span>.suspected_resources
+                .buffers
+                .insert(v.as_info().tracker_index(), v);
         }
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_textures.drain(..).take(<span class="number">1</span>) {
             <span class="self">self</span>.suspected_resources
                 .textures
-                .insert(v.as_info().id(), v);
+                .insert(v.as_info().tracker_index(), v);
         }
     }
 
@@ -1218,19 +1235,27 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = resources {
             <span class="kw">match </span>temp_resource {
                 TempResource::Buffer(raw) =&gt; {
-                    resources.buffers.insert(raw.as_info().id(), raw);
+                    resources.buffers.insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::StagingBuffer(raw) =&gt; {
-                    resources.staging_buffers.insert(raw.as_info().id(), raw);
+                    resources
+                        .staging_buffers
+                        .insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::DestroyedBuffer(destroyed) =&gt; {
-                    resources.destroyed_buffers.insert(destroyed.id, destroyed);
+                    resources
+                        .destroyed_buffers
+                        .insert(destroyed.tracker_index, destroyed);
                 }
                 TempResource::Texture(raw) =&gt; {
-                    resources.textures.insert(raw.as_info().id(), raw);
+                    resources
+                        .textures
+                        .insert(raw.as_info().tracker_index(), raw);
                 }
                 TempResource::DestroyedTexture(destroyed) =&gt; {
-                    resources.destroyed_textures.insert(destroyed.id, destroyed);
+                    resources
+                        .destroyed_textures
+                        .insert(destroyed.tracker_index, destroyed);
                 }
             }
         }
@@ -1252,27 +1277,27 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; LifetimeTracker&lt;A&gt; {
     <span class="kw">fn </span>triage_resources&lt;R&gt;(
-        resources_map: <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id&lt;R::Marker&gt;, Arc&lt;R&gt;&gt;,
+        resources_map: <span class="kw-2">&amp;mut </span>FastHashMap&lt;TrackerIndex, Arc&lt;R&gt;&gt;,
         active: <span class="kw-2">&amp;mut </span>[ActiveSubmission&lt;A&gt;],
-        trackers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ResourceTracker&lt;R&gt;,
-        get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;Id&lt;R::Marker&gt;, Arc&lt;R&gt;&gt;,
+        trackers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ResourceTracker,
+        get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;TrackerIndex, Arc&lt;R&gt;&gt;,
     ) -&gt; Vec&lt;Arc&lt;R&gt;&gt;
     <span class="kw">where
         </span>R: Resource,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = Vec::new();
-        resources_map.retain(|<span class="kw-2">&amp;</span>id, resource| {
+        resources_map.retain(|<span class="kw-2">&amp;</span>index, resource| {
             <span class="kw">let </span>submit_index = resource.as_info().submission_index();
             <span class="kw">let </span>non_referenced_resources = active
                 .iter_mut()
                 .find(|a| a.index == submit_index)
                 .map(|a| <span class="kw-2">&amp;mut </span>a.last_resources);
 
-            <span class="kw">let </span>is_removed = trackers.remove_abandoned(id);
+            <span class="kw">let </span>is_removed = trackers.remove_abandoned(index);
             <span class="kw">if </span>is_removed {
                 removed_resources.push(resource.clone());
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = non_referenced_resources {
-                    get_resource_map(resources).insert(id, resource.clone());
+                    get_resource_map(resources).insert(index, resource.clone());
                 }
             }
             !is_removed
@@ -1291,27 +1316,29 @@
         );
         removed_resources.drain(..).for_each(|bundle| {
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.buffers.write().drain_resources() {
-                <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .buffers
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.textures.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .textures
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.bind_groups.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .bind_groups
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.render_pipelines.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .render_pipelines
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.query_sets.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .query_sets
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
         });
         <span class="self">self
@@ -1328,27 +1355,30 @@
         );
         removed_resource.drain(..).for_each(|bind_group| {
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.buffers.drain_resources() {
-                <span class="self">self</span>.suspected_resources.buffers.insert(v.as_info().id(), v);
+                <span class="self">self</span>.suspected_resources
+                    .buffers
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.textures.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .textures
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.views.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .texture_views
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.samplers.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .samplers
-                    .insert(v.as_info().id(), v);
+                    .insert(v.as_info().tracker_index(), v);
             }
 
-            <span class="self">self</span>.suspected_resources
-                .bind_group_layouts
-                .insert(bind_group.layout.as_info().id(), bind_group.layout.clone());
+            <span class="self">self</span>.suspected_resources.bind_group_layouts.insert(
+                bind_group.layout.as_info().tracker_index(),
+                bind_group.layout.clone(),
+            );
         });
         <span class="self">self
     </span>}
@@ -1437,7 +1467,7 @@
         );
         removed_resources.drain(..).for_each(|compute_pipeline| {
             <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
-                compute_pipeline.layout.as_info().id(),
+                compute_pipeline.layout.as_info().tracker_index(),
                 compute_pipeline.layout.clone(),
             );
         });
@@ -1455,7 +1485,7 @@
         );
         removed_resources.drain(..).for_each(|render_pipeline| {
             <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
-                render_pipeline.layout.as_info().id(),
+                render_pipeline.layout.as_info().tracker_index(),
                 render_pipeline.layout.clone(),
             );
         });
@@ -1474,7 +1504,7 @@
             <span class="kw">for </span>bgl <span class="kw">in </span><span class="kw-2">&amp;</span>pipeline_layout.bind_group_layouts {
                 <span class="self">self</span>.suspected_resources
                     .bind_group_layouts
-                    .insert(bgl.as_info().id(), bgl.clone());
+                    .insert(bgl.as_info().tracker_index(), bgl.clone());
             }
         });
         <span class="self">self
@@ -1605,14 +1635,14 @@
             Vec::with_capacity(<span class="self">self</span>.ready_to_map.len());
 
         <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.ready_to_map.drain(..) {
-            <span class="kw">let </span>buffer_id = buffer.info.id();
+            <span class="kw">let </span>tracker_index = buffer.info.tracker_index();
             <span class="kw">let </span>is_removed = {
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
-                trackers.buffers.remove_abandoned(buffer_id)
+                trackers.buffers.remove_abandoned(tracker_index)
             };
             <span class="kw">if </span>is_removed {
                 <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Idle;
-                <span class="macro">log::trace!</span>(<span class="string">"Buffer ready to map {:?} is not tracked anymore"</span>, buffer_id);
+                <span class="macro">log::trace!</span>(<span class="string">"Buffer ready to map {tracker_index:?} is not tracked anymore"</span>);
             } <span class="kw">else </span>{
                 <span class="kw">let </span>mapping = <span class="kw">match </span>std::mem::replace(
                     <span class="kw-2">&amp;mut *</span>buffer.map_state.lock(),
@@ -1630,7 +1660,7 @@
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No pending mapping."</span>),
                 };
                 <span class="kw">let </span>status = <span class="kw">if </span>mapping.range.start != mapping.range.end {
-                    <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Active"</span>, buffer_id);
+                    <span class="macro">log::debug!</span>(<span class="string">"Buffer {tracker_index:?} map state -&gt; Active"</span>);
                     <span class="kw">let </span>host = mapping.op.host;
                     <span class="kw">let </span>size = mapping.range.end - mapping.range.start;
                     <span class="kw">match </span><span class="kw">super</span>::map_buffer(raw, <span class="kw-2">&amp;</span>buffer, mapping.range.start, size, host) {

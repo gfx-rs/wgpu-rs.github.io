@@ -2568,16 +2568,6 @@
 <a href="#2567" id="2567">2567</a>
 <a href="#2568" id="2568">2568</a>
 <a href="#2569" id="2569">2569</a>
-<a href="#2570" id="2570">2570</a>
-<a href="#2571" id="2571">2571</a>
-<a href="#2572" id="2572">2572</a>
-<a href="#2573" id="2573">2573</a>
-<a href="#2574" id="2574">2574</a>
-<a href="#2575" id="2575">2575</a>
-<a href="#2576" id="2576">2576</a>
-<a href="#2577" id="2577">2577</a>
-<a href="#2578" id="2578">2578</a>
-<a href="#2579" id="2579">2579</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2840,7 +2830,7 @@
                 .trackers
                 .lock()
                 .buffers
-                .insert_single(id, resource, buffer_use);
+                .insert_single(resource, buffer_use);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3107,7 +3097,7 @@
                 .lock_life()
                 .suspected_resources
                 .buffers
-                .insert(buffer_id, buffer);
+                .insert(buffer.info.tracker_index(), buffer);
         }
 
         <span class="kw">if </span>wait {
@@ -3151,11 +3141,11 @@
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
             <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
 
-            device.trackers.lock().textures.insert_single(
-                id,
-                resource,
-                hal::TextureUses::UNINITIALIZED,
-            );
+            device
+                .trackers
+                .lock()
+                .textures
+                .insert_single(resource, hal::TextureUses::UNINITIALIZED);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3225,11 +3215,11 @@
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
             <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
 
-            device.trackers.lock().textures.insert_single(
-                id,
-                resource,
-                hal::TextureUses::UNINITIALIZED,
-            );
+            device
+                .trackers
+                .lock()
+                .textures
+                .insert_single(resource, hal::TextureUses::UNINITIALIZED);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3282,7 +3272,7 @@
                 .trackers
                 .lock()
                 .buffers
-                .insert_single(id, buffer, hal::BufferUses::empty());
+                .insert_single(buffer, hal::BufferUses::empty());
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3342,7 +3332,7 @@
                         .lock_life()
                         .suspected_resources
                         .textures
-                        .insert(texture_id, texture.clone());
+                        .insert(texture.info.tracker_index(), texture.clone());
                 }
             }
 
@@ -3402,7 +3392,7 @@
             }
 
             <span class="macro">api_log!</span>(<span class="string">"Texture::create_view({texture_id:?}) -&gt; {id:?}"</span>);
-            device.trackers.lock().views.insert_single(id, resource);
+            device.trackers.lock().views.insert_single(resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3432,7 +3422,7 @@
                 .lock_life()
                 .suspected_resources
                 .texture_views
-                .insert(texture_view_id, view.clone());
+                .insert(view.info.tracker_index(), view.clone());
 
             <span class="kw">if </span>wait {
                 <span class="kw">match </span>view.device.wait_for_submit(last_submit_index) {
@@ -3478,7 +3468,7 @@
 
             <span class="kw">let </span>(id, resource) = fid.assign(sampler);
             <span class="macro">api_log!</span>(<span class="string">"Device::create_sampler -&gt; {id:?}"</span>);
-            device.trackers.lock().samplers.insert_single(id, resource);
+            device.trackers.lock().samplers.insert_single(resource);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3503,7 +3493,7 @@
                 .lock_life()
                 .suspected_resources
                 .samplers
-                .insert(sampler_id, sampler.clone());
+                .insert(sampler.info.tracker_index(), sampler.clone());
         }
     }
 
@@ -3602,7 +3592,7 @@
                 .lock_life()
                 .suspected_resources
                 .bind_group_layouts
-                .insert(bind_group_layout_id, layout.clone());
+                .insert(layout.info.tracker_index(), layout.clone());
         }
     }
 
@@ -3663,7 +3653,7 @@
                 .lock_life()
                 .suspected_resources
                 .pipeline_layouts
-                .insert(pipeline_layout_id, layout.clone());
+                .insert(layout.info.tracker_index(), layout.clone());
         }
     }
 
@@ -3718,11 +3708,7 @@
 
             <span class="macro">api_log!</span>(<span class="string">"Device::create_bind_group -&gt; {id:?}"</span>);
 
-            device
-                .trackers
-                .lock()
-                .bind_groups
-                .insert_single(id, resource);
+            device.trackers.lock().bind_groups.insert_single(resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3746,7 +3732,7 @@
                 .lock_life()
                 .suspected_resources
                 .bind_groups
-                .insert(bind_group_id, bind_group.clone());
+                .insert(bind_group.info.tracker_index(), bind_group.clone());
         }
     }
 
@@ -4028,7 +4014,7 @@
 
             <span class="kw">let </span>(id, resource) = fid.assign(render_bundle);
             <span class="macro">api_log!</span>(<span class="string">"RenderBundleEncoder::finish -&gt; {id:?}"</span>);
-            device.trackers.lock().bundles.insert_single(id, resource);
+            device.trackers.lock().bundles.insert_single(resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -4052,7 +4038,7 @@
                 .lock_life()
                 .suspected_resources
                 .render_bundles
-                .insert(render_bundle_id, bundle.clone());
+                .insert(bundle.info.tracker_index(), bundle.clone());
         }
     }
 
@@ -4091,11 +4077,7 @@
 
             <span class="kw">let </span>(id, resource) = fid.assign(query_set);
             <span class="macro">api_log!</span>(<span class="string">"Device::create_query_set -&gt; {id:?}"</span>);
-            device
-                .trackers
-                .lock()
-                .query_sets
-                .insert_single(id, resource);
+            device.trackers.lock().query_sets.insert_single(resource);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -4122,7 +4104,7 @@
                 .lock_life()
                 .suspected_resources
                 .query_sets
-                .insert(query_set_id, query_set.clone());
+                .insert(query_set.info.tracker_index(), query_set.clone());
         }
     }
 
@@ -4178,7 +4160,7 @@
                 .trackers
                 .lock()
                 .render_pipelines
-                .insert_single(id, resource);
+                .insert_single(resource);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -4250,18 +4232,17 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(pipeline) = hub.render_pipelines.unregister(render_pipeline_id) {
-            <span class="kw">let </span>layout_id = pipeline.layout.as_info().id();
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>pipeline.device;
             <span class="kw">let </span><span class="kw-2">mut </span>life_lock = device.lock_life();
             life_lock
                 .suspected_resources
                 .render_pipelines
-                .insert(render_pipeline_id, pipeline.clone());
+                .insert(pipeline.info.tracker_index(), pipeline.clone());
 
-            life_lock
-                .suspected_resources
-                .pipeline_layouts
-                .insert(layout_id, pipeline.layout.clone());
+            life_lock.suspected_resources.pipeline_layouts.insert(
+                pipeline.layout.info.tracker_index(),
+                pipeline.layout.clone(),
+            );
         }
     }
 
@@ -4312,7 +4293,7 @@
                 .trackers
                 .lock()
                 .compute_pipelines
-                .insert_single(id, resource);
+                .insert_single(resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -4382,17 +4363,16 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(pipeline) = hub.compute_pipelines.unregister(compute_pipeline_id) {
-            <span class="kw">let </span>layout_id = pipeline.layout.as_info().id();
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>pipeline.device;
             <span class="kw">let </span><span class="kw-2">mut </span>life_lock = device.lock_life();
             life_lock
                 .suspected_resources
                 .compute_pipelines
-                .insert(compute_pipeline_id, pipeline.clone());
-            life_lock
-                .suspected_resources
-                .pipeline_layouts
-                .insert(layout_id, pipeline.layout.clone());
+                .insert(pipeline.info.tracker_index(), pipeline.clone());
+            life_lock.suspected_resources.pipeline_layouts.insert(
+                pipeline.layout.info.tracker_index(),
+                pipeline.layout.clone(),
+            );
         }
     }
 
