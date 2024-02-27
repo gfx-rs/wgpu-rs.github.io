@@ -2564,10 +2564,6 @@
 <a href="#2563" id="2563">2563</a>
 <a href="#2564" id="2564">2564</a>
 <a href="#2565" id="2565">2565</a>
-<a href="#2566" id="2566">2566</a>
-<a href="#2567" id="2567">2567</a>
-<a href="#2568" id="2568">2568</a>
-<a href="#2569" id="2569">2569</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2787,7 +2783,7 @@
                     mapped_at_creation: <span class="bool-val">false</span>,
                 };
                 <span class="kw">let </span>stage = <span class="kw">match </span>device.create_buffer(<span class="kw-2">&amp;</span>stage_desc, <span class="bool-val">true</span>) {
-                    <span class="prelude-val">Ok</span>(stage) =&gt; stage,
+                    <span class="prelude-val">Ok</span>(stage) =&gt; Arc::new(stage),
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         to_destroy.push(buffer);
                         <span class="kw">break </span>e;
@@ -2800,13 +2796,9 @@
                     <span class="prelude-val">Ok</span>(mapping) =&gt; mapping,
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         to_destroy.push(buffer);
-                        to_destroy.push(stage);
                         <span class="kw">break </span>CreateBufferError::Device(e.into());
                     }
                 };
-
-                <span class="kw">let </span>stage_fid = hub.buffers.request();
-                <span class="kw">let </span>stage = stage_fid.init(stage);
 
                 <span class="macro">assert_eq!</span>(buffer.size % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
                 <span class="comment">// Zero initialize memory and then mark both staging and buffer as initialized

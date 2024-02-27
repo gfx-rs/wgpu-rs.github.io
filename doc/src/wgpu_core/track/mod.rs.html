@@ -670,24 +670,6 @@
 <a href="#669" id="669">669</a>
 <a href="#670" id="670">670</a>
 <a href="#671" id="671">671</a>
-<a href="#672" id="672">672</a>
-<a href="#673" id="673">673</a>
-<a href="#674" id="674">674</a>
-<a href="#675" id="675">675</a>
-<a href="#676" id="676">676</a>
-<a href="#677" id="677">677</a>
-<a href="#678" id="678">678</a>
-<a href="#679" id="679">679</a>
-<a href="#680" id="680">680</a>
-<a href="#681" id="681">681</a>
-<a href="#682" id="682">682</a>
-<a href="#683" id="683">683</a>
-<a href="#684" id="684">684</a>
-<a href="#685" id="685">685</a>
-<a href="#686" id="686">686</a>
-<a href="#687" id="687">687</a>
-<a href="#688" id="688">688</a>
-<a href="#689" id="689">689</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -793,7 +775,6 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 
 <span class="kw">use crate</span>::{
     binding_model, command, conv, hal_api::HalApi, id, pipeline, resource, snatch::SnatchGuard,
-    storage::Storage,
 };
 
 <span class="kw">use </span>parking_lot::{Mutex, RwLock};
@@ -1169,31 +1150,14 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; RenderBundleScope&lt;A&gt; {
     <span class="doccomment">/// Create the render bundle scope and pull the maximum IDs from the hubs.
-    </span><span class="kw">pub fn </span>new(
-        buffers: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&lt;A&gt;&gt;,
-        textures: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;&gt;,
-        bind_groups: <span class="kw-2">&amp;</span>Storage&lt;binding_model::BindGroup&lt;A&gt;&gt;,
-        render_pipelines: <span class="kw-2">&amp;</span>Storage&lt;pipeline::RenderPipeline&lt;A&gt;&gt;,
-        query_sets: <span class="kw-2">&amp;</span>Storage&lt;resource::QuerySet&lt;A&gt;&gt;,
-    ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>value = <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
             buffers: RwLock::new(BufferUsageScope::new()),
             textures: RwLock::new(TextureUsageScope::new()),
             bind_groups: RwLock::new(StatelessTracker::new()),
             render_pipelines: RwLock::new(StatelessTracker::new()),
             query_sets: RwLock::new(StatelessTracker::new()),
-        };
-
-        value.buffers.write().set_size(buffers.len());
-        value.textures.write().set_size(textures.len());
-        value.bind_groups.write().set_size(bind_groups.len());
-        value
-            .render_pipelines
-            .write()
-            .set_size(render_pipelines.len());
-        value.query_sets.write().set_size(query_sets.len());
-
-        value
+        }
     }
 
     <span class="doccomment">/// Merge the inner contents of a bind group into the render bundle tracker.
