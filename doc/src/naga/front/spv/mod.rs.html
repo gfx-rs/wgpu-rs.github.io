@@ -10674,6 +10674,21 @@ This value then gets used instead of `OpLoad` result later on.
     Frontend::new(words, options).parse()
 }
 
+<span class="doccomment">/// Helper function to check if `child` is in the scope of `parent`
+</span><span class="kw">fn </span>is_parent(<span class="kw-2">mut </span>child: usize, parent: usize, block_ctx: <span class="kw-2">&amp;</span>BlockContext) -&gt; bool {
+    <span class="kw">loop </span>{
+        <span class="kw">if </span>child == parent {
+            <span class="comment">// The child is in the scope parent
+            </span><span class="kw">break </span><span class="bool-val">true</span>;
+        } <span class="kw">else if </span>child == <span class="number">0 </span>{
+            <span class="comment">// Searched finished at the root the child isn't in the parent's body
+            </span><span class="kw">break </span><span class="bool-val">false</span>;
+        }
+
+        child = block_ctx.bodies[child].parent;
+    }
+}
+
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="attr">#[test]
@@ -10688,21 +10703,6 @@ This value then gets used instead of `OpLoad` result later on.
             </span><span class="number">0x01</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>,
         ];
         <span class="kw">let _ </span>= <span class="kw">super</span>::parse_u8_slice(<span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>Default::default()).unwrap();
-    }
-}
-
-<span class="doccomment">/// Helper function to check if `child` is in the scope of `parent`
-</span><span class="kw">fn </span>is_parent(<span class="kw-2">mut </span>child: usize, parent: usize, block_ctx: <span class="kw-2">&amp;</span>BlockContext) -&gt; bool {
-    <span class="kw">loop </span>{
-        <span class="kw">if </span>child == parent {
-            <span class="comment">// The child is in the scope parent
-            </span><span class="kw">break </span><span class="bool-val">true</span>;
-        } <span class="kw">else if </span>child == <span class="number">0 </span>{
-            <span class="comment">// Searched finished at the root the child isn't in the parent's body
-            </span><span class="kw">break </span><span class="bool-val">false</span>;
-        }
-
-        child = block_ctx.bodies[child].parent;
     }
 }
 </code></pre></div></section></main></body></html>
