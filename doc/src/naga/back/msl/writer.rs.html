@@ -4658,6 +4658,67 @@
 <a href="#4657" id="4657">4657</a>
 <a href="#4658" id="4658">4658</a>
 <a href="#4659" id="4659">4659</a>
+<a href="#4660" id="4660">4660</a>
+<a href="#4661" id="4661">4661</a>
+<a href="#4662" id="4662">4662</a>
+<a href="#4663" id="4663">4663</a>
+<a href="#4664" id="4664">4664</a>
+<a href="#4665" id="4665">4665</a>
+<a href="#4666" id="4666">4666</a>
+<a href="#4667" id="4667">4667</a>
+<a href="#4668" id="4668">4668</a>
+<a href="#4669" id="4669">4669</a>
+<a href="#4670" id="4670">4670</a>
+<a href="#4671" id="4671">4671</a>
+<a href="#4672" id="4672">4672</a>
+<a href="#4673" id="4673">4673</a>
+<a href="#4674" id="4674">4674</a>
+<a href="#4675" id="4675">4675</a>
+<a href="#4676" id="4676">4676</a>
+<a href="#4677" id="4677">4677</a>
+<a href="#4678" id="4678">4678</a>
+<a href="#4679" id="4679">4679</a>
+<a href="#4680" id="4680">4680</a>
+<a href="#4681" id="4681">4681</a>
+<a href="#4682" id="4682">4682</a>
+<a href="#4683" id="4683">4683</a>
+<a href="#4684" id="4684">4684</a>
+<a href="#4685" id="4685">4685</a>
+<a href="#4686" id="4686">4686</a>
+<a href="#4687" id="4687">4687</a>
+<a href="#4688" id="4688">4688</a>
+<a href="#4689" id="4689">4689</a>
+<a href="#4690" id="4690">4690</a>
+<a href="#4691" id="4691">4691</a>
+<a href="#4692" id="4692">4692</a>
+<a href="#4693" id="4693">4693</a>
+<a href="#4694" id="4694">4694</a>
+<a href="#4695" id="4695">4695</a>
+<a href="#4696" id="4696">4696</a>
+<a href="#4697" id="4697">4697</a>
+<a href="#4698" id="4698">4698</a>
+<a href="#4699" id="4699">4699</a>
+<a href="#4700" id="4700">4700</a>
+<a href="#4701" id="4701">4701</a>
+<a href="#4702" id="4702">4702</a>
+<a href="#4703" id="4703">4703</a>
+<a href="#4704" id="4704">4704</a>
+<a href="#4705" id="4705">4705</a>
+<a href="#4706" id="4706">4706</a>
+<a href="#4707" id="4707">4707</a>
+<a href="#4708" id="4708">4708</a>
+<a href="#4709" id="4709">4709</a>
+<a href="#4710" id="4710">4710</a>
+<a href="#4711" id="4711">4711</a>
+<a href="#4712" id="4712">4712</a>
+<a href="#4713" id="4713">4713</a>
+<a href="#4714" id="4714">4714</a>
+<a href="#4715" id="4715">4715</a>
+<a href="#4716" id="4716">4716</a>
+<a href="#4717" id="4717">4717</a>
+<a href="#4718" id="4718">4718</a>
+<a href="#4719" id="4719">4719</a>
+<a href="#4720" id="4720">4720</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -6454,8 +6515,8 @@
                     Mf::CountLeadingZeros =&gt; <span class="string">"clz"</span>,
                     Mf::CountOneBits =&gt; <span class="string">"popcount"</span>,
                     Mf::ReverseBits =&gt; <span class="string">"reverse_bits"</span>,
-                    Mf::ExtractBits =&gt; <span class="string">"extract_bits"</span>,
-                    Mf::InsertBits =&gt; <span class="string">"insert_bits"</span>,
+                    Mf::ExtractBits =&gt; <span class="string">""</span>,
+                    Mf::InsertBits =&gt; <span class="string">""</span>,
                     Mf::FindLsb =&gt; <span class="string">""</span>,
                     Mf::FindMsb =&gt; <span class="string">""</span>,
                     <span class="comment">// data packing
@@ -6551,6 +6612,52 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"as_type&lt;uint&gt;(half2("</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else if </span>fun == Mf::ExtractBits {
+                    <span class="comment">// The behavior of ExtractBits is undefined when offset + count &gt; bit_width. We need
+                    // to first sanitize the offset and count first. If we don't do this, Apple chips
+                    // will return out-of-spec values if the extracted range is not within the bit width.
+                    //
+                    // This encodes the exact formula specified by the wgsl spec, without temporary values:
+                    // https://gpuweb.github.io/gpuweb/wgsl/#extractBits-unsigned-builtin
+                    //
+                    // w = sizeof(x) * 8
+                    // o = min(offset, w)
+                    // tmp = w - o
+                    // c = min(count, tmp)
+                    //
+                    // bitfieldExtract(x, o, c)
+                    //
+                    // extract_bits(e, min(offset, w), min(count, w - min(offset, w))))
+
+                    </span><span class="kw">let </span>scalar_bits = context.resolve_type(arg).scalar_width().unwrap();
+
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::extract_bits("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg1.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u), {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg2.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u - {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg1.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u)))"</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else if </span>fun == Mf::InsertBits {
+                    <span class="comment">// The behavior of InsertBits has the same issue as ExtractBits.
+                    //
+                    // insertBits(e, newBits, min(offset, w), min(count, w - min(offset, w))))
+
+                    </span><span class="kw">let </span>scalar_bits = context.resolve_type(arg).scalar_width().unwrap();
+
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::insert_bits("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg1.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg2.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u), {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg3.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u - {NAMESPACE}::min("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(arg2.unwrap(), context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {scalar_bits}u)))"</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else if </span>fun == Mf::Radians {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"(("</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
@@ -7149,7 +7256,14 @@
                 }
             }
 
-            <span class="kw">if let </span>Expression::Math { fun, arg, arg1, .. } = <span class="kw-2">*</span>expr {
+            <span class="kw">if let </span>Expression::Math {
+                fun,
+                arg,
+                arg1,
+                arg2,
+                ..
+            } = <span class="kw-2">*</span>expr
+            {
                 <span class="kw">match </span>fun {
                     <span class="kw">crate</span>::MathFunction::Dot =&gt; {
                         <span class="comment">// WGSL's `dot` function works on any `vecN` type, but Metal's only
@@ -7173,6 +7287,14 @@
                     }
                     <span class="kw">crate</span>::MathFunction::FindMsb =&gt; {
                         <span class="self">self</span>.need_bake_expressions.insert(arg);
+                    }
+                    <span class="kw">crate</span>::MathFunction::ExtractBits =&gt; {
+                        <span class="comment">// Only argument 1 is re-used.
+                        </span><span class="self">self</span>.need_bake_expressions.insert(arg1.unwrap());
+                    }
+                    <span class="kw">crate</span>::MathFunction::InsertBits =&gt; {
+                        <span class="comment">// Only argument 2 is re-used.
+                        </span><span class="self">self</span>.need_bake_expressions.insert(arg2.unwrap());
                     }
                     <span class="kw">crate</span>::MathFunction::Sign =&gt; {
                         <span class="comment">// WGSL's `sign` function works also on signed ints, but Metal's only
