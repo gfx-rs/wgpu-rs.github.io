@@ -1246,6 +1246,14 @@
 <a href="#1245" id="1245">1245</a>
 <a href="#1246" id="1246">1246</a>
 <a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1876,6 +1884,11 @@
             // that's the only way to get gl_InstanceID to work correctly.
             </span>features.set(wgt::Features::INDIRECT_FIRST_INSTANCE, supported);
         }
+        <span class="comment">// Supported by GL 3.3+, Not supported by GLES 3.0+
+        </span>features.set(
+            wgt::Features::TEXTURE_FORMAT_16BIT_NORM,
+            es_ver.is_none() &amp;&amp; full_ver &gt;= <span class="prelude-val">Some</span>((<span class="number">3</span>, <span class="number">3</span>)),
+        );
 
         <span class="kw">let </span>max_texture_size = <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) } <span class="kw">as </span>u32;
         <span class="kw">let </span>max_texture_3d_size = <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_3D_TEXTURE_SIZE) } <span class="kw">as </span>u32;
@@ -2297,6 +2310,9 @@
 
         <span class="kw">let </span>texture_float_linear = feature_fn(wgt::Features::FLOAT32_FILTERABLE, filterable);
 
+        <span class="kw">let </span>texture_rgb16bit_renderable =
+            feature_fn(wgt::Features::TEXTURE_FORMAT_16BIT_NORM, renderable);
+
         <span class="kw">match </span>format {
             Tf::R8Unorm =&gt; filterable_renderable,
             Tf::R8Snorm =&gt; filterable,
@@ -2333,8 +2349,8 @@
             Tf::Rg32Float =&gt; unfilterable | float_renderable | texture_float_linear,
             Tf::Rgba16Uint =&gt; renderable | storage,
             Tf::Rgba16Sint =&gt; renderable | storage,
-            Tf::Rgba16Unorm =&gt; empty,
-            Tf::Rgba16Snorm =&gt; empty,
+            Tf::Rgba16Unorm =&gt; texture_rgb16bit_renderable,
+            Tf::Rgba16Snorm =&gt; texture_rgb16bit_renderable,
             Tf::Rgba16Float =&gt; filterable | storage | half_float_renderable,
             Tf::Rgba32Uint =&gt; renderable | storage,
             Tf::Rgba32Sint =&gt; renderable | storage,
