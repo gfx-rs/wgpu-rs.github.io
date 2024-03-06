@@ -749,6 +749,14 @@
 <a href="#748" id="748">748</a>
 <a href="#749" id="749">749</a>
 <a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -852,17 +860,25 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     callback_data: Box&lt;DebugUtilsMessengerUserData&gt;,
 }
 
+<span class="attr">#[derive(Debug)]
+</span><span class="doccomment">/// The properties related to the validation layer needed for the
+/// DebugUtilsMessenger for their workarounds
+</span><span class="kw">struct </span>ValidationLayerProperties {
+    <span class="doccomment">/// Validation layer description, from `vk::LayerProperties`.
+    </span>layer_description: std::ffi::CString,
+
+    <span class="doccomment">/// Validation layer specification version, from `vk::LayerProperties`.
+    </span>layer_spec_version: u32,
+}
+
 <span class="doccomment">/// User data needed by `instance::debug_utils_messenger_callback`.
 ///
 /// When we create the [`vk::DebugUtilsMessengerEXT`], the `pUserData`
 /// pointer refers to one of these values.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>DebugUtilsMessengerUserData {
-    <span class="doccomment">/// Validation layer description, from `vk::LayerProperties`.
-    </span>validation_layer_description: std::ffi::CString,
-
-    <span class="doccomment">/// Validation layer specification version, from `vk::LayerProperties`.
-    </span>validation_layer_spec_version: u32,
+    <span class="doccomment">/// The properties related to the validation layer, if present
+    </span>validation_layer_properties: <span class="prelude-ty">Option</span>&lt;ValidationLayerProperties&gt;,
 
     <span class="doccomment">/// If the OBS layer is present. OBS never increments the version of their layer,
     /// so there's no reason to have the version.
