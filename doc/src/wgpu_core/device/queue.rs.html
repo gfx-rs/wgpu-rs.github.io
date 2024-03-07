@@ -1572,6 +1572,33 @@
 <a href="#1571" id="1571">1571</a>
 <a href="#1572" id="1572">1572</a>
 <a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1586,7 +1613,7 @@
     global::Global,
     hal_api::HalApi,
     hal_label,
-    id::{<span class="self">self</span>, QueueId},
+    id::{<span class="self">self</span>, DeviceId, QueueId},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, Resource,
@@ -1916,6 +1943,15 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueWriteError {
+    <span class="attr">#[error(
+        <span class="string">"Device of queue ({:?}) does not match device of write recipient ({:?})"</span>,
+        queue_device_id,
+        target_device_id
+    )]
+    </span>DeviceMismatch {
+        queue_device_id: DeviceId,
+        target_device_id: DeviceId,
+    },
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -1960,12 +1996,30 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
+        <span class="kw">let </span>buffer_device_id = hub
+            .buffers
+            .get(buffer_id)
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?
+            </span>.device
+            .as_info()
+            .id();
+
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+
+        {
+            <span class="kw">let </span>queue_device_id = device.as_info().id();
+            <span class="kw">if </span>buffer_device_id != queue_device_id {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(QueueWriteError::DeviceMismatch {
+                    queue_device_id,
+                    target_device_id: buffer_device_id,
+                });
+            }
+        }
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
 
