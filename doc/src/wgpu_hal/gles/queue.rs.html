@@ -1811,6 +1811,10 @@
 <a href="#1810" id="1810">1810</a>
 <a href="#1811" id="1811">1811</a>
 <a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -1853,10 +1857,14 @@
 <span class="kw">impl </span><span class="kw">super</span>::Queue {
     <span class="doccomment">/// Performs a manual shader clear, used as a workaround for a clearing bug on mesa
     </span><span class="kw">unsafe fn </span>perform_shader_clear(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context, draw_buffer: u32, color: [f32; <span class="number">4</span>]) {
-        <span class="kw">unsafe </span>{ gl.use_program(<span class="prelude-val">Some</span>(<span class="self">self</span>.shader_clear_program)) };
+        <span class="kw">let </span>shader_clear = <span class="self">self
+            </span>.shader_clear_program
+            .as_ref()
+            .expect(<span class="string">"shader_clear_program should always be set if the workaround is enabled"</span>);
+        <span class="kw">unsafe </span>{ gl.use_program(<span class="prelude-val">Some</span>(shader_clear.program)) };
         <span class="kw">unsafe </span>{
             gl.uniform_4_f32(
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.shader_clear_program_color_uniform_location),
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>shader_clear.color_uniform_location),
                 color[<span class="number">0</span>],
                 color[<span class="number">1</span>],
                 color[<span class="number">2</span>],
