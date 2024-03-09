@@ -1255,9 +1255,6 @@
 <a href="#1254" id="1254">1254</a>
 <a href="#1255" id="1255">1255</a>
 <a href="#1256" id="1256">1256</a>
-<a href="#1257" id="1257">1257</a>
-<a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -2062,6 +2059,7 @@
         }
 
         <span class="kw">let </span>downlevel_defaults = wgt::DownlevelLimits {};
+        <span class="kw">let </span>max_samples = <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_SAMPLES) };
 
         <span class="comment">// Drop the GL guard so we can move the context into AdapterShared
         // ( on Wasm the gl handle is just a ref so we tell clippy to allow
@@ -2080,6 +2078,7 @@
                     next_shader_id: Default::default(),
                     program_cache: Default::default(),
                     es: es_ver.is_some(),
+                    max_msaa_samples: max_samples,
                 }),
             },
             info: <span class="self">Self</span>::make_info(vendor, renderer),
@@ -2246,12 +2245,7 @@
         <span class="kw">use </span>wgt::TextureFormat <span class="kw">as </span>Tf;
 
         <span class="kw">let </span>sample_count = {
-            <span class="kw">let </span>max_samples = <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .context
-                    .lock()
-                    .get_parameter_i32(glow::MAX_SAMPLES)
-            };
+            <span class="kw">let </span>max_samples = <span class="self">self</span>.shared.max_msaa_samples;
             <span class="kw">if </span>max_samples &gt;= <span class="number">16 </span>{
                 Tfc::MULTISAMPLE_X2
                     | Tfc::MULTISAMPLE_X4
