@@ -1796,6 +1796,39 @@
 <a href="#1795" id="1795">1795</a>
 <a href="#1796" id="1796">1796</a>
 <a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     compose::validate_compose, validate_atomic_compare_exchange_struct, FunctionInfo, ModuleInfo,
     ShaderStages, TypeFlags,
@@ -1922,6 +1955,8 @@
     </span>MissingCapabilities(<span class="kw">super</span>::Capabilities),
     <span class="attr">#[error(transparent)]
     </span>Literal(<span class="attr">#[from] </span>LiteralError),
+    <span class="attr">#[error(<span class="string">"{0:?} is not supported for Width {2} {1:?} arguments yet, see https://github.com/gfx-rs/wgpu/issues/5276"</span>)]
+    </span>UnsupportedWidth(<span class="kw">crate</span>::MathFunction, <span class="kw">crate</span>::ScalarKind, <span class="kw">crate</span>::Bytes),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -3130,28 +3165,29 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                     }
-                    Mf::CountTrailingZeros
-                    | Mf::CountLeadingZeros
+                    <span class="comment">// Remove once fixed https://github.com/gfx-rs/wgpu/issues/5276
+                    </span>Mf::CountLeadingZeros
+                    | Mf::CountTrailingZeros
                     | Mf::CountOneBits
                     | Mf::ReverseBits
-                    | Mf::FindLsb
-                    | Mf::FindMsb =&gt; {
+                    | Mf::FindMsb
+                    | Mf::FindLsb =&gt; {
                         <span class="kw">if </span>arg1_ty.is_some() || arg2_ty.is_some() || arg3_ty.is_some() {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar(Sc {
-                                kind: Sk::Sint | Sk::Uint,
-                                ..
-                            })
-                            | Ti::Vector {
-                                scalar:
-                                    Sc {
-                                        kind: Sk::Sint | Sk::Uint,
-                                        ..
-                                    },
-                                ..
-                            } =&gt; {}
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
+                                Sk::Sint | Sk::Uint =&gt; {
+                                    <span class="kw">if </span>scalar.width != <span class="number">4 </span>{
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::UnsupportedWidth(
+                                            fun,
+                                            scalar.kind,
+                                            scalar.width,
+                                        ));
+                                    }
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
+                            },
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                     }
@@ -3202,6 +3238,21 @@
                                 ))
                             }
                         }
+                        <span class="comment">// Remove once fixed https://github.com/gfx-rs/wgpu/issues/5276
+                        </span><span class="kw">for </span><span class="kw-2">&amp;</span>arg <span class="kw">in </span>[arg_ty, arg1_ty, arg2_ty, arg3_ty].iter() {
+                            <span class="kw">match </span><span class="kw-2">*</span>arg {
+                                Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; {
+                                    <span class="kw">if </span>scalar.width != <span class="number">4 </span>{
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::UnsupportedWidth(
+                                            fun,
+                                            scalar.kind,
+                                            scalar.width,
+                                        ));
+                                    }
+                                }
+                                <span class="kw">_ </span>=&gt; {}
+                            }
+                        }
                     }
                     Mf::ExtractBits =&gt; {
                         <span class="kw">let </span>(arg1_ty, arg2_ty) = <span class="kw">match </span>(arg1_ty, arg2_ty, arg3_ty) {
@@ -3241,6 +3292,21 @@
                                     <span class="number">2</span>,
                                     arg2.unwrap(),
                                 ))
+                            }
+                        }
+                        <span class="comment">// Remove once fixed https://github.com/gfx-rs/wgpu/issues/5276
+                        </span><span class="kw">for </span><span class="kw-2">&amp;</span>arg <span class="kw">in </span>[arg_ty, arg1_ty, arg2_ty].iter() {
+                            <span class="kw">match </span><span class="kw-2">*</span>arg {
+                                Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; {
+                                    <span class="kw">if </span>scalar.width != <span class="number">4 </span>{
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::UnsupportedWidth(
+                                            fun,
+                                            scalar.kind,
+                                            scalar.width,
+                                        ));
+                                    }
+                                }
+                                <span class="kw">_ </span>=&gt; {}
                             }
                         }
                     }

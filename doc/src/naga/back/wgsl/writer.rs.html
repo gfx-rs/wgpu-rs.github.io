@@ -1961,6 +1961,22 @@
 <a href="#1960" id="1960">1960</a>
 <a href="#1961" id="1961">1961</a>
 <a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
     back,
@@ -3059,16 +3075,24 @@
                     // value can only be expressed in WGSL using AbstractInt and
                     // a unary negation operator.
                     </span><span class="kw">if </span>value == i32::MIN {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"i32(-2147483648)"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"i32({})"</span>, value)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}i"</span>, value)<span class="question-mark">?</span>;
                     }
                 }
                 <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::F64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{:?}lf"</span>, value)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::I64(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(<span class="string">"unsupported i64 literal"</span>.to_string()));
+                <span class="kw">crate</span>::Literal::I64(value) =&gt; {
+                    <span class="comment">// `-9223372036854775808li` is not valid WGSL. The most negative `i64`
+                    // value can only be expressed in WGSL using AbstractInt and
+                    // a unary negation operator.
+                    </span><span class="kw">if </span>value == i64::MIN {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"i64({})"</span>, value)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}li"</span>, value)<span class="question-mark">?</span>;
+                    }
                 }
+                <span class="kw">crate</span>::Literal::U64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{:?}lu"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
                         <span class="string">"Abstract types should not appear in IR presented to backends"</span>.into(),
@@ -3791,6 +3815,14 @@
             kind: Sk::Uint,
             width: <span class="number">4</span>,
         } =&gt; <span class="string">"u32"</span>,
+        Scalar {
+            kind: Sk::Sint,
+            width: <span class="number">8</span>,
+        } =&gt; <span class="string">"i64"</span>,
+        Scalar {
+            kind: Sk::Uint,
+            width: <span class="number">8</span>,
+        } =&gt; <span class="string">"u64"</span>,
         Scalar {
             kind: Sk::Bool,
             width: <span class="number">1</span>,

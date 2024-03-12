@@ -4719,6 +4719,51 @@
 <a href="#4718" id="4718">4718</a>
 <a href="#4719" id="4719">4719</a>
 <a href="#4720" id="4720">4720</a>
+<a href="#4721" id="4721">4721</a>
+<a href="#4722" id="4722">4722</a>
+<a href="#4723" id="4723">4723</a>
+<a href="#4724" id="4724">4724</a>
+<a href="#4725" id="4725">4725</a>
+<a href="#4726" id="4726">4726</a>
+<a href="#4727" id="4727">4727</a>
+<a href="#4728" id="4728">4728</a>
+<a href="#4729" id="4729">4729</a>
+<a href="#4730" id="4730">4730</a>
+<a href="#4731" id="4731">4731</a>
+<a href="#4732" id="4732">4732</a>
+<a href="#4733" id="4733">4733</a>
+<a href="#4734" id="4734">4734</a>
+<a href="#4735" id="4735">4735</a>
+<a href="#4736" id="4736">4736</a>
+<a href="#4737" id="4737">4737</a>
+<a href="#4738" id="4738">4738</a>
+<a href="#4739" id="4739">4739</a>
+<a href="#4740" id="4740">4740</a>
+<a href="#4741" id="4741">4741</a>
+<a href="#4742" id="4742">4742</a>
+<a href="#4743" id="4743">4743</a>
+<a href="#4744" id="4744">4744</a>
+<a href="#4745" id="4745">4745</a>
+<a href="#4746" id="4746">4746</a>
+<a href="#4747" id="4747">4747</a>
+<a href="#4748" id="4748">4748</a>
+<a href="#4749" id="4749">4749</a>
+<a href="#4750" id="4750">4750</a>
+<a href="#4751" id="4751">4751</a>
+<a href="#4752" id="4752">4752</a>
+<a href="#4753" id="4753">4753</a>
+<a href="#4754" id="4754">4754</a>
+<a href="#4755" id="4755">4755</a>
+<a href="#4756" id="4756">4756</a>
+<a href="#4757" id="4757">4757</a>
+<a href="#4758" id="4758">4758</a>
+<a href="#4759" id="4759">4759</a>
+<a href="#4760" id="4760">4760</a>
+<a href="#4761" id="4761">4761</a>
+<a href="#4762" id="4762">4762</a>
+<a href="#4763" id="4763">4763</a>
+<a href="#4764" id="4764">4764</a>
+<a href="#4765" id="4765">4765</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -5040,7 +5085,7 @@
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::Scalar {
-    <span class="kw">const fn </span>to_msl_name(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+    <span class="kw">fn </span>to_msl_name(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self </span>{
@@ -5049,12 +5094,20 @@
             } =&gt; <span class="string">"float"</span>,
             <span class="self">Self </span>{
                 kind: Sk::Sint,
-                width: <span class="kw">_</span>,
+                width: <span class="number">4</span>,
             } =&gt; <span class="string">"int"</span>,
             <span class="self">Self </span>{
                 kind: Sk::Uint,
-                width: <span class="kw">_</span>,
+                width: <span class="number">4</span>,
             } =&gt; <span class="string">"uint"</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Sint,
+                width: <span class="number">8</span>,
+            } =&gt; <span class="string">"long"</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Uint,
+                width: <span class="number">8</span>,
+            } =&gt; <span class="string">"ulong"</span>,
             <span class="self">Self </span>{
                 kind: Sk::Bool,
                 width: <span class="kw">_</span>,
@@ -5062,7 +5115,8 @@
             <span class="self">Self </span>{
                 kind: Sk::AbstractInt | Sk::AbstractFloat,
                 width: <span class="kw">_</span>,
-            } =&gt; <span class="macro">unreachable!</span>(),
+            } =&gt; <span class="macro">unreachable!</span>(<span class="string">"Found Abstract scalar kind"</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Unsupported scalar kind: {:?}"</span>, <span class="self">self</span>),
         }
     }
 }
@@ -5456,7 +5510,11 @@
             <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
                 put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::Scalar::U32, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?
             </span>}
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(
+                    <span class="string">"Invalid type for image coordinate"</span>.into(),
+                ))
+            }
         };
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
@@ -5789,13 +5847,17 @@
         <span class="kw">let </span>(offset, array_ty) = <span class="kw">match </span>context.module.types[global.ty].inner {
             <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; <span class="kw">match </span>members.last() {
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw">crate</span>::StructMember { offset, ty, .. }) =&gt; (offset, ty),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="string">"Struct has no members"</span>.into())),
             },
             <span class="kw">crate</span>::TypeInner::Array {
                 size: <span class="kw">crate</span>::ArraySize::Dynamic,
                 ..
             } =&gt; (<span class="number">0</span>, global.ty),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+            <span class="kw-2">ref </span>ty =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                    <span class="string">"Expected type with dynamic array, got {ty:?}"
+                </span>)))
+            }
         };
 
         <span class="kw">let </span>(size, stride) = <span class="kw">match </span>context.module.types[array_ty].inner {
@@ -5805,7 +5867,11 @@
                     .size(context.module.to_ctx()),
                 stride,
             ),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+            <span class="kw-2">ref </span>ty =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                    <span class="string">"Expected array type, got {ty:?}"
+                </span>)))
+            }
         };
 
         <span class="comment">// When the stride length is larger than the size, the final element's stride of
@@ -5994,6 +6060,9 @@
                 <span class="kw">crate</span>::Literal::I32(value) =&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>;
                 }
+                <span class="kw">crate</span>::Literal::U64(value) =&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}uL"</span>)<span class="question-mark">?</span>;
+                }
                 <span class="kw">crate</span>::Literal::I64(value) =&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>;
                 }
@@ -6001,7 +6070,9 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(
+                        <span class="string">"Unsupported abstract literal"</span>.into(),
+                    ));
                 }
             },
             <span class="kw">crate</span>::Expression::Constant(handle) =&gt; {
@@ -6063,7 +6134,11 @@
             <span class="kw">crate</span>::Expression::Splat { size, value } =&gt; {
                 <span class="kw">let </span>scalar = <span class="kw">match </span><span class="kw-2">*</span>get_expr_ty(ctx, value).inner_with(<span class="kw-2">&amp;</span>module.types) {
                     <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                    <span class="kw-2">ref </span>ty =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                            <span class="string">"Expected splat value type must be a scalar, got {ty:?}"</span>,
+                        )))
+                    }
                 };
                 put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, scalar, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
@@ -6393,7 +6468,11 @@
                     <span class="self">self</span>.put_expression(condition, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                <span class="kw-2">ref </span>ty =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                        <span class="string">"Expected select condition to be a non-bool type, got {ty:?}"</span>,
+                    )))
+                }
             },
             <span class="kw">crate</span>::Expression::Derivative { axis, expr, .. } =&gt; {
                 <span class="kw">use </span><span class="kw">crate</span>::DerivativeAxis <span class="kw">as </span>Axis;
@@ -6557,15 +6636,23 @@
                     <span class="self">self</span>.put_expression(arg1.unwrap(), context, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else if </span>fun == Mf::FindLsb {
+                    <span class="kw">let </span>scalar = context.resolve_type(arg).scalar().unwrap();
+                    <span class="kw">let </span>constant = scalar.width * <span class="number">8 </span>+ <span class="number">1</span>;
+
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"((({NAMESPACE}::ctz("</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">") + 1) % 33) - 1)"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">") + 1) % {constant}) - 1)"</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else if </span>fun == Mf::FindMsb {
                     <span class="kw">let </span>inner = context.resolve_type(arg);
+                    <span class="kw">let </span>scalar = inner.scalar().unwrap();
+                    <span class="kw">let </span>constant = scalar.width * <span class="number">8 </span>- <span class="number">1</span>;
 
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::select(31 - {NAMESPACE}::clz("</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"{NAMESPACE}::select({constant} - {NAMESPACE}::clz("
+                    </span>)<span class="question-mark">?</span>;
 
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) = inner.scalar_kind() {
+                    <span class="kw">if </span>scalar.kind == <span class="kw">crate</span>::ScalarKind::Sint {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::select("</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", ~"</span>)<span class="question-mark">?</span>;
@@ -6583,18 +6670,12 @@
                     </span><span class="kw">match </span><span class="kw-2">*</span>inner {
                         <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
                             <span class="kw">let </span>size = back::vector_size_str(size);
-                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = scalar.kind {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int{size}"</span>)<span class="question-mark">?</span>;
-                            } <span class="kw">else </span>{
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint{size}"</span>)<span class="question-mark">?</span>;
-                            }
+                            <span class="kw">let </span>name = scalar.to_msl_name();
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}{size}"</span>)<span class="question-mark">?</span>;
                         }
                         <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
-                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = scalar.kind {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int"</span>)<span class="question-mark">?</span>;
-                            } <span class="kw">else </span>{
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint"</span>)<span class="question-mark">?</span>;
-                            }
+                            <span class="kw">let </span>name = scalar.to_msl_name();
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
                         }
                         <span class="kw">_ </span>=&gt; (),
                     }
@@ -6687,14 +6768,8 @@
                         kind,
                         width: convert.unwrap_or(src.width),
                     };
-                    <span class="kw">let </span>is_bool_cast =
-                        kind == <span class="kw">crate</span>::ScalarKind::Bool || src.kind == <span class="kw">crate</span>::ScalarKind::Bool;
                     <span class="kw">let </span>op = <span class="kw">match </span>convert {
-                        <span class="prelude-val">Some</span>(w) <span class="kw">if </span>w == src.width || is_bool_cast =&gt; <span class="string">"static_cast"</span>,
-                        <span class="prelude-val">Some</span>(<span class="number">8</span>) <span class="kw">if </span>kind == <span class="kw">crate</span>::ScalarKind::Float =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
-                        }
-                        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="string">"static_cast"</span>,
                         <span class="prelude-val">None </span>=&gt; <span class="string">"as_type"</span>,
                     };
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{op}&lt;"</span>)<span class="question-mark">?</span>;
@@ -6722,7 +6797,11 @@
                     <span class="self">self</span>.put_expression(expr, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                <span class="kw-2">ref </span>ty =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                        <span class="string">"Unsupported type for As: {ty:?}"
+                    </span>)))
+                }
             },
             <span class="comment">// has to be a named expression
             </span><span class="kw">crate</span>::Expression::CallResult(<span class="kw">_</span>)
@@ -6737,11 +6816,19 @@
                     <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; {
                         <span class="kw">match </span>context.function.expressions[base] {
                             <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; handle,
-                            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                            <span class="kw-2">ref </span>ex =&gt; {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                                    <span class="string">"Expected global variable in AccessIndex, got {ex:?}"
+                                </span>)))
+                            }
                         }
                     }
                     <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; handle,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
+                    <span class="kw-2">ref </span>ex =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                            <span class="string">"Unexpected expression in ArrayLength, got {ex:?}"
+                        </span>)))
+                    }
                 };
 
                 <span class="kw">if </span>!is_scoped {
@@ -6907,10 +6994,12 @@
                     <span class="kw">match </span>length {
                         index::IndexableLength::Known(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
                         index::IndexableLength::Dynamic =&gt; {
-                            <span class="kw">let </span>global = context
-                                .function
-                                .originating_global(base)
-                                .ok_or(Error::Validation)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>global =
+                                context.function.originating_global(base).ok_or_else(|| {
+                                    Error::GenericValidation(
+                                        <span class="string">"Could not find originating global"</span>.into(),
+                                    )
+                                })<span class="question-mark">?</span>;
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"1 + "</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.put_dynamic_array_max_index(global, context)<span class="question-mark">?
                         </span>}
@@ -7067,10 +7156,9 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}u"</span>, limit - <span class="number">1</span>)<span class="question-mark">?</span>;
                 }
                 index::IndexableLength::Dynamic =&gt; {
-                    <span class="kw">let </span>global = context
-                        .function
-                        .originating_global(base)
-                        .ok_or(Error::Validation)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>global = context.function.originating_global(base).ok_or_else(|| {
+                        Error::GenericValidation(<span class="string">"Could not find originating global"</span>.into())
+                    })<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_dynamic_array_max_index(global, context)<span class="question-mark">?</span>;
                 }
             }
@@ -8679,7 +8767,9 @@
                             binding: <span class="prelude-val">None</span>,
                             first_time: <span class="bool-val">true</span>,
                         };
-                        <span class="kw">let </span>binding = binding.ok_or(Error::Validation)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>binding = binding.ok_or_else(|| {
+                            Error::GenericValidation(<span class="string">"Expected binding, got None"</span>.into())
+                        })<span class="question-mark">?</span>;
 
                         <span class="kw">if let </span><span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::PointSize) = <span class="kw-2">*</span>binding {
                             has_point_size = <span class="bool-val">true</span>;

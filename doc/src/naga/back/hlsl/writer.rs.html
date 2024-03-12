@@ -3283,6 +3283,59 @@
 <a href="#3282" id="3282">3282</a>
 <a href="#3283" id="3283">3283</a>
 <a href="#3284" id="3284">3284</a>
+<a href="#3285" id="3285">3285</a>
+<a href="#3286" id="3286">3286</a>
+<a href="#3287" id="3287">3287</a>
+<a href="#3288" id="3288">3288</a>
+<a href="#3289" id="3289">3289</a>
+<a href="#3290" id="3290">3290</a>
+<a href="#3291" id="3291">3291</a>
+<a href="#3292" id="3292">3292</a>
+<a href="#3293" id="3293">3293</a>
+<a href="#3294" id="3294">3294</a>
+<a href="#3295" id="3295">3295</a>
+<a href="#3296" id="3296">3296</a>
+<a href="#3297" id="3297">3297</a>
+<a href="#3298" id="3298">3298</a>
+<a href="#3299" id="3299">3299</a>
+<a href="#3300" id="3300">3300</a>
+<a href="#3301" id="3301">3301</a>
+<a href="#3302" id="3302">3302</a>
+<a href="#3303" id="3303">3303</a>
+<a href="#3304" id="3304">3304</a>
+<a href="#3305" id="3305">3305</a>
+<a href="#3306" id="3306">3306</a>
+<a href="#3307" id="3307">3307</a>
+<a href="#3308" id="3308">3308</a>
+<a href="#3309" id="3309">3309</a>
+<a href="#3310" id="3310">3310</a>
+<a href="#3311" id="3311">3311</a>
+<a href="#3312" id="3312">3312</a>
+<a href="#3313" id="3313">3313</a>
+<a href="#3314" id="3314">3314</a>
+<a href="#3315" id="3315">3315</a>
+<a href="#3316" id="3316">3316</a>
+<a href="#3317" id="3317">3317</a>
+<a href="#3318" id="3318">3318</a>
+<a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess},
     storage::StoreValue,
@@ -5307,6 +5360,7 @@
                 <span class="kw">crate</span>::Literal::F32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}"</span>)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::U32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}u"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::I32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, value)<span class="question-mark">?</span>,
+                <span class="kw">crate</span>::Literal::U64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}uL"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::I64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}L"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, value)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
@@ -5836,7 +5890,7 @@
                 convert,
             } =&gt; {
                 <span class="kw">let </span>inner = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
-                <span class="kw">match </span>convert {
+                <span class="kw">let </span>close_paren = <span class="kw">match </span>convert {
                     <span class="prelude-val">Some</span>(dst_width) =&gt; {
                         <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
                             kind,
@@ -5869,13 +5923,21 @@
                                 </span>)));
                             }
                         };
-                    }
+                        <span class="bool-val">true
+                    </span>}
                     <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, kind.to_hlsl_cast(),)<span class="question-mark">?</span>;
+                        <span class="kw">if </span>inner.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">64</span>) {
+                            <span class="bool-val">false
+                        </span>} <span class="kw">else </span>{
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, kind.to_hlsl_cast(),)<span class="question-mark">?</span>;
+                            <span class="bool-val">true
+                        </span>}
                     }
-                }
+                };
                 <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                <span class="kw">if </span>close_paren {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                }
             }
             Expression::Math {
                 fun,
@@ -6147,9 +6209,15 @@
                         }
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?
                     </span>}
-                    Function::MissingIntOverload(fun_name) =&gt; {
-                        <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar_kind();
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(ScalarKind::Sint) = scalar_kind {
+                    <span class="comment">// These overloads are only missing on FXC, so this is only needed for 32bit types,
+                    // as non-32bit types are DXC only.
+                    </span>Function::MissingIntOverload(fun_name) =&gt; {
+                        <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar();
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar {
+                            kind: ScalarKind::Sint,
+                            width: <span class="number">4</span>,
+                        }) = scalar_kind
+                        {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"asint({fun_name}(asuint("</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")))"</span>)<span class="question-mark">?</span>;
@@ -6159,9 +6227,15 @@
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                         }
                     }
-                    Function::MissingIntReturnType(fun_name) =&gt; {
-                        <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar_kind();
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(ScalarKind::Sint) = scalar_kind {
+                    <span class="comment">// These overloads are only missing on FXC, so this is only needed for 32bit types,
+                    // as non-32bit types are DXC only.
+                    </span>Function::MissingIntReturnType(fun_name) =&gt; {
+                        <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar();
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar {
+                            kind: ScalarKind::Sint,
+                            width: <span class="number">4</span>,
+                        }) = scalar_kind
+                        {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"asint({fun_name}("</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
@@ -6180,23 +6254,38 @@
                                     <span class="kw">crate</span>::VectorSize::Quad =&gt; <span class="string">".xxxx"</span>,
                                 };
 
-                                <span class="kw">if let </span>ScalarKind::Uint = scalar.kind {
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min((32u){s}, firstbitlow("</span>)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
+
+                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"min(({scalar_width_bits}u){s}, firstbitlow("
+                                    </span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                                 } <span class="kw">else </span>{
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"asint(min((32u){s}, firstbitlow("</span>)<span class="question-mark">?</span>;
+                                    <span class="comment">// This is only needed for the FXC path, on 32bit signed integers.
+                                    </span><span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"asint(min(({scalar_width_bits}u){s}, firstbitlow("
+                                    </span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")))"</span>)<span class="question-mark">?</span>;
                                 }
                             }
                             TypeInner::Scalar(scalar) =&gt; {
-                                <span class="kw">if let </span>ScalarKind::Uint = scalar.kind {
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(32u, firstbitlow("</span>)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>scalar_width_bits = scalar.width * <span class="number">8</span>;
+
+                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint || scalar.width != <span class="number">4 </span>{
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min({scalar_width_bits}u, firstbitlow("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                                 } <span class="kw">else </span>{
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"asint(min(32u, firstbitlow("</span>)<span class="question-mark">?</span>;
+                                    <span class="comment">// This is only needed for the FXC path, on 32bit signed integers.
+                                    </span><span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"asint(min({scalar_width_bits}u, firstbitlow("
+                                    </span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")))"</span>)<span class="question-mark">?</span>;
                                 }
@@ -6215,30 +6304,47 @@
                                     <span class="kw">crate</span>::VectorSize::Quad =&gt; <span class="string">".xxxx"</span>,
                                 };
 
-                                <span class="kw">if let </span>ScalarKind::Uint = scalar.kind {
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"((31u){s} - firstbithigh("</span>)<span class="question-mark">?</span>;
+                                <span class="comment">// scalar width - 1
+                                </span><span class="kw">let </span>constant = scalar.width * <span class="number">8 </span>- <span class="number">1</span>;
+
+                                <span class="kw">if </span>scalar.kind == ScalarKind::Uint {
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"(({constant}u){s} - firstbithigh("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                                 } <span class="kw">else </span>{
+                                    <span class="kw">let </span>conversion_func = <span class="kw">match </span>scalar.width {
+                                        <span class="number">4 </span>=&gt; <span class="string">"asint"</span>,
+                                        <span class="kw">_ </span>=&gt; <span class="string">""</span>,
+                                    };
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(
                                         <span class="self">self</span>.out,
-                                        <span class="string">" &lt; (0){s} ? (0){s} : (31){s} - asint(firstbithigh("
+                                        <span class="string">" &lt; (0){s} ? (0){s} : ({constant}){s} - {conversion_func}(firstbithigh("
                                     </span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")))"</span>)<span class="question-mark">?</span>;
                                 }
                             }
                             TypeInner::Scalar(scalar) =&gt; {
+                                <span class="comment">// scalar width - 1
+                                </span><span class="kw">let </span>constant = scalar.width * <span class="number">8 </span>- <span class="number">1</span>;
+
                                 <span class="kw">if let </span>ScalarKind::Uint = scalar.kind {
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"(31u - firstbithigh("</span>)<span class="question-mark">?</span>;
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({constant}u - firstbithigh("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                                 } <span class="kw">else </span>{
+                                    <span class="kw">let </span>conversion_func = <span class="kw">match </span>scalar.width {
+                                        <span class="number">4 </span>=&gt; <span class="string">"asint"</span>,
+                                        <span class="kw">_ </span>=&gt; <span class="string">""</span>,
+                                    };
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
-                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &lt; 0 ? 0 : 31 - asint(firstbithigh("</span>)<span class="question-mark">?</span>;
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">" &lt; 0 ? 0 : {constant} - {conversion_func}(firstbithigh("
+                                    </span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")))"</span>)<span class="question-mark">?</span>;
                                 }

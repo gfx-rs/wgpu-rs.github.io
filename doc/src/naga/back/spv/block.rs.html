@@ -2503,6 +2503,26 @@
 <a href="#2502" id="2502">2502</a>
 <a href="#2503" id="2503">2503</a>
 <a href="#2504" id="2504">2504</a>
+<a href="#2505" id="2505">2505</a>
+<a href="#2506" id="2506">2506</a>
+<a href="#2507" id="2507">2507</a>
+<a href="#2508" id="2508">2508</a>
+<a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3449,8 +3469,7 @@ Implementations for `BlockContext` methods.
                     )),
                     Mf::CountTrailingZeros =&gt; {
                         <span class="kw">let </span>uint_id = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            <span class="kw">crate</span>::TypeInner::Vector { size, <span class="kw-2">mut </span>scalar } =&gt; {
-                                scalar.kind = <span class="kw">crate</span>::ScalarKind::Uint;
+                            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
                                 <span class="kw">let </span>ty = LocalType::Value {
                                     vector_size: <span class="prelude-val">Some</span>(size),
                                     scalar,
@@ -3461,15 +3480,15 @@ Implementations for `BlockContext` methods.
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(
                                     size <span class="kw">as _</span>,
-                                    <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">32</span>, scalar)<span class="question-mark">?</span>,
+                                    <span class="self">self</span>.writer
+                                        .get_constant_scalar_with(scalar.width * <span class="number">8</span>, scalar)<span class="question-mark">?</span>,
                                 );
 
                                 <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list)
                             }
-                            <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw-2">mut </span>scalar) =&gt; {
-                                scalar.kind = <span class="kw">crate</span>::ScalarKind::Uint;
-                                <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">32</span>, scalar)<span class="question-mark">?
-                            </span>}
+                            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; <span class="self">self
+                                </span>.writer
+                                .get_constant_scalar_with(scalar.width * <span class="number">8</span>, scalar)<span class="question-mark">?</span>,
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
 
@@ -3491,9 +3510,8 @@ Implementations for `BlockContext` methods.
                         ))
                     }
                     Mf::CountLeadingZeros =&gt; {
-                        <span class="kw">let </span>(int_type_id, int_id) = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            <span class="kw">crate</span>::TypeInner::Vector { size, <span class="kw-2">mut </span>scalar } =&gt; {
-                                scalar.kind = <span class="kw">crate</span>::ScalarKind::Sint;
+                        <span class="kw">let </span>(int_type_id, int_id, width) = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
+                            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
                                 <span class="kw">let </span>ty = LocalType::Value {
                                     vector_size: <span class="prelude-val">Some</span>(size),
                                     scalar,
@@ -3504,32 +3522,41 @@ Implementations for `BlockContext` methods.
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(
                                     size <span class="kw">as _</span>,
-                                    <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">31</span>, scalar)<span class="question-mark">?</span>,
+                                    <span class="self">self</span>.writer
+                                        .get_constant_scalar_with(scalar.width * <span class="number">8 </span>- <span class="number">1</span>, scalar)<span class="question-mark">?</span>,
                                 );
 
                                 (
                                     <span class="self">self</span>.get_type_id(ty),
                                     <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list),
+                                    scalar.width,
                                 )
                             }
-                            <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw-2">mut </span>scalar) =&gt; {
-                                scalar.kind = <span class="kw">crate</span>::ScalarKind::Sint;
-                                (
-                                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                                        vector_size: <span class="prelude-val">None</span>,
-                                        scalar,
-                                        pointer_space: <span class="prelude-val">None</span>,
-                                    })),
-                                    <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">31</span>, scalar)<span class="question-mark">?</span>,
-                                )
-                            }
+                            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (
+                                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
+                                    vector_size: <span class="prelude-val">None</span>,
+                                    scalar,
+                                    pointer_space: <span class="prelude-val">None</span>,
+                                })),
+                                <span class="self">self</span>.writer
+                                    .get_constant_scalar_with(scalar.width * <span class="number">8 </span>- <span class="number">1</span>, scalar)<span class="question-mark">?</span>,
+                                scalar.width,
+                            ),
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                        };
+
+                        <span class="kw">if </span>width != <span class="number">4 </span>{
+                            <span class="macro">unreachable!</span>(<span class="string">"This is validated out until a polyfill is implemented. https://github.com/gfx-rs/wgpu/issues/5276"</span>);
                         };
 
                         <span class="kw">let </span>msb_id = <span class="self">self</span>.gen_id();
                         block.body.push(Instruction::ext_inst(
                             <span class="self">self</span>.writer.gl450_ext_inst_id,
-                            spirv::GLOp::FindUMsb,
+                            <span class="kw">if </span>width != <span class="number">4 </span>{
+                                spirv::GLOp::FindILsb
+                            } <span class="kw">else </span>{
+                                spirv::GLOp::FindUMsb
+                            },
                             int_type_id,
                             msb_id,
                             <span class="kw-2">&amp;</span>[arg0_id],
@@ -3681,11 +3708,18 @@ Implementations for `BlockContext` methods.
                         ))
                     }
                     Mf::FindLsb =&gt; MathOp::Ext(spirv::GLOp::FindILsb),
-                    Mf::FindMsb =&gt; MathOp::Ext(<span class="kw">match </span>arg_scalar_kind {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::FindUMsb,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::FindSMsb,
-                        other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected findMSB({:?})"</span>, other),
-                    }),
+                    Mf::FindMsb =&gt; {
+                        <span class="kw">if </span>arg_ty.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">32</span>) {
+                            <span class="kw">let </span>thing = <span class="kw">match </span>arg_scalar_kind {
+                                <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::GLOp::FindUMsb,
+                                <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::GLOp::FindSMsb,
+                                other =&gt; <span class="macro">unimplemented!</span>(<span class="string">"Unexpected findMSB({:?})"</span>, other),
+                            };
+                            MathOp::Ext(thing)
+                        } <span class="kw">else </span>{
+                            <span class="macro">unreachable!</span>(<span class="string">"This is validated out until a polyfill is implemented. https://github.com/gfx-rs/wgpu/issues/5276"</span>);
+                        }
+                    }
                     Mf::Pack4x8unorm =&gt; MathOp::Ext(spirv::GLOp::PackUnorm4x8),
                     Mf::Pack4x8snorm =&gt; MathOp::Ext(spirv::GLOp::PackSnorm4x8),
                     Mf::Pack2x16float =&gt; MathOp::Ext(spirv::GLOp::PackHalf2x16),
@@ -3889,6 +3923,12 @@ Implementations for `BlockContext` methods.
                         }
                         (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF),
                         (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                            Cast::Unary(spirv::Op::UConvert)
+                        }
+                        (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                            Cast::Unary(spirv::Op::SConvert)
+                        }
+                        (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
                             Cast::Unary(spirv::Op::UConvert)
                         }
                         <span class="comment">// We assume it's either an identity cast, or int-uint.

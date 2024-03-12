@@ -537,9 +537,6 @@
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
-<a href="#539" id="539">539</a>
-<a href="#540" id="540">540</a>
-<a href="#541" id="541">541</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [MSL][msl] (Metal Shading Language).
 
@@ -663,8 +660,8 @@ holding the result.
     </span>UnsupportedCall(String),
     <span class="attr">#[error(<span class="string">"feature '{0}' is not implemented yet"</span>)]
     </span>FeatureNotImplemented(String),
-    <span class="attr">#[error(<span class="string">"module is not valid"</span>)]
-    </span>Validation,
+    <span class="attr">#[error(<span class="string">"internal naga error: module should not have validated: {0}"</span>)]
+    </span>GenericValidation(String),
     <span class="attr">#[error(<span class="string">"BuiltIn {0:?} is not supported"</span>)]
     </span>UnsupportedBuiltIn(<span class="kw">crate</span>::BuiltIn),
     <span class="attr">#[error(<span class="string">"capability {0:?} is not supported"</span>)]
@@ -848,13 +845,10 @@ holding the result.
                         },
                     })
                 }
-                LocationMode::Uniform =&gt; {
-                    <span class="macro">log::error!</span>(
-                        <span class="string">"Unexpected Binding::Location({}) for the Uniform mode"</span>,
-                        location
-                    );
-                    <span class="prelude-val">Err</span>(Error::Validation)
-                }
+                LocationMode::Uniform =&gt; <span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                    <span class="string">"Unexpected Binding::Location({}) for the Uniform mode"</span>,
+                    location
+                ))),
             },
         }
     }
