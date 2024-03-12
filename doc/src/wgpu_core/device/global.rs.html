@@ -2564,6 +2564,27 @@
 <a href="#2563" id="2563">2563</a>
 <a href="#2564" id="2564">2564</a>
 <a href="#2565" id="2565">2565</a>
+<a href="#2566" id="2566">2566</a>
+<a href="#2567" id="2567">2567</a>
+<a href="#2568" id="2568">2568</a>
+<a href="#2569" id="2569">2569</a>
+<a href="#2570" id="2570">2570</a>
+<a href="#2571" id="2571">2571</a>
+<a href="#2572" id="2572">2572</a>
+<a href="#2573" id="2573">2573</a>
+<a href="#2574" id="2574">2574</a>
+<a href="#2575" id="2575">2575</a>
+<a href="#2576" id="2576">2576</a>
+<a href="#2577" id="2577">2577</a>
+<a href="#2578" id="2578">2578</a>
+<a href="#2579" id="2579">2579</a>
+<a href="#2580" id="2580">2580</a>
+<a href="#2581" id="2581">2581</a>
+<a href="#2582" id="2582">2582</a>
+<a href="#2583" id="2583">2583</a>
+<a href="#2584" id="2584">2584</a>
+<a href="#2585" id="2585">2585</a>
+<a href="#2586" id="2586">2586</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4663,28 +4684,41 @@
             .get(device_id)
             .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(closures, queue_empty) = {
-            <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
-                <span class="kw">if </span>submission_index.queue_id != device_id.transmute() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
-                        submission_index.queue_id,
-                        device_id,
-                    ));
-                }
+        <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
+            <span class="kw">if </span>submission_index.queue_id != device_id.transmute() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
+                    submission_index.queue_id,
+                    device_id,
+                ));
             }
+        }
 
-            <span class="kw">let </span>fence = device.fence.read();
-            <span class="kw">let </span>fence = fence.as_ref().unwrap();
-            device.maintain(fence, maintain)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>DevicePoll {
+            closures,
+            queue_empty,
+        } = <span class="self">Self</span>::poll_single_device(<span class="kw-2">&amp;</span>device, maintain)<span class="question-mark">?</span>;
+
+        closures.fire();
+
+        <span class="prelude-val">Ok</span>(queue_empty)
+    }
+
+    <span class="kw">fn </span>poll_single_device&lt;A: HalApi&gt;(
+        device: <span class="kw-2">&amp;</span><span class="kw">crate</span>::device::Device&lt;A&gt;,
+        maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DevicePoll, WaitIdleError&gt; {
+        <span class="kw">let </span>fence = device.fence.read();
+        <span class="kw">let </span>fence = fence.as_ref().unwrap();
+        <span class="kw">let </span>(closures, queue_empty) = device.maintain(fence, maintain)<span class="question-mark">?</span>;
 
         <span class="comment">// Some deferred destroys are scheduled in maintain so run this right after
         // to avoid holding on to them until the next device poll.
         </span>device.deferred_resource_destruction();
 
-        closures.fire();
-
-        <span class="prelude-val">Ok</span>(queue_empty)
+        <span class="prelude-val">Ok</span>(DevicePoll {
+            closures,
+            queue_empty,
+        })
     }
 
     <span class="doccomment">/// Poll all devices belonging to the backend `A`.
@@ -4693,7 +4727,7 @@
     ///
     /// Return `all_queue_empty` indicating whether there are more queue
     /// submissions still in flight.
-    </span><span class="kw">fn </span>poll_device&lt;A: HalApi&gt;(
+    </span><span class="kw">fn </span>poll_all_devices_of_api&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         force_wait: bool,
         closures: <span class="kw-2">&amp;mut </span>UserClosures,
@@ -4711,10 +4745,13 @@
                 } <span class="kw">else </span>{
                     wgt::Maintain::Poll
                 };
-                <span class="kw">let </span>fence = device.fence.read();
-                <span class="kw">let </span>fence = fence.as_ref().unwrap();
-                <span class="kw">let </span>(cbs, queue_empty) = device.maintain(fence, maintain)<span class="question-mark">?</span>;
-                all_queue_empty = all_queue_empty &amp;&amp; queue_empty;
+
+                <span class="kw">let </span>DevicePoll {
+                    closures: cbs,
+                    queue_empty,
+                } = <span class="self">Self</span>::poll_single_device(device, maintain)<span class="question-mark">?</span>;
+
+                all_queue_empty &amp;= queue_empty;
 
                 closures.extend(cbs);
             }
@@ -4736,23 +4773,23 @@
 
         <span class="attr">#[cfg(vulkan)]
         </span>{
-            all_queue_empty =
-                <span class="self">self</span>.poll_device::&lt;hal::api::Vulkan&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
+            all_queue_empty &amp;=
+                <span class="self">self</span>.poll_all_devices_of_api::&lt;hal::api::Vulkan&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
         }
         <span class="attr">#[cfg(metal)]
         </span>{
-            all_queue_empty =
-                <span class="self">self</span>.poll_device::&lt;hal::api::Metal&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
+            all_queue_empty &amp;=
+                <span class="self">self</span>.poll_all_devices_of_api::&lt;hal::api::Metal&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
         }
         <span class="attr">#[cfg(dx12)]
         </span>{
-            all_queue_empty =
-                <span class="self">self</span>.poll_device::&lt;hal::api::Dx12&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
+            all_queue_empty &amp;=
+                <span class="self">self</span>.poll_all_devices_of_api::&lt;hal::api::Dx12&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
         }
         <span class="attr">#[cfg(gles)]
         </span>{
-            all_queue_empty =
-                <span class="self">self</span>.poll_device::&lt;hal::api::Gles&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">? </span>&amp;&amp; all_queue_empty;
+            all_queue_empty &amp;=
+                <span class="self">self</span>.poll_all_devices_of_api::&lt;hal::api::Gles&gt;(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
         }
 
         closures.fire();
@@ -5128,5 +5165,10 @@
 
         buffer.unmap()
     }
+}
+
+<span class="kw">struct </span>DevicePoll {
+    closures: UserClosures,
+    queue_empty: bool,
 }
 </code></pre></div></section></main></body></html>
