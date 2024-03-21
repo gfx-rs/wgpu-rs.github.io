@@ -4001,6 +4001,17 @@
 <a href="#4000" id="4000">4000</a>
 <a href="#4001" id="4001">4001</a>
 <a href="#4002" id="4002">4002</a>
+<a href="#4003" id="4003">4003</a>
+<a href="#4004" id="4004">4004</a>
+<a href="#4005" id="4005">4005</a>
+<a href="#4006" id="4006">4006</a>
+<a href="#4007" id="4007">4007</a>
+<a href="#4008" id="4008">4008</a>
+<a href="#4009" id="4009">4009</a>
+<a href="#4010" id="4010">4010</a>
+<a href="#4011" id="4011">4011</a>
+<a href="#4012" id="4012">4012</a>
+<a href="#4013" id="4013">4013</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4270,6 +4281,8 @@
         device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         desc: <span class="kw-2">&amp;</span>RenderBundleEncoderDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::RenderBundleEncoderId, <span class="self">Self</span>::RenderBundleEncoderData);
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">fn </span>device_make_invalid(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData);
     <span class="kw">fn </span>device_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData);
     <span class="kw">fn </span>device_set_device_lost_callback(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -5296,6 +5309,8 @@
         device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         desc: <span class="kw-2">&amp;</span>RenderBundleEncoderDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;);
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">fn </span>device_make_invalid(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>device_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>device_set_device_lost_callback(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -6351,6 +6366,13 @@
         <span class="kw">let </span>(render_bundle_encoder, data) =
             Context::device_create_render_bundle_encoder(<span class="self">self</span>, <span class="kw-2">&amp;</span>device, device_data, desc);
         (render_bundle_encoder.into(), Box::new(data) <span class="kw">as _</span>)
+    }
+
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">fn </span>device_make_invalid(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) {
+        <span class="kw">let </span>device = &lt;T::DeviceId&gt;::from(<span class="kw-2">*</span>device);
+        <span class="kw">let </span>device_data = downcast_ref(device_data);
+        Context::device_make_invalid(<span class="self">self</span>, <span class="kw-2">&amp;</span>device, device_data)
     }
 
     <span class="kw">fn </span>device_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) {

@@ -3043,6 +3043,9 @@
 <a href="#3042" id="3042">3042</a>
 <a href="#3043" id="3043">3043</a>
 <a href="#3044" id="3044">3044</a>
+<a href="#3045" id="3045">3045</a>
+<a href="#3046" id="3046">3046</a>
+<a href="#3047" id="3047">3047</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -4391,14 +4394,17 @@
             <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">"Error in Device::create_render_bundle_encoder: {e}"</span>),
         }
     }
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">fn </span>device_make_invalid(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
+        <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_make_invalid(<span class="kw-2">*</span>device));
+    }
     <span class="attr">#[cfg_attr(not(any(native, Emscripten)), allow(unused))]
     </span><span class="kw">fn </span>device_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
         <span class="attr">#[cfg(any(native, Emscripten))]
         </span>{
-            <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_poll(<span class="kw-2">*</span>device, wgt::Maintain::wait())) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">"Device::drop"</span>),
-            }
+            <span class="comment">// Call device_poll, but don't check for errors. We have to use its
+            // return value, but we just drop it.
+            </span><span class="kw">let _ </span>= <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_poll(<span class="kw-2">*</span>device, wgt::Maintain::wait()));
             <span class="macro">wgc::gfx_select!</span>(device =&gt; <span class="self">self</span>.<span class="number">0</span>.device_drop(<span class="kw-2">*</span>device));
         }
     }

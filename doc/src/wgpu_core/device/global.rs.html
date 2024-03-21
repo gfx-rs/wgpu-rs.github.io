@@ -2585,6 +2585,21 @@
 <a href="#2584" id="2584">2584</a>
 <a href="#2585" id="2585">2585</a>
 <a href="#2586" id="2586">2586</a>
+<a href="#2587" id="2587">2587</a>
+<a href="#2588" id="2588">2588</a>
+<a href="#2589" id="2589">2589</a>
+<a href="#2590" id="2590">2590</a>
+<a href="#2591" id="2591">2591</a>
+<a href="#2592" id="2592">2592</a>
+<a href="#2593" id="2593">2593</a>
+<a href="#2594" id="2594">2594</a>
+<a href="#2595" id="2595">2595</a>
+<a href="#2596" id="2596">2596</a>
+<a href="#2597" id="2597">2597</a>
+<a href="#2598" id="2598">2598</a>
+<a href="#2599" id="2599">2599</a>
+<a href="#2600" id="2600">2600</a>
+<a href="#2601" id="2601">2601</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4827,6 +4842,15 @@
         }
     }
 
+    <span class="comment">// This is a test-only function to force the device into an
+    // invalid state by inserting an error value in its place in
+    // the registry.
+    </span><span class="kw">pub fn </span>device_make_invalid&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        hub.devices
+            .force_replace_with_error(device_id, <span class="string">"Made invalid."</span>);
+    }
+
     <span class="kw">pub fn </span>device_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::drop"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Device::drop {device_id:?}"</span>);
@@ -4862,7 +4886,7 @@
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(device_id) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(device)) = hub.devices.try_get(device_id) {
             <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = device.lock_life();
             <span class="kw">if let </span><span class="prelude-val">Some</span>(existing_closure) = life_tracker.device_lost_closure.take() {
                 <span class="comment">// It's important to not hold the lock while calling the closure.
@@ -4871,6 +4895,12 @@
                 life_tracker = device.lock_life();
             }
             life_tracker.device_lost_closure = <span class="prelude-val">Some</span>(device_lost_closure);
+        } <span class="kw">else </span>{
+            <span class="comment">// No device? Okay. Just like we have to call any existing closure
+            // before we drop it, we need to call this closure before we exit
+            // this function, because there's no device that is ever going to
+            // call it.
+            </span>device_lost_closure.call(DeviceLostReason::DeviceInvalid, <span class="string">""</span>.to_string());
         }
     }
 
