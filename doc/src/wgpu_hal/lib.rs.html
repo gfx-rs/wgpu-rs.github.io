@@ -1690,6 +1690,45 @@
 <a href="#1689" id="1689">1689</a>
 <a href="#1690" id="1690">1690</a>
 <a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1883,13 +1922,13 @@
 }
 
 <span class="kw">pub trait </span>Api: Clone + fmt::Debug + Sized {
-    <span class="kw">type </span>Instance: Instance&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Surface: Surface&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Adapter: Adapter&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Device: Device&lt;<span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Instance: Instance&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Surface: Surface&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Adapter: Adapter&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Device: Device&lt;A = <span class="self">Self</span>&gt;;
 
-    <span class="kw">type </span>Queue: Queue&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">type </span>CommandEncoder: CommandEncoder&lt;<span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Queue: Queue&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>CommandEncoder: CommandEncoder&lt;A = <span class="self">Self</span>&gt;;
     <span class="kw">type </span>CommandBuffer: WasmNotSendSync + fmt::Debug;
 
     <span class="kw">type </span>Buffer: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
@@ -1910,18 +1949,22 @@
     <span class="kw">type </span>AccelerationStructure: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
 }
 
-<span class="kw">pub trait </span>Instance&lt;A: Api&gt;: Sized + WasmNotSendSync {
+<span class="kw">pub trait </span>Instance: Sized + WasmNotSendSync {
+    <span class="kw">type </span>A: Api;
+
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span>InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InstanceError&gt;;
     <span class="kw">unsafe fn </span>create_surface(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::Surface, InstanceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: A::Surface);
-    <span class="kw">unsafe fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;ExposedAdapter&lt;A&gt;&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Surface, InstanceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Surface);
+    <span class="kw">unsafe fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;ExposedAdapter&lt;<span class="self">Self</span>::A&gt;&gt;;
 }
 
-<span class="kw">pub trait </span>Surface&lt;A: Api&gt;: WasmNotSendSync {
+<span class="kw">pub trait </span>Surface: WasmNotSendSync {
+    <span class="kw">type </span>A: Api;
+
     <span class="doccomment">/// Configures the surface to use the given device.
     ///
     /// # Safety
@@ -1932,7 +1975,7 @@
     /// - All surfaces created using other devices must have been unconfigured before this call.
     </span><span class="kw">unsafe fn </span>configure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        device: <span class="kw-2">&amp;</span>A::Device,
+        device: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Device,
         config: <span class="kw-2">&amp;</span>SurfaceConfiguration,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt;;
 
@@ -1944,7 +1987,7 @@
     /// - All [`AcquiredSurfaceTexture`]s must have been destroyed.
     /// - All [`Api::TextureView`]s derived from the [`AcquiredSurfaceTexture`]s must have been destroyed.
     /// - The surface must have been configured on the given device.
-    </span><span class="kw">unsafe fn </span>unconfigure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device);
+    </span><span class="kw">unsafe fn </span>unconfigure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Device);
 
     <span class="doccomment">/// Returns the next texture to be presented by the swapchain for drawing
     ///
@@ -1959,16 +2002,18 @@
     </span><span class="kw">unsafe fn </span>acquire_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         timeout: <span class="prelude-ty">Option</span>&lt;std::time::Duration&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;AcquiredSurfaceTexture&lt;A&gt;&gt;, SurfaceError&gt;;
-    <span class="kw">unsafe fn </span>discard_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: A::SurfaceTexture);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;AcquiredSurfaceTexture&lt;<span class="self">Self</span>::A&gt;&gt;, SurfaceError&gt;;
+    <span class="kw">unsafe fn </span>discard_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::SurfaceTexture);
 }
 
-<span class="kw">pub trait </span>Adapter&lt;A: Api&gt;: WasmNotSendSync {
+<span class="kw">pub trait </span>Adapter: WasmNotSendSync {
+    <span class="kw">type </span>A: Api;
+
     <span class="kw">unsafe fn </span>open(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         features: wgt::Features,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;OpenDevice&lt;A&gt;, DeviceError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;OpenDevice&lt;<span class="self">Self</span>::A&gt;, DeviceError&gt;;
 
     <span class="doccomment">/// Return the set of supported capabilities for a texture format.
     </span><span class="kw">unsafe fn </span>texture_format_capabilities(
@@ -1979,7 +2024,10 @@
     <span class="doccomment">/// Returns the capabilities of working with a specified surface.
     ///
     /// `None` means presentation is not supported for it.
-    </span><span class="kw">unsafe fn </span>surface_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: <span class="kw-2">&amp;</span>A::Surface) -&gt; <span class="prelude-ty">Option</span>&lt;SurfaceCapabilities&gt;;
+    </span><span class="kw">unsafe fn </span>surface_capabilities(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Surface,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;SurfaceCapabilities&gt;;
 
     <span class="doccomment">/// Creates a [`PresentationTimestamp`] using the adapter's WSI.
     ///
@@ -1987,97 +2035,111 @@
     </span><span class="kw">unsafe fn </span>get_presentation_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::PresentationTimestamp;
 }
 
-<span class="kw">pub trait </span>Device&lt;A: Api&gt;: WasmNotSendSync {
+<span class="kw">pub trait </span>Device: WasmNotSendSync {
+    <span class="kw">type </span>A: Api;
+
     <span class="doccomment">/// Exit connection to this logical device.
-    </span><span class="kw">unsafe fn </span>exit(<span class="self">self</span>, queue: A::Queue);
+    </span><span class="kw">unsafe fn </span>exit(<span class="self">self</span>, queue: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Queue);
     <span class="doccomment">/// Creates a new buffer.
     ///
     /// The initial usage is `BufferUses::empty()`.
-    </span><span class="kw">unsafe fn </span>create_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>BufferDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;A::Buffer, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: A::Buffer);
+    </span><span class="kw">unsafe fn </span>create_buffer(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>BufferDescriptor,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer);
     <span class="comment">//TODO: clarify if zero-sized mapping is allowed
     </span><span class="kw">unsafe fn </span>map_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         range: MemoryRange,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BufferMapping, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>A::Buffer) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt;;
-    <span class="kw">unsafe fn </span>flush_mapped_ranges&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>A::Buffer, ranges: I)
+    <span class="kw">unsafe fn </span>unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt;;
+    <span class="kw">unsafe fn </span>flush_mapped_ranges&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer, ranges: I)
     <span class="kw">where
         </span>I: Iterator&lt;Item = MemoryRange&gt;;
-    <span class="kw">unsafe fn </span>invalidate_mapped_ranges&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>A::Buffer, ranges: I)
+    <span class="kw">unsafe fn </span>invalidate_mapped_ranges&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer, ranges: I)
     <span class="kw">where
         </span>I: Iterator&lt;Item = MemoryRange&gt;;
 
     <span class="doccomment">/// Creates a new texture.
     ///
     /// The initial usage for all subresources is `TextureUses::UNINITIALIZED`.
-    </span><span class="kw">unsafe fn </span>create_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>TextureDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;A::Texture, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: A::Texture);
+    </span><span class="kw">unsafe fn </span>create_texture(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>TextureDescriptor,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture);
     <span class="kw">unsafe fn </span>create_texture_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span>A::Texture,
+        texture: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
         desc: <span class="kw-2">&amp;</span>TextureViewDescriptor,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::TextureView, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_texture_view(<span class="kw-2">&amp;</span><span class="self">self</span>, view: A::TextureView);
-    <span class="kw">unsafe fn </span>create_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>SamplerDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;A::Sampler, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: A::Sampler);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::TextureView, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_texture_view(<span class="kw-2">&amp;</span><span class="self">self</span>, view: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::TextureView);
+    <span class="kw">unsafe fn </span>create_sampler(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>SamplerDescriptor,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Sampler, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Sampler);
 
     <span class="doccomment">/// Create a fresh [`CommandEncoder`].
     ///
     /// The new `CommandEncoder` is in the "closed" state.
     </span><span class="kw">unsafe fn </span>create_command_encoder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>CommandEncoderDescriptor&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::CommandEncoder, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, pool: A::CommandEncoder);
+        desc: <span class="kw-2">&amp;</span>CommandEncoderDescriptor&lt;<span class="self">Self</span>::A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandEncoder, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, pool: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandEncoder);
 
     <span class="doccomment">/// Creates a bind group layout.
     </span><span class="kw">unsafe fn </span>create_bind_group_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>BindGroupLayoutDescriptor,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::BindGroupLayout, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, bg_layout: A::BindGroupLayout);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroupLayout, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, bg_layout: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroupLayout);
     <span class="kw">unsafe fn </span>create_pipeline_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>PipelineLayoutDescriptor&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::PipelineLayout, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout: A::PipelineLayout);
+        desc: <span class="kw-2">&amp;</span>PipelineLayoutDescriptor&lt;<span class="self">Self</span>::A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout);
     <span class="kw">unsafe fn </span>create_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>BindGroupDescriptor&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::BindGroup, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, group: A::BindGroup);
+        desc: <span class="kw-2">&amp;</span>BindGroupDescriptor&lt;<span class="self">Self</span>::A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroup, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, group: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroup);
 
     <span class="kw">unsafe fn </span>create_shader_module(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>ShaderModuleDescriptor,
         shader: ShaderInput,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::ShaderModule, ShaderError&gt;;
-    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, module: A::ShaderModule);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule, ShaderError&gt;;
+    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, module: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule);
     <span class="kw">unsafe fn </span>create_render_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>RenderPipelineDescriptor&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::RenderPipeline, PipelineError&gt;;
-    <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: A::RenderPipeline);
+        desc: <span class="kw-2">&amp;</span>RenderPipelineDescriptor&lt;<span class="self">Self</span>::A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline, PipelineError&gt;;
+    <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline);
     <span class="kw">unsafe fn </span>create_compute_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::ComputePipeline, PipelineError&gt;;
-    <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: A::ComputePipeline);
+        desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;<span class="self">Self</span>::A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline, PipelineError&gt;;
+    <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline);
 
     <span class="kw">unsafe fn </span>create_query_set(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>wgt::QuerySetDescriptor&lt;Label&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::QuerySet, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: A::QuerySet);
-    <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;A::Fence, DeviceError&gt;;
-    <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: A::Fence);
-    <span class="kw">unsafe fn </span>get_fence_value(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: <span class="kw-2">&amp;</span>A::Fence) -&gt; <span class="prelude-ty">Result</span>&lt;FenceValue, DeviceError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet);
+    <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence, DeviceError&gt;;
+    <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence);
+    <span class="kw">unsafe fn </span>get_fence_value(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        fence: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;FenceValue, DeviceError&gt;;
     <span class="doccomment">/// Calling wait with a lower value than the current fence value will immediately return.
     </span><span class="kw">unsafe fn </span>wait(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        fence: <span class="kw-2">&amp;</span>A::Fence,
+        fence: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence,
         value: FenceValue,
         timeout_ms: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, DeviceError&gt;;
@@ -2088,22 +2150,24 @@
     <span class="kw">unsafe fn </span>create_acceleration_structure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>AccelerationStructureDescriptor,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;A::AccelerationStructure, DeviceError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure, DeviceError&gt;;
     <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>GetAccelerationStructureBuildSizesDescriptor&lt;A&gt;,
+        desc: <span class="kw-2">&amp;</span>GetAccelerationStructureBuildSizesDescriptor&lt;<span class="self">Self</span>::A&gt;,
     ) -&gt; AccelerationStructureBuildSizes;
     <span class="kw">unsafe fn </span>get_acceleration_structure_device_address(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        acceleration_structure: <span class="kw-2">&amp;</span>A::AccelerationStructure,
+        acceleration_structure: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
     ) -&gt; wgt::BufferAddress;
     <span class="kw">unsafe fn </span>destroy_acceleration_structure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        acceleration_structure: A::AccelerationStructure,
+        acceleration_structure: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
     );
 }
 
-<span class="kw">pub trait </span>Queue&lt;A: Api&gt;: WasmNotSendSync {
+<span class="kw">pub trait </span>Queue: WasmNotSendSync {
+    <span class="kw">type </span>A: Api;
+
     <span class="doccomment">/// Submits the command buffers for execution on GPU.
     ///
     /// Valid usage:
@@ -2114,14 +2178,14 @@
     ///   passed to the surface_textures argument.
     </span><span class="kw">unsafe fn </span>submit(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>A::CommandBuffer],
-        surface_textures: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>A::SurfaceTexture],
-        signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span>A::Fence, FenceValue)&gt;,
+        command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandBuffer],
+        surface_textures: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::SurfaceTexture],
+        signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence, FenceValue)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt;;
     <span class="kw">unsafe fn </span>present(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface: <span class="kw-2">&amp;</span>A::Surface,
-        texture: A::SurfaceTexture,
+        surface: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Surface,
+        texture: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::SurfaceTexture,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt;;
     <span class="kw">unsafe fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32;
 }
@@ -2164,7 +2228,9 @@
 ///   built it.
 ///
 /// - A `CommandEncoder` must not outlive its `Device`.
-</span><span class="kw">pub trait </span>CommandEncoder&lt;A: Api&gt;: WasmNotSendSync + fmt::Debug {
+</span><span class="kw">pub trait </span>CommandEncoder: WasmNotSendSync + fmt::Debug {
+    <span class="kw">type </span>A: Api;
+
     <span class="doccomment">/// Begin encoding a new command buffer.
     ///
     /// This puts this `CommandEncoder` in the "recording" state.
@@ -2202,7 +2268,7 @@
     ///
     /// [`CommandBuffer`]: Api::CommandBuffer
     /// [`begin_encoding`]: CommandEncoder::begin_encoding
-    </span><span class="kw">unsafe fn </span>end_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;A::CommandBuffer, DeviceError&gt;;
+    </span><span class="kw">unsafe fn </span>end_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandBuffer, DeviceError&gt;;
 
     <span class="doccomment">/// Reclaim all resources belonging to this `CommandEncoder`.
     ///
@@ -2217,22 +2283,26 @@
     /// [`CommandBuffer`]: Api::CommandBuffer
     </span><span class="kw">unsafe fn </span>reset_all&lt;I&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command_buffers: I)
     <span class="kw">where
-        </span>I: Iterator&lt;Item = A::CommandBuffer&gt;;
+        </span>I: Iterator&lt;Item = &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandBuffer&gt;;
 
     <span class="kw">unsafe fn </span>transition_buffers&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, A&gt;&gt;;
+        </span>T: Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
 
     <span class="kw">unsafe fn </span>transition_textures&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = TextureBarrier&lt;<span class="lifetime">'a</span>, A&gt;&gt;;
+        </span>T: Iterator&lt;Item = TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
 
     <span class="comment">// copy operations
 
-    </span><span class="kw">unsafe fn </span>clear_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>A::Buffer, range: MemoryRange);
+    </span><span class="kw">unsafe fn </span>clear_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer, range: MemoryRange);
 
-    <span class="kw">unsafe fn </span>copy_buffer_to_buffer&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>A::Buffer, dst: <span class="kw-2">&amp;</span>A::Buffer, regions: T)
-    <span class="kw">where
+    <span class="kw">unsafe fn </span>copy_buffer_to_buffer&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+        regions: T,
+    ) <span class="kw">where
         </span>T: Iterator&lt;Item = BufferCopy&gt;;
 
     <span class="doccomment">/// Copy from an external image to an internal texture.
@@ -2243,7 +2313,7 @@
     </span><span class="kw">unsafe fn </span>copy_external_image_to_texture&lt;T&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         src: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
-        dst: <span class="kw-2">&amp;</span>A::Texture,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
         dst_premultiplication: bool,
         regions: T,
     ) <span class="kw">where
@@ -2255,9 +2325,9 @@
     /// Note: the copy extent is in physical size (rounded to the block size)
     </span><span class="kw">unsafe fn </span>copy_texture_to_texture&lt;T&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        src: <span class="kw-2">&amp;</span>A::Texture,
+        src: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
         src_usage: TextureUses,
-        dst: <span class="kw-2">&amp;</span>A::Texture,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
         regions: T,
     ) <span class="kw">where
         </span>T: Iterator&lt;Item = TextureCopy&gt;;
@@ -2266,8 +2336,12 @@
     /// Works with a single array layer.
     /// Note: `dst` current usage has to be `TextureUses::COPY_DST`.
     /// Note: the copy extent is in physical size (rounded to the block size)
-    </span><span class="kw">unsafe fn </span>copy_buffer_to_texture&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>A::Buffer, dst: <span class="kw-2">&amp;</span>A::Texture, regions: T)
-    <span class="kw">where
+    </span><span class="kw">unsafe fn </span>copy_buffer_to_texture&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
+        regions: T,
+    ) <span class="kw">where
         </span>T: Iterator&lt;Item = BufferTextureCopy&gt;;
 
     <span class="doccomment">/// Copy from texture to buffer.
@@ -2275,9 +2349,9 @@
     /// Note: the copy extent is in physical size (rounded to the block size)
     </span><span class="kw">unsafe fn </span>copy_texture_to_buffer&lt;T&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        src: <span class="kw-2">&amp;</span>A::Texture,
+        src: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture,
         src_usage: TextureUses,
-        dst: <span class="kw-2">&amp;</span>A::Buffer,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         regions: T,
     ) <span class="kw">where
         </span>T: Iterator&lt;Item = BufferTextureCopy&gt;;
@@ -2288,9 +2362,9 @@
     /// of all the preceding groups to be taken from `layout`.
     </span><span class="kw">unsafe fn </span>set_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        layout: <span class="kw-2">&amp;</span>A::PipelineLayout,
+        layout: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout,
         index: u32,
-        group: <span class="kw-2">&amp;</span>A::BindGroup,
+        group: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroup,
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     );
 
@@ -2304,7 +2378,7 @@
     /// - The range of push constants written must be valid for the pipeline layout at draw time.
     </span><span class="kw">unsafe fn </span>set_push_constants(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        layout: <span class="kw-2">&amp;</span>A::PipelineLayout,
+        layout: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout,
         stages: wgt::ShaderStages,
         offset_bytes: u32,
         data: <span class="kw-2">&amp;</span>[u32],
@@ -2319,18 +2393,18 @@
     </span><span class="doccomment">/// # Safety:
     ///
     /// - If `set` is an occlusion query set, it must be the same one as used in the [`RenderPassDescriptor::occlusion_query_set`] parameter.
-    </span><span class="kw">unsafe fn </span>begin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>A::QuerySet, index: u32);
+    </span><span class="kw">unsafe fn </span>begin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, index: u32);
     <span class="doccomment">/// # Safety:
     ///
     /// - If `set` is an occlusion query set, it must be the same one as used in the [`RenderPassDescriptor::occlusion_query_set`] parameter.
-    </span><span class="kw">unsafe fn </span>end_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>A::QuerySet, index: u32);
-    <span class="kw">unsafe fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>A::QuerySet, index: u32);
-    <span class="kw">unsafe fn </span>reset_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>A::QuerySet, range: Range&lt;u32&gt;);
+    </span><span class="kw">unsafe fn </span>end_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, index: u32);
+    <span class="kw">unsafe fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, index: u32);
+    <span class="kw">unsafe fn </span>reset_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, range: Range&lt;u32&gt;);
     <span class="kw">unsafe fn </span>copy_query_results(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        set: <span class="kw-2">&amp;</span>A::QuerySet,
+        set: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet,
         range: Range&lt;u32&gt;,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         offset: wgt::BufferAddress,
         stride: wgt::BufferSize,
     );
@@ -2338,17 +2412,17 @@
     <span class="comment">// render passes
 
     // Begins a render pass, clears all active bindings.
-    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;A&gt;);
+    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="self">Self</span>::A&gt;);
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
-    <span class="kw">unsafe fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>A::RenderPipeline);
+    <span class="kw">unsafe fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline);
 
     <span class="kw">unsafe fn </span>set_index_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        binding: BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;,
+        binding: BufferBinding&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;,
         format: wgt::IndexFormat,
     );
-    <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, binding: BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;);
+    <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, binding: BufferBinding&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;);
     <span class="kw">unsafe fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span>Rect&lt;f32&gt;, depth_range: Range&lt;f32&gt;);
     <span class="kw">unsafe fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span>Rect&lt;u32&gt;);
     <span class="kw">unsafe fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: u32);
@@ -2371,29 +2445,29 @@
     );
     <span class="kw">unsafe fn </span>draw_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         offset: wgt::BufferAddress,
         draw_count: u32,
     );
     <span class="kw">unsafe fn </span>draw_indexed_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         offset: wgt::BufferAddress,
         draw_count: u32,
     );
     <span class="kw">unsafe fn </span>draw_indirect_count(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         offset: wgt::BufferAddress,
-        count_buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        count_buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         count_offset: wgt::BufferAddress,
         max_count: u32,
     );
     <span class="kw">unsafe fn </span>draw_indexed_indirect_count(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         offset: wgt::BufferAddress,
-        count_buffer: <span class="kw-2">&amp;</span>A::Buffer,
+        count_buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
         count_offset: wgt::BufferAddress,
         max_count: u32,
     );
@@ -2401,13 +2475,17 @@
     <span class="comment">// compute passes
 
     // Begins a compute pass, clears all active bindings.
-    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;A&gt;);
+    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="self">Self</span>::A&gt;);
     <span class="kw">unsafe fn </span>end_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
-    <span class="kw">unsafe fn </span>set_compute_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>A::ComputePipeline);
+    <span class="kw">unsafe fn </span>set_compute_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline);
 
     <span class="kw">unsafe fn </span>dispatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: [u32; <span class="number">3</span>]);
-    <span class="kw">unsafe fn </span>dispatch_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>A::Buffer, offset: wgt::BufferAddress);
+    <span class="kw">unsafe fn </span>dispatch_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+        offset: wgt::BufferAddress,
+    );
 
     <span class="doccomment">/// To get the required sizes for the buffer allocations use `get_acceleration_structure_build_sizes` per descriptor
     /// All buffers must be synchronized externally
@@ -2421,8 +2499,8 @@
         descriptor_count: u32,
         descriptors: T,
     ) <span class="kw">where
-        </span>A: <span class="lifetime">'a</span>,
-        T: IntoIterator&lt;Item = BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, A&gt;&gt;;
+        </span><span class="self">Self</span>::A: <span class="lifetime">'a</span>,
+        T: IntoIterator&lt;Item = BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
 
     <span class="kw">unsafe fn </span>place_acceleration_structure_barrier(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
