@@ -3629,6 +3629,15 @@
 <a href="#3628" id="3628">3628</a>
 <a href="#3629" id="3629">3629</a>
 <a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3659,7 +3668,10 @@
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
-    track::{BindGroupStates, TextureSelector, Tracker, TrackerIndexAllocators},
+    track::{
+        BindGroupStates, TextureSelector, Tracker, TrackerIndexAllocators, UsageScope,
+        UsageScopePool,
+    },
     validation::{
         <span class="self">self</span>, check_buffer_usage, check_texture_usage, validate_color_attachment_bytes_per_sample,
     },
@@ -3766,6 +3778,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) deferred_destroy: Mutex&lt;Vec&lt;DeferredDestroy&lt;A&gt;&gt;&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) usage_scopes: UsageScopePool&lt;A&gt;,
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DeferredDestroy&lt;A: HalApi&gt; {
@@ -3927,6 +3940,7 @@
             instance_flags,
             pending_writes: Mutex::new(<span class="prelude-val">Some</span>(pending_writes)),
             deferred_destroy: Mutex::new(Vec::new()),
+            usage_scopes: Default::default(),
         })
     }
 
@@ -7198,6 +7212,10 @@
         <span class="kw">for </span>texture <span class="kw">in </span>trackers.textures.used_resources() {
             <span class="kw">let _ </span>= texture.destroy();
         }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>, A&gt; {
+        UsageScope::new_pooled(<span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes, <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices)
     }
 }
 

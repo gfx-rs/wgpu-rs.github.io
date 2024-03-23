@@ -670,6 +670,30 @@
 <a href="#669" id="669">669</a>
 <a href="#670" id="670">670</a>
 <a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -1152,8 +1176,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="doccomment">/// Create the render bundle scope and pull the maximum IDs from the hubs.
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            buffers: RwLock::new(BufferUsageScope::new()),
-            textures: RwLock::new(TextureUsageScope::new()),
+            buffers: RwLock::new(BufferUsageScope::default()),
+            textures: RwLock::new(TextureUsageScope::default()),
             bind_groups: RwLock::new(StatelessTracker::new()),
             render_pipelines: RwLock::new(StatelessTracker::new()),
             query_sets: RwLock::new(StatelessTracker::new()),
@@ -1184,28 +1208,52 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     }
 }
 
+<span class="doccomment">/// A pool for storing the memory used by [`UsageScope`]s. We take and store this memory when the
+/// scope is dropped to avoid reallocating. The memory required only grows and allocation cost is
+/// significant when a large number of resources have been used.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>UsageScopePool&lt;A&gt; = Mutex&lt;Vec&lt;(BufferUsageScope&lt;A&gt;, TextureUsageScope&lt;A&gt;)&gt;&gt;;
+
 <span class="doccomment">/// A usage scope tracker. Only needs to store stateful resources as stateless
 /// resources cannot possibly have a usage conflict.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>UsageScope&lt;A: HalApi&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>UsageScope&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="kw">pub </span>pool: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UsageScopePool&lt;A&gt;,
     <span class="kw">pub </span>buffers: BufferUsageScope&lt;A&gt;,
     <span class="kw">pub </span>textures: TextureUsageScope&lt;A&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; UsageScope&lt;A&gt; {
-    <span class="doccomment">/// Create the render bundle scope and pull the maximum IDs from the hubs.
-    </span><span class="kw">pub fn </span>new(tracker_indices: <span class="kw-2">&amp;</span>TrackerIndexAllocators) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="self">Self </span>{
-            buffers: BufferUsageScope::new(),
-            textures: TextureUsageScope::new(),
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: HalApi&gt; Drop <span class="kw">for </span>UsageScope&lt;<span class="lifetime">'a</span>, A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// clear vecs and push into pool
+        </span><span class="self">self</span>.buffers.clear();
+        <span class="self">self</span>.textures.clear();
+        <span class="self">self</span>.pool.lock().push((
+            std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buffers),
+            std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.textures),
+        ));
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; UsageScope&lt;<span class="lifetime">'static</span>, A&gt; {
+    <span class="kw">pub fn </span>new_pooled&lt;<span class="lifetime">'d</span>&gt;(
+        pool: <span class="kw-2">&amp;</span><span class="lifetime">'d </span>UsageScopePool&lt;A&gt;,
+        tracker_indices: <span class="kw-2">&amp;</span>TrackerIndexAllocators,
+    ) -&gt; UsageScope&lt;<span class="lifetime">'d</span>, A&gt; {
+        <span class="kw">let </span>pooled = pool.lock().pop().unwrap_or_default();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>scope = UsageScope::&lt;<span class="lifetime">'d</span>, A&gt; {
+            pool,
+            buffers: pooled.<span class="number">0</span>,
+            textures: pooled.<span class="number">1</span>,
         };
 
-        value.buffers.set_size(tracker_indices.buffers.size());
-        value.textures.set_size(tracker_indices.textures.size());
-
-        value
+        scope.buffers.set_size(tracker_indices.buffers.size());
+        scope.textures.set_size(tracker_indices.textures.size());
+        scope
     }
+}
 
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: HalApi&gt; UsageScope&lt;<span class="lifetime">'a</span>, A&gt; {
     <span class="doccomment">/// Merge the inner contents of a bind group into the usage scope.
     ///
     /// Only stateful things are merged in here, all other resources are owned

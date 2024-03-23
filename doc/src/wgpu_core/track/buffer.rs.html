@@ -812,6 +812,10 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -922,22 +926,26 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferUsageScope&lt;A: HalApi&gt; {
     state: Vec&lt;BufferUses&gt;,
-
     metadata: ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; BufferUsageScope&lt;A&gt; {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;A: HalApi&gt; Default <span class="kw">for </span>BufferUsageScope&lt;A&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             state: Vec::new(),
-
             metadata: ResourceMetadata::new(),
         }
     }
+}
 
+<span class="kw">impl</span>&lt;A: HalApi&gt; BufferUsageScope&lt;A&gt; {
     <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
         <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.state.len());
         <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
+    }
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.state.clear();
+        <span class="self">self</span>.metadata.clear();
     }
 
     <span class="doccomment">/// Sets the size of all the vectors inside the tracker.

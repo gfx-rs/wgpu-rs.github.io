@@ -3610,9 +3610,9 @@
 <span class="kw">const </span>MAX_TOTAL_ATTACHMENTS: usize = hal::MAX_COLOR_ATTACHMENTS + hal::MAX_COLOR_ATTACHMENTS + <span class="number">1</span>;
 <span class="kw">type </span>AttachmentDataVec&lt;T&gt; = ArrayVec&lt;T, MAX_TOTAL_ATTACHMENTS&gt;;
 
-<span class="kw">struct </span>RenderPassInfo&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+<span class="kw">struct </span>RenderPassInfo&lt;<span class="lifetime">'a</span>, <span class="lifetime">'d</span>, A: HalApi&gt; {
     context: RenderPassContext,
-    usage_scope: UsageScope&lt;A&gt;,
+    usage_scope: UsageScope&lt;<span class="lifetime">'d</span>, A&gt;,
     <span class="doccomment">/// All render attachments, including depth/stencil
     </span>render_attachments: AttachmentDataVec&lt;RenderAttachment&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
     is_depth_read_only: bool,
@@ -3625,7 +3625,7 @@
     multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A: HalApi&gt; RenderPassInfo&lt;<span class="lifetime">'a</span>, A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'d</span>, A: HalApi&gt; RenderPassInfo&lt;<span class="lifetime">'a</span>, <span class="lifetime">'d</span>, A&gt; {
     <span class="kw">fn </span>add_pass_texture_init_actions&lt;V&gt;(
         channel: <span class="kw-2">&amp;</span>PassChannel&lt;V&gt;,
         texture_memory_actions: <span class="kw-2">&amp;mut </span>CommandBufferTextureMemoryActions&lt;A&gt;,
@@ -3661,7 +3661,7 @@
     }
 
     <span class="kw">fn </span>start(
-        device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'d </span>Device&lt;A&gt;,
         label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;RenderPassColorAttachment&gt;],
         depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>RenderPassDepthStencilAttachment&gt;,
@@ -4085,7 +4085,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             context,
-            usage_scope: UsageScope::new(<span class="kw-2">&amp;</span>device.tracker_indices),
+            usage_scope: device.new_usage_scope(),
             render_attachments,
             is_depth_read_only,
             is_stencil_read_only,
@@ -4101,7 +4101,7 @@
         <span class="kw-2">mut </span><span class="self">self</span>,
         raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(UsageScope&lt;A&gt;, SurfacesInDiscardState&lt;A&gt;), RenderPassErrorInner&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(UsageScope&lt;<span class="lifetime">'d</span>, A&gt;, SurfacesInDiscardState&lt;A&gt;), RenderPassErrorInner&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"RenderPassInfo::finish"</span>);
         <span class="kw">unsafe </span>{
             raw.end_render_pass();

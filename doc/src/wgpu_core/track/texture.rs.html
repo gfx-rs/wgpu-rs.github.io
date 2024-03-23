@@ -1470,6 +1470,13 @@
 <a href="#1469" id="1469">1469</a>
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are significantly more complicated than
@@ -1682,6 +1689,7 @@
     simple: Vec&lt;TextureUses&gt;,
     complex: FastHashMap&lt;usize, ComplexTextureState&gt;,
 }
+
 <span class="kw">impl </span>TextureStateSet {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -1707,15 +1715,16 @@
     metadata: ResourceMetadata&lt;Texture&lt;A&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; TextureUsageScope&lt;A&gt; {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;A: HalApi&gt; Default <span class="kw">for </span>TextureUsageScope&lt;A&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             set: TextureStateSet::new(),
-
             metadata: ResourceMetadata::new(),
         }
     }
+}
 
+<span class="kw">impl</span>&lt;A: HalApi&gt; TextureUsageScope&lt;A&gt; {
     <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
         <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
 
@@ -1728,6 +1737,11 @@
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>});
+    }
+
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.set.clear();
+        <span class="self">self</span>.metadata.clear();
     }
 
     <span class="doccomment">/// Sets the size of all the vectors inside the tracker.
