@@ -479,14 +479,16 @@
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
     hub::Hub,
     id::{BindGroupLayoutId, PipelineLayoutId},
-    resource::{Buffer, BufferAccessResult},
-    resource::{BufferAccessError, BufferMapOperation},
-    resource_log, Label, DOWNLEVEL_ERROR_MESSAGE,
+    resource::{Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation},
+    resource_log,
+    snatch::SnatchGuard,
+    Label, DOWNLEVEL_ERROR_MESSAGE,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -798,10 +800,10 @@
     offset: BufferAddress,
     size: BufferAddress,
     kind: HostMap,
+    snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ptr::NonNull&lt;u8&gt;, BufferAccessError&gt; {
-    <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
     <span class="kw">let </span>raw_buffer = buffer
-        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+        .raw(snatch_guard)
         .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
     <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{
         raw.map_buffer(raw_buffer, offset..offset + size)

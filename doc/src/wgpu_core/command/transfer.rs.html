@@ -1228,6 +1228,17 @@
 <a href="#1227" id="1227">1227</a>
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1244,6 +1255,7 @@
         TextureInitTrackerAction,
     },
     resource::{Resource, Texture, TextureErrorDimension},
+    snatch::SnatchGuard,
     track::{TextureSelector, Tracker},
 };
 
@@ -1682,6 +1694,7 @@
     copy_texture: <span class="kw-2">&amp;</span>ImageCopyTexture,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
+    snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
     <span class="kw">let </span>init_action = TextureInitTrackerAction {
         texture: texture.clone(),
@@ -1710,6 +1723,7 @@
                 <span class="kw-2">&amp;mut </span>trackers.textures,
                 <span class="kw-2">&amp;</span>device.alignments,
                 device.zero_buffer.as_ref().unwrap(),
+                snatch_guard,
             )<span class="question-mark">?</span>;
         }
     }
@@ -1729,6 +1743,7 @@
     source: <span class="kw-2">&amp;</span>ImageCopyTexture,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
+    snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
     handle_texture_init(
         MemoryInitKind::NeedsInitializedMemory,
@@ -1739,6 +1754,7 @@
         source,
         copy_size,
         texture,
+        snatch_guard,
     )<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
@@ -1755,6 +1771,7 @@
     destination: <span class="kw-2">&amp;</span>ImageCopyTexture,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
+    snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
     <span class="comment">// Attention: If we don't write full texture subresources, we need to a full
     // clear first since we don't track subrects. This means that in rare cases
@@ -1779,6 +1796,7 @@
         destination,
         copy_size,
         texture,
+        snatch_guard,
     )<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
@@ -2009,6 +2027,8 @@
 
         <span class="kw">let </span>(dst_range, dst_base) = extract_texture_selector(destination, copy_size, <span class="kw-2">&amp;</span>dst_texture)<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="comment">// Handle texture init *before* dealing with barrier transitions so we
         // have an easier time inserting "immediate-inits" that may be required
         // by prior discards in rare cases.
@@ -2020,9 +2040,8 @@
             destination,
             copy_size,
             <span class="kw-2">&amp;</span>dst_texture,
+            <span class="kw-2">&amp;</span>snatch_guard,
         )<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
         <span class="kw">let </span>(src_buffer, src_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
@@ -2165,6 +2184,8 @@
 
         <span class="kw">let </span>(src_range, src_base) = extract_texture_selector(source, copy_size, <span class="kw-2">&amp;</span>src_texture)<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
         <span class="comment">// Handle texture init *before* dealing with barrier transitions so we
         // have an easier time inserting "immediate-inits" that may be required
         // by prior discards in rare cases.
@@ -2176,9 +2197,8 @@
             source,
             copy_size,
             <span class="kw-2">&amp;</span>src_texture,
+            <span class="kw-2">&amp;</span>snatch_guard,
         )<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
         <span class="kw">let </span>src_pending = tracker
             .textures
@@ -2382,6 +2402,7 @@
             source,
             copy_size,
             <span class="kw-2">&amp;</span>src_texture,
+            <span class="kw-2">&amp;</span>snatch_guard,
         )<span class="question-mark">?</span>;
         handle_dst_texture_init(
             encoder,
@@ -2391,6 +2412,7 @@
             destination,
             copy_size,
             <span class="kw-2">&amp;</span>dst_texture,
+            <span class="kw-2">&amp;</span>snatch_guard,
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>src_pending = cmd_buf_data

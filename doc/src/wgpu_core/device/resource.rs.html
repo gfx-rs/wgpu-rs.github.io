@@ -3638,6 +3638,10 @@
 <a href="#3637" id="3637">3637</a>
 <a href="#3638" id="3638">3638</a>
 <a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3740,6 +3744,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: Mutex&lt;<span class="prelude-ty">Option</span>&lt;CommandAllocator&lt;A&gt;&gt;&gt;,
     <span class="comment">//Note: The submission index here corresponds to the last submission that is done.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: AtomicU64, <span class="comment">//SubmissionIndex,
+    // NOTE: if both are needed, the `snatchable_lock` must be consistently acquired before the
+    // `fence` lock to avoid deadlocks.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) fence: RwLock&lt;<span class="prelude-ty">Option</span>&lt;A::Fence&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) snatchable_lock: SnatchLock,
 
@@ -4032,6 +4038,7 @@
         <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="self">self</span>,
         fence: <span class="kw-2">&amp;</span>A::Fence,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
         <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
@@ -4085,7 +4092,8 @@
             life_tracker.triage_mapped();
         }
 
-        <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
+        <span class="kw">let </span>mapping_closures =
+            life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers, snatch_guard);
 
         <span class="kw">let </span>queue_empty = life_tracker.queue_empty();
 

@@ -2600,6 +2600,16 @@
 <a href="#2599" id="2599">2599</a>
 <a href="#2600" id="2600">2600</a>
 <a href="#2601" id="2601">2601</a>
+<a href="#2602" id="2602">2602</a>
+<a href="#2603" id="2603">2603</a>
+<a href="#2604" id="2604">2604</a>
+<a href="#2605" id="2605">2605</a>
+<a href="#2606" id="2606">2606</a>
+<a href="#2607" id="2607">2607</a>
+<a href="#2608" id="2608">2608</a>
+<a href="#2609" id="2609">2609</a>
+<a href="#2610" id="2610">2610</a>
+<a href="#2611" id="2611">2611</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2794,7 +2804,15 @@
                 <span class="kw">let </span>ptr = <span class="kw">if </span>map_size == <span class="number">0 </span>{
                     std::ptr::NonNull::dangling()
                 } <span class="kw">else </span>{
-                    <span class="kw">match </span>map_buffer(device.raw(), <span class="kw-2">&amp;</span>buffer, <span class="number">0</span>, map_size, HostMap::Write) {
+                    <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+                    <span class="kw">match </span>map_buffer(
+                        device.raw(),
+                        <span class="kw-2">&amp;</span>buffer,
+                        <span class="number">0</span>,
+                        map_size,
+                        HostMap::Write,
+                        <span class="kw-2">&amp;</span>snatch_guard,
+                    ) {
                         <span class="prelude-val">Ok</span>(ptr) =&gt; ptr,
                         <span class="prelude-val">Err</span>(e) =&gt; {
                             to_destroy.push(buffer);
@@ -4610,9 +4628,10 @@
                 }
 
                 <span class="comment">// Wait for all work to finish before configuring the surface.
-                </span><span class="kw">let </span>fence = device.fence.read();
+                </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+                <span class="kw">let </span>fence = device.fence.read();
                 <span class="kw">let </span>fence = fence.as_ref().unwrap();
-                <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Wait) {
+                <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Wait, <span class="kw-2">&amp;</span>snatch_guard) {
                     <span class="prelude-val">Ok</span>((closures, <span class="kw">_</span>)) =&gt; {
                         user_callbacks = closures;
                     }
@@ -4722,9 +4741,10 @@
         device: <span class="kw-2">&amp;</span><span class="kw">crate</span>::device::Device&lt;A&gt;,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;DevicePoll, WaitIdleError&gt; {
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">let </span>fence = device.fence.read();
         <span class="kw">let </span>fence = fence.as_ref().unwrap();
-        <span class="kw">let </span>(closures, queue_empty) = device.maintain(fence, maintain)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(closures, queue_empty) = device.maintain(fence, maintain, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
         <span class="comment">// Some deferred destroys are scheduled in maintain so run this right after
         // to avoid holding on to them until the next device poll.

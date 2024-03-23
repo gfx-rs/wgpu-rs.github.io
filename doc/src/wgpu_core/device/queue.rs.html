@@ -1599,6 +1599,9 @@
 <a href="#1598" id="1598">1598</a>
 <a href="#1599" id="1599">1599</a>
 <a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2416,6 +2419,7 @@
                         <span class="kw-2">&amp;mut </span>trackers.textures,
                         <span class="kw-2">&amp;</span>device.alignments,
                         device.zero_buffer.as_ref().unwrap(),
+                        <span class="kw-2">&amp;</span>device.snatchable_lock.read(),
                     )
                     .map_err(QueueWriteError::from)<span class="question-mark">?</span>;
                 }
@@ -2685,6 +2689,7 @@
                         <span class="kw-2">&amp;mut </span>trackers.textures,
                         <span class="kw-2">&amp;</span>device.alignments,
                         device.zero_buffer.as_ref().unwrap(),
+                        <span class="kw-2">&amp;</span>device.snatchable_lock.read(),
                     )
                     .map_err(QueueWriteError::from)<span class="question-mark">?</span>;
                 }
@@ -2748,7 +2753,10 @@
 
             <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
-            <span class="kw">let </span><span class="kw-2">mut </span>fence = device.fence.write();
+            <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
+            <span class="comment">// Fence lock must be acquired after the snatch lock everywhere to avoid deadlocks.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>fence = device.fence.write();
             <span class="kw">let </span>fence = fence.as_mut().unwrap();
             <span class="kw">let </span>submit_index = device
                 .active_submission_index
@@ -2757,8 +2765,6 @@
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
 
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::default();
-
-            <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
             <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures_owned = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::new();
 
@@ -2992,10 +2998,10 @@
                         <span class="comment">//Note: locking the trackers has to be done after the storages
                         </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
                         baked
-                            .initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers)
+                            .initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers, <span class="kw-2">&amp;</span>snatch_guard)
                             .map_err(|err| QueueSubmitError::DestroyedBuffer(err.<span class="number">0</span>))<span class="question-mark">?</span>;
                         baked
-                            .initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, device)
+                            .initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, device, <span class="kw-2">&amp;</span>snatch_guard)
                             .map_err(|err| QueueSubmitError::DestroyedTexture(err.<span class="number">0</span>))<span class="question-mark">?</span>;
                         <span class="comment">//Note: stateless trackers are not merged:
                         // device already knows these resources exist.
@@ -3143,7 +3149,7 @@
 
             <span class="comment">// This will schedule destruction of all resources that are no longer needed
             // by the user but used in the command stream, among other things.
-            </span><span class="kw">let </span>(closures, <span class="kw">_</span>) = <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Poll) {
+            </span><span class="kw">let </span>(closures, <span class="kw">_</span>) = <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Poll, <span class="kw-2">&amp;</span>snatch_guard) {
                 <span class="prelude-val">Ok</span>(closures) =&gt; closures,
                 <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err)),
                 <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),

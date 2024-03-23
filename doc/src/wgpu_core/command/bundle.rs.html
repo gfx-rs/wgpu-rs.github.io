@@ -1741,6 +1741,9 @@
 <a href="#1740" id="1740">1740</a>
 <a href="#1741" id="1741">1741</a>
 <a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1842,6 +1845,7 @@ index format changes.
     pipeline::{PipelineFlags, RenderPipeline, VertexStep},
     resource::{Buffer, Resource, ResourceInfo, ResourceType},
     resource_log,
+    snatch::SnatchGuard,
     track::RenderBundleScope,
     validation::check_buffer_usage,
     Label, LabelHelpers,
@@ -2637,7 +2641,11 @@ index format changes.
     /// Note that the function isn't expected to fail, generally.
     /// All the validation has already been done by this point.
     /// The only failure condition is if some of the used buffers are destroyed.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>execute(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>execute(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        raw: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>offsets = <span class="self">self</span>.base.dynamic_offsets.as_slice();
         <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout = <span class="prelude-val">None</span>::&lt;Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;;
         <span class="kw">if </span>!<span class="self">self</span>.discard_hal_labels {
@@ -2645,8 +2653,6 @@ index format changes.
                 <span class="kw">unsafe </span>{ raw.begin_debug_marker(label) };
             }
         }
-
-        <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
 
         <span class="kw">use </span>ArcRenderCommand <span class="kw">as </span>Cmd;
         <span class="kw">for </span>command <span class="kw">in </span><span class="self">self</span>.base.commands.iter() {
@@ -2657,7 +2663,7 @@ index format changes.
                     bind_group,
                 } =&gt; {
                     <span class="kw">let </span>raw_bg = bind_group
-                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .raw(snatch_guard)
                         .ok_or(ExecutionError::InvalidBindGroup(bind_group.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{
                         raw.set_bind_group(
@@ -2681,7 +2687,7 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffer: <span class="kw-2">&amp;</span>A::Buffer = buffer
-                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .raw(snatch_guard)
                         .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
@@ -2697,7 +2703,7 @@ index format changes.
                     size,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer
-                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .raw(snatch_guard)
                         .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">let </span>bb = hal::BufferBinding {
                         buffer,
@@ -2784,7 +2790,7 @@ index format changes.
                     indexed: <span class="bool-val">false</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer
-                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .raw(snatch_guard)
                         .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }
@@ -2795,7 +2801,7 @@ index format changes.
                     indexed: <span class="bool-val">true</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer
-                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+                        .raw(snatch_guard)
                         .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }

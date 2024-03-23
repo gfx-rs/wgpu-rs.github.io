@@ -499,6 +499,9 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -513,6 +516,7 @@
     id::{BufferId, CommandEncoderId, DeviceId, TextureId},
     init_tracker::{MemoryInitKind, TextureInitRange},
     resource::{Resource, Texture, TextureClearMode},
+    snatch::SnatchGuard,
     track::{TextureSelector, TextureTracker},
 };
 
@@ -740,6 +744,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         }
         <span class="kw">let </span>(encoder, tracker) = cmd_buf_data.open_encoder_and_tracker()<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         clear_texture(
             <span class="kw-2">&amp;</span>dst_texture,
             TextureInitRange {
@@ -750,6 +755,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             <span class="kw-2">&amp;mut </span>tracker.textures,
             <span class="kw-2">&amp;</span>device.alignments,
             device.zero_buffer.as_ref().unwrap(),
+            <span class="kw-2">&amp;</span>snatch_guard,
         )
     }
 }
@@ -761,10 +767,10 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     texture_tracker: <span class="kw-2">&amp;mut </span>TextureTracker&lt;A&gt;,
     alignments: <span class="kw-2">&amp;</span>hal::Alignments,
     zero_buffer: <span class="kw-2">&amp;</span>A::Buffer,
+    snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
-    <span class="kw">let </span>snatch_guard = dst_texture.device.snatchable_lock.read();
     <span class="kw">let </span>dst_raw = dst_texture
-        .raw(<span class="kw-2">&amp;</span>snatch_guard)
+        .raw(snatch_guard)
         .ok_or_else(|| ClearError::InvalidTexture(dst_texture.as_info().id()))<span class="question-mark">?</span>;
 
     <span class="comment">// Issue the right barrier.

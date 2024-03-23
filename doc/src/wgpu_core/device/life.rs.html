@@ -845,6 +845,15 @@
 <a href="#844" id="844">844</a>
 <a href="#845" id="845">845</a>
 <a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -859,6 +868,7 @@
         <span class="self">self</span>, Buffer, DestroyedBuffer, DestroyedTexture, QuerySet, Resource, Sampler,
         StagingBuffer, Texture, TextureView,
     },
+    snatch::SnatchGuard,
     track::{ResourceTracker, Tracker, TrackerIndex},
     FastHashMap, SubmissionIndex,
 };
@@ -1627,6 +1637,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         raw: <span class="kw-2">&amp;</span>A::Device,
         trackers: <span class="kw-2">&amp;</span>Mutex&lt;Tracker&lt;A&gt;&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; Vec&lt;<span class="kw">super</span>::BufferMapPendingClosure&gt; {
         <span class="kw">if </span><span class="self">self</span>.ready_to_map.is_empty() {
             <span class="kw">return </span>Vec::new();
@@ -1663,7 +1674,14 @@
                     <span class="macro">log::debug!</span>(<span class="string">"Buffer {tracker_index:?} map state -&gt; Active"</span>);
                     <span class="kw">let </span>host = mapping.op.host;
                     <span class="kw">let </span>size = mapping.range.end - mapping.range.start;
-                    <span class="kw">match </span><span class="kw">super</span>::map_buffer(raw, <span class="kw-2">&amp;</span>buffer, mapping.range.start, size, host) {
+                    <span class="kw">match </span><span class="kw">super</span>::map_buffer(
+                        raw,
+                        <span class="kw-2">&amp;</span>buffer,
+                        mapping.range.start,
+                        size,
+                        host,
+                        snatch_guard,
+                    ) {
                         <span class="prelude-val">Ok</span>(ptr) =&gt; {
                             <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Active {
                                 ptr,
