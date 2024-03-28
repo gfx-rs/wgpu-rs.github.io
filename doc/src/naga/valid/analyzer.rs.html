@@ -1280,6 +1280,53 @@
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
 <a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Module analyzer.
 
 Figures out the following properties:
@@ -1427,11 +1474,36 @@ Figures out the following properties:
 <span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
+</span><span class="doccomment">/// Information about an expression in a function body.
 </span><span class="kw">pub struct </span>ExpressionInfo {
-    <span class="kw">pub </span>uniformity: Uniformity,
-    <span class="kw">pub </span>ref_count: usize,
-    assignable_global: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt;,
-    <span class="kw">pub </span>ty: TypeResolution,
+    <span class="doccomment">/// Whether this expression is uniform, and why.
+    ///
+    /// If this expression's value is not uniform, this is the handle
+    /// of the expression from which this one's non-uniformity
+    /// originates. Otherwise, this is `None`.
+    </span><span class="kw">pub </span>uniformity: Uniformity,
+
+    <span class="doccomment">/// The number of statements and other expressions using this
+    /// expression's value.
+    </span><span class="kw">pub </span>ref_count: usize,
+
+    <span class="doccomment">/// The global variable into which this expression produces a pointer.
+    ///
+    /// This is `None` unless this expression is either a
+    /// [`GlobalVariable`], or an [`Access`] or [`AccessIndex`] that
+    /// ultimately refers to some part of a global.
+    ///
+    /// [`Load`] expressions applied to pointer-typed arguments could
+    /// refer to globals, but we leave this as `None` for them.
+    ///
+    /// [`GlobalVariable`]: crate::Expression::GlobalVariable
+    /// [`Access`]: crate::Expression::Access
+    /// [`AccessIndex`]: crate::Expression::AccessIndex
+    /// [`Load`]: crate::Expression::Load
+    </span>assignable_global: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt;,
+
+    <span class="doccomment">/// The type of this expression.
+    </span><span class="kw">pub </span>ty: TypeResolution,
 }
 
 <span class="kw">impl </span>ExpressionInfo {
@@ -1593,14 +1665,20 @@ Figures out the following properties:
 }
 
 <span class="kw">impl </span>FunctionInfo {
-    <span class="doccomment">/// Adds a value-type reference to an expression.
+    <span class="doccomment">/// Record a use of `expr` of the sort given by `global_use`.
+    ///
+    /// Bump `expr`'s reference count, and return its uniformity.
+    ///
+    /// If `expr` is a pointer to a global variable, or some part of
+    /// a global variable, add `global_use` to that global's set of
+    /// uses.
     </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>add_ref_impl(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         global_use: GlobalUse,
     ) -&gt; NonUniformResult {
-        <span class="kw">let </span>info = <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions[handle.index()];
+        <span class="kw">let </span>info = <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions[expr.index()];
         info.ref_count += <span class="number">1</span>;
         <span class="comment">// mark the used global as read
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(global) = info.assignable_global {
@@ -1609,22 +1687,38 @@ Figures out the following properties:
         info.uniformity.non_uniform_result
     }
 
-    <span class="doccomment">/// Adds a value-type reference to an expression.
+    <span class="doccomment">/// Record a use of `expr` for its value.
+    ///
+    /// This is used for almost all expression references. Anything
+    /// that writes to the value `expr` points to, or otherwise wants
+    /// contribute flags other than `GlobalUse::READ`, should use
+    /// `add_ref_impl` directly.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>add_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; NonUniformResult {
-        <span class="self">self</span>.add_ref_impl(handle, GlobalUse::READ)
+    </span><span class="kw">fn </span>add_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; NonUniformResult {
+        <span class="self">self</span>.add_ref_impl(expr, GlobalUse::READ)
     }
 
-    <span class="doccomment">/// Adds a potentially assignable reference to an expression.
-    /// These are destinations for `Store` and `ImageStore` statements,
-    /// which can transit through `Access` and `AccessIndex`.
+    <span class="doccomment">/// Record a use of `expr`, and indicate which global variable it
+    /// refers to, if any.
+    ///
+    /// Bump `expr`'s reference count, and return its uniformity.
+    ///
+    /// If `expr` is a pointer to a global variable, or some part
+    /// thereof, store that global in `*assignable_global`. Leave the
+    /// global's uses unchanged.
+    ///
+    /// This is used to determine the [`assignable_global`] for
+    /// [`Access`] and [`AccessIndex`] expressions that ultimately
+    /// refer to a global variable. Those expressions don't contribute
+    /// any usage to the global themselves; that depends on how other
+    /// expressions use them.
     </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>add_assignable_ref(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         assignable_global: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt;,
     ) -&gt; NonUniformResult {
-        <span class="kw">let </span>info = <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions[handle.index()];
+        <span class="kw">let </span>info = <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions[expr.index()];
         info.ref_count += <span class="number">1</span>;
         <span class="comment">// propagate the assignable global up the chain, till it either hits
         // a value-type expression, or the assignment statement.
