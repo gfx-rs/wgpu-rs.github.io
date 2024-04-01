@@ -1507,6 +1507,17 @@
 <a href="#1506" id="1506">1506</a>
 <a href="#1507" id="1507">1507</a>
 <a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2634,8 +2645,10 @@
                 !<span class="number">0</span>;
                 bg_layout
                     .entries
-                    .last()
-                    .map_or(<span class="number">0</span>, |b| b.binding <span class="kw">as </span>usize + <span class="number">1</span>)
+                    .iter()
+                    .map(|b| b.binding)
+                    .max()
+                    .map_or(<span class="number">0</span>, |idx| idx <span class="kw">as </span>usize + <span class="number">1</span>)
             ]
             .into_boxed_slice();
 
@@ -2688,7 +2701,16 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::BindGroup, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>contents = Vec::new();
 
-        <span class="kw">for </span>(entry, layout) <span class="kw">in </span>desc.entries.iter().zip(desc.layout.entries.iter()) {
+        <span class="kw">let </span>layout_and_entry_iter = desc.entries.iter().map(|entry| {
+            <span class="kw">let </span>layout = desc
+                .layout
+                .entries
+                .iter()
+                .find(|layout_entry| layout_entry.binding == entry.binding)
+                .expect(<span class="string">"internal error: no layout entry found with binding slot"</span>);
+            (entry, layout)
+        });
+        <span class="kw">for </span>(entry, layout) <span class="kw">in </span>layout_and_entry_iter {
             <span class="kw">let </span>binding = <span class="kw">match </span>layout.ty {
                 wgt::BindingType::Buffer { .. } =&gt; {
                     <span class="kw">let </span>bb = <span class="kw-2">&amp;</span>desc.buffers[entry.resource_index <span class="kw">as </span>usize];
