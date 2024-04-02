@@ -2065,6 +2065,12 @@
 <a href="#2064" id="2064">2064</a>
 <a href="#2065" id="2065">2065</a>
 <a href="#2066" id="2066">2066</a>
+<a href="#2067" id="2067">2067</a>
+<a href="#2068" id="2068">2068</a>
+<a href="#2069" id="2069">2069</a>
+<a href="#2070" id="2070">2070</a>
+<a href="#2071" id="2071">2071</a>
+<a href="#2072" id="2072">2072</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -3925,8 +3931,14 @@
             .iter()
             .flat_map(|entry| entry.function.arguments.iter())
             .any(|arg| has_view_index_check(ir_module, arg.binding.as_ref(), arg.ty));
-        <span class="kw">let </span>has_ray_query = ir_module.special_types.ray_desc.is_some()
+        <span class="kw">let </span><span class="kw-2">mut </span>has_ray_query = ir_module.special_types.ray_desc.is_some()
             | ir_module.special_types.ray_intersection.is_some();
+
+        <span class="kw">for </span>(<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Type { <span class="kw-2">ref </span>inner, .. }) <span class="kw">in </span>ir_module.types.iter() {
+            <span class="kw">if let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::AccelerationStructure | <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::RayQuery = inner {
+                has_ray_query = <span class="bool-val">true
+            </span>}
+        }
 
         <span class="kw">if </span><span class="self">self</span>.physical_layout.version &lt; <span class="number">0x10300 </span>&amp;&amp; has_storage_buffers {
             <span class="comment">// enable the storage buffer class on &lt; SPV-1.3
