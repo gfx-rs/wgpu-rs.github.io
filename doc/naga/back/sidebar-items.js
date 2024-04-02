@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["dot","glsl","hlsl","msl","spv","wgsl"],"struct":["RayFlag"]};
+window.SIDEBAR_ITEMS = {"constant":["BAKE_PREFIX","COMPONENTS","INDENT"],"enum":["FunctionType","RayIntersectionType"],"fn":["binary_operation_str"],"mod":["dot","glsl","hlsl","msl","spv","wgsl"],"struct":["FunctionCtx","Level","RayFlag"],"type":["NeedBakeExpressions"]};

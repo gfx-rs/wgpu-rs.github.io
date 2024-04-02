@@ -272,6 +272,14 @@
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend functions that export shader [`Module`](super::Module)s into binary and text formats.
 */
@@ -290,14 +298,19 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 <span class="attr">#[cfg(feature = <span class="string">"wgsl-out"</span>)]
 </span><span class="kw">pub mod </span>wgsl;
 
-<span class="kw">const </span>COMPONENTS: <span class="kw-2">&amp;</span>[char] = <span class="kw-2">&amp;</span>[<span class="string">'x'</span>, <span class="string">'y'</span>, <span class="string">'z'</span>, <span class="string">'w'</span>];
-<span class="kw">const </span>INDENT: <span class="kw-2">&amp;</span>str = <span class="string">"    "</span>;
-<span class="kw">const </span>BAKE_PREFIX: <span class="kw-2">&amp;</span>str = <span class="string">"_e"</span>;
+<span class="doccomment">/// Names of vector components.
+</span><span class="kw">pub const </span>COMPONENTS: <span class="kw-2">&amp;</span>[char] = <span class="kw-2">&amp;</span>[<span class="string">'x'</span>, <span class="string">'y'</span>, <span class="string">'z'</span>, <span class="string">'w'</span>];
+<span class="doccomment">/// Indent for backends.
+</span><span class="kw">pub const </span>INDENT: <span class="kw-2">&amp;</span>str = <span class="string">"    "</span>;
+<span class="doccomment">/// Prefix used for baking.
+</span><span class="kw">pub const </span>BAKE_PREFIX: <span class="kw-2">&amp;</span>str = <span class="string">"_e"</span>;
 
-<span class="kw">type </span>NeedBakeExpressions = <span class="kw">crate</span>::FastHashSet&lt;<span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;;
+<span class="doccomment">/// Expressions that need baking.
+</span><span class="kw">pub type </span>NeedBakeExpressions = <span class="kw">crate</span>::FastHashSet&lt;<span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;;
 
-<span class="attr">#[derive(Clone, Copy)]
-</span><span class="kw">struct </span>Level(usize);
+<span class="doccomment">/// Indentation level.
+</span><span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">pub struct </span>Level(<span class="kw">pub </span>usize);
 
 <span class="kw">impl </span>Level {
     <span class="kw">const fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
@@ -326,7 +339,7 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 /// [`EntryPoint`]: crate::EntryPoint
 /// [`Module`]: crate::Module
 /// [`Module::entry_points`]: crate::Module::entry_points
-</span><span class="kw">enum </span>FunctionType {
+</span><span class="kw">pub enum </span>FunctionType {
     <span class="doccomment">/// A regular function.
     </span>Function(<span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Function&gt;),
     <span class="doccomment">/// An [`EntryPoint`], and its index in [`Module::entry_points`].
@@ -337,7 +350,8 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 }
 
 <span class="kw">impl </span>FunctionType {
-    <span class="kw">fn </span>is_compute_entry_point(<span class="kw-2">&amp;</span><span class="self">self</span>, module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module) -&gt; bool {
+    <span class="doccomment">/// Returns true if the function is an entry point for a compute shader.
+    </span><span class="kw">pub fn </span>is_compute_entry_point(<span class="kw-2">&amp;</span><span class="self">self</span>, module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             FunctionType::EntryPoint(index) =&gt; {
                 module.entry_points[index <span class="kw">as </span>usize].stage == <span class="kw">crate</span>::ShaderStage::Compute
@@ -348,19 +362,20 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 }
 
 <span class="doccomment">/// Helper structure that stores data needed when writing the function
-</span><span class="kw">struct </span>FunctionCtx&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>FunctionCtx&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The current function being written
-    </span>ty: FunctionType,
+    </span><span class="kw">pub </span>ty: FunctionType,
     <span class="doccomment">/// Analysis about the function
-    </span>info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::valid::FunctionInfo,
+    </span><span class="kw">pub </span>info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::valid::FunctionInfo,
     <span class="doccomment">/// The expression arena of the current function being written
-    </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+    </span><span class="kw">pub </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     <span class="doccomment">/// Map of expressions that have associated variable names
-    </span>named_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::NamedExpressions,
+    </span><span class="kw">pub </span>named_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::NamedExpressions,
 }
 
 <span class="kw">impl </span>FunctionCtx&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="kw">fn </span>resolve_type&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="doccomment">/// Helper method that resolves a type of a given expression.
+    </span><span class="kw">pub fn </span>resolve_type&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
         handle: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
@@ -369,7 +384,10 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
     }
 
     <span class="doccomment">/// Helper method that generates a [`NameKey`](crate::proc::NameKey) for a local in the current function
-    </span><span class="kw">const fn </span>name_key(<span class="kw-2">&amp;</span><span class="self">self</span>, local: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::LocalVariable&gt;) -&gt; <span class="kw">crate</span>::proc::NameKey {
+    </span><span class="kw">pub const fn </span>name_key(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        local: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::LocalVariable&gt;,
+    ) -&gt; <span class="kw">crate</span>::proc::NameKey {
         <span class="kw">match </span><span class="self">self</span>.ty {
             FunctionType::Function(handle) =&gt; <span class="kw">crate</span>::proc::NameKey::FunctionLocal(handle, local),
             FunctionType::EntryPoint(idx) =&gt; <span class="kw">crate</span>::proc::NameKey::EntryPointLocal(idx, local),
@@ -380,7 +398,7 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
     ///
     /// # Panics
     /// - If the function arguments are less or equal to `arg`
-    </span><span class="kw">const fn </span>argument_key(<span class="kw-2">&amp;</span><span class="self">self</span>, arg: u32) -&gt; <span class="kw">crate</span>::proc::NameKey {
+    </span><span class="kw">pub const fn </span>argument_key(<span class="kw-2">&amp;</span><span class="self">self</span>, arg: u32) -&gt; <span class="kw">crate</span>::proc::NameKey {
         <span class="kw">match </span><span class="self">self</span>.ty {
             FunctionType::Function(handle) =&gt; <span class="kw">crate</span>::proc::NameKey::FunctionArgument(handle, arg),
             FunctionType::EntryPoint(ep_index) =&gt; {
@@ -389,8 +407,8 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
         }
     }
 
-    <span class="comment">// Returns true if the given expression points to a fixed-function pipeline input.
-    </span><span class="kw">fn </span>is_fixed_function_input(
+    <span class="doccomment">/// Returns true if the given expression points to a fixed-function pipeline input.
+    </span><span class="kw">pub fn </span>is_fixed_function_input(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw-2">mut </span>expression: <span class="kw">crate</span>::Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
@@ -436,7 +454,7 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
     /// See the [module-level documentation][emit] for details.
     ///
     /// [emit]: index.html#expression-evaluation-time
-    </span><span class="kw">const fn </span>bake_ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    </span><span class="kw">pub const fn </span>bake_ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="comment">// accesses are never cached, only loads are
             </span><span class="kw">crate</span>::Expression::Access { .. } | <span class="kw">crate</span>::Expression::AccessIndex { .. } =&gt; usize::MAX,
@@ -455,9 +473,7 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 }
 
 <span class="doccomment">/// Helper function that returns the string corresponding to the [`BinaryOperator`](crate::BinaryOperator)
-/// # Notes
-/// Used by `glsl-out`, `msl-out`, `wgsl-out`, `hlsl-out`.
-</span><span class="kw">const fn </span>binary_operation_str(op: <span class="kw">crate</span>::BinaryOperator) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+</span><span class="kw">pub const fn </span>binary_operation_str(op: <span class="kw">crate</span>::BinaryOperator) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
     <span class="kw">use </span><span class="kw">crate</span>::BinaryOperator <span class="kw">as </span>Bo;
     <span class="kw">match </span>op {
         Bo::Add =&gt; <span class="string">"+"</span>,
@@ -482,8 +498,6 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 }
 
 <span class="doccomment">/// Helper function that returns the string corresponding to the [`VectorSize`](crate::VectorSize)
-/// # Notes
-/// Used by `msl-out`, `wgsl-out`, `hlsl-out`.
 </span><span class="kw">const fn </span>vector_size_str(size: <span class="kw">crate</span>::VectorSize) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
     <span class="kw">match </span>size {
         <span class="kw">crate</span>::VectorSize::Bi =&gt; <span class="string">"2"</span>,
@@ -493,7 +507,8 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::TypeInner {
-    <span class="kw">const fn </span>is_handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="doccomment">/// Returns true if this is a handle to a type rather than the type directly.
+    </span><span class="kw">pub const fn </span>is_handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="kw">crate</span>::TypeInner::Image { .. } | <span class="kw">crate</span>::TypeInner::Sampler { .. } =&gt; <span class="bool-val">true</span>,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
@@ -540,8 +555,9 @@ Backend functions that export shader [`Module`](super::Module)s into binary and 
     }
 }
 
-<span class="attr">#[repr(u32)]
-</span><span class="kw">enum </span>RayIntersectionType {
+<span class="doccomment">/// The intersection test to use for ray queries.
+</span><span class="attr">#[repr(u32)]
+</span><span class="kw">pub enum </span>RayIntersectionType {
     Triangle = <span class="number">1</span>,
     BoundingBox = <span class="number">4</span>,
 }
