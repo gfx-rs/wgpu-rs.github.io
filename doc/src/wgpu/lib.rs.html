@@ -5242,6 +5242,64 @@
 <a href="#5241" id="5241">5241</a>
 <a href="#5242" id="5242">5242</a>
 <a href="#5243" id="5243">5243</a>
+<a href="#5244" id="5244">5244</a>
+<a href="#5245" id="5245">5245</a>
+<a href="#5246" id="5246">5246</a>
+<a href="#5247" id="5247">5247</a>
+<a href="#5248" id="5248">5248</a>
+<a href="#5249" id="5249">5249</a>
+<a href="#5250" id="5250">5250</a>
+<a href="#5251" id="5251">5251</a>
+<a href="#5252" id="5252">5252</a>
+<a href="#5253" id="5253">5253</a>
+<a href="#5254" id="5254">5254</a>
+<a href="#5255" id="5255">5255</a>
+<a href="#5256" id="5256">5256</a>
+<a href="#5257" id="5257">5257</a>
+<a href="#5258" id="5258">5258</a>
+<a href="#5259" id="5259">5259</a>
+<a href="#5260" id="5260">5260</a>
+<a href="#5261" id="5261">5261</a>
+<a href="#5262" id="5262">5262</a>
+<a href="#5263" id="5263">5263</a>
+<a href="#5264" id="5264">5264</a>
+<a href="#5265" id="5265">5265</a>
+<a href="#5266" id="5266">5266</a>
+<a href="#5267" id="5267">5267</a>
+<a href="#5268" id="5268">5268</a>
+<a href="#5269" id="5269">5269</a>
+<a href="#5270" id="5270">5270</a>
+<a href="#5271" id="5271">5271</a>
+<a href="#5272" id="5272">5272</a>
+<a href="#5273" id="5273">5273</a>
+<a href="#5274" id="5274">5274</a>
+<a href="#5275" id="5275">5275</a>
+<a href="#5276" id="5276">5276</a>
+<a href="#5277" id="5277">5277</a>
+<a href="#5278" id="5278">5278</a>
+<a href="#5279" id="5279">5279</a>
+<a href="#5280" id="5280">5280</a>
+<a href="#5281" id="5281">5281</a>
+<a href="#5282" id="5282">5282</a>
+<a href="#5283" id="5283">5283</a>
+<a href="#5284" id="5284">5284</a>
+<a href="#5285" id="5285">5285</a>
+<a href="#5286" id="5286">5286</a>
+<a href="#5287" id="5287">5287</a>
+<a href="#5288" id="5288">5288</a>
+<a href="#5289" id="5289">5289</a>
+<a href="#5290" id="5290">5290</a>
+<a href="#5291" id="5291">5291</a>
+<a href="#5292" id="5292">5292</a>
+<a href="#5293" id="5293">5293</a>
+<a href="#5294" id="5294">5294</a>
+<a href="#5295" id="5295">5295</a>
+<a href="#5296" id="5296">5296</a>
+<a href="#5297" id="5297">5297</a>
+<a href="#5298" id="5298">5298</a>
+<a href="#5299" id="5299">5299</a>
+<a href="#5300" id="5300">5300</a>
+<a href="#5301" id="5301">5301</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -8359,10 +8417,10 @@
     ///
     /// - The raw handle obtained from the hal Texture must not be manually destroyed
     </span><span class="attr">#[cfg(wgpu_core)]
-    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;)&gt;(
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R, R&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture_callback: F,
-    ) {
+    ) -&gt; R {
         <span class="kw">let </span>texture = <span class="self">self</span>.data.as_ref().downcast_ref().unwrap();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
@@ -8370,7 +8428,7 @@
             .as_any()
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
         {
-            <span class="kw">unsafe </span>{ ctx.texture_as_hal::&lt;A, F&gt;(texture, hal_texture_callback) }
+            <span class="kw">unsafe </span>{ ctx.texture_as_hal::&lt;A, F, R&gt;(texture, hal_texture_callback) }
         } <span class="kw">else </span>{
             hal_texture_callback(<span class="prelude-val">None</span>)
         }
@@ -8713,6 +8771,36 @@
             destination.data.as_ref(),
             destination_offset,
         )
+    }
+
+    <span class="doccomment">/// Returns the inner hal CommandEncoder using a callback. The hal command encoder will be `None` if the
+    /// backend type argument does not match with this wgpu CommandEncoder
+    ///
+    /// This method will start the wgpu_core level command recording.
+    ///
+    /// # Safety
+    ///
+    /// - The raw handle obtained from the hal CommandEncoder must not be manually destroyed
+    </span><span class="attr">#[cfg(wgpu_core)]
+    </span><span class="kw">pub unsafe fn </span>as_hal_mut&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder&gt;) -&gt; R,
+        R,
+    &gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        hal_command_encoder_callback: F,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;R&gt; {
+        <span class="kw">use </span>core::id::CommandEncoderId;
+
+        <span class="self">self</span>.context
+            .as_any()
+            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
+            .map(|ctx| <span class="kw">unsafe </span>{
+                ctx.command_encoder_as_hal_mut::&lt;A, F, R&gt;(
+                    CommandEncoderId::from(<span class="self">self</span>.id.unwrap()),
+                    hal_command_encoder_callback,
+                )
+            })
     }
 }
 
@@ -10264,6 +10352,34 @@
     /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
     </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
         Id(<span class="self">self</span>.id.global_id(), PhantomData)
+    }
+
+    <span class="doccomment">/// Returns the inner hal TextureView using a callback. The hal texture will be `None` if the
+    /// backend type argument does not match with this wgpu Texture
+    ///
+    /// # Safety
+    ///
+    /// - The raw handle obtained from the hal TextureView must not be manually destroyed
+    </span><span class="attr">#[cfg(wgpu_core)]
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R, R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hal_texture_view_callback: F,
+    ) -&gt; R {
+        <span class="kw">use </span>core::id::TextureViewId;
+
+        <span class="kw">let </span>texture_view_id = TextureViewId::from(<span class="self">self</span>.id);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
+            </span>.context
+            .as_any()
+            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
+        {
+            <span class="kw">unsafe </span>{
+                ctx.texture_view_as_hal::&lt;A, F, R&gt;(texture_view_id, hal_texture_view_callback)
+            }
+        } <span class="kw">else </span>{
+            hal_texture_view_callback(<span class="prelude-val">None</span>)
+        }
     }
 }
 
