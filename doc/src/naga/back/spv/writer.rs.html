@@ -2071,6 +2071,8 @@
 <a href="#2070" id="2070">2070</a>
 <a href="#2071" id="2071">2071</a>
 <a href="#2072" id="2072">2072</a>
+<a href="#2073" id="2073">2073</a>
+<a href="#2074" id="2074">2074</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -2638,36 +2640,38 @@
             <span class="comment">// Handle globals are pre-emitted and should be loaded automatically.
             //
             // Any that are binding arrays we skip as we cannot load the array, we must load the result after indexing.
-            </span><span class="kw">let </span>is_binding_array = <span class="kw">match </span>ir_module.types[var.ty].inner {
-                <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="bool-val">true</span>,
-                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-            };
-
-            <span class="kw">if </span>var.space == <span class="kw">crate</span>::AddressSpace::Handle &amp;&amp; !is_binding_array {
-                <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
-                <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-                prelude
-                    .body
-                    .push(Instruction::load(var_type_id, id, gv.var_id, <span class="prelude-val">None</span>));
-                gv.access_id = gv.var_id;
-                gv.handle_id = id;
-            } <span class="kw">else if </span>global_needs_wrapper(ir_module, var) {
-                <span class="kw">let </span>class = map_storage_class(var.space);
-                <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(<span class="kw-2">&amp;</span>ir_module.types, var.ty, class)<span class="question-mark">?</span>;
-                <span class="kw">let </span>index_id = <span class="self">self</span>.get_index_constant(<span class="number">0</span>);
-
-                <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-                prelude.body.push(Instruction::access_chain(
-                    pointer_type_id,
-                    id,
-                    gv.var_id,
-                    <span class="kw-2">&amp;</span>[index_id],
-                ));
-                gv.access_id = id;
-            } <span class="kw">else </span>{
-                <span class="comment">// by default, the variable ID is accessed as is
-                </span>gv.access_id = gv.var_id;
-            };
+            </span><span class="kw">match </span>ir_module.types[var.ty].inner {
+                <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; {
+                    gv.access_id = gv.var_id;
+                }
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">if </span>var.space == <span class="kw">crate</span>::AddressSpace::Handle {
+                        <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
+                        <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
+                        prelude
+                            .body
+                            .push(Instruction::load(var_type_id, id, gv.var_id, <span class="prelude-val">None</span>));
+                        gv.access_id = gv.var_id;
+                        gv.handle_id = id;
+                    } <span class="kw">else if </span>global_needs_wrapper(ir_module, var) {
+                        <span class="kw">let </span>class = map_storage_class(var.space);
+                        <span class="kw">let </span>pointer_type_id =
+                            <span class="self">self</span>.get_pointer_id(<span class="kw-2">&amp;</span>ir_module.types, var.ty, class)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>index_id = <span class="self">self</span>.get_index_constant(<span class="number">0</span>);
+                        <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
+                        prelude.body.push(Instruction::access_chain(
+                            pointer_type_id,
+                            id,
+                            gv.var_id,
+                            <span class="kw-2">&amp;</span>[index_id],
+                        ));
+                        gv.access_id = id;
+                    } <span class="kw">else </span>{
+                        <span class="comment">// by default, the variable ID is accessed as is
+                        </span>gv.access_id = gv.var_id;
+                    };
+                }
+            }
 
             <span class="comment">// work around borrow checking in the presence of `self.xxx()` calls
             </span><span class="self">self</span>.global_variables[handle.index()] = gv;
