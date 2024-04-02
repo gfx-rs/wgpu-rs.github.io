@@ -2119,6 +2119,8 @@
 <a href="#2118" id="2118">2118</a>
 <a href="#2119" id="2119">2119</a>
 <a href="#2120" id="2120">2120</a>
+<a href="#2121" id="2121">2121</a>
+<a href="#2122" id="2122">2122</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2539,7 +2541,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         instance: <span class="kw-2">&amp;</span>ash::Instance,
         phd: vk::PhysicalDevice,
-        caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities,
+        caps: <span class="kw-2">&amp;</span>PhysicalDeviceProperties,
     ) -&gt; (wgt::Features, wgt::DownlevelFlags) {
         <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
         <span class="kw">use </span>wgt::{DownlevelFlags <span class="kw">as </span>Df, Features <span class="kw">as </span>F};
@@ -2820,11 +2822,13 @@
     }
 }
 
-<span class="doccomment">/// Information gathered about a physical device.
+<span class="doccomment">/// Vulkan "properties" structures gathered about a physical device.
 ///
-/// This structure holds the results from the queries we make about a
-/// [`vk::PhysicalDevice`], other than features: its device properties,
-/// supported extensions, and whatever properties those extensions provide.
+/// This structure holds the properties of a [`vk::PhysicalDevice`]:
+/// - the standard Vulkan device properties
+/// - the `VkExtensionProperties` structs for all available extensions, and
+/// - the per-extension properties structures for the available extensions that
+///   `wgpu` cares about.
 ///
 /// Generally, if you get it from any of these functions, it's stored
 /// here:
@@ -2839,7 +2843,7 @@
 /// This does not include device features; for those, see
 /// [`PhysicalDeviceFeatures`].
 </span><span class="attr">#[derive(Default, Debug)]
-</span><span class="kw">pub struct </span>PhysicalDeviceCapabilities {
+</span><span class="kw">pub struct </span>PhysicalDeviceProperties {
     <span class="doccomment">/// Extensions supported by the `vk::PhysicalDevice`,
     /// as returned by `vkEnumerateDeviceExtensionProperties`.
     </span>supported_extensions: Vec&lt;vk::ExtensionProperties&gt;,
@@ -2873,10 +2877,10 @@
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
-</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>PhysicalDeviceCapabilities {}
-<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>PhysicalDeviceCapabilities {}
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>PhysicalDeviceProperties {}
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>PhysicalDeviceProperties {}
 
-<span class="kw">impl </span>PhysicalDeviceCapabilities {
+<span class="kw">impl </span>PhysicalDeviceProperties {
     <span class="kw">pub fn </span>properties(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::PhysicalDeviceProperties {
         <span class="self">self</span>.properties
     }
@@ -3115,9 +3119,9 @@
     </span><span class="kw">fn </span>inspect(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         phd: vk::PhysicalDevice,
-    ) -&gt; (PhysicalDeviceCapabilities, PhysicalDeviceFeatures) {
+    ) -&gt; (PhysicalDeviceProperties, PhysicalDeviceFeatures) {
         <span class="kw">let </span>capabilities = {
-            <span class="kw">let </span><span class="kw-2">mut </span>capabilities = PhysicalDeviceCapabilities::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>capabilities = PhysicalDeviceProperties::default();
             capabilities.supported_extensions =
                 <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.enumerate_device_extension_properties(phd).unwrap() };
             capabilities.properties = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.get_physical_device_properties(phd) };
@@ -3514,7 +3518,7 @@
         <span class="self">self</span>.raw
     }
 
-    <span class="kw">pub fn </span>physical_device_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities {
+    <span class="kw">pub fn </span>physical_device_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PhysicalDeviceProperties {
         <span class="kw-2">&amp;</span><span class="self">self</span>.phd_capabilities
     }
 
