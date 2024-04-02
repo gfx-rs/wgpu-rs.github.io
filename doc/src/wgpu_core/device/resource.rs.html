@@ -3642,6 +3642,7 @@
 <a href="#3641" id="3641">3641</a>
 <a href="#3642" id="3642">3642</a>
 <a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4038,7 +4039,7 @@
         <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="self">self</span>,
         fence: <span class="kw-2">&amp;</span>A::Fence,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
-        snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
+        snatch_guard: SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
         <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
@@ -4093,7 +4094,7 @@
         }
 
         <span class="kw">let </span>mapping_closures =
-            life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers, snatch_guard);
+            life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers, <span class="kw-2">&amp;</span>snatch_guard);
 
         <span class="kw">let </span>queue_empty = life_tracker.queue_empty();
 
@@ -4120,8 +4121,9 @@
             }
         }
 
-        <span class="comment">// Don't hold the lock while calling release_gpu_resources.
+        <span class="comment">// Don't hold the locks while calling release_gpu_resources.
         </span>drop(life_tracker);
+        drop(snatch_guard);
 
         <span class="kw">if </span>should_release_gpu_resource {
             <span class="self">self</span>.release_gpu_resources();
