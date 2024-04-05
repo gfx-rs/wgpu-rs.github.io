@@ -676,6 +676,11 @@
 <a href="#675" id="675">675</a>
 <a href="#676" id="676">676</a>
 <a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     front::glsl::{
         ast::{
@@ -929,7 +934,7 @@
                     init.and_then(|expr| ctx.ctx.lift_up_const_expression(expr).ok());
                 late_initializer = <span class="prelude-val">None</span>;
             } <span class="kw">else if let </span><span class="prelude-val">Some</span>(init) = init {
-                <span class="kw">if </span>ctx.is_inside_loop || !ctx.ctx.expression_constness.is_const(init) {
+                <span class="kw">if </span>ctx.is_inside_loop || !ctx.ctx.local_expression_kind_tracker.is_const(init) {
                     decl_initializer = <span class="prelude-val">None</span>;
                     late_initializer = <span class="prelude-val">Some</span>(init);
                 } <span class="kw">else </span>{
@@ -1004,7 +1009,12 @@
 
                             <span class="kw">let </span>result = ty.map(|ty| FunctionResult { ty, binding: <span class="prelude-val">None </span>});
 
-                            <span class="kw">let </span><span class="kw-2">mut </span>context = Context::new(frontend, ctx.module, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+                            <span class="kw">let </span><span class="kw-2">mut </span>context = Context::new(
+                                frontend,
+                                ctx.module,
+                                <span class="bool-val">false</span>,
+                                ctx.global_expression_kind_tracker,
+                            )<span class="question-mark">?</span>;
 
                             <span class="self">self</span>.parse_function_args(frontend, <span class="kw-2">&amp;mut </span>context)<span class="question-mark">?</span>;
 

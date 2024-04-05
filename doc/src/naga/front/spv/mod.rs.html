@@ -5345,18 +5345,6 @@
 <a href="#5344" id="5344">5344</a>
 <a href="#5345" id="5345">5345</a>
 <a href="#5346" id="5346">5346</a>
-<a href="#5347" id="5347">5347</a>
-<a href="#5348" id="5348">5348</a>
-<a href="#5349" id="5349">5349</a>
-<a href="#5350" id="5350">5350</a>
-<a href="#5351" id="5351">5351</a>
-<a href="#5352" id="5352">5352</a>
-<a href="#5353" id="5353">5353</a>
-<a href="#5354" id="5354">5354</a>
-<a href="#5355" id="5355">5355</a>
-<a href="#5356" id="5356">5356</a>
-<a href="#5357" id="5357">5357</a>
-<a href="#5358" id="5358">5358</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -5555,7 +5543,6 @@ This value then gets used instead of `OpLoad` result later on.
     location: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     desc_set: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     desc_index: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
-    specialization: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     storage_buffer: bool,
     offset: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     array_stride: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
@@ -5573,11 +5560,6 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) =&gt; name.as_str(),
             <span class="prelude-val">None </span>=&gt; <span class="string">"?"</span>,
         }
-    }
-
-    <span class="kw">fn </span>specialization(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Override {
-        <span class="self">self</span>.specialization
-            .map_or(<span class="kw">crate</span>::Override::None, <span class="kw">crate</span>::Override::ByNameOrId)
     }
 
     <span class="kw">const fn </span>resource_binding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ResourceBinding&gt; {
@@ -5896,7 +5878,8 @@ This value then gets used instead of `OpLoad` result later on.
     </span>local_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::LocalVariable&gt;,
     <span class="doccomment">/// Constants arena of the module being processed
     </span>const_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
-    const_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+    overrides: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
+    global_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     <span class="doccomment">/// Type arena of the module being processed
     </span>type_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="doccomment">/// Global arena of the module being processed
@@ -6114,9 +6097,6 @@ This value then gets used instead of `OpLoad` result later on.
             }
             spirv::Decoration::RowMajor =&gt; {
                 dec.matrix_major = <span class="prelude-val">Some</span>(Majority::Row);
-            }
-            spirv::Decoration::SpecId =&gt; {
-                dec.specialization = <span class="prelude-val">Some</span>(<span class="self">self</span>.next()<span class="question-mark">?</span>);
             }
             other =&gt; {
                 <span class="macro">log::warn!</span>(<span class="string">"Unknown decoration {:?}"</span>, other);
@@ -9302,7 +9282,7 @@ This value then gets used instead of `OpLoad` result later on.
                 Op::TypeImage =&gt; <span class="self">self</span>.parse_type_image(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::TypeSampledImage =&gt; <span class="self">self</span>.parse_type_sampled_image(inst),
                 Op::TypeSampler =&gt; <span class="self">self</span>.parse_type_sampler(inst, <span class="kw-2">&amp;mut </span>module),
-                Op::Constant | Op::SpecConstant =&gt; <span class="self">self</span>.parse_constant(inst, <span class="kw-2">&amp;mut </span>module),
+                Op::Constant =&gt; <span class="self">self</span>.parse_constant(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::ConstantComposite =&gt; <span class="self">self</span>.parse_composite_constant(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::ConstantNull | Op::Undef =&gt; <span class="self">self</span>.parse_null_constant(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::ConstantTrue =&gt; <span class="self">self</span>.parse_bool_constant(inst, <span class="bool-val">true</span>, <span class="kw-2">&amp;mut </span>module),
@@ -10283,14 +10263,13 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 
         <span class="kw">let </span>init = module
-            .const_expressions
+            .global_expressions
             .append(<span class="kw">crate</span>::Expression::Literal(literal), span);
         <span class="self">self</span>.lookup_constant.insert(
             id,
             LookupConstant {
                 handle: module.constants.append(
                     <span class="kw">crate</span>::Constant {
-                        r#override: decor.specialization(),
                         name: decor.name,
                         ty,
                         init,
@@ -10324,7 +10303,7 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
             <span class="kw">let </span>constant = <span class="self">self</span>.lookup_constant.lookup(component_id)<span class="question-mark">?</span>;
             <span class="kw">let </span>expr = module
-                .const_expressions
+                .global_expressions
                 .append(<span class="kw">crate</span>::Expression::Constant(constant.handle), span);
             components.push(expr);
         }
@@ -10334,14 +10313,13 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 
         <span class="kw">let </span>init = module
-            .const_expressions
+            .global_expressions
             .append(<span class="kw">crate</span>::Expression::Compose { ty, components }, span);
         <span class="self">self</span>.lookup_constant.insert(
             id,
             LookupConstant {
                 handle: module.constants.append(
                     <span class="kw">crate</span>::Constant {
-                        r#override: decor.specialization(),
                         name: decor.name,
                         ty,
                         init,
@@ -10372,11 +10350,10 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
 
         <span class="kw">let </span>init = module
-            .const_expressions
+            .global_expressions
             .append(<span class="kw">crate</span>::Expression::ZeroValue(ty), span);
         <span class="kw">let </span>handle = module.constants.append(
             <span class="kw">crate</span>::Constant {
-                r#override: decor.specialization(),
                 name: decor.name,
                 ty,
                 init,
@@ -10406,7 +10383,7 @@ This value then gets used instead of `OpLoad` result later on.
 
         <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
 
-        <span class="kw">let </span>init = module.const_expressions.append(
+        <span class="kw">let </span>init = module.global_expressions.append(
             <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::Bool(value)),
             span,
         );
@@ -10415,7 +10392,6 @@ This value then gets used instead of `OpLoad` result later on.
             LookupConstant {
                 handle: module.constants.append(
                     <span class="kw">crate</span>::Constant {
-                        r#override: decor.specialization(),
                         name: decor.name,
                         ty,
                         init,
@@ -10446,7 +10422,7 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
             <span class="kw">let </span>lconst = <span class="self">self</span>.lookup_constant.lookup(init_id)<span class="question-mark">?</span>;
             <span class="kw">let </span>expr = module
-                .const_expressions
+                .global_expressions
                 .append(<span class="kw">crate</span>::Expression::Constant(lconst.handle), span);
             <span class="prelude-val">Some</span>(expr)
         } <span class="kw">else </span>{
@@ -10568,7 +10544,7 @@ This value then gets used instead of `OpLoad` result later on.
                         <span class="kw">match </span>null::generate_default_built_in(
                             <span class="prelude-val">Some</span>(built_in),
                             ty,
-                            <span class="kw-2">&amp;mut </span>module.const_expressions,
+                            <span class="kw-2">&amp;mut </span>module.global_expressions,
                             span,
                         ) {
                             <span class="prelude-val">Ok</span>(handle) =&gt; <span class="prelude-val">Some</span>(handle),
@@ -10590,14 +10566,14 @@ This value then gets used instead of `OpLoad` result later on.
                                 <span class="kw">let </span>handle = null::generate_default_built_in(
                                     built_in,
                                     member.ty,
-                                    <span class="kw-2">&amp;mut </span>module.const_expressions,
+                                    <span class="kw-2">&amp;mut </span>module.global_expressions,
                                     span,
                                 )<span class="question-mark">?</span>;
                                 components.push(handle);
                             }
                             <span class="prelude-val">Some</span>(
                                 module
-                                    .const_expressions
+                                    .global_expressions
                                     .append(<span class="kw">crate</span>::Expression::Compose { ty, components }, span),
                             )
                         }
@@ -10666,7 +10642,7 @@ This value then gets used instead of `OpLoad` result later on.
     gctx: <span class="kw">crate</span>::proc::GlobalCtx,
     constant: Handle&lt;<span class="kw">crate</span>::Constant&gt;,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
-    <span class="kw">match </span>gctx.const_expressions[gctx.constants[constant].init] {
+    <span class="kw">match </span>gctx.global_expressions[gctx.constants[constant].init] {
         <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::U32(id)) =&gt; <span class="prelude-val">Some</span>(id),
         <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::I32(id)) =&gt; <span class="prelude-val">Some</span>(id <span class="kw">as </span>u32),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,

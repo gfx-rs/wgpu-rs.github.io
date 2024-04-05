@@ -892,6 +892,9 @@
 <a href="#891" id="891">891</a>
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, UniqueArena};
 
 <span class="kw">use </span>thiserror::Error;
@@ -1079,6 +1082,7 @@
 
 <span class="kw">pub struct </span>ResolveContext&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+    <span class="kw">pub </span>overrides: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
     <span class="kw">pub </span>types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>special_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::SpecialTypes,
     <span class="kw">pub </span>global_vars: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
@@ -1096,6 +1100,7 @@
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             constants: <span class="kw-2">&amp;</span>module.constants,
+            overrides: <span class="kw-2">&amp;</span>module.overrides,
             types: <span class="kw-2">&amp;</span>module.types,
             special_types: <span class="kw-2">&amp;</span>module.special_types,
             global_vars: <span class="kw-2">&amp;</span>module.global_variables,
@@ -1301,6 +1306,7 @@
             },
             <span class="kw">crate</span>::Expression::Literal(lit) =&gt; TypeResolution::Value(lit.ty_inner()),
             <span class="kw">crate</span>::Expression::Constant(h) =&gt; TypeResolution::Handle(<span class="self">self</span>.constants[h].ty),
+            <span class="kw">crate</span>::Expression::Override(h) =&gt; TypeResolution::Handle(<span class="self">self</span>.overrides[h].ty),
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; TypeResolution::Handle(ty),
             <span class="kw">crate</span>::Expression::Compose { ty, .. } =&gt; TypeResolution::Handle(ty),
             <span class="kw">crate</span>::Expression::FunctionArgument(index) =&gt; {

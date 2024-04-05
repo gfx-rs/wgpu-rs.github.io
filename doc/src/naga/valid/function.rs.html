@@ -1055,6 +1055,14 @@
 <a href="#1054" id="1054">1054</a>
 <a href="#1055" id="1055">1055</a>
 <a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 
@@ -1111,8 +1119,8 @@
     </span>InvalidType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(<span class="string">"Initializer doesn't match the variable type"</span>)]
     </span>InitializerType,
-    <span class="attr">#[error(<span class="string">"Initializer is not const"</span>)]
-    </span>NonConstInitializer,
+    <span class="attr">#[error(<span class="string">"Initializer is not a const or override expression"</span>)]
+    </span>NonConstOrOverrideInitializer,
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -1984,7 +1992,7 @@
         var: <span class="kw-2">&amp;</span><span class="kw">crate</span>::LocalVariable,
         gctx: <span class="kw">crate</span>::proc::GlobalCtx,
         fun_info: <span class="kw-2">&amp;</span>FunctionInfo,
-        expression_constness: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::ExpressionConstnessTracker,
+        local_expr_kind: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::ExpressionKindTracker,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LocalVariableError&gt; {
         <span class="macro">log::debug!</span>(<span class="string">"var {:?}"</span>, var);
         <span class="kw">let </span>type_info = <span class="self">self
@@ -2002,8 +2010,8 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(LocalVariableError::InitializerType);
             }
 
-            <span class="kw">if </span>!expression_constness.is_const(init) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(LocalVariableError::NonConstInitializer);
+            <span class="kw">if </span>!local_expr_kind.is_const_or_override(init) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(LocalVariableError::NonConstOrOverrideInitializer);
             }
         }
 
@@ -2016,14 +2024,14 @@
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
         mod_info: <span class="kw-2">&amp;</span>ModuleInfo,
         entry_point: bool,
+        global_expr_kind: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::ExpressionKindTracker,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;FunctionInfo, WithSpan&lt;FunctionError&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>info = mod_info.process_function(fun, module, <span class="self">self</span>.flags, <span class="self">self</span>.capabilities)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>expression_constness =
-            <span class="kw">crate</span>::proc::ExpressionConstnessTracker::from_arena(<span class="kw-2">&amp;</span>fun.expressions);
+        <span class="kw">let </span>local_expr_kind = <span class="kw">crate</span>::proc::ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>fun.expressions);
 
         <span class="kw">for </span>(var_handle, var) <span class="kw">in </span>fun.local_variables.iter() {
-            <span class="self">self</span>.validate_local_var(var, module.to_ctx(), <span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span>expression_constness)
+            <span class="self">self</span>.validate_local_var(var, module.to_ctx(), <span class="kw-2">&amp;</span>info, <span class="kw-2">&amp;</span>local_expr_kind)
                 .map_err(|source| {
                     FunctionError::LocalVariable {
                         handle: var_handle,
@@ -2089,7 +2097,15 @@
                 <span class="self">self</span>.valid_expression_set.insert(handle.index());
             }
             <span class="kw">if </span><span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::EXPRESSIONS) {
-                <span class="kw">match </span><span class="self">self</span>.validate_expression(handle, expr, fun, module, <span class="kw-2">&amp;</span>info, mod_info) {
+                <span class="kw">match </span><span class="self">self</span>.validate_expression(
+                    handle,
+                    expr,
+                    fun,
+                    module,
+                    <span class="kw-2">&amp;</span>info,
+                    mod_info,
+                    global_expr_kind,
+                ) {
                     <span class="prelude-val">Ok</span>(stages) =&gt; info.available_stages &amp;= stages,
                     <span class="prelude-val">Err</span>(source) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::Expression { handle, source }

@@ -2075,19 +2075,6 @@
 <a href="#2074" id="2074">2074</a>
 <a href="#2075" id="2075">2075</a>
 <a href="#2076" id="2076">2076</a>
-<a href="#2077" id="2077">2077</a>
-<a href="#2078" id="2078">2078</a>
-<a href="#2079" id="2079">2079</a>
-<a href="#2080" id="2080">2080</a>
-<a href="#2081" id="2081">2081</a>
-<a href="#2082" id="2082">2082</a>
-<a href="#2083" id="2083">2083</a>
-<a href="#2084" id="2084">2084</a>
-<a href="#2085" id="2085">2085</a>
-<a href="#2086" id="2086">2086</a>
-<a href="#2087" id="2087">2087</a>
-<a href="#2088" id="2088">2088</a>
-<a href="#2089" id="2089">2089</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
@@ -2123,9 +2110,6 @@ Many `Statement` variants use the [`Block`] type, which is `Vec&lt;Statement&gt;
 with optional span info, representing a series of statements executed in order. The body of an
 `EntryPoint`s or `Function` is a `Block`, and `Statement` has a
 [`Block`][Statement::Block] variant.
-
-If the `clone` feature is enabled, [`Arena`], [`UniqueArena`], [`Type`], [`TypeInner`],
-[`Constant`], [`Function`], [`EntryPoint`] and [`Module`] can be cloned.
 
 ## Arenas
 
@@ -2265,7 +2249,7 @@ tree.
 A Naga *constant expression* is one of the following [`Expression`]
 variants, whose operands (if any) are also constant expressions:
 - [`Literal`]
-- [`Constant`], for [`Constant`s][const_type] whose [`override`] is [`None`]
+- [`Constant`], for [`Constant`]s
 - [`ZeroValue`], for fixed-size types
 - [`Compose`]
 - [`Access`]
@@ -2284,8 +2268,7 @@ A constant expression can be evaluated at module translation time.
 ## Override expressions
 
 A Naga *override expression* is the same as a [constant expression],
-except that it is also allowed to refer to [`Constant`s][const_type]
-whose [`override`] is something other than [`None`].
+except that it is also allowed to reference other [`Override`]s.
 
 An override expression can be evaluated at pipeline creation time.
 
@@ -2327,10 +2310,6 @@ An override expression can be evaluated at pipeline creation time.
 [`Relational`]: Expression::Relational
 [`Math`]: Expression::Math
 [`As`]: Expression::As
-
-[const_type]: Constant
-[`override`]: Constant::override
-[`None`]: Override::None
 
 [constant expression]: index.html#constant-expressions
 */
@@ -2982,41 +2961,37 @@ An override expression can be evaluated at pipeline creation time.
     AbstractFloat(f64),
 }
 
-<span class="attr">#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+<span class="doccomment">/// Pipeline-overridable constant.
+</span><span class="attr">#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-</span><span class="kw">pub enum </span>Override {
-    <span class="prelude-val">None</span>,
-    ByName,
-    ByNameOrId(u32),
+</span><span class="kw">pub struct </span>Override {
+    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// Pipeline Constant ID.
+    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;u16&gt;,
+    <span class="kw">pub </span>ty: Handle&lt;Type&gt;,
+
+    <span class="doccomment">/// The default value of the pipeline-overridable constant.
+    ///
+    /// This [`Handle`] refers to [`Module::global_expressions`], not
+    /// any [`Function::expressions`] arena.
+    </span><span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
 }
 
 <span class="doccomment">/// Constant value.
-</span><span class="attr">#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
 </span><span class="kw">pub struct </span>Constant {
     <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    <span class="kw">pub </span>r#override: Override,
     <span class="kw">pub </span>ty: Handle&lt;Type&gt;,
 
     <span class="doccomment">/// The value of the constant.
     ///
-    /// This [`Handle`] refers to [`Module::const_expressions`], not
+    /// This [`Handle`] refers to [`Module::global_expressions`], not
     /// any [`Function::expressions`] arena.
-    ///
-    /// If [`override`] is [`None`], then this must be a Naga
-    /// [constant expression]. Otherwise, this may be a Naga
-    /// [override expression] or [constant expression].
-    ///
-    /// [`override`]: Constant::override
-    /// [`None`]: Override::None
-    /// [constant expression]: index.html#constant-expressions
-    /// [override expression]: index.html#override-expressions
     </span><span class="kw">pub </span>init: Handle&lt;Expression&gt;,
 }
 
@@ -3082,7 +3057,7 @@ An override expression can be evaluated at pipeline creation time.
     </span><span class="kw">pub </span>ty: Handle&lt;Type&gt;,
     <span class="doccomment">/// Initial value for this variable.
     ///
-    /// Expression handle lives in const_expressions
+    /// Expression handle lives in global_expressions
     </span><span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
 }
 
@@ -3100,7 +3075,7 @@ An override expression can be evaluated at pipeline creation time.
     ///
     /// This handle refers to this `LocalVariable`'s function's
     /// [`expressions`] arena, but it is required to be an evaluated
-    /// constant expression.
+    /// override expression.
     ///
     /// [`expressions`]: Function::expressions
     </span><span class="kw">pub </span>init: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
@@ -3405,6 +3380,8 @@ An override expression can be evaluated at pipeline creation time.
     </span>Literal(Literal),
     <span class="doccomment">/// Constant value.
     </span>Constant(Handle&lt;Constant&gt;),
+    <span class="doccomment">/// Pipeline-overridable constant.
+    </span>Override(Handle&lt;Override&gt;),
     <span class="doccomment">/// Zero value of a type.
     </span>ZeroValue(Handle&lt;Type&gt;),
     <span class="doccomment">/// Composite expression.
@@ -3530,7 +3507,7 @@ An override expression can be evaluated at pipeline creation time.
         </span>gather: <span class="prelude-ty">Option</span>&lt;SwizzleComponent&gt;,
         coordinate: Handle&lt;Expression&gt;,
         array_index: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
-        <span class="doccomment">/// Expression handle lives in const_expressions
+        <span class="doccomment">/// Expression handle lives in global_expressions
         </span>offset: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
         level: SampleLevel,
         depth_ref: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
@@ -4003,8 +3980,7 @@ An override expression can be evaluated at pipeline creation time.
 }
 
 <span class="doccomment">/// A function defined in the module.
-</span><span class="attr">#[derive(Debug, Default)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
@@ -4068,8 +4044,7 @@ An override expression can be evaluated at pipeline creation time.
 /// [`Location`]: Binding::Location
 /// [`function`]: EntryPoint::function
 /// [`stage`]: EntryPoint::stage
-</span><span class="attr">#[derive(Debug)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
@@ -4093,8 +4068,7 @@ An override expression can be evaluated at pipeline creation time.
 /// These cannot be spelled in WGSL source.
 ///
 /// Stored in [`SpecialTypes::predeclared_types`] and created by [`Module::generate_predeclared_type`].
-</span><span class="attr">#[derive(Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
@@ -4111,8 +4085,7 @@ An override expression can be evaluated at pipeline creation time.
 }
 
 <span class="doccomment">/// Set of special types that can be optionally generated by the frontends.
-</span><span class="attr">#[derive(Debug, Default)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
@@ -4147,8 +4120,7 @@ An override expression can be evaluated at pipeline creation time.
 /// Alternatively, you can load an existing shader using one of the [available front ends][front].
 ///
 /// When finished, you can export modules using one of the [available backends][back].
-</span><span class="attr">#[derive(Debug, Default)]
-#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
@@ -4159,6 +4131,8 @@ An override expression can be evaluated at pipeline creation time.
     </span><span class="kw">pub </span>special_types: SpecialTypes,
     <span class="doccomment">/// Arena for the constants defined in this module.
     </span><span class="kw">pub </span>constants: Arena&lt;Constant&gt;,
+    <span class="doccomment">/// Arena for the pipeline-overridable constants defined in this module.
+    </span><span class="kw">pub </span>overrides: Arena&lt;Override&gt;,
     <span class="doccomment">/// Arena for the global variables defined in this module.
     </span><span class="kw">pub </span>global_variables: Arena&lt;GlobalVariable&gt;,
     <span class="doccomment">/// [Constant expressions] and [override expressions] used by this module.
@@ -4168,7 +4142,7 @@ An override expression can be evaluated at pipeline creation time.
     ///
     /// [Constant expressions]: index.html#constant-expressions
     /// [override expressions]: index.html#override-expressions
-    </span><span class="kw">pub </span>const_expressions: Arena&lt;Expression&gt;,
+    </span><span class="kw">pub </span>global_expressions: Arena&lt;Expression&gt;,
     <span class="doccomment">/// Arena for the functions defined in this module.
     ///
     /// Each function must appear in this arena strictly before all its callers.

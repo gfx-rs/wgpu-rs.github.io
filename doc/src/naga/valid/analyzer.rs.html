@@ -1327,6 +1327,7 @@
 <a href="#1326" id="1326">1326</a>
 <a href="#1327" id="1327">1327</a>
 <a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Module analyzer.
 
 Figures out the following properties:
@@ -1555,7 +1556,7 @@ Figures out the following properties:
     sampler: GlobalOrArgument,
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="attr">#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>FunctionInfo {
@@ -1903,7 +1904,7 @@ Figures out the following properties:
                 non_uniform_result: <span class="self">self</span>.add_ref(vector),
                 requirements: UniformityRequirements::empty(),
             },
-            E::Literal(<span class="kw">_</span>) | E::Constant(<span class="kw">_</span>) | E::ZeroValue(<span class="kw">_</span>) =&gt; Uniformity::new(),
+            E::Literal(<span class="kw">_</span>) | E::Constant(<span class="kw">_</span>) | E::Override(<span class="kw">_</span>) | E::ZeroValue(<span class="kw">_</span>) =&gt; Uniformity::new(),
             E::Compose { <span class="kw-2">ref </span>components, .. } =&gt; {
                 <span class="kw">let </span>non_uniform_result = components
                     .iter()
@@ -2376,7 +2377,7 @@ Figures out the following properties:
         gctx: <span class="kw">crate</span>::proc::GlobalCtx,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::ConstExpressionError&gt; {
         <span class="self">self</span>.const_expression_types[handle.index()] =
-            resolve_context.resolve(<span class="kw-2">&amp;</span>gctx.const_expressions[handle], |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>[h]))<span class="question-mark">?</span>;
+            resolve_context.resolve(<span class="kw-2">&amp;</span>gctx.global_expressions[handle], |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>[h]))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2515,6 +2516,7 @@ Figures out the following properties:
     };
     <span class="kw">let </span>resolve_context = ResolveContext {
         constants: <span class="kw-2">&amp;</span>Arena::new(),
+        overrides: <span class="kw-2">&amp;</span>Arena::new(),
         types: <span class="kw-2">&amp;</span>type_arena,
         special_types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SpecialTypes::default(),
         global_vars: <span class="kw-2">&amp;</span>global_var_arena,

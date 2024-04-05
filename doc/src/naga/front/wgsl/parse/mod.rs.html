@@ -2385,6 +2385,36 @@
 <a href="#2384" id="2384">2384</a>
 <a href="#2385" id="2385">2385</a>
 <a href="#2386" id="2386">2386</a>
+<a href="#2387" id="2387">2387</a>
+<a href="#2388" id="2388">2388</a>
+<a href="#2389" id="2389">2389</a>
+<a href="#2390" id="2390">2390</a>
+<a href="#2391" id="2391">2391</a>
+<a href="#2392" id="2392">2392</a>
+<a href="#2393" id="2393">2393</a>
+<a href="#2394" id="2394">2394</a>
+<a href="#2395" id="2395">2395</a>
+<a href="#2396" id="2396">2396</a>
+<a href="#2397" id="2397">2397</a>
+<a href="#2398" id="2398">2398</a>
+<a href="#2399" id="2399">2399</a>
+<a href="#2400" id="2400">2400</a>
+<a href="#2401" id="2401">2401</a>
+<a href="#2402" id="2402">2402</a>
+<a href="#2403" id="2403">2403</a>
+<a href="#2404" id="2404">2404</a>
+<a href="#2405" id="2405">2405</a>
+<a href="#2406" id="2406">2406</a>
+<a href="#2407" id="2407">2407</a>
+<a href="#2408" id="2408">2408</a>
+<a href="#2409" id="2409">2409</a>
+<a href="#2410" id="2410">2410</a>
+<a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -4567,6 +4597,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>early_depth_test = ParsedAttribute::default();
         <span class="kw">let </span>(<span class="kw-2">mut </span>bind_index, <span class="kw-2">mut </span>bind_group) =
             (ParsedAttribute::default(), ParsedAttribute::default());
+        <span class="kw">let </span><span class="kw-2">mut </span>id = ParsedAttribute::default();
 
         <span class="kw">let </span><span class="kw-2">mut </span>dependencies = FastIndexSet::default();
         <span class="kw">let </span><span class="kw-2">mut </span>ctx = ExpressionContext {
@@ -4588,6 +4619,11 @@
                 (<span class="string">"group"</span>, name_span) =&gt; {
                     lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     bind_group.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
+                    lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
+                }
+                (<span class="string">"id"</span>, name_span) =&gt; {
+                    lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
+                    id.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                     lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
                 (<span class="string">"vertex"</span>, name_span) =&gt; {
@@ -4679,6 +4715,30 @@
                 lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Const(ast::Const { name, ty, init }))
+            }
+            (Token::Word(<span class="string">"override"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
+                    <span class="prelude-val">Some</span>(<span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
+                <span class="kw">let </span>init = <span class="kw">if </span>lexer.skip(Token::Operation(<span class="string">'='</span>)) {
+                    <span class="prelude-val">Some</span>(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
+                lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
+
+                <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Override(ast::Override {
+                    name,
+                    id: id.value,
+                    ty,
+                    init,
+                }))
             }
             (Token::Word(<span class="string">"var"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>var = <span class="self">self</span>.variable_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;

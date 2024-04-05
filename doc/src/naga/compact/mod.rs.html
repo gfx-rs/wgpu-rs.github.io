@@ -306,6 +306,25 @@
 <a href="#305" id="305">305</a>
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>handle_set_map;
@@ -346,7 +365,7 @@
             <span class="macro">log::trace!</span>(<span class="string">"tracing global {:?}"</span>, global.name);
             module_tracer.types_used.insert(global.ty);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = global.init {
-                module_tracer.const_expressions_used.insert(init);
+                module_tracer.global_expressions_used.insert(init);
             }
         }
     }
@@ -358,7 +377,15 @@
     </span><span class="kw">for </span>(handle, constant) <span class="kw">in </span>module.constants.iter() {
         <span class="kw">if </span>constant.name.is_some() {
             module_tracer.constants_used.insert(handle);
-            module_tracer.const_expressions_used.insert(constant.init);
+            module_tracer.global_expressions_used.insert(constant.init);
+        }
+    }
+
+    <span class="comment">// We treat all overrides as used by definition.
+    </span><span class="kw">for </span>(<span class="kw">_</span>, override_) <span class="kw">in </span>module.overrides.iter() {
+        module_tracer.types_used.insert(override_.ty);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = override_.init {
+            module_tracer.global_expressions_used.insert(init);
         }
     }
 
@@ -445,9 +472,9 @@
 
     <span class="comment">// Drop unused constant expressions, reusing existing storage.
     </span><span class="macro">log::trace!</span>(<span class="string">"adjusting constant expressions"</span>);
-    module.const_expressions.retain_mut(|handle, expr| {
-        <span class="kw">if </span>module_map.const_expressions.used(handle) {
-            module_map.adjust_expression(expr, <span class="kw-2">&amp;</span>module_map.const_expressions);
+    module.global_expressions.retain_mut(|handle, expr| {
+        <span class="kw">if </span>module_map.global_expressions.used(handle) {
+            module_map.adjust_expression(expr, <span class="kw-2">&amp;</span>module_map.global_expressions);
             <span class="bool-val">true
         </span>} <span class="kw">else </span>{
             <span class="bool-val">false
@@ -459,12 +486,21 @@
     module.constants.retain_mut(|handle, constant| {
         <span class="kw">if </span>module_map.constants.used(handle) {
             module_map.types.adjust(<span class="kw-2">&amp;mut </span>constant.ty);
-            module_map.const_expressions.adjust(<span class="kw-2">&amp;mut </span>constant.init);
+            module_map.global_expressions.adjust(<span class="kw-2">&amp;mut </span>constant.init);
             <span class="bool-val">true
         </span>} <span class="kw">else </span>{
             <span class="bool-val">false
         </span>}
     });
+
+    <span class="comment">// Adjust override types and initializers.
+    </span><span class="macro">log::trace!</span>(<span class="string">"adjusting overrides"</span>);
+    <span class="kw">for </span>(<span class="kw">_</span>, override_) <span class="kw">in </span>module.overrides.iter_mut() {
+        module_map.types.adjust(<span class="kw-2">&amp;mut </span>override_.ty);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = override_.init.as_mut() {
+            module_map.global_expressions.adjust(init);
+        }
+    }
 
     <span class="comment">// Adjust global variables' types and initializers.
     </span><span class="macro">log::trace!</span>(<span class="string">"adjusting global variables"</span>);
@@ -472,7 +508,7 @@
         <span class="macro">log::trace!</span>(<span class="string">"adjusting global {:?}"</span>, global.name);
         module_map.types.adjust(<span class="kw-2">&amp;mut </span>global.ty);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>init) = global.init {
-            module_map.const_expressions.adjust(init);
+            module_map.global_expressions.adjust(init);
         }
     }
 
@@ -501,7 +537,7 @@
     module: <span class="kw-2">&amp;</span><span class="lifetime">'module </span><span class="kw">crate</span>::Module,
     types_used: HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
     constants_used: HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
-    const_expressions_used: HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
+    global_expressions_used: HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'module</span>&gt; ModuleTracer&lt;<span class="lifetime">'module</span>&gt; {
@@ -510,7 +546,7 @@
             module,
             types_used: HandleSet::for_arena(<span class="kw-2">&amp;</span>module.types),
             constants_used: HandleSet::for_arena(<span class="kw-2">&amp;</span>module.constants),
-            const_expressions_used: HandleSet::for_arena(<span class="kw-2">&amp;</span>module.const_expressions),
+            global_expressions_used: HandleSet::for_arena(<span class="kw-2">&amp;</span>module.global_expressions),
         }
     }
 
@@ -541,12 +577,13 @@
 
     <span class="kw">fn </span>as_const_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; expressions::ExpressionTracer {
         expressions::ExpressionTracer {
-            expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.module.const_expressions,
+            expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions,
             constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
+            overrides: <span class="kw-2">&amp;</span><span class="self">self</span>.module.overrides,
             types_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.types_used,
             constants_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.constants_used,
-            expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used,
-            const_expressions_used: <span class="prelude-val">None</span>,
+            expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.global_expressions_used,
+            global_expressions_used: <span class="prelude-val">None</span>,
         }
     }
 
@@ -557,9 +594,10 @@
         FunctionTracer {
             function,
             constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
+            overrides: <span class="kw-2">&amp;</span><span class="self">self</span>.module.overrides,
             types_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.types_used,
             constants_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.constants_used,
-            const_expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used,
+            global_expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.global_expressions_used,
             expressions_used: HandleSet::for_arena(<span class="kw-2">&amp;</span>function.expressions),
         }
     }
@@ -568,7 +606,7 @@
 <span class="kw">struct </span>ModuleMap {
     types: HandleMap&lt;<span class="kw">crate</span>::Type&gt;,
     constants: HandleMap&lt;<span class="kw">crate</span>::Constant&gt;,
-    const_expressions: HandleMap&lt;<span class="kw">crate</span>::Expression&gt;,
+    global_expressions: HandleMap&lt;<span class="kw">crate</span>::Expression&gt;,
 }
 
 <span class="kw">impl </span>From&lt;ModuleTracer&lt;<span class="lifetime">'_</span>&gt;&gt; <span class="kw">for </span>ModuleMap {
@@ -576,7 +614,7 @@
         ModuleMap {
             types: HandleMap::from_set(used.types_used),
             constants: HandleMap::from_set(used.constants_used),
-            const_expressions: HandleMap::from_set(used.const_expressions_used),
+            global_expressions: HandleMap::from_set(used.global_expressions_used),
         }
     }
 }

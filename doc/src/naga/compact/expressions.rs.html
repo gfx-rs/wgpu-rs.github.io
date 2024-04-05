@@ -388,11 +388,21 @@
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
 <span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
     <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+    <span class="kw">pub </span>overrides: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
 
     <span class="doccomment">/// The arena in which we are currently tracing expressions.
     </span><span class="kw">pub </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
@@ -410,11 +420,11 @@
     /// the module's constant expression arena.
     </span><span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 
-    <span class="doccomment">/// The used set for the module's `const_expressions` arena.
+    <span class="doccomment">/// The used set for the module's `global_expressions` arena.
     ///
     /// If `None`, we are already tracing the constant expressions,
     /// and `expressions_used` already refers to their handle set.
-    </span><span class="kw">pub </span>const_expressions_used: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+    </span><span class="kw">pub </span>global_expressions_used: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'tracer</span>&gt; ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
@@ -429,11 +439,11 @@
     /// marked.
     ///
     /// [fe]: crate::Function::expressions
-    /// [ce]: crate::Module::const_expressions
+    /// [ce]: crate::Module::global_expressions
     </span><span class="kw">pub fn </span>trace_expressions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">log::trace!</span>(
             <span class="string">"entering trace_expression of {}"</span>,
-            <span class="kw">if </span><span class="self">self</span>.const_expressions_used.is_some() {
+            <span class="kw">if </span><span class="self">self</span>.global_expressions_used.is_some() {
                 <span class="string">"function expressions"
             </span>} <span class="kw">else </span>{
                 <span class="string">"const expressions"
@@ -473,11 +483,16 @@
                     // and the constant refers to the initializer, it must
                     // precede `expr` in the arena.
                     </span><span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
-                    <span class="kw">match </span><span class="self">self</span>.const_expressions_used {
+                    <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
                         <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
                         <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
                     }
                 }
+                Ex::Override(<span class="kw">_</span>) =&gt; {
+                    <span class="comment">// All overrides are considered used by definition. We mark
+                    // their types and initialization expressions as used in
+                    // `compact::compact`, so we have no more work to do here.
+                </span>}
                 Ex::ZeroValue(ty) =&gt; <span class="self">self</span>.types_used.insert(ty),
                 Ex::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
                     <span class="self">self</span>.types_used.insert(ty);
@@ -506,7 +521,7 @@
                     <span class="self">self</span>.expressions_used
                         .insert_iter([image, sampler, coordinate]);
                     <span class="self">self</span>.expressions_used.insert_iter(array_index);
-                    <span class="kw">match </span><span class="self">self</span>.const_expressions_used {
+                    <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
                         <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert_iter(offset),
                         <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert_iter(offset),
                     }
@@ -609,6 +624,9 @@
             | Ex::CallResult(<span class="kw">_</span>)
             | Ex::RayQueryProceedResult =&gt; {}
 
+            <span class="comment">// All overrides are retained, so their handles never change.
+            </span>Ex::Override(<span class="kw">_</span>) =&gt; {}
+
             <span class="comment">// Expressions that contain handles that need to be adjusted.
             </span>Ex::Constant(<span class="kw-2">ref mut </span>constant) =&gt; <span class="self">self</span>.constants.adjust(constant),
             Ex::ZeroValue(<span class="kw-2">ref mut </span>ty) =&gt; <span class="self">self</span>.types.adjust(ty),
@@ -657,7 +675,7 @@
                 adjust(coordinate);
                 operand_map.adjust_option(array_index);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>offset) = <span class="kw-2">*</span>offset {
-                    <span class="self">self</span>.const_expressions.adjust(offset);
+                    <span class="self">self</span>.global_expressions.adjust(offset);
                 }
                 <span class="self">self</span>.adjust_sample_level(level, operand_map);
                 operand_map.adjust_option(depth_ref);

@@ -1601,6 +1601,16 @@
 <a href="#1600" id="1600">1600</a>
 <a href="#1601" id="1601">1601</a>
 <a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::<span class="kw-2">*</span>,
     builtins::{inject_builtin, sampled_to_depth},
@@ -2839,6 +2849,8 @@
             <span class="kw">let </span>pointer = ctx
                 .expressions
                 .append(Expression::GlobalVariable(arg.handle), Default::default());
+            ctx.local_expression_kind_tracker
+                .insert(pointer, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
 
             <span class="kw">let </span>ty = ctx.module.global_variables[arg.handle].ty;
 
@@ -2859,6 +2871,8 @@
                     <span class="kw">let </span>value = ctx
                         .expressions
                         .append(Expression::FunctionArgument(idx), Default::default());
+                    ctx.local_expression_kind_tracker
+                        .insert(value, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
                     ctx.body
                         .push(Statement::Store { pointer, value }, Default::default());
                 },
@@ -2888,6 +2902,8 @@
             <span class="kw">let </span>pointer = ctx
                 .expressions
                 .append(Expression::GlobalVariable(arg.handle), Default::default());
+            ctx.local_expression_kind_tracker
+                .insert(pointer, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
 
             <span class="kw">let </span>ty = ctx.module.global_variables[arg.handle].ty;
 
@@ -2910,6 +2926,8 @@
                     <span class="kw">let </span>load = ctx
                         .expressions
                         .append(Expression::Load { pointer }, Default::default());
+                    ctx.local_expression_kind_tracker
+                        .insert(load, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
                     ctx.body.push(
                         Statement::Emit(ctx.expressions.range_from(len)),
                         Default::default(),
@@ -2932,6 +2950,8 @@
             <span class="kw">let </span>res = ctx
                 .expressions
                 .append(Expression::Compose { ty, components }, Default::default());
+            ctx.local_expression_kind_tracker
+                .insert(res, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
             ctx.body.push(
                 Statement::Emit(ctx.expressions.range_from(len)),
                 Default::default(),

@@ -4764,6 +4764,11 @@
 <a href="#4763" id="4763">4763</a>
 <a href="#4764" id="4764">4764</a>
 <a href="#4765" id="4765">4765</a>
+<a href="#4766" id="4766">4766</a>
+<a href="#4767" id="4767">4767</a>
+<a href="#4768" id="4768">4768</a>
+<a href="#4769" id="4769">4769</a>
+<a href="#4770" id="4770">4770</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -6014,7 +6019,7 @@
     ) -&gt; BackendResult {
         <span class="self">self</span>.put_possibly_const_expression(
             expr_handle,
-            <span class="kw-2">&amp;</span>module.const_expressions,
+            <span class="kw-2">&amp;</span>module.global_expressions,
             module,
             mod_info,
             <span class="kw-2">&amp;</span>(module, mod_info),
@@ -6197,6 +6202,7 @@
                     |writer, context, expr| writer.put_expression(expr, context, <span class="bool-val">true</span>),
                 )<span class="question-mark">?</span>;
             }
+            <span class="kw">crate</span>::Expression::Override(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override),
             <span class="kw">crate</span>::Expression::Access { base, .. }
             | <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; {
                 <span class="comment">// This is an acceptable place to generate a `ReadZeroSkipWrite` check.
@@ -7986,6 +7992,10 @@
         options: <span class="kw-2">&amp;</span>Options,
         pipeline_options: <span class="kw-2">&amp;</span>PipelineOptions,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TranslationInfo, Error&gt; {
+        <span class="kw">if </span>!module.overrides.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+        }
+
         <span class="self">self</span>.names.clear();
         <span class="self">self</span>.namer.reset(
             module,

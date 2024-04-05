@@ -2353,6 +2353,10 @@
 <a href="#2352" id="2352">2352</a>
 <a href="#2353" id="2353">2353</a>
 <a href="#2354" id="2354">2354</a>
+<a href="#2355" id="2355">2355</a>
+<a href="#2356" id="2356">2356</a>
+<a href="#2357" id="2357">2357</a>
+<a href="#2358" id="2358">2358</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3120,14 +3124,17 @@
                 } <span class="kw">else </span>{
                     <span class="kw-2">&amp;</span><span class="self">self</span>.naga_options
                 };
+
+                <span class="kw">let </span>(module, info) = naga::back::pipeline_constants::process_overrides(
+                    <span class="kw-2">&amp;</span>naga_shader.module,
+                    <span class="kw-2">&amp;</span>naga_shader.info,
+                    stage.constants,
+                )
+                .map_err(|e| <span class="kw">crate</span>::PipelineError::Linkage(stage_flags, <span class="macro">format!</span>(<span class="string">"{e}"</span>)))<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>spv = {
                     <span class="macro">profiling::scope!</span>(<span class="string">"naga::spv::write_vec"</span>);
-                    naga::back::spv::write_vec(
-                        <span class="kw-2">&amp;</span>naga_shader.module,
-                        <span class="kw-2">&amp;</span>naga_shader.info,
-                        options,
-                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_options),
-                    )
+                    naga::back::spv::write_vec(<span class="kw-2">&amp;</span>module, <span class="kw-2">&amp;</span>info, options, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pipeline_options))
                 }
                 .map_err(|e| <span class="kw">crate</span>::PipelineError::Linkage(stage_flags, <span class="macro">format!</span>(<span class="string">"{e}"</span>)))<span class="question-mark">?</span>;
                 <span class="self">self</span>.create_shader_module_impl(<span class="kw-2">&amp;</span>spv)<span class="question-mark">?
@@ -3942,6 +3949,7 @@
                     </span>.shared
                     .workarounds
                     .contains(<span class="kw">super</span>::Workarounds::SEPARATE_ENTRY_POINTS)
+                    || !naga_shader.module.overrides.is_empty()
                 {
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule::Intermediate {
                         naga_shader,

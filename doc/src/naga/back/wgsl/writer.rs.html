@@ -1977,6 +1977,13 @@
 <a href="#1976" id="1976">1976</a>
 <a href="#1977" id="1977">1977</a>
 <a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
     back,
@@ -2085,6 +2092,12 @@
     }
 
     <span class="kw">pub fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, info: <span class="kw-2">&amp;</span>valid::ModuleInfo) -&gt; BackendResult {
+        <span class="kw">if </span>!module.overrides.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(
+                <span class="string">"Pipeline constants are not yet supported for this back-end"</span>.to_string(),
+            ));
+        }
+
         <span class="self">self</span>.reset(module);
 
         <span class="comment">// Save all ep result types
@@ -3049,7 +3062,7 @@
         <span class="self">self</span>.write_possibly_const_expression(
             module,
             expr,
-            <span class="kw-2">&amp;</span>module.const_expressions,
+            <span class="kw-2">&amp;</span>module.global_expressions,
             |writer, expr| writer.write_const_expression(module, expr),
         )
     }
@@ -3178,6 +3191,7 @@
                     |writer, expr| writer.write_expr(module, expr, func_ctx),
                 )<span class="question-mark">?</span>;
             }
+            Expression::Override(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
             Expression::FunctionArgument(pos) =&gt; {
                 <span class="kw">let </span>name_key = func_ctx.argument_key(pos);
                 <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>name_key];

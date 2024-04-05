@@ -756,6 +756,44 @@
 <a href="#755" id="755">755</a>
 <a href="#756" id="756">756</a>
 <a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -828,6 +866,8 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     </span>FeatureNotImplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
     <span class="attr">#[error(<span class="string">"module is not validated properly: {0}"</span>)]
     </span>Validation(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+    <span class="attr">#[error(<span class="string">"overrides should not be present at this stage"</span>)]
+    </span>Override,
 }
 
 <span class="attr">#[derive(Default)]
@@ -1285,6 +1325,42 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     handle_id: Word,
 }
 
+<span class="doccomment">/// Tracks the expressions for which the backend emits the following instructions:
+/// - OpConstantTrue
+/// - OpConstantFalse
+/// - OpConstant
+/// - OpConstantComposite
+/// - OpConstantNull
+</span><span class="kw">struct </span>ExpressionConstnessTracker {
+    inner: bit_set::BitSet,
+}
+
+<span class="kw">impl </span>ExpressionConstnessTracker {
+    <span class="kw">fn </span>from_arena(arena: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = bit_set::BitSet::new();
+        <span class="kw">for </span>(handle, expr) <span class="kw">in </span>arena.iter() {
+            <span class="kw">let </span>insert = <span class="kw">match </span><span class="kw-2">*</span>expr {
+                <span class="kw">crate</span>::Expression::Literal(<span class="kw">_</span>)
+                | <span class="kw">crate</span>::Expression::ZeroValue(<span class="kw">_</span>)
+                | <span class="kw">crate</span>::Expression::Constant(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+                <span class="kw">crate</span>::Expression::Compose { <span class="kw-2">ref </span>components, .. } =&gt; {
+                    components.iter().all(|h| inner.contains(h.index()))
+                }
+                <span class="kw">crate</span>::Expression::Splat { value, .. } =&gt; inner.contains(value.index()),
+                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+            };
+            <span class="kw">if </span>insert {
+                inner.insert(handle.index());
+            }
+        }
+        <span class="self">Self </span>{ inner }
+    }
+
+    <span class="kw">fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, value: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
+        <span class="self">self</span>.inner.contains(value.index())
+    }
+}
+
 <span class="doccomment">/// General information needed to emit SPIR-V for Naga statements.
 </span><span class="kw">struct </span>BlockContext&lt;<span class="lifetime">'w</span>&gt; {
     <span class="doccomment">/// The writer handling the module to which this code belongs.
@@ -1310,7 +1386,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     </span>temp_list: Vec&lt;Word&gt;,
 
     <span class="doccomment">/// Tracks the constness of `Expression`s residing in `self.ir_function.expressions`
-    </span>expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker,
+    </span>expression_constness: ExpressionConstnessTracker,
 }
 
 <span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
@@ -1483,7 +1559,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 }
 
 <span class="comment">// A subset of options meant to be changed per pipeline.
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="attr">#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>PipelineOptions {

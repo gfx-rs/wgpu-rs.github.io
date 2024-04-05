@@ -4605,6 +4605,13 @@
 <a href="#4604" id="4604">4604</a>
 <a href="#4605" id="4605">4605</a>
 <a href="#4606" id="4606">4606</a>
+<a href="#4607" id="4607">4607</a>
+<a href="#4608" id="4608">4608</a>
+<a href="#4609" id="4609">4609</a>
+<a href="#4610" id="4610">4610</a>
+<a href="#4611" id="4611">4611</a>
+<a href="#4612" id="4612">4612</a>
+<a href="#4613" id="4613">4613</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -4889,7 +4896,7 @@ to output a [`Module`](crate::Module) into glsl
 }
 
 <span class="doccomment">/// A subset of options meant to be changed per pipeline.
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="attr">#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>PipelineOptions {
@@ -5104,6 +5111,8 @@ to output a [`Module`](crate::Module) into glsl
     </span>ImageMultipleSamplers,
     <span class="attr">#[error(<span class="string">"{0}"</span>)]
     </span>Custom(String),
+    <span class="attr">#[error(<span class="string">"overrides should not be present at this stage"</span>)]
+    </span>Override,
 }
 
 <span class="doccomment">/// Binary operation with a different logic on the GLSL side.
@@ -5172,6 +5181,10 @@ to output a [`Module`](crate::Module) into glsl
         pipeline_options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PipelineOptions,
         policies: proc::BoundsCheckPolicies,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        <span class="kw">if </span>!module.overrides.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+        }
+
         <span class="comment">// Check if the requested version is supported
         </span><span class="kw">if </span>!options.version.is_supported() {
             <span class="macro">log::error!</span>(<span class="string">"Version {}"</span>, options.version);
@@ -7009,7 +7022,7 @@ to output a [`Module`](crate::Module) into glsl
     </span><span class="kw">fn </span>write_const_expr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; BackendResult {
         <span class="self">self</span>.write_possibly_const_expr(
             expr,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.module.const_expressions,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions,
             |expr| <span class="kw-2">&amp;</span><span class="self">self</span>.info[expr],
             |writer, expr| writer.write_const_expr(expr),
         )
@@ -7143,6 +7156,7 @@ to output a [`Module`](crate::Module) into glsl
                     |writer, expr| writer.write_expr(expr, ctx),
                 )<span class="question-mark">?</span>;
             }
+            Expression::Override(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override),
             <span class="comment">// `Access` is applied to arrays, vectors and matrices and is written as indexing
             </span>Expression::Access { base, index } =&gt; {
                 <span class="self">self</span>.write_expr(base, ctx)<span class="question-mark">?</span>;

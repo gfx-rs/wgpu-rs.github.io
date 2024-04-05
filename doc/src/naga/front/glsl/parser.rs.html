@@ -430,6 +430,17 @@
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
 <a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{FunctionKind, Profile, TypeQualifiers},
     context::{Context, ExprPos},
@@ -596,9 +607,15 @@
 
     <span class="kw">pub fn </span>parse(<span class="kw-2">&amp;mut </span><span class="self">self</span>, frontend: <span class="kw-2">&amp;mut </span>Frontend) -&gt; <span class="prelude-ty">Result</span>&lt;Module&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>module = Module::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>global_expression_kind_tracker = <span class="kw">crate</span>::proc::ExpressionKindTracker::new();
 
         <span class="comment">// Body and expression arena for global initialization
-        </span><span class="kw">let </span><span class="kw-2">mut </span>ctx = Context::new(frontend, <span class="kw-2">&amp;mut </span>module, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>ctx = Context::new(
+            frontend,
+            <span class="kw-2">&amp;mut </span>module,
+            <span class="bool-val">false</span>,
+            <span class="kw-2">&amp;mut </span>global_expression_kind_tracker,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">while </span><span class="self">self</span>.peek(frontend).is_some() {
             <span class="self">self</span>.parse_external_declaration(frontend, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
@@ -628,7 +645,11 @@
         frontend: <span class="kw-2">&amp;mut </span>Frontend,
         ctx: <span class="kw-2">&amp;mut </span>Context,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, Span)&gt; {
-        <span class="kw">let </span>(const_expr, meta) = <span class="self">self</span>.parse_constant_expression(frontend, ctx.module)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(const_expr, meta) = <span class="self">self</span>.parse_constant_expression(
+            frontend,
+            ctx.module,
+            ctx.global_expression_kind_tracker,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>res = ctx.module.to_ctx().eval_expr_to_u32(const_expr);
 
@@ -651,8 +672,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         frontend: <span class="kw-2">&amp;mut </span>Frontend,
         module: <span class="kw-2">&amp;mut </span>Module,
+        global_expression_kind_tracker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;Expression&gt;, Span)&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>ctx = Context::new(frontend, module, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>ctx = Context::new(frontend, module, <span class="bool-val">true</span>, global_expression_kind_tracker)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>stmt_ctx = ctx.stmt_ctx();
         <span class="kw">let </span>expr = <span class="self">self</span>.parse_conditional(frontend, <span class="kw-2">&amp;mut </span>ctx, <span class="kw-2">&amp;mut </span>stmt_ctx, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;

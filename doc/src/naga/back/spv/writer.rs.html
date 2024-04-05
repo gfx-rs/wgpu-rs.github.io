@@ -2073,6 +2073,10 @@
 <a href="#2072" id="2072">2072</a>
 <a href="#2073" id="2073">2073</a>
 <a href="#2074" id="2074">2074</a>
+<a href="#2075" id="2075">2075</a>
+<a href="#2076" id="2076">2076</a>
+<a href="#2077" id="2077">2077</a>
+<a href="#2078" id="2078">2078</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -2690,7 +2694,7 @@
             <span class="comment">// Steal the Writer's temp list for a bit.
             </span>temp_list: std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list),
             writer: <span class="self">self</span>,
-            expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker::from_arena(
+            expression_constness: <span class="kw">super</span>::ExpressionConstnessTracker::from_arena(
                 <span class="kw-2">&amp;</span>ir_function.expressions,
             ),
         };
@@ -3333,7 +3337,7 @@
         ir_module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
         mod_info: <span class="kw-2">&amp;</span>ModuleInfo,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
-        <span class="kw">let </span>id = <span class="kw">match </span>ir_module.const_expressions[handle] {
+        <span class="kw">let </span>id = <span class="kw">match </span>ir_module.global_expressions[handle] {
             <span class="kw">crate</span>::Expression::Literal(literal) =&gt; <span class="self">self</span>.get_constant_scalar(literal),
             <span class="kw">crate</span>::Expression::Constant(constant) =&gt; {
                 <span class="kw">let </span>constant = <span class="kw-2">&amp;</span>ir_module.constants[constant];
@@ -3347,7 +3351,7 @@
                 <span class="kw">let </span>component_ids: Vec&lt;<span class="kw">_</span>&gt; = <span class="kw">crate</span>::proc::flatten_compose(
                     ty,
                     components,
-                    <span class="kw-2">&amp;</span>ir_module.const_expressions,
+                    <span class="kw-2">&amp;</span>ir_module.global_expressions,
                     <span class="kw-2">&amp;</span>ir_module.types,
                 )
                 .map(|component| <span class="self">self</span>.constant_ids[component.index()])
@@ -3989,8 +3993,8 @@
 
         <span class="comment">// write all const-expressions as constants
         </span><span class="self">self</span>.constant_ids
-            .resize(ir_module.const_expressions.len(), <span class="number">0</span>);
-        <span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>ir_module.const_expressions.iter() {
+            .resize(ir_module.global_expressions.len(), <span class="number">0</span>);
+        <span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>ir_module.global_expressions.iter() {
             <span class="self">self</span>.write_constant_expr(handle, ir_module, mod_info)<span class="question-mark">?</span>;
         }
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.constant_ids.iter().all(|<span class="kw-2">&amp;</span>id| id != <span class="number">0</span>));
@@ -4104,6 +4108,10 @@
         debug_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;DebugInfo&gt;,
         words: <span class="kw-2">&amp;mut </span>Vec&lt;Word&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">if </span>!ir_module.overrides.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+        }
+
         <span class="self">self</span>.reset();
 
         <span class="comment">// Try to find the entry point and corresponding index

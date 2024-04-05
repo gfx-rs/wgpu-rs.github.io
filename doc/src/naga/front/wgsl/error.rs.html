@@ -785,6 +785,15 @@
 <a href="#784" id="784">784</a>
 <a href="#785" id="785">785</a>
 <a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::Token;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
@@ -977,7 +986,7 @@
         expected: String,
         got: String,
     },
-    MissingType(Span),
+    DeclMissingTypeAndInit(Span),
     MissingAttribute(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
@@ -1060,6 +1069,7 @@
         span: Span,
         limit: u8,
     },
+    PipelineConstantIDValue(Span),
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Error&lt;<span class="lifetime">'a</span>&gt; {
@@ -1309,11 +1319,11 @@
                     notes: <span class="macro">vec!</span>[],
                 }
             }
-            Error::MissingType(name_span) =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">"variable `{}` needs a type"</span>, <span class="kw-2">&amp;</span>source[name_span]),
+            Error::DeclMissingTypeAndInit(name_span) =&gt; ParseError {
+                message: <span class="macro">format!</span>(<span class="string">"declaration of `{}` needs a type specifier or initializer"</span>, <span class="kw-2">&amp;</span>source[name_span]),
                 labels: <span class="macro">vec!</span>[(
                     name_span,
-                    <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
+                    <span class="string">"needs a type specifier or initializer"</span>.into(),
                 )],
                 notes: <span class="macro">vec!</span>[],
             },
@@ -1567,6 +1577,14 @@
                 notes: <span class="macro">vec!</span>[
                     <span class="macro">format!</span>(<span class="string">"nesting limit is currently set to {limit}"</span>),
                 ],
+            },
+            Error::PipelineConstantIDValue(span) =&gt; ParseError {
+                message: <span class="string">"pipeline constant ID must be between 0 and 65535 inclusive"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(
+                    span,
+                    <span class="string">"must be between 0 and 65535 inclusive"</span>.into(),
+                )],
+                notes: <span class="macro">vec!</span>[],
             },
         }
     }

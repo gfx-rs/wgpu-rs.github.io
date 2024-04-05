@@ -698,6 +698,39 @@
 <a href="#697" id="697">697</a>
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Implementation of `Validator::validate_module_handles`.
 
 </span><span class="kw">use crate</span>::{
@@ -731,12 +764,13 @@
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validate_module_handles(module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module) -&gt; <span class="prelude-ty">Result</span>&lt;(), ValidationError&gt; {
         <span class="kw">let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Module {
             <span class="kw-2">ref </span>constants,
+            <span class="kw-2">ref </span>overrides,
             <span class="kw-2">ref </span>entry_points,
             <span class="kw-2">ref </span>functions,
             <span class="kw-2">ref </span>global_variables,
             <span class="kw-2">ref </span>types,
             <span class="kw-2">ref </span>special_types,
-            <span class="kw-2">ref </span>const_expressions,
+            <span class="kw-2">ref </span>global_expressions,
         } = module;
 
         <span class="comment">// NOTE: Types being first is important. All other forms of validation depend on this.
@@ -767,23 +801,31 @@
             }
         }
 
-        <span class="kw">for </span>handle_and_expr <span class="kw">in </span>const_expressions.iter() {
-            <span class="self">Self</span>::validate_const_expression_handles(handle_and_expr, constants, types)<span class="question-mark">?</span>;
+        <span class="kw">for </span>handle_and_expr <span class="kw">in </span>global_expressions.iter() {
+            <span class="self">Self</span>::validate_const_expression_handles(handle_and_expr, constants, overrides, types)<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span>validate_type = |handle| <span class="self">Self</span>::validate_type_handle(handle, types);
         <span class="kw">let </span>validate_const_expr =
-            |handle| <span class="self">Self</span>::validate_expression_handle(handle, const_expressions);
+            |handle| <span class="self">Self</span>::validate_expression_handle(handle, global_expressions);
 
         <span class="kw">for </span>(_handle, constant) <span class="kw">in </span>constants.iter() {
-            <span class="kw">let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Constant {
-                name: <span class="kw">_</span>,
-                r#override: <span class="kw">_</span>,
-                ty,
-                init,
-            } = constant;
+            <span class="kw">let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Constant { name: <span class="kw">_</span>, ty, init } = constant;
             validate_type(ty)<span class="question-mark">?</span>;
             validate_const_expr(init)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>(_handle, override_) <span class="kw">in </span>overrides.iter() {
+            <span class="kw">let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Override {
+                name: <span class="kw">_</span>,
+                id: <span class="kw">_</span>,
+                ty,
+                init,
+            } = override_;
+            validate_type(ty)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(init_expr) = init {
+                validate_const_expr(init_expr)<span class="question-mark">?</span>;
+            }
         }
 
         <span class="kw">for </span>(_handle, global_variable) <span class="kw">in </span>global_variables.iter() {
@@ -840,7 +882,8 @@
                 <span class="self">Self</span>::validate_expression_handles(
                     handle_and_expr,
                     constants,
-                    const_expressions,
+                    overrides,
+                    global_expressions,
                     types,
                     local_variables,
                     global_variables,
@@ -886,6 +929,13 @@
         handle.check_valid_for(constants).map(|<span class="kw">_</span>| ())
     }
 
+    <span class="kw">fn </span>validate_override_handle(
+        handle: Handle&lt;<span class="kw">crate</span>::Override&gt;,
+        overrides: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidHandleError&gt; {
+        handle.check_valid_for(overrides).map(|<span class="kw">_</span>| ())
+    }
+
     <span class="kw">fn </span>validate_expression_handle(
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         expressions: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
@@ -903,9 +953,11 @@
     <span class="kw">fn </span>validate_const_expression_handles(
         (handle, expression): (Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression),
         constants: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+        overrides: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
         types: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidHandleError&gt; {
         <span class="kw">let </span>validate_constant = |handle| <span class="self">Self</span>::validate_constant_handle(handle, constants);
+        <span class="kw">let </span>validate_override = |handle| <span class="self">Self</span>::validate_override_handle(handle, overrides);
         <span class="kw">let </span>validate_type = |handle| <span class="self">Self</span>::validate_type_handle(handle, types);
 
         <span class="kw">match </span><span class="kw-2">*</span>expression {
@@ -913,6 +965,12 @@
             <span class="kw">crate</span>::Expression::Constant(constant) =&gt; {
                 validate_constant(constant)<span class="question-mark">?</span>;
                 handle.check_dep(constants[constant].init)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::Expression::Override(override_) =&gt; {
+                validate_override(override_)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = overrides[override_].init {
+                    handle.check_dep(init)<span class="question-mark">?</span>;
+                }
             }
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; {
                 validate_type(ty)<span class="question-mark">?</span>;
@@ -930,7 +988,8 @@
     </span><span class="kw">fn </span>validate_expression_handles(
         (handle, expression): (Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression),
         constants: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
-        const_expressions: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+        overrides: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
+        global_expressions: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
         types: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
         local_variables: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::LocalVariable&gt;,
         global_variables: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
@@ -939,8 +998,9 @@
         </span>current_function: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Function&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidHandleError&gt; {
         <span class="kw">let </span>validate_constant = |handle| <span class="self">Self</span>::validate_constant_handle(handle, constants);
+        <span class="kw">let </span>validate_override = |handle| <span class="self">Self</span>::validate_override_handle(handle, overrides);
         <span class="kw">let </span>validate_const_expr =
-            |handle| <span class="self">Self</span>::validate_expression_handle(handle, const_expressions);
+            |handle| <span class="self">Self</span>::validate_expression_handle(handle, global_expressions);
         <span class="kw">let </span>validate_type = |handle| <span class="self">Self</span>::validate_type_handle(handle, types);
 
         <span class="kw">match </span><span class="kw-2">*</span>expression {
@@ -959,6 +1019,9 @@
             <span class="kw">crate</span>::Expression::Literal(<span class="kw">_</span>) =&gt; {}
             <span class="kw">crate</span>::Expression::Constant(constant) =&gt; {
                 validate_constant(constant)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::Expression::Override(override_) =&gt; {
+                validate_override(override_)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; {
                 validate_type(ty)<span class="question-mark">?</span>;
@@ -1262,6 +1325,7 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub enum </span>InvalidHandleError {
     <span class="attr">#[error(transparent)]
     </span>BadHandle(<span class="attr">#[from] </span>BadHandle),
@@ -1272,6 +1336,7 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 #[error(
     <span class="string">"{subject:?} of kind {subject_kind:?} depends on {depends_on:?} of kind {depends_on_kind}, \
     which has not been processed yet"
@@ -1364,6 +1429,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>const_exprs = Arena::new();
     <span class="kw">let </span><span class="kw-2">mut </span>fun_exprs = Arena::new();
     <span class="kw">let </span><span class="kw-2">mut </span>constants = Arena::new();
+    <span class="kw">let </span>overrides = Arena::new();
 
     <span class="kw">let </span>i32_handle = types.insert(
         Type {
@@ -1379,7 +1445,6 @@
     <span class="kw">let </span>self_referential_const = constants.append(
         Constant {
             name: <span class="prelude-val">None</span>,
-            r#override: <span class="kw">crate</span>::Override::None,
             ty: i32_handle,
             init: fun_expr,
         },
@@ -1392,6 +1457,7 @@
         <span class="macro">assert!</span>(<span class="kw">super</span>::Validator::validate_const_expression_handles(
             handle_and_expr,
             <span class="kw-2">&amp;</span>constants,
+            <span class="kw-2">&amp;</span>overrides,
             <span class="kw-2">&amp;</span>types,
         )
         .is_err());

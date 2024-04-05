@@ -771,6 +771,19 @@
 <a href="#770" id="770">770</a>
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 
 <span class="doccomment">/// An unique index in the arena array that a handle points to.
@@ -895,6 +908,7 @@
     serde(transparent)
 )]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
+#[cfg_attr(test, derive(PartialEq))]
 </span><span class="kw">pub struct </span>Range&lt;T&gt; {
     inner: ops::Range&lt;u32&gt;,
     <span class="attr">#[cfg_attr(any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>), serde(skip))]
@@ -913,6 +927,7 @@
 
 <span class="comment">// NOTE: Keep this diagnostic in sync with that of [`BadHandle`].
 </span><span class="attr">#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 #[error(<span class="string">"Handle range {range:?} of {kind} is either not present, or inaccessible yet"</span>)]
 </span><span class="kw">pub struct </span>BadRangeError {
     <span class="comment">// This error is used for many `Handle` types, but there's no point in making this generic, so
@@ -1012,7 +1027,7 @@
 /// Adding new items to the arena produces a strongly-typed [`Handle`].
 /// The arena can be indexed using the given handle to obtain
 /// a reference to the stored item.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, serde(transparent))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(arbitrary::Arbitrary))]
@@ -1068,6 +1083,17 @@
             .iter()
             .enumerate()
             .map(|(i, v)| <span class="kw">unsafe </span>{ (Handle::from_usize_unchecked(i), v) })
+    }
+
+    <span class="doccomment">/// Drains the arena, returning an iterator over the items stored.
+    </span><span class="kw">pub fn </span>drain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, T, Span)&gt; {
+        <span class="kw">let </span>arena = std::mem::take(<span class="self">self</span>);
+        arena
+            .data
+            .into_iter()
+            .zip(arena.span_info)
+            .enumerate()
+            .map(|(i, (v, span))| <span class="kw">unsafe </span>{ (Handle::from_usize_unchecked(i), v, span) })
     }
 
     <span class="doccomment">/// Returns a iterator over the items stored in this arena,
@@ -1304,7 +1330,7 @@
 ///
 /// `UniqueArena` is similar to [`Arena`]: If `Arena` is vector-like,
 /// `UniqueArena` is `HashSet`-like.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">"clone"</span>, derive(Clone))]
+</span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>UniqueArena&lt;T&gt; {
     set: FastIndexSet&lt;T&gt;,
 

@@ -1497,14 +1497,6 @@
 <a href="#1496" id="1496">1496</a>
 <a href="#1497" id="1497">1497</a>
 <a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         GlobalLookup, GlobalLookupKind, HirExpr, HirExprKind, ParameterInfo, ParameterQualifier,
@@ -1584,12 +1576,19 @@
     <span class="kw">pub </span>body: Block,
     <span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
     <span class="kw">pub </span>is_const: bool,
-    <span class="doccomment">/// Tracks the constness of `Expression`s residing in `self.expressions`
-    </span><span class="kw">pub </span>expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker,
+    <span class="doccomment">/// Tracks the expression kind of `Expression`s residing in `self.expressions`
+    </span><span class="kw">pub </span>local_expression_kind_tracker: <span class="kw">crate</span>::proc::ExpressionKindTracker,
+    <span class="doccomment">/// Tracks the expression kind of `Expression`s residing in `self.module.global_expressions`
+    </span><span class="kw">pub </span>global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Context&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub fn </span>new(frontend: <span class="kw-2">&amp;</span>Frontend, module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module, is_const: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">pub fn </span>new(
+        frontend: <span class="kw-2">&amp;</span>Frontend,
+        module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+        is_const: bool,
+        global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>this = Context {
             expressions: Arena::new(),
             locals: Arena::new(),
@@ -1608,7 +1607,8 @@
             body: Block::new(),
             module,
             is_const: <span class="bool-val">false</span>,
-            expression_constness: <span class="kw">crate</span>::proc::ExpressionConstnessTracker::new(),
+            local_expression_kind_tracker: <span class="kw">crate</span>::proc::ExpressionKindTracker::new(),
+            global_expression_kind_tracker,
         };
 
         this.emit_start();
@@ -1756,40 +1756,24 @@
 
     <span class="kw">pub fn </span>add_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Expression, meta: Span) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>eval = <span class="kw">if </span><span class="self">self</span>.is_const {
-            <span class="kw">crate</span>::proc::ConstantEvaluator::for_glsl_module(<span class="self">self</span>.module)
+            <span class="kw">crate</span>::proc::ConstantEvaluator::for_glsl_module(
+                <span class="self">self</span>.module,
+                <span class="self">self</span>.global_expression_kind_tracker,
+            )
         } <span class="kw">else </span>{
             <span class="kw">crate</span>::proc::ConstantEvaluator::for_glsl_function(
                 <span class="self">self</span>.module,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.expression_constness,
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.local_expression_kind_tracker,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.body,
             )
         };
 
-        <span class="kw">let </span>res = eval.try_eval_and_append(<span class="kw-2">&amp;</span>expr, meta).map_err(|e| Error {
+        eval.try_eval_and_append(expr, meta).map_err(|e| Error {
             kind: e.into(),
             meta,
-        });
-
-        <span class="kw">match </span>res {
-            <span class="prelude-val">Ok</span>(expr) =&gt; <span class="prelude-val">Ok</span>(expr),
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="kw">if </span><span class="self">self</span>.is_const {
-                    <span class="prelude-val">Err</span>(e)
-                } <span class="kw">else </span>{
-                    <span class="kw">let </span>needs_pre_emit = expr.needs_pre_emit();
-                    <span class="kw">if </span>needs_pre_emit {
-                        <span class="self">self</span>.body.extend(<span class="self">self</span>.emitter.finish(<span class="kw-2">&amp;</span><span class="self">self</span>.expressions));
-                    }
-                    <span class="kw">let </span>h = <span class="self">self</span>.expressions.append(expr, meta);
-                    <span class="kw">if </span>needs_pre_emit {
-                        <span class="self">self</span>.emitter.start(<span class="kw-2">&amp;</span><span class="self">self</span>.expressions);
-                    }
-                    <span class="prelude-val">Ok</span>(h)
-                }
-            }
-        }
+        })
     }
 
     <span class="doccomment">/// Add variable to current scope
@@ -2986,7 +2970,7 @@
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: Handle&lt;Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="kw">if </span><span class="self">self</span>.is_const {
-            <span class="kw-2">&amp;</span><span class="self">self</span>.module.const_expressions[index]
+            <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions[index]
         } <span class="kw">else </span>{
             <span class="kw-2">&amp;</span><span class="self">self</span>.expressions[index]
         }

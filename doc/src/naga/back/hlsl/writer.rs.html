@@ -3336,6 +3336,11 @@
 <a href="#3335" id="3335">3335</a>
 <a href="#3336" id="3336">3336</a>
 <a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess},
     storage::StoreValue,
@@ -3506,6 +3511,10 @@
         module: <span class="kw-2">&amp;</span>Module,
         module_info: <span class="kw-2">&amp;</span>valid::ModuleInfo,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ReflectionInfo, Error&gt; {
+        <span class="kw">if </span>!module.overrides.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+        }
+
         <span class="self">self</span>.reset(module);
 
         <span class="comment">// Write special constants, if needed
@@ -3571,7 +3580,7 @@
 
         <span class="self">self</span>.write_special_functions(module)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.write_wrapped_compose_functions(module, <span class="kw-2">&amp;</span>module.const_expressions)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_wrapped_compose_functions(module, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
 
         <span class="comment">// Write all named constants
         </span><span class="kw">let </span><span class="kw-2">mut </span>constants = module
@@ -5335,7 +5344,7 @@
         <span class="self">self</span>.write_possibly_const_expression(
             module,
             expr,
-            <span class="kw-2">&amp;</span>module.const_expressions,
+            <span class="kw-2">&amp;</span>module.global_expressions,
             |writer, expr| writer.write_const_expression(module, expr),
         )
     }
@@ -5478,6 +5487,7 @@
                     |writer, expr| writer.write_expr(module, expr, func_ctx),
                 )<span class="question-mark">?</span>;
             }
+            Expression::Override(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override),
             <span class="comment">// All of the multiplication can be expressed as `mul`,
             // except vector * vector, which needs to use the "*" operator.
             </span>Expression::Binary {
