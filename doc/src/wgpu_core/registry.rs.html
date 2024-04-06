@@ -198,6 +198,14 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
@@ -278,12 +286,20 @@
         Arc::new(value)
     }
 
+    <span class="kw">pub fn </span>init_in_place(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>value: Arc&lt;T&gt;) -&gt; Arc&lt;T&gt; {
+        Arc::get_mut(<span class="kw-2">&amp;mut </span>value)
+            .unwrap()
+            .as_info_mut()
+            .set_id(<span class="self">self</span>.id);
+        value
+    }
+
     <span class="doccomment">/// Assign a new resource to this ID.
     ///
     /// Registers it with the registry, and fills out the resource info.
-    </span><span class="kw">pub fn </span>assign(<span class="self">self</span>, value: T) -&gt; (Id&lt;T::Marker&gt;, Arc&lt;T&gt;) {
+    </span><span class="kw">pub fn </span>assign(<span class="self">self</span>, value: Arc&lt;T&gt;) -&gt; (Id&lt;T::Marker&gt;, Arc&lt;T&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.data.write();
-        data.insert(<span class="self">self</span>.id, <span class="self">self</span>.init(value));
+        data.insert(<span class="self">self</span>.id, <span class="self">self</span>.init_in_place(value));
         (<span class="self">self</span>.id, data.get(<span class="self">self</span>.id).unwrap().clone())
     }
 

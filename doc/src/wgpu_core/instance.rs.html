@@ -1173,6 +1173,10 @@
 <a href="#1172" id="1172">1172</a>
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -1700,7 +1704,8 @@
             raw: hal_surface,
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
+        <span class="attr">#[allow(clippy::arc_with_non_send_sync)]
+        </span><span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
         <span class="prelude-val">Ok</span>(id)
     }
 
@@ -1733,7 +1738,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
         id
     }
 
@@ -1762,7 +1767,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
         id
     }
 
@@ -1791,7 +1796,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
         id
     }
 
@@ -1822,7 +1827,7 @@
             },
         };
 
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
         id
     }
 
@@ -1882,7 +1887,7 @@
         <span class="kw">for </span>raw <span class="kw">in </span>hal_adapters {
             <span class="kw">let </span>adapter = Adapter::new(raw);
             <span class="macro">log::info!</span>(<span class="string">"Adapter {:?} {:?}"</span>, A::VARIANT, adapter.raw.info);
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = hub.adapters.prepare(id_backend).assign(adapter);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = hub.adapters.prepare(id_backend).assign(Arc::new(adapter));
             list.push(id);
         }
     }
@@ -1929,7 +1934,10 @@
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>adapter = Adapter::new(list.swap_remove(<span class="kw-2">*</span>selected));
                 <span class="macro">log::info!</span>(<span class="string">"Adapter {:?} {:?}"</span>, A::VARIANT, adapter.raw.info);
-                <span class="kw">let </span>(id, <span class="kw">_</span>) = HalApi::hub(<span class="self">self</span>).adapters.prepare(new_id).assign(adapter);
+                <span class="kw">let </span>(id, <span class="kw">_</span>) = HalApi::hub(<span class="self">self</span>)
+                    .adapters
+                    .prepare(new_id)
+                    .assign(Arc::new(adapter));
                 <span class="prelude-val">Some</span>(id)
             }
         }
@@ -2112,13 +2120,13 @@
 
         <span class="kw">let </span>(id, _adapter): (<span class="kw">_</span>, Arc&lt;Adapter&lt;A&gt;&gt;) = <span class="kw">match </span>A::VARIANT {
             <span class="attr">#[cfg(vulkan)]
-            </span>Backend::Vulkan =&gt; fid.assign(Adapter::new(hal_adapter)),
+            </span>Backend::Vulkan =&gt; fid.assign(Arc::new(Adapter::new(hal_adapter))),
             <span class="attr">#[cfg(metal)]
-            </span>Backend::Metal =&gt; fid.assign(Adapter::new(hal_adapter)),
+            </span>Backend::Metal =&gt; fid.assign(Arc::new(Adapter::new(hal_adapter))),
             <span class="attr">#[cfg(dx12)]
-            </span>Backend::Dx12 =&gt; fid.assign(Adapter::new(hal_adapter)),
+            </span>Backend::Dx12 =&gt; fid.assign(Arc::new(Adapter::new(hal_adapter))),
             <span class="attr">#[cfg(gles)]
-            </span>Backend::Gl =&gt; fid.assign(Adapter::new(hal_adapter)),
+            </span>Backend::Gl =&gt; fid.assign(Arc::new(Adapter::new(hal_adapter))),
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
         <span class="macro">resource_log!</span>(<span class="string">"Created Adapter {:?}"</span>, id);
@@ -2241,13 +2249,13 @@
                     <span class="prelude-val">Ok</span>((device, queue)) =&gt; (device, queue),
                     <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
                 };
-            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = device_fid.assign(device);
+            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = device_fid.assign(Arc::new(device));
             <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);
 
             <span class="kw">let </span>device = hub.devices.get(device_id).unwrap();
             queue.device = <span class="prelude-val">Some</span>(device.clone());
 
-            <span class="kw">let </span>(queue_id, queue) = queue_fid.assign(queue);
+            <span class="kw">let </span>(queue_id, queue) = queue_fid.assign(Arc::new(queue));
             <span class="macro">resource_log!</span>(<span class="string">"Created Queue {:?}"</span>, queue_id);
 
             device.set_queue(queue);
@@ -2293,13 +2301,13 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
-            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = devices_fid.assign(device);
+            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = devices_fid.assign(Arc::new(device));
             <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);
 
             <span class="kw">let </span>device = hub.devices.get(device_id).unwrap();
             queue.device = <span class="prelude-val">Some</span>(device.clone());
 
-            <span class="kw">let </span>(queue_id, queue) = queues_fid.assign(queue);
+            <span class="kw">let </span>(queue_id, queue) = queues_fid.assign(Arc::new(queue));
             <span class="macro">resource_log!</span>(<span class="string">"Created Queue {:?}"</span>, queue_id);
 
             device.set_queue(queue);

@@ -2883,7 +2883,7 @@
                 hal::BufferUses::COPY_DST
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(buffer);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(buffer));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer({desc:?}) -&gt; {id:?}"</span>);
 
             device
@@ -3198,7 +3198,7 @@
                 <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span>error,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(texture);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(texture));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
 
             device
@@ -3272,7 +3272,7 @@
             texture.initialization_status =
                 RwLock::new(TextureInitTracker::new(desc.mip_level_count, <span class="number">0</span>));
 
-            <span class="kw">let </span>(id, resource) = fid.assign(texture);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(texture));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
 
             device
@@ -3325,7 +3325,7 @@
 
             <span class="kw">let </span>buffer = device.create_buffer_from_hal(hal_buffer, desc);
 
-            <span class="kw">let </span>(id, buffer) = fid.assign(buffer);
+            <span class="kw">let </span>(id, buffer) = fid.assign(Arc::new(buffer));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer -&gt; {id:?}"</span>);
 
             device
@@ -3444,7 +3444,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(view);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(view));
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>views = texture.views.lock();
@@ -3526,7 +3526,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(sampler);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(sampler));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_sampler -&gt; {id:?}"</span>);
             device.trackers.lock().samplers.insert_single(resource);
 
@@ -3608,7 +3608,7 @@
                 <span class="kw">let </span>bgl =
                     device.create_bind_group_layout(<span class="kw-2">&amp;</span>desc.label, entry_map, bgl::Origin::Pool)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>(id_inner, arc) = fid.take().unwrap().assign(bgl);
+                <span class="kw">let </span>(id_inner, arc) = fid.take().unwrap().assign(Arc::new(bgl));
                 id = <span class="prelude-val">Some</span>(id_inner);
 
                 <span class="prelude-val">Ok</span>(arc)
@@ -3689,7 +3689,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(layout);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(layout));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_pipeline_layout -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3756,7 +3756,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(bind_group);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(bind_group));
 
             <span class="kw">let </span>weak_ref = Arc::downgrade(<span class="kw-2">&amp;</span>resource);
             <span class="kw">for </span>range <span class="kw">in </span><span class="kw-2">&amp;</span>resource.used_texture_ranges {
@@ -3871,7 +3871,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(shader));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_shader_module -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3928,7 +3928,7 @@
                 <span class="prelude-val">Ok</span>(shader) =&gt; shader,
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(shader));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_shader_module_spirv -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3993,7 +3993,7 @@
                     .map(|s| s.to_string()),
             );
 
-            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(command_buffer);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(command_buffer));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_command_encoder -&gt; {id:?}"</span>);
             <span class="kw">return </span>(id.transmute(), <span class="prelude-val">None</span>);
         };
@@ -4086,7 +4086,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(render_bundle);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(render_bundle));
             <span class="macro">api_log!</span>(<span class="string">"RenderBundleEncoder::finish -&gt; {id:?}"</span>);
             device.trackers.lock().bundles.insert_single(resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
@@ -4149,7 +4149,7 @@
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">break </span>err,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(query_set);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(query_set));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_query_set -&gt; {id:?}"</span>);
             device.trackers.lock().query_sets.insert_single(resource);
 
@@ -4227,7 +4227,7 @@
                     <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
                 };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(pipeline));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_render_pipeline -&gt; {id:?}"</span>);
 
             device
@@ -4360,7 +4360,7 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
 
-            <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
+            <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(pipeline));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_compute_pipeline -&gt; {id:?}"</span>);
 
             device
