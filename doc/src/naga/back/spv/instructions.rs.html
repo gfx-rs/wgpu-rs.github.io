@@ -1099,6 +1099,42 @@
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
 <a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{block::DebugInfoInner, helpers};
 <span class="kw">use </span>spirv::{Op, Word};
 
@@ -1142,6 +1178,42 @@
             instruction.add_operands(helpers::string_to_words(source.source_code));
         }
         instruction
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>source_continued(source: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>instruction = <span class="self">Self</span>::new(Op::SourceContinued);
+        instruction.add_operands(helpers::str_bytes_to_words(source));
+        instruction
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>source_auto_continued(
+        source_language: spirv::SourceLanguage,
+        version: u32,
+        source: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;DebugInfoInner&gt;,
+    ) -&gt; Vec&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>instructions = <span class="macro">vec!</span>[];
+
+        <span class="kw">let </span>with_continue = source.as_ref().and_then(|debug_info| {
+            (debug_info.source_code.len() &gt; u16::MAX <span class="kw">as </span>usize).then_some(debug_info)
+        });
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_info) = with_continue {
+            <span class="kw">let </span><span class="kw-2">mut </span>instruction = <span class="self">Self</span>::new(Op::Source);
+            instruction.add_operand(source_language <span class="kw">as </span>u32);
+            instruction.add_operands(helpers::bytes_to_words(<span class="kw-2">&amp;</span>version.to_le_bytes()));
+
+            <span class="kw">let </span>words = helpers::string_to_byte_chunks(debug_info.source_code, u16::MAX <span class="kw">as </span>usize);
+            instruction.add_operand(debug_info.source_file_id);
+            instruction.add_operands(helpers::str_bytes_to_words(words[<span class="number">0</span>]));
+            instructions.push(instruction);
+            <span class="kw">for </span>word_bytes <span class="kw">in </span>words[<span class="number">1</span>..].iter() {
+                <span class="kw">let </span>instruction_continue = <span class="self">Self</span>::source_continued(word_bytes);
+                instructions.push(instruction_continue);
+            }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>instruction = <span class="self">Self</span>::source(source_language, version, source);
+            instructions.push(instruction);
+        }
+        instructions
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>name(target_id: Word, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
