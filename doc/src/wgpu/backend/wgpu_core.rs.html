@@ -3087,8 +3087,6 @@
 <a href="#3086" id="3086">3086</a>
 <a href="#3087" id="3087">3087</a>
 <a href="#3088" id="3088">3088</a>
-<a href="#3089" id="3089">3089</a>
-<a href="#3090" id="3090">3090</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3722,7 +3720,7 @@
             id: queue_id,
             error_sink,
         };
-        ready(<span class="prelude-val">Ok</span>((device_id, device, device_id.transmute(), queue)))
+        ready(<span class="prelude-val">Ok</span>((device_id, device, device_id.into_queue_id(), queue)))
     }
 
     <span class="kw">fn </span>instance_poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; bool {
@@ -4930,8 +4928,7 @@
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="macro">wgc::gfx_select!</span>(
             encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_run_compute_pass(<span class="kw-2">*</span>encoder, pass_data)
         ) {
-            <span class="kw">let </span>name =
-                <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.transmute()));
+            <span class="kw">let </span>name = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.into_command_buffer_id()));
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,
@@ -5014,8 +5011,7 @@
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
             <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_run_render_pass(<span class="kw-2">*</span>encoder, pass_data))
         {
-            <span class="kw">let </span>name =
-                <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.transmute()));
+            <span class="kw">let </span>name = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.into_command_buffer_id()));
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,

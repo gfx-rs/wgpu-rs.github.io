@@ -374,6 +374,10 @@
 <a href="#373" id="373">373</a>
 <a href="#374" id="374">374</a>
 <a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This is a player library for WebGPU traces.
  *
  * # Notes
@@ -712,7 +716,7 @@
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
                 <span class="kw">let </span>size = (range.end - range.start) <span class="kw">as </span>usize;
                 <span class="kw">if </span>queued {
-                    <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(device.transmute(), id, range.start, <span class="kw-2">&amp;</span>bin)
+                    <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(device.into_queue_id(), id, range.start, <span class="kw-2">&amp;</span>bin)
                         .unwrap();
                 } <span class="kw">else </span>{
                     <span class="self">self</span>.device_wait_for_buffer::&lt;A&gt;(device, id).unwrap();
@@ -727,23 +731,27 @@
                 size,
             } =&gt; {
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
-                <span class="self">self</span>.queue_write_texture::&lt;A&gt;(device.transmute(), <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
+                <span class="self">self</span>.queue_write_texture::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
                     .unwrap();
             }
             Action::Submit(_index, <span class="kw-2">ref </span>commands) <span class="kw">if </span>commands.is_empty() =&gt; {
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.transmute(), <span class="kw-2">&amp;</span>[]).unwrap();
+                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>[]).unwrap();
             }
             Action::Submit(_index, commands) =&gt; {
                 <span class="kw">let </span>(encoder, error) = <span class="self">self</span>.device_create_command_encoder::&lt;A&gt;(
                     device,
                     <span class="kw-2">&amp;</span>wgt::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>},
-                    <span class="prelude-val">Some</span>(comb_manager.process(device.backend()).transmute()),
+                    <span class="prelude-val">Some</span>(
+                        comb_manager
+                            .process(device.backend())
+                            .into_command_encoder_id(),
+                    ),
                 );
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
                 <span class="kw">let </span>cmdbuf = <span class="self">self</span>.encode_commands::&lt;A&gt;(encoder, commands);
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.transmute(), <span class="kw-2">&amp;</span>[cmdbuf])
+                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>[cmdbuf])
                     .unwrap();
             }
         }

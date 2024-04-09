@@ -385,11 +385,6 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Epoch, Index};
 <span class="kw">use </span>std::{
     cmp::Ordering,
@@ -574,15 +569,6 @@
         <span class="self">self</span>.<span class="number">0</span>.backend()
     }
 
-    <span class="doccomment">/// Transmute this identifier to one with a different marker trait.
-    ///
-    /// Legal use is governed through a sealed trait, however it's correctness
-    /// depends on the current implementation of `wgpu-core`.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub const fn </span>transmute&lt;U: <span class="self">self</span>::transmute::Transmute&lt;T&gt;&gt;(<span class="self">self</span>) -&gt; Id&lt;U&gt; {
-        Id(<span class="self">self</span>.<span class="number">0</span>, PhantomData)
-    }
-
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>zip(index: Index, epoch: Epoch, backend: Backend) -&gt; <span class="self">Self </span>{
         Id(RawId::zip(index, epoch, backend), PhantomData)
@@ -592,20 +578,6 @@
     </span><span class="kw">pub fn </span>unzip(<span class="self">self</span>) -&gt; (Index, Epoch, Backend) {
         <span class="self">self</span>.<span class="number">0</span>.unzip()
     }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>transmute {
-    <span class="comment">// This trait is effectively sealed to prevent illegal transmutes.
-    </span><span class="kw">pub trait </span>Transmute&lt;U&gt;: <span class="kw">super</span>::Marker {}
-
-    <span class="comment">// Self-transmute is always legal.
-    </span><span class="kw">impl</span>&lt;T&gt; Transmute&lt;T&gt; <span class="kw">for </span>T <span class="kw">where </span>T: <span class="kw">super</span>::Marker {}
-
-    <span class="comment">// TODO: Remove these once queues have their own identifiers.
-    </span><span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::Queue&gt; <span class="kw">for </span><span class="kw">super</span>::markers::Device {}
-    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::Device&gt; <span class="kw">for </span><span class="kw">super</span>::markers::Queue {}
-    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::CommandBuffer&gt; <span class="kw">for </span><span class="kw">super</span>::markers::CommandEncoder {}
-    <span class="kw">impl </span>Transmute&lt;<span class="kw">super</span>::markers::CommandEncoder&gt; <span class="kw">for </span><span class="kw">super</span>::markers::CommandBuffer {}
 }
 
 <span class="kw">impl</span>&lt;T&gt; Copy <span class="kw">for </span>Id&lt;T&gt; <span class="kw">where </span>T: Marker {}
@@ -739,6 +711,24 @@
     <span class="kw">pub type </span>RenderBundleEncoderId RenderBundleEncoder;
     <span class="kw">pub type </span>RenderBundleId RenderBundle;
     <span class="kw">pub type </span>QuerySetId QuerySet;
+}
+
+<span class="kw">impl </span>CommandEncoderId {
+    <span class="kw">pub fn </span>into_command_buffer_id(<span class="self">self</span>) -&gt; CommandBufferId {
+        Id(<span class="self">self</span>.<span class="number">0</span>, PhantomData)
+    }
+}
+
+<span class="kw">impl </span>CommandBufferId {
+    <span class="kw">pub fn </span>into_command_encoder_id(<span class="self">self</span>) -&gt; CommandEncoderId {
+        Id(<span class="self">self</span>.<span class="number">0</span>, PhantomData)
+    }
+}
+
+<span class="kw">impl </span>DeviceId {
+    <span class="kw">pub fn </span>into_queue_id(<span class="self">self</span>) -&gt; QueueId {
+        Id(<span class="self">self</span>.<span class="number">0</span>, PhantomData)
+    }
 }
 
 <span class="attr">#[test]

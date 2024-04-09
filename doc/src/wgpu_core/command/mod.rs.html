@@ -987,7 +987,7 @@
         id: id::CommandEncoderId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
         <span class="kw">let </span>storage = hub.command_buffers.read();
-        <span class="kw">match </span>storage.get(id.transmute()) {
+        <span class="kw">match </span>storage.get(id.into_command_buffer_id()) {
             <span class="prelude-val">Ok</span>(cmd_buf) =&gt; <span class="kw">match </span>cmd_buf.data.lock().as_ref().unwrap().status {
                 CommandEncoderStatus::Recording =&gt; <span class="prelude-val">Ok</span>(cmd_buf.clone()),
                 CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
@@ -1152,7 +1152,7 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>error = <span class="kw">match </span>hub.command_buffers.get(encoder_id.transmute()) {
+        <span class="kw">let </span>error = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
             <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
                 <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
@@ -1178,7 +1178,7 @@
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Some</span>(CommandEncoderError::Invalid),
         };
 
-        (encoder_id.transmute(), error)
+        (encoder_id.into_command_buffer_id(), error)
     }
 
     <span class="kw">pub fn </span>command_encoder_push_debug_group&lt;A: HalApi&gt;(
@@ -1434,7 +1434,7 @@
         <span class="comment">// This error is not in the error chain, only notes are needed
         </span><span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Pass(id) =&gt; {
-                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id.transmute());
+                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id.into_command_buffer_id());
             }
             <span class="self">Self</span>::SetBindGroup(id) =&gt; {
                 fmt.bind_group_label(<span class="kw-2">&amp;</span>id);

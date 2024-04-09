@@ -2624,6 +2624,8 @@
 <a href="#2623" id="2623">2623</a>
 <a href="#2624" id="2624">2624</a>
 <a href="#2625" id="2625">2625</a>
+<a href="#2626" id="2626">2626</a>
+<a href="#2627" id="2627">2627</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3960,7 +3962,9 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_command_encoder"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>fid = hub.command_buffers.prepare(id_in.map(|id| id.transmute()));
+        <span class="kw">let </span>fid = hub
+            .command_buffers
+            .prepare(id_in.map(|id| id.into_command_buffer_id()));
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
@@ -3995,11 +3999,11 @@
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(command_buffer));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_command_encoder -&gt; {id:?}"</span>);
-            <span class="kw">return </span>(id.transmute(), <span class="prelude-val">None</span>);
+            <span class="kw">return </span>(id.into_command_encoder_id(), <span class="prelude-val">None</span>);
         };
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
-        (id.transmute(), <span class="prelude-val">Some</span>(error))
+        (id.into_command_encoder_id(), <span class="prelude-val">Some</span>(error))
     }
 
     <span class="kw">pub fn </span>command_buffer_label&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: id::CommandBufferId) -&gt; String {
@@ -4014,7 +4018,7 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cmd_buf) = hub
             .command_buffers
-            .unregister(command_encoder_id.transmute())
+            .unregister(command_encoder_id.into_command_buffer_id())
         {
             cmd_buf.data.lock().as_mut().unwrap().encoder.discard();
             cmd_buf
@@ -4026,7 +4030,7 @@
     <span class="kw">pub fn </span>command_buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_buffer_id: id::CommandBufferId) {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandBuffer::drop"</span>);
         <span class="macro">api_log!</span>(<span class="string">"CommandBuffer::drop {command_buffer_id:?}"</span>);
-        <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id.transmute())
+        <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id.into_command_encoder_id())
     }
 
     <span class="kw">pub fn </span>device_create_render_bundle_encoder(
@@ -4747,7 +4751,7 @@
             .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
-            <span class="kw">if </span>submission_index.queue_id != device_id.transmute() {
+            <span class="kw">if </span>submission_index.queue_id != device_id.into_queue_id() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
                     submission_index.queue_id,
                     device_id,
