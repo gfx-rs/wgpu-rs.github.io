@@ -1174,9 +1174,6 @@
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
 <a href="#1175" id="1175">1175</a>
-<a href="#1176" id="1176">1176</a>
-<a href="#1177" id="1177">1177</a>
-<a href="#1178" id="1178">1178</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -1846,22 +1843,19 @@
         }
 
         <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.unregister(id);
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = Arc::into_inner(surface.unwrap()) {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
-                <span class="attr">#[cfg(vulkan)]
-                </span>unconfigure::&lt;hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(metal)]
-                </span>unconfigure::&lt;hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(dx12)]
-                </span>unconfigure::&lt;hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-                <span class="attr">#[cfg(gles)]
-                </span>unconfigure::&lt;hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
-            }
-
-            <span class="self">self</span>.instance.destroy_surface(surface);
-        } <span class="kw">else </span>{
-            <span class="macro">panic!</span>(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
+        <span class="kw">let </span>surface = Arc::into_inner(surface.unwrap())
+            .expect(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
+            <span class="attr">#[cfg(vulkan)]
+            </span>unconfigure::&lt;hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            <span class="attr">#[cfg(metal)]
+            </span>unconfigure::&lt;hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            <span class="attr">#[cfg(dx12)]
+            </span>unconfigure::&lt;hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            <span class="attr">#[cfg(gles)]
+            </span>unconfigure::&lt;hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
         }
+        <span class="self">self</span>.instance.destroy_surface(surface);
     }
 
     <span class="kw">fn </span>enumerate&lt;A: HalApi&gt;(
