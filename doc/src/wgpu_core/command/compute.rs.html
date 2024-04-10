@@ -1075,6 +1075,8 @@
 <a href="#1074" id="1074">1074</a>
 <a href="#1075" id="1075">1075</a>
 <a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
 <span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
@@ -1113,6 +1115,7 @@
 
 <span class="kw">use </span>thiserror::Error;
 
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{fmt, mem, str};
 
 <span class="attr">#[doc(hidden)]
@@ -1442,7 +1445,8 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf: Arc&lt;CommandBuffer&lt;A&gt;&gt; =
+            CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(pass_scope)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::InvalidDevice(
