@@ -206,6 +206,10 @@
 <a href="#205" id="205">205</a>
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
@@ -245,7 +249,7 @@
 /// any other dependent resource
 ///
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Registry&lt;T: Resource&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Registry&lt;T: Resource&gt; {
     identity: Arc&lt;IdentityManager&lt;T::Marker&gt;&gt;,
     storage: RwLock&lt;Storage&lt;T&gt;&gt;,
     backend: Backend,
@@ -354,16 +358,20 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">'a</span>, Storage&lt;T&gt;&gt; {
         <span class="self">self</span>.storage.write()
     }
-    <span class="kw">pub fn </span>unregister_locked(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, storage: <span class="kw-2">&amp;mut </span>Storage&lt;T&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unregister_locked(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: Id&lt;T::Marker&gt;,
+        storage: <span class="kw-2">&amp;mut </span>Storage&lt;T&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
         <span class="self">self</span>.identity.free(id);
         storage.remove(id)
     }
-    <span class="kw">pub fn </span>force_replace(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, <span class="kw-2">mut </span>value: T) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, <span class="kw-2">mut </span>value: T) {
         <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
         value.as_info_mut().set_id(id);
         storage.force_replace(id, value)
     }
-    <span class="kw">pub fn </span>force_replace_with_error(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, label: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace_with_error(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, label: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
         storage.remove(id);
         storage.insert_error(id, label);
@@ -375,7 +383,7 @@
         </span>value
     }
 
-    <span class="kw">pub fn </span>label_for_resource(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; String {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label_for_resource(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; String {
         <span class="kw">let </span>guard = <span class="self">self</span>.storage.read();
 
         <span class="kw">let </span>type_name = guard.kind();
