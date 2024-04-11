@@ -766,6 +766,9 @@
 <a href="#765" id="765">765</a>
 <a href="#766" id="766">766</a>
 <a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Handle, UniqueArena},
     Scalar,
@@ -1275,11 +1278,14 @@
                 }
                 spirv::ImageOperands::CONST_OFFSET =&gt; {
                     <span class="kw">let </span>offset_constant = <span class="self">self</span>.next()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>offset_handle = <span class="self">self</span>.lookup_constant.lookup(offset_constant)<span class="question-mark">?</span>.handle;
-                    <span class="kw">let </span>offset_handle = ctx.global_expressions.append(
-                        <span class="kw">crate</span>::Expression::Constant(offset_handle),
-                        Default::default(),
-                    );
+                    <span class="kw">let </span>offset_expr = <span class="self">self
+                        </span>.lookup_constant
+                        .lookup(offset_constant)<span class="question-mark">?
+                        </span>.inner
+                        .to_expr();
+                    <span class="kw">let </span>offset_handle = ctx
+                        .global_expressions
+                        .append(offset_expr, Default::default());
                     offset = <span class="prelude-val">Some</span>(offset_handle);
                     words_left -= <span class="number">1</span>;
                 }

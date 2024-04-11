@@ -5345,6 +5345,10 @@
 <a href="#5344" id="5344">5344</a>
 <a href="#5345" id="5345">5345</a>
 <a href="#5346" id="5346">5346</a>
+<a href="#5347" id="5347">5347</a>
+<a href="#5348" id="5348">5348</a>
+<a href="#5349" id="5349">5349</a>
+<a href="#5350" id="5350">5350</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -5543,6 +5547,7 @@ This value then gets used instead of `OpLoad` result later on.
     location: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     desc_set: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     desc_index: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
+    specialization_constant_id: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     storage_buffer: bool,
     offset: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     array_stride: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
@@ -5625,8 +5630,23 @@ This value then gets used instead of `OpLoad` result later on.
 }
 
 <span class="attr">#[derive(Debug)]
+</span><span class="kw">enum </span>Constant {
+    Constant(Handle&lt;<span class="kw">crate</span>::Constant&gt;),
+    Override(Handle&lt;<span class="kw">crate</span>::Override&gt;),
+}
+
+<span class="kw">impl </span>Constant {
+    <span class="kw">const fn </span>to_expr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Expression {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::Constant(c) =&gt; <span class="kw">crate</span>::Expression::Constant(c),
+            <span class="self">Self</span>::Override(o) =&gt; <span class="kw">crate</span>::Expression::Override(o),
+        }
+    }
+}
+
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>LookupConstant {
-    handle: Handle&lt;<span class="kw">crate</span>::Constant&gt;,
+    inner: Constant,
     type_id: spirv::Word,
 }
 
@@ -6097,6 +6117,9 @@ This value then gets used instead of `OpLoad` result later on.
             }
             spirv::Decoration::RowMajor =&gt; {
                 dec.matrix_major = <span class="prelude-val">Some</span>(Majority::Row);
+            }
+            spirv::Decoration::SpecId =&gt; {
+                dec.specialization_constant_id = <span class="prelude-val">Some</span>(<span class="self">self</span>.next()<span class="question-mark">?</span>);
             }
             other =&gt; {
                 <span class="macro">log::warn!</span>(<span class="string">"Unknown decoration {:?}"</span>, other);
@@ -6732,10 +6755,7 @@ This value then gets used instead of `OpLoad` result later on.
                         inst.expect(<span class="number">5</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>init_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                         <span class="kw">let </span>lconst = <span class="self">self</span>.lookup_constant.lookup(init_id)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Some</span>(
-                            ctx.expressions
-                                .append(<span class="kw">crate</span>::Expression::Constant(lconst.handle), span),
-                        )
+                        <span class="prelude-val">Some</span>(ctx.expressions.append(lconst.inner.to_expr(), span))
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
@@ -8989,9 +9009,9 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>exec_scope_const = <span class="self">self</span>.lookup_constant.lookup(exec_scope_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>semantics_const = <span class="self">self</span>.lookup_constant.lookup(semantics_id)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>exec_scope = resolve_constant(ctx.gctx(), exec_scope_const.handle)
+                    <span class="kw">let </span>exec_scope = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>exec_scope_const.inner)
                         .ok_or(Error::InvalidBarrierScope(exec_scope_id))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>semantics = resolve_constant(ctx.gctx(), semantics_const.handle)
+                    <span class="kw">let </span>semantics = resolve_constant(ctx.gctx(), <span class="kw-2">&amp;</span>semantics_const.inner)
                         .ok_or(Error::InvalidBarrierMemorySemantics(semantics_id))<span class="question-mark">?</span>;
 
                     <span class="kw">if </span>exec_scope == spirv::Scope::Workgroup <span class="kw">as </span>u32 {
@@ -9052,6 +9072,7 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         globals: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
         constants: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+        overrides: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
     ) -&gt; Arena&lt;<span class="kw">crate</span>::Expression&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>expressions = Arena::new();
         <span class="attr">#[allow(clippy::panic)]
@@ -9076,8 +9097,11 @@ This value then gets used instead of `OpLoad` result later on.
         }
         <span class="comment">// register constants
         </span><span class="kw">for </span>(<span class="kw-2">&amp;</span>id, con) <span class="kw">in </span><span class="self">self</span>.lookup_constant.iter() {
-            <span class="kw">let </span>span = constants.get_span(con.handle);
-            <span class="kw">let </span>handle = expressions.append(<span class="kw">crate</span>::Expression::Constant(con.handle), span);
+            <span class="kw">let </span>(expr, span) = <span class="kw">match </span>con.inner {
+                Constant::Constant(c) =&gt; (<span class="kw">crate</span>::Expression::Constant(c), constants.get_span(c)),
+                Constant::Override(o) =&gt; (<span class="kw">crate</span>::Expression::Override(o), overrides.get_span(o)),
+            };
+            <span class="kw">let </span>handle = expressions.append(expr, span);
             <span class="self">self</span>.lookup_expression.insert(
                 id,
                 LookupExpression {
@@ -9282,11 +9306,17 @@ This value then gets used instead of `OpLoad` result later on.
                 Op::TypeImage =&gt; <span class="self">self</span>.parse_type_image(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::TypeSampledImage =&gt; <span class="self">self</span>.parse_type_sampled_image(inst),
                 Op::TypeSampler =&gt; <span class="self">self</span>.parse_type_sampler(inst, <span class="kw-2">&amp;mut </span>module),
-                Op::Constant =&gt; <span class="self">self</span>.parse_constant(inst, <span class="kw-2">&amp;mut </span>module),
-                Op::ConstantComposite =&gt; <span class="self">self</span>.parse_composite_constant(inst, <span class="kw-2">&amp;mut </span>module),
+                Op::Constant | Op::SpecConstant =&gt; <span class="self">self</span>.parse_constant(inst, <span class="kw-2">&amp;mut </span>module),
+                Op::ConstantComposite | Op::SpecConstantComposite =&gt; {
+                    <span class="self">self</span>.parse_composite_constant(inst, <span class="kw-2">&amp;mut </span>module)
+                }
                 Op::ConstantNull | Op::Undef =&gt; <span class="self">self</span>.parse_null_constant(inst, <span class="kw-2">&amp;mut </span>module),
-                Op::ConstantTrue =&gt; <span class="self">self</span>.parse_bool_constant(inst, <span class="bool-val">true</span>, <span class="kw-2">&amp;mut </span>module),
-                Op::ConstantFalse =&gt; <span class="self">self</span>.parse_bool_constant(inst, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>module),
+                Op::ConstantTrue | Op::SpecConstantTrue =&gt; {
+                    <span class="self">self</span>.parse_bool_constant(inst, <span class="bool-val">true</span>, <span class="kw-2">&amp;mut </span>module)
+                }
+                Op::ConstantFalse | Op::SpecConstantFalse =&gt; {
+                    <span class="self">self</span>.parse_bool_constant(inst, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>module)
+                }
                 Op::Variable =&gt; <span class="self">self</span>.parse_global_variable(inst, <span class="kw-2">&amp;mut </span>module),
                 Op::Function =&gt; {
                     <span class="self">self</span>.switch(ModuleState::Function, inst.op)<span class="question-mark">?</span>;
@@ -9843,9 +9873,9 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>length_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
         <span class="kw">let </span>length_const = <span class="self">self</span>.lookup_constant.lookup(length_id)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>size = resolve_constant(module.to_ctx(), length_const.handle)
+        <span class="kw">let </span>size = resolve_constant(module.to_ctx(), <span class="kw-2">&amp;</span>length_const.inner)
             .and_then(NonZeroU32::new)
-            .ok_or(Error::InvalidArraySize(length_const.handle))<span class="question-mark">?</span>;
+            .ok_or(Error::InvalidArraySize(length_id))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
         <span class="kw">let </span>base = <span class="self">self</span>.lookup_type.lookup(type_id)<span class="question-mark">?</span>.handle;
@@ -10258,28 +10288,13 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedType(type_lookup.handle)),
         };
 
-        <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
-
         <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 
         <span class="kw">let </span>init = module
             .global_expressions
             .append(<span class="kw">crate</span>::Expression::Literal(literal), span);
-        <span class="self">self</span>.lookup_constant.insert(
-            id,
-            LookupConstant {
-                handle: module.constants.append(
-                    <span class="kw">crate</span>::Constant {
-                        name: decor.name,
-                        ty,
-                        init,
-                    },
-                    span,
-                ),
-                type_id,
-            },
-        );
-        <span class="prelude-val">Ok</span>(())
+
+        <span class="self">self</span>.insert_parsed_constant(module, id, type_id, ty, init, span)
     }
 
     <span class="kw">fn </span>parse_composite_constant(
@@ -10304,32 +10319,17 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="kw">let </span>constant = <span class="self">self</span>.lookup_constant.lookup(component_id)<span class="question-mark">?</span>;
             <span class="kw">let </span>expr = module
                 .global_expressions
-                .append(<span class="kw">crate</span>::Expression::Constant(constant.handle), span);
+                .append(constant.inner.to_expr(), span);
             components.push(expr);
         }
-
-        <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
 
         <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 
         <span class="kw">let </span>init = module
             .global_expressions
             .append(<span class="kw">crate</span>::Expression::Compose { ty, components }, span);
-        <span class="self">self</span>.lookup_constant.insert(
-            id,
-            LookupConstant {
-                handle: module.constants.append(
-                    <span class="kw">crate</span>::Constant {
-                        name: decor.name,
-                        ty,
-                        init,
-                    },
-                    span,
-                ),
-                type_id,
-            },
-        );
-        <span class="prelude-val">Ok</span>(())
+
+        <span class="self">self</span>.insert_parsed_constant(module, id, type_id, ty, init, span)
     }
 
     <span class="kw">fn </span>parse_null_constant(
@@ -10347,22 +10347,11 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>type_lookup = <span class="self">self</span>.lookup_type.lookup(type_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>ty = type_lookup.handle;
 
-        <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
-
         <span class="kw">let </span>init = module
             .global_expressions
             .append(<span class="kw">crate</span>::Expression::ZeroValue(ty), span);
-        <span class="kw">let </span>handle = module.constants.append(
-            <span class="kw">crate</span>::Constant {
-                name: decor.name,
-                ty,
-                init,
-            },
-            span,
-        );
-        <span class="self">self</span>.lookup_constant
-            .insert(id, LookupConstant { handle, type_id });
-        <span class="prelude-val">Ok</span>(())
+
+        <span class="self">self</span>.insert_parsed_constant(module, id, type_id, ty, init, span)
     }
 
     <span class="kw">fn </span>parse_bool_constant(
@@ -10381,26 +10370,44 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>type_lookup = <span class="self">self</span>.lookup_type.lookup(type_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>ty = type_lookup.handle;
 
-        <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
-
         <span class="kw">let </span>init = module.global_expressions.append(
             <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::Bool(value)),
             span,
         );
-        <span class="self">self</span>.lookup_constant.insert(
-            id,
-            LookupConstant {
-                handle: module.constants.append(
-                    <span class="kw">crate</span>::Constant {
-                        name: decor.name,
-                        ty,
-                        init,
-                    },
-                    span,
-                ),
-                type_id,
-            },
-        );
+
+        <span class="self">self</span>.insert_parsed_constant(module, id, type_id, ty, init, span)
+    }
+
+    <span class="kw">fn </span>insert_parsed_constant(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Module,
+        id: u32,
+        type_id: u32,
+        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+        init: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        span: <span class="kw">crate</span>::Span,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span>decor = <span class="self">self</span>.future_decor.remove(<span class="kw-2">&amp;</span>id).unwrap_or_default();
+
+        <span class="kw">let </span>inner = <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = decor.specialization_constant_id {
+            <span class="kw">let </span>o = <span class="kw">crate</span>::Override {
+                name: decor.name,
+                id: <span class="prelude-val">Some</span>(id.try_into().map_err(|<span class="kw">_</span>| Error::SpecIdTooHigh(id))<span class="question-mark">?</span>),
+                ty,
+                init: <span class="prelude-val">Some</span>(init),
+            };
+            Constant::Override(module.overrides.append(o, span))
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>c = <span class="kw">crate</span>::Constant {
+                name: decor.name,
+                ty,
+                init,
+            };
+            Constant::Constant(module.constants.append(c, span))
+        };
+
+        <span class="self">self</span>.lookup_constant
+            .insert(id, LookupConstant { inner, type_id });
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -10423,7 +10430,7 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="kw">let </span>lconst = <span class="self">self</span>.lookup_constant.lookup(init_id)<span class="question-mark">?</span>;
             <span class="kw">let </span>expr = module
                 .global_expressions
-                .append(<span class="kw">crate</span>::Expression::Constant(lconst.handle), span);
+                .append(lconst.inner.to_expr(), span);
             <span class="prelude-val">Some</span>(expr)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -10638,10 +10645,11 @@ This value then gets used instead of `OpLoad` result later on.
     <span class="prelude-val">Ok</span>(expr)
 }
 
-<span class="kw">fn </span>resolve_constant(
-    gctx: <span class="kw">crate</span>::proc::GlobalCtx,
-    constant: Handle&lt;<span class="kw">crate</span>::Constant&gt;,
-) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+<span class="kw">fn </span>resolve_constant(gctx: <span class="kw">crate</span>::proc::GlobalCtx, constant: <span class="kw-2">&amp;</span>Constant) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    <span class="kw">let </span>constant = <span class="kw">match </span><span class="kw-2">*</span>constant {
+        Constant::Constant(constant) =&gt; constant,
+        Constant::Override(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+    };
     <span class="kw">match </span>gctx.global_expressions[gctx.constants[constant].init] {
         <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::U32(id)) =&gt; <span class="prelude-val">Some</span>(id),
         <span class="kw">crate</span>::Expression::Literal(<span class="kw">crate</span>::Literal::I32(id)) =&gt; <span class="prelude-val">Some</span>(id <span class="kw">as </span>u32),
