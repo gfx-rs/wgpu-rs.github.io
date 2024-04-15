@@ -1599,6 +1599,11 @@
 <a href="#1598" id="1598">1598</a>
 <a href="#1599" id="1599">1599</a>
 <a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1753,14 +1758,19 @@
     Texture(Arc&lt;Texture&lt;A&gt;&gt;),
 }
 
-<span class="doccomment">/// A queue execution for a particular command encoder.
+<span class="doccomment">/// A series of [`CommandBuffers`] that have been submitted to a
+/// queue, and the [`wgpu_hal::CommandEncoder`] that built them.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EncoderInFlight&lt;A: HalApi&gt; {
     raw: A::CommandEncoder,
     cmd_buffers: Vec&lt;A::CommandBuffer&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; EncoderInFlight&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>land(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; A::CommandEncoder {
+    <span class="doccomment">/// Free all of our command buffers.
+    ///
+    /// Return the command encoder, fully reset and ready to be
+    /// reused.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>land(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; A::CommandEncoder {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.reset_all(<span class="self">self</span>.cmd_buffers.into_iter()) };
         <span class="self">self</span>.raw
     }

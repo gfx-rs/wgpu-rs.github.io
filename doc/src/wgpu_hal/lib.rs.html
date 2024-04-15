@@ -1837,6 +1837,40 @@
 <a href="#1836" id="1836">1836</a>
 <a href="#1837" id="1837">1837</a>
 <a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
+<a href="#1871" id="1871">1871</a>
+<a href="#1872" id="1872">1872</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! A cross-platform unsafe graphics abstraction.
  *
  * This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2142,7 +2176,16 @@
 
     <span class="kw">type </span>Queue: Queue&lt;A = <span class="self">Self</span>&gt;;
     <span class="kw">type </span>CommandEncoder: CommandEncoder&lt;A = <span class="self">Self</span>&gt;;
-    <span class="kw">type </span>CommandBuffer: WasmNotSendSync + fmt::Debug;
+
+    <span class="doccomment">/// This API's command buffer type.
+    ///
+    /// The only thing you can do with `CommandBuffer`s is build them
+    /// with a [`CommandEncoder`] and then pass them to
+    /// [`Queue::submit`] for execution, or destroy them by passing
+    /// them to [`CommandEncoder::reset_all`].
+    ///
+    /// [`CommandEncoder`]: Api::CommandEncoder
+    </span><span class="kw">type </span>CommandBuffer: WasmNotSendSync + fmt::Debug;
 
     <span class="kw">type </span>Buffer: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
     <span class="kw">type </span>Texture: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
@@ -2384,11 +2427,21 @@
     <span class="doccomment">/// Submits the command buffers for execution on GPU.
     ///
     /// Valid usage:
-    /// - all of the command buffers were created from command pools
-    ///   that are associated with this queue.
-    /// - all of the command buffers had `CommandBuffer::finish()` called.
-    /// - all surface textures that the command buffers write to must be
-    ///   passed to the surface_textures argument.
+    ///
+    /// - All of the [`CommandBuffer`][cb]s were created from
+    ///   [`CommandEncoder`][ce]s that are associated with this queue.
+    ///
+    /// - All of those [`CommandBuffer`][cb]s must remain alive until
+    ///   the submitted commands have finished execution. (Since
+    ///   command buffers must not outlive their encoders, this
+    ///   implies that the encoders must remain alive as well.)
+    ///
+    /// - All of the [`SurfaceTexture`][st]s that the command buffers
+    ///   write to appear in the `surface_textures` argument.
+    ///
+    /// [cb]: Api::CommandBuffer
+    /// [ce]: Api::CommandEncoder
+    /// [st]: Api::SurfaceTexture
     </span><span class="kw">unsafe fn </span>submit(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandBuffer],
@@ -2403,7 +2456,12 @@
     <span class="kw">unsafe fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32;
 }
 
-<span class="doccomment">/// Encoder and allocation pool for `CommandBuffer`.
+<span class="doccomment">/// Encoder and allocation pool for `CommandBuffer`s.
+///
+/// A `CommandEncoder` not only constructs `CommandBuffer`s but also
+/// acts as the allocation pool that owns the buffers' underlying
+/// storage. Thus, `CommandBuffer`s must not outlive the
+/// `CommandEncoder` that created them.
 ///
 /// The life cycle of a `CommandBuffer` is as follows:
 ///
@@ -2416,14 +2474,17 @@
 ///
 /// - Call methods like `copy_buffer_to_buffer`, `begin_render_pass`,
 ///   etc. on a "recording" `CommandEncoder` to add commands to the
-///   list.
+///   list. (If an error occurs, you must call `discard_encoding`; see
+///   below.)
 ///
 /// - Call `end_encoding` on a recording `CommandEncoder` to close the
 ///   encoder and construct a fresh `CommandBuffer` consisting of the
 ///   list of commands recorded up to that point.
 ///
 /// - Call `discard_encoding` on a recording `CommandEncoder` to drop
-///   the commands recorded thus far and close the encoder.
+///   the commands recorded thus far and close the encoder. This is
+///   the only safe thing to do on a `CommandEncoder` if an error has
+///   occurred while recording commands.
 ///
 /// - Call `reset_all` on a closed `CommandEncoder`, passing all the
 ///   live `CommandBuffers` built from it. All the `CommandBuffer`s
@@ -2441,6 +2502,10 @@
 ///   built it.
 ///
 /// - A `CommandEncoder` must not outlive its `Device`.
+///
+/// It is the user's responsibility to meet this requirements. This
+/// allows `CommandEncoder` implementations to keep their state
+/// tracking to a minimum.
 </span><span class="kw">pub trait </span>CommandEncoder: WasmNotSendSync + fmt::Debug {
     <span class="kw">type </span>A: Api;
 
@@ -2454,6 +2519,9 @@
     </span><span class="kw">unsafe fn </span>begin_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: Label) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt;;
 
     <span class="doccomment">/// Discard the command list under construction, if any.
+    ///
+    /// If an error has occurred while recording commands, this
+    /// is the only safe thing to do with the encoder.
     ///
     /// This puts this `CommandEncoder` in the "closed" state.
     ///

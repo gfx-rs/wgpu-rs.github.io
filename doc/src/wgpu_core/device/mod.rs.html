@@ -480,6 +480,23 @@
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
 <a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
@@ -859,12 +876,25 @@
     <span class="prelude-val">Ok</span>(mapping.ptr)
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandAllocator&lt;A: HalApi&gt; {
+<span class="doccomment">/// A pool of free [`wgpu_hal::CommandEncoder`]s, owned by a `Device`.
+///
+/// Each encoder in this list is in the "closed" state.
+///
+/// Since a raw [`CommandEncoder`][ce] is itself a pool for allocating
+/// raw [`CommandBuffer`][cb]s, this is a pool of pools.
+///
+/// [ce]: wgpu_hal::CommandEncoder
+/// [cb]: wgpu_hal::Api::CommandBuffer
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandAllocator&lt;A: HalApi&gt; {
     free_encoders: Vec&lt;A::CommandEncoder&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; CommandAllocator&lt;A&gt; {
-    <span class="kw">fn </span>acquire_encoder(
+    <span class="doccomment">/// Return a fresh [`wgpu_hal::CommandEncoder`] in the "closed" state.
+    ///
+    /// If we have free encoders in the pool, take one of those. Otherwise,
+    /// create a new one on `device`.
+    </span><span class="kw">fn </span>acquire_encoder(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>A::Device,
         queue: <span class="kw-2">&amp;</span>A::Queue,
@@ -878,11 +908,15 @@
         }
     }
 
-    <span class="kw">fn </span>release_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>, encoder: A::CommandEncoder) {
+    <span class="doccomment">/// Add `encoder` back to the free pool.
+    </span><span class="kw">fn </span>release_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>, encoder: A::CommandEncoder) {
         <span class="self">self</span>.free_encoders.push(encoder);
     }
 
-    <span class="kw">fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) {
+    <span class="doccomment">/// Free the pool of command encoders.
+    ///
+    /// This is only called when the `Device` is dropped.
+    </span><span class="kw">fn </span>dispose(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) {
         <span class="macro">resource_log!</span>(
             <span class="string">"CommandAllocator::dispose encoders {}"</span>,
             <span class="self">self</span>.free_encoders.len()
