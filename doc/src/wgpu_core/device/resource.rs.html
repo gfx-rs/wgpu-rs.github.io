@@ -3638,14 +3638,6 @@
 <a href="#3637" id="3637">3637</a>
 <a href="#3638" id="3638">3638</a>
 <a href="#3639" id="3639">3639</a>
-<a href="#3640" id="3640">3640</a>
-<a href="#3641" id="3641">3641</a>
-<a href="#3642" id="3642">3642</a>
-<a href="#3643" id="3643">3643</a>
-<a href="#3644" id="3644">3644</a>
-<a href="#3645" id="3645">3645</a>
-<a href="#3646" id="3646">3646</a>
-<a href="#3647" id="3647">3647</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3655,8 +3647,8 @@
         bgl,
         life::{LifetimeTracker, WaitIdleError},
         queue::PendingWrites,
-        AttachmentData, CommandAllocator, DeviceLostInvocation, MissingDownlevelFlags,
-        MissingFeatures, RenderPassContext, CLEANUP_WAIT_MS,
+        AttachmentData, DeviceLostInvocation, MissingDownlevelFlags, MissingFeatures,
+        RenderPassContext, CLEANUP_WAIT_MS,
     },
     hal_api::HalApi,
     hal_label,
@@ -3745,7 +3737,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) zero_buffer: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Device&lt;A&gt;&gt;,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: Mutex&lt;<span class="prelude-ty">Option</span>&lt;CommandAllocator&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: command::CommandAllocator&lt;A&gt;,
     <span class="comment">//Note: The submission index here corresponds to the last submission that is done.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: AtomicU64, <span class="comment">//SubmissionIndex,
     // NOTE: if both are needed, the `snatchable_lock` must be consistently acquired before the
@@ -3813,7 +3805,7 @@
         <span class="kw">let </span>raw = <span class="self">self</span>.raw.take().unwrap();
         <span class="kw">let </span>pending_writes = <span class="self">self</span>.pending_writes.lock().take().unwrap();
         pending_writes.dispose(<span class="kw-2">&amp;</span>raw);
-        <span class="self">self</span>.command_allocator.lock().take().unwrap().dispose(<span class="kw-2">&amp;</span>raw);
+        <span class="self">self</span>.command_allocator.dispose(<span class="kw-2">&amp;</span>raw);
         <span class="kw">unsafe </span>{
             raw.destroy_buffer(<span class="self">self</span>.zero_buffer.take().unwrap());
             raw.destroy_fence(<span class="self">self</span>.fence.write().take().unwrap());
@@ -3871,10 +3863,8 @@
         <span class="kw">let </span>fence =
             <span class="kw">unsafe </span>{ raw_device.create_fence() }.map_err(|<span class="kw">_</span>| CreateDeviceError::OutOfMemory)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>com_alloc = CommandAllocator {
-            free_encoders: Vec::new(),
-        };
-        <span class="kw">let </span>pending_encoder = com_alloc
+        <span class="kw">let </span>command_allocator = command::CommandAllocator::new();
+        <span class="kw">let </span>pending_encoder = command_allocator
             .acquire_encoder(<span class="kw-2">&amp;</span>raw_device, raw_queue)
             .map_err(|<span class="kw">_</span>| CreateDeviceError::OutOfMemory)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = queue::PendingWrites::&lt;A&gt;::new(pending_encoder);
@@ -3919,7 +3909,7 @@
             queue_to_drop: OnceCell::new(),
             zero_buffer: <span class="prelude-val">Some</span>(zero_buffer),
             info: ResourceInfo::new(<span class="string">"&lt;device&gt;"</span>, <span class="prelude-val">None</span>),
-            command_allocator: Mutex::new(<span class="prelude-val">Some</span>(com_alloc)),
+            command_allocator,
             active_submission_index: AtomicU64::new(<span class="number">0</span>),
             fence: RwLock::new(<span class="prelude-val">Some</span>(fence)),
             snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new() },
@@ -4073,10 +4063,8 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life();
-        <span class="kw">let </span>submission_closures = life_tracker.triage_submissions(
-            last_done_index,
-            <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
-        );
+        <span class="kw">let </span>submission_closures =
+            life_tracker.triage_submissions(last_done_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
 
         {
             <span class="comment">// Normally, `temp_suspected` exists only to save heap
@@ -7133,10 +7121,9 @@
                     .map_err(DeviceError::from)<span class="question-mark">?
             </span>};
             drop(guard);
-            <span class="kw">let </span>closures = <span class="self">self</span>.lock_life().triage_submissions(
-                submission_index,
-                <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
-            );
+            <span class="kw">let </span>closures = <span class="self">self
+                </span>.lock_life()
+                .triage_submissions(submission_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
             <span class="macro">assert!</span>(
                 closures.is_empty(),
                 <span class="string">"wait_for_submit is not expected to work with closures"
@@ -7264,10 +7251,7 @@
             <span class="macro">log::error!</span>(<span class="string">"failed to wait for the device: {error}"</span>);
         }
         <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life();
-        <span class="kw">let _ </span>= life_tracker.triage_submissions(
-            current_index,
-            <span class="self">self</span>.command_allocator.lock().as_mut().unwrap(),
-        );
+        <span class="kw">let _ </span>= life_tracker.triage_submissions(current_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = life_tracker.device_lost_closure.take() {
             <span class="comment">// It's important to not hold the lock while calling the closure.
             </span>drop(life_tracker);

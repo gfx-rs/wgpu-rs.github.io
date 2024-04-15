@@ -1610,7 +1610,7 @@
     api_log,
     command::{
         extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
-        ClearError, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
+        ClearError, CommandAllocator, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
     },
     conv,
     device::{life::ResourceMaps, DeviceError, WaitIdleError},
@@ -1864,7 +1864,7 @@
     <span class="attr">#[must_use]
     </span><span class="kw">fn </span>post_submit(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        command_allocator: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::CommandAllocator&lt;A&gt;,
+        command_allocator: <span class="kw-2">&amp;</span>CommandAllocator&lt;A&gt;,
         device: <span class="kw-2">&amp;</span>A::Device,
         queue: <span class="kw-2">&amp;</span>A::Queue,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;EncoderInFlight&lt;A&gt;&gt; {
@@ -3136,7 +3136,7 @@
 
             <span class="macro">profiling::scope!</span>(<span class="string">"cleanup"</span>);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_execution) = pending_writes.post_submit(
-                device.command_allocator.lock().as_mut().unwrap(),
+                <span class="kw-2">&amp;</span>device.command_allocator,
                 device.raw(),
                 queue.raw.as_ref().unwrap(),
             ) {
