@@ -1258,6 +1258,26 @@
 <a href="#1257" id="1257">1257</a>
 <a href="#1258" id="1258">1258</a>
 <a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1364,7 +1384,7 @@
         }
     }
 
-    <span class="kw">fn </span>make_info(vendor_orig: String, renderer_orig: String) -&gt; wgt::AdapterInfo {
+    <span class="kw">fn </span>make_info(vendor_orig: String, renderer_orig: String, version: String) -&gt; wgt::AdapterInfo {
         <span class="kw">let </span>vendor = vendor_orig.to_lowercase();
         <span class="kw">let </span>renderer = renderer_orig.to_lowercase();
 
@@ -1439,13 +1459,33 @@
             <span class="number">0
         </span>};
 
+        <span class="kw">let </span>driver;
+        <span class="kw">let </span>driver_info;
+        <span class="kw">if </span>version.starts_with(<span class="string">"WebGL "</span>) || version.starts_with(<span class="string">"OpenGL "</span>) {
+            <span class="kw">let </span>es_sig = <span class="string">" ES"</span>;
+            <span class="kw">match </span>version.find(es_sig) {
+                <span class="prelude-val">Some</span>(pos) =&gt; {
+                    driver = version[..pos + es_sig.len()].to_owned();
+                    driver_info = version[pos + es_sig.len() + <span class="number">1</span>..].to_owned();
+                }
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">let </span>pos = version.find(<span class="string">' '</span>).unwrap();
+                    driver = version[..pos].to_owned();
+                    driver_info = version[pos + <span class="number">1</span>..].to_owned();
+                }
+            }
+        } <span class="kw">else </span>{
+            driver = <span class="string">"OpenGL"</span>.to_owned();
+            driver_info = version;
+        }
+
         wgt::AdapterInfo {
             name: renderer_orig,
             vendor: vendor_id,
             device: <span class="number">0</span>,
             device_type: inferred_device_type,
-            driver: String::new(),
-            driver_info: String::new(),
+            driver,
+            driver_info,
             backend: wgt::Backend::Gl,
         }
     }
@@ -2085,7 +2125,7 @@
                     max_msaa_samples: max_samples,
                 }),
             },
-            info: <span class="self">Self</span>::make_info(vendor, renderer),
+            info: <span class="self">Self</span>::make_info(vendor, renderer, version),
             features,
             capabilities: <span class="kw">crate</span>::Capabilities {
                 limits,
