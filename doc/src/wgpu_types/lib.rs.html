@@ -7222,6 +7222,48 @@
 <a href="#7221" id="7221">7221</a>
 <a href="#7222" id="7222">7222</a>
 <a href="#7223" id="7223">7223</a>
+<a href="#7224" id="7224">7224</a>
+<a href="#7225" id="7225">7225</a>
+<a href="#7226" id="7226">7226</a>
+<a href="#7227" id="7227">7227</a>
+<a href="#7228" id="7228">7228</a>
+<a href="#7229" id="7229">7229</a>
+<a href="#7230" id="7230">7230</a>
+<a href="#7231" id="7231">7231</a>
+<a href="#7232" id="7232">7232</a>
+<a href="#7233" id="7233">7233</a>
+<a href="#7234" id="7234">7234</a>
+<a href="#7235" id="7235">7235</a>
+<a href="#7236" id="7236">7236</a>
+<a href="#7237" id="7237">7237</a>
+<a href="#7238" id="7238">7238</a>
+<a href="#7239" id="7239">7239</a>
+<a href="#7240" id="7240">7240</a>
+<a href="#7241" id="7241">7241</a>
+<a href="#7242" id="7242">7242</a>
+<a href="#7243" id="7243">7243</a>
+<a href="#7244" id="7244">7244</a>
+<a href="#7245" id="7245">7245</a>
+<a href="#7246" id="7246">7246</a>
+<a href="#7247" id="7247">7247</a>
+<a href="#7248" id="7248">7248</a>
+<a href="#7249" id="7249">7249</a>
+<a href="#7250" id="7250">7250</a>
+<a href="#7251" id="7251">7251</a>
+<a href="#7252" id="7252">7252</a>
+<a href="#7253" id="7253">7253</a>
+<a href="#7254" id="7254">7254</a>
+<a href="#7255" id="7255">7255</a>
+<a href="#7256" id="7256">7256</a>
+<a href="#7257" id="7257">7257</a>
+<a href="#7258" id="7258">7258</a>
+<a href="#7259" id="7259">7259</a>
+<a href="#7260" id="7260">7260</a>
+<a href="#7261" id="7261">7261</a>
+<a href="#7262" id="7262">7262</a>
+<a href="#7263" id="7263">7263</a>
+<a href="#7264" id="7264">7264</a>
+<a href="#7265" id="7265">7265</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -8114,6 +8156,30 @@
         ///
         /// This is a native only feature.
         </span><span class="kw">const </span>SHADER_INT64 = <span class="number">1 </span>&lt;&lt; <span class="number">55</span>;
+        <span class="doccomment">/// Allows compute and fragment shaders to use the subgroup operation built-ins
+        ///
+        /// Supported Platforms:
+        /// - Vulkan
+        /// - DX12
+        /// - Metal
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>SUBGROUP = <span class="number">1 </span>&lt;&lt; <span class="number">56</span>;
+        <span class="doccomment">/// Allows vertex shaders to use the subgroup operation built-ins
+        ///
+        /// Supported Platforms:
+        /// - Vulkan
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>SUBGROUP_VERTEX = <span class="number">1 </span>&lt;&lt; <span class="number">57</span>;
+        <span class="doccomment">/// Allows shaders to use the subgroup barrier
+        ///
+        /// Supported Platforms:
+        /// - Vulkan
+        /// - Metal
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>SUBGROUP_BARRIER = <span class="number">1 </span>&lt;&lt; <span class="number">58</span>;
     }
 }
 
@@ -8360,6 +8426,11 @@
     <span class="doccomment">/// The maximum value for each dimension of a `ComputePass::dispatch(x, y, z)` operation.
     /// Defaults to 65535. Higher is "better".
     </span><span class="kw">pub </span>max_compute_workgroups_per_dimension: u32,
+
+    <span class="doccomment">/// Minimal number of invocations in a subgroup. Higher is "better".
+    </span><span class="kw">pub </span>min_subgroup_size: u32,
+    <span class="doccomment">/// Maximal number of invocations in a subgroup. Lower is "better".
+    </span><span class="kw">pub </span>max_subgroup_size: u32,
     <span class="doccomment">/// Amount of storage available for push constants in bytes. Defaults to 0. Higher is "better".
     /// Requesting more than 0 during device creation requires [`Features::PUSH_CONSTANTS`] to be enabled.
     ///
@@ -8370,7 +8441,6 @@
     /// - OpenGL doesn't natively support push constants, and are emulated with uniforms,
     ///   so this number is less useful but likely 256.
     </span><span class="kw">pub </span>max_push_constant_size: u32,
-
     <span class="doccomment">/// Maximum number of live non-sampler bindings.
     ///
     /// This limit only affects the d3d12 backend. Using a large number will allow the device
@@ -8411,6 +8481,8 @@
             max_compute_workgroup_size_y: <span class="number">256</span>,
             max_compute_workgroup_size_z: <span class="number">64</span>,
             max_compute_workgroups_per_dimension: <span class="number">65535</span>,
+            min_subgroup_size: <span class="number">0</span>,
+            max_subgroup_size: <span class="number">0</span>,
             max_push_constant_size: <span class="number">0</span>,
             max_non_sampler_bindings: <span class="number">1_000_000</span>,
         }
@@ -8442,6 +8514,8 @@
     ///     max_vertex_buffers: 8,
     ///     max_vertex_attributes: 16,
     ///     max_vertex_buffer_array_stride: 2048,
+    ///     min_subgroup_size: 0,
+    ///     max_subgroup_size: 0,
     ///     max_push_constant_size: 0,
     ///     min_uniform_buffer_offset_alignment: 256,
     ///     min_storage_buffer_offset_alignment: 256,
@@ -8478,6 +8552,8 @@
             max_vertex_buffers: <span class="number">8</span>,
             max_vertex_attributes: <span class="number">16</span>,
             max_vertex_buffer_array_stride: <span class="number">2048</span>,
+            min_subgroup_size: <span class="number">0</span>,
+            max_subgroup_size: <span class="number">0</span>,
             max_push_constant_size: <span class="number">0</span>,
             min_uniform_buffer_offset_alignment: <span class="number">256</span>,
             min_storage_buffer_offset_alignment: <span class="number">256</span>,
@@ -8520,6 +8596,8 @@
     ///     max_vertex_buffers: 8,
     ///     max_vertex_attributes: 16,
     ///     max_vertex_buffer_array_stride: 255, // +
+    ///     min_subgroup_size: 0,
+    ///     max_subgroup_size: 0,
     ///     max_push_constant_size: 0,
     ///     min_uniform_buffer_offset_alignment: 256,
     ///     min_storage_buffer_offset_alignment: 256,
@@ -8550,6 +8628,8 @@
             max_compute_workgroup_size_y: <span class="number">0</span>,
             max_compute_workgroup_size_z: <span class="number">0</span>,
             max_compute_workgroups_per_dimension: <span class="number">0</span>,
+            min_subgroup_size: <span class="number">0</span>,
+            max_subgroup_size: <span class="number">0</span>,
 
             <span class="comment">// Value supported by Intel Celeron B830 on Windows (OpenGL 3.1)
             </span>max_inter_stage_shader_components: <span class="number">31</span>,
@@ -8642,6 +8722,10 @@
         <span class="macro">compare!</span>(max_vertex_buffers, Less);
         <span class="macro">compare!</span>(max_vertex_attributes, Less);
         <span class="macro">compare!</span>(max_vertex_buffer_array_stride, Less);
+        <span class="kw">if </span><span class="self">self</span>.min_subgroup_size &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.max_subgroup_size &gt; <span class="number">0 </span>{
+            <span class="macro">compare!</span>(min_subgroup_size, Greater);
+            <span class="macro">compare!</span>(max_subgroup_size, Less);
+        }
         <span class="macro">compare!</span>(max_push_constant_size, Less);
         <span class="macro">compare!</span>(min_uniform_buffer_offset_alignment, Greater);
         <span class="macro">compare!</span>(min_storage_buffer_offset_alignment, Greater);

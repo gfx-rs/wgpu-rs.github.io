@@ -719,6 +719,33 @@
 <a href="#718" id="718">718</a>
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     analyzer::{FunctionInfo, GlobalUse},
     Capabilities, Disalignment, FunctionError, ModuleInfo,
@@ -798,6 +825,8 @@
         location: u32,
         attribute: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
+    <span class="attr">#[error(<span class="string">"Workgroup size is multi dimensional, @builtin(subgroup_id) and @builtin(subgroup_invocation_id) are not supported."</span>)]
+    </span>InvalidMultiDimensionalSubgroupBuiltIn,
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -861,6 +890,7 @@
 <span class="kw">impl </span>VaryingContext&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>validate_impl(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ep: <span class="kw-2">&amp;</span><span class="kw">crate</span>::EntryPoint,
         ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         binding: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VaryingError&gt; {
@@ -888,10 +918,22 @@
                     Bi::PrimitiveIndex =&gt; Capabilities::PRIMITIVE_INDEX,
                     Bi::ViewIndex =&gt; Capabilities::MULTIVIEW,
                     Bi::SampleIndex =&gt; Capabilities::MULTISAMPLED_SHADING,
+                    Bi::NumSubgroups
+                    | Bi::SubgroupId
+                    | Bi::SubgroupSize
+                    | Bi::SubgroupInvocationId =&gt; Capabilities::SUBGROUP,
                     <span class="kw">_ </span>=&gt; Capabilities::empty(),
                 };
                 <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(required) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::UnsupportedCapability(required));
+                }
+
+                <span class="kw">if </span><span class="macro">matches!</span>(
+                    built_in,
+                    <span class="kw">crate</span>::BuiltIn::SubgroupId | <span class="kw">crate</span>::BuiltIn::SubgroupInvocationId
+                ) &amp;&amp; ep.workgroup_size[<span class="number">1</span>..].iter().any(|<span class="kw-2">&amp;</span>s| s &gt; <span class="number">1</span>)
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidMultiDimensionalSubgroupBuiltIn);
                 }
 
                 <span class="kw">let </span>(visible, type_good) = <span class="kw">match </span>built_in {
@@ -974,6 +1016,17 @@
                                 size: Vs::Tri,
                                 scalar: <span class="kw">crate</span>::Scalar::U32,
                             },
+                    ),
+                    Bi::NumSubgroups | Bi::SubgroupId =&gt; (
+                        <span class="self">self</span>.stage == St::Compute &amp;&amp; !<span class="self">self</span>.output,
+                        <span class="kw-2">*</span>ty_inner == Ti::Scalar(<span class="kw">crate</span>::Scalar::U32),
+                    ),
+                    Bi::SubgroupSize | Bi::SubgroupInvocationId =&gt; (
+                        <span class="kw">match </span><span class="self">self</span>.stage {
+                            St::Compute | St::Fragment =&gt; !<span class="self">self</span>.output,
+                            St::Vertex =&gt; <span class="bool-val">false</span>,
+                        },
+                        <span class="kw-2">*</span>ty_inner == Ti::Scalar(<span class="kw">crate</span>::Scalar::U32),
                     ),
                 };
 
@@ -1075,13 +1128,14 @@
 
     <span class="kw">fn </span>validate(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ep: <span class="kw-2">&amp;</span><span class="kw">crate</span>::EntryPoint,
         ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         binding: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), WithSpan&lt;VaryingError&gt;&gt; {
         <span class="kw">let </span>span_context = <span class="self">self</span>.types.get_span_context(ty);
         <span class="kw">match </span>binding {
             <span class="prelude-val">Some</span>(binding) =&gt; <span class="self">self
-                </span>.validate_impl(ty, binding)
+                </span>.validate_impl(ep, ty, binding)
                 .map_err(|e| e.with_span_context(span_context)),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
@@ -1098,7 +1152,7 @@
                                     }
                                 }
                                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) =&gt; <span class="self">self
-                                    </span>.validate_impl(member.ty, binding)
+                                    </span>.validate_impl(ep, member.ty, binding)
                                     .map_err(|e| e.with_span_context(span_context))<span class="question-mark">?</span>,
                             }
                         }
@@ -1330,7 +1384,7 @@
                 capabilities: <span class="self">self</span>.capabilities,
                 flags: <span class="self">self</span>.flags,
             };
-            ctx.validate(fa.ty, fa.binding.as_ref())
+            ctx.validate(ep, fa.ty, fa.binding.as_ref())
                 .map_err_inner(|e| EntryPointError::Argument(index <span class="kw">as </span>u32, e).with_span())<span class="question-mark">?</span>;
         }
 
@@ -1348,7 +1402,7 @@
                 capabilities: <span class="self">self</span>.capabilities,
                 flags: <span class="self">self</span>.flags,
             };
-            ctx.validate(fr.ty, fr.binding.as_ref())
+            ctx.validate(ep, fr.ty, fr.binding.as_ref())
                 .map_err_inner(|e| EntryPointError::Result(e).with_span())<span class="question-mark">?</span>;
             <span class="kw">if </span>ctx.second_blend_source {
                 <span class="comment">// Only the first location may be used when dual source blending

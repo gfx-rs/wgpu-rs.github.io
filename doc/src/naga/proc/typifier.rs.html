@@ -895,6 +895,11 @@
 <a href="#894" id="894">894</a>
 <a href="#895" id="895">895</a>
 <a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, UniqueArena};
 
 <span class="kw">use </span>thiserror::Error;
@@ -1495,6 +1500,7 @@
                 | <span class="kw">crate</span>::BinaryOperator::ShiftRight =&gt; past(left)<span class="question-mark">?</span>.clone(),
             },
             <span class="kw">crate</span>::Expression::AtomicResult { ty, .. } =&gt; TypeResolution::Handle(ty),
+            <span class="kw">crate</span>::Expression::SubgroupOperationResult { ty } =&gt; TypeResolution::Handle(ty),
             <span class="kw">crate</span>::Expression::WorkGroupUniformLoadResult { ty } =&gt; TypeResolution::Handle(ty),
             <span class="kw">crate</span>::Expression::Select { accept, .. } =&gt; past(accept)<span class="question-mark">?</span>.clone(),
             <span class="kw">crate</span>::Expression::Derivative { expr, .. } =&gt; past(expr)<span class="question-mark">?</span>.clone(),
@@ -1782,6 +1788,10 @@
                     .ok_or(ResolveError::MissingSpecialType)<span class="question-mark">?</span>;
                 TypeResolution::Handle(result)
             }
+            <span class="kw">crate</span>::Expression::SubgroupBallotResult =&gt; TypeResolution::Value(Ti::Vector {
+                scalar: <span class="kw">crate</span>::Scalar::U32,
+                size: <span class="kw">crate</span>::VectorSize::Quad,
+            }),
         })
     }
 }

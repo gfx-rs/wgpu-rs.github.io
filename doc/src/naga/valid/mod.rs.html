@@ -605,6 +605,75 @@
 <a href="#604" id="604">604</a>
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
@@ -684,7 +753,7 @@ Shader validator.
     #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
     #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-    </span><span class="kw">pub struct </span>Capabilities: u16 {
+    </span><span class="kw">pub struct </span>Capabilities: u32 {
         <span class="doccomment">/// Support for [`AddressSpace:PushConstant`].
         </span><span class="kw">const </span>PUSH_CONSTANT = <span class="number">0x1</span>;
         <span class="doccomment">/// Float values with width = 8.
@@ -717,12 +786,67 @@ Shader validator.
         </span><span class="kw">const </span>CUBE_ARRAY_TEXTURES = <span class="number">0x4000</span>;
         <span class="doccomment">/// Support for 64-bit signed and unsigned integers.
         </span><span class="kw">const </span>SHADER_INT64 = <span class="number">0x8000</span>;
+        <span class="doccomment">/// Support for subgroup operations.
+        </span><span class="kw">const </span>SUBGROUP = <span class="number">0x10000</span>;
+        <span class="doccomment">/// Support for subgroup barriers.
+        </span><span class="kw">const </span>SUBGROUP_BARRIER = <span class="number">0x20000</span>;
     }
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Capabilities {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::MULTISAMPLED_SHADING | <span class="self">Self</span>::CUBE_ARRAY_TEXTURES
+    }
+}
+
+<span class="macro">bitflags::bitflags! </span>{
+    <span class="doccomment">/// Supported subgroup operations
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+    #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
+    #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+    </span><span class="kw">pub struct </span>SubgroupOperationSet: u8 {
+        <span class="doccomment">/// Elect, Barrier
+        </span><span class="kw">const </span>BASIC = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+        <span class="doccomment">/// Any, All
+        </span><span class="kw">const </span>VOTE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// reductions, scans
+        </span><span class="kw">const </span>ARITHMETIC = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// ballot, broadcast
+        </span><span class="kw">const </span>BALLOT = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// shuffle, shuffle xor
+        </span><span class="kw">const </span>SHUFFLE = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// shuffle up, down
+        </span><span class="kw">const </span>SHUFFLE_RELATIVE = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="comment">// We don't support these operations yet
+        // /// Clustered
+        // const CLUSTERED = 1 &lt;&lt; 6;
+        // /// Quad supported
+        // const QUAD_FRAGMENT_COMPUTE = 1 &lt;&lt; 7;
+        // /// Quad supported in all stages
+        // const QUAD_ALL_STAGES = 1 &lt;&lt; 8;
+    </span>}
+}
+
+<span class="kw">impl </span><span class="kw">super</span>::SubgroupOperation {
+    <span class="kw">const fn </span>required_operations(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SubgroupOperationSet {
+        <span class="kw">use </span>SubgroupOperationSet <span class="kw">as </span>S;
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::All | <span class="self">Self</span>::Any =&gt; S::VOTE,
+            <span class="self">Self</span>::Add | <span class="self">Self</span>::Mul | <span class="self">Self</span>::Min | <span class="self">Self</span>::Max | <span class="self">Self</span>::And | <span class="self">Self</span>::Or | <span class="self">Self</span>::Xor =&gt; {
+                S::ARITHMETIC
+            }
+        }
+    }
+}
+
+<span class="kw">impl </span><span class="kw">super</span>::GatherMode {
+    <span class="kw">const fn </span>required_operations(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SubgroupOperationSet {
+        <span class="kw">use </span>SubgroupOperationSet <span class="kw">as </span>S;
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::BroadcastFirst | <span class="self">Self</span>::Broadcast(<span class="kw">_</span>) =&gt; S::BALLOT,
+            <span class="self">Self</span>::Shuffle(<span class="kw">_</span>) | <span class="self">Self</span>::ShuffleXor(<span class="kw">_</span>) =&gt; S::SHUFFLE,
+            <span class="self">Self</span>::ShuffleUp(<span class="kw">_</span>) | <span class="self">Self</span>::ShuffleDown(<span class="kw">_</span>) =&gt; S::SHUFFLE_RELATIVE,
+        }
     }
 }
 
@@ -773,6 +897,8 @@ Shader validator.
 </span><span class="kw">pub struct </span>Validator {
     flags: ValidationFlags,
     capabilities: Capabilities,
+    subgroup_stages: ShaderStages,
+    subgroup_operations: SubgroupOperationSet,
     types: Vec&lt;r#type::TypeInfo&gt;,
     layouter: Layouter,
     location_mask: BitSet,
@@ -924,6 +1050,8 @@ Shader validator.
         Validator {
             flags,
             capabilities,
+            subgroup_stages: ShaderStages::empty(),
+            subgroup_operations: SubgroupOperationSet::empty(),
             types: Vec::new(),
             layouter: Layouter::default(),
             location_mask: BitSet::new(),
@@ -935,6 +1063,16 @@ Shader validator.
             allow_overrides: <span class="bool-val">true</span>,
         }
     }
+
+    <span class="kw">pub fn </span>subgroup_stages(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.subgroup_stages = stages;
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub fn </span>subgroup_operations(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operations: SubgroupOperationSet) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.subgroup_operations = operations;
+        <span class="self">self
+    </span>}
 
     <span class="doccomment">/// Reset the validator internals
     </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {

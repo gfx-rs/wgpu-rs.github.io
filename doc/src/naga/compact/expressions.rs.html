@@ -397,6 +397,10 @@
 <a href="#396" id="396">396</a>
 <a href="#397" id="397">397</a>
 <a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
@@ -471,6 +475,7 @@
                 | Ex::GlobalVariable(<span class="kw">_</span>)
                 | Ex::LocalVariable(<span class="kw">_</span>)
                 | Ex::CallResult(<span class="kw">_</span>)
+                | Ex::SubgroupBallotResult
                 | Ex::RayQueryProceedResult =&gt; {}
 
                 Ex::Constant(handle) =&gt; {
@@ -591,6 +596,7 @@
                 Ex::AtomicResult { ty, comparison: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.types_used.insert(ty),
                 Ex::WorkGroupUniformLoadResult { ty } =&gt; <span class="self">self</span>.types_used.insert(ty),
                 Ex::ArrayLength(expr) =&gt; <span class="self">self</span>.expressions_used.insert(expr),
+                Ex::SubgroupOperationResult { ty } =&gt; <span class="self">self</span>.types_used.insert(ty),
                 Ex::RayQueryGetIntersection {
                     query,
                     committed: <span class="kw">_</span>,
@@ -622,6 +628,7 @@
             | Ex::GlobalVariable(<span class="kw">_</span>)
             | Ex::LocalVariable(<span class="kw">_</span>)
             | Ex::CallResult(<span class="kw">_</span>)
+            | Ex::SubgroupBallotResult
             | Ex::RayQueryProceedResult =&gt; {}
 
             <span class="comment">// All overrides are retained, so their handles never change.
@@ -752,6 +759,7 @@
                 comparison: <span class="kw">_</span>,
             } =&gt; <span class="self">self</span>.types.adjust(ty),
             Ex::WorkGroupUniformLoadResult { <span class="kw-2">ref mut </span>ty } =&gt; <span class="self">self</span>.types.adjust(ty),
+            Ex::SubgroupOperationResult { <span class="kw-2">ref mut </span>ty } =&gt; <span class="self">self</span>.types.adjust(ty),
             Ex::ArrayLength(<span class="kw-2">ref mut </span>expr) =&gt; adjust(expr),
             Ex::RayQueryGetIntersection {
                 <span class="kw-2">ref mut </span>query,

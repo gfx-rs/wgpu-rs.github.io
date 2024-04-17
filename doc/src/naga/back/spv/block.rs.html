@@ -2524,6 +2524,29 @@
 <a href="#2523" id="2523">2523</a>
 <a href="#2524" id="2524">2524</a>
 <a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a>
+<a href="#2527" id="2527">2527</a>
+<a href="#2528" id="2528">2528</a>
+<a href="#2529" id="2529">2529</a>
+<a href="#2530" id="2530">2530</a>
+<a href="#2531" id="2531">2531</a>
+<a href="#2532" id="2532">2532</a>
+<a href="#2533" id="2533">2533</a>
+<a href="#2534" id="2534">2534</a>
+<a href="#2535" id="2535">2535</a>
+<a href="#2536" id="2536">2536</a>
+<a href="#2537" id="2537">2537</a>
+<a href="#2538" id="2538">2538</a>
+<a href="#2539" id="2539">2539</a>
+<a href="#2540" id="2540">2540</a>
+<a href="#2541" id="2541">2541</a>
+<a href="#2542" id="2542">2542</a>
+<a href="#2543" id="2543">2543</a>
+<a href="#2544" id="2544">2544</a>
+<a href="#2545" id="2545">2545</a>
+<a href="#2546" id="2546">2546</a>
+<a href="#2547" id="2547">2547</a>
+<a href="#2548" id="2548">2548</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3805,7 +3828,9 @@ Implementations for `BlockContext` methods.
             <span class="kw">crate</span>::Expression::CallResult(<span class="kw">_</span>)
             | <span class="kw">crate</span>::Expression::AtomicResult { .. }
             | <span class="kw">crate</span>::Expression::WorkGroupUniformLoadResult { .. }
-            | <span class="kw">crate</span>::Expression::RayQueryProceedResult =&gt; <span class="self">self</span>.cached[expr_handle],
+            | <span class="kw">crate</span>::Expression::RayQueryProceedResult
+            | <span class="kw">crate</span>::Expression::SubgroupBallotResult
+            | <span class="kw">crate</span>::Expression::SubgroupOperationResult { .. } =&gt; <span class="self">self</span>.cached[expr_handle],
             <span class="kw">crate</span>::Expression::As {
                 expr,
                 kind,
@@ -5015,6 +5040,27 @@ Implementations for `BlockContext` methods.
                 }
                 <span class="kw">crate</span>::Statement::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
                     <span class="self">self</span>.write_ray_query_function(query, fun, <span class="kw-2">&amp;mut </span>block);
+                }
+                <span class="kw">crate</span>::Statement::SubgroupBallot {
+                    result,
+                    <span class="kw-2">ref </span>predicate,
+                } =&gt; {
+                    <span class="self">self</span>.write_subgroup_ballot(predicate, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::Statement::SubgroupCollectiveOperation {
+                    <span class="kw-2">ref </span>op,
+                    <span class="kw-2">ref </span>collective_op,
+                    argument,
+                    result,
+                } =&gt; {
+                    <span class="self">self</span>.write_subgroup_operation(op, collective_op, argument, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::Statement::SubgroupGather {
+                    <span class="kw-2">ref </span>mode,
+                    argument,
+                    result,
+                } =&gt; {
+                    <span class="self">self</span>.write_subgroup_gather(mode, argument, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
                 }
             }
         }
