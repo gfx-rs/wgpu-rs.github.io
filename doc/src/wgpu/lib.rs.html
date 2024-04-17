@@ -5338,6 +5338,24 @@
 <a href="#5337" id="5337">5337</a>
 <a href="#5338" id="5338">5338</a>
 <a href="#5339" id="5339">5339</a>
+<a href="#5340" id="5340">5340</a>
+<a href="#5341" id="5341">5341</a>
+<a href="#5342" id="5342">5342</a>
+<a href="#5343" id="5343">5343</a>
+<a href="#5344" id="5344">5344</a>
+<a href="#5345" id="5345">5345</a>
+<a href="#5346" id="5346">5346</a>
+<a href="#5347" id="5347">5347</a>
+<a href="#5348" id="5348">5348</a>
+<a href="#5349" id="5349">5349</a>
+<a href="#5350" id="5350">5350</a>
+<a href="#5351" id="5351">5351</a>
+<a href="#5352" id="5352">5352</a>
+<a href="#5353" id="5353">5353</a>
+<a href="#5354" id="5354">5354</a>
+<a href="#5355" id="5355">5355</a>
+<a href="#5356" id="5356">5356</a>
+<a href="#5357" id="5357">5357</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5706,9 +5724,19 @@
 /// serves a similar role.
 </span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">'window</span>&gt; {
     context: Arc&lt;C&gt;,
-    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
-    id: ObjectId,
-    data: Box&lt;Data&gt;,
+
+    <span class="doccomment">/// Optionally, keep the source of the handle used for the surface alive.
+    ///
+    /// This is useful for platforms where the surface is created from a window and the surface
+    /// would become invalid when the window is dropped.
+    </span>_handle_source: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
+
+    <span class="doccomment">/// Wgpu-core surface id.
+    </span>id: ObjectId,
+
+    <span class="doccomment">/// Additional surface data returned by [`DynContext::instance_create_surface`].
+    </span>surface_data: Box&lt;Data&gt;,
+
     <span class="comment">// Stores the latest `SurfaceConfiguration` that was set using `Surface::configure`.
     // It is required to set the attributes of the `SurfaceTexture` in the
     // `Surface::get_current_texture` method.
@@ -5725,15 +5753,15 @@
         f.debug_struct(<span class="string">"Surface"</span>)
             .field(<span class="string">"context"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.context)
             .field(
-                <span class="string">"_surface"</span>,
-                <span class="kw-2">&amp;</span><span class="kw">if </span><span class="self">self</span>._surface.is_some() {
+                <span class="string">"_handle_source"</span>,
+                <span class="kw-2">&amp;</span><span class="kw">if </span><span class="self">self</span>._handle_source.is_some() {
                     <span class="string">"Some"
                 </span>} <span class="kw">else </span>{
                     <span class="string">"None"
                 </span>},
             )
             .field(<span class="string">"id"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.id)
-            .field(<span class="string">"data"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.data)
+            .field(<span class="string">"data"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.surface_data)
             .field(<span class="string">"config"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
             .finish()
     }
@@ -5745,7 +5773,8 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
+            <span class="self">self</span>.context
+                .surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.surface_data.as_ref())
         }
     }
 }
@@ -7307,6 +7336,8 @@
 
     <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc..
     ///
+    /// Internally, this creates surfaces for all backends that are enabled for this instance.
+    ///
     /// See [`SurfaceTarget`] for what targets are supported.
     /// See [`Instance::create_surface_unsafe`] for surface creation with unsafe target variants.
     ///
@@ -7317,7 +7348,7 @@
         target: <span class="kw">impl </span>Into&lt;SurfaceTarget&lt;<span class="lifetime">'window</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'window</span>&gt;, CreateSurfaceError&gt; {
         <span class="comment">// Handle origin (i.e. window) to optionally take ownership of to make the surface outlast the window.
-        </span><span class="kw">let </span>handle_origin;
+        </span><span class="kw">let </span>handle_source;
 
         <span class="kw">let </span>target = target.into();
         <span class="kw">let </span><span class="kw-2">mut </span>surface = <span class="kw">match </span>target {
@@ -7327,14 +7358,14 @@
                         inner: CreateSurfaceErrorKind::RawHandle(e),
                     })<span class="question-mark">?</span>,
                 );
-                handle_origin = <span class="prelude-val">Some</span>(window);
+                handle_source = <span class="prelude-val">Some</span>(window);
 
                 surface
             }<span class="question-mark">?</span>,
 
             <span class="attr">#[cfg(any(webgpu, webgl))]
             </span>SurfaceTarget::Canvas(canvas) =&gt; {
-                handle_origin = <span class="prelude-val">None</span>;
+                handle_source = <span class="prelude-val">None</span>;
 
                 <span class="kw">let </span>value: <span class="kw-2">&amp;</span>wasm_bindgen::JsValue = <span class="kw-2">&amp;</span>canvas;
                 <span class="kw">let </span>obj = std::ptr::NonNull::from(value).cast();
@@ -7353,7 +7384,7 @@
 
             <span class="attr">#[cfg(any(webgpu, webgl))]
             </span>SurfaceTarget::OffscreenCanvas(canvas) =&gt; {
-                handle_origin = <span class="prelude-val">None</span>;
+                handle_source = <span class="prelude-val">None</span>;
 
                 <span class="kw">let </span>value: <span class="kw-2">&amp;</span>wasm_bindgen::JsValue = <span class="kw-2">&amp;</span>canvas;
                 <span class="kw">let </span>obj = std::ptr::NonNull::from(value).cast();
@@ -7372,12 +7403,14 @@
             </span>}
         };
 
-        surface._surface = handle_origin;
+        surface._handle_source = handle_source;
 
         <span class="prelude-val">Ok</span>(surface)
     }
 
     <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc. using an unsafe target.
+    ///
+    /// Internally, this creates surfaces for all backends that are enabled for this instance.
     ///
     /// See [`SurfaceTargetUnsafe`] for what targets are supported.
     /// See [`Instance::create_surface`] for surface creation with safe target variants.
@@ -7393,9 +7426,9 @@
 
         <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            _surface: <span class="prelude-val">None</span>,
+            _handle_source: <span class="prelude-val">None</span>,
             id,
-            data,
+            surface_data: data,
             config: Mutex::new(<span class="prelude-val">None</span>),
         })
     }
@@ -7569,7 +7602,7 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
             <span class="kw-2">&amp;</span>surface.id,
-            surface.data.as_ref(),
+            surface.surface_data.as_ref(),
         )
     }
 
@@ -10173,7 +10206,7 @@
         DynContext::surface_get_capabilities(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_ref(),
+            <span class="self">self</span>.surface_data.as_ref(),
             <span class="kw-2">&amp;</span>adapter.id,
             adapter.data.as_ref(),
         )
@@ -10212,7 +10245,7 @@
         DynContext::surface_configure(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_ref(),
+            <span class="self">self</span>.surface_data.as_ref(),
             <span class="kw-2">&amp;</span>device.id,
             device.data.as_ref(),
             config,
@@ -10231,8 +10264,11 @@
     /// If a SurfaceTexture referencing this surface is alive when the swapchain is recreated,
     /// recreating the swapchain will panic.
     </span><span class="kw">pub fn </span>get_current_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceTexture, SurfaceError&gt; {
-        <span class="kw">let </span>(texture_id, texture_data, status, detail) =
-            DynContext::surface_get_current_texture(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+        <span class="kw">let </span>(texture_id, texture_data, status, detail) = DynContext::surface_get_current_texture(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
+            <span class="self">self</span>.surface_data.as_ref(),
+        );
 
         <span class="kw">let </span>suboptimal = <span class="kw">match </span>status {
             SurfaceStatus::Good =&gt; <span class="bool-val">false</span>,
@@ -10295,7 +10331,7 @@
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
             .map(|ctx| <span class="kw">unsafe </span>{
                 ctx.surface_as_hal::&lt;A, F, R&gt;(
-                    <span class="self">self</span>.data.downcast_ref().unwrap(),
+                    <span class="self">self</span>.surface_data.downcast_ref().unwrap(),
                     hal_surface_callback,
                 )
             })

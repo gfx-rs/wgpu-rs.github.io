@@ -1174,16 +1174,56 @@
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
 <a href="#1175" id="1175">1175</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
-    any_surface::AnySurface,
     api_log,
     device::{queue::Queue, resource::Device, DeviceDescriptor},
     global::Global,
     hal_api::HalApi,
-    id::markers,
-    id::{AdapterId, DeviceId, Id, Marker, QueueId, SurfaceId},
+    id::{markers, AdapterId, DeviceId, Id, Marker, QueueId, SurfaceId},
     present::Presentation,
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log, LabelHelpers, DOWNLEVEL_WARNING_MESSAGE,
@@ -1197,6 +1237,7 @@
 
 <span class="kw">pub type </span>RequestAdapterOptions = wgt::RequestAdapterOptions&lt;SurfaceId&gt;;
 <span class="kw">type </span>HalInstance&lt;A&gt; = &lt;A <span class="kw">as </span>hal::Api&gt;::Instance;
+<span class="kw">type </span>HalSurface&lt;A&gt; = &lt;A <span class="kw">as </span>hal::Api&gt;::Surface;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[error(<span class="string">"Limit '{name}' value {requested} is better than allowed {allowed}"</span>)]
@@ -1289,31 +1330,36 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: Surface) {
-        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, surface: AnySurface) {
-            <span class="kw">unsafe </span>{
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(suf) = surface.take::&lt;A&gt;() {
-                    instance.as_ref().unwrap().destroy_surface(suf);
+        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, <span class="kw-2">mut </span>surface: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;A&gt;&gt;) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = surface.take() {
+                <span class="kw">unsafe </span>{
+                    instance.as_ref().unwrap().destroy_surface(surface);
                 }
             }
         }
-        <span class="kw">match </span>surface.raw.backend() {
-            <span class="attr">#[cfg(vulkan)]
-            </span>Backend::Vulkan =&gt; destroy::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.raw),
-            <span class="attr">#[cfg(metal)]
-            </span>Backend::Metal =&gt; destroy::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.raw),
-            <span class="attr">#[cfg(dx12)]
-            </span>Backend::Dx12 =&gt; destroy::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.raw),
-            <span class="attr">#[cfg(gles)]
-            </span>Backend::Gl =&gt; destroy::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.raw),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
+        <span class="attr">#[cfg(vulkan)]
+        </span>destroy::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.vulkan);
+        <span class="attr">#[cfg(metal)]
+        </span>destroy::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.metal);
+        <span class="attr">#[cfg(dx12)]
+        </span>destroy::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.dx12);
+        <span class="attr">#[cfg(gles)]
+        </span>destroy::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.gl);
     }
 }
 
 <span class="kw">pub struct </span>Surface {
     <span class="kw">pub</span>(<span class="kw">crate</span>) presentation: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Presentation&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Surface&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: AnySurface,
+
+    <span class="attr">#[cfg(vulkan)]
+    </span><span class="kw">pub </span>vulkan: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Vulkan&gt;&gt;,
+    <span class="attr">#[cfg(metal)]
+    </span><span class="kw">pub </span>metal: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Metal&gt;&gt;,
+    <span class="attr">#[cfg(dx12)]
+    </span><span class="kw">pub </span>dx12: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Dx12&gt;&gt;,
+    <span class="attr">#[cfg(gles)]
+    </span><span class="kw">pub </span>gl: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Gles&gt;&gt;,
 }
 
 <span class="kw">impl </span>Resource <span class="kw">for </span>Surface {
@@ -1339,7 +1385,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>Adapter&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::SurfaceCapabilities, GetSurfaceSupportError&gt; {
-        <span class="kw">let </span>suf = A::get_surface(<span class="self">self</span>).ok_or(GetSurfaceSupportError::Unsupported)<span class="question-mark">?</span>;
+        <span class="kw">let </span>suf = A::surface_as_hal(<span class="self">self</span>).ok_or(GetSurfaceSupportError::Unsupported)<span class="question-mark">?</span>;
         <span class="macro">profiling::scope!</span>(<span class="string">"surface_capabilities"</span>);
         <span class="kw">let </span>caps = <span class="kw">unsafe </span>{
             adapter
@@ -1379,7 +1425,7 @@
     }
 
     <span class="kw">pub fn </span>is_surface_supported(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: <span class="kw-2">&amp;</span>Surface) -&gt; bool {
-        <span class="kw">let </span>suf = A::get_surface(surface);
+        <span class="kw">let </span>suf = A::surface_as_hal(surface);
 
         <span class="comment">// If get_surface returns None, then the API does not advertise support for the surface.
         //
@@ -1637,14 +1683,26 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateSurfaceError {
-    <span class="attr">#[error(<span class="string">"No backend is available"</span>)]
-    </span>NoSupportedBackend,
-    <span class="attr">#[error(transparent)]
-    </span>InstanceError(<span class="attr">#[from] </span>hal::InstanceError),
+    <span class="attr">#[error(<span class="string">"The backend {0} was not enabled on the instance."</span>)]
+    </span>BackendNotEnabled(Backend),
+    <span class="attr">#[error(<span class="string">"Failed to create surface for any enabled backend: {0:?}"</span>)]
+    </span>FailedToCreateSurfaceForAnyBackend(HashMap&lt;Backend, hal::InstanceError&gt;),
 }
 
 <span class="kw">impl </span>Global {
-    <span class="doccomment">/// # Safety
+    <span class="doccomment">/// Creates a new surface targeting the given display/window handles.
+    ///
+    /// Internally attempts to create hal surfaces for all enabled backends.
+    ///
+    /// Fails only if creation for surfaces for all enabled backends fails in which case
+    /// the error for each enabled backend is listed.
+    /// Vice versa, if creation for any backend succeeds, success is returned.
+    /// Surface creation errors are logged to the debug log in any case.
+    ///
+    /// id_in:
+    /// - If `Some`, the id to assign to the surface. A new one will be generated otherwise.
+    ///
+    /// # Safety
     ///
     /// - `display_handle` must be a valid object to create a surface upon.
     /// - `window_handle` must remain valid as long as the returned
@@ -1659,51 +1717,86 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface"</span>);
 
         <span class="kw">fn </span>init&lt;A: HalApi&gt;(
+            errors: <span class="kw-2">&amp;mut </span>HashMap&lt;Backend, hal::InstanceError&gt;,
+            any_created: <span class="kw-2">&amp;mut </span>bool,
+            backend: Backend,
             inst: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;,
             display_handle: raw_window_handle::RawDisplayHandle,
             window_handle: raw_window_handle::RawWindowHandle,
-        ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;AnySurface, hal::InstanceError&gt;&gt; {
-            inst.as_ref().map(|inst| <span class="kw">unsafe </span>{
-                <span class="kw">match </span>inst.create_surface(display_handle, window_handle) {
-                    <span class="prelude-val">Ok</span>(raw) =&gt; <span class="prelude-val">Ok</span>(AnySurface::new::&lt;A&gt;(raw)),
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
+        ) -&gt; <span class="prelude-ty">Option</span>&lt;HalSurface&lt;A&gt;&gt; {
+            inst.as_ref().and_then(|inst| {
+                <span class="kw">match unsafe </span>{ inst.create_surface(display_handle, window_handle) } {
+                    <span class="prelude-val">Ok</span>(raw) =&gt; {
+                        <span class="kw-2">*</span>any_created = <span class="bool-val">true</span>;
+                        <span class="prelude-val">Some</span>(raw)
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="macro">log::debug!</span>(
+                            <span class="string">"Instance::create_surface: failed to create surface for {:?}: {:?}"</span>,
+                            backend,
+                            err
+                        );
+                        errors.insert(backend, err);
+                        <span class="prelude-val">None
+                    </span>}
                 }
             })
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>hal_surface: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;AnySurface, hal::InstanceError&gt;&gt; = <span class="prelude-val">None</span>;
-
-        <span class="attr">#[cfg(vulkan)]
-        </span><span class="kw">if </span>hal_surface.is_none() {
-            hal_surface =
-                init::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan, display_handle, window_handle);
-        }
-        <span class="attr">#[cfg(metal)]
-        </span><span class="kw">if </span>hal_surface.is_none() {
-            hal_surface =
-                init::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal, display_handle, window_handle);
-        }
-        <span class="attr">#[cfg(dx12)]
-        </span><span class="kw">if </span>hal_surface.is_none() {
-            hal_surface =
-                init::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12, display_handle, window_handle);
-        }
-        <span class="attr">#[cfg(gles)]
-        </span><span class="kw">if </span>hal_surface.is_none() {
-            hal_surface = init::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl, display_handle, window_handle);
-        }
-
-        <span class="kw">let </span>hal_surface = hal_surface.ok_or(CreateSurfaceError::NoSupportedBackend)<span class="question-mark">??</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>errors = HashMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>any_created = <span class="bool-val">false</span>;
 
         <span class="kw">let </span>surface = Surface {
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
-            raw: hal_surface,
+
+            <span class="attr">#[cfg(vulkan)]
+            </span>vulkan: init::&lt;hal::api::Vulkan&gt;(
+                <span class="kw-2">&amp;mut </span>errors,
+                <span class="kw-2">&amp;mut </span>any_created,
+                Backend::Vulkan,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan,
+                display_handle,
+                window_handle,
+            ),
+            <span class="attr">#[cfg(metal)]
+            </span>metal: init::&lt;hal::api::Metal&gt;(
+                <span class="kw-2">&amp;mut </span>errors,
+                <span class="kw-2">&amp;mut </span>any_created,
+                Backend::Metal,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal,
+                display_handle,
+                window_handle,
+            ),
+            <span class="attr">#[cfg(dx12)]
+            </span>dx12: init::&lt;hal::api::Dx12&gt;(
+                <span class="kw-2">&amp;mut </span>errors,
+                <span class="kw-2">&amp;mut </span>any_created,
+                Backend::Dx12,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12,
+                display_handle,
+                window_handle,
+            ),
+            <span class="attr">#[cfg(gles)]
+            </span>gl: init::&lt;hal::api::Gles&gt;(
+                <span class="kw-2">&amp;mut </span>errors,
+                <span class="kw-2">&amp;mut </span>any_created,
+                Backend::Gl,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl,
+                display_handle,
+                window_handle,
+            ),
         };
 
-        <span class="attr">#[allow(clippy::arc_with_non_send_sync)]
-        </span><span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
-        <span class="prelude-val">Ok</span>(id)
+        <span class="kw">if </span>any_created {
+            <span class="attr">#[allow(clippy::arc_with_non_send_sync)]
+            </span><span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+            <span class="prelude-val">Ok</span>(id)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(CreateSurfaceError::FailedToCreateSurfaceForAnyBackend(
+                errors,
+            ))
+        }
     }
 
     <span class="doccomment">/// # Safety
@@ -1714,29 +1807,57 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         layer: <span class="kw-2">*mut </span>std::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
-    ) -&gt; SurfaceId {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_metal"</span>);
 
         <span class="kw">let </span>surface = Surface {
             presentation: Mutex::new(<span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
-            raw: {
-                <span class="kw">let </span>hal_surface = <span class="self">self
-                    </span>.instance
-                    .metal
-                    .as_ref()
-                    .map(|inst| {
-                        <span class="comment">// we don't want to link to metal-rs for this
-                        </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
-                        </span>inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) })
-                    })
-                    .unwrap();
-                AnySurface::new::&lt;hal::api::Metal&gt;(hal_surface)
-            },
+            metal: <span class="prelude-val">Some</span>(<span class="self">self</span>.instance.metal.as_ref().map_or(
+                <span class="prelude-val">Err</span>(CreateSurfaceError::BackendNotEnabled(Backend::Metal)),
+                |inst| {
+                    <span class="comment">// we don't want to link to metal-rs for this
+                    </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
+                    </span><span class="prelude-val">Ok</span>(inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) }))
+                },
+            )<span class="question-mark">?</span>),
+            <span class="attr">#[cfg(dx12)]
+            </span>dx12: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(vulkan)]
+            </span>vulkan: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(gles)]
+            </span>gl: <span class="prelude-val">None</span>,
         };
 
         <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
-        id
+        <span class="prelude-val">Ok</span>(id)
+    }
+
+    <span class="attr">#[cfg(dx12)]
+    </span><span class="kw">fn </span>instance_create_surface_dx12(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
+        create_surface_func: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>HalInstance&lt;hal::api::Dx12&gt;) -&gt; HalSurface&lt;hal::api::Dx12&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
+        <span class="kw">let </span>surface = Surface {
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
+            dx12: <span class="prelude-val">Some</span>(create_surface_func(
+                <span class="self">self</span>.instance
+                    .dx12
+                    .as_ref()
+                    .ok_or(CreateSurfaceError::BackendNotEnabled(Backend::Dx12))<span class="question-mark">?</span>,
+            )),
+            <span class="attr">#[cfg(metal)]
+            </span>metal: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(vulkan)]
+            </span>vulkan: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(gles)]
+            </span>gl: <span class="prelude-val">None</span>,
+        };
+
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
+        <span class="prelude-val">Ok</span>(id)
     }
 
     <span class="attr">#[cfg(dx12)]
@@ -1747,25 +1868,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         visual: <span class="kw-2">*mut </span>std::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
-    ) -&gt; SurfaceId {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_visual"</span>);
-
-        <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
-            info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
-            raw: {
-                <span class="kw">let </span>hal_surface = <span class="self">self
-                    </span>.instance
-                    .dx12
-                    .as_ref()
-                    .map(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) })
-                    .unwrap();
-                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
-            },
-        };
-
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
-        id
+        <span class="self">self</span>.instance_create_surface_dx12(id_in, |inst| <span class="kw">unsafe </span>{
+            inst.create_surface_from_visual(visual <span class="kw">as _</span>)
+        })
     }
 
     <span class="attr">#[cfg(dx12)]
@@ -1776,25 +1883,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
-    ) -&gt; SurfaceId {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_surface_handle"</span>);
-
-        <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
-            info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
-            raw: {
-                <span class="kw">let </span>hal_surface = <span class="self">self
-                    </span>.instance
-                    .dx12
-                    .as_ref()
-                    .map(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_surface_handle(surface_handle) })
-                    .unwrap();
-                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
-            },
-        };
-
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
-        id
+        <span class="self">self</span>.instance_create_surface_dx12(id_in, |inst| <span class="kw">unsafe </span>{
+            inst.create_surface_from_surface_handle(surface_handle)
+        })
     }
 
     <span class="attr">#[cfg(dx12)]
@@ -1805,27 +1898,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
-    ) -&gt; SurfaceId {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_swap_chain_panel"</span>);
-
-        <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
-            info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
-            raw: {
-                <span class="kw">let </span>hal_surface = <span class="self">self
-                    </span>.instance
-                    .dx12
-                    .as_ref()
-                    .map(|inst| <span class="kw">unsafe </span>{
-                        inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>)
-                    })
-                    .unwrap();
-                AnySurface::new::&lt;hal::api::Dx12&gt;(hal_surface)
-            },
-        };
-
-        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare(id_in).assign(Arc::new(surface));
-        id
+        <span class="self">self</span>.instance_create_surface_dx12(id_in, |inst| <span class="kw">unsafe </span>{
+            inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>)
+        })
     }
 
     <span class="kw">pub fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: SurfaceId) {
@@ -1833,11 +1910,15 @@
 
         <span class="macro">api_log!</span>(<span class="string">"Surface::drop {id:?}"</span>);
 
-        <span class="kw">fn </span>unconfigure&lt;A: HalApi&gt;(global: <span class="kw-2">&amp;</span>Global, surface: <span class="kw-2">&amp;</span>AnySurface, present: <span class="kw-2">&amp;</span>Presentation) {
-            <span class="kw">let </span>hub = HalApi::hub(global);
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(hal_surface) = surface.downcast_ref::&lt;A&gt;() {
+        <span class="kw">fn </span>unconfigure&lt;A: HalApi&gt;(
+            global: <span class="kw-2">&amp;</span>Global,
+            surface: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;HalSurface&lt;A&gt;&gt;,
+            present: <span class="kw-2">&amp;</span>Presentation,
+        ) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = surface {
+                <span class="kw">let </span>hub = HalApi::hub(global);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(device) = present.device.downcast_ref::&lt;A&gt;() {
-                    hub.surface_unconfigure(device, hal_surface);
+                    hub.surface_unconfigure(device, surface);
                 }
             }
         }
@@ -1845,15 +1926,16 @@
         <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.unregister(id);
         <span class="kw">let </span>surface = Arc::into_inner(surface.unwrap())
             .expect(<span class="string">"Surface cannot be destroyed because is still in use"</span>);
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
             <span class="attr">#[cfg(vulkan)]
-            </span>unconfigure::&lt;hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            </span>unconfigure::&lt;hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.vulkan, <span class="kw-2">&amp;</span>present);
             <span class="attr">#[cfg(metal)]
-            </span>unconfigure::&lt;hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            </span>unconfigure::&lt;hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.metal, <span class="kw-2">&amp;</span>present);
             <span class="attr">#[cfg(dx12)]
-            </span>unconfigure::&lt;hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            </span>unconfigure::&lt;hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.dx12, <span class="kw-2">&amp;</span>present);
             <span class="attr">#[cfg(gles)]
-            </span>unconfigure::&lt;hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            </span>unconfigure::&lt;hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.gl, <span class="kw-2">&amp;</span>present);
         }
         <span class="self">self</span>.instance.destroy_surface(surface);
     }
@@ -1961,7 +2043,7 @@
                         adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
                     }
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = compatible_surface {
-                        <span class="kw">let </span>surface = <span class="kw-2">&amp;</span>A::get_surface(surface);
+                        <span class="kw">let </span>surface = <span class="kw-2">&amp;</span>A::surface_as_hal(surface);
                         adapters.retain(|exposed| <span class="kw">unsafe </span>{
                             <span class="comment">// If the surface does not exist for this backend,
                             // then the surface is not supported.
