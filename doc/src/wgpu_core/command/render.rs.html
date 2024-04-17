@@ -2812,68 +2812,6 @@
 <a href="#2811" id="2811">2811</a>
 <a href="#2812" id="2812">2812</a>
 <a href="#2813" id="2813">2813</a>
-<a href="#2814" id="2814">2814</a>
-<a href="#2815" id="2815">2815</a>
-<a href="#2816" id="2816">2816</a>
-<a href="#2817" id="2817">2817</a>
-<a href="#2818" id="2818">2818</a>
-<a href="#2819" id="2819">2819</a>
-<a href="#2820" id="2820">2820</a>
-<a href="#2821" id="2821">2821</a>
-<a href="#2822" id="2822">2822</a>
-<a href="#2823" id="2823">2823</a>
-<a href="#2824" id="2824">2824</a>
-<a href="#2825" id="2825">2825</a>
-<a href="#2826" id="2826">2826</a>
-<a href="#2827" id="2827">2827</a>
-<a href="#2828" id="2828">2828</a>
-<a href="#2829" id="2829">2829</a>
-<a href="#2830" id="2830">2830</a>
-<a href="#2831" id="2831">2831</a>
-<a href="#2832" id="2832">2832</a>
-<a href="#2833" id="2833">2833</a>
-<a href="#2834" id="2834">2834</a>
-<a href="#2835" id="2835">2835</a>
-<a href="#2836" id="2836">2836</a>
-<a href="#2837" id="2837">2837</a>
-<a href="#2838" id="2838">2838</a>
-<a href="#2839" id="2839">2839</a>
-<a href="#2840" id="2840">2840</a>
-<a href="#2841" id="2841">2841</a>
-<a href="#2842" id="2842">2842</a>
-<a href="#2843" id="2843">2843</a>
-<a href="#2844" id="2844">2844</a>
-<a href="#2845" id="2845">2845</a>
-<a href="#2846" id="2846">2846</a>
-<a href="#2847" id="2847">2847</a>
-<a href="#2848" id="2848">2848</a>
-<a href="#2849" id="2849">2849</a>
-<a href="#2850" id="2850">2850</a>
-<a href="#2851" id="2851">2851</a>
-<a href="#2852" id="2852">2852</a>
-<a href="#2853" id="2853">2853</a>
-<a href="#2854" id="2854">2854</a>
-<a href="#2855" id="2855">2855</a>
-<a href="#2856" id="2856">2856</a>
-<a href="#2857" id="2857">2857</a>
-<a href="#2858" id="2858">2858</a>
-<a href="#2859" id="2859">2859</a>
-<a href="#2860" id="2860">2860</a>
-<a href="#2861" id="2861">2861</a>
-<a href="#2862" id="2862">2862</a>
-<a href="#2863" id="2863">2863</a>
-<a href="#2864" id="2864">2864</a>
-<a href="#2865" id="2865">2865</a>
-<a href="#2866" id="2866">2866</a>
-<a href="#2867" id="2867">2867</a>
-<a href="#2868" id="2868">2868</a>
-<a href="#2869" id="2869">2869</a>
-<a href="#2870" id="2870">2870</a>
-<a href="#2871" id="2871">2871</a>
-<a href="#2872" id="2872">2872</a>
-<a href="#2873" id="2873">2873</a>
-<a href="#2874" id="2874">2874</a>
-<a href="#2875" id="2875">2875</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -5335,36 +5273,31 @@
     }
 }
 
-<span class="kw">pub mod </span>render_ffi {
+<span class="kw">pub mod </span>render_commands {
     <span class="kw">use super</span>::{
         <span class="kw">super</span>::{Rect, RenderCommand},
         RenderPass,
     };
-    <span class="kw">use crate</span>::{id, RawString};
-    <span class="kw">use </span>std::{convert::TryInto, ffi, num::NonZeroU32, slice};
+    <span class="kw">use </span><span class="kw">crate</span>::id;
+    <span class="kw">use </span>std::{convert::TryInto, num::NonZeroU32};
     <span class="kw">use </span>wgt::{BufferAddress, BufferSize, Color, DynamicOffset, IndexFormat};
 
     <span class="doccomment">/// # Safety
     ///
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `offset_length` elements.
-    </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_bind_group(
+    </span><span class="kw">pub fn </span>wgpu_render_pass_set_bind_group(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         index: u32,
         bind_group_id: id::BindGroupId,
-        offsets: <span class="kw-2">*const </span>DynamicOffset,
-        offset_length: usize,
+        offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
-        <span class="kw">let </span>redundant = <span class="kw">unsafe </span>{
-            pass.current_bind_groups.set_and_check_redundant(
-                bind_group_id,
-                index,
-                <span class="kw-2">&amp;mut </span>pass.base.dynamic_offsets,
-                offsets,
-                offset_length,
-            )
-        };
+        <span class="kw">let </span>redundant = pass.current_bind_groups.set_and_check_redundant(
+            bind_group_id,
+            index,
+            <span class="kw-2">&amp;mut </span>pass.base.dynamic_offsets,
+            offsets,
+        );
 
         <span class="kw">if </span>redundant {
             <span class="kw">return</span>;
@@ -5372,16 +5305,12 @@
 
         pass.base.commands.push(RenderCommand::SetBindGroup {
             index,
-            num_dynamic_offsets: offset_length,
+            num_dynamic_offsets: offsets.len(),
             bind_group_id,
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_pipeline(
-        pass: <span class="kw-2">&amp;mut </span>RenderPass,
-        pipeline_id: id::RenderPipelineId,
-    ) {
+    <span class="kw">pub fn </span>wgpu_render_pass_set_pipeline(pass: <span class="kw-2">&amp;mut </span>RenderPass, pipeline_id: id::RenderPipelineId) {
         <span class="kw">if </span>pass.current_pipeline.set_and_check_redundant(pipeline_id) {
             <span class="kw">return</span>;
         }
@@ -5391,8 +5320,7 @@
             .push(RenderCommand::SetPipeline(pipeline_id));
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_vertex_buffer(
+    <span class="kw">pub fn </span>wgpu_render_pass_set_vertex_buffer(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         slot: u32,
         buffer_id: id::BufferId,
@@ -5407,8 +5335,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_index_buffer(
+    <span class="kw">pub fn </span>wgpu_render_pass_set_index_buffer(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer: id::BufferId,
         index_format: IndexFormat,
@@ -5418,22 +5345,19 @@
         pass.set_index_buffer(buffer, index_format, offset, size);
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_blend_constant(pass: <span class="kw-2">&amp;mut </span>RenderPass, color: <span class="kw-2">&amp;</span>Color) {
+    <span class="kw">pub fn </span>wgpu_render_pass_set_blend_constant(pass: <span class="kw-2">&amp;mut </span>RenderPass, color: <span class="kw-2">&amp;</span>Color) {
         pass.base
             .commands
             .push(RenderCommand::SetBlendConstant(<span class="kw-2">*</span>color));
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_stencil_reference(pass: <span class="kw-2">&amp;mut </span>RenderPass, value: u32) {
+    <span class="kw">pub fn </span>wgpu_render_pass_set_stencil_reference(pass: <span class="kw-2">&amp;mut </span>RenderPass, value: u32) {
         pass.base
             .commands
             .push(RenderCommand::SetStencilReference(value));
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_viewport(
+    <span class="kw">pub fn </span>wgpu_render_pass_set_viewport(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         x: f32,
         y: f32,
@@ -5449,8 +5373,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_scissor_rect(
+    <span class="kw">pub fn </span>wgpu_render_pass_set_scissor_rect(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         x: u32,
         y: u32,
@@ -5466,13 +5389,11 @@
     ///
     /// This function is unsafe as there is no guarantee that the given pointer is
     /// valid for `size_bytes` bytes.
-    </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_set_push_constants(
+    </span><span class="kw">pub fn </span>wgpu_render_pass_set_push_constants(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         stages: wgt::ShaderStages,
         offset: u32,
-        size_bytes: u32,
-        data: <span class="kw-2">*const </span>u8,
+        data: <span class="kw-2">&amp;</span>[u8],
     ) {
         <span class="macro">assert_eq!</span>(
             offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
@@ -5480,31 +5401,28 @@
             <span class="string">"Push constant offset must be aligned to 4 bytes."
         </span>);
         <span class="macro">assert_eq!</span>(
-            size_bytes &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
+            data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
             <span class="number">0</span>,
             <span class="string">"Push constant size must be aligned to 4 bytes."
         </span>);
-        <span class="kw">let </span>data_slice = <span class="kw">unsafe </span>{ slice::from_raw_parts(data, size_bytes <span class="kw">as </span>usize) };
         <span class="kw">let </span>value_offset = pass.base.push_constant_data.len().try_into().expect(
             <span class="string">"Ran out of push constant space. Don't set 4gb of push constants per RenderPass."</span>,
         );
 
         pass.base.push_constant_data.extend(
-            data_slice
-                .chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
+            data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
                 .map(|arr| u32::from_ne_bytes([arr[<span class="number">0</span>], arr[<span class="number">1</span>], arr[<span class="number">2</span>], arr[<span class="number">3</span>]])),
         );
 
         pass.base.commands.push(RenderCommand::SetPushConstant {
             stages,
             offset,
-            size_bytes,
+            size_bytes: data.len() <span class="kw">as </span>u32,
             values_offset: <span class="prelude-val">Some</span>(value_offset),
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_draw(
+    <span class="kw">pub fn </span>wgpu_render_pass_draw(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         vertex_count: u32,
         instance_count: u32,
@@ -5519,8 +5437,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_draw_indexed(
+    <span class="kw">pub fn </span>wgpu_render_pass_draw_indexed(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         index_count: u32,
         instance_count: u32,
@@ -5537,8 +5454,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_draw_indirect(
+    <span class="kw">pub fn </span>wgpu_render_pass_draw_indirect(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5551,8 +5467,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_draw_indexed_indirect(
+    <span class="kw">pub fn </span>wgpu_render_pass_draw_indexed_indirect(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5565,8 +5480,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_multi_draw_indirect(
+    <span class="kw">pub fn </span>wgpu_render_pass_multi_draw_indirect(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5580,8 +5494,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_multi_draw_indexed_indirect(
+    <span class="kw">pub fn </span>wgpu_render_pass_multi_draw_indexed_indirect(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5595,8 +5508,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_multi_draw_indirect_count(
+    <span class="kw">pub fn </span>wgpu_render_pass_multi_draw_indirect_count(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5616,8 +5528,7 @@
             });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_multi_draw_indexed_indirect_count(
+    <span class="kw">pub fn </span>wgpu_render_pass_multi_draw_indexed_indirect_count(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         buffer_id: id::BufferId,
         offset: BufferAddress,
@@ -5637,17 +5548,8 @@
             });
     }
 
-    <span class="doccomment">/// # Safety
-    ///
-    /// This function is unsafe as there is no guarantee that the given `label`
-    /// is a valid null-terminated string.
-    </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_push_debug_group(
-        pass: <span class="kw-2">&amp;mut </span>RenderPass,
-        label: RawString,
-        color: u32,
-    ) {
-        <span class="kw">let </span>bytes = <span class="kw">unsafe </span>{ ffi::CStr::from_ptr(label) }.to_bytes();
+    <span class="kw">pub fn </span>wgpu_render_pass_push_debug_group(pass: <span class="kw-2">&amp;mut </span>RenderPass, label: <span class="kw-2">&amp;</span>str, color: u32) {
+        <span class="kw">let </span>bytes = label.as_bytes();
         pass.base.string_data.extend_from_slice(bytes);
 
         pass.base.commands.push(RenderCommand::PushDebugGroup {
@@ -5656,22 +5558,12 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_pop_debug_group(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
+    <span class="kw">pub fn </span>wgpu_render_pass_pop_debug_group(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
         pass.base.commands.push(RenderCommand::PopDebugGroup);
     }
 
-    <span class="doccomment">/// # Safety
-    ///
-    /// This function is unsafe as there is no guarantee that the given `label`
-    /// is a valid null-terminated string.
-    </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_insert_debug_marker(
-        pass: <span class="kw-2">&amp;mut </span>RenderPass,
-        label: RawString,
-        color: u32,
-    ) {
-        <span class="kw">let </span>bytes = <span class="kw">unsafe </span>{ ffi::CStr::from_ptr(label) }.to_bytes();
+    <span class="kw">pub fn </span>wgpu_render_pass_insert_debug_marker(pass: <span class="kw-2">&amp;mut </span>RenderPass, label: <span class="kw-2">&amp;</span>str, color: u32) {
+        <span class="kw">let </span>bytes = label.as_bytes();
         pass.base.string_data.extend_from_slice(bytes);
 
         pass.base.commands.push(RenderCommand::InsertDebugMarker {
@@ -5680,8 +5572,7 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_write_timestamp(
+    <span class="kw">pub fn </span>wgpu_render_pass_write_timestamp(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         query_set_id: id::QuerySetId,
         query_index: u32,
@@ -5692,23 +5583,17 @@
         });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_begin_occlusion_query(
-        pass: <span class="kw-2">&amp;mut </span>RenderPass,
-        query_index: u32,
-    ) {
+    <span class="kw">pub fn </span>wgpu_render_pass_begin_occlusion_query(pass: <span class="kw-2">&amp;mut </span>RenderPass, query_index: u32) {
         pass.base
             .commands
             .push(RenderCommand::BeginOcclusionQuery { query_index });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_end_occlusion_query(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
+    <span class="kw">pub fn </span>wgpu_render_pass_end_occlusion_query(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
         pass.base.commands.push(RenderCommand::EndOcclusionQuery);
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_begin_pipeline_statistics_query(
+    <span class="kw">pub fn </span>wgpu_render_pass_begin_pipeline_statistics_query(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         query_set_id: id::QuerySetId,
         query_index: u32,
@@ -5721,26 +5606,17 @@
             });
     }
 
-    <span class="attr">#[no_mangle]
-    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_end_pipeline_statistics_query(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
+    <span class="kw">pub fn </span>wgpu_render_pass_end_pipeline_statistics_query(pass: <span class="kw-2">&amp;mut </span>RenderPass) {
         pass.base
             .commands
             .push(RenderCommand::EndPipelineStatisticsQuery);
     }
 
-    <span class="doccomment">/// # Safety
-    ///
-    /// This function is unsafe as there is no guarantee that the given pointer is
-    /// valid for `render_bundle_ids_length` elements.
-    </span><span class="attr">#[no_mangle]
-    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>wgpu_render_pass_execute_bundles(
+    <span class="kw">pub fn </span>wgpu_render_pass_execute_bundles(
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
-        render_bundle_ids: <span class="kw-2">*const </span>id::RenderBundleId,
-        render_bundle_ids_length: usize,
+        render_bundle_ids: <span class="kw-2">&amp;</span>[id::RenderBundleId],
     ) {
-        <span class="kw">for </span><span class="kw-2">&amp;</span>bundle_id <span class="kw">in
-            unsafe </span>{ slice::from_raw_parts(render_bundle_ids, render_bundle_ids_length) }
-        {
+        <span class="kw">for </span><span class="kw-2">&amp;</span>bundle_id <span class="kw">in </span>render_bundle_ids {
             pass.base
                 .commands
                 .push(RenderCommand::ExecuteBundle(bundle_id));

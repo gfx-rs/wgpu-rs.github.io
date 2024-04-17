@@ -1743,7 +1743,6 @@
 <a href="#1742" id="1742">1742</a>
 <a href="#1743" id="1743">1743</a>
 <a href="#1744" id="1744">1744</a>
-<a href="#1745" id="1745">1745</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -3294,15 +3293,14 @@ index format changes.
         offsets: <span class="kw-2">*const </span>DynamicOffset,
         offset_length: usize,
     ) {
-        <span class="kw">let </span>redundant = <span class="kw">unsafe </span>{
-            bundle.current_bind_groups.set_and_check_redundant(
-                bind_group_id,
-                index,
-                <span class="kw-2">&amp;mut </span>bundle.base.dynamic_offsets,
-                offsets,
-                offset_length,
-            )
-        };
+        <span class="kw">let </span>offsets = <span class="kw">unsafe </span>{ slice::from_raw_parts(offsets, offset_length) };
+
+        <span class="kw">let </span>redundant = bundle.current_bind_groups.set_and_check_redundant(
+            bind_group_id,
+            index,
+            <span class="kw-2">&amp;mut </span>bundle.base.dynamic_offsets,
+            offsets,
+        );
 
         <span class="kw">if </span>redundant {
             <span class="kw">return</span>;

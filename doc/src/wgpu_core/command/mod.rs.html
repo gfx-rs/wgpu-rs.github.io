@@ -887,9 +887,6 @@
 <a href="#886" id="886">886</a>
 <a href="#887" id="887">887</a>
 <a href="#888" id="888">888</a>
-<a href="#889" id="889">889</a>
-<a href="#890" id="890">890</a>
-<a href="#891" id="891">891</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -901,7 +898,6 @@
 <span class="kw">mod </span>render;
 <span class="kw">mod </span>transfer;
 
-<span class="kw">use </span>std::slice;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::clear::clear_texture;
@@ -1649,16 +1645,15 @@
         }
     }
 
-    <span class="kw">unsafe fn </span>set_and_check_redundant(
+    <span class="kw">fn </span>set_and_check_redundant(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bind_group_id: id::BindGroupId,
         index: u32,
         dynamic_offsets: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;,
-        offsets: <span class="kw-2">*const </span>wgt::DynamicOffset,
-        offset_length: usize,
+        offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) -&gt; bool {
         <span class="comment">// For now never deduplicate bind groups with dynamic offsets.
-        </span><span class="kw">if </span>offset_length == <span class="number">0 </span>{
+        </span><span class="kw">if </span>offsets.is_empty() {
             <span class="comment">// If this get returns None, that means we're well over the limit,
             // so let the call through to get a proper error
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
@@ -1674,8 +1669,7 @@
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_bind_group) = <span class="self">self</span>.last_states.get_mut(index <span class="kw">as </span>usize) {
                 current_bind_group.reset();
             }
-            dynamic_offsets
-                .extend_from_slice(<span class="kw">unsafe </span>{ slice::from_raw_parts(offsets, offset_length) });
+            dynamic_offsets.extend_from_slice(offsets);
         }
         <span class="bool-val">false
     </span>}
