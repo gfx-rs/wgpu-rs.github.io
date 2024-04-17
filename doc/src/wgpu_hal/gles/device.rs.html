@@ -1526,6 +1526,19 @@
 <a href="#1525" id="1525">1525</a>
 <a href="#1526" id="1526">1526</a>
 <a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1783,11 +1796,23 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
+        <span class="kw">let </span>needs_temp_options = stage.zero_initialize_workgroup_memory
+            != context.layout.naga_options.zero_initialize_workgroup_memory;
+        <span class="kw">let </span><span class="kw-2">mut </span>temp_options;
+        <span class="kw">let </span>naga_options = <span class="kw">if </span>needs_temp_options {
+            <span class="comment">// We use a conditional here, as cloning the naga_options could be expensive
+            // That is, we want to avoid doing that unless we cannot avoid it
+            </span>temp_options = context.layout.naga_options.clone();
+            temp_options.zero_initialize_workgroup_memory = stage.zero_initialize_workgroup_memory;
+            <span class="kw-2">&amp;</span>temp_options
+        } <span class="kw">else </span>{
+            <span class="kw-2">&amp;</span>context.layout.naga_options
+        };
         <span class="kw">let </span><span class="kw-2">mut </span>writer = glsl::Writer::new(
             <span class="kw-2">&amp;mut </span>output,
             <span class="kw-2">&amp;</span>module,
             <span class="kw-2">&amp;</span>info,
-            <span class="kw-2">&amp;</span>context.layout.naga_options,
+            naga_options,
             <span class="kw-2">&amp;</span>pipeline_options,
             policies,
         )
@@ -1833,6 +1858,7 @@
                 naga_stage: naga_stage.to_owned(),
                 shader_id: stage.module.id,
                 entry_point: stage.entry_point.to_owned(),
+                zero_initialize_workgroup_memory: stage.zero_initialize_workgroup_memory,
             });
         }
         <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self

@@ -2363,10 +2363,17 @@
 <a href="#2362" id="2362">2362</a>
 <a href="#2363" id="2363">2363</a>
 <a href="#2364" id="2364">2364</a>
+<a href="#2365" id="2365">2365</a>
+<a href="#2366" id="2366">2366</a>
+<a href="#2367" id="2367">2367</a>
+<a href="#2368" id="2368">2368</a>
+<a href="#2369" id="2369">2369</a>
+<a href="#2370" id="2370">2370</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{extensions::khr, vk};
+<span class="kw">use </span>naga::back::spv::ZeroInitializeWorkgroupMemoryMode;
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use </span>std::{
@@ -3102,7 +3109,8 @@
                 };
                 <span class="kw">let </span>needs_temp_options = !runtime_checks
                     || !binding_map.is_empty()
-                    || naga_shader.debug_source.is_some();
+                    || naga_shader.debug_source.is_some()
+                    || !stage.zero_initialize_workgroup_memory;
                 <span class="kw">let </span><span class="kw-2">mut </span>temp_options;
                 <span class="kw">let </span>options = <span class="kw">if </span>needs_temp_options {
                     temp_options = <span class="self">self</span>.naga_options.clone();
@@ -3124,6 +3132,10 @@
                             source_code: <span class="kw-2">&amp;</span>debug.source_code,
                             file_name: debug.file_name.as_ref().as_ref(),
                         })
+                    }
+                    <span class="kw">if </span>!stage.zero_initialize_workgroup_memory {
+                        temp_options.zero_initialize_workgroup_memory =
+                            ZeroInitializeWorkgroupMemoryMode::None;
                     }
 
                     <span class="kw-2">&amp;</span>temp_options
