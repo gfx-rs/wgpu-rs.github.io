@@ -863,6 +863,11 @@
 <a href="#862" id="862">862</a>
 <a href="#863" id="863">863</a>
 <a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -1673,29 +1678,33 @@
                 <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Idle;
                 <span class="macro">log::trace!</span>(<span class="string">"Buffer ready to map {tracker_index:?} is not tracked anymore"</span>);
             } <span class="kw">else </span>{
-                <span class="kw">let </span>mapping = <span class="kw">match </span>std::mem::replace(
+                <span class="comment">// This _cannot_ be inlined into the match. If it is, the lock will be held
+                // open through the whole match, resulting in a deadlock when we try to re-lock
+                // the buffer back to active.
+                </span><span class="kw">let </span>mapping = std::mem::replace(
                     <span class="kw-2">&amp;mut *</span>buffer.map_state.lock(),
                     resource::BufferMapState::Idle,
-                ) {
+                );
+                <span class="kw">let </span>pending_mapping = <span class="kw">match </span>mapping {
                     resource::BufferMapState::Waiting(pending_mapping) =&gt; pending_mapping,
                     <span class="comment">// Mapping cancelled
                     </span>resource::BufferMapState::Idle =&gt; <span class="kw">continue</span>,
                     <span class="comment">// Mapping queued at least twice by map -&gt; unmap -&gt; map
                     // and was already successfully mapped below
-                    </span>active @ resource::BufferMapState::Active { .. } =&gt; {
-                        <span class="kw-2">*</span>buffer.map_state.lock() = active;
+                    </span>resource::BufferMapState::Active { .. } =&gt; {
+                        <span class="kw-2">*</span>buffer.map_state.lock() = mapping;
                         <span class="kw">continue</span>;
                     }
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No pending mapping."</span>),
                 };
-                <span class="kw">let </span>status = <span class="kw">if </span>mapping.range.start != mapping.range.end {
+                <span class="kw">let </span>status = <span class="kw">if </span>pending_mapping.range.start != pending_mapping.range.end {
                     <span class="macro">log::debug!</span>(<span class="string">"Buffer {tracker_index:?} map state -&gt; Active"</span>);
-                    <span class="kw">let </span>host = mapping.op.host;
-                    <span class="kw">let </span>size = mapping.range.end - mapping.range.start;
+                    <span class="kw">let </span>host = pending_mapping.op.host;
+                    <span class="kw">let </span>size = pending_mapping.range.end - pending_mapping.range.start;
                     <span class="kw">match </span><span class="kw">super</span>::map_buffer(
                         raw,
                         <span class="kw-2">&amp;</span>buffer,
-                        mapping.range.start,
+                        pending_mapping.range.start,
                         size,
                         host,
                         snatch_guard,
@@ -1703,7 +1712,8 @@
                         <span class="prelude-val">Ok</span>(ptr) =&gt; {
                             <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Active {
                                 ptr,
-                                range: mapping.range.start..mapping.range.start + size,
+                                range: pending_mapping.range.start
+                                    ..pending_mapping.range.start + size,
                                 host,
                             };
                             <span class="prelude-val">Ok</span>(())
@@ -1716,12 +1726,12 @@
                 } <span class="kw">else </span>{
                     <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Active {
                         ptr: std::ptr::NonNull::dangling(),
-                        range: mapping.range,
-                        host: mapping.op.host,
+                        range: pending_mapping.range,
+                        host: pending_mapping.op.host,
                     };
                     <span class="prelude-val">Ok</span>(())
                 };
-                pending_callbacks.push((mapping.op, status));
+                pending_callbacks.push((pending_mapping.op, status));
             }
         }
         pending_callbacks
