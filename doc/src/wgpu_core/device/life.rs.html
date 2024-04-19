@@ -894,11 +894,6 @@
 <a href="#893" id="893">893</a>
 <a href="#894" id="894">894</a>
 <a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -1057,8 +1052,7 @@
 /// However, it's not clear that this is effective. See [#5560].
 ///
 /// [`wgpu_hal`]: hal
-/// [`CommandBuffer`]: crate::command::CommandBuffer
-/// [`PendingWrites`]: crate::device::queue::PendingWrites
+/// [`ResourceInfo::submission_index`]: crate::resource::ResourceInfo
 /// [#5560]: https://github.com/gfx-rs/wgpu/issues/5560
 </span><span class="kw">struct </span>ActiveSubmission&lt;A: HalApi&gt; {
     <span class="doccomment">/// The index of the submission we track.
@@ -1091,6 +1085,8 @@
     ///
     /// Once this submission has completed, the command buffers are reset and
     /// the command encoder is recycled.
+    ///
+    /// [`wgpu_hal::Queue::submit`]: hal::Queue::submit
     </span>encoders: Vec&lt;EncoderInFlight&lt;A&gt;&gt;,
 
     <span class="doccomment">/// List of queue "on_submitted_work_done" closures to be called once this
@@ -1271,22 +1267,19 @@
     ///
     /// Assume that all submissions up through `last_done` have completed.
     ///
-    /// -   Buffers used by those submissions are now ready to map, if
-    ///     requested. Add any buffers in the submission's [`mapped`] list to
-    ///     [`self.ready_to_map`], where [`LifetimeTracker::handle_mapping`] will find
-    ///     them.
+    /// -   Buffers used by those submissions are now ready to map, if requested.
+    ///     Add any buffers in the submission's [`mapped`] list to
+    ///     [`self.ready_to_map`], where [`LifetimeTracker::handle_mapping`]
+    ///     will find them.
     ///
     /// -   Resources whose final use was in those submissions are now ready to
-    ///     free. Add any resources in the submission's [`last_resources`] table
-    ///     to [`self.free_resources`], where [`LifetimeTracker::cleanup`] will find
-    ///     them.
+    ///     free. Dropping the submission's [`last_resources`] table does so.
     ///
     /// Return a list of [`SubmittedWorkDoneClosure`]s to run.
     ///
     /// [`mapped`]: ActiveSubmission::mapped
     /// [`self.ready_to_map`]: LifetimeTracker::ready_to_map
     /// [`last_resources`]: ActiveSubmission::last_resources
-    /// [`self.free_resources`]: LifetimeTracker::free_resources
     /// [`SubmittedWorkDoneClosure`]: crate::device::queue::SubmittedWorkDoneClosure
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>triage_submissions(
@@ -1634,13 +1627,10 @@
 
     <span class="doccomment">/// Identify resources to free, according to `trackers` and `self.suspected_resources`.
     ///
-    /// Given `trackers`, the [`Tracker`] belonging to same [`Device`] as
-    /// `self`, and `hub`, the [`Hub`] to which that `Device` belongs:
-    ///
-    /// Remove from `trackers` each resource mentioned in
-    /// [`self.suspected_resources`]. If `trackers` held the final reference to
-    /// that resource, add it to the appropriate free list, to be destroyed by
-    /// the hal:
+    /// Remove from `trackers`, the [`Tracker`] belonging to same [`Device`] as
+    /// `self`, each resource mentioned in [`self.suspected_resources`]. If
+    /// `trackers` held the final reference to that resource, add it to the
+    /// appropriate free list, to be destroyed by the hal:
     ///
     /// -   Add resources used by queue submissions still in flight to the
     ///     [`last_resources`] table of the last such submission's entry in

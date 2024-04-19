@@ -140,11 +140,6 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::Backend;
 
@@ -163,31 +158,26 @@
 
 <span class="doccomment">/// A simple structure to allocate [`Id`] identifiers.
 ///
-/// Calling [`alloc`] returns a fresh, never-before-seen id. Calling [`free`]
+/// Calling [`alloc`] returns a fresh, never-before-seen id. Calling [`release`]
 /// marks an id as dead; it will never be returned again by `alloc`.
 ///
-/// Use `IdentityManager::default` to construct new instances.
+/// `IdentityValues` returns `Id`s whose index values are suitable for use as
+/// indices into a `Vec&lt;T&gt;` that holds those ids' referents:
 ///
-/// `IdentityManager` returns `Id`s whose index values are suitable for use as
-/// indices into a `Storage&lt;T&gt;` that holds those ids' referents:
+/// - Every live id has a distinct index value. Every live id's index
+///   selects a distinct element in the vector.
 ///
-/// - Every live id has a distinct index value. Each live id's index selects a
-///   distinct element in the vector.
-///
-/// - `IdentityManager` prefers low index numbers. If you size your vector to
+/// - `IdentityValues` prefers low index numbers. If you size your vector to
 ///   accommodate the indices produced here, the vector's length will reflect
 ///   the highwater mark of actual occupancy.
 ///
-/// - `IdentityManager` reuses the index values of freed ids before returning
+/// - `IdentityValues` reuses the index values of freed ids before returning
 ///   ids with new index values. Freed vector entries get reused.
-///
-/// See the module-level documentation for an overview of how this
-/// fits together.
 ///
 /// [`Id`]: crate::id::Id
 /// [`Backend`]: wgt::Backend;
-/// [`alloc`]: IdentityManager::alloc
-/// [`free`]: IdentityManager::free
+/// [`alloc`]: IdentityValues::alloc
+/// [`release`]: IdentityValues::release
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>IdentityValues {
     free: Vec&lt;(Index, Epoch)&gt;,

@@ -887,6 +887,15 @@
 <a href="#886" id="886">886</a>
 <a href="#887" id="887">887</a>
 <a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -980,15 +989,17 @@
 /// Methods that take a command encoder id actually look up the command buffer,
 /// and then use its encoder.
 ///
-/// [rce]: wgpu_hal::Api::CommandEncoder
-/// [rcb]: wgpu_hal::Api::CommandBuffer
+/// [rce]: hal::Api::CommandEncoder
+/// [rcb]: hal::Api::CommandBuffer
+/// [`CommandEncoderId`]: crate::id::CommandEncoderId
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandEncoder&lt;A: HalApi&gt; {
     <span class="doccomment">/// The underlying `wgpu_hal` [`CommandEncoder`].
     ///
     /// Successfully executed command buffers' encoders are saved in a
-    /// [`wgpu_hal::device::CommandAllocator`] for recycling.
+    /// [`CommandAllocator`] for recycling.
     ///
-    /// [`CommandEncoder`]: wgpu_hal::Api::CommandEncoder
+    /// [`CommandEncoder`]: hal::Api::CommandEncoder
+    /// [`CommandAllocator`]: crate::command::CommandAllocator
     </span>raw: A::CommandEncoder,
 
     <span class="doccomment">/// All the raw command buffers for our owning [`CommandBuffer`], in
@@ -1000,13 +1011,16 @@
     /// [`raw.reset_all()`][CE::ra], so the encoder and its buffers travel
     /// together.
     ///
-    /// [CE::ra]: wgpu_hal::CommandEncoder::reset_all
+    /// [CE::ra]: hal::CommandEncoder::reset_all
+    /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     </span>list: Vec&lt;A::CommandBuffer&gt;,
 
     <span class="doccomment">/// True if `raw` is in the "recording" state.
     ///
     /// See the documentation for [`wgpu_hal::CommandEncoder`] for
     /// details on the states `raw` can be in.
+    ///
+    /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     </span>is_open: bool,
 
     label: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -1037,6 +1051,8 @@
     /// transitions' command buffer.
     ///
     /// [l]: CommandEncoder::list
+    /// [`transition_buffers`]: hal::CommandEncoder::transition_buffers
+    /// [`transition_textures`]: hal::CommandEncoder::transition_textures
     </span><span class="kw">fn </span>close_and_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
@@ -1117,6 +1133,8 @@
 </span><span class="kw">pub struct </span>CommandBufferMutable&lt;A: HalApi&gt; {
     <span class="doccomment">/// The [`wgpu_hal::Api::CommandBuffer`]s we've built so far, and the encoder
     /// they belong to.
+    ///
+    /// [`wgpu_hal::Api::CommandBuffer`]: hal::Api::CommandBuffer
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) encoder: CommandEncoder&lt;A&gt;,
 
     <span class="doccomment">/// The current state of this command buffer's encoder.
