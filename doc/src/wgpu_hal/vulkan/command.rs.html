@@ -1143,6 +1143,11 @@
 <a href="#1142" id="1142">1142</a>
 <a href="#1143" id="1143">1143</a>
 <a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -1249,6 +1254,11 @@
     }
 
     <span class="kw">unsafe fn </span>discard_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Safe use requires this is not called in the "closed" state, so the buffer
+        // shouldn't be null. Assert this to make sure we're not pushing null
+        // buffers to the discard pile.
+        </span><span class="macro">assert_ne!</span>(<span class="self">self</span>.active, vk::CommandBuffer::null());
+
         <span class="self">self</span>.discarded.push(<span class="self">self</span>.active);
         <span class="self">self</span>.active = vk::CommandBuffer::null();
     }
