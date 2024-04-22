@@ -3,10 +3,37 @@
     pub ui_view: <a class="struct" href="https://doc.rust-lang.org/nightly/core/ptr/non_null/struct.NonNull.html" title="struct core::ptr::non_null::NonNull">NonNull</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/ffi/enum.c_void.html" title="enum core::ffi::c_void">c_void</a>&gt;,
     pub ui_view_controller: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/ptr/non_null/struct.NonNull.html" title="struct core::ptr::non_null::NonNull">NonNull</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/ffi/enum.c_void.html" title="enum core::ffi::c_void">c_void</a>&gt;&gt;,
 }</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Raw window handle for UIKit.</p>
+<p>Note that <code>UIView</code> can only be accessed from the main thread of the
+application. This struct is <code>!Send</code> and <code>!Sync</code> to help with ensuring
+that.</p>
+<h2 id="example"><a href="#example">Example</a></h2>
+<p>Getting the view from a <a href="struct.WindowHandle.html" title="struct wgpu::rwh::WindowHandle"><code>WindowHandle</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![cfg(any(target_os = <span class="string">"ios"</span>, target_os = <span class="string">"tvos"</span>, target_os = <span class="string">"watchos"</span>, target_os = <span class="string">"xros"</span>))]
+</span><span class="kw">use </span>icrate::Foundation::is_main_thread;
+<span class="kw">use </span>objc2::rc::Id;
+<span class="comment">// TODO: Use `icrate::UIKit::UIView` when available
+</span><span class="kw">use </span>objc2::runtime::NSObject;
+<span class="kw">use </span>raw_window_handle::{WindowHandle, RawWindowHandle};
+
+<span class="kw">let </span>handle: WindowHandle&lt;<span class="lifetime">'_</span>&gt;; <span class="comment">// Get the window handle from somewhere else
+</span><span class="kw">match </span>handle.as_raw() {
+    RawWindowHandle::UIKit(handle) =&gt; {
+        <span class="macro">assert!</span>(is_main_thread(), <span class="string">"can only access UIKit handles on the main thread"</span>);
+        <span class="kw">let </span>ui_view = handle.ui_view.as_ptr();
+        <span class="comment">// SAFETY: The pointer came from `WindowHandle`, which ensures
+        // that the `UiKitWindowHandle` contains a valid pointer to an
+        // `UIView`.
+        // Unwrap is fine, since the pointer came from `NonNull`.
+        </span><span class="kw">let </span>ui_view: Id&lt;NSObject&gt; = <span class="kw">unsafe </span>{ Id::retain(ui_view.cast()) }.unwrap();
+        <span class="comment">// Do something with the UIView here.
+    </span>}
+    handle =&gt; <span class="macro">unreachable!</span>(<span class="string">"unknown handle {handle:?} for platform"</span>),
+}</code></pre></div>
 </div></details><h2 id="fields" class="fields section-header">Fields (Non-exhaustive)<a href="#fields" class="anchor">§</a></h2><details class="toggle non-exhaustive"><summary class="hideme"><span>This struct is marked as non-exhaustive</span></summary><div class="docblock">Non-exhaustive structs could have additional fields added in future. Therefore, non-exhaustive structs cannot be constructed in external crates using the traditional <code>Struct { .. }</code> syntax; cannot be matched against without a wildcard <code>..</code>; and struct update syntax will not work.</div></details><span id="structfield.ui_view" class="structfield section-header"><a href="#structfield.ui_view" class="anchor field">§</a><code>ui_view: <a class="struct" href="https://doc.rust-lang.org/nightly/core/ptr/non_null/struct.NonNull.html" title="struct core::ptr::non_null::NonNull">NonNull</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/ffi/enum.c_void.html" title="enum core::ffi::c_void">c_void</a>&gt;</code></span><div class="docblock"><p>A pointer to an <code>UIView</code> object.</p>
 </div><span id="structfield.ui_view_controller" class="structfield section-header"><a href="#structfield.ui_view_controller" class="anchor field">§</a><code>ui_view_controller: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/core/ptr/non_null/struct.NonNull.html" title="struct core::ptr::non_null::NonNull">NonNull</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/ffi/enum.c_void.html" title="enum core::ffi::c_void">c_void</a>&gt;&gt;</code></span><div class="docblock"><p>A pointer to an <code>UIViewController</code> object, if the view has one.</p>
 </div><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-UiKitWindowHandle" class="impl"><a href="#impl-UiKitWindowHandle" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.UiKitWindowHandle.html" title="struct wgpu::rwh::UiKitWindowHandle">UiKitWindowHandle</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.new" class="method"><h4 class="code-header">pub fn <a href="#method.new" class="fn">new</a>(ui_view: <a class="struct" href="https://doc.rust-lang.org/nightly/core/ptr/non_null/struct.NonNull.html" title="struct core::ptr::non_null::NonNull">NonNull</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/ffi/enum.c_void.html" title="enum core::ffi::c_void">c_void</a>&gt;) -&gt; <a class="struct" href="struct.UiKitWindowHandle.html" title="struct wgpu::rwh::UiKitWindowHandle">UiKitWindowHandle</a></h4></section></summary><div class="docblock"><p>Create a new handle to a view.</p>
-<h5 id="example"><a href="#example">Example</a></h5>
+<h5 id="example-1"><a href="#example-1">Example</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>view: <span class="kw-2">&amp;</span>UIView;
 <span class="kw">let </span><span class="kw-2">mut </span>handle = UiKitWindowHandle::new(NonNull::from(view).cast());
 <span class="comment">// Optionally set the view controller.
