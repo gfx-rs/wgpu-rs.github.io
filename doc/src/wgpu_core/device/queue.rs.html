@@ -1625,6 +1625,7 @@
     hal_label,
     id::{<span class="self">self</span>, DeviceId, QueueId},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
+    lock::{rank, Mutex},
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, Resource,
         ResourceInfo, ResourceType, StagingBuffer, Texture, TextureInner,
@@ -1633,7 +1634,6 @@
 };
 
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>, Queue <span class="kw">as _</span>};
-<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span>std::{
@@ -1928,7 +1928,7 @@
     <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size) }<span class="question-mark">?</span>;
 
     <span class="kw">let </span>staging_buffer = StagingBuffer {
-        raw: Mutex::new(<span class="prelude-val">Some</span>(buffer)),
+        raw: Mutex::new(rank::STAGING_BUFFER_RAW, <span class="prelude-val">Some</span>(buffer)),
         device: device.clone(),
         size,
         info: ResourceInfo::new(

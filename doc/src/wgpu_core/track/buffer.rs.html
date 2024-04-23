@@ -829,6 +829,7 @@
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     id::BufferId,
+    lock::{rank, Mutex},
     resource::{Buffer, Resource},
     snatch::SnatchGuard,
     storage::Storage,
@@ -838,7 +839,6 @@
     },
 };
 <span class="kw">use </span>hal::{BufferBarrier, BufferUses};
-<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::{strict_assert, strict_assert_eq};
 
 <span class="kw">impl </span>ResourceUses <span class="kw">for </span>BufferUses {
@@ -869,7 +869,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; BufferBindGroupState&lt;A&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            buffers: Mutex::new(Vec::new()),
+            buffers: Mutex::new(rank::BUFFER_BIND_GROUP_STATE_BUFFERS, Vec::new()),
 
             _phantom: PhantomData,
         }

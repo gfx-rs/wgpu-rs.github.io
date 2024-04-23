@@ -695,6 +695,14 @@
 <a href="#694" id="694">694</a>
 <a href="#695" id="695">695</a>
 <a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -799,10 +807,15 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">mod </span>texture;
 
 <span class="kw">use crate</span>::{
-    binding_model, command, conv, hal_api::HalApi, id, pipeline, resource, snatch::SnatchGuard,
+    binding_model, command, conv,
+    hal_api::HalApi,
+    id,
+    lock::{rank, Mutex},
+    pipeline, resource,
+    snatch::SnatchGuard,
 };
 
-<span class="kw">use </span>parking_lot::{Mutex, RwLock};
+<span class="kw">use </span>parking_lot::RwLock;
 <span class="kw">use </span>std::{fmt, ops, sync::Arc};
 <span class="kw">use </span>thiserror::Error;
 
@@ -888,7 +901,10 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">impl </span>SharedTrackerIndexAllocator {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         SharedTrackerIndexAllocator {
-            inner: Mutex::new(TrackerIndexAllocator::new()),
+            inner: Mutex::new(
+                rank::SHARED_TRACKER_INDEX_ALLOCATOR_INNER,
+                TrackerIndexAllocator::new(),
+            ),
         }
     }
 

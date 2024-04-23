@@ -896,6 +896,9 @@
 <a href="#895" id="895">895</a>
 <a href="#896" id="896">896</a>
 <a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -921,6 +924,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::error::{ErrorFormatter, PrettyError};
 <span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
 <span class="kw">use </span><span class="kw">crate</span>::id::CommandBufferId;
+<span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
@@ -929,7 +933,6 @@
 <span class="kw">use crate</span>::{api_log, global::Global, hal_api::HalApi, id, resource_log, Label};
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
-<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>thiserror::Error;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -1236,25 +1239,28 @@
                     .as_str(),
                 <span class="prelude-val">None</span>,
             ),
-            data: Mutex::new(<span class="prelude-val">Some</span>(CommandBufferMutable {
-                encoder: CommandEncoder {
-                    raw: encoder,
-                    is_open: <span class="bool-val">false</span>,
-                    list: Vec::new(),
-                    label,
-                },
-                status: CommandEncoderStatus::Recording,
-                trackers: Tracker::new(),
-                buffer_memory_init_actions: Default::default(),
-                texture_memory_actions: Default::default(),
-                pending_query_resets: QueryResetMap::new(),
-                <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-                </span>commands: <span class="kw">if </span>enable_tracing {
-                    <span class="prelude-val">Some</span>(Vec::new())
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>},
-            })),
+            data: Mutex::new(
+                rank::COMMAND_BUFFER_DATA,
+                <span class="prelude-val">Some</span>(CommandBufferMutable {
+                    encoder: CommandEncoder {
+                        raw: encoder,
+                        is_open: <span class="bool-val">false</span>,
+                        list: Vec::new(),
+                        label,
+                    },
+                    status: CommandEncoderStatus::Recording,
+                    trackers: Tracker::new(),
+                    buffer_memory_init_actions: Default::default(),
+                    texture_memory_actions: Default::default(),
+                    pending_query_resets: QueryResetMap::new(),
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+                    </span>commands: <span class="kw">if </span>enable_tracing {
+                        <span class="prelude-val">Some</span>(Vec::new())
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>},
+                }),
+            ),
         }
     }
 

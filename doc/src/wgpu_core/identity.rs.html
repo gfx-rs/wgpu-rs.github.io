@@ -140,11 +140,14 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>wgt::Backend;
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
     id::{Id, Marker},
+    lock::{rank, Mutex},
     Epoch, Index,
 };
 <span class="kw">use </span>std::{fmt::Debug, marker::PhantomData};
@@ -259,12 +262,15 @@
 <span class="kw">impl</span>&lt;T: Marker&gt; IdentityManager&lt;T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            values: Mutex::new(IdentityValues {
-                free: Vec::new(),
-                next_index: <span class="number">0</span>,
-                count: <span class="number">0</span>,
-                id_source: IdSource::None,
-            }),
+            values: Mutex::new(
+                rank::IDENTITY_MANAGER_VALUES,
+                IdentityValues {
+                    free: Vec::new(),
+                    next_index: <span class="number">0</span>,
+                    count: <span class="number">0</span>,
+                    id_source: IdSource::None,
+                },
+            ),
             _phantom: PhantomData,
         }
     }

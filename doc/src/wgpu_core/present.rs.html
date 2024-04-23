@@ -437,6 +437,7 @@
 <a href="#436" id="436">436</a>
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -460,13 +461,14 @@ extract it from the hub.
     hal_api::HalApi,
     hal_label, id,
     init_tracker::TextureInitTracker,
+    lock::{rank, Mutex},
     resource::{<span class="self">self</span>, ResourceInfo},
     snatch::Snatchable,
     track,
 };
 
 <span class="kw">use </span>hal::{Queue <span class="kw">as _</span>, Surface <span class="kw">as _</span>};
-<span class="kw">use </span>parking_lot::{Mutex, RwLock};
+<span class="kw">use </span>parking_lot::RwLock;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::SurfaceStatus <span class="kw">as </span>Status;
 
@@ -666,8 +668,8 @@ extract it from the hub.
                     clear_mode: RwLock::new(resource::TextureClearMode::Surface {
                         clear_view: <span class="prelude-val">Some</span>(clear_view),
                     }),
-                    views: Mutex::new(Vec::new()),
-                    bind_groups: Mutex::new(Vec::new()),
+                    views: Mutex::new(rank::TEXTURE_VIEWS, Vec::new()),
+                    bind_groups: Mutex::new(rank::TEXTURE_BIND_GROUPS, Vec::new()),
                 };
 
                 <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(texture));

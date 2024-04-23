@@ -1215,6 +1215,7 @@
 <a href="#1214" id="1214">1214</a>
 <a href="#1215" id="1215">1215</a>
 <a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -1223,13 +1224,14 @@
     device::{queue::Queue, resource::Device, DeviceDescriptor},
     global::Global,
     hal_api::HalApi,
-    id::{markers, AdapterId, DeviceId, Id, Marker, QueueId, SurfaceId},
+    id::markers,
+    id::{AdapterId, DeviceId, Id, Marker, QueueId, SurfaceId},
+    lock::{rank, Mutex},
     present::Presentation,
     resource::{Resource, ResourceInfo, ResourceType},
     resource_log, LabelHelpers, DOWNLEVEL_WARNING_MESSAGE,
 };
 
-<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::{Backend, Backends, PowerPreference};
 
 <span class="kw">use </span>hal::{Adapter <span class="kw">as _</span>, Instance <span class="kw">as _</span>, OpenDevice};
@@ -1747,7 +1749,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>any_created = <span class="bool-val">false</span>;
 
         <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
 
             <span class="attr">#[cfg(vulkan)]
@@ -1811,7 +1813,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_metal"</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
             metal: <span class="prelude-val">Some</span>(<span class="self">self</span>.instance.metal.as_ref().map_or(
                 <span class="prelude-val">Err</span>(CreateSurfaceError::BackendNotEnabled(Backend::Metal)),
@@ -1840,7 +1842,7 @@
         create_surface_func: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>HalInstance&lt;hal::api::Dx12&gt;) -&gt; HalSurface&lt;hal::api::Dx12&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = Surface {
-            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
             info: ResourceInfo::new(<span class="string">"&lt;Surface&gt;"</span>, <span class="prelude-val">None</span>),
             dx12: <span class="prelude-val">Some</span>(create_surface_func(
                 <span class="self">self</span>.instance
