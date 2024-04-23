@@ -991,47 +991,8 @@
 <a href="#990" id="990">990</a>
 <a href="#991" id="991">991</a>
 <a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a>
-<a href="#1000" id="1000">1000</a>
-<a href="#1001" id="1001">1001</a>
-<a href="#1002" id="1002">1002</a>
-<a href="#1003" id="1003">1003</a>
-<a href="#1004" id="1004">1004</a>
-<a href="#1005" id="1005">1005</a>
-<a href="#1006" id="1006">1006</a>
-<a href="#1007" id="1007">1007</a>
-<a href="#1008" id="1008">1008</a>
-<a href="#1009" id="1009">1009</a>
-<a href="#1010" id="1010">1010</a>
-<a href="#1011" id="1011">1011</a>
-<a href="#1012" id="1012">1012</a>
-<a href="#1013" id="1013">1013</a>
-<a href="#1014" id="1014">1014</a>
-<a href="#1015" id="1015">1015</a>
-<a href="#1016" id="1016">1016</a>
-<a href="#1017" id="1017">1017</a>
-<a href="#1018" id="1018">1018</a>
-<a href="#1019" id="1019">1019</a>
-<a href="#1020" id="1020">1020</a>
-<a href="#1021" id="1021">1021</a>
-<a href="#1022" id="1022">1022</a>
-<a href="#1023" id="1023">1023</a>
-<a href="#1024" id="1024">1024</a>
-<a href="#1025" id="1025">1025</a>
-<a href="#1026" id="1026">1026</a>
-<a href="#1027" id="1027">1027</a>
-<a href="#1028" id="1028">1028</a>
-<a href="#1029" id="1029">1029</a>
-<a href="#1030" id="1030">1030</a>
-<a href="#1031" id="1031">1031</a>
-<a href="#1032" id="1032">1032</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::command::compute_command::{ArcComputeCommand, ComputeCommand};
+<span class="kw">use </span><span class="kw">crate</span>::device::DeviceError;
 <span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use </span><span class="kw">crate</span>::track::TrackerIndex;
@@ -1053,7 +1014,6 @@
     hal_label, id,
     id::DeviceId,
     init_tracker::MemoryInitKind,
-    pipeline,
     resource::{<span class="self">self</span>},
     storage::Storage,
     track::{Tracker, UsageConflict, UsageScope},
@@ -1071,59 +1031,6 @@
 
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{fmt, mem, str};
-
-<span class="attr">#[doc(hidden)]
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub enum </span>ComputeCommand {
-    SetBindGroup {
-        index: u32,
-        num_dynamic_offsets: usize,
-        bind_group_id: id::BindGroupId,
-    },
-    SetPipeline(id::ComputePipelineId),
-
-    <span class="doccomment">/// Set a range of push constants to values stored in [`BasePass::push_constant_data`].
-    </span>SetPushConstant {
-        <span class="doccomment">/// The byte offset within the push constant storage to write to. This
-        /// must be a multiple of four.
-        </span>offset: u32,
-
-        <span class="doccomment">/// The number of bytes to write. This must be a multiple of four.
-        </span>size_bytes: u32,
-
-        <span class="doccomment">/// Index in [`BasePass::push_constant_data`] of the start of the data
-        /// to be written.
-        ///
-        /// Note: this is not a byte offset like `offset`. Rather, it is the
-        /// index of the first `u32` element in `push_constant_data` to read.
-        </span>values_offset: u32,
-    },
-
-    Dispatch([u32; <span class="number">3</span>]),
-    DispatchIndirect {
-        buffer_id: id::BufferId,
-        offset: wgt::BufferAddress,
-    },
-    PushDebugGroup {
-        color: u32,
-        len: usize,
-    },
-    PopDebugGroup,
-    InsertDebugMarker {
-        color: u32,
-        len: usize,
-    },
-    WriteTimestamp {
-        query_set_id: id::QuerySetId,
-        query_index: u32,
-    },
-    BeginPipelineStatisticsQuery {
-        query_set_id: id::QuerySetId,
-        query_index: u32,
-    },
-    EndPipelineStatisticsQuery,
-}
 
 <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>ComputePass {
@@ -1218,7 +1125,7 @@
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Bind group at index {0:?} is invalid"</span>)]
-    </span>InvalidBindGroup(usize),
+    </span>InvalidBindGroup(u32),
     <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
     </span>InvalidDevice(DeviceId),
     <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
@@ -1283,7 +1190,7 @@
 </span><span class="kw">pub struct </span>ComputePassError {
     <span class="kw">pub </span>scope: PassErrorScope,
     <span class="attr">#[source]
-    </span>inner: ComputePassErrorInner,
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) inner: ComputePassErrorInner,
 }
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>ComputePassError {
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
@@ -1380,7 +1287,8 @@
         encoder_id: id::CommandEncoderId,
         pass: <span class="kw-2">&amp;</span>ComputePass,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="self">self</span>.command_encoder_run_compute_pass_impl::&lt;A&gt;(
+        <span class="comment">// TODO: This should go directly to `command_encoder_run_compute_pass_impl` by means of storing `ArcComputeCommand` internally.
+        </span><span class="self">self</span>.command_encoder_run_compute_pass_with_unresolved_commands::&lt;A&gt;(
             encoder_id,
             pass.base.as_ref(),
             pass.timestamp_writes.as_ref(),
@@ -1388,10 +1296,32 @@
     }
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>command_encoder_run_compute_pass_impl&lt;A: HalApi&gt;(
+    </span><span class="kw">pub fn </span>command_encoder_run_compute_pass_with_unresolved_commands&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
         base: BasePassRef&lt;ComputeCommand&gt;,
+        timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>resolved_commands =
+            ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), base.commands)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.command_encoder_run_compute_pass_impl::&lt;A&gt;(
+            encoder_id,
+            BasePassRef {
+                label: base.label,
+                commands: <span class="kw-2">&amp;</span>resolved_commands,
+                dynamic_offsets: base.dynamic_offsets,
+                string_data: base.string_data,
+                push_constant_data: base.push_constant_data,
+            },
+            timestamp_writes,
+        )
+    }
+
+    <span class="kw">fn </span>command_encoder_run_compute_pass_impl&lt;A: HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        encoder_id: id::CommandEncoderId,
+        base: BasePassRef&lt;ArcComputeCommand&lt;A&gt;&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
@@ -1415,7 +1345,13 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
-                base: BasePass::from_ref(base),
+                base: BasePass {
+                    label: base.label.map(str::to_string),
+                    commands: base.commands.iter().map(Into::into).collect(),
+                    dynamic_offsets: base.dynamic_offsets.to_vec(),
+                    string_data: base.string_data.to_vec(),
+                    push_constant_data: base.push_constant_data.to_vec(),
+                },
                 timestamp_writes: timestamp_writes.cloned(),
             });
         }
@@ -1435,9 +1371,7 @@
         <span class="kw">let </span>raw = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
-        <span class="kw">let </span>pipeline_guard = hub.compute_pipelines.read();
         <span class="kw">let </span>query_set_guard = hub.query_sets.read();
-        <span class="kw">let </span>buffer_guard = hub.buffers.read();
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
             binder: Binder::new(),
@@ -1515,19 +1449,21 @@
         // be inserted before texture reads.
         </span><span class="kw">let </span><span class="kw-2">mut </span>pending_discard_init_fixups = SurfacesInDiscardState::new();
 
-        <span class="kw">for </span>command <span class="kw">in </span>base.commands {
-            <span class="kw">match </span><span class="kw-2">*</span>command {
-                ComputeCommand::SetBindGroup {
+        <span class="comment">// TODO: We should be draining the commands here, avoiding extra copies in the process.
+        //       (A command encoder can't be executed twice!)
+        </span><span class="kw">for </span>command <span class="kw">in </span>base.commands {
+            <span class="kw">match </span>command {
+                ArcComputeCommand::SetBindGroup {
                     index,
                     num_dynamic_offsets,
-                    bind_group_id,
+                    bind_group,
                 } =&gt; {
-                    <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group_id);
+                    <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group.as_info().id());
 
                     <span class="kw">let </span>max_bind_groups = cmd_buf.limits.max_bind_groups;
-                    <span class="kw">if </span>index &gt;= max_bind_groups {
+                    <span class="kw">if </span>index &gt;= <span class="kw-2">&amp;</span>max_bind_groups {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::BindGroupIndexOutOfRange {
-                            index,
+                            index: <span class="kw-2">*</span>index,
                             max: max_bind_groups,
                         })
                         .map_pass_err(scope);
@@ -1540,13 +1476,9 @@
                     );
                     dynamic_offset_count += num_dynamic_offsets;
 
-                    <span class="kw">let </span>bind_group = tracker
-                        .bind_groups
-                        .add_single(<span class="kw-2">&amp;*</span>bind_group_guard, bind_group_id)
-                        .ok_or(ComputePassErrorInner::InvalidBindGroup(index <span class="kw">as </span>usize))
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>bind_group = tracker.bind_groups.insert_single(bind_group.clone());
                     bind_group
-                        .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
+                        .validate_dynamic_bindings(<span class="kw-2">*</span>index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     buffer_memory_init_actions.extend(
@@ -1568,14 +1500,14 @@
                     <span class="kw">let </span>entries =
                         state
                             .binder
-                            .assign_group(index <span class="kw">as </span>usize, bind_group, <span class="kw-2">&amp;</span>temp_offsets);
+                            .assign_group(<span class="kw-2">*</span>index <span class="kw">as </span>usize, bind_group, <span class="kw-2">&amp;</span>temp_offsets);
                     <span class="kw">if </span>!entries.is_empty() &amp;&amp; pipeline_layout.is_some() {
                         <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                         <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
                                 <span class="kw">let </span>raw_bg = group
                                     .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                    .ok_or(ComputePassErrorInner::InvalidBindGroup(i))
+                                    .ok_or(ComputePassErrorInner::InvalidBindGroup(i <span class="kw">as </span>u32))
                                     .map_pass_err(scope)<span class="question-mark">?</span>;
                                 <span class="kw">unsafe </span>{
                                     raw.set_bind_group(
@@ -1589,16 +1521,13 @@
                         }
                     }
                 }
-                ComputeCommand::SetPipeline(pipeline_id) =&gt; {
+                ArcComputeCommand::SetPipeline(pipeline) =&gt; {
+                    <span class="kw">let </span>pipeline_id = pipeline.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute(pipeline_id);
 
                     state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
 
-                    <span class="kw">let </span>pipeline: <span class="kw-2">&amp;</span>pipeline::ComputePipeline&lt;A&gt; = tracker
-                        .compute_pipelines
-                        .add_single(<span class="kw-2">&amp;*</span>pipeline_guard, pipeline_id)
-                        .ok_or(ComputePassErrorInner::InvalidPipeline(pipeline_id))
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    tracker.compute_pipelines.insert_single(pipeline.clone());
 
                     <span class="kw">unsafe </span>{
                         raw.set_compute_pipeline(pipeline.raw());
@@ -1622,7 +1551,7 @@
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
                                     <span class="kw">let </span>raw_bg = group
                                         .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                        .ok_or(ComputePassErrorInner::InvalidBindGroup(i))
+                                        .ok_or(ComputePassErrorInner::InvalidBindGroup(i <span class="kw">as </span>u32))
                                         .map_pass_err(scope)<span class="question-mark">?</span>;
                                     <span class="kw">unsafe </span>{
                                         raw.set_bind_group(
@@ -1658,7 +1587,7 @@
                         }
                     }
                 }
-                ComputeCommand::SetPushConstant {
+                ArcComputeCommand::SetPushConstant {
                     offset,
                     size_bytes,
                     values_offset,
@@ -1669,7 +1598,7 @@
                     <span class="kw">let </span>values_end_offset =
                         (values_offset + size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
                     <span class="kw">let </span>data_slice =
-                        <span class="kw-2">&amp;</span>base.push_constant_data[(values_offset <span class="kw">as </span>usize)..values_end_offset];
+                        <span class="kw-2">&amp;</span>base.push_constant_data[(<span class="kw-2">*</span>values_offset <span class="kw">as </span>usize)..values_end_offset];
 
                     <span class="kw">let </span>pipeline_layout = state
                         .binder
@@ -1684,7 +1613,7 @@
                     pipeline_layout
                         .validate_push_constant_ranges(
                             wgt::ShaderStages::COMPUTE,
-                            offset,
+                            <span class="kw-2">*</span>offset,
                             end_offset_bytes,
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -1693,12 +1622,12 @@
                         raw.set_push_constants(
                             pipeline_layout.raw(),
                             wgt::ShaderStages::COMPUTE,
-                            offset,
+                            <span class="kw-2">*</span>offset,
                             data_slice,
                         );
                     }
                 }
-                ComputeCommand::Dispatch(groups) =&gt; {
+                ArcComputeCommand::Dispatch(groups) =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Dispatch {
                         indirect: <span class="bool-val">false</span>,
                         pipeline: state.pipeline,
@@ -1723,7 +1652,7 @@
                     {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::Dispatch(
                             DispatchError::InvalidGroupSize {
-                                current: groups,
+                                current: <span class="kw-2">*</span>groups,
                                 limit: groups_size_limit,
                             },
                         ))
@@ -1731,10 +1660,11 @@
                     }
 
                     <span class="kw">unsafe </span>{
-                        raw.dispatch(groups);
+                        raw.dispatch(<span class="kw-2">*</span>groups);
                     }
                 }
-                ComputeCommand::DispatchIndirect { buffer_id, offset } =&gt; {
+                ArcComputeCommand::DispatchIndirect { buffer, offset } =&gt; {
+                    <span class="kw">let </span>buffer_id = buffer.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::Dispatch {
                         indirect: <span class="bool-val">true</span>,
                         pipeline: state.pipeline,
@@ -1746,29 +1676,25 @@
                         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>indirect_buffer = state
+                    state
                         .scope
                         .buffers
-                        .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
+                        .insert_merge_single(buffer.clone(), hal::BufferUses::INDIRECT)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
-                    check_buffer_usage(
-                        buffer_id,
-                        indirect_buffer.usage,
-                        wgt::BufferUsages::INDIRECT,
-                    )
-                    .map_pass_err(scope)<span class="question-mark">?</span>;
+                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::INDIRECT)
+                        .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>end_offset = offset + mem::size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
-                    <span class="kw">if </span>end_offset &gt; indirect_buffer.size {
+                    <span class="kw">if </span>end_offset &gt; buffer.size {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::IndirectBufferOverrun {
-                            offset,
+                            offset: <span class="kw-2">*</span>offset,
                             end_offset,
-                            buffer_size: indirect_buffer.size,
+                            buffer_size: buffer.size,
                         })
                         .map_pass_err(scope);
                     }
 
-                    <span class="kw">let </span>buf_raw = indirect_buffer
+                    <span class="kw">let </span>buf_raw = buffer
                         .raw
                         .get(<span class="kw-2">&amp;</span>snatch_guard)
                         .ok_or(ComputePassErrorInner::InvalidIndirectBuffer(buffer_id))
@@ -1777,9 +1703,9 @@
                     <span class="kw">let </span>stride = <span class="number">3 </span>* <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size
 
                     </span>buffer_memory_init_actions.extend(
-                        indirect_buffer.initialization_status.read().create_action(
-                            indirect_buffer,
-                            offset..(offset + stride),
+                        buffer.initialization_status.read().create_action(
+                            buffer,
+                            <span class="kw-2">*</span>offset..(<span class="kw-2">*</span>offset + stride),
                             MemoryInitKind::NeedsInitializedMemory,
                         ),
                     );
@@ -1789,15 +1715,15 @@
                             raw,
                             <span class="kw-2">&amp;mut </span>intermediate_trackers,
                             <span class="kw-2">&amp;*</span>bind_group_guard,
-                            <span class="prelude-val">Some</span>(indirect_buffer.as_info().tracker_index()),
+                            <span class="prelude-val">Some</span>(buffer.as_info().tracker_index()),
                             <span class="kw-2">&amp;</span>snatch_guard,
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{
-                        raw.dispatch_indirect(buf_raw, offset);
+                        raw.dispatch_indirect(buf_raw, <span class="kw-2">*</span>offset);
                     }
                 }
-                ComputeCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
+                ArcComputeCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
                     state.debug_scope_depth += <span class="number">1</span>;
                     <span class="kw">if </span>!discard_hal_labels {
                         <span class="kw">let </span>label =
@@ -1809,7 +1735,7 @@
                     }
                     string_offset += len;
                 }
-                ComputeCommand::PopDebugGroup =&gt; {
+                ArcComputeCommand::PopDebugGroup =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::PopDebugGroup;
 
                     <span class="kw">if </span>state.debug_scope_depth == <span class="number">0 </span>{
@@ -1823,7 +1749,7 @@
                         }
                     }
                 }
-                ComputeCommand::InsertDebugMarker { color: <span class="kw">_</span>, len } =&gt; {
+                ArcComputeCommand::InsertDebugMarker { color: <span class="kw">_</span>, len } =&gt; {
                     <span class="kw">if </span>!discard_hal_labels {
                         <span class="kw">let </span>label =
                             str::from_utf8(<span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len])
@@ -1832,49 +1758,43 @@
                     }
                     string_offset += len;
                 }
-                ComputeCommand::WriteTimestamp {
-                    query_set_id,
+                ArcComputeCommand::WriteTimestamp {
+                    query_set,
                     query_index,
                 } =&gt; {
+                    <span class="kw">let </span>query_set_id = query_set.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
 
                     device
                         .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
-                        .query_sets
-                        .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
-                        .ok_or(ComputePassErrorInner::InvalidQuerySet(query_set_id))
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set.clone());
 
                     query_set
-                        .validate_and_write_timestamp(raw, query_set_id, query_index, <span class="prelude-val">None</span>)
+                        .validate_and_write_timestamp(raw, query_set_id, <span class="kw-2">*</span>query_index, <span class="prelude-val">None</span>)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
-                ComputeCommand::BeginPipelineStatisticsQuery {
-                    query_set_id,
+                ArcComputeCommand::BeginPipelineStatisticsQuery {
+                    query_set,
                     query_index,
                 } =&gt; {
+                    <span class="kw">let </span>query_set_id = query_set.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
-                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
-                        .query_sets
-                        .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
-                        .ok_or(ComputePassErrorInner::InvalidQuerySet(query_set_id))
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set.clone());
 
                     query_set
                         .validate_and_begin_pipeline_statistics_query(
                             raw,
                             query_set_id,
-                            query_index,
+                            <span class="kw-2">*</span>query_index,
                             <span class="prelude-val">None</span>,
                             <span class="kw-2">&amp;mut </span>active_query,
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
-                ComputeCommand::EndPipelineStatisticsQuery =&gt; {
+                ArcComputeCommand::EndPipelineStatisticsQuery =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
 
                     end_pipeline_statistics_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)

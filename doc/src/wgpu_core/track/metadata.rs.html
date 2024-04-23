@@ -238,6 +238,8 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `ResourceMetadata` type.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
@@ -327,16 +329,18 @@
     /// Add the resource with the given index, epoch, and reference count to the
     /// set.
     ///
+    /// Returns a reference to the newly inserted resource.
+    /// (This allows avoiding a clone/reference count increase in many cases.)
+    ///
     /// # Safety
     ///
     /// The given `index` must be in bounds for this `ResourceMetadata`'s
     /// existing tables. See `tracker_assert_in_bounds`.
     </span><span class="attr">#[inline(always)]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, resource: Arc&lt;T&gt;) {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, resource: Arc&lt;T&gt;) -&gt; <span class="kw-2">&amp;</span>Arc&lt;T&gt; {
         <span class="self">self</span>.owned.set(index, <span class="bool-val">true</span>);
-        <span class="kw">unsafe </span>{
-            <span class="kw-2">*</span><span class="self">self</span>.resources.get_unchecked_mut(index) = <span class="prelude-val">Some</span>(resource);
-        }
+        <span class="kw">let </span>resource_dst = <span class="kw">unsafe </span>{ <span class="self">self</span>.resources.get_unchecked_mut(index) };
+        resource_dst.insert(resource)
     }
 
     <span class="doccomment">/// Get the resource with the given index.

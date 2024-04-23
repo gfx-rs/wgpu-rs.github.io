@@ -816,6 +816,22 @@
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
 <a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -1063,6 +1079,22 @@
             .get(id)
             .map_err(|<span class="kw">_</span>| UsageConflict::BufferInvalid { id })<span class="question-mark">?</span>;
 
+        <span class="self">self</span>.insert_merge_single(buffer.clone(), new_state)
+            .map(|<span class="kw">_</span>| buffer)
+    }
+
+    <span class="doccomment">/// Merge a single state into the UsageScope, using an already resolved buffer.
+    ///
+    /// If the resulting state is invalid, returns a usage
+    /// conflict with the details of the invalid state.
+    ///
+    /// If the ID is higher than the length of internal vectors,
+    /// the vectors will be extended. A call to set_size is not needed.
+    </span><span class="kw">pub fn </span>insert_merge_single(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
+        new_state: BufferUses,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
         <span class="kw">let </span>index = buffer.info.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
@@ -1078,12 +1110,12 @@
                 index,
                 BufferStateProvider::Direct { state: new_state },
                 ResourceMetadataProvider::Direct {
-                    resource: Cow::Owned(buffer.clone()),
+                    resource: Cow::Owned(buffer),
                 },
             )<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(buffer)
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
