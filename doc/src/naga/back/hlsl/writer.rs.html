@@ -3554,8 +3554,22 @@
 <a href="#3553" id="3553">3553</a>
 <a href="#3554" id="3554">3554</a>
 <a href="#3555" id="3555">3555</a>
+<a href="#3556" id="3556">3556</a>
+<a href="#3557" id="3557">3557</a>
+<a href="#3558" id="3558">3558</a>
+<a href="#3559" id="3559">3559</a>
+<a href="#3560" id="3560">3560</a>
+<a href="#3561" id="3561">3561</a>
+<a href="#3562" id="3562">3562</a>
+<a href="#3563" id="3563">3563</a>
+<a href="#3564" id="3564">3564</a>
+<a href="#3565" id="3565">3565</a>
+<a href="#3566" id="3566">3566</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
-    help::{WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess},
+    help::{
+        WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
+        WrappedZeroValue,
+    },
     storage::StoreValue,
     BackendResult, Error, Options,
 };
@@ -3820,6 +3834,7 @@
         <span class="self">self</span>.write_special_functions(module)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.write_wrapped_compose_functions(module, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_wrapped_zero_value_functions(module, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
 
         <span class="comment">// Write all named constants
         </span><span class="kw">let </span><span class="kw-2">mut </span>constants = module
@@ -5807,7 +5822,10 @@
                     <span class="self">self</span>.write_const_expression(module, constant.init)<span class="question-mark">?</span>;
                 }
             }
-            Expression::ZeroValue(ty) =&gt; <span class="self">self</span>.write_default_init(module, ty)<span class="question-mark">?</span>,
+            Expression::ZeroValue(ty) =&gt; {
+                <span class="self">self</span>.write_wrapped_zero_value_function_name(module, WrappedZeroValue { ty })<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"()"</span>)<span class="question-mark">?</span>;
+            }
             Expression::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
                 <span class="kw">match </span>module.types[ty].inner {
                     TypeInner::Struct { .. } | TypeInner::Array { .. } =&gt; {
@@ -6950,7 +6968,11 @@
     }
 
     <span class="doccomment">/// Helper function that write default zero initialization
-    </span><span class="kw">fn </span>write_default_init(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, ty: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; BackendResult {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_default_init(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+    ) -&gt; BackendResult {
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.write_type(module, ty)<span class="question-mark">?</span>;
         <span class="kw">if let </span>TypeInner::Array { base, size, .. } = module.types[ty].inner {
