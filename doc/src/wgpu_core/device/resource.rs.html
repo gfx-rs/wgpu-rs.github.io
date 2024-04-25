@@ -3683,6 +3683,31 @@
 <a href="#3682" id="3682">3682</a>
 <a href="#3683" id="3683">3683</a>
 <a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
+<a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3698,6 +3723,7 @@
     hal_api::HalApi,
     hal_label,
     hub::Hub,
+    id,
     init_tracker::{
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTracker, TextureInitTrackerAction,
@@ -5634,6 +5660,7 @@
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
         storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
+        device_id: id::Id&lt;id::markers::Device&gt;,
         snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
@@ -5652,6 +5679,7 @@
                 })
             }
         };
+
         <span class="kw">let </span>(pub_usage, internal_use, range_limit) = <span class="kw">match </span>binding_ty {
             wgt::BufferBindingType::Uniform =&gt; (
                 wgt::BufferUsages::UNIFORM,
@@ -5683,6 +5711,10 @@
             .buffers
             .add_single(storage, bb.buffer_id, internal_use)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>buffer.device.as_info().id() != device_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
 
         check_buffer_usage(bb.buffer_id, buffer.usage, pub_usage)<span class="question-mark">?</span>;
         <span class="kw">let </span>raw_buffer = buffer
@@ -5762,13 +5794,53 @@
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_texture_binding(
-        view: <span class="kw-2">&amp;</span>TextureView&lt;A&gt;,
-        internal_use: hal::TextureUses,
-        pub_usage: wgt::TextureUsages,
+    <span class="kw">fn </span>create_sampler_binding&lt;<span class="lifetime">'a</span>&gt;(
+        used: <span class="kw-2">&amp;</span>BindGroupStates&lt;A&gt;,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Sampler&lt;A&gt;&gt;,
+        id: id::Id&lt;id::markers::Sampler&gt;,
+        device_id: id::Id&lt;id::markers::Device&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Sampler&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
+
+        <span class="kw">let </span>sampler = used
+            .samplers
+            .add_single(storage, id)
+            .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>sampler.device.as_info().id() != device_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
+        <span class="prelude-val">Ok</span>(sampler)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_texture_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        binding: u32,
+        decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
+        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;TextureView&lt;A&gt;&gt;,
+        id: id::Id&lt;id::markers::TextureView&gt;,
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
         used_texture_ranges: <span class="kw-2">&amp;mut </span>Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), binding_model::CreateBindGroupError&gt; {
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::TextureBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
+
+        <span class="kw">let </span>view = used
+            .views
+            .add_single(storage, id)
+            .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>view.device.as_info().id() != <span class="self">self</span>.as_info().id() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
+        <span class="kw">let </span>(pub_usage, internal_use) = <span class="self">self</span>.texture_use_parameters(
+            binding,
+            decl,
+            view,
+            <span class="string">"SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture"</span>,
+        )<span class="question-mark">?</span>;
         <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>view.parent;
         <span class="kw">let </span>texture_id = texture.as_info().id();
         <span class="comment">// Careful here: the texture may no longer have its own ref count,
@@ -5798,7 +5870,12 @@
             kind: MemoryInitKind::NeedsInitializedMemory,
         });
 
-        <span class="prelude-val">Ok</span>(())
+        <span class="prelude-val">Ok</span>(hal::TextureBinding {
+            view: view
+                .raw(snatch_guard)
+                .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>,
+            usage: internal_use,
+        })
     }
 
     <span class="comment">// This function expects the provided bind group layout to be resolved
@@ -5860,6 +5937,7 @@
                         <span class="kw-2">&amp;mut </span>used,
                         <span class="kw-2">&amp;*</span>buffer_guard,
                         <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
+                        <span class="self">self</span>.as_info().id(),
                         <span class="kw-2">&amp;</span>snatch_guard,
                     )<span class="question-mark">?</span>;
 
@@ -5883,105 +5961,86 @@
                             <span class="kw-2">&amp;mut </span>used,
                             <span class="kw-2">&amp;*</span>buffer_guard,
                             <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
+                            <span class="self">self</span>.as_info().id(),
                             <span class="kw-2">&amp;</span>snatch_guard,
                         )<span class="question-mark">?</span>;
                         hal_buffers.push(bb);
                     }
                     (res_index, num_bindings)
                 }
-                Br::Sampler(id) =&gt; {
-                    <span class="kw">match </span>decl.ty {
-                        wgt::BindingType::Sampler(ty) =&gt; {
-                            <span class="kw">let </span>sampler = used
-                                .samplers
-                                .add_single(<span class="kw-2">&amp;*</span>sampler_guard, id)
-                                .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
+                Br::Sampler(id) =&gt; <span class="kw">match </span>decl.ty {
+                    wgt::BindingType::Sampler(ty) =&gt; {
+                        <span class="kw">let </span>sampler = <span class="self">Self</span>::create_sampler_binding(
+                            <span class="kw-2">&amp;</span>used,
+                            <span class="kw-2">&amp;</span>sampler_guard,
+                            id,
+                            <span class="self">self</span>.as_info().id(),
+                        )<span class="question-mark">?</span>;
 
-                            <span class="kw">if </span>sampler.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-                            }
-
-                            <span class="comment">// Allowed sampler values for filtering and comparison
-                            </span><span class="kw">let </span>(allowed_filtering, allowed_comparison) = <span class="kw">match </span>ty {
-                                wgt::SamplerBindingType::Filtering =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">false</span>),
-                                wgt::SamplerBindingType::NonFiltering =&gt; (<span class="prelude-val">Some</span>(<span class="bool-val">false</span>), <span class="bool-val">false</span>),
-                                wgt::SamplerBindingType::Comparison =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">true</span>),
-                            };
-
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(allowed_filtering) = allowed_filtering {
-                                <span class="kw">if </span>allowed_filtering != sampler.filtering {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongSamplerFiltering {
-                                        binding,
-                                        layout_flt: allowed_filtering,
-                                        sampler_flt: sampler.filtering,
-                                    });
-                                }
-                            }
-
-                            <span class="kw">if </span>allowed_comparison != sampler.comparison {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongSamplerComparison {
+                        <span class="kw">let </span>(allowed_filtering, allowed_comparison) = <span class="kw">match </span>ty {
+                            wgt::SamplerBindingType::Filtering =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">false</span>),
+                            wgt::SamplerBindingType::NonFiltering =&gt; (<span class="prelude-val">Some</span>(<span class="bool-val">false</span>), <span class="bool-val">false</span>),
+                            wgt::SamplerBindingType::Comparison =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">true</span>),
+                        };
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(allowed_filtering) = allowed_filtering {
+                            <span class="kw">if </span>allowed_filtering != sampler.filtering {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongSamplerFiltering {
                                     binding,
-                                    layout_cmp: allowed_comparison,
-                                    sampler_cmp: sampler.comparison,
+                                    layout_flt: allowed_filtering,
+                                    sampler_flt: sampler.filtering,
                                 });
                             }
-
-                            <span class="kw">let </span>res_index = hal_samplers.len();
-                            hal_samplers.push(sampler.raw());
-                            (res_index, <span class="number">1</span>)
                         }
-                        <span class="kw">_ </span>=&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongBindingType {
+                        <span class="kw">if </span>allowed_comparison != sampler.comparison {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongSamplerComparison {
                                 binding,
-                                actual: decl.ty,
-                                expected: <span class="string">"Sampler"</span>,
-                            })
+                                layout_cmp: allowed_comparison,
+                                sampler_cmp: sampler.comparison,
+                            });
                         }
+
+                        <span class="kw">let </span>res_index = hal_samplers.len();
+                        hal_samplers.push(sampler.raw());
+                        (res_index, <span class="number">1</span>)
                     }
-                }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongBindingType {
+                            binding,
+                            actual: decl.ty,
+                            expected: <span class="string">"Sampler"</span>,
+                        })
+                    }
+                },
                 Br::SamplerArray(<span class="kw-2">ref </span>bindings_array) =&gt; {
                     <span class="kw">let </span>num_bindings = bindings_array.len();
                     <span class="self">Self</span>::check_array_binding(<span class="self">self</span>.features, decl.count, num_bindings)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>res_index = hal_samplers.len();
                     <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>bindings_array.iter() {
-                        <span class="kw">let </span>sampler = used
-                            .samplers
-                            .add_single(<span class="kw-2">&amp;*</span>sampler_guard, id)
-                            .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
-                        <span class="kw">if </span>sampler.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-                        }
+                        <span class="kw">let </span>sampler = <span class="self">Self</span>::create_sampler_binding(
+                            <span class="kw-2">&amp;</span>used,
+                            <span class="kw-2">&amp;</span>sampler_guard,
+                            id,
+                            <span class="self">self</span>.as_info().id(),
+                        )<span class="question-mark">?</span>;
+
                         hal_samplers.push(sampler.raw());
                     }
 
                     (res_index, num_bindings)
                 }
                 Br::TextureView(id) =&gt; {
-                    <span class="kw">let </span>view = used
-                        .views
-                        .add_single(<span class="kw-2">&amp;*</span>texture_view_guard, id)
-                        .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>(pub_usage, internal_use) = <span class="self">self</span>.texture_use_parameters(
+                    <span class="kw">let </span>tb = <span class="self">self</span>.create_texture_binding(
                         binding,
                         decl,
-                        view,
-                        <span class="string">"SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture"</span>,
-                    )<span class="question-mark">?</span>;
-                    <span class="self">Self</span>::create_texture_binding(
-                        view,
-                        internal_use,
-                        pub_usage,
+                        <span class="kw-2">&amp;</span>texture_view_guard,
+                        id,
                         <span class="kw-2">&amp;mut </span>used,
                         <span class="kw-2">&amp;mut </span>used_texture_ranges,
+                        <span class="kw-2">&amp;</span>snatch_guard,
                     )<span class="question-mark">?</span>;
                     <span class="kw">let </span>res_index = hal_textures.len();
-                    hal_textures.push(hal::TextureBinding {
-                        view: view
-                            .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>,
-                        usage: internal_use,
-                    });
+                    hal_textures.push(tb);
                     (res_index, <span class="number">1</span>)
                 }
                 Br::TextureViewArray(<span class="kw-2">ref </span>bindings_array) =&gt; {
@@ -5990,26 +6049,17 @@
 
                     <span class="kw">let </span>res_index = hal_textures.len();
                     <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>bindings_array.iter() {
-                        <span class="kw">let </span>view = used
-                            .views
-                            .add_single(<span class="kw-2">&amp;*</span>texture_view_guard, id)
-                            .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>;
-                        <span class="kw">let </span>(pub_usage, internal_use) =
-                            <span class="self">self</span>.texture_use_parameters(binding, decl, view,
-                                                         <span class="string">"SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray"</span>)<span class="question-mark">?</span>;
-                        <span class="self">Self</span>::create_texture_binding(
-                            view,
-                            internal_use,
-                            pub_usage,
+                        <span class="kw">let </span>tb = <span class="self">self</span>.create_texture_binding(
+                            binding,
+                            decl,
+                            <span class="kw-2">&amp;</span>texture_view_guard,
+                            id,
                             <span class="kw-2">&amp;mut </span>used,
                             <span class="kw-2">&amp;mut </span>used_texture_ranges,
+                            <span class="kw-2">&amp;</span>snatch_guard,
                         )<span class="question-mark">?</span>;
-                        hal_textures.push(hal::TextureBinding {
-                            view: view
-                                .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>,
-                            usage: internal_use,
-                        });
+
+                        hal_textures.push(tb);
                     }
 
                     (res_index, num_bindings)
