@@ -263,12 +263,12 @@
 <a href="#262" id="262">262</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
     id::Id,
     identity::IdentityManager,
+    lock::{rank, RwLock, RwLockReadGuard, RwLockWriteGuard},
     resource::Resource,
     storage::{Element, InvalidId, Storage},
 };
@@ -311,7 +311,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(backend: Backend) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             identity: Arc::new(IdentityManager::new()),
-            storage: RwLock::new(Storage::new()),
+            storage: RwLock::new(rank::REGISTRY_STORAGE, Storage::new()),
             backend,
         }
     }

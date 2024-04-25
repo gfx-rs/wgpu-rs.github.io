@@ -165,15 +165,19 @@
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(unused)]
 
-</span><span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+</span><span class="kw">use </span><span class="kw">crate</span>::lock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 <span class="kw">use </span>std::{
     backtrace::Backtrace,
     cell::{Cell, RefCell, UnsafeCell},
     panic::{<span class="self">self</span>, Location},
     thread,
 };
+
+<span class="kw">use </span><span class="kw">crate</span>::lock::rank;
 
 <span class="doccomment">/// A guard that provides read access to snatchable data.
 </span><span class="kw">pub struct </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;(RwLockReadGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
@@ -295,9 +299,9 @@
     /// right SnatchLock (the one associated to the same device). This method is unsafe
     /// to force force sers to think twice about creating a SnatchLock. The only place this
     /// method should be called is when creating the device.
-    </span><span class="kw">pub unsafe fn </span>new() -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub unsafe fn </span>new(rank: rank::LockRank) -&gt; <span class="self">Self </span>{
         SnatchLock {
-            lock: RwLock::new(()),
+            lock: RwLock::new(rank, ()),
         }
     }
 

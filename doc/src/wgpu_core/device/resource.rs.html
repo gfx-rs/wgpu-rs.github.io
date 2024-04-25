@@ -3678,6 +3678,11 @@
 <a href="#3677" id="3677">3677</a>
 <a href="#3678" id="3678">3678</a>
 <a href="#3679" id="3679">3679</a>
+<a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3698,7 +3703,7 @@
         TextureInitTracker, TextureInitTrackerAction,
     },
     instance::Adapter,
-    lock::{rank, Mutex, MutexGuard},
+    lock::{rank, Mutex, MutexGuard, RwLock},
     pipeline,
     pool::ResourcePool,
     registry::Registry,
@@ -3722,7 +3727,6 @@
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>};
 <span class="kw">use </span>once_cell::sync::OnceCell;
-<span class="kw">use </span>parking_lot::RwLock;
 
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
@@ -3952,8 +3956,8 @@
             info: ResourceInfo::new(<span class="string">"&lt;device&gt;"</span>, <span class="prelude-val">None</span>),
             command_allocator,
             active_submission_index: AtomicU64::new(<span class="number">0</span>),
-            fence: RwLock::new(<span class="prelude-val">Some</span>(fence)),
-            snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new() },
+            fence: RwLock::new(rank::DEVICE_FENCE, <span class="prelude-val">Some</span>(fence)),
+            snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new(rank::DEVICE_SNATCHABLE_LOCK) },
             valid: AtomicBool::new(<span class="bool-val">true</span>),
             trackers: Mutex::new(rank::DEVICE_TRACKERS, Tracker::new()),
             tracker_indices: TrackerIndexAllocators::new(),
@@ -4336,7 +4340,10 @@
             device: <span class="self">self</span>.clone(),
             usage: desc.usage,
             size: desc.size,
-            initialization_status: RwLock::new(BufferInitTracker::new(aligned_size)),
+            initialization_status: RwLock::new(
+                rank::BUFFER_INITIALIZATION_STATUS,
+                BufferInitTracker::new(aligned_size),
+            ),
             sync_mapped_writes: Mutex::new(rank::BUFFER_SYNC_MAPPED_WRITES, <span class="prelude-val">None</span>),
             map_state: Mutex::new(rank::BUFFER_MAP_STATE, resource::BufferMapState::Idle),
             info: ResourceInfo::new(
@@ -4363,10 +4370,10 @@
             desc: desc.map_label(|<span class="kw">_</span>| ()),
             hal_usage,
             format_features,
-            initialization_status: RwLock::new(TextureInitTracker::new(
-                desc.mip_level_count,
-                desc.array_layer_count(),
-            )),
+            initialization_status: RwLock::new(
+                rank::TEXTURE_INITIALIZATION_STATUS,
+                TextureInitTracker::new(desc.mip_level_count, desc.array_layer_count()),
+            ),
             full_range: TextureSelector {
                 mips: <span class="number">0</span>..desc.mip_level_count,
                 layers: <span class="number">0</span>..desc.array_layer_count(),
@@ -4375,7 +4382,7 @@
                 desc.label.borrow_or_default(),
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.tracker_indices.textures.clone()),
             ),
-            clear_mode: RwLock::new(clear_mode),
+            clear_mode: RwLock::new(rank::TEXTURE_CLEAR_MODE, clear_mode),
             views: Mutex::new(rank::TEXTURE_VIEWS, Vec::new()),
             bind_groups: Mutex::new(rank::TEXTURE_BIND_GROUPS, Vec::new()),
         }
@@ -4393,7 +4400,10 @@
             device: <span class="self">self</span>.clone(),
             usage: desc.usage,
             size: desc.size,
-            initialization_status: RwLock::new(BufferInitTracker::new(<span class="number">0</span>)),
+            initialization_status: RwLock::new(
+                rank::BUFFER_INITIALIZATION_STATUS,
+                BufferInitTracker::new(<span class="number">0</span>),
+            ),
             sync_mapped_writes: Mutex::new(rank::BUFFER_SYNC_MAPPED_WRITES, <span class="prelude-val">None</span>),
             map_state: Mutex::new(rank::BUFFER_MAP_STATE, resource::BufferMapState::Idle),
             info: ResourceInfo::new(

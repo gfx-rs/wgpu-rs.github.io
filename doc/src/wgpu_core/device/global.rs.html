@@ -2623,6 +2623,8 @@
 <a href="#2622" id="2622">2622</a>
 <a href="#2623" id="2623">2623</a>
 <a href="#2624" id="2624">2624</a>
+<a href="#2625" id="2625">2625</a>
+<a href="#2626" id="2626">2626</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2636,6 +2638,7 @@
     id::{<span class="self">self</span>, AdapterId, DeviceId, QueueId, SurfaceId},
     init_tracker::TextureInitTracker,
     instance::{<span class="self">self</span>, Adapter, Surface},
+    lock::{rank, RwLock},
     pipeline, present,
     resource::{<span class="self">self</span>, BufferAccessResult},
     resource::{BufferAccessError, BufferMapOperation, CreateBufferError, Resource},
@@ -2645,7 +2648,6 @@
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>hal::Device <span class="kw">as _</span>;
-<span class="kw">use </span>parking_lot::RwLock;
 
 <span class="kw">use </span>wgt::{BufferAddress, TextureFormat};
 
@@ -3268,8 +3270,10 @@
                 texture.hal_usage |= hal::TextureUses::COPY_DST;
             }
 
-            texture.initialization_status =
-                RwLock::new(TextureInitTracker::new(desc.mip_level_count, <span class="number">0</span>));
+            texture.initialization_status = RwLock::new(
+                rank::TEXTURE_INITIALIZATION_STATUS,
+                TextureInitTracker::new(desc.mip_level_count, <span class="number">0</span>),
+            );
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(texture));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_texture({desc:?}) -&gt; {id:?}"</span>);
