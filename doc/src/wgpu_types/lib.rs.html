@@ -7244,26 +7244,6 @@
 <a href="#7243" id="7243">7243</a>
 <a href="#7244" id="7244">7244</a>
 <a href="#7245" id="7245">7245</a>
-<a href="#7246" id="7246">7246</a>
-<a href="#7247" id="7247">7247</a>
-<a href="#7248" id="7248">7248</a>
-<a href="#7249" id="7249">7249</a>
-<a href="#7250" id="7250">7250</a>
-<a href="#7251" id="7251">7251</a>
-<a href="#7252" id="7252">7252</a>
-<a href="#7253" id="7253">7253</a>
-<a href="#7254" id="7254">7254</a>
-<a href="#7255" id="7255">7255</a>
-<a href="#7256" id="7256">7256</a>
-<a href="#7257" id="7257">7257</a>
-<a href="#7258" id="7258">7258</a>
-<a href="#7259" id="7259">7259</a>
-<a href="#7260" id="7260">7260</a>
-<a href="#7261" id="7261">7261</a>
-<a href="#7262" id="7262">7262</a>
-<a href="#7263" id="7263">7263</a>
-<a href="#7264" id="7264">7264</a>
-<a href="#7265" id="7265">7265</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -8409,7 +8389,7 @@
     /// pipeline output data, across all color attachments.
     </span><span class="kw">pub </span>max_color_attachment_bytes_per_sample: u32,
     <span class="doccomment">/// Maximum number of bytes used for workgroup memory in a compute entry point. Defaults to
-    /// 16352. Higher is "better".
+    /// 16384. Higher is "better".
     </span><span class="kw">pub </span>max_compute_workgroup_storage_size: u32,
     <span class="doccomment">/// Maximum value of the product of the `workgroup_size` dimensions for a compute entry-point.
     /// Defaults to 256. Higher is "better".
@@ -8450,6 +8430,14 @@
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Limits {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::defaults()
+    }
+}
+
+<span class="kw">impl </span>Limits {
+    <span class="comment">// Rust doesn't allow const in trait implementations, so we break this out
+    // to allow reusing these defaults in const contexts like `downlevel_defaults`
+    </span><span class="kw">const fn </span>defaults() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             max_texture_dimension_1d: <span class="number">8192</span>,
             max_texture_dimension_2d: <span class="number">8192</span>,
@@ -8464,11 +8452,11 @@
             max_storage_buffers_per_shader_stage: <span class="number">8</span>,
             max_storage_textures_per_shader_stage: <span class="number">4</span>,
             max_uniform_buffers_per_shader_stage: <span class="number">12</span>,
-            max_uniform_buffer_binding_size: <span class="number">64 </span>&lt;&lt; <span class="number">10</span>,
-            max_storage_buffer_binding_size: <span class="number">128 </span>&lt;&lt; <span class="number">20</span>,
-            max_vertex_buffers: <span class="number">8</span>,
-            max_buffer_size: <span class="number">256 </span>&lt;&lt; <span class="number">20</span>,
-            max_vertex_attributes: <span class="number">16</span>,
+            max_uniform_buffer_binding_size: <span class="number">64 </span>&lt;&lt; <span class="number">10</span>, <span class="comment">// (64 KiB)
+            </span>max_storage_buffer_binding_size: <span class="number">128 </span>&lt;&lt; <span class="number">20</span>, <span class="comment">// (128 MiB)
+            </span>max_vertex_buffers: <span class="number">8</span>,
+            max_buffer_size: <span class="number">256 </span>&lt;&lt; <span class="number">20</span>, <span class="comment">// (256 MiB)
+            </span>max_vertex_attributes: <span class="number">16</span>,
             max_vertex_buffer_array_stride: <span class="number">2048</span>,
             min_uniform_buffer_offset_alignment: <span class="number">256</span>,
             min_storage_buffer_offset_alignment: <span class="number">256</span>,
@@ -8487,9 +8475,7 @@
             max_non_sampler_bindings: <span class="number">1_000_000</span>,
         }
     }
-}
 
-<span class="kw">impl </span>Limits {
     <span class="doccomment">/// These default limits are guaranteed to be compatible with GLES-3.1, and D3D11
     ///
     /// Those limits are as follows (different from default are marked with *):
@@ -8522,7 +8508,7 @@
     ///     max_inter_stage_shader_components: 60,
     ///     max_color_attachments: 8,
     ///     max_color_attachment_bytes_per_sample: 32,
-    ///     max_compute_workgroup_storage_size: 16352,
+    ///     max_compute_workgroup_storage_size: 16352, // *
     ///     max_compute_invocations_per_workgroup: 256,
     ///     max_compute_workgroup_size_x: 256,
     ///     max_compute_workgroup_size_y: 256,
@@ -8537,37 +8523,11 @@
             max_texture_dimension_1d: <span class="number">2048</span>,
             max_texture_dimension_2d: <span class="number">2048</span>,
             max_texture_dimension_3d: <span class="number">256</span>,
-            max_texture_array_layers: <span class="number">256</span>,
-            max_bind_groups: <span class="number">4</span>,
-            max_bindings_per_bind_group: <span class="number">1000</span>,
-            max_dynamic_uniform_buffers_per_pipeline_layout: <span class="number">8</span>,
-            max_dynamic_storage_buffers_per_pipeline_layout: <span class="number">4</span>,
-            max_sampled_textures_per_shader_stage: <span class="number">16</span>,
-            max_samplers_per_shader_stage: <span class="number">16</span>,
             max_storage_buffers_per_shader_stage: <span class="number">4</span>,
-            max_storage_textures_per_shader_stage: <span class="number">4</span>,
-            max_uniform_buffers_per_shader_stage: <span class="number">12</span>,
-            max_uniform_buffer_binding_size: <span class="number">16 </span>&lt;&lt; <span class="number">10</span>,
-            max_storage_buffer_binding_size: <span class="number">128 </span>&lt;&lt; <span class="number">20</span>,
-            max_vertex_buffers: <span class="number">8</span>,
-            max_vertex_attributes: <span class="number">16</span>,
-            max_vertex_buffer_array_stride: <span class="number">2048</span>,
-            min_subgroup_size: <span class="number">0</span>,
-            max_subgroup_size: <span class="number">0</span>,
-            max_push_constant_size: <span class="number">0</span>,
-            min_uniform_buffer_offset_alignment: <span class="number">256</span>,
-            min_storage_buffer_offset_alignment: <span class="number">256</span>,
-            max_inter_stage_shader_components: <span class="number">60</span>,
-            max_color_attachments: <span class="number">8</span>,
-            max_color_attachment_bytes_per_sample: <span class="number">32</span>,
-            max_compute_workgroup_storage_size: <span class="number">16352</span>,
-            max_compute_invocations_per_workgroup: <span class="number">256</span>,
-            max_compute_workgroup_size_x: <span class="number">256</span>,
-            max_compute_workgroup_size_y: <span class="number">256</span>,
-            max_compute_workgroup_size_z: <span class="number">64</span>,
-            max_compute_workgroups_per_dimension: <span class="number">65535</span>,
-            max_buffer_size: <span class="number">256 </span>&lt;&lt; <span class="number">20</span>,
-            max_non_sampler_bindings: <span class="number">1_000_000</span>,
+            max_uniform_buffer_binding_size: <span class="number">16 </span>&lt;&lt; <span class="number">10</span>, <span class="comment">// (16 KiB)
+            // see: https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf#page=7
+            </span>max_compute_workgroup_storage_size: <span class="number">16352</span>,
+            ..<span class="self">Self</span>::defaults()
         }
     }
 
