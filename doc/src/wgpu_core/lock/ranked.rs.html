@@ -384,6 +384,7 @@
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Lock types that enforce well-ranked lock acquisition order.
 //!
 //! This module's [`Mutex`] and [`RwLock` types are instrumented to check that
@@ -499,9 +500,8 @@
 /// update the per-thread state accordingly.
 ///
 /// Return the `LockState` that must be restored when this thread is released.
-</span><span class="kw">fn </span>acquire(new_rank: LockRank) -&gt; LockState {
+</span><span class="kw">fn </span>acquire(new_rank: LockRank, location: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Location&lt;<span class="lifetime">'static</span>&gt;) -&gt; LockState {
     <span class="kw">let </span>state = LOCK_STATE.get();
-    <span class="kw">let </span>location = Location::caller();
     <span class="comment">// Initially, it's fine to acquire any lock. So we only
     // need to check when `last_acquired` is `Some`.
     </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">ref </span>last_rank, <span class="kw-2">ref </span>last_location)) = state.last_acquired {
@@ -554,7 +554,7 @@
 
     <span class="attr">#[track_caller]
     </span><span class="kw">pub fn </span>lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MutexGuard&lt;T&gt; {
-        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank);
+        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         MutexGuard {
             inner: <span class="self">self</span>.inner.lock(),
             saved,
@@ -635,16 +635,18 @@
         }
     }
 
-    <span class="kw">pub fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;T&gt; {
-        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank);
+    <span class="attr">#[track_caller]
+    </span><span class="kw">pub fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;T&gt; {
+        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         RwLockReadGuard {
             inner: <span class="self">self</span>.inner.read(),
             saved,
         }
     }
 
-    <span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;T&gt; {
-        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank);
+    <span class="attr">#[track_caller]
+    </span><span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;T&gt; {
+        <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         RwLockWriteGuard {
             inner: <span class="self">self</span>.inner.write(),
             saved,
