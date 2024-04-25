@@ -954,6 +954,8 @@
 <a href="#953" id="953">953</a>
 <a href="#954" id="954">954</a>
 <a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
 <span class="kw">use crate</span>::{
     proc::{ConstantEvaluator, ConstantEvaluatorError, Emitter},
@@ -1085,8 +1087,10 @@
                 Expression::Constant(c_h)
             }
             Expression::Constant(c_h) =&gt; {
-                adjusted_constant_initializers.insert(c_h);
-                module.constants[c_h].init = adjusted_global_expressions[c_h.index()];
+                <span class="kw">if </span>adjusted_constant_initializers.insert(c_h) {
+                    <span class="kw">let </span>init = <span class="kw-2">&amp;mut </span>module.constants[c_h].init;
+                    <span class="kw-2">*</span>init = adjusted_global_expressions[init.index()];
+                }
                 expr
             }
             expr =&gt; expr,
