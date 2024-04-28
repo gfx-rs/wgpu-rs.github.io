@@ -1967,6 +1967,27 @@
 <a href="#1966" id="1966">1966</a>
 <a href="#1967" id="1967">1967</a>
 <a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! A cross-platform unsafe graphics abstraction.
  *
  * This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2608,6 +2629,26 @@
 
     <span class="doccomment">/// Submits the command buffers for execution on GPU.
     ///
+    /// If two calls to `submit` on a single `Queue` occur in a particular order
+    /// (that is, they happen on the same thread, or on two threads that have
+    /// synchronized to establish an ordering), then the first submission's
+    /// commands all complete execution before any of the second submission's
+    /// commands begin. All results produced by one submission are visible to
+    /// the next.
+    ///
+    /// Within a submission, command buffers execute in the order in which they
+    /// appear in `command_buffers`. All results produced by one buffer are
+    /// visible to the next.
+    ///
+    /// If two calls to `submit` on a single `Queue` from different threads are
+    /// not synchronized to occur in a particular order, they must pass distinct
+    /// [`Fence`]s. As explained in the [`Fence`] documentation, waiting for
+    /// operations to complete is only trustworthy when operations finish in
+    /// order of increasing fence value, but submissions from different threads
+    /// cannot determine how to order the fence values if the submissions
+    /// themselves are unordered. If each thread uses a separate [`Fence`], this
+    /// problem does not arise.
+    ///
     /// Valid usage:
     ///
     /// - All of the [`CommandBuffer`][cb]s were created from
@@ -2621,6 +2662,7 @@
     /// - All of the [`SurfaceTexture`][st]s that the command buffers
     ///   write to appear in the `surface_textures` argument.
     ///
+    /// [`Fence`]: crate::Api::Fence
     /// [cb]: Api::CommandBuffer
     /// [ce]: Api::CommandEncoder
     /// [st]: Api::SurfaceTexture
