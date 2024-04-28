@@ -2723,8 +2723,6 @@
 <a href="#2722" id="2722">2722</a>
 <a href="#2723" id="2723">2723</a>
 <a href="#2724" id="2724">2724</a>
-<a href="#2725" id="2725">2725</a>
-<a href="#2726" id="2726">2726</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3677,10 +3675,10 @@
         pattern: [<span class="kw">crate</span>::SwizzleComponent; <span class="number">4</span>],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>get_dst_ty = |ty| <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
-            <span class="kw">crate</span>::TypeInner::Vector { size: <span class="kw">_</span>, scalar } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.types.insert(
+            TypeInner::Vector { size: <span class="kw">_</span>, scalar } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.types.insert(
                 Type {
                     name: <span class="prelude-val">None</span>,
-                    inner: <span class="kw">crate</span>::TypeInner::Vector { size, scalar },
+                    inner: TypeInner::Vector { size, scalar },
                 },
                 span,
             )),
@@ -3971,13 +3969,11 @@
             Expression::ZeroValue(ty) | Expression::Compose { ty, .. } =&gt; {
                 <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
                     TypeInner::Array { size, .. } =&gt; <span class="kw">match </span>size {
-                        <span class="kw">crate</span>::ArraySize::Constant(len) =&gt; {
+                        ArraySize::Constant(len) =&gt; {
                             <span class="kw">let </span>expr = Expression::Literal(Literal::U32(len.get()));
                             <span class="self">self</span>.register_evaluated_expr(expr, span)
                         }
-                        <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
-                            <span class="prelude-val">Err</span>(ConstantEvaluatorError::ArrayLengthDynamic)
-                        }
+                        ArraySize::Dynamic =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::ArrayLengthDynamic),
                     },
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidArrayLengthArg),
                 }
@@ -4040,7 +4036,7 @@
             Expression::ZeroValue(ty)
                 <span class="kw">if </span><span class="macro">matches!</span>(
                     <span class="self">self</span>.types[ty].inner,
-                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
+                    TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                         kind: ScalarKind::Uint,
                         ..
                     })
@@ -4355,7 +4351,7 @@
             <span class="kw">return </span><span class="self">self</span>.cast(expr, target, span);
         };
 
-        <span class="kw">let </span><span class="kw">crate</span>::TypeInner::Array {
+        <span class="kw">let </span>TypeInner::Array {
             base: <span class="kw">_</span>,
             size,
             stride: <span class="kw">_</span>,
