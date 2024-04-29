@@ -4012,6 +4012,34 @@
 <a href="#4011" id="4011">4011</a>
 <a href="#4012" id="4012">4012</a>
 <a href="#4013" id="4013">4013</a>
+<a href="#4014" id="4014">4014</a>
+<a href="#4015" id="4015">4015</a>
+<a href="#4016" id="4016">4016</a>
+<a href="#4017" id="4017">4017</a>
+<a href="#4018" id="4018">4018</a>
+<a href="#4019" id="4019">4019</a>
+<a href="#4020" id="4020">4020</a>
+<a href="#4021" id="4021">4021</a>
+<a href="#4022" id="4022">4022</a>
+<a href="#4023" id="4023">4023</a>
+<a href="#4024" id="4024">4024</a>
+<a href="#4025" id="4025">4025</a>
+<a href="#4026" id="4026">4026</a>
+<a href="#4027" id="4027">4027</a>
+<a href="#4028" id="4028">4028</a>
+<a href="#4029" id="4029">4029</a>
+<a href="#4030" id="4030">4030</a>
+<a href="#4031" id="4031">4031</a>
+<a href="#4032" id="4032">4032</a>
+<a href="#4033" id="4033">4033</a>
+<a href="#4034" id="4034">4034</a>
+<a href="#4035" id="4035">4035</a>
+<a href="#4036" id="4036">4036</a>
+<a href="#4037" id="4037">4037</a>
+<a href="#4038" id="4038">4038</a>
+<a href="#4039" id="4039">4039</a>
+<a href="#4040" id="4040">4040</a>
+<a href="#4041" id="4041">4041</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4023,13 +4051,13 @@
 
 <span class="kw">use crate</span>::{
     AnyWasmNotSendSync, BindGroupDescriptor, BindGroupLayoutDescriptor, Buffer, BufferAsyncError,
-    BufferDescriptor, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
-    DeviceDescriptor, Error, ErrorFilter, ImageCopyBuffer, ImageCopyTexture, Maintain,
-    MaintainResult, MapMode, PipelineLayoutDescriptor, QuerySetDescriptor, RenderBundleDescriptor,
-    RenderBundleEncoderDescriptor, RenderPassDescriptor, RenderPipelineDescriptor,
-    RequestAdapterOptions, RequestDeviceError, SamplerDescriptor, ShaderModuleDescriptor,
-    ShaderModuleDescriptorSpirV, SurfaceTargetUnsafe, Texture, TextureDescriptor,
-    TextureViewDescriptor, UncapturedErrorHandler,
+    BufferDescriptor, CommandEncoderDescriptor, CompilationInfo, ComputePassDescriptor,
+    ComputePipelineDescriptor, DeviceDescriptor, Error, ErrorFilter, ImageCopyBuffer,
+    ImageCopyTexture, Maintain, MaintainResult, MapMode, PipelineLayoutDescriptor,
+    QuerySetDescriptor, RenderBundleDescriptor, RenderBundleEncoderDescriptor,
+    RenderPassDescriptor, RenderPipelineDescriptor, RequestAdapterOptions, RequestDeviceError,
+    SamplerDescriptor, ShaderModuleDescriptor, ShaderModuleDescriptorSpirV, SurfaceTargetUnsafe,
+    Texture, TextureDescriptor, TextureViewDescriptor, UncapturedErrorHandler,
 };
 
 <span class="doccomment">/// Meta trait for an id tracked by a context.
@@ -4108,6 +4136,8 @@
         &gt; + WasmNotSend
         + <span class="lifetime">'static</span>;
     <span class="kw">type </span>PopErrorScopeFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + WasmNotSend + <span class="lifetime">'static</span>;
+
+    <span class="kw">type </span>CompilationInfoFuture: Future&lt;Output = CompilationInfo&gt; + WasmNotSend + <span class="lifetime">'static</span>;
 
     <span class="kw">fn </span>init(instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self</span>;
     <span class="kw">unsafe fn </span>instance_create_surface(
@@ -4337,6 +4367,11 @@
         sub_range: Range&lt;BufferAddress&gt;,
     ) -&gt; Box&lt;<span class="kw">dyn </span>BufferMappedRange&gt;;
     <span class="kw">fn </span>buffer_unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferId, buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData);
+    <span class="kw">fn </span>shader_get_compilation_info(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        shader: <span class="kw-2">&amp;</span><span class="self">Self</span>::ShaderModuleId,
+        shader_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::ShaderModuleData,
+    ) -&gt; <span class="self">Self</span>::CompilationInfoFuture;
     <span class="kw">fn </span>texture_create_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span><span class="self">Self</span>::TextureId,
@@ -5138,6 +5173,11 @@
 </span><span class="kw">pub type </span>DevicePopErrorFuture = Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt;&gt;;
 
 <span class="attr">#[cfg(send_sync)]
+</span><span class="kw">pub type </span>ShaderCompilationInfoFuture = Box&lt;<span class="kw">dyn </span>Future&lt;Output = CompilationInfo&gt; + Send&gt;;
+<span class="attr">#[cfg(not(send_sync))]
+</span><span class="kw">pub type </span>ShaderCompilationInfoFuture = Box&lt;<span class="kw">dyn </span>Future&lt;Output = CompilationInfo&gt;&gt;;
+
+<span class="attr">#[cfg(send_sync)]
 </span><span class="kw">pub type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">'static</span>&gt;;
 <span class="attr">#[cfg(not(send_sync))]
 </span><span class="kw">pub type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + <span class="lifetime">'static</span>&gt;;
@@ -5359,6 +5399,11 @@
         sub_range: Range&lt;BufferAddress&gt;,
     ) -&gt; Box&lt;<span class="kw">dyn </span>BufferMappedRange&gt;;
     <span class="kw">fn </span>buffer_unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>ObjectId, buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
+    <span class="kw">fn </span>shader_get_compilation_info(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        shader: <span class="kw-2">&amp;</span>ObjectId,
+        shader_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+    ) -&gt; Pin&lt;ShaderCompilationInfoFuture&gt;;
     <span class="kw">fn </span>texture_create_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span>ObjectId,
@@ -6481,6 +6526,17 @@
         <span class="kw">let </span>buffer = &lt;T::BufferId&gt;::from(<span class="kw-2">*</span>buffer);
         <span class="kw">let </span>buffer_data = downcast_ref(buffer_data);
         Context::buffer_unmap(<span class="self">self</span>, <span class="kw-2">&amp;</span>buffer, buffer_data)
+    }
+
+    <span class="kw">fn </span>shader_get_compilation_info(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        shader: <span class="kw-2">&amp;</span>ObjectId,
+        shader_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+    ) -&gt; Pin&lt;ShaderCompilationInfoFuture&gt; {
+        <span class="kw">let </span>shader = &lt;T::ShaderModuleId&gt;::from(<span class="kw-2">*</span>shader);
+        <span class="kw">let </span>shader_data = downcast_ref(shader_data);
+        <span class="kw">let </span>future = Context::shader_get_compilation_info(<span class="self">self</span>, <span class="kw-2">&amp;</span>shader, shader_data);
+        Box::pin(future)
     }
 
     <span class="kw">fn </span>texture_create_view(

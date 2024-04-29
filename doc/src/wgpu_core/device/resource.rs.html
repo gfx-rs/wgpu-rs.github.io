@@ -3738,7 +3738,7 @@
     },
     instance::Adapter,
     lock::{rank, Mutex, MutexGuard, RwLock},
-    pipeline,
+    pipeline::{<span class="self">self</span>},
     pool::ResourcePool,
     registry::Registry,
     resource::{
@@ -5148,7 +5148,7 @@
             </span>pipeline::ShaderModuleSource::Wgsl(code) =&gt; {
                 <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::wgsl::parse_str"</span>);
                 <span class="kw">let </span>module = naga::front::wgsl::parse_str(<span class="kw-2">&amp;</span>code).map_err(|inner| {
-                    pipeline::CreateShaderModuleError::Parsing(pipeline::ShaderError {
+                    pipeline::CreateShaderModuleError::Parsing(naga::error::ShaderError {
                         source: code.to_string(),
                         label: desc.label.as_ref().map(|l| l.to_string()),
                         inner: Box::new(inner),
@@ -5161,7 +5161,7 @@
                 <span class="kw">let </span>parser = naga::front::spv::Frontend::new(spv.iter().cloned(), <span class="kw-2">&amp;</span>options);
                 <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::spv::Frontend"</span>);
                 <span class="kw">let </span>module = parser.parse().map_err(|inner| {
-                    pipeline::CreateShaderModuleError::ParsingSpirV(pipeline::ShaderError {
+                    pipeline::CreateShaderModuleError::ParsingSpirV(naga::error::ShaderError {
                         source: String::new(),
                         label: desc.label.as_ref().map(|l| l.to_string()),
                         inner: Box::new(inner),
@@ -5174,7 +5174,7 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>parser = naga::front::glsl::Frontend::default();
                 <span class="macro">profiling::scope!</span>(<span class="string">"naga::front::glsl::Frontend.parse"</span>);
                 <span class="kw">let </span>module = parser.parse(<span class="kw-2">&amp;</span>options, <span class="kw-2">&amp;</span>code).map_err(|inner| {
-                    pipeline::CreateShaderModuleError::ParsingGlsl(pipeline::ShaderError {
+                    pipeline::CreateShaderModuleError::ParsingGlsl(naga::error::ShaderError {
                         source: code.to_string(),
                         label: desc.label.as_ref().map(|l| l.to_string()),
                         inner: Box::new(inner),
@@ -5217,7 +5217,7 @@
             </span>.create_validator(naga::valid::ValidationFlags::all())
             .validate(<span class="kw-2">&amp;</span>module)
             .map_err(|inner| {
-                pipeline::CreateShaderModuleError::Validation(pipeline::ShaderError {
+                pipeline::CreateShaderModuleError::Validation(naga::error::ShaderError {
                     source,
                     label: desc.label.as_ref().map(|l| l.to_string()),
                     inner: Box::new(inner),

@@ -575,8 +575,8 @@
     </span><span class="kw">pub fn </span>location(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; SourceLocation {
         <span class="kw">let </span>prefix = <span class="kw-2">&amp;</span>source[..<span class="self">self</span>.start <span class="kw">as </span>usize];
         <span class="kw">let </span>line_number = prefix.matches(<span class="string">'\n'</span>).count() <span class="kw">as </span>u32 + <span class="number">1</span>;
-        <span class="kw">let </span>line_start = prefix.rfind(<span class="string">'\n'</span>).map(|pos| pos + <span class="number">1</span>).unwrap_or(<span class="number">0</span>);
-        <span class="kw">let </span>line_position = source[line_start..<span class="self">self</span>.start <span class="kw">as </span>usize].chars().count() <span class="kw">as </span>u32 + <span class="number">1</span>;
+        <span class="kw">let </span>line_start = prefix.rfind(<span class="string">'\n'</span>).map(|pos| pos + <span class="number">1</span>).unwrap_or(<span class="number">0</span>) <span class="kw">as </span>u32;
+        <span class="kw">let </span>line_position = <span class="self">self</span>.start - line_start + <span class="number">1</span>;
 
         SourceLocation {
             line_number,
@@ -610,14 +610,14 @@
 /// Roughly corresponds to the positional members of [`GPUCompilationMessage`][gcm] from
 /// the WebGPU specification, except
 /// - `offset` and `length` are in bytes (UTF-8 code units), instead of UTF-16 code units.
-/// - `line_position` counts entire Unicode code points, instead of UTF-16 code units.
+/// - `line_position` is in bytes (UTF-8 code units), instead of UTF-16 code units.
 ///
 /// [gcm]: https://www.w3.org/TR/webgpu/#gpucompilationmessage
 </span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>SourceLocation {
     <span class="doccomment">/// 1-based line number.
     </span><span class="kw">pub </span>line_number: u32,
-    <span class="doccomment">/// 1-based column of the start of this span, counted in Unicode code points.
+    <span class="doccomment">/// 1-based column in code units (in bytes) of the start of the span.
     </span><span class="kw">pub </span>line_position: u32,
     <span class="doccomment">/// 0-based Offset in code units (in bytes) of the start of the span.
     </span><span class="kw">pub </span>offset: u32,
