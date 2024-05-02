@@ -116,7 +116,10 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{future::Future, pin::Pin, sync::Arc};
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{future::Future, panic::Location, pin::Pin, sync::Arc};
 
 <span class="kw">use crate</span>::{TestParameters, TestingContext};
 
@@ -144,14 +147,17 @@
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>GpuTestConfiguration {
     <span class="kw">pub</span>(<span class="kw">crate</span>) name: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) location: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Location&lt;<span class="lifetime">'static</span>&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) params: TestParameters,
     <span class="kw">pub</span>(<span class="kw">crate</span>) test: <span class="prelude-ty">Option</span>&lt;RunTestAsync&gt;,
 }
 
 <span class="kw">impl </span>GpuTestConfiguration {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+    <span class="attr">#[track_caller]
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             name: String::new(),
+            location: Location::caller(),
             params: TestParameters::default(),
             test: <span class="prelude-val">None</span>,
         }
