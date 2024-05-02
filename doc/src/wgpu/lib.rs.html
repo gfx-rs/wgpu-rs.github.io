@@ -5704,6 +5704,44 @@
 <a href="#5703" id="5703">5703</a>
 <a href="#5704" id="5704">5704</a>
 <a href="#5705" id="5705">5705</a>
+<a href="#5706" id="5706">5706</a>
+<a href="#5707" id="5707">5707</a>
+<a href="#5708" id="5708">5708</a>
+<a href="#5709" id="5709">5709</a>
+<a href="#5710" id="5710">5710</a>
+<a href="#5711" id="5711">5711</a>
+<a href="#5712" id="5712">5712</a>
+<a href="#5713" id="5713">5713</a>
+<a href="#5714" id="5714">5714</a>
+<a href="#5715" id="5715">5715</a>
+<a href="#5716" id="5716">5716</a>
+<a href="#5717" id="5717">5717</a>
+<a href="#5718" id="5718">5718</a>
+<a href="#5719" id="5719">5719</a>
+<a href="#5720" id="5720">5720</a>
+<a href="#5721" id="5721">5721</a>
+<a href="#5722" id="5722">5722</a>
+<a href="#5723" id="5723">5723</a>
+<a href="#5724" id="5724">5724</a>
+<a href="#5725" id="5725">5725</a>
+<a href="#5726" id="5726">5726</a>
+<a href="#5727" id="5727">5727</a>
+<a href="#5728" id="5728">5728</a>
+<a href="#5729" id="5729">5729</a>
+<a href="#5730" id="5730">5730</a>
+<a href="#5731" id="5731">5731</a>
+<a href="#5732" id="5732">5732</a>
+<a href="#5733" id="5733">5733</a>
+<a href="#5734" id="5734">5734</a>
+<a href="#5735" id="5735">5735</a>
+<a href="#5736" id="5736">5736</a>
+<a href="#5737" id="5737">5737</a>
+<a href="#5738" id="5738">5738</a>
+<a href="#5739" id="5739">5739</a>
+<a href="#5740" id="5740">5740</a>
+<a href="#5741" id="5741">5741</a>
+<a href="#5742" id="5742">5742</a>
+<a href="#5743" id="5743">5743</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -10697,11 +10735,24 @@
 <span class="kw">impl </span>Queue {
     <span class="doccomment">/// Schedule a data write into `buffer` starting at `offset`.
     ///
-    /// This method is intended to have low performance costs.
-    /// As such, the write is not immediately submitted, and instead enqueued
-    /// internally to happen at the start of the next `submit()` call.
-    ///
     /// This method fails if `data` overruns the size of `buffer` starting at `offset`.
+    ///
+    /// This does *not* submit the transfer to the GPU immediately. Calls to
+    /// `write_buffer` begin execution only on the next call to
+    /// [`Queue::submit`]. To get a set of scheduled transfers started
+    /// immediately, it's fine to call `submit` with no command buffers at all:
+    ///
+    /// ```no_run
+    /// # let queue: wgpu::Queue = todo!();
+    /// queue.submit([]);
+    /// ```
+    ///
+    /// However, `data` will be immediately copied into staging memory, so the
+    /// caller may discard it any time after this call completes.
+    ///
+    /// If possible, consider using [`Queue::write_buffer_with`] instead. That
+    /// method avoids an intermediate copy and is often able to transfer data
+    /// more efficiently than this one.
     </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
         DynContext::queue_write_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
@@ -10714,14 +10765,32 @@
         )
     }
 
-    <span class="doccomment">/// Schedule a data write into `buffer` starting at `offset` via the returned
-    /// [`QueueWriteBufferView`].
+    <span class="doccomment">/// Write to a buffer via a directly mapped staging buffer.
     ///
-    /// Reading from this buffer is slow and will not yield the actual contents of the buffer.
+    /// Return a [`QueueWriteBufferView`] which, when dropped, schedules a copy
+    /// of its contents into `buffer` at `offset`. The returned view
+    /// dereferences to a `size`-byte long `&amp;mut [u8]`, in which you should
+    /// store the data you would like written to `buffer`.
     ///
-    /// This method is intended to have low performance costs.
-    /// As such, the write is not immediately submitted, and instead enqueued
-    /// internally to happen at the start of the next `submit()` call.
+    /// This method may perform transfers faster than [`Queue::write_buffer`],
+    /// because the returned [`QueueWriteBufferView`] is actually the staging
+    /// buffer for the write, mapped into the caller's address space. Writing
+    /// your data directly into this staging buffer avoids the temporary
+    /// CPU-side buffer needed by `write_buffer`.
+    ///
+    /// Reading from the returned view is slow, and will not yield the current
+    /// contents of `buffer`.
+    ///
+    /// Note that dropping the [`QueueWriteBufferView`] does *not* submit the
+    /// transfer to the GPU immediately. The transfer begins only on the next
+    /// call to [`Queue::submit`] after the view is dropped. To get a set of
+    /// scheduled transfers started immediately, it's fine to call `submit` with
+    /// no command buffers at all:
+    ///
+    /// ```no_run
+    /// # let queue: wgpu::Queue = todo!();
+    /// queue.submit([]);
+    /// ```
     ///
     /// This method fails if `size` is greater than the size of `buffer` starting at `offset`.
     </span><span class="attr">#[must_use]
@@ -10765,13 +10834,20 @@
     ///   texture (coordinate offset, mip level) that will be overwritten.
     /// * `size` is the size, in texels, of the region to be written.
     ///
-    /// This method is intended to have low performance costs.
-    /// As such, the write is not immediately submitted, and instead enqueued
-    /// internally to happen at the start of the next `submit()` call.
-    /// However, `data` will be immediately copied into staging memory; so the caller may
-    /// discard it any time after this call completes.
-    ///
     /// This method fails if `size` overruns the size of `texture`, or if `data` is too short.
+    ///
+    /// This does *not* submit the transfer to the GPU immediately. Calls to
+    /// `write_texture` begin execution only on the next call to
+    /// [`Queue::submit`]. To get a set of scheduled transfers started
+    /// immediately, it's fine to call `submit` with no command buffers at all:
+    ///
+    /// ```no_run
+    /// # let queue: wgpu::Queue = todo!();
+    /// queue.submit([]);
+    /// ```
+    ///
+    /// However, `data` will be immediately copied into staging memory, so the
+    /// caller may discard it any time after this call completes.
     </span><span class="kw">pub fn </span>write_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
