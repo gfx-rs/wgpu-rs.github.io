@@ -3716,6 +3716,8 @@
 <a href="#3715" id="3715">3715</a>
 <a href="#3716" id="3716">3716</a>
 <a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4115,11 +4117,12 @@
     ///   return it to our callers.)
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>maintain&lt;<span class="lifetime">'this</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="self">self</span>,
-        fence: <span class="kw-2">&amp;</span>A::Fence,
+        fence_guard: <span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="prelude-ty">Option</span>&lt;A::Fence&gt;&gt;,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
         snatch_guard: SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
+        <span class="kw">let </span>fence = fence_guard.as_ref().unwrap();
         <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
             <span class="kw">let </span>index_to_wait_for = <span class="kw">match </span>maintain {
                 wgt::Maintain::WaitForSubmissionIndex(submission_index) =&gt; {
@@ -4199,6 +4202,7 @@
 
         <span class="comment">// Don't hold the locks while calling release_gpu_resources.
         </span>drop(life_tracker);
+        drop(fence_guard);
         drop(snatch_guard);
 
         <span class="kw">if </span>should_release_gpu_resource {

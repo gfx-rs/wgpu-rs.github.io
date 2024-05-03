@@ -385,6 +385,17 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Lock types that enforce well-ranked lock acquisition order.
 //!
 //! This module's [`Mutex`] and [`RwLock` types are instrumented to check that
@@ -468,7 +479,7 @@
 /// [mod]: crate::lock::ranked
 </span><span class="kw">pub struct </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     inner: parking_lot::MutexGuard&lt;<span class="lifetime">'a</span>, T&gt;,
-    saved: LockState,
+    saved: LockStateGuard,
 }
 
 <span class="macro">thread_local! </span>{
@@ -492,6 +503,26 @@
         last_acquired: <span class="prelude-val">None</span>,
         depth: <span class="number">0</span>,
     };
+}
+
+<span class="doccomment">/// A container that restores a [`LockState`] when dropped.
+///
+/// This type serves two purposes:
+///
+/// - Operations like `RwLockWriteGuard::downgrade` would like to be able to
+///   destructure lock guards and reassemble their pieces into new guards, but
+///   if the guard type itself implements `Drop`, we can't destructure it
+///   without unsafe code or pointless `Option`s whose state is almost always
+///   statically known.
+///
+/// - We can just implement `Drop` for this type once, and then use it in lock
+///   guards, rather than implementing `Drop` separately for each guard type.
+</span><span class="kw">struct </span>LockStateGuard(LockState);
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>LockStateGuard {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        release(<span class="self">self</span>.<span class="number">0</span>)
+    }
 }
 
 <span class="doccomment">/// Check and record the acquisition of a lock with `new_rank`.
@@ -557,14 +588,8 @@
         <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         MutexGuard {
             inner: <span class="self">self</span>.inner.lock(),
-            saved,
+            saved: LockStateGuard(saved),
         }
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Drop <span class="kw">for </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        release(<span class="self">self</span>.saved);
     }
 }
 
@@ -611,7 +636,7 @@
 /// [mod]: crate::lock::ranked
 </span><span class="kw">pub struct </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     inner: parking_lot::RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt;,
-    saved: LockState,
+    saved: LockStateGuard,
 }
 
 <span class="doccomment">/// A write guard produced by locking [`RwLock`] for writing.
@@ -624,7 +649,7 @@
 /// [mod]: crate::lock::ranked
 </span><span class="kw">pub struct </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     inner: parking_lot::RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt;,
-    saved: LockState,
+    saved: LockStateGuard,
 }
 
 <span class="kw">impl</span>&lt;T&gt; RwLock&lt;T&gt; {
@@ -640,7 +665,7 @@
         <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         RwLockReadGuard {
             inner: <span class="self">self</span>.inner.read(),
-            saved,
+            saved: LockStateGuard(saved),
         }
     }
 
@@ -649,7 +674,16 @@
         <span class="kw">let </span>saved = acquire(<span class="self">self</span>.rank, Location::caller());
         RwLockWriteGuard {
             inner: <span class="self">self</span>.inner.write(),
-            saved,
+            saved: LockStateGuard(saved),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">pub fn </span>downgrade(this: <span class="self">Self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+        RwLockReadGuard {
+            inner: parking_lot::RwLockWriteGuard::downgrade(this.inner),
+            saved: this.saved,
         }
     }
 }
@@ -657,18 +691,6 @@
 <span class="kw">impl</span>&lt;T: std::fmt::Debug&gt; std::fmt::Debug <span class="kw">for </span>RwLock&lt;T&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="self">self</span>.inner.fmt(f)
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Drop <span class="kw">for </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        release(<span class="self">self</span>.saved);
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Drop <span class="kw">for </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        release(<span class="self">self</span>.saved);
     }
 }
 

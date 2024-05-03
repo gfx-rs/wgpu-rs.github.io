@@ -1609,6 +1609,10 @@
 <a href="#1608" id="1608">1608</a>
 <a href="#1609" id="1609">1609</a>
 <a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1625,7 +1629,7 @@
     hal_label,
     id::{<span class="self">self</span>, DeviceId, QueueId},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
-    lock::{rank, Mutex},
+    lock::{rank, Mutex, RwLockWriteGuard},
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, Resource,
         ResourceInfo, ResourceType, StagingBuffer, Texture, TextureInner,
@@ -2773,8 +2777,8 @@
             <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
             <span class="comment">// Fence lock must be acquired after the snatch lock everywhere to avoid deadlocks.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>fence = device.fence.write();
-            <span class="kw">let </span>fence = fence.as_mut().unwrap();
+            </span><span class="kw">let </span><span class="kw-2">mut </span>fence_guard = device.fence.write();
+            <span class="kw">let </span>fence = fence_guard.as_mut().unwrap();
             <span class="kw">let </span>submit_index = device
                 .active_submission_index
                 .fetch_add(<span class="number">1</span>, Ordering::Relaxed)
@@ -3070,8 +3074,8 @@
                 }
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-            <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>pending_writes_guard = device.pending_writes.lock();
+            <span class="kw">let </span>pending_writes = pending_writes_guard.as_mut().unwrap();
 
             {
                 used_surface_textures.set_size(hub.textures.read().len());
@@ -3161,18 +3165,22 @@
                 active_executions,
             );
 
-            <span class="comment">// This will schedule destruction of all resources that are no longer needed
-            // by the user but used in the command stream, among other things.
-            </span><span class="kw">let </span>(closures, <span class="kw">_</span>) = <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Poll, snatch_guard) {
-                <span class="prelude-val">Ok</span>(closures) =&gt; closures,
-                <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err)),
-                <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),
-                <span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(..)) =&gt; <span class="macro">unreachable!</span>(),
-            };
-
             <span class="comment">// pending_write_resources has been drained, so it's empty, but we
             // want to retain its heap allocation.
             </span>pending_writes.temp_resources = pending_write_resources;
+            drop(pending_writes_guard);
+
+            <span class="comment">// This will schedule destruction of all resources that are no longer needed
+            // by the user but used in the command stream, among other things.
+            </span><span class="kw">let </span>fence_guard = RwLockWriteGuard::downgrade(fence_guard);
+            <span class="kw">let </span>(closures, <span class="kw">_</span>) =
+                <span class="kw">match </span>device.maintain(fence_guard, wgt::Maintain::Poll, snatch_guard) {
+                    <span class="prelude-val">Ok</span>(closures) =&gt; closures,
+                    <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err)),
+                    <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),
+                    <span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(..)) =&gt; <span class="macro">unreachable!</span>(),
+                };
+
             device.lock_life().post_submit();
 
             (submit_index, closures)
