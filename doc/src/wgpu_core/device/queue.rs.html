@@ -1545,74 +1545,6 @@
 <a href="#1544" id="1544">1544</a>
 <a href="#1545" id="1545">1545</a>
 <a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
-<a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
-<a href="#1553" id="1553">1553</a>
-<a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a>
-<a href="#1556" id="1556">1556</a>
-<a href="#1557" id="1557">1557</a>
-<a href="#1558" id="1558">1558</a>
-<a href="#1559" id="1559">1559</a>
-<a href="#1560" id="1560">1560</a>
-<a href="#1561" id="1561">1561</a>
-<a href="#1562" id="1562">1562</a>
-<a href="#1563" id="1563">1563</a>
-<a href="#1564" id="1564">1564</a>
-<a href="#1565" id="1565">1565</a>
-<a href="#1566" id="1566">1566</a>
-<a href="#1567" id="1567">1567</a>
-<a href="#1568" id="1568">1568</a>
-<a href="#1569" id="1569">1569</a>
-<a href="#1570" id="1570">1570</a>
-<a href="#1571" id="1571">1571</a>
-<a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
-<a href="#1576" id="1576">1576</a>
-<a href="#1577" id="1577">1577</a>
-<a href="#1578" id="1578">1578</a>
-<a href="#1579" id="1579">1579</a>
-<a href="#1580" id="1580">1580</a>
-<a href="#1581" id="1581">1581</a>
-<a href="#1582" id="1582">1582</a>
-<a href="#1583" id="1583">1583</a>
-<a href="#1584" id="1584">1584</a>
-<a href="#1585" id="1585">1585</a>
-<a href="#1586" id="1586">1586</a>
-<a href="#1587" id="1587">1587</a>
-<a href="#1588" id="1588">1588</a>
-<a href="#1589" id="1589">1589</a>
-<a href="#1590" id="1590">1590</a>
-<a href="#1591" id="1591">1591</a>
-<a href="#1592" id="1592">1592</a>
-<a href="#1593" id="1593">1593</a>
-<a href="#1594" id="1594">1594</a>
-<a href="#1595" id="1595">1595</a>
-<a href="#1596" id="1596">1596</a>
-<a href="#1597" id="1597">1597</a>
-<a href="#1598" id="1598">1598</a>
-<a href="#1599" id="1599">1599</a>
-<a href="#1600" id="1600">1600</a>
-<a href="#1601" id="1601">1601</a>
-<a href="#1602" id="1602">1602</a>
-<a href="#1603" id="1603">1603</a>
-<a href="#1604" id="1604">1604</a>
-<a href="#1605" id="1605">1605</a>
-<a href="#1606" id="1606">1606</a>
-<a href="#1607" id="1607">1607</a>
-<a href="#1608" id="1608">1608</a>
-<a href="#1609" id="1609">1609</a>
-<a href="#1610" id="1610">1610</a>
-<a href="#1611" id="1611">1611</a>
-<a href="#1612" id="1612">1612</a>
-<a href="#1613" id="1613">1613</a>
-<a href="#1614" id="1614">1614</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1622,7 +1554,7 @@
         ClearError, CommandAllocator, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
     },
     conv,
-    device::{life::ResourceMaps, DeviceError, WaitIdleError},
+    device::{DeviceError, WaitIdleError},
     get_lowest_common_denom,
     global::Global,
     hal_api::HalApi,
@@ -2798,13 +2730,8 @@
                     <span class="comment">//TODO: if multiple command buffers are submitted, we can re-use the last
                     // native command buffer of the previous chain instead of always creating
                     // a temporary one, since the chains are not finished.
-                    </span><span class="kw">let </span><span class="kw-2">mut </span>temp_suspected = device.temp_suspected.lock();
-                    {
-                        <span class="kw">let </span><span class="kw-2">mut </span>suspected = temp_suspected.replace(ResourceMaps::new()).unwrap();
-                        suspected.clear();
-                    }
 
-                    <span class="comment">// finish all the command buffers first
+                    // finish all the command buffers first
                     </span><span class="kw">for </span><span class="kw-2">&amp;</span>cmb_id <span class="kw">in </span>command_buffer_ids {
                         <span class="comment">// we reset the used surface textures every time we use
                         // it, so make sure to set_size on it.
@@ -2850,41 +2777,23 @@
 
                             <span class="comment">// update submission IDs
                             </span><span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
-                                <span class="kw">let </span>tracker_index = buffer.info.tracker_index();
-                                <span class="kw">let </span>raw_buf = <span class="kw">match </span>buffer.raw.get(<span class="kw-2">&amp;</span>snatch_guard) {
-                                    <span class="prelude-val">Some</span>(raw) =&gt; raw,
-                                    <span class="prelude-val">None </span>=&gt; {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(
-                                            buffer.info.id(),
-                                        ));
-                                    }
-                                };
+                                <span class="kw">if </span>buffer.raw.get(<span class="kw-2">&amp;</span>snatch_guard).is_none() {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(
+                                        buffer.info.id(),
+                                    ));
+                                }
                                 buffer.info.use_at(submit_index);
-                                <span class="kw">if </span>buffer.is_unique() {
-                                    <span class="kw">if let </span>BufferMapState::Active { .. } = <span class="kw-2">*</span>buffer.map_state.lock()
-                                    {
-                                        <span class="macro">log::warn!</span>(<span class="string">"Dropped buffer has a pending mapping."</span>);
-                                        <span class="kw">unsafe </span>{ device.raw().unmap_buffer(raw_buf) }
-                                            .map_err(DeviceError::from)<span class="question-mark">?</span>;
-                                    }
-                                    temp_suspected
-                                        .as_mut()
-                                        .unwrap()
-                                        .buffers
-                                        .insert(tracker_index, buffer.clone());
-                                } <span class="kw">else </span>{
-                                    <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
-                                        BufferMapState::Idle =&gt; (),
-                                        <span class="kw">_ </span>=&gt; {
-                                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(
-                                                buffer.info.id(),
-                                            ))
-                                        }
+
+                                <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
+                                    BufferMapState::Idle =&gt; (),
+                                    <span class="kw">_ </span>=&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(
+                                            buffer.info.id(),
+                                        ))
                                     }
                                 }
                             }
                             <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_trackers.textures.used_resources() {
-                                <span class="kw">let </span>tracker_index = texture.info.tracker_index();
                                 <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
                                     <span class="prelude-val">None </span>=&gt; {
                                         <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(
@@ -2901,13 +2810,6 @@
                                     </span>}
                                 };
                                 texture.info.use_at(submit_index);
-                                <span class="kw">if </span>texture.is_unique() {
-                                    temp_suspected
-                                        .as_mut()
-                                        .unwrap()
-                                        .textures
-                                        .insert(tracker_index, texture.clone());
-                                }
                                 <span class="kw">if </span>should_extend {
                                     <span class="kw">unsafe </span>{
                                         used_surface_textures
@@ -2918,12 +2820,6 @@
                             }
                             <span class="kw">for </span>texture_view <span class="kw">in </span>cmd_buf_trackers.views.used_resources() {
                                 texture_view.info.use_at(submit_index);
-                                <span class="kw">if </span>texture_view.is_unique() {
-                                    temp_suspected.as_mut().unwrap().texture_views.insert(
-                                        texture_view.as_info().tracker_index(),
-                                        texture_view.clone(),
-                                    );
-                                }
                             }
                             {
                                 <span class="kw">for </span>bg <span class="kw">in </span>cmd_buf_trackers.bind_groups.used_resources() {
@@ -2937,13 +2833,6 @@
                                     <span class="kw">for </span>sampler <span class="kw">in </span>bg.used.samplers.used_resources() {
                                         sampler.info.use_at(submit_index);
                                     }
-                                    <span class="kw">if </span>bg.is_unique() {
-                                        temp_suspected
-                                            .as_mut()
-                                            .unwrap()
-                                            .bind_groups
-                                            .insert(bg.as_info().tracker_index(), bg.clone());
-                                    }
                                 }
                             }
                             <span class="comment">// assert!(cmd_buf_trackers.samplers.is_empty());
@@ -2951,32 +2840,14 @@
                                 </span>cmd_buf_trackers.compute_pipelines.used_resources()
                             {
                                 compute_pipeline.info.use_at(submit_index);
-                                <span class="kw">if </span>compute_pipeline.is_unique() {
-                                    temp_suspected.as_mut().unwrap().compute_pipelines.insert(
-                                        compute_pipeline.as_info().tracker_index(),
-                                        compute_pipeline.clone(),
-                                    );
-                                }
                             }
                             <span class="kw">for </span>render_pipeline <span class="kw">in
                                 </span>cmd_buf_trackers.render_pipelines.used_resources()
                             {
                                 render_pipeline.info.use_at(submit_index);
-                                <span class="kw">if </span>render_pipeline.is_unique() {
-                                    temp_suspected.as_mut().unwrap().render_pipelines.insert(
-                                        render_pipeline.as_info().tracker_index(),
-                                        render_pipeline.clone(),
-                                    );
-                                }
                             }
                             <span class="kw">for </span>query_set <span class="kw">in </span>cmd_buf_trackers.query_sets.used_resources() {
                                 query_set.info.use_at(submit_index);
-                                <span class="kw">if </span>query_set.is_unique() {
-                                    temp_suspected.as_mut().unwrap().query_sets.insert(
-                                        query_set.as_info().tracker_index(),
-                                        query_set.clone(),
-                                    );
-                                }
                             }
                             <span class="kw">for </span>bundle <span class="kw">in </span>cmd_buf_trackers.bundles.used_resources() {
                                 bundle.info.use_at(submit_index);
@@ -2990,13 +2861,6 @@
                                 }
                                 <span class="kw">for </span>query_set <span class="kw">in </span>bundle.used.query_sets.read().used_resources() {
                                     query_set.info.use_at(submit_index);
-                                }
-                                <span class="kw">if </span>bundle.is_unique() {
-                                    temp_suspected
-                                        .as_mut()
-                                        .unwrap()
-                                        .render_bundles
-                                        .insert(bundle.as_info().tracker_index(), bundle.clone());
                                 }
                             }
                         }

@@ -3705,19 +3705,6 @@
 <a href="#3704" id="3704">3704</a>
 <a href="#3705" id="3705">3705</a>
 <a href="#3706" id="3706">3706</a>
-<a href="#3707" id="3707">3707</a>
-<a href="#3708" id="3708">3708</a>
-<a href="#3709" id="3709">3709</a>
-<a href="#3710" id="3710">3710</a>
-<a href="#3711" id="3711">3711</a>
-<a href="#3712" id="3712">3712</a>
-<a href="#3713" id="3713">3713</a>
-<a href="#3714" id="3714">3714</a>
-<a href="#3715" id="3715">3715</a>
-<a href="#3716" id="3716">3716</a>
-<a href="#3717" id="3717">3717</a>
-<a href="#3718" id="3718">3718</a>
-<a href="#3719" id="3719">3719</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3847,9 +3834,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracker_indices: TrackerIndexAllocators,
     <span class="comment">// Life tracker should be locked right after the device and before anything else.
     </span>life_tracker: Mutex&lt;LifetimeTracker&lt;A&gt;&gt;,
-    <span class="doccomment">/// Temporary storage for resource management functions. Cleared at the end
-    /// of every call (unless an error occurs).
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) temp_suspected: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ResourceMaps&lt;A&gt;&gt;&gt;,
     <span class="doccomment">/// Pool of bind group layouts, allowing deduplication.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) bgl_pool: ResourcePool&lt;bgl::EntryMap, BindGroupLayout&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) alignments: hal::Alignments,
@@ -3862,6 +3846,10 @@
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) usage_scopes: UsageScopePool&lt;A&gt;,
+
+    <span class="doccomment">/// Temporary storage, cleared at the start of every call,
+    /// retained only to save allocations.
+    </span>temp_suspected: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ResourceMaps&lt;A&gt;&gt;&gt;,
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DeferredDestroy&lt;A: HalApi&gt; {
@@ -4154,23 +4142,9 @@
         <span class="kw">let </span>submission_closures =
             life_tracker.triage_submissions(last_done_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
 
-        {
-            <span class="comment">// Normally, `temp_suspected` exists only to save heap
-            // allocations: it's cleared at the start of the function
-            // call, and cleared by the end. But `Global::queue_submit` is
-            // fallible; if it exits early, it may leave some resources in
-            // `temp_suspected`.
-            </span><span class="kw">let </span>temp_suspected = <span class="self">self
-                </span>.temp_suspected
-                .lock()
-                .replace(ResourceMaps::new())
-                .unwrap();
+        life_tracker.triage_suspected(<span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
 
-            life_tracker.suspected_resources.extend(temp_suspected);
-
-            life_tracker.triage_suspected(<span class="kw-2">&amp;</span><span class="self">self</span>.trackers);
-            life_tracker.triage_mapped();
-        }
+        life_tracker.triage_mapped();
 
         <span class="kw">let </span>mapping_closures =
             life_tracker.handle_mapping(<span class="self">self</span>.raw(), <span class="kw-2">&amp;</span><span class="self">self</span>.trackers, <span class="kw-2">&amp;</span>snatch_guard);
