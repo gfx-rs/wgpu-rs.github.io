@@ -1456,6 +1456,10 @@
 <a href="#1455" id="1455">1455</a>
 <a href="#1456" id="1456">1456</a>
 <a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
@@ -2007,22 +2011,28 @@
         <span class="kw">let </span><span class="kw-2">mut </span>khr_context_flags = <span class="number">0</span>;
         <span class="kw">let </span>supports_khr_context = display_extensions.contains(<span class="string">"EGL_KHR_create_context"</span>);
 
-        <span class="comment">//TODO: make it so `Device` == EGL Context
-        </span><span class="kw">let </span><span class="kw-2">mut </span>context_attributes = <span class="macro">vec!</span>[
-            khronos_egl::CONTEXT_MAJOR_VERSION,
-            <span class="number">3</span>, <span class="comment">// Request GLES 3.0 or higher
-        </span>];
-
-        <span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+        <span class="kw">let </span><span class="kw-2">mut </span>context_attributes = <span class="macro">vec!</span>[];
+        <span class="kw">if </span>supports_opengl {
+            context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
+            context_attributes.push(<span class="number">3</span>);
             context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
-            context_attributes.push(<span class="kw">match </span>force_gles_minor_version {
-                wgt::Gles3MinorVersion::Version0 =&gt; <span class="number">0</span>,
-                wgt::Gles3MinorVersion::Version1 =&gt; <span class="number">1</span>,
-                wgt::Gles3MinorVersion::Version2 =&gt; <span class="number">2</span>,
-                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-            });
+            context_attributes.push(<span class="number">3</span>);
+            <span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+                <span class="macro">log::warn!</span>(<span class="string">"Ignoring specified GLES minor version as OpenGL is used"</span>);
+            }
+        } <span class="kw">else </span>{
+            context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
+            context_attributes.push(<span class="number">3</span>); <span class="comment">// Request GLES 3.0 or higher
+            </span><span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+                context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
+                context_attributes.push(<span class="kw">match </span>force_gles_minor_version {
+                    wgt::Gles3MinorVersion::Automatic =&gt; <span class="macro">unreachable!</span>(),
+                    wgt::Gles3MinorVersion::Version0 =&gt; <span class="number">0</span>,
+                    wgt::Gles3MinorVersion::Version1 =&gt; <span class="number">1</span>,
+                    wgt::Gles3MinorVersion::Version2 =&gt; <span class="number">2</span>,
+                });
+            }
         }
-
         <span class="kw">if </span>flags.contains(wgt::InstanceFlags::DEBUG) {
             <span class="kw">if </span>version &gt;= (<span class="number">1</span>, <span class="number">5</span>) {
                 <span class="macro">log::debug!</span>(<span class="string">"\tEGL context: +debug"</span>);
@@ -2052,9 +2062,7 @@
                 // because it's for desktop GL only, not GLES.
                 </span><span class="macro">log::warn!</span>(<span class="string">"\tEGL context: -robust access"</span>);
             }
-
-            <span class="comment">//TODO do we need `khronos_egl::CONTEXT_OPENGL_NOTIFICATION_STRATEGY_EXT`?
-        </span>}
+        }
         <span class="kw">if </span>khr_context_flags != <span class="number">0 </span>{
             context_attributes.push(EGL_CONTEXT_FLAGS_KHR);
             context_attributes.push(khr_context_flags);
