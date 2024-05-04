@@ -3705,6 +3705,12 @@
 <a href="#3704" id="3704">3704</a>
 <a href="#3705" id="3705">3705</a>
 <a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
+<a href="#3710" id="3710">3710</a>
+<a href="#3711" id="3711">3711</a>
+<a href="#3712" id="3712">3712</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4192,12 +4198,14 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>untrack(<span class="kw-2">&amp;</span><span class="self">self</span>, trackers: <span class="kw-2">&amp;</span>Tracker&lt;A&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>temp_suspected = <span class="self">self
+        <span class="comment">// If we have a previously allocated `ResourceMap`, just use that.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>temp_suspected = <span class="self">self
             </span>.temp_suspected
             .lock()
-            .replace(ResourceMaps::new())
-            .unwrap();
+            .take()
+            .unwrap_or_else(|| ResourceMaps::new());
         temp_suspected.clear();
+
         <span class="comment">// As the tracker is cleared/dropped, we need to consider all the resources
         // that it references for destruction in the next GC pass.
         </span>{
@@ -4258,7 +4266,11 @@
                 }
             }
         }
-        <span class="self">self</span>.lock_life().suspected_resources.extend(temp_suspected);
+        <span class="self">self</span>.lock_life()
+            .suspected_resources
+            .extend(<span class="kw-2">&amp;mut </span>temp_suspected);
+        <span class="comment">// Save this resource map for later reuse.
+        </span><span class="kw-2">*</span><span class="self">self</span>.temp_suspected.lock() = <span class="prelude-val">Some</span>(temp_suspected);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer(
