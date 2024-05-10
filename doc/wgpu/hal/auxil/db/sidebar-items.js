@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["amd","apple","arm","broadcom","imgtec","intel","mesa","nvidia","qualcomm"]};

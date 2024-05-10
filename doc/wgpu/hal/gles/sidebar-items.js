@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["TextureInner"],"struct":["Adapter","AdapterContext","AdapterContextLock","Api","BindGroup","BindGroupLayout","Buffer","CommandBuffer","CommandEncoder","ComputePipeline","Device","Fence","PipelineLayout","QuerySet","Queue","RenderPipeline","Sampler","ShaderClearProgram","ShaderModule","Texture","TextureFormatDesc","TextureView"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["FIRST_INSTANCE_BINDING","SUPPORTED_CORE_VERSIONS","SUPPORTED_ES_VERSIONS"],"enum":["Error","Version"],"struct":["Features","Options","PipelineOptions","PushConstantItem","ReflectionInfo","TextureMapping","VaryingLocation","Writer","WriterFlags"],"type":["BindingMap"]};

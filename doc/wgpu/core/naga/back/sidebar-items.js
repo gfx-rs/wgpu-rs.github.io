@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["BAKE_PREFIX","COMPONENTS","INDENT"],"enum":["FunctionType","RayIntersectionType"],"fn":["binary_operation_str"],"mod":["dot","glsl","hlsl","msl","pipeline_constants","spv","wgsl"],"struct":["FunctionCtx","Level","RayFlag"],"type":["NeedBakeExpressions","PipelineConstants"]};
