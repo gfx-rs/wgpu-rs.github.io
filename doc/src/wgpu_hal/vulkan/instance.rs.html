@@ -1058,29 +1058,6 @@
 <a href="#1057" id="1057">1057</a>
 <a href="#1058" id="1058">1058</a>
 <a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a>
-<a href="#1061" id="1061">1061</a>
-<a href="#1062" id="1062">1062</a>
-<a href="#1063" id="1063">1063</a>
-<a href="#1064" id="1064">1064</a>
-<a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a>
-<a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a>
-<a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a>
-<a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a>
-<a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
-<a href="#1079" id="1079">1079</a>
-<a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a>
-<a href="#1082" id="1082">1082</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1090,10 +1067,7 @@
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>ash::{
-    extensions::{ext, khr},
-    vk,
-};
+<span class="kw">use </span>ash::{ext, khr, vk};
 <span class="kw">use </span>parking_lot::RwLock;
 
 <span class="kw">unsafe extern </span><span class="string">"system" </span><span class="kw">fn </span>debug_utils_messenger_callback(
@@ -1116,10 +1090,10 @@
         <span class="comment">// https://github.com/KhronosGroup/Vulkan-ValidationLayers/issues/5671
         // Versions 1.3.240 through 1.3.250 return a spurious error here if
         // the debug range start and end appear in different command buffers.
-        </span><span class="kw">let </span>khronos_validation_layer =
-            CStr::from_bytes_with_nul(<span class="string">b"Khronos Validation Layer\0"</span>).unwrap();
+        </span><span class="kw">const </span>KHRONOS_VALIDATION_LAYER: <span class="kw-2">&amp;</span>CStr =
+            <span class="kw">unsafe </span>{ CStr::from_bytes_with_nul_unchecked(<span class="string">b"Khronos Validation Layer\0"</span>) };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_properties) = user_data.validation_layer_properties.as_ref() {
-            <span class="kw">if </span>layer_properties.layer_description.as_ref() == khronos_validation_layer
+            <span class="kw">if </span>layer_properties.layer_description.as_ref() == KHRONOS_VALIDATION_LAYER
                 &amp;&amp; layer_properties.layer_spec_version &gt;= vk::make_api_version(<span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">240</span>)
                 &amp;&amp; layer_properties.layer_spec_version &lt;= vk::make_api_version(<span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">250</span>)
             {
@@ -1130,7 +1104,7 @@
 
     <span class="comment">// Silence Vulkan Validation error "VUID-VkSwapchainCreateInfoKHR-pNext-07781"
     // This happens when a surface is configured with a size outside the allowed extent.
-    // It's s false positive due to the inherent racy-ness of surface resizing.
+    // It's a false positive due to the inherent racy-ness of surface resizing.
     </span><span class="kw">const </span>VUID_VKSWAPCHAINCREATEINFOKHR_PNEXT_07781: i32 = <span class="number">0x4c8929c1</span>;
     <span class="kw">if </span>cd.message_id_number == VUID_VKSWAPCHAINCREATEINFOKHR_PNEXT_07781 {
         <span class="kw">return </span>vk::FALSE;
@@ -1157,16 +1131,9 @@
         <span class="kw">_ </span>=&gt; log::Level::Warn,
     };
 
-    <span class="kw">let </span>message_id_name = <span class="kw">if </span>cd.p_message_id_name.is_null() {
-        Cow::from(<span class="string">""</span>)
-    } <span class="kw">else </span>{
-        <span class="kw">unsafe </span>{ CStr::from_ptr(cd.p_message_id_name) }.to_string_lossy()
-    };
-    <span class="kw">let </span>message = <span class="kw">if </span>cd.p_message.is_null() {
-        Cow::from(<span class="string">""</span>)
-    } <span class="kw">else </span>{
-        <span class="kw">unsafe </span>{ CStr::from_ptr(cd.p_message) }.to_string_lossy()
-    };
+    <span class="kw">let </span>message_id_name =
+        <span class="kw">unsafe </span>{ cd.message_id_name_as_c_str() }.map_or(Cow::Borrowed(<span class="string">""</span>), CStr::to_string_lossy);
+    <span class="kw">let </span>message = <span class="kw">unsafe </span>{ cd.message_as_c_str() }.map_or(Cow::Borrowed(<span class="string">""</span>), CStr::to_string_lossy);
 
     <span class="kw">let _ </span>= std::panic::catch_unwind(|| {
         <span class="macro">log::log!</span>(
@@ -1184,10 +1151,7 @@
             <span class="kw">unsafe </span>{ slice::from_raw_parts(cd.p_queue_labels, cd.queue_label_count <span class="kw">as </span>usize) };
         <span class="kw">let </span>names = labels
             .iter()
-            .flat_map(|dul_obj| {
-                <span class="kw">unsafe </span>{ dul_obj.p_label_name.as_ref() }
-                    .map(|lbl| <span class="kw">unsafe </span>{ CStr::from_ptr(lbl) }.to_string_lossy())
-            })
+            .flat_map(|dul_obj| <span class="kw">unsafe </span>{ dul_obj.label_name_as_c_str() }.map(CStr::to_string_lossy))
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="kw">let _ </span>= std::panic::catch_unwind(|| {
@@ -1200,10 +1164,7 @@
             <span class="kw">unsafe </span>{ slice::from_raw_parts(cd.p_cmd_buf_labels, cd.cmd_buf_label_count <span class="kw">as </span>usize) };
         <span class="kw">let </span>names = labels
             .iter()
-            .flat_map(|dul_obj| {
-                <span class="kw">unsafe </span>{ dul_obj.p_label_name.as_ref() }
-                    .map(|lbl| <span class="kw">unsafe </span>{ CStr::from_ptr(lbl) }.to_string_lossy())
-            })
+            .flat_map(|dul_obj| <span class="kw">unsafe </span>{ dul_obj.label_name_as_c_str() }.map(CStr::to_string_lossy))
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="kw">let _ </span>= std::panic::catch_unwind(|| {
@@ -1217,9 +1178,8 @@
         </span><span class="kw">let </span>names = labels
             .iter()
             .map(|obj_info| {
-                <span class="kw">let </span>name = <span class="kw">unsafe </span>{ obj_info.p_object_name.as_ref() }
-                    .map(|name| <span class="kw">unsafe </span>{ CStr::from_ptr(name) }.to_string_lossy())
-                    .unwrap_or(Cow::Borrowed(<span class="string">"?"</span>));
+                <span class="kw">let </span>name = <span class="kw">unsafe </span>{ obj_info.object_name_as_c_str() }
+                    .map_or(Cow::Borrowed(<span class="string">"?"</span>), CStr::to_string_lossy);
 
                 <span class="macro">format!</span>(
                     <span class="string">"(type: {:?}, hndl: 0x{:x}, name: {})"</span>,
@@ -1241,9 +1201,9 @@
 }
 
 <span class="kw">impl </span><span class="kw">super</span>::DebugUtilsCreateInfo {
-    <span class="kw">fn </span>to_vk_create_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::DebugUtilsMessengerCreateInfoEXTBuilder&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="kw">fn </span>to_vk_create_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::DebugUtilsMessengerCreateInfoEXT&lt;<span class="lifetime">'_</span>&gt; {
         <span class="kw">let </span>user_data_ptr: <span class="kw-2">*const </span><span class="kw">super</span>::DebugUtilsMessengerUserData = <span class="kw-2">&amp;*</span><span class="self">self</span>.callback_data;
-        vk::DebugUtilsMessengerCreateInfoEXT::builder()
+        vk::DebugUtilsMessengerCreateInfoEXT::default()
             .message_severity(<span class="self">self</span>.severity)
             .message_type(<span class="self">self</span>.message_type)
             .user_data(user_data_ptr <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
@@ -1303,7 +1263,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;vk::ExtensionProperties&gt;, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">let </span>instance_extensions = {
             <span class="macro">profiling::scope!</span>(<span class="string">"vkEnumerateInstanceExtensionProperties"</span>);
-            entry.enumerate_instance_extension_properties(layer_name)
+            <span class="kw">unsafe </span>{ entry.enumerate_instance_extension_properties(layer_name) }
         };
         instance_extensions.map_err(|e| {
             <span class="kw">crate</span>::InstanceError::with_source(
@@ -1337,7 +1297,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt; = Vec::new();
 
         <span class="comment">// VK_KHR_surface
-        </span>extensions.push(khr::Surface::name());
+        </span>extensions.push(khr::surface::NAME);
 
         <span class="comment">// Platform-specific WSI extensions
         </span><span class="kw">if </span><span class="macro">cfg!</span>(all(
@@ -1346,45 +1306,46 @@
             not(target_os = <span class="string">"macos"</span>)
         )) {
             <span class="comment">// VK_KHR_xlib_surface
-            </span>extensions.push(khr::XlibSurface::name());
+            </span>extensions.push(khr::xlib_surface::NAME);
             <span class="comment">// VK_KHR_xcb_surface
-            </span>extensions.push(khr::XcbSurface::name());
+            </span>extensions.push(khr::xcb_surface::NAME);
             <span class="comment">// VK_KHR_wayland_surface
-            </span>extensions.push(khr::WaylandSurface::name());
+            </span>extensions.push(khr::wayland_surface::NAME);
         }
         <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"android"</span>) {
             <span class="comment">// VK_KHR_android_surface
-            </span>extensions.push(khr::AndroidSurface::name());
+            </span>extensions.push(khr::android_surface::NAME);
         }
         <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"windows"</span>) {
             <span class="comment">// VK_KHR_win32_surface
-            </span>extensions.push(khr::Win32Surface::name());
+            </span>extensions.push(khr::win32_surface::NAME);
         }
         <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>) {
             <span class="comment">// VK_EXT_metal_surface
-            </span>extensions.push(ext::MetalSurface::name());
-            extensions.push(vk::KhrPortabilityEnumerationFn::name());
+            </span>extensions.push(ext::metal_surface::NAME);
+            extensions.push(khr::portability_enumeration::NAME);
         }
 
         <span class="kw">if </span>flags.contains(wgt::InstanceFlags::DEBUG) {
             <span class="comment">// VK_EXT_debug_utils
-            </span>extensions.push(ext::DebugUtils::name());
+            </span>extensions.push(ext::debug_utils::NAME);
         }
 
         <span class="comment">// VK_EXT_swapchain_colorspace
         // Provides wide color gamut
-        </span>extensions.push(vk::ExtSwapchainColorspaceFn::name());
+        </span>extensions.push(ext::swapchain_colorspace::NAME);
 
         <span class="comment">// VK_KHR_get_physical_device_properties2
         // Even though the extension was promoted to Vulkan 1.1, we still require the extension
         // so that we don't have to conditionally use the functions provided by the 1.1 instance
-        </span>extensions.push(vk::KhrGetPhysicalDeviceProperties2Fn::name());
+        </span>extensions.push(khr::get_physical_device_properties2::NAME);
 
         <span class="comment">// Only keep available extensions.
         </span>extensions.retain(|<span class="kw-2">&amp;</span>ext| {
-            <span class="kw">if </span>instance_extensions.iter().any(|inst_ext| {
-                <span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_ext.extension_name) == <span class="prelude-val">Some</span>(ext)
-            }) {
+            <span class="kw">if </span>instance_extensions
+                .iter()
+                .any(|inst_ext| inst_ext.extension_name_as_c_str() == <span class="prelude-val">Ok</span>(ext))
+            {
                 <span class="bool-val">true
             </span>} <span class="kw">else </span>{
                 <span class="macro">log::warn!</span>(<span class="string">"Unable to find extension: {}"</span>, ext.to_string_lossy());
@@ -1419,10 +1380,10 @@
         <span class="macro">log::debug!</span>(<span class="string">"Instance version: 0x{:x}"</span>, instance_api_version);
 
         <span class="kw">let </span>debug_utils = <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_utils_create_info) = debug_utils_create_info {
-            <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
+            <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::debug_utils::NAME) {
                 <span class="macro">log::info!</span>(<span class="string">"Enabling debug utils"</span>);
 
-                <span class="kw">let </span>extension = ext::DebugUtils::new(<span class="kw-2">&amp;</span>entry, <span class="kw-2">&amp;</span>raw_instance);
+                <span class="kw">let </span>extension = ext::debug_utils::Instance::new(<span class="kw-2">&amp;</span>entry, <span class="kw-2">&amp;</span>raw_instance);
                 <span class="kw">let </span>vk_info = debug_utils_create_info.to_vk_create_info();
                 <span class="kw">let </span>messenger =
                     <span class="kw">unsafe </span>{ extension.create_debug_utils_messenger(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }.unwrap();
@@ -1445,9 +1406,9 @@
         </span>};
 
         <span class="kw">let </span>get_physical_device_properties =
-            <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>khr::GetPhysicalDeviceProperties2::name()) {
+            <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>khr::get_physical_device_properties2::NAME) {
                 <span class="macro">log::debug!</span>(<span class="string">"Enabling device properties2"</span>);
-                <span class="prelude-val">Some</span>(khr::GetPhysicalDeviceProperties2::new(
+                <span class="prelude-val">Some</span>(khr::get_physical_device_properties2::Instance::new(
                     <span class="kw-2">&amp;</span>entry,
                     <span class="kw-2">&amp;</span>raw_instance,
                 ))
@@ -1471,21 +1432,21 @@
         })
     }
 
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_from_xlib(
+    <span class="kw">fn </span>create_surface_from_xlib(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         dpy: <span class="kw-2">*mut </span>vk::Display,
         window: vk::Window,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XlibSurface::name()) {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::xlib_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_KHR_xlib_surface"</span>,
             )));
         }
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>xlib_loader = khr::XlibSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
-            <span class="kw">let </span>info = vk::XlibSurfaceCreateInfoKHR::builder()
+            <span class="kw">let </span>xlib_loader =
+                khr::xlib_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>info = vk::XlibSurfaceCreateInfoKHR::default()
                 .flags(vk::XlibSurfaceCreateFlagsKHR::empty())
                 .window(window)
                 .dpy(dpy);
@@ -1497,21 +1458,20 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_from_xcb(
+    <span class="kw">fn </span>create_surface_from_xcb(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         connection: <span class="kw-2">*mut </span>vk::xcb_connection_t,
         window: vk::xcb_window_t,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XcbSurface::name()) {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::xcb_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_KHR_xcb_surface"</span>,
             )));
         }
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>xcb_loader = khr::XcbSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
-            <span class="kw">let </span>info = vk::XcbSurfaceCreateInfoKHR::builder()
+            <span class="kw">let </span>xcb_loader = khr::xcb_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>info = vk::XcbSurfaceCreateInfoKHR::default()
                 .flags(vk::XcbSurfaceCreateFlagsKHR::empty())
                 .window(window)
                 .connection(connection);
@@ -1523,25 +1483,21 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_from_wayland(
+    <span class="kw">fn </span>create_surface_from_wayland(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        display: <span class="kw-2">*mut </span>c_void,
-        surface: <span class="kw-2">*mut </span>c_void,
+        display: <span class="kw-2">*mut </span>vk::wl_display,
+        surface: <span class="kw-2">*mut </span>vk::wl_surface,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self
-            </span>.shared
-            .extensions
-            .contains(<span class="kw-2">&amp;</span>khr::WaylandSurface::name())
-        {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::wayland_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_KHR_wayland_surface"</span>,
             )));
         }
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>w_loader = khr::WaylandSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
-            <span class="kw">let </span>info = vk::WaylandSurfaceCreateInfoKHR::builder()
+            <span class="kw">let </span>w_loader =
+                khr::wayland_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>info = vk::WaylandSurfaceCreateInfoKHR::default()
                 .flags(vk::WaylandSurfaceCreateFlagsKHR::empty())
                 .display(display)
                 .surface(surface);
@@ -1552,26 +1508,22 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_android(
+    <span class="kw">fn </span>create_surface_android(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        window: <span class="kw-2">*const </span>c_void,
+        window: <span class="kw-2">*mut </span>vk::ANativeWindow,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self
-            </span>.shared
-            .extensions
-            .contains(<span class="kw-2">&amp;</span>khr::AndroidSurface::name())
-        {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::android_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_KHR_android_surface"</span>,
             )));
         }
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>a_loader = khr::AndroidSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
-            <span class="kw">let </span>info = vk::AndroidSurfaceCreateInfoKHR::builder()
+            <span class="kw">let </span>a_loader =
+                khr::android_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>info = vk::AndroidSurfaceCreateInfoKHR::default()
                 .flags(vk::AndroidSurfaceCreateFlagsKHR::empty())
-                .window(window <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
+                .window(window);
 
             <span class="kw">unsafe </span>{ a_loader.create_android_surface(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }.expect(<span class="string">"AndroidSurface failed"</span>)
         };
@@ -1579,24 +1531,24 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_from_hwnd(
+    <span class="kw">fn </span>create_surface_from_hwnd(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hinstance: <span class="kw-2">*mut </span>c_void,
-        hwnd: <span class="kw-2">*mut </span>c_void,
+        hinstance: vk::HINSTANCE,
+        hwnd: vk::HWND,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::Win32Surface::name()) {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::win32_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_KHR_win32_surface"</span>,
             )));
         }
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>info = vk::Win32SurfaceCreateInfoKHR::builder()
+            <span class="kw">let </span>info = vk::Win32SurfaceCreateInfoKHR::default()
                 .flags(vk::Win32SurfaceCreateFlagsKHR::empty())
                 .hinstance(hinstance)
                 .hwnd(hwnd);
-            <span class="kw">let </span>win32_loader = khr::Win32Surface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>win32_loader =
+                khr::win32_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
             <span class="kw">unsafe </span>{
                 win32_loader
                     .create_win32_surface(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>)
@@ -1612,7 +1564,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         view: <span class="kw-2">*mut </span>c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::metal_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
                 <span class="string">"Vulkan driver does not support VK_EXT_metal_surface"</span>,
             )));
@@ -1623,11 +1575,11 @@
         };
 
         <span class="kw">let </span>surface = {
-            <span class="kw">let </span>metal_loader = ext::MetalSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
-            <span class="kw">let </span>vk_info = vk::MetalSurfaceCreateInfoEXT::builder()
+            <span class="kw">let </span>metal_loader =
+                ext::metal_surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+            <span class="kw">let </span>vk_info = vk::MetalSurfaceCreateInfoEXT::default()
                 .flags(vk::MetalSurfaceCreateFlagsEXT::empty())
-                .layer(layer <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
-                .build();
+                .layer(layer <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
 
             <span class="kw">unsafe </span>{ metal_loader.create_metal_surface(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>).unwrap() }
         };
@@ -1636,7 +1588,7 @@
     }
 
     <span class="kw">fn </span>create_surface_from_vk_surface_khr(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: vk::SurfaceKHR) -&gt; <span class="kw">super</span>::Surface {
-        <span class="kw">let </span>functor = khr::Surface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+        <span class="kw">let </span>functor = khr::surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
         <span class="kw">super</span>::Surface {
             raw: surface,
             functor,
@@ -1667,7 +1619,6 @@
 
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Init Vulkan Backend"</span>);
-        <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
 
         <span class="kw">let </span>entry = <span class="kw">unsafe </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"Load vk library"</span>);
@@ -1678,7 +1629,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let </span>version = {
             <span class="macro">profiling::scope!</span>(<span class="string">"vkEnumerateInstanceVersion"</span>);
-            entry.try_enumerate_instance_version()
+            <span class="kw">unsafe </span>{ entry.try_enumerate_instance_version() }
         };
         <span class="kw">let </span>instance_api_version = <span class="kw">match </span>version {
             <span class="comment">// Vulkan 1.1+
@@ -1693,7 +1644,7 @@
         };
 
         <span class="kw">let </span>app_name = CString::new(desc.name).unwrap();
-        <span class="kw">let </span>app_info = vk::ApplicationInfo::builder()
+        <span class="kw">let </span>app_info = vk::ApplicationInfo::default()
             .application_name(app_name.as_c_str())
             .application_version(<span class="number">1</span>)
             .engine_name(CStr::from_bytes_with_nul(<span class="string">b"wgpu-hal\0"</span>).unwrap())
@@ -1719,7 +1670,7 @@
 
         <span class="kw">let </span>instance_layers = {
             <span class="macro">profiling::scope!</span>(<span class="string">"vkEnumerateInstanceLayerProperties"</span>);
-            entry.enumerate_instance_layer_properties()
+            <span class="kw">unsafe </span>{ entry.enumerate_instance_layer_properties() }
         };
         <span class="kw">let </span>instance_layers = instance_layers.map_err(|e| {
             <span class="macro">log::debug!</span>(<span class="string">"enumerate_instance_layer_properties: {:?}"</span>, e);
@@ -1735,7 +1686,7 @@
         ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'layers </span>vk::LayerProperties&gt; {
             instance_layers
                 .iter()
-                .find(|inst_layer| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(name))
+                .find(|inst_layer| inst_layer.layer_name_as_c_str() == <span class="prelude-val">Ok</span>(name))
         }
 
         <span class="kw">let </span>validation_layer_name =
@@ -1751,9 +1702,9 @@
             <span class="comment">// Convert all the names of the extensions into an iterator of CStrs.
             </span><span class="kw">let </span><span class="kw-2">mut </span>ext_names = exts
                 .iter()
-                .filter_map(|ext| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>ext.extension_name));
+                .filter_map(|ext| ext.extension_name_as_c_str().ok());
             <span class="comment">// Find the validation features extension.
-            </span>ext_names.any(|ext_name| ext_name == vk::ExtValidationFeaturesFn::name())
+            </span>ext_names.any(|ext_name| ext_name == ext::validation_features::NAME)
         } <span class="kw">else </span>{
             <span class="bool-val">false
         </span>};
@@ -1771,7 +1722,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>layers: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt; = Vec::new();
 
-        <span class="kw">let </span>has_debug_extension = extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name());
+        <span class="kw">let </span>has_debug_extension = extensions.contains(<span class="kw-2">&amp;</span>ext::debug_utils::NAME);
         <span class="kw">let </span><span class="kw-2">mut </span>debug_user_data = has_debug_extension.then(|| {
             <span class="comment">// Put the callback data on the heap, to ensure it will never be
             // moved.
@@ -1791,11 +1742,10 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_user_data) = debug_user_data.as_mut() {
                     debug_user_data.validation_layer_properties =
                         <span class="prelude-val">Some</span>(<span class="kw">super</span>::ValidationLayerProperties {
-                            layer_description: cstr_from_bytes_until_nul(
-                                <span class="kw-2">&amp;</span>layer_properties.description,
-                            )
-                            .unwrap()
-                            .to_owned(),
+                            layer_description: layer_properties
+                                .description_as_c_str()
+                                .unwrap()
+                                .to_owned(),
                             layer_spec_version: layer_properties.spec_version,
                         });
                 }
@@ -1829,9 +1779,7 @@
                 callback_data,
             };
 
-            <span class="kw">let </span>vk_create_info = create_info.to_vk_create_info().build();
-
-            <span class="prelude-val">Some</span>((create_info, vk_create_info))
+            <span class="prelude-val">Some</span>(create_info)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -1863,7 +1811,7 @@
         <span class="comment">// Avoid VUID-VkInstanceCreateInfo-flags-06559: Only ask the instance to
         // enumerate incomplete Vulkan implementations (which we need on Mac) if
         // we managed to find the extension that provides the flag.
-        </span><span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>vk::KhrPortabilityEnumerationFn::name()) {
+        </span><span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>khr::portability_enumeration::NAME) {
             flags |= vk::InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR;
         }
         <span class="kw">let </span>vk_instance = {
@@ -1876,14 +1824,17 @@
                 })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            <span class="kw">let </span><span class="kw-2">mut </span>create_info = vk::InstanceCreateInfo::builder()
+            <span class="kw">let </span><span class="kw-2">mut </span>create_info = vk::InstanceCreateInfo::default()
                 .flags(flags)
                 .application_info(<span class="kw-2">&amp;</span>app_info)
                 .enabled_layer_names(<span class="kw-2">&amp;</span>str_pointers[..layers.len()])
                 .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers[layers.len()..]);
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>(<span class="kw">_</span>, <span class="kw-2">ref mut </span>vk_create_info)) = debug_utils.as_mut() {
-                create_info = create_info.push_next(vk_create_info);
+            <span class="kw">let </span><span class="kw-2">mut </span>debug_utils_create_info = debug_utils
+                .as_mut()
+                .map(|create_info| create_info.to_vk_create_info());
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_utils_create_info) = debug_utils_create_info.as_mut() {
+                create_info = create_info.push_next(debug_utils_create_info);
             }
 
             <span class="comment">// Enable explicit validation features if available
@@ -1903,7 +1854,7 @@
                         .push(vk::ValidationFeatureEnableEXT::GPU_ASSISTED_RESERVE_BINDING_SLOT);
                 }
 
-                validation_features = vk::ValidationFeaturesEXT::builder()
+                validation_features = vk::ValidationFeaturesEXT::default()
                     .enabled_validation_features(<span class="kw-2">&amp;</span>validation_feature_list);
                 create_info = create_info.push_next(<span class="kw-2">&amp;mut </span>validation_features);
             }
@@ -1926,7 +1877,7 @@
                 vk_instance,
                 instance_api_version,
                 android_sdk_version,
-                debug_utils.map(|(i, <span class="kw">_</span>)| i),
+                debug_utils,
                 extensions,
                 desc.flags,
                 has_nv_optimus,
@@ -1942,13 +1893,15 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">use </span>raw_window_handle::{RawDisplayHandle <span class="kw">as </span>Rdh, RawWindowHandle <span class="kw">as </span>Rwh};
 
-        <span class="kw">match </span>(window_handle, display_handle) {
+        <span class="comment">// TODO: Replace with ash-window, which also lazy-loads the extension based on handle type
+
+        </span><span class="kw">match </span>(window_handle, display_handle) {
             (Rwh::Wayland(handle), Rdh::Wayland(display)) =&gt; {
                 <span class="self">self</span>.create_surface_from_wayland(display.display.as_ptr(), handle.surface.as_ptr())
             }
             (Rwh::Xlib(handle), Rdh::Xlib(display)) =&gt; {
                 <span class="kw">let </span>display = display.display.expect(<span class="string">"Display pointer is not set."</span>);
-                <span class="self">self</span>.create_surface_from_xlib(display.as_ptr() <span class="kw">as </span><span class="kw-2">*mut *const </span>c_void, handle.window)
+                <span class="self">self</span>.create_surface_from_xlib(display.as_ptr(), handle.window)
             }
             (Rwh::Xcb(handle), Rdh::Xcb(display)) =&gt; {
                 <span class="kw">let </span>connection = display.connection.expect(<span class="string">"Pointer to X-Server is not set."</span>);
@@ -1957,22 +1910,23 @@
             (Rwh::AndroidNdk(handle), <span class="kw">_</span>) =&gt; {
                 <span class="self">self</span>.create_surface_android(handle.a_native_window.as_ptr())
             }
-            <span class="attr">#[cfg(windows)]
-            </span>(Rwh::Win32(handle), <span class="kw">_</span>) =&gt; {
-                <span class="kw">use </span>winapi::um::libloaderapi::GetModuleHandleW;
-
-                <span class="kw">let </span>hinstance = <span class="kw">unsafe </span>{ GetModuleHandleW(std::ptr::null()) };
-                <span class="self">self</span>.create_surface_from_hwnd(hinstance <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, handle.hwnd.get() <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
+            (Rwh::Win32(handle), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let </span>hinstance = handle.hinstance.ok_or_else(|| {
+                    <span class="kw">crate</span>::InstanceError::new(String::from(
+                        <span class="string">"Vulkan requires raw-window-handle's Win32::hinstance to be set"</span>,
+                    ))
+                })<span class="question-mark">?</span>;
+                <span class="self">self</span>.create_surface_from_hwnd(hinstance.get(), handle.hwnd.get())
             }
             <span class="attr">#[cfg(all(target_os = <span class="string">"macos"</span>, feature = <span class="string">"metal"</span>))]
             </span>(Rwh::AppKit(handle), <span class="kw">_</span>)
-                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) =&gt;
+                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::metal_surface::NAME) =&gt;
             {
                 <span class="self">self</span>.create_surface_from_view(handle.ns_view.as_ptr())
             }
             <span class="attr">#[cfg(all(target_os = <span class="string">"ios"</span>, feature = <span class="string">"metal"</span>))]
             </span>(Rwh::UiKit(handle), <span class="kw">_</span>)
-                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) =&gt;
+                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::metal_surface::NAME) =&gt;
             {
                 <span class="self">self</span>.create_surface_from_view(handle.ui_view.as_ptr())
             }

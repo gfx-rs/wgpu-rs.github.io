@@ -1128,30 +1128,10 @@
 <a href="#1127" id="1127">1127</a>
 <a href="#1128" id="1128">1128</a>
 <a href="#1129" id="1129">1129</a>
-<a href="#1130" id="1130">1130</a>
-<a href="#1131" id="1131">1131</a>
-<a href="#1132" id="1132">1132</a>
-<a href="#1133" id="1133">1133</a>
-<a href="#1134" id="1134">1134</a>
-<a href="#1135" id="1135">1135</a>
-<a href="#1136" id="1136">1136</a>
-<a href="#1137" id="1137">1137</a>
-<a href="#1138" id="1138">1138</a>
-<a href="#1139" id="1139">1139</a>
-<a href="#1140" id="1140">1140</a>
-<a href="#1141" id="1141">1141</a>
-<a href="#1142" id="1142">1142</a>
-<a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a>
-<a href="#1146" id="1146">1146</a>
-<a href="#1147" id="1147">1147</a>
-<a href="#1148" id="1148">1148</a>
-<a href="#1149" id="1149">1149</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>ash::{extensions::ext, vk};
+<span class="kw">use </span>ash::vk;
 
 <span class="kw">use </span>std::{mem, ops::Range, slice};
 
@@ -1189,12 +1169,6 @@
     }
 }
 
-<span class="kw">impl </span><span class="kw">super</span>::DeviceShared {
-    <span class="kw">fn </span>debug_messenger(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ext::DebugUtils&gt; {
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.debug_utils.as_ref()<span class="question-mark">?</span>.extension)
-    }
-}
-
 <span class="kw">impl </span><span class="kw">super</span>::CommandEncoder {
     <span class="kw">fn </span>write_pass_end_timestamp_if_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>((query_set, index)) = <span class="self">self</span>.end_of_pass_timer_query.take() {
@@ -1215,10 +1189,9 @@
 
     <span class="kw">unsafe fn </span>begin_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">crate</span>::Label) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.free.is_empty() {
-            <span class="kw">let </span>vk_info = vk::CommandBufferAllocateInfo::builder()
+            <span class="kw">let </span>vk_info = vk::CommandBufferAllocateInfo::default()
                 .command_pool(<span class="self">self</span>.raw)
-                .command_buffer_count(ALLOCATION_GRANULARITY)
-                .build();
+                .command_buffer_count(ALLOCATION_GRANULARITY);
             <span class="kw">let </span>cmd_buf_vec = <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.allocate_command_buffers(<span class="kw-2">&amp;</span>vk_info)<span class="question-mark">? </span>};
             <span class="self">self</span>.free.extend(cmd_buf_vec);
         }
@@ -1226,20 +1199,13 @@
 
         <span class="comment">// Set the name unconditionally, since there might be a
         // previous name assigned to this.
-        </span><span class="kw">unsafe </span>{
-            <span class="self">self</span>.device.set_object_name(
-                vk::ObjectType::COMMAND_BUFFER,
-                raw,
-                label.unwrap_or_default(),
-            )
-        };
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.device.set_object_name(raw, label.unwrap_or_default()) };
 
         <span class="comment">// Reset this in case the last renderpass was never ended.
         </span><span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">false</span>;
 
-        <span class="kw">let </span>vk_info = vk::CommandBufferBeginInfo::builder()
-            .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT)
-            .build();
+        <span class="kw">let </span>vk_info = vk::CommandBufferBeginInfo::default()
+            .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
         <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.begin_command_buffer(raw, <span class="kw-2">&amp;</span>vk_info) }<span class="question-mark">?</span>;
         <span class="self">self</span>.active = raw;
 
@@ -1295,12 +1261,11 @@
             dst_stages |= dst_stage;
 
             vk_barriers.push(
-                vk::BufferMemoryBarrier::builder()
+                vk::BufferMemoryBarrier::default()
                     .buffer(bar.buffer.raw)
                     .size(vk::WHOLE_SIZE)
                     .src_access_mask(src_access)
-                    .dst_access_mask(dst_access)
-                    .build(),
+                    .dst_access_mask(dst_access),
             )
         }
 
@@ -1342,14 +1307,13 @@
             dst_stages |= dst_stage;
 
             vk_barriers.push(
-                vk::ImageMemoryBarrier::builder()
+                vk::ImageMemoryBarrier::default()
                     .image(bar.texture.raw)
                     .subresource_range(range)
                     .src_access_mask(src_access)
                     .dst_access_mask(dst_access)
                     .old_layout(src_layout)
-                    .new_layout(dst_layout)
-                    .build(),
+                    .new_layout(dst_layout),
             );
         }
 
@@ -1592,7 +1556,7 @@
                 <span class="prelude-val">Some</span>(buffer) =&gt; ray_tracing_functions
                     .buffer_device_address
                     .get_buffer_device_address(
-                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::builder().buffer(buffer.raw),
+                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::default().buffer(buffer.raw),
                     ),
                 <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Buffers are required to build acceleration structures"</span>),
             }
@@ -1619,23 +1583,24 @@
         <span class="kw">for </span>desc <span class="kw">in </span>descriptors {
             <span class="kw">let </span>(geometries, ranges) = <span class="kw">match </span><span class="kw-2">*</span>desc.entries {
                 <span class="kw">crate</span>::AccelerationStructureEntries::Instances(<span class="kw-2">ref </span>instances) =&gt; {
-                    <span class="kw">let </span>instance_data = vk::AccelerationStructureGeometryInstancesDataKHR::builder(
-                    )
+                    <span class="kw">let </span>instance_data = vk::AccelerationStructureGeometryInstancesDataKHR::default(
+                    <span class="comment">// TODO: Code is so large that rustfmt refuses to treat this... :(
+                    </span>)
                     .data(vk::DeviceOrHostAddressConstKHR {
                         device_address: get_device_address(instances.buffer),
                     });
 
-                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                         .geometry_type(vk::GeometryTypeKHR::INSTANCES)
                         .geometry(vk::AccelerationStructureGeometryDataKHR {
-                            instances: <span class="kw-2">*</span>instance_data,
+                            instances: instance_data,
                         });
 
-                    <span class="kw">let </span>range = vk::AccelerationStructureBuildRangeInfoKHR::builder()
+                    <span class="kw">let </span>range = vk::AccelerationStructureBuildRangeInfoKHR::default()
                         .primitive_count(instances.count)
                         .primitive_offset(instances.offset);
 
-                    (<span class="macro">smallvec::smallvec!</span>[<span class="kw-2">*</span>geometry], <span class="macro">smallvec::smallvec!</span>[<span class="kw-2">*</span>range])
+                    (<span class="macro">smallvec::smallvec!</span>[geometry], <span class="macro">smallvec::smallvec!</span>[range])
                 }
                 <span class="kw">crate</span>::AccelerationStructureEntries::Triangles(<span class="kw-2">ref </span>in_geometries) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>ranges = smallvec::SmallVec::&lt;
@@ -1646,7 +1611,7 @@
                     &gt;::with_capacity(in_geometries.len());
                     <span class="kw">for </span>triangles <span class="kw">in </span>in_geometries {
                         <span class="kw">let </span><span class="kw-2">mut </span>triangle_data =
-                            vk::AccelerationStructureGeometryTrianglesDataKHR::builder()
+                            vk::AccelerationStructureGeometryTrianglesDataKHR::default()
                                 .vertex_data(vk::DeviceOrHostAddressConstKHR {
                                     device_address: get_device_address(triangles.vertex_buffer),
                                 })
@@ -1654,7 +1619,7 @@
                                 .max_vertex(triangles.vertex_count)
                                 .vertex_stride(triangles.vertex_stride);
 
-                        <span class="kw">let </span><span class="kw-2">mut </span>range = vk::AccelerationStructureBuildRangeInfoKHR::builder();
+                        <span class="kw">let </span><span class="kw-2">mut </span>range = vk::AccelerationStructureBuildRangeInfoKHR::default();
 
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>indices) = triangles.indices {
                             triangle_data = triangle_data
@@ -1678,7 +1643,7 @@
                                 ray_tracing_functions
                                     .buffer_device_address
                                     .get_buffer_device_address(
-                                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::builder()
+                                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::default()
                                             .buffer(transform.buffer.raw),
                                     )
                             };
@@ -1690,17 +1655,17 @@
                             range = range.transform_offset(transform.offset);
                         }
 
-                        <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                        <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                             .geometry_type(vk::GeometryTypeKHR::TRIANGLES)
                             .geometry(vk::AccelerationStructureGeometryDataKHR {
-                                triangles: <span class="kw-2">*</span>triangle_data,
+                                triangles: triangle_data,
                             })
                             .flags(conv::map_acceleration_structure_geometry_flags(
                                 triangles.flags,
                             ));
 
-                        geometries.push(<span class="kw-2">*</span>geometry);
-                        ranges.push(<span class="kw-2">*</span>range);
+                        geometries.push(geometry);
+                        ranges.push(range);
                     }
                     (geometries, ranges)
                 }
@@ -1712,25 +1677,25 @@
                         [vk::AccelerationStructureGeometryKHR; CAPACITY_INNER],
                     &gt;::with_capacity(in_geometries.len());
                     <span class="kw">for </span>aabb <span class="kw">in </span>in_geometries {
-                        <span class="kw">let </span>aabbs_data = vk::AccelerationStructureGeometryAabbsDataKHR::builder()
+                        <span class="kw">let </span>aabbs_data = vk::AccelerationStructureGeometryAabbsDataKHR::default()
                             .data(vk::DeviceOrHostAddressConstKHR {
                                 device_address: get_device_address(aabb.buffer),
                             })
                             .stride(aabb.stride);
 
-                        <span class="kw">let </span>range = vk::AccelerationStructureBuildRangeInfoKHR::builder()
+                        <span class="kw">let </span>range = vk::AccelerationStructureBuildRangeInfoKHR::default()
                             .primitive_count(aabb.count)
                             .primitive_offset(aabb.offset);
 
-                        <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                        <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                             .geometry_type(vk::GeometryTypeKHR::AABBS)
                             .geometry(vk::AccelerationStructureGeometryDataKHR {
-                                aabbs: <span class="kw-2">*</span>aabbs_data,
+                                aabbs: aabbs_data,
                             })
                             .flags(conv::map_acceleration_structure_geometry_flags(aabb.flags));
 
-                        geometries.push(<span class="kw-2">*</span>geometry);
-                        ranges.push(<span class="kw-2">*</span>range);
+                        geometries.push(geometry);
+                        ranges.push(range);
                     }
                     (geometries, ranges)
                 }
@@ -1743,7 +1708,7 @@
                 ray_tracing_functions
                     .buffer_device_address
                     .get_buffer_device_address(
-                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::builder().buffer(desc.scratch_buffer.raw),
+                        <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::default().buffer(desc.scratch_buffer.raw),
                     )
             };
             <span class="kw">let </span>ty = <span class="kw">match </span><span class="kw-2">*</span>desc.entries {
@@ -1752,7 +1717,7 @@
                 }
                 <span class="kw">_ </span>=&gt; vk::AccelerationStructureTypeKHR::BOTTOM_LEVEL,
             };
-            <span class="kw">let </span><span class="kw-2">mut </span>geometry_info = vk::AccelerationStructureBuildGeometryInfoKHR::builder()
+            <span class="kw">let </span><span class="kw-2">mut </span>geometry_info = vk::AccelerationStructureBuildGeometryInfoKHR::default()
                 .ty(ty)
                 .mode(conv::map_acceleration_structure_build_mode(desc.mode))
                 .flags(conv::map_acceleration_structure_flags(desc.flags))
@@ -1768,7 +1733,7 @@
                     .raw;
             }
 
-            geometry_infos.push(<span class="kw-2">*</span>geometry_info);
+            geometry_infos.push(geometry_info);
         }
 
         <span class="kw">for </span>(i, geometry_info) <span class="kw">in </span>geometry_infos.iter_mut().enumerate() {
@@ -1799,10 +1764,9 @@
                 src_stage | vk::PipelineStageFlags::TOP_OF_PIPE,
                 dst_stage | vk::PipelineStageFlags::BOTTOM_OF_PIPE,
                 vk::DependencyFlags::empty(),
-                <span class="kw-2">&amp;</span>[vk::MemoryBarrier::builder()
+                <span class="kw-2">&amp;</span>[vk::MemoryBarrier::default()
                     .src_access_mask(src_access)
-                    .dst_access_mask(dst_access)
-                    .build()],
+                    .dst_access_mask(dst_access)],
                 <span class="kw-2">&amp;</span>[],
                 <span class="kw-2">&amp;</span>[],
             )
@@ -1904,17 +1868,13 @@
             .make_framebuffer(fb_key, raw_pass, desc.label)
             .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassBeginInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassBeginInfo::default()
             .render_pass(raw_pass)
             .render_area(render_area)
             .clear_values(<span class="kw-2">&amp;</span>vk_clear_values)
             .framebuffer(raw_framebuffer);
         <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment_info = <span class="kw">if </span>caps.imageless_framebuffers {
-            <span class="prelude-val">Some</span>(
-                vk::RenderPassAttachmentBeginInfo::builder()
-                    .attachments(<span class="kw-2">&amp;</span>vk_image_views)
-                    .build(),
-            )
+            <span class="prelude-val">Some</span>(vk::RenderPassAttachmentBeginInfo::default().attachments(<span class="kw-2">&amp;</span>vk_image_views))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -2009,21 +1969,21 @@
     }
 
     <span class="kw">unsafe fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.extension_fns.debug_utils.as_ref() {
             <span class="kw">let </span>cstr = <span class="self">self</span>.temp.make_c_str(label);
-            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::builder().label_name(cstr).build();
+            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::default().label_name(cstr);
             <span class="kw">unsafe </span>{ ext.cmd_insert_debug_utils_label(<span class="self">self</span>.active, <span class="kw-2">&amp;</span>vk_label) };
         }
     }
     <span class="kw">unsafe fn </span>begin_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, group_label: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.extension_fns.debug_utils.as_ref() {
             <span class="kw">let </span>cstr = <span class="self">self</span>.temp.make_c_str(group_label);
-            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::builder().label_name(cstr).build();
+            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::default().label_name(cstr);
             <span class="kw">unsafe </span>{ ext.cmd_begin_debug_utils_label(<span class="self">self</span>.active, <span class="kw-2">&amp;</span>vk_label) };
         }
     }
     <span class="kw">unsafe fn </span>end_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.extension_fns.debug_utils.as_ref() {
             <span class="kw">unsafe </span>{ ext.cmd_end_debug_utils_label(<span class="self">self</span>.active) };
         }
     }

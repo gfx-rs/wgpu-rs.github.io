@@ -2360,41 +2360,26 @@
 <a href="#2359" id="2359">2359</a>
 <a href="#2360" id="2360">2360</a>
 <a href="#2361" id="2361">2361</a>
-<a href="#2362" id="2362">2362</a>
-<a href="#2363" id="2363">2363</a>
-<a href="#2364" id="2364">2364</a>
-<a href="#2365" id="2365">2365</a>
-<a href="#2366" id="2366">2366</a>
-<a href="#2367" id="2367">2367</a>
-<a href="#2368" id="2368">2368</a>
-<a href="#2369" id="2369">2369</a>
-<a href="#2370" id="2370">2370</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>ash::{extensions::khr, vk};
-<span class="kw">use </span>naga::back::spv::ZeroInitializeWorkgroupMemoryMode;
+<span class="kw">use </span>ash::{khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use </span>std::{
     borrow::Cow,
     collections::{hash_map::Entry, BTreeMap},
     ffi::{CStr, CString},
+    mem::MaybeUninit,
     num::NonZeroU32,
     ptr,
     sync::Arc,
 };
 
 <span class="kw">impl </span><span class="kw">super</span>::DeviceShared {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>set_object_name(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        object_type: vk::ObjectType,
-        object: <span class="kw">impl </span>vk::Handle,
-        name: <span class="kw-2">&amp;</span>str,
-    ) {
-        <span class="kw">let </span>extension = <span class="kw">match </span><span class="self">self</span>.instance.debug_utils {
-            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>debug_utils) =&gt; <span class="kw-2">&amp;</span>debug_utils.extension,
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>set_object_name(<span class="kw-2">&amp;</span><span class="self">self</span>, object: <span class="kw">impl </span>vk::Handle, name: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(extension) = <span class="self">self</span>.extension_fns.debug_utils.as_ref() <span class="kw">else </span>{
+            <span class="kw">return</span>;
         };
 
         <span class="comment">// Keep variables outside the if-else block to ensure they do not
@@ -2425,10 +2410,8 @@
 
         <span class="kw">let </span>_result = <span class="kw">unsafe </span>{
             extension.set_debug_utils_object_name(
-                <span class="self">self</span>.raw.handle(),
-                <span class="kw-2">&amp;</span>vk::DebugUtilsObjectNameInfoEXT::builder()
-                    .object_type(object_type)
-                    .object_handle(object.as_raw())
+                <span class="kw-2">&amp;</span>vk::DebugUtilsObjectNameInfoEXT::default()
+                    .object_handle(object)
                     .object_name(name),
             )
         };
@@ -2458,25 +2441,23 @@
                         };
                         vk_attachments.push({
                             <span class="kw">let </span>(load_op, store_op) = conv::map_attachment_ops(cat.base.ops);
-                            vk::AttachmentDescription::builder()
+                            vk::AttachmentDescription::default()
                                 .format(cat.base.format)
                                 .samples(samples)
                                 .load_op(load_op)
                                 .store_op(store_op)
                                 .initial_layout(cat.base.layout)
                                 .final_layout(cat.base.layout)
-                                .build()
                         });
                         <span class="kw">let </span>resolve_ref = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>rat) = cat.resolve {
                             <span class="kw">let </span>(load_op, store_op) = conv::map_attachment_ops(rat.ops);
-                            <span class="kw">let </span>vk_attachment = vk::AttachmentDescription::builder()
+                            <span class="kw">let </span>vk_attachment = vk::AttachmentDescription::default()
                                 .format(rat.format)
                                 .samples(vk::SampleCountFlags::TYPE_1)
                                 .load_op(load_op)
                                 .store_op(store_op)
                                 .initial_layout(rat.layout)
-                                .final_layout(rat.layout)
-                                .build();
+                                .final_layout(rat.layout);
                             vk_attachments.push(vk_attachment);
 
                             vk::AttachmentReference {
@@ -2504,7 +2485,7 @@
                     <span class="kw">let </span>(load_op, store_op) = conv::map_attachment_ops(ds.base.ops);
                     <span class="kw">let </span>(stencil_load_op, stencil_store_op) =
                         conv::map_attachment_ops(ds.stencil_ops);
-                    <span class="kw">let </span>vk_attachment = vk::AttachmentDescription::builder()
+                    <span class="kw">let </span>vk_attachment = vk::AttachmentDescription::default()
                         .format(ds.base.format)
                         .samples(samples)
                         .load_op(load_op)
@@ -2512,13 +2493,12 @@
                         .stencil_load_op(stencil_load_op)
                         .stencil_store_op(stencil_store_op)
                         .initial_layout(ds.base.layout)
-                        .final_layout(ds.base.layout)
-                        .build();
+                        .final_layout(ds.base.layout);
                     vk_attachments.push(vk_attachment);
                 }
 
                 <span class="kw">let </span>vk_subpasses = [{
-                    <span class="kw">let </span><span class="kw-2">mut </span>vk_subpass = vk::SubpassDescription::builder()
+                    <span class="kw">let </span><span class="kw-2">mut </span>vk_subpass = vk::SubpassDescription::default()
                         .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS)
                         .color_attachments(<span class="kw-2">&amp;</span>color_refs)
                         .resolve_attachments(<span class="kw-2">&amp;</span>resolve_refs);
@@ -2534,10 +2514,10 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>reference) = ds_ref {
                         vk_subpass = vk_subpass.depth_stencil_attachment(reference)
                     }
-                    vk_subpass.build()
+                    vk_subpass
                 }];
 
-                <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassCreateInfo::builder()
+                <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassCreateInfo::default()
                     .attachments(<span class="kw-2">&amp;</span>vk_attachments)
                     .subpasses(<span class="kw-2">&amp;</span>vk_subpasses);
 
@@ -2554,10 +2534,9 @@
                     </span>mask = [(<span class="number">1 </span>&lt;&lt; multiview.get()) - <span class="number">1</span>];
 
                     <span class="comment">// On Vulkan 1.1 or later, this is an alias for core functionality
-                    </span>multiview_info = vk::RenderPassMultiviewCreateInfoKHR::builder()
+                    </span>multiview_info = vk::RenderPassMultiviewCreateInfoKHR::default()
                         .view_masks(<span class="kw-2">&amp;</span>mask)
-                        .correlation_masks(<span class="kw-2">&amp;</span>mask)
-                        .build();
+                        .correlation_masks(<span class="kw-2">&amp;</span>mask);
                     vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>multiview_info);
                 }
 
@@ -2602,7 +2581,7 @@
                     .iter()
                     .enumerate()
                     .map(|(i, at)| {
-                        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::FramebufferAttachmentImageInfo::builder()
+                        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::FramebufferAttachmentImageInfo::default()
                             .usage(conv::map_texture_usage(at.view_usage))
                             .flags(at.raw_image_flags)
                             .width(e.key().extent.width)
@@ -2614,14 +2593,13 @@
                         } <span class="kw">else </span>{
                             info = info.view_formats(<span class="kw-2">&amp;</span>vk_view_formats_list[i]);
                         };
-                        info.build()
+                        info
                     })
                     .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;&gt;();
 
-                <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment_info = vk::FramebufferAttachmentsCreateInfo::builder()
-                    .attachment_image_infos(<span class="kw-2">&amp;</span>vk_image_infos)
-                    .build();
-                <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::FramebufferCreateInfo::builder()
+                <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment_info = vk::FramebufferAttachmentsCreateInfo::default()
+                    .attachment_image_infos(<span class="kw-2">&amp;</span>vk_image_infos);
+                <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::FramebufferCreateInfo::default()
                     .render_pass(raw_pass)
                     .width(e.key().extent.width)
                     .height(e.key().extent.height)
@@ -2640,7 +2618,7 @@
                 <span class="kw-2">*</span>e.insert(<span class="kw">unsafe </span>{
                     <span class="kw">let </span>raw = <span class="self">self</span>.raw.create_framebuffer(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>).unwrap();
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = pass_label {
-                        <span class="self">self</span>.set_object_name(vk::ObjectType::FRAMEBUFFER, raw, label);
+                        <span class="self">self</span>.set_object_name(raw, label);
                     }
                     raw
                 })
@@ -2656,11 +2634,10 @@
         <span class="kw">let </span>block = buffer.block.as_ref()<span class="question-mark">?</span>.lock();
         <span class="kw">let </span>mask = <span class="self">self</span>.private_caps.non_coherent_map_mask;
         <span class="prelude-val">Some</span>(ranges.map(<span class="kw">move </span>|range| {
-            vk::MappedMemoryRange::builder()
+            vk::MappedMemoryRange::default()
                 .memory(<span class="kw-2">*</span>block.memory())
                 .offset((block.offset() + range.start) &amp; !mask)
                 .size((range.end - range.start + mask) &amp; !mask)
-                .build()
         }))
     }
 
@@ -2684,14 +2661,14 @@
         memory_type: u32,
         flags: gpu_alloc::AllocationFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;vk::DeviceMemory, gpu_alloc::OutOfMemory&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::MemoryAllocateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::MemoryAllocateInfo::default()
             .allocation_size(size)
             .memory_type_index(memory_type);
 
         <span class="kw">let </span><span class="kw-2">mut </span>info_flags;
 
         <span class="kw">if </span>flags.contains(gpu_alloc::AllocationFlags::DEVICE_ADDRESS) {
-            info_flags = vk::MemoryAllocateFlagsInfo::builder()
+            info_flags = vk::MemoryAllocateFlagsInfo::default()
                 .flags(vk::MemoryAllocateFlags::DEVICE_ADDRESS);
             info = info.push_next(<span class="kw-2">&amp;mut </span>info_flags);
         }
@@ -2815,11 +2792,10 @@
         <span class="kw">if </span>flags.contains(gpu_descriptor::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET) {
             vk_flags |= vk::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET;
         }
-        <span class="kw">let </span>vk_info = vk::DescriptorPoolCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::DescriptorPoolCreateInfo::default()
             .max_sets(max_sets)
             .flags(vk_flags)
-            .pool_sizes(<span class="kw-2">&amp;</span>filtered_counts)
-            .build();
+            .pool_sizes(<span class="kw-2">&amp;</span>filtered_counts);
 
         <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw.create_descriptor_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) } {
             <span class="prelude-val">Ok</span>(pool) =&gt; <span class="prelude-val">Ok</span>(pool),
@@ -2851,14 +2827,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), gpu_descriptor::DeviceAllocationError&gt; {
         <span class="kw">let </span>result = <span class="kw">unsafe </span>{
             <span class="self">self</span>.raw.allocate_descriptor_sets(
-                <span class="kw-2">&amp;</span>vk::DescriptorSetAllocateInfo::builder()
+                <span class="kw-2">&amp;</span>vk::DescriptorSetAllocateInfo::default()
                     .descriptor_pool(<span class="kw-2">*</span>pool)
                     .set_layouts(
                         <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::DescriptorSetLayout; <span class="number">32</span>]&gt;::from_iter(
                             layouts.cloned(),
                         ),
-                    )
-                    .build(),
+                    ),
             )
         };
 
@@ -2903,7 +2878,7 @@
 }
 
 <span class="kw">struct </span>CompiledStage {
-    create_info: vk::PipelineShaderStageCreateInfo,
+    create_info: vk::PipelineShaderStageCreateInfo&lt;<span class="lifetime">'static</span>&gt;,
     _entry_point: CString,
     temp_raw_module: <span class="prelude-ty">Option</span>&lt;vk::ShaderModule&gt;,
 }
@@ -2916,7 +2891,7 @@
         provided_old_swapchain: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::Swapchain&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Swapchain, <span class="kw">crate</span>::SurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_swapchain"</span>);
-        <span class="kw">let </span>functor = khr::Swapchain::new(<span class="kw-2">&amp;</span>surface.instance.raw, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
+        <span class="kw">let </span>functor = khr::swapchain::Device::new(<span class="kw-2">&amp;</span>surface.instance.raw, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
 
         <span class="kw">let </span>old_swapchain = <span class="kw">match </span>provided_old_swapchain {
             <span class="prelude-val">Some</span>(osc) =&gt; osc.raw,
@@ -2948,7 +2923,7 @@
             wgt_view_formats.push(config.format);
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::SwapchainCreateInfoKHR::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::SwapchainCreateInfoKHR::default()
             .flags(raw_flags)
             .surface(surface.raw)
             .min_image_count(config.maximum_frame_latency + <span class="number">1</span>) <span class="comment">// TODO: https://github.com/gfx-rs/wgpu/issues/2869
@@ -2967,7 +2942,7 @@
             .clipped(<span class="bool-val">true</span>)
             .old_swapchain(old_swapchain);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>format_list_info = vk::ImageFormatListCreateInfo::builder();
+        <span class="kw">let </span><span class="kw-2">mut </span>format_list_info = vk::ImageFormatListCreateInfo::default();
         <span class="kw">if </span>!raw_view_formats.is_empty() {
             format_list_info = format_list_info.view_formats(<span class="kw-2">&amp;</span>raw_view_formats);
             info = info.push_next(<span class="kw-2">&amp;mut </span>format_list_info);
@@ -3006,7 +2981,7 @@
             .map(|<span class="kw">_</span>| <span class="kw">unsafe </span>{
                 <span class="self">self</span>.shared
                     .raw
-                    .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::builder(), <span class="prelude-val">None</span>)
+                    .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::default(), <span class="prelude-val">None</span>)
             })
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
             .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
@@ -3079,7 +3054,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         spv: <span class="kw-2">&amp;</span>[u32],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;vk::ShaderModule, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>vk_info = vk::ShaderModuleCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::ShaderModuleCreateInfo::default()
             .flags(vk::ShaderModuleCreateFlags::empty())
             .code(spv);
 
@@ -3135,7 +3110,7 @@
                     }
                     <span class="kw">if </span>!stage.zero_initialize_workgroup_memory {
                         temp_options.zero_initialize_workgroup_memory =
-                            ZeroInitializeWorkgroupMemoryMode::None;
+                            naga::back::spv::ZeroInitializeWorkgroupMemoryMode::None;
                     }
 
                     <span class="kw-2">&amp;</span>temp_options
@@ -3165,12 +3140,13 @@
         }
 
         <span class="kw">let </span>entry_point = CString::new(stage.entry_point).unwrap();
-        <span class="kw">let </span>create_info = vk::PipelineShaderStageCreateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>create_info = vk::PipelineShaderStageCreateInfo::default()
             .flags(flags)
             .stage(conv::map_shader_stage(stage_flags))
-            .module(vk_module)
-            .name(<span class="kw-2">&amp;</span>entry_point)
-            .build();
+            .module(vk_module);
+
+        <span class="comment">// Circumvent struct lifetime check because of a self-reference inside CompiledStage
+        </span>create_info.p_name = entry_point.as_ptr();
 
         <span class="prelude-val">Ok</span>(CompiledStage {
             create_info,
@@ -3232,7 +3208,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BufferDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Buffer, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>vk_info = vk::BufferCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::BufferCreateInfo::default()
             .size(desc.size)
             .usage(conv::map_buffer_usage(desc.usage))
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
@@ -3291,10 +3267,7 @@
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::BUFFER, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
@@ -3402,7 +3375,7 @@
             raw_flags |= vk::ImageCreateFlags::MUTABLE_FORMAT;
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageCreateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageCreateInfo::default()
             .flags(raw_flags)
             .image_type(conv::map_texture_dimension(desc.dimension))
             .format(original_format)
@@ -3415,7 +3388,7 @@
             .sharing_mode(vk::SharingMode::EXCLUSIVE)
             .initial_layout(vk::ImageLayout::UNDEFINED);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>format_list_info = vk::ImageFormatListCreateInfo::builder();
+        <span class="kw">let </span><span class="kw-2">mut </span>format_list_info = vk::ImageFormatListCreateInfo::default();
         <span class="kw">if </span>!vk_view_formats.is_empty() {
             format_list_info = format_list_info.view_formats(<span class="kw-2">&amp;</span>vk_view_formats);
             vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>format_list_info);
@@ -3443,10 +3416,7 @@
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::IMAGE, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Texture {
@@ -3475,7 +3445,7 @@
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureViewDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::TextureView, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>subresource_range = conv::map_subresource_range(<span class="kw-2">&amp;</span>desc.range, texture.format);
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageViewCreateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::ImageViewCreateInfo::default()
             .flags(vk::ImageViewCreateFlags::empty())
             .image(texture.raw)
             .view_type(conv::map_view_dimension(desc.dimension))
@@ -3486,9 +3456,8 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>image_view_info;
         <span class="kw">let </span>view_usage = <span class="kw">if </span><span class="self">self</span>.shared.private_caps.image_view_usage &amp;&amp; !desc.usage.is_empty() {
-            image_view_info = vk::ImageViewUsageCreateInfo::builder()
-                .usage(conv::map_texture_usage(desc.usage))
-                .build();
+            image_view_info =
+                vk::ImageViewUsageCreateInfo::default().usage(conv::map_texture_usage(desc.usage));
             vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>image_view_info);
             desc.usage
         } <span class="kw">else </span>{
@@ -3498,10 +3467,7 @@
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_image_view(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::IMAGE_VIEW, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="kw">let </span>attachment = <span class="kw">super</span>::FramebufferAttachment {
@@ -3543,7 +3509,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SamplerDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Sampler, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SamplerCreateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SamplerCreateInfo::default()
             .flags(vk::SamplerCreateFlags::empty())
             .mag_filter(conv::map_filter_mode(desc.mag_filter))
             .min_filter(conv::map_filter_mode(desc.min_filter))
@@ -3575,10 +3541,7 @@
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_sampler(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::SAMPLER, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Sampler { raw })
@@ -3591,10 +3554,9 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Api&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandEncoder, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>vk_info = vk::CommandPoolCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::CommandPoolCreateInfo::default()
             .queue_family_index(desc.queue.family_index)
-            .flags(vk::CommandPoolCreateFlags::TRANSIENT)
-            .build();
+            .flags(vk::CommandPoolCreateFlags::TRANSIENT);
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_command_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::CommandEncoder {
@@ -3684,10 +3646,11 @@
                 descriptor_count: types[entry.binding <span class="kw">as </span>usize].<span class="number">1</span>,
                 stage_flags: conv::map_shader_stage(entry.visibility),
                 p_immutable_samplers: ptr::null(),
+                _marker: Default::default(),
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>vk_info = vk::DescriptorSetLayoutCreateInfo::builder().bindings(<span class="kw-2">&amp;</span>vk_bindings);
+        <span class="kw">let </span>vk_info = vk::DescriptorSetLayoutCreateInfo::default().bindings(<span class="kw-2">&amp;</span>vk_bindings);
 
         <span class="kw">let </span>binding_arrays = desc
             .entries
@@ -3718,7 +3681,7 @@
                 })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            binding_flag_info = vk::DescriptorSetLayoutBindingFlagsCreateInfo::builder()
+            binding_flag_info = vk::DescriptorSetLayoutBindingFlagsCreateInfo::default()
                 .binding_flags(<span class="kw-2">&amp;</span>binding_flag_vec);
 
             vk_info.push_next(<span class="kw-2">&amp;mut </span>binding_flag_info)
@@ -3733,10 +3696,7 @@
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::DESCRIPTOR_SET_LAYOUT, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroupLayout {
@@ -3774,7 +3734,7 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>vk_info = vk::PipelineLayoutCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::PipelineLayoutCreateInfo::default()
             .flags(vk::PipelineLayoutCreateFlags::empty())
             .set_layouts(<span class="kw-2">&amp;</span>vk_set_layouts)
             .push_constant_ranges(<span class="kw-2">&amp;</span>vk_push_constant_ranges);
@@ -3785,10 +3745,7 @@
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::PIPELINE_LAYOUT, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>binding_arrays = BTreeMap::new();
@@ -3835,118 +3792,165 @@
 
         <span class="kw">let </span>set = vk_sets.pop().unwrap();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::DESCRIPTOR_SET, <span class="kw-2">*</span>set.raw(), label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(<span class="kw-2">*</span>set.raw(), label) };
+        }
+
+        <span class="doccomment">/// Helper for splitting off and initializing a given number of elements on a pre-allocated
+        /// stack, based on items returned from an [`ExactSizeIterator`].  Typically created from a
+        /// [`MaybeUninit`] slice (see [`Vec::spare_capacity_mut()`]).
+        /// The updated [`ExtensionStack`] of remaining uninitialized elements is returned, safely
+        /// representing that the initialized and remaining elements are two independent mutable
+        /// borrows.
+        </span><span class="kw">struct </span>ExtendStack&lt;<span class="lifetime">'a</span>, T&gt; {
+            remainder: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[MaybeUninit&lt;T&gt;],
+        }
+
+        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ExtendStack&lt;<span class="lifetime">'a</span>, T&gt; {
+            <span class="kw">fn </span>from_vec_capacity(vec: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;T&gt;) -&gt; <span class="self">Self </span>{
+                <span class="self">Self </span>{
+                    remainder: vec.spare_capacity_mut(),
+                }
+            }
+
+            <span class="kw">fn </span>extend_one(<span class="self">self</span>, value: T) -&gt; (<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T) {
+                <span class="kw">let </span>(to_init, remainder) = <span class="self">self</span>.remainder.split_first_mut().unwrap();
+                <span class="kw">let </span>init = to_init.write(value);
+                (<span class="self">Self </span>{ remainder }, init)
+            }
+
+            <span class="kw">fn </span>extend(
+                <span class="self">self</span>,
+                iter: <span class="kw">impl </span>IntoIterator&lt;Item = T&gt; + ExactSizeIterator,
+            ) -&gt; (<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[T]) {
+                <span class="kw">let </span>(to_init, remainder) = <span class="self">self</span>.remainder.split_at_mut(iter.len());
+
+                <span class="kw">for </span>(value, to_init) <span class="kw">in </span>iter.into_iter().zip(to_init.iter_mut()) {
+                    to_init.write(value);
+                }
+
+                <span class="comment">// we can't use the safe (yet unstable) MaybeUninit::write_slice() here because of having an iterator to write
+
+                </span><span class="kw">let </span>init = {
+                    <span class="attr">#[allow(trivial_casts)]
+                    </span><span class="comment">// SAFETY: The loop above has initialized exactly as many items as to_init is
+                    // long, so it is safe to cast away the MaybeUninit&lt;T&gt; wrapper into T.
+
+                    // Additional safety docs from unstable slice_assume_init_mut
+                    // SAFETY: similar to safety notes for `slice_get_ref`, but we have a
+                    // mutable reference which is also guaranteed to be valid for writes.
+                    </span><span class="kw">unsafe </span>{
+                        <span class="kw-2">&amp;mut *</span>(to_init <span class="kw">as </span><span class="kw-2">*mut </span>[MaybeUninit&lt;T&gt;] <span class="kw">as </span><span class="kw-2">*mut </span>[T])
+                    }
+                };
+                (<span class="self">Self </span>{ remainder }, init)
+            }
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>writes = Vec::with_capacity(desc.entries.len());
         <span class="kw">let </span><span class="kw-2">mut </span>buffer_infos = Vec::with_capacity(desc.buffers.len());
-        <span class="kw">let </span><span class="kw-2">mut </span>sampler_infos = Vec::with_capacity(desc.samplers.len());
-        <span class="kw">let </span><span class="kw-2">mut </span>image_infos = Vec::with_capacity(desc.textures.len());
-        <span class="kw">let </span><span class="kw-2">mut </span>acceleration_structure_infos =
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer_infos = ExtendStack::from_vec_capacity(<span class="kw-2">&amp;mut </span>buffer_infos);
+        <span class="kw">let </span><span class="kw-2">mut </span>image_infos = Vec::with_capacity(desc.samplers.len() + desc.textures.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>image_infos = ExtendStack::from_vec_capacity(<span class="kw-2">&amp;mut </span>image_infos);
+        <span class="comment">// TODO: This length could be reduced to just the number of top-level acceleration
+        // structure bindings, where multiple consecutive TLAS bindings that are set via
+        // one `WriteDescriptorSet` count towards one "info" struct, not the total number of
+        // acceleration structure bindings to write:
+        </span><span class="kw">let </span><span class="kw-2">mut </span>acceleration_structure_infos =
             Vec::with_capacity(desc.acceleration_structures.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>acceleration_structure_infos =
+            ExtendStack::from_vec_capacity(<span class="kw-2">&amp;mut </span>acceleration_structure_infos);
         <span class="kw">let </span><span class="kw-2">mut </span>raw_acceleration_structures =
             Vec::with_capacity(desc.acceleration_structures.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>raw_acceleration_structures =
+            ExtendStack::from_vec_capacity(<span class="kw-2">&amp;mut </span>raw_acceleration_structures);
         <span class="kw">for </span>entry <span class="kw">in </span>desc.entries {
             <span class="kw">let </span>(ty, size) = desc.layout.types[entry.binding <span class="kw">as </span>usize];
             <span class="kw">if </span>size == <span class="number">0 </span>{
                 <span class="kw">continue</span>; <span class="comment">// empty slot
             </span>}
-            <span class="kw">let </span><span class="kw-2">mut </span>write = vk::WriteDescriptorSet::builder()
+            <span class="kw">let </span><span class="kw-2">mut </span>write = vk::WriteDescriptorSet::default()
                 .dst_set(<span class="kw-2">*</span>set.raw())
                 .dst_binding(entry.binding)
                 .descriptor_type(ty);
 
-            <span class="kw">let </span><span class="kw-2">mut </span>extra_descriptor_count = <span class="number">0</span>;
-
             write = <span class="kw">match </span>ty {
                 vk::DescriptorType::SAMPLER =&gt; {
-                    <span class="kw">let </span>index = sampler_infos.len();
                     <span class="kw">let </span>start = entry.resource_index;
                     <span class="kw">let </span>end = start + entry.count;
-                    sampler_infos.extend(desc.samplers[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
-                        |binding| {
-                            vk::DescriptorImageInfo::builder()
-                                .sampler(binding.raw)
-                                .build()
-                        },
-                    ));
-                    write.image_info(<span class="kw-2">&amp;</span>sampler_infos[index..])
+                    <span class="kw">let </span>local_image_infos;
+                    (image_infos, local_image_infos) =
+                        image_infos.extend(desc.samplers[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
+                            |sampler| vk::DescriptorImageInfo::default().sampler(sampler.raw),
+                        ));
+                    write.image_info(local_image_infos)
                 }
                 vk::DescriptorType::SAMPLED_IMAGE | vk::DescriptorType::STORAGE_IMAGE =&gt; {
-                    <span class="kw">let </span>index = image_infos.len();
                     <span class="kw">let </span>start = entry.resource_index;
                     <span class="kw">let </span>end = start + entry.count;
-                    image_infos.extend(desc.textures[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
-                        |binding| {
-                            <span class="kw">let </span>layout = conv::derive_image_layout(
-                                binding.usage,
-                                binding.view.attachment.view_format,
-                            );
-                            vk::DescriptorImageInfo::builder()
-                                .image_view(binding.view.raw)
-                                .image_layout(layout)
-                                .build()
-                        },
-                    ));
-                    write.image_info(<span class="kw-2">&amp;</span>image_infos[index..])
+                    <span class="kw">let </span>local_image_infos;
+                    (image_infos, local_image_infos) =
+                        image_infos.extend(desc.textures[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
+                            |binding| {
+                                <span class="kw">let </span>layout = conv::derive_image_layout(
+                                    binding.usage,
+                                    binding.view.attachment.view_format,
+                                );
+                                vk::DescriptorImageInfo::default()
+                                    .image_view(binding.view.raw)
+                                    .image_layout(layout)
+                            },
+                        ));
+                    write.image_info(local_image_infos)
                 }
                 vk::DescriptorType::UNIFORM_BUFFER
                 | vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC
                 | vk::DescriptorType::STORAGE_BUFFER
                 | vk::DescriptorType::STORAGE_BUFFER_DYNAMIC =&gt; {
-                    <span class="kw">let </span>index = buffer_infos.len();
                     <span class="kw">let </span>start = entry.resource_index;
                     <span class="kw">let </span>end = start + entry.count;
-                    buffer_infos.extend(desc.buffers[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
-                        |binding| {
-                            vk::DescriptorBufferInfo::builder()
-                                .buffer(binding.buffer.raw)
-                                .offset(binding.offset)
-                                .range(binding.size.map_or(vk::WHOLE_SIZE, wgt::BufferSize::get))
-                                .build()
-                        },
-                    ));
-                    write.buffer_info(<span class="kw-2">&amp;</span>buffer_infos[index..])
+                    <span class="kw">let </span>local_buffer_infos;
+                    (buffer_infos, local_buffer_infos) =
+                        buffer_infos.extend(desc.buffers[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize].iter().map(
+                            |binding| {
+                                vk::DescriptorBufferInfo::default()
+                                    .buffer(binding.buffer.raw)
+                                    .offset(binding.offset)
+                                    .range(
+                                        binding.size.map_or(vk::WHOLE_SIZE, wgt::BufferSize::get),
+                                    )
+                            },
+                        ));
+                    write.buffer_info(local_buffer_infos)
                 }
                 vk::DescriptorType::ACCELERATION_STRUCTURE_KHR =&gt; {
-                    <span class="kw">let </span>index = acceleration_structure_infos.len();
                     <span class="kw">let </span>start = entry.resource_index;
                     <span class="kw">let </span>end = start + entry.count;
 
-                    <span class="kw">let </span>raw_start = raw_acceleration_structures.len();
-
-                    raw_acceleration_structures.extend(
+                    <span class="kw">let </span>local_raw_acceleration_structures;
+                    (
+                        raw_acceleration_structures,
+                        local_raw_acceleration_structures,
+                    ) = raw_acceleration_structures.extend(
                         desc.acceleration_structures[start <span class="kw">as </span>usize..end <span class="kw">as </span>usize]
                             .iter()
                             .map(|acceleration_structure| acceleration_structure.raw),
                     );
 
-                    <span class="kw">let </span>acceleration_structure_info =
-                        vk::WriteDescriptorSetAccelerationStructureKHR::builder()
-                            .acceleration_structures(<span class="kw-2">&amp;</span>raw_acceleration_structures[raw_start..]);
+                    <span class="kw">let </span>local_acceleration_structure_infos;
+                    (
+                        acceleration_structure_infos,
+                        local_acceleration_structure_infos,
+                    ) = acceleration_structure_infos.extend_one(
+                        vk::WriteDescriptorSetAccelerationStructureKHR::default()
+                            .acceleration_structures(local_raw_acceleration_structures),
+                    );
 
-                    <span class="comment">// todo: Dereference the struct to get around lifetime issues. Safe as long as we never resize
-                    // `raw_acceleration_structures`.
-                    </span><span class="kw">let </span>acceleration_structure_info: vk::WriteDescriptorSetAccelerationStructureKHR = <span class="kw-2">*</span>acceleration_structure_info;
-
-                    <span class="macro">assert!</span>(
-                        index &lt; desc.acceleration_structures.len(),
-                        <span class="string">"Encountered more acceleration structures then expected"
-                    </span>);
-                    acceleration_structure_infos.push(acceleration_structure_info);
-
-                    extra_descriptor_count += <span class="number">1</span>;
-
-                    write.push_next(<span class="kw-2">&amp;mut </span>acceleration_structure_infos[index])
+                    write
+                        .descriptor_count(entry.count)
+                        .push_next(local_acceleration_structure_infos)
                 }
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
-
-            <span class="kw">let </span><span class="kw-2">mut </span>write = write.build();
-            write.descriptor_count += extra_descriptor_count;
 
             writes.push(write);
         }
@@ -4014,10 +4018,7 @@
         <span class="kw">let </span>raw = <span class="self">self</span>.create_shader_module_impl(<span class="kw-2">&amp;</span>spv)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::SHADER_MODULE, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule::Raw(raw))
@@ -4069,15 +4070,13 @@
             }
         }
 
-        <span class="kw">let </span>vk_vertex_input = vk::PipelineVertexInputStateCreateInfo::builder()
+        <span class="kw">let </span>vk_vertex_input = vk::PipelineVertexInputStateCreateInfo::default()
             .vertex_binding_descriptions(<span class="kw-2">&amp;</span>vertex_buffers)
-            .vertex_attribute_descriptions(<span class="kw-2">&amp;</span>vertex_attributes)
-            .build();
+            .vertex_attribute_descriptions(<span class="kw-2">&amp;</span>vertex_attributes);
 
-        <span class="kw">let </span>vk_input_assembly = vk::PipelineInputAssemblyStateCreateInfo::builder()
+        <span class="kw">let </span>vk_input_assembly = vk::PipelineInputAssemblyStateCreateInfo::default()
             .topology(conv::map_topology(desc.primitive.topology))
-            .primitive_restart_enable(desc.primitive.strip_index_format.is_some())
-            .build();
+            .primitive_restart_enable(desc.primitive.strip_index_format.is_some());
 
         <span class="kw">let </span>compiled_vs = <span class="self">self</span>.compile_stage(
             <span class="kw-2">&amp;</span>desc.vertex_stage,
@@ -4098,7 +4097,7 @@
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_rasterization = vk::PipelineRasterizationStateCreateInfo::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_rasterization = vk::PipelineRasterizationStateCreateInfo::default()
             .polygon_mode(conv::map_polygon_mode(desc.primitive.polygon_mode))
             .front_face(conv::map_front_face(desc.primitive.front_face))
             .line_width(<span class="number">1.0</span>)
@@ -4107,14 +4106,15 @@
             vk_rasterization = vk_rasterization.cull_mode(conv::map_cull_face(face))
         }
         <span class="kw">let </span><span class="kw-2">mut </span>vk_rasterization_conservative_state =
-            vk::PipelineRasterizationConservativeStateCreateInfoEXT::builder()
-                .conservative_rasterization_mode(vk::ConservativeRasterizationModeEXT::OVERESTIMATE)
-                .build();
+            vk::PipelineRasterizationConservativeStateCreateInfoEXT::default()
+                .conservative_rasterization_mode(
+                    vk::ConservativeRasterizationModeEXT::OVERESTIMATE,
+                );
         <span class="kw">if </span>desc.primitive.conservative {
             vk_rasterization = vk_rasterization.push_next(<span class="kw-2">&amp;mut </span>vk_rasterization_conservative_state);
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_depth_stencil = vk::PipelineDepthStencilStateCreateInfo::builder();
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_depth_stencil = vk::PipelineDepthStencilStateCreateInfo::default();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ds) = desc.depth_stencil {
             <span class="kw">let </span>vk_format = <span class="self">self</span>.shared.private_caps.map_texture_format(ds.format);
             <span class="kw">let </span>vk_layout = <span class="kw">if </span>ds.is_read_only(desc.primitive.cull_mode) {
@@ -4152,26 +4152,24 @@
             }
         }
 
-        <span class="kw">let </span>vk_viewport = vk::PipelineViewportStateCreateInfo::builder()
+        <span class="kw">let </span>vk_viewport = vk::PipelineViewportStateCreateInfo::default()
             .flags(vk::PipelineViewportStateCreateFlags::empty())
             .scissor_count(<span class="number">1</span>)
-            .viewport_count(<span class="number">1</span>)
-            .build();
+            .viewport_count(<span class="number">1</span>);
 
         <span class="kw">let </span>vk_sample_mask = [
             desc.multisample.mask <span class="kw">as </span>u32,
             (desc.multisample.mask &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32,
         ];
-        <span class="kw">let </span>vk_multisample = vk::PipelineMultisampleStateCreateInfo::builder()
+        <span class="kw">let </span>vk_multisample = vk::PipelineMultisampleStateCreateInfo::default()
             .rasterization_samples(vk::SampleCountFlags::from_raw(desc.multisample.count))
             .alpha_to_coverage_enable(desc.multisample.alpha_to_coverage_enabled)
-            .sample_mask(<span class="kw-2">&amp;</span>vk_sample_mask)
-            .build();
+            .sample_mask(<span class="kw-2">&amp;</span>vk_sample_mask);
 
         <span class="kw">let </span><span class="kw-2">mut </span>vk_attachments = Vec::with_capacity(desc.color_targets.len());
         <span class="kw">for </span>cat <span class="kw">in </span>desc.color_targets {
             <span class="kw">let </span>(key, attarchment) = <span class="kw">if let </span><span class="prelude-val">Some</span>(cat) = cat.as_ref() {
-                <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment = vk::PipelineColorBlendAttachmentState::builder()
+                <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment = vk::PipelineColorBlendAttachmentState::default()
                     .color_write_mask(vk::ColorComponentFlags::from_raw(cat.write_mask.bits()));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>blend) = cat.blend {
                     <span class="kw">let </span>(color_op, color_src, color_dst) = conv::map_blend_component(<span class="kw-2">&amp;</span>blend.color);
@@ -4195,7 +4193,7 @@
                         ),
                         resolve: <span class="prelude-val">None</span>,
                     }),
-                    vk_attachment.build(),
+                    vk_attachment,
                 )
             } <span class="kw">else </span>{
                 (<span class="prelude-val">None</span>, vk::PipelineColorBlendAttachmentState::default())
@@ -4205,13 +4203,11 @@
             vk_attachments.push(attarchment);
         }
 
-        <span class="kw">let </span>vk_color_blend = vk::PipelineColorBlendStateCreateInfo::builder()
-            .attachments(<span class="kw-2">&amp;</span>vk_attachments)
-            .build();
+        <span class="kw">let </span>vk_color_blend =
+            vk::PipelineColorBlendStateCreateInfo::default().attachments(<span class="kw-2">&amp;</span>vk_attachments);
 
-        <span class="kw">let </span>vk_dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
-            .dynamic_states(<span class="kw-2">&amp;</span>dynamic_states)
-            .build();
+        <span class="kw">let </span>vk_dynamic_state =
+            vk::PipelineDynamicStateCreateInfo::default().dynamic_states(<span class="kw-2">&amp;</span>dynamic_states);
 
         <span class="kw">let </span>raw_pass = <span class="self">self
             </span>.shared
@@ -4219,7 +4215,7 @@
             .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>vk_infos = [{
-            vk::GraphicsPipelineCreateInfo::builder()
+            vk::GraphicsPipelineCreateInfo::default()
                 .layout(desc.layout.raw)
                 .stages(<span class="kw-2">&amp;</span>stages)
                 .vertex_input_state(<span class="kw-2">&amp;</span>vk_vertex_input)
@@ -4231,7 +4227,6 @@
                 .color_blend_state(<span class="kw-2">&amp;</span>vk_color_blend)
                 .dynamic_state(<span class="kw-2">&amp;</span>vk_dynamic_state)
                 .render_pass(raw_pass)
-                .build()
         }];
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw_vec = {
@@ -4246,10 +4241,7 @@
 
         <span class="kw">let </span>raw = raw_vec.pop().unwrap();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::PIPELINE, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw_module) = compiled_vs.temp_raw_module {
@@ -4280,10 +4272,9 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>vk_infos = [{
-            vk::ComputePipelineCreateInfo::builder()
+            vk::ComputePipelineCreateInfo::default()
                 .layout(desc.layout.raw)
                 .stage(compiled.create_info)
-                .build()
         }];
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw_vec = {
@@ -4298,10 +4289,7 @@
 
         <span class="kw">let </span>raw = raw_vec.pop().unwrap();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::PIPELINE, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw_module) = compiled.temp_raw_module {
@@ -4333,18 +4321,14 @@
             ),
         };
 
-        <span class="kw">let </span>vk_info = vk::QueryPoolCreateInfo::builder()
+        <span class="kw">let </span>vk_info = vk::QueryPoolCreateInfo::default()
             .query_type(vk_type)
             .query_count(desc.count)
-            .pipeline_statistics(pipeline_statistics)
-            .build();
+            .pipeline_statistics(pipeline_statistics);
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_query_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::QUERY_POOL, raw, label)
-            };
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::QuerySet { raw })
@@ -4356,8 +4340,8 @@
     <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">if </span><span class="self">self</span>.shared.private_caps.timeline_semaphores {
             <span class="kw">let </span><span class="kw-2">mut </span>sem_type_info =
-                vk::SemaphoreTypeCreateInfo::builder().semaphore_type(vk::SemaphoreType::TIMELINE);
-            <span class="kw">let </span>vk_info = vk::SemaphoreCreateInfo::builder().push_next(<span class="kw-2">&amp;mut </span>sem_type_info);
+                vk::SemaphoreTypeCreateInfo::default().semaphore_type(vk::SemaphoreType::TIMELINE);
+            <span class="kw">let </span>vk_info = vk::SemaphoreCreateInfo::default().push_next(<span class="kw-2">&amp;mut </span>sem_type_info);
             <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_semaphore(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
             <span class="kw">super</span>::Fence::TimelineSemaphore(raw)
         } <span class="kw">else </span>{
@@ -4407,7 +4391,7 @@
             <span class="kw">super</span>::Fence::TimelineSemaphore(raw) =&gt; {
                 <span class="kw">let </span>semaphores = [raw];
                 <span class="kw">let </span>values = [wait_value];
-                <span class="kw">let </span>vk_info = vk::SemaphoreWaitInfo::builder()
+                <span class="kw">let </span>vk_info = vk::SemaphoreWaitInfo::default()
                     .semaphores(<span class="kw-2">&amp;</span>semaphores)
                     .values(<span class="kw-2">&amp;</span>values);
                 <span class="kw">let </span>result = <span class="kw">match </span><span class="self">self</span>.shared.extension_fns.timeline_semaphore {
@@ -4500,14 +4484,14 @@
             <span class="kw">crate</span>::AccelerationStructureEntries::Instances(<span class="kw-2">ref </span>instances) =&gt; {
                 <span class="kw">let </span>instance_data = vk::AccelerationStructureGeometryInstancesDataKHR::default();
 
-                <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                     .geometry_type(vk::GeometryTypeKHR::INSTANCES)
                     .geometry(vk::AccelerationStructureGeometryDataKHR {
                         instances: instance_data,
                     });
 
                 (
-                    <span class="macro">smallvec::smallvec!</span>[<span class="kw-2">*</span>geometry],
+                    <span class="macro">smallvec::smallvec!</span>[geometry],
                     <span class="macro">smallvec::smallvec!</span>[instances.count],
                 )
             }
@@ -4520,7 +4504,7 @@
 
                 <span class="kw">for </span>triangles <span class="kw">in </span>in_geometries {
                     <span class="kw">let </span><span class="kw-2">mut </span>triangle_data =
-                        vk::AccelerationStructureGeometryTrianglesDataKHR::builder()
+                        vk::AccelerationStructureGeometryTrianglesDataKHR::default()
                             .vertex_format(conv::map_vertex_format(triangles.vertex_format))
                             .max_vertex(triangles.vertex_count)
                             .vertex_stride(triangles.vertex_stride);
@@ -4533,16 +4517,16 @@
                         triangles.vertex_count
                     };
 
-                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                         .geometry_type(vk::GeometryTypeKHR::TRIANGLES)
                         .geometry(vk::AccelerationStructureGeometryDataKHR {
-                            triangles: <span class="kw-2">*</span>triangle_data,
+                            triangles: triangle_data,
                         })
                         .flags(conv::map_acceleration_structure_geometry_flags(
                             triangles.flags,
                         ));
 
-                    geometries.push(<span class="kw-2">*</span>geometry);
+                    geometries.push(geometry);
                     primitive_counts.push(pritive_count);
                 }
                 (geometries, primitive_counts)
@@ -4554,15 +4538,15 @@
                     [vk::AccelerationStructureGeometryKHR; CAPACITY],
                 &gt;::with_capacity(in_geometries.len());
                 <span class="kw">for </span>aabb <span class="kw">in </span>in_geometries {
-                    <span class="kw">let </span>aabbs_data = vk::AccelerationStructureGeometryAabbsDataKHR::builder()
+                    <span class="kw">let </span>aabbs_data = vk::AccelerationStructureGeometryAabbsDataKHR::default()
                         .stride(aabb.stride);
 
-                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::builder()
+                    <span class="kw">let </span>geometry = vk::AccelerationStructureGeometryKHR::default()
                         .geometry_type(vk::GeometryTypeKHR::AABBS)
-                        .geometry(vk::AccelerationStructureGeometryDataKHR { aabbs: <span class="kw-2">*</span>aabbs_data })
+                        .geometry(vk::AccelerationStructureGeometryDataKHR { aabbs: aabbs_data })
                         .flags(conv::map_acceleration_structure_geometry_flags(aabb.flags));
 
-                    geometries.push(<span class="kw-2">*</span>geometry);
+                    geometries.push(geometry);
                     primitive_counts.push(aabb.count);
                 }
                 (geometries, primitive_counts)
@@ -4576,20 +4560,22 @@
             <span class="kw">_ </span>=&gt; vk::AccelerationStructureTypeKHR::BOTTOM_LEVEL,
         };
 
-        <span class="kw">let </span>geometry_info = vk::AccelerationStructureBuildGeometryInfoKHR::builder()
+        <span class="kw">let </span>geometry_info = vk::AccelerationStructureBuildGeometryInfoKHR::default()
             .ty(ty)
             .flags(conv::map_acceleration_structure_flags(desc.flags))
             .geometries(<span class="kw-2">&amp;</span>geometries);
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>raw = Default::default();
+        <span class="kw">unsafe </span>{
             ray_tracing_functions
                 .acceleration_structure
                 .get_acceleration_structure_build_sizes(
                     vk::AccelerationStructureBuildTypeKHR::DEVICE,
                     <span class="kw-2">&amp;</span>geometry_info,
                     <span class="kw-2">&amp;</span>primitive_counts,
+                    <span class="kw-2">&amp;mut </span>raw,
                 )
-        };
+        }
 
         <span class="kw">crate</span>::AccelerationStructureBuildSizes {
             acceleration_structure_size: raw.acceleration_structure_size,
@@ -4613,7 +4599,7 @@
             ray_tracing_functions
                 .acceleration_structure
                 .get_acceleration_structure_device_address(
-                    <span class="kw-2">&amp;</span>vk::AccelerationStructureDeviceAddressInfoKHR::builder()
+                    <span class="kw-2">&amp;</span>vk::AccelerationStructureDeviceAddressInfoKHR::default()
                         .acceleration_structure(acceleration_structure.raw),
                 )
         }
@@ -4630,7 +4616,7 @@
             .as_ref()
             .expect(<span class="string">"Feature `RAY_TRACING` not enabled"</span>);
 
-        <span class="kw">let </span>vk_buffer_info = vk::BufferCreateInfo::builder()
+        <span class="kw">let </span>vk_buffer_info = vk::BufferCreateInfo::default()
             .size(desc.size)
             .usage(vk::BufferUsageFlags::ACCELERATION_STRUCTURE_STORAGE_KHR)
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
@@ -4654,11 +4640,10 @@
                 .bind_buffer_memory(raw_buffer, <span class="kw-2">*</span>block.memory(), block.offset())<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-                <span class="self">self</span>.shared
-                    .set_object_name(vk::ObjectType::BUFFER, raw_buffer, label);
+                <span class="self">self</span>.shared.set_object_name(raw_buffer, label);
             }
 
-            <span class="kw">let </span>vk_info = vk::AccelerationStructureCreateInfoKHR::builder()
+            <span class="kw">let </span>vk_info = vk::AccelerationStructureCreateInfoKHR::default()
                 .buffer(raw_buffer)
                 .offset(<span class="number">0</span>)
                 .size(desc.size)
@@ -4669,11 +4654,8 @@
                 .create_acceleration_structure(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
-                <span class="self">self</span>.shared.set_object_name(
-                    vk::ObjectType::ACCELERATION_STRUCTURE_KHR,
-                    raw_acceleration_structure,
-                    label,
-                );
+                <span class="self">self</span>.shared
+                    .set_object_name(raw_acceleration_structure, label);
             }
 
             <span class="prelude-val">Ok</span>(<span class="kw">super</span>::AccelerationStructure {

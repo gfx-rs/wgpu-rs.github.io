@@ -853,13 +853,6 @@
 <a href="#852" id="852">852</a>
 <a href="#853" id="853">853</a>
 <a href="#854" id="854">854</a>
-<a href="#855" id="855">855</a>
-<a href="#856" id="856">856</a>
-<a href="#857" id="857">857</a>
-<a href="#858" id="858">858</a>
-<a href="#859" id="859">859</a>
-<a href="#860" id="860">860</a>
-<a href="#861" id="861">861</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -895,7 +888,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">use </span>std::{
     borrow::Borrow,
-    ffi::CStr,
+    ffi::{CStr, CString},
     fmt,
     num::NonZeroU32,
     sync::{
@@ -905,10 +898,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>ash::{
-    extensions::{ext, khr},
-    vk,
-};
+<span class="kw">use </span>ash::{ext, khr, vk};
 <span class="kw">use </span>parking_lot::{Mutex, RwLock};
 
 <span class="kw">const </span>MILLIS_TO_NANOS: u64 = <span class="number">1_000_000</span>;
@@ -945,7 +935,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 }
 
 <span class="kw">struct </span>DebugUtils {
-    extension: ext::DebugUtils,
+    extension: ext::debug_utils::Instance,
     messenger: vk::DebugUtilsMessengerEXT,
 
     <span class="doccomment">/// Owning pointer to the debug messenger callback user data.
@@ -968,7 +958,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 /// DebugUtilsMessenger for their workarounds
 </span><span class="kw">struct </span>ValidationLayerProperties {
     <span class="doccomment">/// Validation layer description, from `vk::LayerProperties`.
-    </span>layer_description: std::ffi::CString,
+    </span>layer_description: CString,
 
     <span class="doccomment">/// Validation layer specification version, from `vk::LayerProperties`.
     </span>layer_spec_version: u32,
@@ -994,7 +984,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
     flags: wgt::InstanceFlags,
     debug_utils: <span class="prelude-ty">Option</span>&lt;DebugUtils&gt;,
-    get_physical_device_properties: <span class="prelude-ty">Option</span>&lt;khr::GetPhysicalDeviceProperties2&gt;,
+    get_physical_device_properties: <span class="prelude-ty">Option</span>&lt;khr::get_physical_device_properties2::Instance&gt;,
     entry: ash::Entry,
     has_nv_optimus: bool,
     android_sdk_version: u32,
@@ -1014,7 +1004,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">struct </span>Swapchain {
     raw: vk::SwapchainKHR,
     raw_flags: vk::SwapchainCreateFlagsKHR,
-    functor: khr::Swapchain,
+    functor: khr::swapchain::Device,
     device: Arc&lt;DeviceShared&gt;,
     images: Vec&lt;vk::Image&gt;,
     config: <span class="kw">crate</span>::SurfaceConfiguration,
@@ -1028,7 +1018,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">pub struct </span>Surface {
     raw: vk::SurfaceKHR,
-    functor: khr::Surface,
+    functor: khr::surface::Instance,
     instance: Arc&lt;InstanceShared&gt;,
     swapchain: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Swapchain&gt;&gt;,
 }
@@ -1067,14 +1057,15 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 }
 
 <span class="kw">struct </span>DeviceExtensionFunctions {
-    draw_indirect_count: <span class="prelude-ty">Option</span>&lt;khr::DrawIndirectCount&gt;,
-    timeline_semaphore: <span class="prelude-ty">Option</span>&lt;ExtensionFn&lt;khr::TimelineSemaphore&gt;&gt;,
+    debug_utils: <span class="prelude-ty">Option</span>&lt;ext::debug_utils::Device&gt;,
+    draw_indirect_count: <span class="prelude-ty">Option</span>&lt;khr::draw_indirect_count::Device&gt;,
+    timeline_semaphore: <span class="prelude-ty">Option</span>&lt;ExtensionFn&lt;khr::timeline_semaphore::Device&gt;&gt;,
     ray_tracing: <span class="prelude-ty">Option</span>&lt;RayTracingDeviceExtensionFunctions&gt;,
 }
 
 <span class="kw">struct </span>RayTracingDeviceExtensionFunctions {
-    acceleration_structure: khr::AccelerationStructure,
-    buffer_device_address: khr::BufferDeviceAddress,
+    acceleration_structure: khr::acceleration_structure::Device,
+    buffer_device_address: khr::buffer_device_address::Device,
 }
 
 <span class="doccomment">/// Set of internal capabilities, which don't show up in the exposed
@@ -1223,7 +1214,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">pub struct </span>Queue {
     raw: vk::Queue,
-    swapchain_fn: khr::Swapchain,
+    swapchain_fn: khr::swapchain::Device,
     device: Arc&lt;DeviceShared&gt;,
     family_index: u32,
     <span class="doccomment">/// We use a redundant chain of semaphores to pass on the signal
@@ -1314,12 +1305,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">struct </span>Temp {
     marker: Vec&lt;u8&gt;,
-    buffer_barriers: Vec&lt;vk::BufferMemoryBarrier&gt;,
-    image_barriers: Vec&lt;vk::ImageMemoryBarrier&gt;,
+    buffer_barriers: Vec&lt;vk::BufferMemoryBarrier&lt;<span class="lifetime">'static</span>&gt;&gt;,
+    image_barriers: Vec&lt;vk::ImageMemoryBarrier&lt;<span class="lifetime">'static</span>&gt;&gt;,
 }
-
-<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Temp {}
-<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Temp {}
 
 <span class="kw">impl </span>Temp {
     <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -1500,7 +1488,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     </span><span class="kw">fn </span>get_latest(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>ash::Device,
-        extension: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ExtensionFn&lt;khr::TimelineSemaphore&gt;&gt;,
+        extension: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ExtensionFn&lt;khr::timeline_semaphore::Device&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::TimelineSemaphore(raw) =&gt; <span class="kw">unsafe </span>{
@@ -1546,10 +1534,8 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
                 }
                 <span class="kw">if </span>free.len() != base_free {
                     active.retain(|<span class="kw-2">&amp;</span>(value, <span class="kw">_</span>)| value &gt; latest);
-                    <span class="kw">unsafe </span>{
-                        device.reset_fences(<span class="kw-2">&amp;</span>free[base_free..])<span class="question-mark">?</span>;
-                    }
-                }
+                    <span class="kw">unsafe </span>{ device.reset_fences(<span class="kw-2">&amp;</span>free[base_free..]) }<span class="question-mark">?
+                </span>}
                 <span class="kw-2">*</span>last_completed = latest;
             }
         }
@@ -1611,7 +1597,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
                         <span class="prelude-val">None </span>=&gt; <span class="kw">unsafe </span>{
                             <span class="self">self</span>.device
                                 .raw
-                                .create_fence(<span class="kw-2">&amp;</span>vk::FenceCreateInfo::builder(), <span class="prelude-val">None</span>)<span class="question-mark">?
+                                .create_fence(<span class="kw-2">&amp;</span>vk::FenceCreateInfo::default(), <span class="prelude-val">None</span>)<span class="question-mark">?
                         </span>},
                     };
                     active.push((value, fence_raw));
@@ -1624,7 +1610,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             .map(|cmd| cmd.raw)
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SubmitInfo::builder().command_buffers(<span class="kw-2">&amp;</span>vk_cmd_buffers);
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SubmitInfo::default().command_buffers(<span class="kw-2">&amp;</span>vk_cmd_buffers);
 
         vk_info = vk_info
             .wait_semaphores(<span class="kw-2">&amp;</span>wait_semaphores)
@@ -1635,7 +1621,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
         <span class="kw">if </span>!signal_values.is_empty() {
             vk_timeline_info =
-                vk::TimelineSemaphoreSubmitInfo::builder().signal_semaphore_values(<span class="kw-2">&amp;</span>signal_values);
+                vk::TimelineSemaphoreSubmitInfo::default().signal_semaphore_values(<span class="kw-2">&amp;</span>signal_values);
             vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>vk_timeline_info);
         }
 
@@ -1643,7 +1629,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.device
                 .raw
-                .queue_submit(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>[vk_info.build()], fence_raw)<span class="question-mark">?
+                .queue_submit(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>[vk_info], fence_raw)<span class="question-mark">?
         </span>};
         <span class="prelude-val">Ok</span>(())
     }
@@ -1658,7 +1644,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
         <span class="kw">let </span>swapchains = [ssc.raw];
         <span class="kw">let </span>image_indices = [texture.index];
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::PresentInfoKHR::builder()
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::PresentInfoKHR::default()
             .swapchains(<span class="kw-2">&amp;</span>swapchains)
             .image_indices(<span class="kw-2">&amp;</span>image_indices);
 
