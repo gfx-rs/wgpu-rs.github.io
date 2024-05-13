@@ -1586,7 +1586,7 @@
     },
     init_tracker::{BufferInitTracker, TextureInitTracker},
     lock::{Mutex, RwLock},
-    resource, resource_log,
+    resource_log,
     snatch::{ExclusiveSnatchGuard, SnatchGuard, Snatchable},
     track::{SharedTrackerIndexAllocator, TextureSelector, TrackerIndex},
     validation::MissingBufferUsageError,
@@ -2014,8 +2014,8 @@
             .ok_or(BufferAccessError::Destroyed)<span class="question-mark">?</span>;
         <span class="kw">let </span>buffer_id = <span class="self">self</span>.info.id();
         <span class="macro">log::debug!</span>(<span class="string">"Buffer {:?} map state -&gt; Idle"</span>, buffer_id);
-        <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), resource::BufferMapState::Idle) {
-            resource::BufferMapState::Init {
+        <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), BufferMapState::Idle) {
+            BufferMapState::Init {
                 ptr,
                 stage_buffer,
                 needs_flush,
@@ -2075,13 +2075,13 @@
                 pending_writes.consume_temp(queue::TempResource::Buffer(stage_buffer));
                 pending_writes.dst_buffers.insert(buffer_id, <span class="self">self</span>.clone());
             }
-            resource::BufferMapState::Idle =&gt; {
+            BufferMapState::Idle =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(BufferAccessError::NotMapped);
             }
-            resource::BufferMapState::Waiting(pending) =&gt; {
+            BufferMapState::Waiting(pending) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((pending.op, <span class="prelude-val">Err</span>(BufferAccessError::MapAborted))));
             }
-            resource::BufferMapState::Active { ptr, range, host } =&gt; {
+            BufferMapState::Active { ptr, range, host } =&gt; {
                 <span class="kw">if </span>host == HostMap::Write {
                     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
@@ -2123,13 +2123,13 @@
             <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.raw.snatch(snatch_guard) {
                 <span class="prelude-val">Some</span>(raw) =&gt; raw,
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(DestroyError::AlreadyDestroyed);
                 }
             };
 
             <span class="kw">let </span>bind_groups = {
                 <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.bind_groups.lock();
-                std::mem::take(<span class="kw-2">&amp;mut *</span>guard)
+                mem::take(<span class="kw-2">&amp;mut *</span>guard)
             };
 
             queue::TempResource::DestroyedBuffer(Arc::new(DestroyedBuffer {
@@ -2454,18 +2454,18 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(resource::DestroyError::AlreadyDestroyed);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(DestroyError::AlreadyDestroyed);
                 }
             };
 
             <span class="kw">let </span>views = {
                 <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.views.lock();
-                std::mem::take(<span class="kw-2">&amp;mut *</span>guard)
+                mem::take(<span class="kw-2">&amp;mut *</span>guard)
             };
 
             <span class="kw">let </span>bind_groups = {
                 <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.bind_groups.lock();
-                std::mem::take(<span class="kw-2">&amp;mut *</span>guard)
+                mem::take(<span class="kw-2">&amp;mut *</span>guard)
             };
 
             queue::TempResource::DestroyedTexture(Arc::new(DestroyedTexture {

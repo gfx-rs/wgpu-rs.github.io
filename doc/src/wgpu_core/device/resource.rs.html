@@ -3706,11 +3706,6 @@
 <a href="#3705" id="3705">3705</a>
 <a href="#3706" id="3706">3706</a>
 <a href="#3707" id="3707">3707</a>
-<a href="#3708" id="3708">3708</a>
-<a href="#3709" id="3709">3709</a>
-<a href="#3710" id="3710">3710</a>
-<a href="#3711" id="3711">3711</a>
-<a href="#3712" id="3712">3712</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3772,7 +3767,7 @@
 };
 
 <span class="kw">use super</span>::{
-    life::{<span class="self">self</span>, ResourceMaps},
+    life::ResourceMaps,
     queue::{<span class="self">self</span>, Queue},
     DeviceDescriptor, DeviceError, ImplicitPipelineContext, UserClosures, ENTRYPOINT_FAILURE_ERROR,
     IMPLICIT_BIND_GROUP_LAYOUT_ERROR_LABEL, ZERO_BUFFER_SIZE,
@@ -3942,7 +3937,7 @@
         <span class="kw">let </span>pending_encoder = command_allocator
             .acquire_encoder(<span class="kw-2">&amp;</span>raw_device, raw_queue)
             .map_err(|<span class="kw">_</span>| CreateDeviceError::OutOfMemory)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = queue::PendingWrites::&lt;A&gt;::new(pending_encoder);
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = PendingWrites::&lt;A&gt;::new(pending_encoder);
 
         <span class="comment">// Create zeroed buffer used for texture clears.
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{
@@ -3991,11 +3986,8 @@
             valid: AtomicBool::new(<span class="bool-val">true</span>),
             trackers: Mutex::new(rank::DEVICE_TRACKERS, Tracker::new()),
             tracker_indices: TrackerIndexAllocators::new(),
-            life_tracker: Mutex::new(rank::DEVICE_LIFE_TRACKER, life::LifetimeTracker::new()),
-            temp_suspected: Mutex::new(
-                rank::DEVICE_TEMP_SUSPECTED,
-                <span class="prelude-val">Some</span>(life::ResourceMaps::new()),
-            ),
+            life_tracker: Mutex::new(rank::DEVICE_LIFE_TRACKER, LifetimeTracker::new()),
+            temp_suspected: Mutex::new(rank::DEVICE_TEMP_SUSPECTED, <span class="prelude-val">Some</span>(ResourceMaps::new())),
             bgl_pool: ResourcePool::new(),
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span>trace: Mutex::new(
@@ -4654,8 +4646,8 @@
                 (<span class="bool-val">true</span>, hal::TextureUses::COLOR_TARGET)
             };
             <span class="kw">let </span>dimension = <span class="kw">match </span>desc.dimension {
-                wgt::TextureDimension::D1 =&gt; wgt::TextureViewDimension::D1,
-                wgt::TextureDimension::D2 =&gt; wgt::TextureViewDimension::D2,
+                wgt::TextureDimension::D1 =&gt; TextureViewDimension::D1,
+                wgt::TextureDimension::D2 =&gt; TextureViewDimension::D2,
                 wgt::TextureDimension::D3 =&gt; <span class="macro">unreachable!</span>(),
             };
 
@@ -4738,15 +4730,15 @@
         <span class="kw">let </span>resolved_dimension = desc
             .dimension
             .unwrap_or_else(|| <span class="kw">match </span>texture.desc.dimension {
-                wgt::TextureDimension::D1 =&gt; wgt::TextureViewDimension::D1,
+                wgt::TextureDimension::D1 =&gt; TextureViewDimension::D1,
                 wgt::TextureDimension::D2 =&gt; {
                     <span class="kw">if </span>texture.desc.array_layer_count() == <span class="number">1 </span>{
-                        wgt::TextureViewDimension::D2
+                        TextureViewDimension::D2
                     } <span class="kw">else </span>{
-                        wgt::TextureViewDimension::D2Array
+                        TextureViewDimension::D2Array
                     }
                 }
-                wgt::TextureDimension::D3 =&gt; wgt::TextureViewDimension::D3,
+                wgt::TextureDimension::D3 =&gt; TextureViewDimension::D3,
             });
 
         <span class="kw">let </span>resolved_mip_level_count = desc.range.mip_level_count.unwrap_or_else(|| {
@@ -4760,16 +4752,14 @@
             desc.range
                 .array_layer_count
                 .unwrap_or_else(|| <span class="kw">match </span>resolved_dimension {
-                    wgt::TextureViewDimension::D1
-                    | wgt::TextureViewDimension::D2
-                    | wgt::TextureViewDimension::D3 =&gt; <span class="number">1</span>,
-                    wgt::TextureViewDimension::Cube =&gt; <span class="number">6</span>,
-                    wgt::TextureViewDimension::D2Array | wgt::TextureViewDimension::CubeArray =&gt; {
-                        texture
-                            .desc
-                            .array_layer_count()
-                            .saturating_sub(desc.range.base_array_layer)
-                    }
+                    TextureViewDimension::D1
+                    | TextureViewDimension::D2
+                    | TextureViewDimension::D3 =&gt; <span class="number">1</span>,
+                    TextureViewDimension::Cube =&gt; <span class="number">6</span>,
+                    TextureViewDimension::D2Array | TextureViewDimension::CubeArray =&gt; texture
+                        .desc
+                        .array_layer_count()
+                        .saturating_sub(desc.range.base_array_layer),
                 });
 
         <span class="comment">// validate TextureViewDescriptor
@@ -4800,7 +4790,7 @@
         }
 
         <span class="comment">// check if multisampled texture is seen as anything but 2D
-        </span><span class="kw">if </span>texture.desc.sample_count &gt; <span class="number">1 </span>&amp;&amp; resolved_dimension != wgt::TextureViewDimension::D2 {
+        </span><span class="kw">if </span>texture.desc.sample_count &gt; <span class="number">1 </span>&amp;&amp; resolved_dimension != TextureViewDimension::D2 {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 resource::CreateTextureViewError::InvalidMultisampledTextureViewDimension(
                     resolved_dimension,
@@ -4937,10 +4927,10 @@
         </span><span class="kw">let </span>usage = {
             <span class="kw">let </span>mask_copy = !(hal::TextureUses::COPY_SRC | hal::TextureUses::COPY_DST);
             <span class="kw">let </span>mask_dimension = <span class="kw">match </span>resolved_dimension {
-                wgt::TextureViewDimension::Cube | wgt::TextureViewDimension::CubeArray =&gt; {
+                TextureViewDimension::Cube | TextureViewDimension::CubeArray =&gt; {
                     hal::TextureUses::RESOURCE
                 }
-                wgt::TextureViewDimension::D3 =&gt; {
+                TextureViewDimension::D3 =&gt; {
                     hal::TextureUses::RESOURCE
                         | hal::TextureUses::STORAGE_READ
                         | hal::TextureUses::STORAGE_READ_WRITE
@@ -5522,7 +5512,7 @@
                     format: <span class="kw">_</span>,
                 } =&gt; {
                     <span class="kw">match </span>view_dimension {
-                        wgt::TextureViewDimension::Cube | wgt::TextureViewDimension::CubeArray =&gt; {
+                        TextureViewDimension::Cube | TextureViewDimension::CubeArray =&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(binding_model::CreateBindGroupLayoutError::Entry {
                                 binding: entry.binding,
                                 error: BindGroupLayoutEntryError::StorageTextureCube,
@@ -6129,7 +6119,7 @@
         features: wgt::Features,
         count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
         num_bindings: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">super</span>::binding_model::CreateBindGroupError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">super</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(count) = count {
@@ -6807,7 +6797,7 @@
                                     pipeline_expects_dual_source_blending = <span class="bool-val">true</span>;
                                     <span class="kw">break</span>;
                                 } <span class="kw">else </span>{
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::pipeline::CreateRenderPipelineError
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError
                             ::BlendFactorOnUnsupportedTarget { factor, target: i <span class="kw">as </span>u32 });
                                 }
                             }
@@ -7413,7 +7403,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Device&lt;A&gt; {
     <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Device"</span>;
 
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Device;
+    <span class="kw">type </span>Marker = id::markers::Device;
 
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.info

@@ -5993,7 +5993,7 @@ to output a [`Module`](crate::Module) into glsl
         <span class="self">self</span>.reflection_names_globals.insert(handle, block_name);
 
         <span class="kw">match </span><span class="self">self</span>.module.types[global.ty].inner {
-            <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. }
+            TypeInner::Struct { <span class="kw-2">ref </span>members, .. }
                 <span class="kw">if </span><span class="self">self</span>.module.types[members.last().unwrap().ty]
                     .inner
                     .is_dynamically_sized(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types) =&gt;
@@ -6174,7 +6174,7 @@ to output a [`Module`](crate::Module) into glsl
         output: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="comment">// For a struct, emit a separate global for each member with a binding.
-        </span><span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } = <span class="self">self</span>.module.types[ty].inner {
+        </span><span class="kw">if let </span>TypeInner::Struct { <span class="kw-2">ref </span>members, .. } = <span class="self">self</span>.module.types[ty].inner {
             <span class="kw">for </span>member <span class="kw">in </span>members {
                 <span class="self">self</span>.write_varying(member.binding.as_ref(), member.ty, output)<span class="question-mark">?</span>;
             }
@@ -6446,7 +6446,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}"</span>)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
                 <span class="kw">match </span><span class="self">self</span>.module.types[arg.ty].inner {
-                    <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+                    TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                         <span class="self">self</span>.write_type(arg.ty)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
                         <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
@@ -6931,7 +6931,7 @@ to output a [`Module`](crate::Module) into glsl
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) = ep.function.result {
                             <span class="kw">let </span>value = value.unwrap();
                             <span class="kw">match </span><span class="self">self</span>.module.types[result.ty].inner {
-                                <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+                                TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                                     <span class="kw">let </span>temp_struct_name = <span class="kw">match </span>ctx.expressions[value] {
                                         <span class="kw">crate</span>::Expression::Compose { .. } =&gt; {
                                             <span class="kw">let </span>return_struct = <span class="string">"_tmp_return"</span>;
@@ -7713,7 +7713,7 @@ to output a [`Module`](crate::Module) into glsl
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = level {
                                     <span class="kw">let </span>cast_to_int = <span class="macro">matches!</span>(
                                         <span class="kw-2">*</span>ctx.resolve_type(expr, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types),
-                                        <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
+                                        TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                                             kind: <span class="kw">crate</span>::ScalarKind::Uint,
                                             ..
                                         })
@@ -8056,7 +8056,7 @@ to output a [`Module`](crate::Module) into glsl
                         <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
 
                         <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                            <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; <span class="macro">write!</span>(
+                            TypeInner::Vector { size, .. } =&gt; <span class="macro">write!</span>(
                                 <span class="self">self</span>.out,
                                 <span class="string">", vec{}(0.0), vec{0}(1.0)"</span>,
                                 back::vector_size_str(size)
@@ -8103,7 +8103,7 @@ to output a [`Module`](crate::Module) into glsl
                     Mf::Pow =&gt; <span class="string">"pow"</span>,
                     <span class="comment">// geometry
                     </span>Mf::Dot =&gt; <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                        <span class="kw">crate</span>::TypeInner::Vector {
+                        TypeInner::Vector {
                             scalar:
                                 <span class="kw">crate</span>::Scalar {
                                     kind: <span class="kw">crate</span>::ScalarKind::Float,
@@ -8111,7 +8111,7 @@ to output a [`Module`](crate::Module) into glsl
                                 },
                             ..
                         } =&gt; <span class="string">"dot"</span>,
-                        <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
+                        TypeInner::Vector { size, .. } =&gt; {
                             <span class="kw">return </span><span class="self">self</span>.write_dot_product(arg, arg1.unwrap(), size <span class="kw">as </span>usize, ctx)
                         }
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(
@@ -8163,7 +8163,7 @@ to output a [`Module`](crate::Module) into glsl
                     <span class="comment">// bits
                     </span>Mf::CountTrailingZeros =&gt; {
                         <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                            <span class="kw">crate</span>::TypeInner::Vector { size, scalar, .. } =&gt; {
+                            TypeInner::Vector { size, scalar, .. } =&gt; {
                                 <span class="kw">let </span>s = back::vector_size_str(size);
                                 <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(uvec{s}(findLSB("</span>)<span class="question-mark">?</span>;
@@ -8175,7 +8175,7 @@ to output a [`Module`](crate::Module) into glsl
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")), uvec{s}(32u)))"</span>)<span class="question-mark">?</span>;
                                 }
                             }
-                            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
+                            TypeInner::Scalar(scalar) =&gt; {
                                 <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(uint(findLSB("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
@@ -8193,7 +8193,7 @@ to output a [`Module`](crate::Module) into glsl
                     Mf::CountLeadingZeros =&gt; {
                         <span class="kw">if </span><span class="self">self</span>.options.version.supports_integer_functions() {
                             <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                                <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
+                                TypeInner::Vector { size, scalar } =&gt; {
                                     <span class="kw">let </span>s = back::vector_size_str(size);
 
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
@@ -8208,7 +8208,7 @@ to output a [`Module`](crate::Module) into glsl
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", ivec{s}(0)))"</span>)<span class="question-mark">?</span>;
                                     }
                                 }
-                                <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
+                                TypeInner::Scalar(scalar) =&gt; {
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint(31 - findMSB("</span>)<span class="question-mark">?</span>;
                                     } <span class="kw">else </span>{
@@ -8224,7 +8224,7 @@ to output a [`Module`](crate::Module) into glsl
                             };
                         } <span class="kw">else </span>{
                             <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                                <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
+                                TypeInner::Vector { size, scalar } =&gt; {
                                     <span class="kw">let </span>s = back::vector_size_str(size);
 
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
@@ -8242,7 +8242,7 @@ to output a [`Module`](crate::Module) into glsl
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", ivec{s}(0u))))"</span>)<span class="question-mark">?</span>;
                                     }
                                 }
-                                <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
+                                TypeInner::Scalar(scalar) =&gt; {
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint(31.0 - floor(log2(float("</span>)<span class="question-mark">?</span>;
                                         <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
@@ -8350,11 +8350,11 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="comment">// Check if the argument is an unsigned integer and return the vector size
                 // in case it's a vector
                 </span><span class="kw">let </span>maybe_uint_size = <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
-                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
+                    TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                         kind: <span class="kw">crate</span>::ScalarKind::Uint,
                         ..
                     }) =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">None</span>),
-                    <span class="kw">crate</span>::TypeInner::Vector {
+                    TypeInner::Vector {
                         scalar:
                             <span class="kw">crate</span>::Scalar {
                                 kind: <span class="kw">crate</span>::ScalarKind::Uint,
@@ -9147,7 +9147,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="kw">continue</span>;
             }
             <span class="kw">match </span><span class="self">self</span>.module.types[var.ty].inner {
-                <span class="kw">crate</span>::TypeInner::Image { .. } =&gt; {
+                TypeInner::Image { .. } =&gt; {
                     <span class="kw">let </span>tex_name = <span class="self">self</span>.reflection_names_globals[<span class="kw-2">&amp;</span>handle].clone();
                     <span class="kw">match </span>texture_mapping.entry(tex_name) {
                         Entry::Vacant(v) =&gt; {
@@ -9183,7 +9183,7 @@ to output a [`Module`](crate::Module) into glsl
             //
             // This is potentially a bit wasteful, but the set of types in the program
             // shouldn't be too large.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>layouter = <span class="kw">crate</span>::proc::Layouter::default();
+            </span><span class="kw">let </span><span class="kw-2">mut </span>layouter = proc::Layouter::default();
             layouter.update(<span class="self">self</span>.module.to_ctx()).unwrap();
 
             <span class="comment">// We start with the name of the binding itself.
@@ -9211,7 +9211,7 @@ to output a [`Module`](crate::Module) into glsl
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         segments: <span class="kw-2">&amp;mut </span>Vec&lt;String&gt;,
-        layouter: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::Layouter,
+        layouter: <span class="kw-2">&amp;</span>proc::Layouter,
         offset: <span class="kw-2">&amp;mut </span>u32,
         items: <span class="kw-2">&amp;mut </span>Vec&lt;PushConstantItem&gt;,
     ) {

@@ -4469,7 +4469,7 @@ Implementations for `BlockContext` methods.
                 ));
             };
             <span class="kw">match </span><span class="kw-2">*</span>statement {
-                <span class="kw">crate</span>::Statement::Emit(<span class="kw-2">ref </span>range) =&gt; {
+                Statement::Emit(<span class="kw-2">ref </span>range) =&gt; {
                     <span class="kw">for </span>handle <span class="kw">in </span>range.clone() {
                         <span class="comment">// omit const expressions as we've already cached those
                         </span><span class="kw">if </span>!<span class="self">self</span>.expression_constness.is_const(handle) {
@@ -4477,7 +4477,7 @@ Implementations for `BlockContext` methods.
                         }
                     }
                 }
-                <span class="kw">crate</span>::Statement::Block(<span class="kw-2">ref </span>block_statements) =&gt; {
+                Statement::Block(<span class="kw-2">ref </span>block_statements) =&gt; {
                     <span class="kw">let </span>scope_id = <span class="self">self</span>.gen_id();
                     <span class="self">self</span>.function.consume(block, Instruction::branch(scope_id));
 
@@ -4492,7 +4492,7 @@ Implementations for `BlockContext` methods.
 
                     block = Block::new(merge_id);
                 }
-                <span class="kw">crate</span>::Statement::If {
+                Statement::If {
                     condition,
                     <span class="kw-2">ref </span>accept,
                     <span class="kw-2">ref </span>reject,
@@ -4546,7 +4546,7 @@ Implementations for `BlockContext` methods.
 
                     block = Block::new(merge_id);
                 }
-                <span class="kw">crate</span>::Statement::Switch {
+                Statement::Switch {
                     selector,
                     <span class="kw-2">ref </span>cases,
                 } =&gt; {
@@ -4626,7 +4626,7 @@ Implementations for `BlockContext` methods.
 
                     block = Block::new(merge_id);
                 }
-                <span class="kw">crate</span>::Statement::Loop {
+                Statement::Loop {
                     <span class="kw-2">ref </span>body,
                     <span class="kw-2">ref </span>continuing,
                     break_if,
@@ -4695,19 +4695,19 @@ Implementations for `BlockContext` methods.
 
                     block = Block::new(merge_id);
                 }
-                <span class="kw">crate</span>::Statement::Break =&gt; {
+                Statement::Break =&gt; {
                     <span class="self">self</span>.function
                         .consume(block, Instruction::branch(loop_context.break_id.unwrap()));
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="kw">crate</span>::Statement::Continue =&gt; {
+                Statement::Continue =&gt; {
                     <span class="self">self</span>.function.consume(
                         block,
                         Instruction::branch(loop_context.continuing_id.unwrap()),
                     );
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="kw">crate</span>::Statement::Return { value: <span class="prelude-val">Some</span>(value) } =&gt; {
+                Statement::Return { value: <span class="prelude-val">Some</span>(value) } =&gt; {
                     <span class="kw">let </span>value_id = <span class="self">self</span>.cached[value];
                     <span class="kw">let </span>instruction = <span class="kw">match </span><span class="self">self</span>.function.entry_point_context {
                         <span class="comment">// If this is an entry point, and we need to return anything,
@@ -4726,18 +4726,18 @@ Implementations for `BlockContext` methods.
                     <span class="self">self</span>.function.consume(block, instruction);
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="kw">crate</span>::Statement::Return { value: <span class="prelude-val">None </span>} =&gt; {
+                Statement::Return { value: <span class="prelude-val">None </span>} =&gt; {
                     <span class="self">self</span>.function.consume(block, Instruction::return_void());
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="kw">crate</span>::Statement::Kill =&gt; {
+                Statement::Kill =&gt; {
                     <span class="self">self</span>.function.consume(block, Instruction::kill());
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="kw">crate</span>::Statement::Barrier(flags) =&gt; {
+                Statement::Barrier(flags) =&gt; {
                     <span class="self">self</span>.writer.write_barrier(flags, <span class="kw-2">&amp;mut </span>block);
                 }
-                <span class="kw">crate</span>::Statement::Store { pointer, value } =&gt; {
+                Statement::Store { pointer, value } =&gt; {
                     <span class="kw">let </span>value_id = <span class="self">self</span>.cached[value];
                     <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(pointer, <span class="kw-2">&amp;mut </span>block, <span class="prelude-val">None</span>)<span class="question-mark">? </span>{
                         ExpressionPointer::Ready { pointer_id } =&gt; {
@@ -4786,13 +4786,13 @@ Implementations for `BlockContext` methods.
                         }
                     };
                 }
-                <span class="kw">crate</span>::Statement::ImageStore {
+                Statement::ImageStore {
                     image,
                     coordinate,
                     array_index,
                     value,
                 } =&gt; <span class="self">self</span>.write_image_store(image, coordinate, array_index, value, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Statement::Call {
+                Statement::Call {
                     function: local_function,
                     <span class="kw-2">ref </span>arguments,
                     result,
@@ -4818,7 +4818,7 @@ Implementations for `BlockContext` methods.
                         <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list,
                     ));
                 }
-                <span class="kw">crate</span>::Statement::Atomic {
+                Statement::Atomic {
                     pointer,
                     <span class="kw-2">ref </span>fun,
                     value,
@@ -4998,7 +4998,7 @@ Implementations for `BlockContext` methods.
 
                     block.body.push(instruction);
                 }
-                <span class="kw">crate</span>::Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
+                Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
                     <span class="self">self</span>.writer
                         .write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, <span class="kw-2">&amp;mut </span>block);
                     <span class="kw">let </span>result_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[result].ty);
@@ -5038,16 +5038,16 @@ Implementations for `BlockContext` methods.
                     <span class="self">self</span>.writer
                         .write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, <span class="kw-2">&amp;mut </span>block);
                 }
-                <span class="kw">crate</span>::Statement::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
+                Statement::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
                     <span class="self">self</span>.write_ray_query_function(query, fun, <span class="kw-2">&amp;mut </span>block);
                 }
-                <span class="kw">crate</span>::Statement::SubgroupBallot {
+                Statement::SubgroupBallot {
                     result,
                     <span class="kw-2">ref </span>predicate,
                 } =&gt; {
                     <span class="self">self</span>.write_subgroup_ballot(predicate, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span>::Statement::SubgroupCollectiveOperation {
+                Statement::SubgroupCollectiveOperation {
                     <span class="kw-2">ref </span>op,
                     <span class="kw-2">ref </span>collective_op,
                     argument,
@@ -5055,7 +5055,7 @@ Implementations for `BlockContext` methods.
                 } =&gt; {
                     <span class="self">self</span>.write_subgroup_operation(op, collective_op, argument, result, <span class="kw-2">&amp;mut </span>block)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span>::Statement::SubgroupGather {
+                Statement::SubgroupGather {
                     <span class="kw-2">ref </span>mode,
                     argument,
                     result,

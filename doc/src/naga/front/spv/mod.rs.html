@@ -5596,10 +5596,6 @@
 <a href="#5595" id="5595">5595</a>
 <a href="#5596" id="5596">5596</a>
 <a href="#5597" id="5597">5597</a>
-<a href="#5598" id="5598">5598</a>
-<a href="#5599" id="5599">5599</a>
-<a href="#5600" id="5600">5600</a>
-<a href="#5601" id="5601">5601</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -9356,30 +9352,27 @@ This value then gets used instead of `OpLoad` result later on.
                     );
                     emitter.start(ctx.expressions);
                 }
-                spirv::Op::GroupNonUniformAll
-                | spirv::Op::GroupNonUniformAny
-                | spirv::Op::GroupNonUniformIAdd
-                | spirv::Op::GroupNonUniformFAdd
-                | spirv::Op::GroupNonUniformIMul
-                | spirv::Op::GroupNonUniformFMul
-                | spirv::Op::GroupNonUniformSMax
-                | spirv::Op::GroupNonUniformUMax
-                | spirv::Op::GroupNonUniformFMax
-                | spirv::Op::GroupNonUniformSMin
-                | spirv::Op::GroupNonUniformUMin
-                | spirv::Op::GroupNonUniformFMin
-                | spirv::Op::GroupNonUniformBitwiseAnd
-                | spirv::Op::GroupNonUniformBitwiseOr
-                | spirv::Op::GroupNonUniformBitwiseXor
-                | spirv::Op::GroupNonUniformLogicalAnd
-                | spirv::Op::GroupNonUniformLogicalOr
-                | spirv::Op::GroupNonUniformLogicalXor =&gt; {
+                Op::GroupNonUniformAll
+                | Op::GroupNonUniformAny
+                | Op::GroupNonUniformIAdd
+                | Op::GroupNonUniformFAdd
+                | Op::GroupNonUniformIMul
+                | Op::GroupNonUniformFMul
+                | Op::GroupNonUniformSMax
+                | Op::GroupNonUniformUMax
+                | Op::GroupNonUniformFMax
+                | Op::GroupNonUniformSMin
+                | Op::GroupNonUniformUMin
+                | Op::GroupNonUniformFMin
+                | Op::GroupNonUniformBitwiseAnd
+                | Op::GroupNonUniformBitwiseOr
+                | Op::GroupNonUniformBitwiseXor
+                | Op::GroupNonUniformLogicalAnd
+                | Op::GroupNonUniformLogicalOr
+                | Op::GroupNonUniformLogicalXor =&gt; {
                     block.extend(emitter.finish(ctx.expressions));
                     inst.expect(
-                        <span class="kw">if </span><span class="macro">matches!</span>(
-                            inst.op,
-                            spirv::Op::GroupNonUniformAll | spirv::Op::GroupNonUniformAny
-                        ) {
+                        <span class="kw">if </span><span class="macro">matches!</span>(inst.op, Op::GroupNonUniformAll | Op::GroupNonUniformAny) {
                             <span class="number">5
                         </span>} <span class="kw">else </span>{
                             <span class="number">6
@@ -9389,7 +9382,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>result_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                     <span class="kw">let </span>exec_scope_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                     <span class="kw">let </span>collective_op_id = <span class="kw">match </span>inst.op {
-                        spirv::Op::GroupNonUniformAll | spirv::Op::GroupNonUniformAny =&gt; {
+                        Op::GroupNonUniformAll | Op::GroupNonUniformAny =&gt; {
                             <span class="kw">crate</span>::CollectiveOperation::Reduce
                         }
                         <span class="kw">_ </span>=&gt; {
@@ -9419,26 +9412,29 @@ This value then gets used instead of `OpLoad` result later on.
                         .ok_or(Error::InvalidBarrierScope(exec_scope_id))<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>op_id = <span class="kw">match </span>inst.op {
-                        spirv::Op::GroupNonUniformAll =&gt; <span class="kw">crate</span>::SubgroupOperation::All,
-                        spirv::Op::GroupNonUniformAny =&gt; <span class="kw">crate</span>::SubgroupOperation::Any,
-                        spirv::Op::GroupNonUniformIAdd | spirv::Op::GroupNonUniformFAdd =&gt; {
+                        Op::GroupNonUniformAll =&gt; <span class="kw">crate</span>::SubgroupOperation::All,
+                        Op::GroupNonUniformAny =&gt; <span class="kw">crate</span>::SubgroupOperation::Any,
+                        Op::GroupNonUniformIAdd | Op::GroupNonUniformFAdd =&gt; {
                             <span class="kw">crate</span>::SubgroupOperation::Add
                         }
-                        spirv::Op::GroupNonUniformIMul | spirv::Op::GroupNonUniformFMul =&gt; {
+                        Op::GroupNonUniformIMul | Op::GroupNonUniformFMul =&gt; {
                             <span class="kw">crate</span>::SubgroupOperation::Mul
                         }
-                        spirv::Op::GroupNonUniformSMax
-                        | spirv::Op::GroupNonUniformUMax
-                        | spirv::Op::GroupNonUniformFMax =&gt; <span class="kw">crate</span>::SubgroupOperation::Max,
-                        spirv::Op::GroupNonUniformSMin
-                        | spirv::Op::GroupNonUniformUMin
-                        | spirv::Op::GroupNonUniformFMin =&gt; <span class="kw">crate</span>::SubgroupOperation::Min,
-                        spirv::Op::GroupNonUniformBitwiseAnd
-                        | spirv::Op::GroupNonUniformLogicalAnd =&gt; <span class="kw">crate</span>::SubgroupOperation::And,
-                        spirv::Op::GroupNonUniformBitwiseOr
-                        | spirv::Op::GroupNonUniformLogicalOr =&gt; <span class="kw">crate</span>::SubgroupOperation::Or,
-                        spirv::Op::GroupNonUniformBitwiseXor
-                        | spirv::Op::GroupNonUniformLogicalXor =&gt; <span class="kw">crate</span>::SubgroupOperation::Xor,
+                        Op::GroupNonUniformSMax
+                        | Op::GroupNonUniformUMax
+                        | Op::GroupNonUniformFMax =&gt; <span class="kw">crate</span>::SubgroupOperation::Max,
+                        Op::GroupNonUniformSMin
+                        | Op::GroupNonUniformUMin
+                        | Op::GroupNonUniformFMin =&gt; <span class="kw">crate</span>::SubgroupOperation::Min,
+                        Op::GroupNonUniformBitwiseAnd | Op::GroupNonUniformLogicalAnd =&gt; {
+                            <span class="kw">crate</span>::SubgroupOperation::And
+                        }
+                        Op::GroupNonUniformBitwiseOr | Op::GroupNonUniformLogicalOr =&gt; {
+                            <span class="kw">crate</span>::SubgroupOperation::Or
+                        }
+                        Op::GroupNonUniformBitwiseXor | Op::GroupNonUniformLogicalXor =&gt; {
+                            <span class="kw">crate</span>::SubgroupOperation::Xor
+                        }
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                     };
 
@@ -9476,13 +9472,11 @@ This value then gets used instead of `OpLoad` result later on.
                 | Op::GroupNonUniformShuffleDown
                 | Op::GroupNonUniformShuffleUp
                 | Op::GroupNonUniformShuffleXor =&gt; {
-                    inst.expect(
-                        <span class="kw">if </span><span class="macro">matches!</span>(inst.op, spirv::Op::GroupNonUniformBroadcastFirst) {
-                            <span class="number">5
-                        </span>} <span class="kw">else </span>{
-                            <span class="number">6
-                        </span>},
-                    )<span class="question-mark">?</span>;
+                    inst.expect(<span class="kw">if </span><span class="macro">matches!</span>(inst.op, Op::GroupNonUniformBroadcastFirst) {
+                        <span class="number">5
+                    </span>} <span class="kw">else </span>{
+                        <span class="number">6
+                    </span>})<span class="question-mark">?</span>;
                     block.extend(emitter.finish(ctx.expressions));
                     <span class="kw">let </span>result_type_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                     <span class="kw">let </span>result_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
@@ -9497,26 +9491,24 @@ This value then gets used instead of `OpLoad` result later on.
                         .filter(|exec_scope| <span class="kw-2">*</span>exec_scope == spirv::Scope::Subgroup <span class="kw">as </span>u32)
                         .ok_or(Error::InvalidBarrierScope(exec_scope_id))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>mode = <span class="kw">if </span><span class="macro">matches!</span>(inst.op, spirv::Op::GroupNonUniformBroadcastFirst) {
+                    <span class="kw">let </span>mode = <span class="kw">if </span><span class="macro">matches!</span>(inst.op, Op::GroupNonUniformBroadcastFirst) {
                         <span class="kw">crate</span>::GatherMode::BroadcastFirst
                     } <span class="kw">else </span>{
                         <span class="kw">let </span>index_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                         <span class="kw">let </span>index_lookup = <span class="self">self</span>.lookup_expression.lookup(index_id)<span class="question-mark">?</span>;
                         <span class="kw">let </span>index_handle = <span class="macro">get_expr_handle!</span>(index_id, index_lookup);
                         <span class="kw">match </span>inst.op {
-                            spirv::Op::GroupNonUniformBroadcast =&gt; {
+                            Op::GroupNonUniformBroadcast =&gt; {
                                 <span class="kw">crate</span>::GatherMode::Broadcast(index_handle)
                             }
-                            spirv::Op::GroupNonUniformShuffle =&gt; {
-                                <span class="kw">crate</span>::GatherMode::Shuffle(index_handle)
-                            }
-                            spirv::Op::GroupNonUniformShuffleDown =&gt; {
+                            Op::GroupNonUniformShuffle =&gt; <span class="kw">crate</span>::GatherMode::Shuffle(index_handle),
+                            Op::GroupNonUniformShuffleDown =&gt; {
                                 <span class="kw">crate</span>::GatherMode::ShuffleDown(index_handle)
                             }
-                            spirv::Op::GroupNonUniformShuffleUp =&gt; {
+                            Op::GroupNonUniformShuffleUp =&gt; {
                                 <span class="kw">crate</span>::GatherMode::ShuffleUp(index_handle)
                             }
-                            spirv::Op::GroupNonUniformShuffleXor =&gt; {
+                            Op::GroupNonUniformShuffleXor =&gt; {
                                 <span class="kw">crate</span>::GatherMode::ShuffleXor(index_handle)
                             }
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
@@ -9831,7 +9823,7 @@ This value then gets used instead of `OpLoad` result later on.
 
         <span class="comment">// Do entry point specific processing after all functions are parsed so that we can
         // cull unused problematic builtins of gl_PerVertex.
-        </span><span class="kw">for </span>(ep, fun_id) <span class="kw">in </span>core::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.deferred_entry_points) {
+        </span><span class="kw">for </span>(ep, fun_id) <span class="kw">in </span>mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.deferred_entry_points) {
             <span class="self">self</span>.process_entry_point(<span class="kw-2">&amp;mut </span>module, ep, fun_id)<span class="question-mark">?</span>;
         }
 
@@ -9976,8 +9968,8 @@ This value then gets used instead of `OpLoad` result later on.
             </span>.lookup_entry_point
             .get_mut(<span class="kw-2">&amp;</span>ep_id)
             .ok_or(Error::InvalidId(ep_id))<span class="question-mark">?</span>;
-        <span class="kw">let </span>mode = spirv::ExecutionMode::from_u32(mode_id)
-            .ok_or(Error::UnsupportedExecutionMode(mode_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>mode =
+            ExecutionMode::from_u32(mode_id).ok_or(Error::UnsupportedExecutionMode(mode_id))<span class="question-mark">?</span>;
 
         <span class="kw">match </span>mode {
             ExecutionMode::EarlyFragmentTests =&gt; {
