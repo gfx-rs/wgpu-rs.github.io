@@ -4743,6 +4743,65 @@
 <a href="#4742" id="4742">4742</a>
 <a href="#4743" id="4743">4743</a>
 <a href="#4744" id="4744">4744</a>
+<a href="#4745" id="4745">4745</a>
+<a href="#4746" id="4746">4746</a>
+<a href="#4747" id="4747">4747</a>
+<a href="#4748" id="4748">4748</a>
+<a href="#4749" id="4749">4749</a>
+<a href="#4750" id="4750">4750</a>
+<a href="#4751" id="4751">4751</a>
+<a href="#4752" id="4752">4752</a>
+<a href="#4753" id="4753">4753</a>
+<a href="#4754" id="4754">4754</a>
+<a href="#4755" id="4755">4755</a>
+<a href="#4756" id="4756">4756</a>
+<a href="#4757" id="4757">4757</a>
+<a href="#4758" id="4758">4758</a>
+<a href="#4759" id="4759">4759</a>
+<a href="#4760" id="4760">4760</a>
+<a href="#4761" id="4761">4761</a>
+<a href="#4762" id="4762">4762</a>
+<a href="#4763" id="4763">4763</a>
+<a href="#4764" id="4764">4764</a>
+<a href="#4765" id="4765">4765</a>
+<a href="#4766" id="4766">4766</a>
+<a href="#4767" id="4767">4767</a>
+<a href="#4768" id="4768">4768</a>
+<a href="#4769" id="4769">4769</a>
+<a href="#4770" id="4770">4770</a>
+<a href="#4771" id="4771">4771</a>
+<a href="#4772" id="4772">4772</a>
+<a href="#4773" id="4773">4773</a>
+<a href="#4774" id="4774">4774</a>
+<a href="#4775" id="4775">4775</a>
+<a href="#4776" id="4776">4776</a>
+<a href="#4777" id="4777">4777</a>
+<a href="#4778" id="4778">4778</a>
+<a href="#4779" id="4779">4779</a>
+<a href="#4780" id="4780">4780</a>
+<a href="#4781" id="4781">4781</a>
+<a href="#4782" id="4782">4782</a>
+<a href="#4783" id="4783">4783</a>
+<a href="#4784" id="4784">4784</a>
+<a href="#4785" id="4785">4785</a>
+<a href="#4786" id="4786">4786</a>
+<a href="#4787" id="4787">4787</a>
+<a href="#4788" id="4788">4788</a>
+<a href="#4789" id="4789">4789</a>
+<a href="#4790" id="4790">4790</a>
+<a href="#4791" id="4791">4791</a>
+<a href="#4792" id="4792">4792</a>
+<a href="#4793" id="4793">4793</a>
+<a href="#4794" id="4794">4794</a>
+<a href="#4795" id="4795">4795</a>
+<a href="#4796" id="4796">4796</a>
+<a href="#4797" id="4797">4797</a>
+<a href="#4798" id="4798">4798</a>
+<a href="#4799" id="4799">4799</a>
+<a href="#4800" id="4800">4800</a>
+<a href="#4801" id="4801">4801</a>
+<a href="#4802" id="4802">4802</a>
+<a href="#4803" id="4803">4803</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -4798,8 +4857,7 @@ to output a [`Module`](crate::Module) into glsl
 <span class="kw">use </span>features::FeaturesManager;
 <span class="kw">use </span>std::{
     cmp::Ordering,
-    fmt,
-    fmt::{Error <span class="kw">as </span>FmtError, Write},
+    fmt::{<span class="self">self</span>, Error <span class="kw">as </span>FmtError, Write},
     mem,
 };
 <span class="kw">use </span>thiserror::Error;
@@ -6062,6 +6120,12 @@ to output a [`Module`](crate::Module) into glsl
                                 <span class="kw">_ </span>=&gt; {}
                             }
                         }
+                    }
+                    <span class="kw">crate</span>::MathFunction::Pack4xI8
+                    | <span class="kw">crate</span>::MathFunction::Pack4xU8
+                    | <span class="kw">crate</span>::MathFunction::Unpack4xI8
+                    | <span class="kw">crate</span>::MathFunction::Unpack4xU8 =&gt; {
+                        <span class="self">self</span>.need_bake_expressions.insert(arg);
                     }
                     <span class="kw">crate</span>::MathFunction::ExtractBits =&gt; {
                         <span class="comment">// Only argument 1 is re-used.
@@ -8327,12 +8391,66 @@ to output a [`Module`](crate::Module) into glsl
                     Mf::Pack2x16snorm =&gt; <span class="string">"packSnorm2x16"</span>,
                     Mf::Pack2x16unorm =&gt; <span class="string">"packUnorm2x16"</span>,
                     Mf::Pack2x16float =&gt; <span class="string">"packHalf2x16"</span>,
+                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8) =&gt; {
+                        <span class="kw">let </span>was_signed = <span class="kw">match </span>fun {
+                            Mf::Pack4xI8 =&gt; <span class="bool-val">true</span>,
+                            Mf::Pack4xU8 =&gt; <span class="bool-val">false</span>,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                        };
+                        <span class="kw">let </span>const_suffix = <span class="kw">if </span>was_signed { <span class="string">"" </span>} <span class="kw">else </span>{ <span class="string">"u" </span>};
+                        <span class="kw">if </span>was_signed {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[0] &amp; 0xFF{const_suffix}) | (("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[1] &amp; 0xFF{const_suffix}) &lt;&lt; 8) | (("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[2] &amp; 0xFF{const_suffix}) &lt;&lt; 16) | (("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[3] &amp; 0xFF{const_suffix}) &lt;&lt; 24)"</span>)<span class="question-mark">?</span>;
+                        <span class="kw">if </span>was_signed {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                        }
+
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    }
                     <span class="comment">// data unpacking
                     </span>Mf::Unpack4x8snorm =&gt; <span class="string">"unpackSnorm4x8"</span>,
                     Mf::Unpack4x8unorm =&gt; <span class="string">"unpackUnorm4x8"</span>,
                     Mf::Unpack2x16snorm =&gt; <span class="string">"unpackSnorm2x16"</span>,
                     Mf::Unpack2x16unorm =&gt; <span class="string">"unpackUnorm2x16"</span>,
                     Mf::Unpack2x16float =&gt; <span class="string">"unpackHalf2x16"</span>,
+                    fun @ (Mf::Unpack4xI8 | Mf::Unpack4xU8) =&gt; {
+                        <span class="kw">let </span>sign_prefix = <span class="kw">match </span>fun {
+                            Mf::Unpack4xI8 =&gt; <span class="string">'i'</span>,
+                            Mf::Unpack4xU8 =&gt; <span class="string">'u'</span>,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                        };
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{sign_prefix}vec4("</span>)<span class="question-mark">?</span>;
+                        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"bitfieldExtract("</span>)<span class="question-mark">?</span>;
+                            <span class="comment">// Since bitfieldExtract only sign extends if the value is signed, this
+                            // cast is needed
+                            </span><span class="kw">match </span>fun {
+                                Mf::Unpack4xI8 =&gt; {
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int("</span>)<span class="question-mark">?</span>;
+                                    <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                                }
+                                Mf::Unpack4xU8 =&gt; <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>,
+                                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                            };
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {}, 8)"</span>, i * <span class="number">8</span>)<span class="question-mark">?</span>;
+                            <span class="kw">if </span>i != <span class="number">3 </span>{
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            }
+                        }
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                    }
                 };
 
                 <span class="kw">let </span>extract_bits = fun == Mf::ExtractBits;

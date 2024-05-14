@@ -1848,6 +1848,25 @@
 <a href="#1847" id="1847">1847</a>
 <a href="#1848" id="1848">1848</a>
 <a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     compose::validate_compose, validate_atomic_compare_exchange_struct, FunctionInfo, ModuleInfo,
     ShaderStages, TypeFlags,
@@ -3377,11 +3396,30 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                     }
+                    mf @ (Mf::Pack4xI8 | Mf::Pack4xU8) =&gt; {
+                        <span class="kw">let </span>scalar_kind = <span class="kw">match </span>mf {
+                            Mf::Pack4xI8 =&gt; Sk::Sint,
+                            Mf::Pack4xU8 =&gt; Sk::Uint,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                        };
+                        <span class="kw">if </span>arg1_ty.is_some() || arg2_ty.is_some() || arg3_ty.is_some() {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
+                        }
+                        <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
+                            Ti::Vector {
+                                size: <span class="kw">crate</span>::VectorSize::Quad,
+                                scalar: Sc { kind, .. },
+                            } <span class="kw">if </span>kind == scalar_kind =&gt; {}
+                            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
+                        }
+                    }
                     Mf::Unpack2x16float
                     | Mf::Unpack2x16snorm
                     | Mf::Unpack2x16unorm
                     | Mf::Unpack4x8snorm
-                    | Mf::Unpack4x8unorm =&gt; {
+                    | Mf::Unpack4x8unorm
+                    | Mf::Unpack4xI8
+                    | Mf::Unpack4xU8 =&gt; {
                         <span class="kw">if </span>arg1_ty.is_some() || arg2_ty.is_some() || arg3_ty.is_some() {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
