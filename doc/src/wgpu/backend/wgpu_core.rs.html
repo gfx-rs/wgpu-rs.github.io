@@ -3102,6 +3102,45 @@
 <a href="#3101" id="3101">3101</a>
 <a href="#3102" id="3102">3102</a>
 <a href="#3103" id="3103">3103</a>
+<a href="#3104" id="3104">3104</a>
+<a href="#3105" id="3105">3105</a>
+<a href="#3106" id="3106">3106</a>
+<a href="#3107" id="3107">3107</a>
+<a href="#3108" id="3108">3108</a>
+<a href="#3109" id="3109">3109</a>
+<a href="#3110" id="3110">3110</a>
+<a href="#3111" id="3111">3111</a>
+<a href="#3112" id="3112">3112</a>
+<a href="#3113" id="3113">3113</a>
+<a href="#3114" id="3114">3114</a>
+<a href="#3115" id="3115">3115</a>
+<a href="#3116" id="3116">3116</a>
+<a href="#3117" id="3117">3117</a>
+<a href="#3118" id="3118">3118</a>
+<a href="#3119" id="3119">3119</a>
+<a href="#3120" id="3120">3120</a>
+<a href="#3121" id="3121">3121</a>
+<a href="#3122" id="3122">3122</a>
+<a href="#3123" id="3123">3123</a>
+<a href="#3124" id="3124">3124</a>
+<a href="#3125" id="3125">3125</a>
+<a href="#3126" id="3126">3126</a>
+<a href="#3127" id="3127">3127</a>
+<a href="#3128" id="3128">3128</a>
+<a href="#3129" id="3129">3129</a>
+<a href="#3130" id="3130">3130</a>
+<a href="#3131" id="3131">3131</a>
+<a href="#3132" id="3132">3132</a>
+<a href="#3133" id="3133">3133</a>
+<a href="#3134" id="3134">3134</a>
+<a href="#3135" id="3135">3135</a>
+<a href="#3136" id="3136">3136</a>
+<a href="#3137" id="3137">3137</a>
+<a href="#3138" id="3138">3138</a>
+<a href="#3139" id="3139">3139</a>
+<a href="#3140" id="3140">3140</a>
+<a href="#3141" id="3141">3141</a>
+<a href="#3142" id="3142">3142</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3128,9 +3167,11 @@
     sync::Arc,
 };
 <span class="kw">use </span>wgc::{
-    command::{bundle_ffi::<span class="kw-2">*</span>, compute_commands::<span class="kw-2">*</span>, render_commands::<span class="kw-2">*</span>},
+    command::{bundle_ffi::<span class="kw-2">*</span>, render_commands::<span class="kw-2">*</span>},
     device::DeviceLostClosure,
-    id::{CommandEncoderId, TextureViewId},
+    gfx_select,
+    id::CommandEncoderId,
+    id::TextureViewId,
     pipeline::CreateShaderModuleError,
 };
 <span class="kw">use </span>wgt::WasmNotSendSync;
@@ -3581,6 +3622,12 @@
 }
 
 <span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ComputePass {
+    pass: Box&lt;<span class="kw">dyn </span>wgc::command::DynComputePass&gt;,
+    error_sink: ErrorSink,
+}
+
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>CommandEncoder {
     error_sink: ErrorSink,
     open: bool,
@@ -3618,7 +3665,7 @@
     <span class="kw">type </span>CommandEncoderId = wgc::id::CommandEncoderId;
     <span class="kw">type </span>CommandEncoderData = CommandEncoder;
     <span class="kw">type </span>ComputePassId = Unused;
-    <span class="kw">type </span>ComputePassData = wgc::command::ComputePass;
+    <span class="kw">type </span>ComputePassData = ComputePass;
     <span class="kw">type </span>RenderPassId = Unused;
     <span class="kw">type </span>RenderPassData = wgc::command::RenderPass;
     <span class="kw">type </span>CommandBufferId = wgc::id::CommandBufferId;
@@ -4945,7 +4992,7 @@
     <span class="kw">fn </span>command_encoder_begin_compute_pass(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderId,
-        _encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
+        encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
         desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::ComputePassId, <span class="self">Self</span>::ComputePassData) {
         <span class="kw">let </span>timestamp_writes =
@@ -4956,15 +5003,16 @@
                     beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                     end_of_pass_write_index: tw.end_of_pass_write_index,
                 });
+
         (
             Unused,
-            wgc::command::ComputePass::new(
-                <span class="kw-2">*</span>encoder,
-                <span class="kw-2">&amp;</span>wgc::command::ComputePassDescriptor {
+            <span class="self">Self</span>::ComputePassData {
+                pass: <span class="macro">gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_create_compute_pass_dyn(<span class="kw-2">*</span>encoder, <span class="kw-2">&amp;</span>wgc::command::ComputePassDescriptor {
                     label: desc.label.map(Borrowed),
                     timestamp_writes: timestamp_writes.as_ref(),
-                },
-            ),
+                })),
+                error_sink: encoder_data.error_sink.clone(),
+            },
         )
     }
 
@@ -4975,9 +5023,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="macro">wgc::gfx_select!</span>(
-            encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_run_compute_pass(<span class="kw-2">*</span>encoder, pass_data)
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.run(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="kw">let </span>name = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_label(encoder.into_command_buffer_id()));
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
@@ -5440,7 +5486,9 @@
         pipeline: <span class="kw-2">&amp;</span><span class="self">Self</span>::ComputePipelineId,
         _pipeline_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::ComputePipelineData,
     ) {
-        wgpu_compute_pass_set_pipeline(pass_data, <span class="kw-2">*</span>pipeline)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>pipeline) {
+            <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>pass_data.error_sink, cause, <span class="string">"ComputePass::set_pipeline"</span>);
+        }
     }
 
     <span class="kw">fn </span>compute_pass_set_bind_group(
@@ -5452,7 +5500,12 @@
         _bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
-        wgpu_compute_pass_set_bind_group(pass_data, index, <span class="kw-2">*</span>bind_group, offsets);
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, index, <span class="kw-2">*</span>bind_group, offsets)
+        {
+            <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>pass_data.error_sink, cause, <span class="string">"ComputePass::set_bind_group"</span>);
+        }
     }
 
     <span class="kw">fn </span>compute_pass_set_push_constants(
@@ -5462,7 +5515,7 @@
         offset: u32,
         data: <span class="kw-2">&amp;</span>[u8],
     ) {
-        wgpu_compute_pass_set_push_constant(pass_data, offset, data);
+        pass_data.pass.set_push_constant(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, offset, data);
     }
 
     <span class="kw">fn </span>compute_pass_insert_debug_marker(
@@ -5471,7 +5524,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
         label: <span class="kw-2">&amp;</span>str,
     ) {
-        wgpu_compute_pass_insert_debug_marker(pass_data, label, <span class="number">0</span>);
+        pass_data.pass.insert_debug_marker(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, label, <span class="number">0</span>);
     }
 
     <span class="kw">fn </span>compute_pass_push_debug_group(
@@ -5480,7 +5533,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
         group_label: <span class="kw-2">&amp;</span>str,
     ) {
-        wgpu_compute_pass_push_debug_group(pass_data, group_label, <span class="number">0</span>);
+        pass_data.pass.push_debug_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, group_label, <span class="number">0</span>);
     }
 
     <span class="kw">fn </span>compute_pass_pop_debug_group(
@@ -5488,7 +5541,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
     ) {
-        wgpu_compute_pass_pop_debug_group(pass_data);
+        pass_data.pass.pop_debug_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>);
     }
 
     <span class="kw">fn </span>compute_pass_write_timestamp(
@@ -5499,7 +5552,12 @@
         _query_set_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QuerySetData,
         query_index: u32,
     ) {
-        wgpu_compute_pass_write_timestamp(pass_data, <span class="kw-2">*</span>query_set, query_index)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .write_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>query_set, query_index)
+        {
+            <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>pass_data.error_sink, cause, <span class="string">"ComputePass::write_timestamp"</span>);
+        }
     }
 
     <span class="kw">fn </span>compute_pass_begin_pipeline_statistics_query(
@@ -5510,7 +5568,17 @@
         _query_set_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QuerySetData,
         query_index: u32,
     ) {
-        wgpu_compute_pass_begin_pipeline_statistics_query(pass_data, <span class="kw-2">*</span>query_set, query_index)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .begin_pipeline_statistics_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>query_set, query_index)
+        {
+            <span class="self">self</span>.handle_error_nolabel(
+                <span class="kw-2">&amp;</span>pass_data.error_sink,
+                cause,
+                <span class="string">"ComputePass::begin_pipeline_statistics_query"</span>,
+            );
+        }
     }
 
     <span class="kw">fn </span>compute_pass_end_pipeline_statistics_query(
@@ -5518,7 +5586,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
     ) {
-        wgpu_compute_pass_end_pipeline_statistics_query(pass_data)
+        pass_data.pass.end_pipeline_statistics_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>);
     }
 
     <span class="kw">fn </span>compute_pass_dispatch_workgroups(
@@ -5529,7 +5597,7 @@
         y: u32,
         z: u32,
     ) {
-        wgpu_compute_pass_dispatch_workgroups(pass_data, x, y, z)
+        pass_data.pass.dispatch_workgroups(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, x, y, z);
     }
 
     <span class="kw">fn </span>compute_pass_dispatch_workgroups_indirect(
@@ -5540,7 +5608,17 @@
         _indirect_buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         indirect_offset: wgt::BufferAddress,
     ) {
-        wgpu_compute_pass_dispatch_workgroups_indirect(pass_data, <span class="kw-2">*</span>indirect_buffer, indirect_offset)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .dispatch_workgroups_indirect(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>indirect_buffer, indirect_offset)
+        {
+            <span class="self">self</span>.handle_error_nolabel(
+                <span class="kw-2">&amp;</span>pass_data.error_sink,
+                cause,
+                <span class="string">"ComputePass::dispatch_workgroups_indirect"</span>,
+            );
+        }
     }
 
     <span class="kw">fn </span>render_bundle_encoder_set_pipeline(

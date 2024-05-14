@@ -449,14 +449,12 @@
 <a href="#448" id="448">448</a>
 <a href="#449" id="449">449</a>
 <a href="#450" id="450">450</a>
-<a href="#451" id="451">451</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
     binding_model::{BindGroup, LateMinBufferBindingSizeMismatch, PipelineLayout},
     device::SHADER_STAGE_COUNT,
     hal_api::HalApi,
-    id::BindGroupId,
     pipeline::LateSizedBufferGroup,
     resource::Resource,
 };
@@ -811,11 +809,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[bind_range]
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BindGroupId&gt; + <span class="lifetime">'_ </span>{
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;BindGroup&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads;
         <span class="self">self</span>.manager
             .list_active()
-            .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap().as_info().id())
+            .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap())
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>invalid_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BindGroupMask {
