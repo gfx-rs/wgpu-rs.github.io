@@ -1570,6 +1570,14 @@
 <a href="#1569" id="1569">1569</a>
 <a href="#1570" id="1570">1570</a>
 <a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1656,7 +1664,8 @@
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; ResourceInfo&lt;T&gt; {
-    <span class="attr">#[allow(unused_variables)]
+    <span class="comment">// Note: Abstractly, this function should take `label: String` to minimize string cloning.
+    // But as actually used, every input is a literal or borrowed `&amp;str`, so this is convenient.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
         label: <span class="kw-2">&amp;</span>str,
         tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
@@ -1721,9 +1730,16 @@
     <span class="kw">const </span>TYPE: ResourceType;
     <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="self">self</span>.as_info().label.clone()
+
+    <span class="doccomment">/// Returns a string identifying this resource for logging and errors.
+    ///
+    /// It may be a user-provided string or it may be a placeholder from wgpu.
+    ///
+    /// It is non-empty unless the user-provided string was empty.
+    </span><span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.as_info().label
     }
+
     <span class="kw">fn </span>ref_count(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; usize {
         Arc::strong_count(<span class="self">self</span>)
     }
@@ -2290,9 +2306,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        String::from(<span class="string">"&lt;StagingBuffer&gt;"</span>)
-    }
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="string">"&lt;StagingBuffer&gt;"
+    </span>}
 }
 
 <span class="kw">pub type </span>TextureDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;, Vec&lt;wgt::TextureFormat&gt;&gt;;
