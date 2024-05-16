@@ -2252,6 +2252,21 @@
 <a href="#2251" id="2251">2251</a>
 <a href="#2252" id="2252">2252</a>
 <a href="#2253" id="2253">2253</a>
+<a href="#2254" id="2254">2254</a>
+<a href="#2255" id="2255">2255</a>
+<a href="#2256" id="2256">2256</a>
+<a href="#2257" id="2257">2257</a>
+<a href="#2258" id="2258">2258</a>
+<a href="#2259" id="2259">2259</a>
+<a href="#2260" id="2260">2260</a>
+<a href="#2261" id="2261">2261</a>
+<a href="#2262" id="2262">2262</a>
+<a href="#2263" id="2263">2263</a>
+<a href="#2264" id="2264">2264</a>
+<a href="#2265" id="2265">2265</a>
+<a href="#2266" id="2266">2266</a>
+<a href="#2267" id="2267">2267</a>
+<a href="#2268" id="2268">2268</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, khr, vk};
@@ -2716,7 +2731,8 @@
             | F::TIMESTAMP_QUERY_INSIDE_ENCODERS
             | F::TIMESTAMP_QUERY_INSIDE_PASSES
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-            | F::CLEAR_TEXTURE;
+            | F::CLEAR_TEXTURE
+            | F::PIPELINE_CACHE;
 
         <span class="kw">let </span><span class="kw-2">mut </span>dl_flags = Df::COMPUTE_SHADERS
             | Df::BASE_VERTEX
@@ -3999,6 +4015,19 @@
             <span class="kw">unsafe </span>{ raw_device.get_device_queue(family_index, queue_index) }
         };
 
+        <span class="kw">let </span>driver_version = <span class="self">self
+            </span>.phd_capabilities
+            .properties
+            .driver_version
+            .to_be_bytes();
+        <span class="attr">#[rustfmt::skip]
+        </span><span class="kw">let </span>pipeline_cache_validation_key = [
+            driver_version[<span class="number">0</span>], driver_version[<span class="number">1</span>], driver_version[<span class="number">2</span>], driver_version[<span class="number">3</span>],
+            <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
+            <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
+            <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
+        ];
+
         <span class="kw">let </span>shared = Arc::new(<span class="kw">super</span>::DeviceShared {
             raw: raw_device,
             family_index,
@@ -4014,6 +4043,7 @@
                 timeline_semaphore: timeline_semaphore_fn,
                 ray_tracing: ray_tracing_fns,
             },
+            pipeline_cache_validation_key,
             vendor_id: <span class="self">self</span>.phd_capabilities.properties.vendor_id,
             timestamp_period: <span class="self">self</span>.phd_capabilities.properties.limits.timestamp_period,
             private_caps: <span class="self">self</span>.private_caps.clone(),

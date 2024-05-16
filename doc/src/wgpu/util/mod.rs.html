@@ -141,6 +141,55 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
 //!
 //! Nothing in this module is a part of the WebGPU API specification;
@@ -281,6 +330,55 @@
     <span class="kw">type </span>Target = [u8];
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="self">self</span>.<span class="number">1</span>.slice()
+    }
+}
+
+<span class="doccomment">/// A recommended key for storing [`PipelineCache`]s for the adapter
+/// associated with the given [`AdapterInfo`](wgt::AdapterInfo)
+/// This key will define a class of adapters for which the same cache
+/// might be valid.
+///
+/// If this returns `None`, the adapter doesn't support [`PipelineCache`].
+/// This may be because the API doesn't support application managed caches
+/// (such as browser WebGPU), or that `wgpu` hasn't implemented it for
+/// that API yet.
+///
+/// This key could be used as a filename, as seen in the example below.
+///
+/// # Examples
+///
+/// ``` no_run
+/// # use std::path::PathBuf;
+/// # let adapter_info = todo!();
+/// let cache_dir: PathBuf = PathBuf::new();
+/// let filename = wgpu::util::pipeline_cache_key(&amp;adapter_info);
+/// if let Some(filename) = filename {
+///     let cache_file = cache_dir.join(&amp;filename);
+///     let cache_data = std::fs::read(&amp;cache_file);
+///     let pipeline_cache: wgpu::PipelineCache = todo!("Use data (if present) to create a pipeline cache");
+///
+///     let data = pipeline_cache.get_data();
+///     if let Some(data) = data {
+///         let temp_file = cache_file.with_extension("temp");
+///         std::fs::write(&amp;temp_file, &amp;data)?;
+///         std::fs::rename(&amp;temp_file, &amp;cache_file)?;
+///     }
+/// }
+/// # Ok::&lt;(), std::io::Error&gt;(())
+/// ```
+///
+/// [`PipelineCache`]: super::PipelineCache
+</span><span class="kw">pub fn </span>pipeline_cache_key(adapter_info: <span class="kw-2">&amp;</span>wgt::AdapterInfo) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+    <span class="kw">match </span>adapter_info.backend {
+        wgt::Backend::Vulkan =&gt; <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
+            <span class="comment">// The vendor/device should uniquely define a driver
+            // We/the driver will also later validate that the vendor/device and driver
+            // version match, which may lead to clearing an outdated
+            // cache for the same device.
+            </span><span class="string">"wgpu_pipeline_cache_vulkan_{}_{}"</span>,
+            adapter_info.vendor, adapter_info.device
+        )),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
 </code></pre></div></section></main></body></html>

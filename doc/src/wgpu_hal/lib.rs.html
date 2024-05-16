@@ -2027,6 +2027,38 @@
 <a href="#2026" id="2026">2026</a>
 <a href="#2027" id="2027">2027</a>
 <a href="#2028" id="2028">2028</a>
+<a href="#2029" id="2029">2029</a>
+<a href="#2030" id="2030">2030</a>
+<a href="#2031" id="2031">2031</a>
+<a href="#2032" id="2032">2032</a>
+<a href="#2033" id="2033">2033</a>
+<a href="#2034" id="2034">2034</a>
+<a href="#2035" id="2035">2035</a>
+<a href="#2036" id="2036">2036</a>
+<a href="#2037" id="2037">2037</a>
+<a href="#2038" id="2038">2038</a>
+<a href="#2039" id="2039">2039</a>
+<a href="#2040" id="2040">2040</a>
+<a href="#2041" id="2041">2041</a>
+<a href="#2042" id="2042">2042</a>
+<a href="#2043" id="2043">2043</a>
+<a href="#2044" id="2044">2044</a>
+<a href="#2045" id="2045">2045</a>
+<a href="#2046" id="2046">2046</a>
+<a href="#2047" id="2047">2047</a>
+<a href="#2048" id="2048">2048</a>
+<a href="#2049" id="2049">2049</a>
+<a href="#2050" id="2050">2050</a>
+<a href="#2051" id="2051">2051</a>
+<a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
+<a href="#2059" id="2059">2059</a>
+<a href="#2060" id="2060">2060</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! A cross-platform unsafe graphics abstraction.
  *
  * This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2362,6 +2394,12 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Error)]
+</span><span class="kw">pub enum </span>PipelineCacheError {
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
+}
+
+<span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Error)]
 </span><span class="kw">pub enum </span>SurfaceError {
     <span class="attr">#[error(<span class="string">"Surface is lost"</span>)]
     </span>Lost,
@@ -2461,6 +2499,7 @@
     <span class="kw">type </span>ShaderModule: fmt::Debug + WasmNotSendSync;
     <span class="kw">type </span>RenderPipeline: fmt::Debug + WasmNotSendSync;
     <span class="kw">type </span>ComputePipeline: fmt::Debug + WasmNotSendSync;
+    <span class="kw">type </span>PipelineCache: fmt::Debug + WasmNotSendSync;
 
     <span class="kw">type </span>AccelerationStructure: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
 }
@@ -2640,6 +2679,14 @@
         desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;<span class="self">Self</span>::A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline, PipelineError&gt;;
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline);
+    <span class="kw">unsafe fn </span>create_pipeline_cache(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineCache, PipelineCacheError&gt;;
+    <span class="kw">fn </span>pipeline_cache_validation_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">16</span>]&gt; {
+        <span class="prelude-val">None
+    </span>}
+    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, cache: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineCache);
 
     <span class="kw">unsafe fn </span>create_query_set(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2680,6 +2727,14 @@
 
     <span class="kw">unsafe fn </span>start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
     <span class="kw">unsafe fn </span>stop_capture(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+    <span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">unsafe fn </span>pipeline_cache_get_data(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        cache: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineCache,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+        <span class="prelude-val">None
+    </span>}
 
     <span class="kw">unsafe fn </span>create_acceleration_structure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -3665,6 +3720,13 @@
     </span><span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineLayout,
     <span class="doccomment">/// The compiled compute stage and its entry point.
     </span><span class="kw">pub </span>stage: ProgrammableStage&lt;<span class="lifetime">'a</span>, A&gt;,
+    <span class="doccomment">/// The cache which will be used and filled when compiling this pipeline
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineCache&gt;,
+}
+
+<span class="kw">pub struct </span>PipelineCacheDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8]&gt;,
 }
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.
@@ -3701,6 +3763,8 @@
     <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
     /// layers the attachments will have.
     </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    <span class="doccomment">/// The cache which will be used and filled when compiling this pipeline
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineCache&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone)]

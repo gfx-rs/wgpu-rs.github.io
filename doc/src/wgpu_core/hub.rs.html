@@ -319,6 +319,11 @@
 <a href="#318" id="318">318</a>
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Allocating resource ids, and tracking the resources they refer to.
 
 The `wgpu_core` API uses identifiers of type [`Id&lt;R&gt;`] to refer to
@@ -431,7 +436,7 @@ flagged as errors as well.
     device::{queue::Queue, Device},
     hal_api::HalApi,
     instance::{Adapter, Surface},
-    pipeline::{ComputePipeline, RenderPipeline, ShaderModule},
+    pipeline::{ComputePipeline, PipelineCache, RenderPipeline, ShaderModule},
     registry::{Registry, RegistryReport},
     resource::{Buffer, QuerySet, Sampler, StagingBuffer, Texture, TextureView},
     storage::{Element, Storage},
@@ -451,6 +456,7 @@ flagged as errors as well.
     <span class="kw">pub </span>render_bundles: RegistryReport,
     <span class="kw">pub </span>render_pipelines: RegistryReport,
     <span class="kw">pub </span>compute_pipelines: RegistryReport,
+    <span class="kw">pub </span>pipeline_caches: RegistryReport,
     <span class="kw">pub </span>query_sets: RegistryReport,
     <span class="kw">pub </span>buffers: RegistryReport,
     <span class="kw">pub </span>textures: RegistryReport,
@@ -501,6 +507,7 @@ flagged as errors as well.
     <span class="kw">pub</span>(<span class="kw">crate</span>) render_bundles: Registry&lt;RenderBundle&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) render_pipelines: Registry&lt;RenderPipeline&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) compute_pipelines: Registry&lt;ComputePipeline&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pipeline_caches: Registry&lt;PipelineCache&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) query_sets: Registry&lt;QuerySet&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) buffers: Registry&lt;Buffer&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) staging_buffers: Registry&lt;StagingBuffer&lt;A&gt;&gt;,
@@ -523,6 +530,7 @@ flagged as errors as well.
             render_bundles: Registry::new(A::VARIANT),
             render_pipelines: Registry::new(A::VARIANT),
             compute_pipelines: Registry::new(A::VARIANT),
+            pipeline_caches: Registry::new(A::VARIANT),
             query_sets: Registry::new(A::VARIANT),
             buffers: Registry::new(A::VARIANT),
             staging_buffers: Registry::new(A::VARIANT),
@@ -556,6 +564,7 @@ flagged as errors as well.
         <span class="self">self</span>.pipeline_layouts.write().map.clear();
         <span class="self">self</span>.compute_pipelines.write().map.clear();
         <span class="self">self</span>.render_pipelines.write().map.clear();
+        <span class="self">self</span>.pipeline_caches.write().map.clear();
         <span class="self">self</span>.query_sets.write().map.clear();
 
         <span class="kw">for </span>element <span class="kw">in </span>surface_guard.map.iter() {
@@ -601,6 +610,7 @@ flagged as errors as well.
             render_bundles: <span class="self">self</span>.render_bundles.generate_report(),
             render_pipelines: <span class="self">self</span>.render_pipelines.generate_report(),
             compute_pipelines: <span class="self">self</span>.compute_pipelines.generate_report(),
+            pipeline_caches: <span class="self">self</span>.pipeline_caches.generate_report(),
             query_sets: <span class="self">self</span>.query_sets.generate_report(),
             buffers: <span class="self">self</span>.buffers.generate_report(),
             textures: <span class="self">self</span>.textures.generate_report(),
