@@ -2799,6 +2799,8 @@
 <a href="#2798" id="2798">2798</a>
 <a href="#2799" id="2799">2799</a>
 <a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -3048,8 +3050,14 @@
         }
     }
 
-    <span class="kw">pub fn </span>parent_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; id::CommandEncoderId {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>parent_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; id::CommandEncoderId {
         <span class="self">self</span>.parent_id
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+        <span class="self">self</span>.base.label.as_deref()
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4104,13 +4112,9 @@
 <span class="comment">// Common routines between render/compute
 
 </span><span class="kw">impl </span>Global {
-    <span class="kw">pub fn </span>command_encoder_run_render_pass&lt;A: HalApi&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        encoder_id: id::CommandEncoderId,
-        pass: <span class="kw-2">&amp;</span>RenderPass,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
-        <span class="self">self</span>.command_encoder_run_render_pass_impl::&lt;A&gt;(
-            encoder_id,
+    <span class="kw">pub fn </span>render_pass_end&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;</span>RenderPass) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
+        <span class="self">self</span>.render_pass_end_impl::&lt;A&gt;(
+            pass.parent_id(),
             pass.base.as_ref(),
             <span class="kw-2">&amp;</span>pass.color_targets,
             pass.depth_stencil_target.as_ref(),
@@ -4120,7 +4124,7 @@
     }
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>command_encoder_run_render_pass_impl&lt;A: HalApi&gt;(
+    </span><span class="kw">pub fn </span>render_pass_end_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
         base: BasePassRef&lt;RenderCommand&gt;,

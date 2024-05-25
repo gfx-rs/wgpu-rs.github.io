@@ -1064,6 +1064,69 @@
 <a href="#1063" id="1063">1063</a>
 <a href="#1064" id="1064">1064</a>
 <a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     command::{
@@ -1071,8 +1134,8 @@
         compute_command::{ArcComputeCommand, ComputeCommand},
         end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
-        BasePass, BasePassRef, BindGroupStateChange, CommandBuffer, CommandEncoderError,
-        CommandEncoderStatus, MapPassErr, PassErrorScope, QueryUseError, StateChange,
+        BasePass, BindGroupStateChange, CommandBuffer, CommandEncoderError, CommandEncoderStatus,
+        MapPassErr, PassErrorScope, QueryUseError, StateChange,
     },
     device::{DeviceError, MissingDownlevelFlags, MissingFeatures},
     error::{ErrorFormatter, PrettyError},
@@ -1101,7 +1164,12 @@
 <span class="kw">use </span>std::{fmt, mem, str};
 
 <span class="kw">pub struct </span>ComputePass&lt;A: HalApi&gt; {
-    base: BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;,
+    <span class="doccomment">/// All pass data &amp; records is stored here.
+    ///
+    /// If this is `None`, the pass has been ended and can no longer be used.
+    /// Any attempt to record more commands will result in a validation error.
+    </span>base: <span class="prelude-ty">Option</span>&lt;BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;&gt;,
+
     parent_id: id::CommandEncoderId,
     timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&gt;,
 
@@ -1113,7 +1181,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; ComputePass&lt;A&gt; {
     <span class="kw">fn </span>new(parent_id: id::CommandEncoderId, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            base: BasePass::&lt;ArcComputeCommand&lt;A&gt;&gt;::new(<span class="kw-2">&amp;</span>desc.label),
+            base: <span class="prelude-val">Some</span>(BasePass::&lt;ArcComputeCommand&lt;A&gt;&gt;::new(<span class="kw-2">&amp;</span>desc.label)),
             parent_id,
             timestamp_writes: desc.timestamp_writes.cloned(),
 
@@ -1122,8 +1190,24 @@
         }
     }
 
-    <span class="kw">pub fn </span>parent_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; id::CommandEncoderId {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>parent_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; id::CommandEncoderId {
         <span class="self">self</span>.parent_id
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+        <span class="self">self</span>.base.as_ref().and_then(|base| base.label.as_deref())
+    }
+
+    <span class="kw">fn </span>base_mut&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
+        scope: PassErrorScope,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;, ComputePassError&gt; {
+        <span class="self">self</span>.base
+            .as_mut()
+            .ok_or(ComputePassErrorInner::PassEnded)
+            .map_pass_err(scope)
     }
 }
 
@@ -1206,12 +1290,20 @@
     </span>Bind(<span class="attr">#[from] </span>BindError),
     <span class="attr">#[error(transparent)]
     </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
+    <span class="attr">#[error(<span class="string">"Push constant offset must be aligned to 4 bytes"</span>)]
+    </span>PushConstantOffsetAlignment,
+    <span class="attr">#[error(<span class="string">"Push constant size must be aligned to 4 bytes"</span>)]
+    </span>PushConstantSizeAlignment,
+    <span class="attr">#[error(<span class="string">"Ran out of push constant space. Don't set 4gb of push constants per ComputePass."</span>)]
+    </span>PushConstantOutOfMemory,
     <span class="attr">#[error(transparent)]
     </span>QueryUse(<span class="attr">#[from] </span>QueryUseError),
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
+    <span class="attr">#[error(<span class="string">"The compute pass has already been ended and no further commands can be recorded"</span>)]
+    </span>PassEnded,
 }
 
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>ComputePassErrorInner {
@@ -1345,32 +1437,31 @@
         Box::new(ComputePass::&lt;A&gt;::new(parent_id, desc))
     }
 
-    <span class="kw">pub fn </span>command_encoder_run_compute_pass&lt;A: HalApi&gt;(
+    <span class="kw">pub fn </span>compute_pass_end&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        pass: <span class="kw-2">&amp;</span>ComputePass&lt;A&gt;,
+        pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="self">self</span>.command_encoder_run_compute_pass_impl(
-            pass.parent_id,
-            pass.base.as_ref(),
-            pass.timestamp_writes.as_ref(),
-        )
+        <span class="kw">let </span>base = pass.base.take().ok_or(ComputePassError {
+            scope: PassErrorScope::Pass(pass.parent_id),
+            inner: ComputePassErrorInner::PassEnded,
+        })<span class="question-mark">?</span>;
+        <span class="self">self</span>.compute_pass_end_impl(pass.parent_id, base, pass.timestamp_writes.as_ref())
     }
 
     <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>command_encoder_run_compute_pass_with_unresolved_commands&lt;A: HalApi&gt;(
+    </span><span class="kw">pub fn </span>compute_pass_end_with_unresolved_commands&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
-        base: BasePassRef&lt;ComputeCommand&gt;,
+        base: BasePass&lt;ComputeCommand&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="kw">let </span>resolved_commands =
-            ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), base.commands)<span class="question-mark">?</span>;
+        <span class="kw">let </span>commands = ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), <span class="kw-2">&amp;</span>base.commands)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.command_encoder_run_compute_pass_impl::&lt;A&gt;(
+        <span class="self">self</span>.compute_pass_end_impl::&lt;A&gt;(
             encoder_id,
-            BasePassRef {
+            BasePass {
                 label: base.label,
-                commands: <span class="kw-2">&amp;</span>resolved_commands,
+                commands,
                 dynamic_offsets: base.dynamic_offsets,
                 string_data: base.string_data,
                 push_constant_data: base.push_constant_data,
@@ -1379,10 +1470,10 @@
         )
     }
 
-    <span class="kw">fn </span>command_encoder_run_compute_pass_impl&lt;A: HalApi&gt;(
+    <span class="kw">fn </span>compute_pass_end_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
-        base: BasePassRef&lt;ArcComputeCommand&lt;A&gt;&gt;,
+        base: BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
@@ -1407,7 +1498,7 @@
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
                 base: BasePass {
-                    label: base.label.map(str::to_string),
+                    label: base.label.clone(),
                     commands: base.commands.iter().map(Into::into).collect(),
                     dynamic_offsets: base.dynamic_offsets.to_vec(),
                     string_data: base.string_data.to_vec(),
@@ -1495,7 +1586,7 @@
             .flags
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS);
         <span class="kw">let </span>hal_desc = hal::ComputePassDescriptor {
-            label: hal_label(base.label, <span class="self">self</span>.instance.flags),
+            label: hal_label(base.label.as_deref(), <span class="self">self</span>.instance.flags),
             timestamp_writes,
         };
 
@@ -1521,9 +1612,9 @@
                     <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group.as_info().id());
 
                     <span class="kw">let </span>max_bind_groups = cmd_buf.limits.max_bind_groups;
-                    <span class="kw">if </span>index &gt;= <span class="kw-2">&amp;</span>max_bind_groups {
+                    <span class="kw">if </span>index &gt;= max_bind_groups {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::BindGroupIndexOutOfRange {
-                            index: <span class="kw-2">*</span>index,
+                            index,
                             max: max_bind_groups,
                         })
                         .map_pass_err(scope);
@@ -1536,9 +1627,9 @@
                     );
                     dynamic_offset_count += num_dynamic_offsets;
 
-                    <span class="kw">let </span>bind_group = tracker.bind_groups.insert_single(bind_group.clone());
+                    <span class="kw">let </span>bind_group = tracker.bind_groups.insert_single(bind_group);
                     bind_group
-                        .validate_dynamic_bindings(<span class="kw-2">*</span>index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
+                        .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     buffer_memory_init_actions.extend(
@@ -1560,7 +1651,7 @@
                     <span class="kw">let </span>entries =
                         state
                             .binder
-                            .assign_group(<span class="kw-2">*</span>index <span class="kw">as </span>usize, bind_group, <span class="kw-2">&amp;</span>temp_offsets);
+                            .assign_group(index <span class="kw">as </span>usize, bind_group, <span class="kw-2">&amp;</span>temp_offsets);
                     <span class="kw">if </span>!entries.is_empty() &amp;&amp; pipeline_layout.is_some() {
                         <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                         <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
@@ -1587,7 +1678,7 @@
 
                     state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
 
-                    tracker.compute_pipelines.insert_single(pipeline.clone());
+                    <span class="kw">let </span>pipeline = tracker.compute_pipelines.insert_single(pipeline);
 
                     <span class="kw">unsafe </span>{
                         raw.set_compute_pipeline(pipeline.raw());
@@ -1658,7 +1749,7 @@
                     <span class="kw">let </span>values_end_offset =
                         (values_offset + size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) <span class="kw">as </span>usize;
                     <span class="kw">let </span>data_slice =
-                        <span class="kw-2">&amp;</span>base.push_constant_data[(<span class="kw-2">*</span>values_offset <span class="kw">as </span>usize)..values_end_offset];
+                        <span class="kw-2">&amp;</span>base.push_constant_data[(values_offset <span class="kw">as </span>usize)..values_end_offset];
 
                     <span class="kw">let </span>pipeline_layout = state
                         .binder
@@ -1673,7 +1764,7 @@
                     pipeline_layout
                         .validate_push_constant_ranges(
                             wgt::ShaderStages::COMPUTE,
-                            <span class="kw-2">*</span>offset,
+                            offset,
                             end_offset_bytes,
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -1682,7 +1773,7 @@
                         raw.set_push_constants(
                             pipeline_layout.raw(),
                             wgt::ShaderStages::COMPUTE,
-                            <span class="kw-2">*</span>offset,
+                            offset,
                             data_slice,
                         );
                     }
@@ -1706,7 +1797,7 @@
                     {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::Dispatch(
                             DispatchError::InvalidGroupSize {
-                                current: <span class="kw-2">*</span>groups,
+                                current: groups,
                                 limit: groups_size_limit,
                             },
                         ))
@@ -1714,7 +1805,7 @@
                     }
 
                     <span class="kw">unsafe </span>{
-                        raw.dispatch(<span class="kw-2">*</span>groups);
+                        raw.dispatch(groups);
                     }
                 }
                 ArcComputeCommand::DispatchIndirect { buffer, offset } =&gt; {
@@ -1741,7 +1832,7 @@
                     <span class="kw">let </span>end_offset = offset + mem::size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
                     <span class="kw">if </span>end_offset &gt; buffer.size {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::IndirectBufferOverrun {
-                            offset: <span class="kw-2">*</span>offset,
+                            offset,
                             end_offset,
                             buffer_size: buffer.size,
                         })
@@ -1758,8 +1849,8 @@
 
                     </span>buffer_memory_init_actions.extend(
                         buffer.initialization_status.read().create_action(
-                            buffer,
-                            <span class="kw-2">*</span>offset..(<span class="kw-2">*</span>offset + stride),
+                            <span class="kw-2">&amp;</span>buffer,
+                            offset..(offset + stride),
                             MemoryInitKind::NeedsInitializedMemory,
                         ),
                     );
@@ -1773,7 +1864,7 @@
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{
-                        raw.dispatch_indirect(buf_raw, <span class="kw-2">*</span>offset);
+                        raw.dispatch_indirect(buf_raw, offset);
                     }
                 }
                 ArcComputeCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
@@ -1822,10 +1913,10 @@
                         .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set.clone());
+                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
                     query_set
-                        .validate_and_write_timestamp(raw, query_set_id, <span class="kw-2">*</span>query_index, <span class="prelude-val">None</span>)
+                        .validate_and_write_timestamp(raw, query_set_id, query_index, <span class="prelude-val">None</span>)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
                 ArcComputeCommand::BeginPipelineStatisticsQuery {
@@ -1835,13 +1926,13 @@
                     <span class="kw">let </span>query_set_id = query_set.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
-                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set.clone());
+                    <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
                     query_set
                         .validate_and_begin_pipeline_statistics_query(
                             raw,
                             query_set_id,
-                            <span class="kw-2">*</span>query_index,
+                            query_index,
                             <span class="prelude-val">None</span>,
                             <span class="kw-2">&amp;mut </span>active_query,
                         )
@@ -1900,10 +1991,17 @@
         bind_group_id: id::BindGroupId,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="kw">let </span>redundant = pass.current_bind_groups.set_and_check_redundant(
+        <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group_id);
+        <span class="kw">let </span>base = pass
+            .base
+            .as_mut()
+            .ok_or(ComputePassErrorInner::PassEnded)
+            .map_pass_err(scope)<span class="question-mark">?</span>; <span class="comment">// Can't use base_mut() utility here because of borrow checker.
+
+        </span><span class="kw">let </span>redundant = pass.current_bind_groups.set_and_check_redundant(
             bind_group_id,
             index,
-            <span class="kw-2">&amp;mut </span>pass.base.dynamic_offsets,
+            <span class="kw-2">&amp;mut </span>base.dynamic_offsets,
             offsets,
         );
 
@@ -1916,13 +2014,11 @@
             .bind_groups
             .read()
             .get(bind_group_id)
-            .map_err(|<span class="kw">_</span>| ComputePassError {
-                scope: PassErrorScope::SetBindGroup(bind_group_id),
-                inner: ComputePassErrorInner::InvalidBindGroup(index),
-            })<span class="question-mark">?
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBindGroup(index))
+            .map_pass_err(scope)<span class="question-mark">?
             </span>.clone();
 
-        pass.base.commands.push(ArcComputeCommand::SetBindGroup {
+        base.commands.push(ArcComputeCommand::SetBindGroup {
             index,
             num_dynamic_offsets: offsets.len(),
             bind_group,
@@ -1936,8 +2032,14 @@
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
         pipeline_id: id::ComputePipelineId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="kw">if </span>pass.current_pipeline.set_and_check_redundant(pipeline_id) {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        <span class="kw">let </span>redundant = pass.current_pipeline.set_and_check_redundant(pipeline_id);
+
+        <span class="kw">let </span>scope = PassErrorScope::SetPipelineCompute(pipeline_id);
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>redundant {
+            <span class="comment">// Do redundant early-out **after** checking whether the pass is ended or not.
+            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -1945,15 +2047,11 @@
             .compute_pipelines
             .read()
             .get(pipeline_id)
-            .map_err(|<span class="kw">_</span>| ComputePassError {
-                scope: PassErrorScope::SetPipelineCompute(pipeline_id),
-                inner: ComputePassErrorInner::InvalidPipeline(pipeline_id),
-            })<span class="question-mark">?
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidPipeline(pipeline_id))
+            .map_pass_err(scope)<span class="question-mark">?
             </span>.clone();
 
-        pass.base
-            .commands
-            .push(ArcComputeCommand::SetPipeline(pipeline));
+        base.commands.push(ArcComputeCommand::SetPipeline(pipeline));
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1963,33 +2061,36 @@
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
         offset: u32,
         data: <span class="kw-2">&amp;</span>[u8],
-    ) {
-        <span class="macro">assert_eq!</span>(
-            offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
-            <span class="number">0</span>,
-            <span class="string">"Push constant offset must be aligned to 4 bytes."
-        </span>);
-        <span class="macro">assert_eq!</span>(
-            data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>),
-            <span class="number">0</span>,
-            <span class="string">"Push constant size must be aligned to 4 bytes."
-        </span>);
-        <span class="kw">let </span>value_offset = pass.base.push_constant_data.len().try_into().expect(
-            <span class="string">"Ran out of push constant space. Don't set 4gb of push constants per ComputePass."</span>,
-        ); <span class="comment">// TODO: make this an error that can be handled
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        </span>pass.base.push_constant_data.extend(
+        <span class="kw">if </span>offset &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantOffsetAlignment).map_pass_err(scope);
+        }
+
+        <span class="kw">if </span>data.len() <span class="kw">as </span>u32 &amp; (wgt::PUSH_CONSTANT_ALIGNMENT - <span class="number">1</span>) != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::PushConstantSizeAlignment).map_pass_err(scope);
+        }
+        <span class="kw">let </span>value_offset = base
+            .push_constant_data
+            .len()
+            .try_into()
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::PushConstantOutOfMemory)
+            .map_pass_err(scope)<span class="question-mark">?</span>;
+
+        base.push_constant_data.extend(
             data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT <span class="kw">as </span>usize)
                 .map(|arr| u32::from_ne_bytes([arr[<span class="number">0</span>], arr[<span class="number">1</span>], arr[<span class="number">2</span>], arr[<span class="number">3</span>]])),
         );
 
-        pass.base
-            .commands
-            .push(ArcComputeCommand::&lt;A&gt;::SetPushConstant {
-                offset,
-                size_bytes: data.len() <span class="kw">as </span>u32,
-                values_offset: value_offset,
-            });
+        base.commands.push(ArcComputeCommand::&lt;A&gt;::SetPushConstant {
+            offset,
+            size_bytes: data.len() <span class="kw">as </span>u32,
+            values_offset: value_offset,
+        });
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>compute_pass_dispatch_workgroups&lt;A: HalApi&gt;(
@@ -1998,10 +2099,18 @@
         groups_x: u32,
         groups_y: u32,
         groups_z: u32,
-    ) {
-        pass.base.commands.push(ArcComputeCommand::&lt;A&gt;::Dispatch([
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::Dispatch {
+            indirect: <span class="bool-val">false</span>,
+            pipeline: pass.current_pipeline.last_state,
+        };
+
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+        base.commands.push(ArcComputeCommand::&lt;A&gt;::Dispatch([
             groups_x, groups_y, groups_z,
         ]));
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>compute_pass_dispatch_workgroups_indirect&lt;A: HalApi&gt;(
@@ -2011,21 +2120,21 @@
         offset: BufferAddress,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span>scope = PassErrorScope::Dispatch {
+            indirect: <span class="bool-val">true</span>,
+            pipeline: pass.current_pipeline.last_state,
+        };
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>buffer = hub
             .buffers
             .read()
             .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| ComputePassError {
-                scope: PassErrorScope::Dispatch {
-                    indirect: <span class="bool-val">true</span>,
-                    pipeline: pass.current_pipeline.last_state,
-                },
-                inner: ComputePassErrorInner::InvalidBuffer(buffer_id),
-            })<span class="question-mark">?
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBuffer(buffer_id))
+            .map_pass_err(scope)<span class="question-mark">?
             </span>.clone();
 
-        pass.base
-            .commands
+        base.commands
             .push(ArcComputeCommand::&lt;A&gt;::DispatchIndirect { buffer, offset });
 
         <span class="prelude-val">Ok</span>(())
@@ -2036,22 +2145,29 @@
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
         label: <span class="kw-2">&amp;</span>str,
         color: u32,
-    ) {
-        <span class="kw">let </span>bytes = label.as_bytes();
-        pass.base.string_data.extend_from_slice(bytes);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>base = pass.base_mut(PassErrorScope::PushDebugGroup)<span class="question-mark">?</span>;
 
-        pass.base
-            .commands
-            .push(ArcComputeCommand::&lt;A&gt;::PushDebugGroup {
-                color,
-                len: bytes.len(),
-            });
+        <span class="kw">let </span>bytes = label.as_bytes();
+        base.string_data.extend_from_slice(bytes);
+
+        base.commands.push(ArcComputeCommand::&lt;A&gt;::PushDebugGroup {
+            color,
+            len: bytes.len(),
+        });
+
+        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>compute_pass_pop_debug_group&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;) {
-        pass.base
-            .commands
-            .push(ArcComputeCommand::&lt;A&gt;::PopDebugGroup);
+    <span class="kw">pub fn </span>compute_pass_pop_debug_group&lt;A: HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>base = pass.base_mut(PassErrorScope::PopDebugGroup)<span class="question-mark">?</span>;
+
+        base.commands.push(ArcComputeCommand::&lt;A&gt;::PopDebugGroup);
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>compute_pass_insert_debug_marker&lt;A: HalApi&gt;(
@@ -2059,16 +2175,19 @@
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
         label: <span class="kw-2">&amp;</span>str,
         color: u32,
-    ) {
-        <span class="kw">let </span>bytes = label.as_bytes();
-        pass.base.string_data.extend_from_slice(bytes);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>base = pass.base_mut(PassErrorScope::InsertDebugMarker)<span class="question-mark">?</span>;
 
-        pass.base
-            .commands
+        <span class="kw">let </span>bytes = label.as_bytes();
+        base.string_data.extend_from_slice(bytes);
+
+        base.commands
             .push(ArcComputeCommand::&lt;A&gt;::InsertDebugMarker {
                 color,
                 len: bytes.len(),
             });
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>compute_pass_write_timestamp&lt;A: HalApi&gt;(
@@ -2077,18 +2196,19 @@
         query_set_id: id::QuerySetId,
         query_index: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>query_set = hub
             .query_sets
             .read()
             .get(query_set_id)
-            .map_err(|<span class="kw">_</span>| ComputePassError {
-                scope: PassErrorScope::WriteTimestamp,
-                inner: ComputePassErrorInner::InvalidQuerySet(query_set_id),
-            })<span class="question-mark">?
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidQuerySet(query_set_id))
+            .map_pass_err(scope)<span class="question-mark">?
             </span>.clone();
 
-        pass.base.commands.push(ArcComputeCommand::WriteTimestamp {
+        base.commands.push(ArcComputeCommand::WriteTimestamp {
             query_set,
             query_index,
         });
@@ -2102,19 +2222,19 @@
         query_set_id: id::QuerySetId,
         query_index: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>query_set = hub
             .query_sets
             .read()
             .get(query_set_id)
-            .map_err(|<span class="kw">_</span>| ComputePassError {
-                scope: PassErrorScope::WriteTimestamp,
-                inner: ComputePassErrorInner::InvalidQuerySet(query_set_id),
-            })<span class="question-mark">?
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidQuerySet(query_set_id))
+            .map_pass_err(scope)<span class="question-mark">?
             </span>.clone();
 
-        pass.base
-            .commands
+        base.commands
             .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
                 query_set,
                 query_index,
@@ -2123,10 +2243,16 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;) {
-        pass.base
-            .commands
+    <span class="kw">pub fn </span>compute_pass_end_pipeline_statistics_query&lt;A: HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
+        <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
+        base.commands
             .push(ArcComputeCommand::&lt;A&gt;::EndPipelineStatisticsQuery);
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>
