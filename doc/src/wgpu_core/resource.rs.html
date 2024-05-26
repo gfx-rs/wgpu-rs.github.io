@@ -1578,6 +1578,28 @@
 <a href="#1577" id="1577">1577</a>
 <a href="#1578" id="1578">1578</a>
 <a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2512,6 +2534,28 @@
 }
 
 <span class="kw">impl </span>Global {
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The raw buffer handle must not be manually destroyed
+    </span><span class="kw">pub unsafe fn </span>buffer_as_hal&lt;A: HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Buffer&gt;) -&gt; R, R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: BufferId,
+        hal_buffer_callback: F,
+    ) -&gt; R {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::as_hal"</span>);
+
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span>buffer_opt = { hub.buffers.try_get(id).ok().flatten() };
+        <span class="kw">let </span>buffer = buffer_opt.as_ref().unwrap();
+
+        <span class="kw">let </span>hal_buffer = {
+            <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+            buffer.raw(<span class="kw-2">&amp;</span>snatch_guard)
+        };
+
+        hal_buffer_callback(hal_buffer)
+    }
+
     <span class="doccomment">/// # Safety
     ///
     /// - The raw texture handle must not be manually destroyed

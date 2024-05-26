@@ -5908,6 +5908,30 @@
 <a href="#5907" id="5907">5907</a>
 <a href="#5908" id="5908">5908</a>
 <a href="#5909" id="5909">5909</a>
+<a href="#5910" id="5910">5910</a>
+<a href="#5911" id="5911">5911</a>
+<a href="#5912" id="5912">5912</a>
+<a href="#5913" id="5913">5913</a>
+<a href="#5914" id="5914">5914</a>
+<a href="#5915" id="5915">5915</a>
+<a href="#5916" id="5916">5916</a>
+<a href="#5917" id="5917">5917</a>
+<a href="#5918" id="5918">5918</a>
+<a href="#5919" id="5919">5919</a>
+<a href="#5920" id="5920">5920</a>
+<a href="#5921" id="5921">5921</a>
+<a href="#5922" id="5922">5922</a>
+<a href="#5923" id="5923">5923</a>
+<a href="#5924" id="5924">5924</a>
+<a href="#5925" id="5925">5925</a>
+<a href="#5926" id="5926">5926</a>
+<a href="#5927" id="5927">5927</a>
+<a href="#5928" id="5928">5928</a>
+<a href="#5929" id="5929">5929</a>
+<a href="#5930" id="5930">5930</a>
+<a href="#5931" id="5931">5931</a>
+<a href="#5932" id="5932">5932</a>
+<a href="#5933" id="5933">5933</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -9454,6 +9478,30 @@
             buffer: <span class="self">self</span>,
             offset: <span class="number">0</span>,
             size: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns the inner hal Buffer using a callback. The hal buffer will be `None` if the
+    /// backend type argument does not match with this wgpu Buffer
+    ///
+    /// # Safety
+    ///
+    /// - The raw handle obtained from the hal Buffer must not be manually destroyed
+    </span><span class="attr">#[cfg(wgpu_core)]
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Buffer&gt;) -&gt; R, R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hal_buffer_callback: F,
+    ) -&gt; R {
+        <span class="kw">let </span>id = <span class="self">self</span>.id;
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
+            </span>.context
+            .as_any()
+            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
+        {
+            <span class="kw">unsafe </span>{ ctx.buffer_as_hal::&lt;A, F, R&gt;(id.into(), hal_buffer_callback) }
+        } <span class="kw">else </span>{
+            hal_buffer_callback(<span class="prelude-val">None</span>)
         }
     }
 
