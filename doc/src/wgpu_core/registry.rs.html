@@ -261,6 +261,12 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgt::Backend;
@@ -439,8 +445,14 @@
         <span class="kw">let </span>guard = <span class="self">self</span>.storage.read();
 
         <span class="kw">let </span>type_name = guard.kind();
-        <span class="kw">match </span>guard.get(id) {
-            <span class="prelude-val">Ok</span>(res) =&gt; {
+
+        <span class="comment">// Using `get` over `try_get` is fine for the most part.
+        // However, there's corner cases where it can happen that a resource still holds an Arc
+        // to another resource that was already dropped explicitly from the registry.
+        // That resource is now in an invalid state, likely causing an error that lead
+        // us here, trying to print its label but failing because the id is now vacant.
+        </span><span class="kw">match </span>guard.try_get(id) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; {
                 <span class="kw">let </span>label = res.label();
                 <span class="kw">if </span>label.is_empty() {
                     <span class="macro">format!</span>(<span class="string">"&lt;{}-{:?}&gt;"</span>, type_name, id.unzip())
@@ -448,7 +460,7 @@
                     label.to_owned()
                 }
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">format!</span>(
+            <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(
                 <span class="string">"&lt;Invalid-{} label={}&gt;"</span>,
                 type_name,
                 guard.label_for_invalid_id(id)

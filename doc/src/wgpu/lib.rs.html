@@ -5927,11 +5927,6 @@
 <a href="#5926" id="5926">5926</a>
 <a href="#5927" id="5927">5927</a>
 <a href="#5928" id="5928">5928</a>
-<a href="#5929" id="5929">5929</a>
-<a href="#5930" id="5930">5930</a>
-<a href="#5931" id="5931">5931</a>
-<a href="#5932" id="5932">5932</a>
-<a href="#5933" id="5933">5933</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -7220,10 +7215,10 @@
 /// Corresponds to [WebGPU `GPUComputePassEncoder`](
 /// https://gpuweb.github.io/gpuweb/#compute-pass-encoder).
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>ComputePass {
     id: ObjectId,
     data: Box&lt;Data&gt;,
-    parent: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandEncoder,
+    context: Arc&lt;C&gt;,
 }
 
 <span class="doccomment">/// Encodes a series of GPU operations into a reusable "render bundle".
@@ -9810,7 +9805,7 @@
     <span class="doccomment">/// Begins recording of a compute pass.
     ///
     /// This function returns a [`ComputePass`] object which records a single compute pass.
-    </span><span class="kw">pub fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; ComputePass&lt;<span class="lifetime">'_</span>&gt; {
+    </span><span class="kw">pub fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; ComputePass {
         <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
         <span class="kw">let </span>(id, data) = DynContext::command_encoder_begin_compute_pass(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
@@ -9821,7 +9816,7 @@
         ComputePass {
             id,
             data,
-            parent: <span class="self">self</span>,
+            context: <span class="self">self</span>.context.clone(),
         }
     }
 
@@ -10662,7 +10657,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl </span>ComputePass {
     <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout
     /// in the active pipeline when the `dispatch()` function is called must match the layout of this bind group.
     ///
@@ -10676,7 +10671,7 @@
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
         DynContext::compute_pass_set_bind_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             index,
@@ -10689,7 +10684,7 @@
     <span class="doccomment">/// Sets the active compute pipeline.
     </span><span class="kw">pub fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>ComputePipeline) {
         DynContext::compute_pass_set_pipeline(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             <span class="kw-2">&amp;</span>pipeline.id,
@@ -10700,7 +10695,7 @@
     <span class="doccomment">/// Inserts debug marker.
     </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::compute_pass_insert_debug_marker(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             label,
@@ -10710,7 +10705,7 @@
     <span class="doccomment">/// Start record commands and group it into debug marker group.
     </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::compute_pass_push_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             label,
@@ -10719,11 +10714,7 @@
 
     <span class="doccomment">/// Stops command recording and creates debug group.
     </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        DynContext::compute_pass_pop_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
-        );
+        DynContext::compute_pass_pop_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.id, <span class="self">self</span>.data.as_mut());
     }
 
     <span class="doccomment">/// Dispatches compute work operations.
@@ -10731,7 +10722,7 @@
     /// `x`, `y` and `z` denote the number of work groups to dispatch in each dimension.
     </span><span class="kw">pub fn </span>dispatch_workgroups(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: u32, y: u32, z: u32) {
         DynContext::compute_pass_dispatch_workgroups(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             x,
@@ -10749,7 +10740,7 @@
         indirect_offset: BufferAddress,
     ) {
         DynContext::compute_pass_dispatch_workgroups_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
@@ -10760,7 +10751,7 @@
 }
 
 <span class="doccomment">/// [`Features::PUSH_CONSTANTS`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl </span>ComputePass {
     <span class="doccomment">/// Set push constant data for subsequent dispatch calls.
     ///
     /// Write the bytes in `data` at offset `offset` within push constant
@@ -10771,7 +10762,7 @@
     /// call will write `data` to bytes `4..12` of push constant storage.
     </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
         DynContext::compute_pass_set_push_constants(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             offset,
@@ -10781,7 +10772,7 @@
 }
 
 <span class="doccomment">/// [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl </span>ComputePass {
     <span class="doccomment">/// Issue a timestamp command at this point in the queue. The timestamp will be written to the specified query set, at the specified index.
     ///
     /// Must be multiplied by [`Queue::get_timestamp_period`] to get
@@ -10790,7 +10781,7 @@
     /// for a string of operations to complete.
     </span><span class="kw">pub fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::compute_pass_write_timestamp(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             <span class="kw-2">&amp;</span>query_set.id,
@@ -10801,12 +10792,12 @@
 }
 
 <span class="doccomment">/// [`Features::PIPELINE_STATISTICS_QUERY`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl </span>ComputePass {
     <span class="doccomment">/// Start a pipeline statistics query on this compute pass. It can be ended with
     /// `end_pipeline_statistics_query`. Pipeline statistics queries may not be nested.
     </span><span class="kw">pub fn </span>begin_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::compute_pass_begin_pipeline_statistics_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
             <span class="kw-2">&amp;</span>query_set.id,
@@ -10819,18 +10810,17 @@
     /// `begin_pipeline_statistics_query`. Pipeline statistics queries may not be nested.
     </span><span class="kw">pub fn </span>end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::compute_pass_end_pipeline_statistics_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_mut(),
         );
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Drop <span class="kw">for </span>ComputePass&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>ComputePass {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.parent
-                .context
+            <span class="self">self</span>.context
                 .compute_pass_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>.id, <span class="self">self</span>.data.as_mut());
         }
     }

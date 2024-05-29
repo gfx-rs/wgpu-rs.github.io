@@ -892,6 +892,88 @@
 <a href="#891" id="891">891</a>
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -919,7 +1001,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError};
 <span class="kw">use </span><span class="kw">crate</span>::error::{ErrorFormatter, PrettyError};
 <span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
-<span class="kw">use </span><span class="kw">crate</span>::id::CommandBufferId;
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
@@ -945,9 +1026,22 @@
     /// [`compute_pass_end`] require the encoder to be in this
     /// state.
     ///
+    /// This corresponds to WebGPU's "open" state.
+    /// See &lt;https://www.w3.org/TR/webgpu/#encoder-state-open&gt;
+    ///
     /// [`command_encoder_clear_buffer`]: Global::command_encoder_clear_buffer
     /// [`compute_pass_end`]: Global::compute_pass_end
     </span>Recording,
+
+    <span class="doccomment">/// Locked by a render or compute pass.
+    ///
+    /// This state is entered when a render/compute pass is created,
+    /// and exited when the pass is ended.
+    ///
+    /// As long as the command encoder is locked, any command building operation on it will fail
+    /// and put the encoder into the [`CommandEncoderStatus::Error`] state.
+    /// See &lt;https://www.w3.org/TR/webgpu/#encoder-state-locked&gt;
+    </span>Locked,
 
     <span class="doccomment">/// Command recording is complete, and the buffer is ready for submission.
     ///
@@ -1304,6 +1398,38 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; CommandBuffer&lt;A&gt; {
+    <span class="kw">fn </span>get_encoder_impl(
+        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
+        id: id::CommandEncoderId,
+        lock_on_acquire: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
+        <span class="kw">let </span>storage = hub.command_buffers.read();
+        <span class="kw">match </span>storage.get(id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+                <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+                <span class="kw">match </span>cmd_buf_data.status {
+                    CommandEncoderStatus::Recording =&gt; {
+                        <span class="kw">if </span>lock_on_acquire {
+                            cmd_buf_data.status = CommandEncoderStatus::Locked;
+                        }
+                        <span class="prelude-val">Ok</span>(cmd_buf.clone())
+                    }
+                    CommandEncoderStatus::Locked =&gt; {
+                        <span class="comment">// Any operation on a locked encoder is required to put it into the invalid/error state.
+                        // See https://www.w3.org/TR/webgpu/#encoder-state-locked
+                        </span>cmd_buf_data.encoder.discard();
+                        cmd_buf_data.status = CommandEncoderStatus::Error;
+                        <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
+                    }
+                    CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
+                    CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+                }
+            }
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+
     <span class="doccomment">/// Return the [`CommandBuffer`] for `id`, for recording new commands.
     ///
     /// In `wgpu_core`, the [`CommandBuffer`] type serves both as encoder and
@@ -1314,14 +1440,37 @@
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
         id: id::CommandEncoderId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
-        <span class="kw">let </span>storage = hub.command_buffers.read();
-        <span class="kw">match </span>storage.get(id.into_command_buffer_id()) {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; <span class="kw">match </span>cmd_buf.data.lock().as_ref().unwrap().status {
-                CommandEncoderStatus::Recording =&gt; <span class="prelude-val">Ok</span>(cmd_buf.clone()),
-                CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
-                CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-            },
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        <span class="kw">let </span>lock_on_acquire = <span class="bool-val">false</span>;
+        <span class="self">Self</span>::get_encoder_impl(hub, id, lock_on_acquire)
+    }
+
+    <span class="doccomment">/// Return the [`CommandBuffer`] for `id` and if successful puts it into the [`CommandEncoderStatus::Locked`] state.
+    ///
+    /// See [`CommandBuffer::get_encoder`].
+    /// Call [`CommandBuffer::unlock_encoder`] to put the [`CommandBuffer`] back into the [`CommandEncoderStatus::Recording`] state.
+    </span><span class="kw">fn </span>lock_encoder(
+        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
+        id: id::CommandEncoderId,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
+        <span class="kw">let </span>lock_on_acquire = <span class="bool-val">true</span>;
+        <span class="self">Self</span>::get_encoder_impl(hub, id, lock_on_acquire)
+    }
+
+    <span class="doccomment">/// Unlocks the [`CommandBuffer`] for `id` and puts it back into the [`CommandEncoderStatus::Recording`] state.
+    ///
+    /// This function is the counterpart to [`CommandBuffer::lock_encoder`].
+    /// It is only valid to call this function if the encoder is in the [`CommandEncoderStatus::Locked`] state.
+    </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>data_lock = <span class="self">self</span>.data.lock();
+        <span class="kw">let </span>status = <span class="kw-2">&amp;mut </span>data_lock.as_mut().unwrap().status;
+        <span class="kw">match </span><span class="kw-2">*</span>status {
+            CommandEncoderStatus::Recording =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            CommandEncoderStatus::Locked =&gt; {
+                <span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
+                <span class="prelude-val">Ok</span>(())
+            }
+            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
         }
     }
 
@@ -1458,6 +1607,8 @@
     </span>NotRecording,
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
+    <span class="attr">#[error(<span class="string">"Command encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
+    </span>Locked,
 }
 
 <span class="kw">impl </span>Global {
@@ -1465,7 +1616,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
         _desc: <span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor&lt;Label&gt;,
-    ) -&gt; (CommandBufferId, <span class="prelude-ty">Option</span>&lt;CommandEncoderError&gt;) {
+    ) -&gt; (id::CommandBufferId, <span class="prelude-ty">Option</span>&lt;CommandEncoderError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::finish"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -1485,6 +1636,11 @@
                             </span><span class="macro">log::trace!</span>(<span class="string">"Command buffer {:?}"</span>, encoder_id);
                             <span class="prelude-val">None
                         </span>}
+                    }
+                    CommandEncoderStatus::Locked =&gt; {
+                        cmd_buf_data.encoder.discard();
+                        cmd_buf_data.status = CommandEncoderStatus::Error;
+                        <span class="prelude-val">Some</span>(CommandEncoderError::Locked)
                     }
                     CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Some</span>(CommandEncoderError::NotRecording),
                     CommandEncoderStatus::Error =&gt; {
@@ -1699,7 +1855,12 @@
     <span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
     </span>Bundle,
     <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-    </span>Pass(id::CommandEncoderId),
+    </span><span class="comment">// TODO: To be removed in favor of `Pass`.
+    // ComputePass is already operating on command buffer instead,
+    // same should apply to RenderPass in the future.
+    </span>PassEncoder(id::CommandEncoderId),
+    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
+    </span>Pass(<span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;),
     <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
     </span>SetBindGroup(id::BindGroupId),
     <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
@@ -1753,8 +1914,11 @@
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
         <span class="comment">// This error is not in the error chain, only notes are needed
         </span><span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::Pass(id) =&gt; {
+            <span class="self">Self</span>::PassEncoder(id) =&gt; {
                 fmt.command_buffer_label(<span class="kw-2">&amp;</span>id.into_command_buffer_id());
+            }
+            <span class="self">Self</span>::Pass(<span class="prelude-val">Some</span>(id)) =&gt; {
+                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id);
             }
             <span class="self">Self</span>::SetBindGroup(id) =&gt; {
                 fmt.bind_group_label(<span class="kw-2">&amp;</span>id);

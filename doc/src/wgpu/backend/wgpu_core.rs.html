@@ -3296,6 +3296,18 @@
 <a href="#3295" id="3295">3295</a>
 <a href="#3296" id="3296">3296</a>
 <a href="#3297" id="3297">3297</a>
+<a href="#3298" id="3298">3298</a>
+<a href="#3299" id="3299">3299</a>
+<a href="#3300" id="3300">3300</a>
+<a href="#3301" id="3301">3301</a>
+<a href="#3302" id="3302">3302</a>
+<a href="#3303" id="3303">3303</a>
+<a href="#3304" id="3304">3304</a>
+<a href="#3305" id="3305">3305</a>
+<a href="#3306" id="3306">3306</a>
+<a href="#3307" id="3307">3307</a>
+<a href="#3308" id="3308">3308</a>
+<a href="#3309" id="3309">3309</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -5216,13 +5228,25 @@
                     end_of_pass_write_index: tw.end_of_pass_write_index,
                 });
 
+        <span class="kw">let </span>(pass, err) = <span class="macro">gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_create_compute_pass_dyn(<span class="kw-2">*</span>encoder, <span class="kw-2">&amp;</span>wgc::command::ComputePassDescriptor {
+            label: desc.label.map(Borrowed),
+            timestamp_writes: timestamp_writes.as_ref(),
+        }));
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = err {
+            <span class="self">self</span>.handle_error(
+                <span class="kw-2">&amp;</span>encoder_data.error_sink,
+                cause,
+                LABEL,
+                desc.label,
+                <span class="string">"CommandEncoder::begin_compute_pass"</span>,
+            );
+        }
+
         (
             Unused,
             <span class="self">Self</span>::ComputePassData {
-                pass: <span class="macro">gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_create_compute_pass_dyn(<span class="kw-2">*</span>encoder, <span class="kw-2">&amp;</span>wgc::command::ComputePassDescriptor {
-                    label: desc.label.map(Borrowed),
-                    timestamp_writes: timestamp_writes.as_ref(),
-                })),
+                pass,
                 error_sink: encoder_data.error_sink.clone(),
             },
         )

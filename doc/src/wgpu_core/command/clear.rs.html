@@ -509,8 +509,6 @@
 <a href="#508" id="508">508</a>
 <a href="#509" id="509">509</a>
 <a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -539,8 +537,6 @@
 </span><span class="kw">pub enum </span>ClearError {
     <span class="attr">#[error(<span class="string">"To use clear_texture the CLEAR_TEXTURE feature needs to be enabled"</span>)]
     </span>MissingClearTextureFeature,
-    <span class="attr">#[error(<span class="string">"Command encoder {0:?} is invalid"</span>)]
-    </span>InvalidCommandEncoder(CommandEncoderId),
     <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
     </span>InvalidDevice(DeviceId),
     <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
@@ -587,6 +583,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     },
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
+    <span class="attr">#[error(transparent)]
+    </span>CommandEncoderError(<span class="attr">#[from] </span><span class="kw">super</span>::CommandEncoderError),
 }
 
 <span class="kw">impl </span>Global {
@@ -602,8 +600,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)
-            .map_err(|<span class="kw">_</span>| ClearError::InvalidCommandEncoder(command_encoder_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
@@ -696,8 +693,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)
-            .map_err(|<span class="kw">_</span>| ClearError::InvalidCommandEncoder(command_encoder_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
