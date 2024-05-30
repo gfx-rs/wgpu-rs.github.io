@@ -1800,8 +1800,6 @@
 <a href="#1799" id="1799">1799</a>
 <a href="#1800" id="1800">1800</a>
 <a href="#1801" id="1801">1801</a>
-<a href="#1802" id="1802">1802</a>
-<a href="#1803" id="1803">1803</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -3544,7 +3542,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="kw">super</span>::CommandBuffer],
         _surface_textures: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="kw">super</span>::Texture],
-        signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span><span class="kw">super</span>::Fence, <span class="kw">crate</span>::FenceValue)&gt;,
+        (signal_fence, signal_value): (<span class="kw-2">&amp;mut </span><span class="kw">super</span>::Fence, <span class="kw">crate</span>::FenceValue),
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>shared = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared);
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span>shared.context.lock();
@@ -3578,12 +3576,10 @@
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>((fence, value)) = signal_fence {
-            fence.maintain(gl);
-            <span class="kw">let </span>sync = <span class="kw">unsafe </span>{ gl.fence_sync(glow::SYNC_GPU_COMMANDS_COMPLETE, <span class="number">0</span>) }
-                .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
-            fence.pending.push((value, sync));
-        }
+        signal_fence.maintain(gl);
+        <span class="kw">let </span>sync = <span class="kw">unsafe </span>{ gl.fence_sync(glow::SYNC_GPU_COMMANDS_COMPLETE, <span class="number">0</span>) }
+            .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
+        signal_fence.pending.push((signal_value, sync));
 
         <span class="prelude-val">Ok</span>(())
     }

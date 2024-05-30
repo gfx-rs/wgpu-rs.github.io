@@ -2257,26 +2257,12 @@
 <a href="#2256" id="2256">2256</a>
 <a href="#2257" id="2257">2257</a>
 <a href="#2258" id="2258">2258</a>
-<a href="#2259" id="2259">2259</a>
-<a href="#2260" id="2260">2260</a>
-<a href="#2261" id="2261">2261</a>
-<a href="#2262" id="2262">2262</a>
-<a href="#2263" id="2263">2263</a>
-<a href="#2264" id="2264">2264</a>
-<a href="#2265" id="2265">2265</a>
-<a href="#2266" id="2266">2266</a>
-<a href="#2267" id="2267">2267</a>
-<a href="#2268" id="2268">2268</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
 
-<span class="kw">use </span>std::{
-    collections::BTreeMap,
-    ffi::CStr,
-    sync::{atomic::AtomicIsize, Arc},
-};
+<span class="kw">use </span>std::{collections::BTreeMap, ffi::CStr, sync::Arc};
 
 <span class="kw">fn </span>depth_stencil_required_flags() -&gt; vk::FormatFeatureFlags {
     vk::FormatFeatureFlags::SAMPLED_IMAGE | vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
@@ -4052,21 +4038,15 @@
             render_passes: Mutex::new(Default::default()),
             framebuffers: Mutex::new(Default::default()),
         });
-        <span class="kw">let </span><span class="kw-2">mut </span>relay_semaphores = [vk::Semaphore::null(); <span class="number">2</span>];
-        <span class="kw">for </span>sem <span class="kw">in </span>relay_semaphores.iter_mut() {
-            <span class="kw">unsafe </span>{
-                <span class="kw-2">*</span>sem = shared
-                    .raw
-                    .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::default(), <span class="prelude-val">None</span>)<span class="question-mark">?
-            </span>};
-        }
+
+        <span class="kw">let </span>relay_semaphores = <span class="kw">super</span>::RelaySemaphores::new(<span class="kw-2">&amp;</span>shared)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>queue = <span class="kw">super</span>::Queue {
             raw: raw_queue,
             swapchain_fn,
             device: Arc::clone(<span class="kw-2">&amp;</span>shared),
             family_index,
-            relay_semaphores,
-            relay_index: AtomicIsize::new(-<span class="number">1</span>),
+            relay_semaphores: Mutex::new(relay_semaphores),
         };
 
         <span class="kw">let </span>mem_allocator = {

@@ -2395,6 +2395,26 @@
 <a href="#2394" id="2394">2394</a>
 <a href="#2395" id="2395">2395</a>
 <a href="#2396" id="2396">2396</a>
+<a href="#2397" id="2397">2397</a>
+<a href="#2398" id="2398">2398</a>
+<a href="#2399" id="2399">2399</a>
+<a href="#2400" id="2400">2400</a>
+<a href="#2401" id="2401">2401</a>
+<a href="#2402" id="2402">2402</a>
+<a href="#2403" id="2403">2403</a>
+<a href="#2404" id="2404">2404</a>
+<a href="#2405" id="2405">2405</a>
+<a href="#2406" id="2406">2406</a>
+<a href="#2407" id="2407">2407</a>
+<a href="#2408" id="2408">2408</a>
+<a href="#2409" id="2409">2409</a>
+<a href="#2410" id="2410">2410</a>
+<a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PipelineCache};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3009,17 +3029,16 @@
         <span class="kw">let </span>images =
             <span class="kw">unsafe </span>{ functor.get_swapchain_images(raw) }.map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
-        <span class="comment">// NOTE: It's important that we define at least images.len() + 1 wait
+        <span class="comment">// NOTE: It's important that we define at least images.len() wait
         // semaphores, since we prospectively need to provide the call to
         // acquire the next image with an unsignaled semaphore.
-        </span><span class="kw">let </span>surface_semaphores = (<span class="number">0</span>..images.len() + <span class="number">1</span>)
-            .map(|<span class="kw">_</span>| <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .raw
-                    .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::default(), <span class="prelude-val">None</span>)
+        </span><span class="kw">let </span>surface_semaphores = (<span class="number">0</span>..=images.len())
+            .map(|<span class="kw">_</span>| {
+                <span class="kw">super</span>::SwapchainImageSemaphores::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared)
+                    .map(Mutex::new)
+                    .map(Arc::new)
             })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
-            .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Swapchain {
             raw,
@@ -3030,7 +3049,7 @@
             config: config.clone(),
             view_formats: wgt_view_formats,
             surface_semaphores,
-            next_surface_index: <span class="number">0</span>,
+            next_semaphore_index: <span class="number">0</span>,
         })
     }
 
@@ -3233,9 +3252,12 @@
     <span class="kw">unsafe fn </span>exit(<span class="self">self</span>, queue: <span class="kw">super</span>::Queue) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.mem_allocator.into_inner().cleanup(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared) };
         <span class="kw">unsafe </span>{ <span class="self">self</span>.desc_allocator.into_inner().cleanup(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared) };
-        <span class="kw">for </span><span class="kw-2">&amp;</span>sem <span class="kw">in </span>queue.relay_semaphores.iter() {
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_semaphore(sem, <span class="prelude-val">None</span>) };
-        }
+        <span class="kw">unsafe </span>{
+            queue
+                .relay_semaphores
+                .into_inner()
+                .destroy(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw)
+        };
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.free_resources() };
     }
 
@@ -4452,54 +4474,7 @@
         timeout_ms: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>timeout_ns = timeout_ms <span class="kw">as </span>u64 * <span class="kw">super</span>::MILLIS_TO_NANOS;
-        <span class="kw">match </span><span class="kw-2">*</span>fence {
-            <span class="kw">super</span>::Fence::TimelineSemaphore(raw) =&gt; {
-                <span class="kw">let </span>semaphores = [raw];
-                <span class="kw">let </span>values = [wait_value];
-                <span class="kw">let </span>vk_info = vk::SemaphoreWaitInfo::default()
-                    .semaphores(<span class="kw-2">&amp;</span>semaphores)
-                    .values(<span class="kw-2">&amp;</span>values);
-                <span class="kw">let </span>result = <span class="kw">match </span><span class="self">self</span>.shared.extension_fns.timeline_semaphore {
-                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Extension(<span class="kw-2">ref </span>ext)) =&gt; <span class="kw">unsafe </span>{
-                        ext.wait_semaphores(<span class="kw-2">&amp;</span>vk_info, timeout_ns)
-                    },
-                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted) =&gt; <span class="kw">unsafe </span>{
-                        <span class="self">self</span>.shared.raw.wait_semaphores(<span class="kw-2">&amp;</span>vk_info, timeout_ns)
-                    },
-                    <span class="prelude-val">None </span>=&gt; <span class="macro">unreachable!</span>(),
-                };
-                <span class="kw">match </span>result {
-                    <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                    <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                    <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
-                }
-            }
-            <span class="kw">super</span>::Fence::FencePool {
-                last_completed,
-                <span class="kw-2">ref </span>active,
-                free: <span class="kw">_</span>,
-            } =&gt; {
-                <span class="kw">if </span>wait_value &lt;= last_completed {
-                    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-                } <span class="kw">else </span>{
-                    <span class="kw">match </span>active.iter().find(|&amp;&amp;(value, <span class="kw">_</span>)| value &gt;= wait_value) {
-                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, raw)) =&gt; {
-                            <span class="kw">match unsafe </span>{
-                                <span class="self">self</span>.shared.raw.wait_for_fences(<span class="kw-2">&amp;</span>[raw], <span class="bool-val">true</span>, timeout_ns)
-                            } {
-                                <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                                <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                                <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
-                            }
-                        }
-                        <span class="prelude-val">None </span>=&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">"No signals reached value {}"</span>, wait_value);
-                            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost)
-                        }
-                    }
-                }
-            }
-        }
+        <span class="self">self</span>.shared.wait_for_fence(fence, wait_value, timeout_ns)
     }
 
     <span class="kw">unsafe fn </span>start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -4757,6 +4732,71 @@
             <span class="self">self</span>.mem_allocator
                 .lock()
                 .dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, acceleration_structure.block.into_inner());
+        }
+    }
+}
+
+<span class="kw">impl </span><span class="kw">super</span>::DeviceShared {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new_binary_semaphore(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;vk::Semaphore, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.raw
+                .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::default(), <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">crate</span>::DeviceError::from)
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>wait_for_fence(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
+        wait_value: <span class="kw">crate</span>::FenceValue,
+        timeout_ns: u64,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::wait"</span>);
+        <span class="kw">match </span><span class="kw-2">*</span>fence {
+            <span class="kw">super</span>::Fence::TimelineSemaphore(raw) =&gt; {
+                <span class="kw">let </span>semaphores = [raw];
+                <span class="kw">let </span>values = [wait_value];
+                <span class="kw">let </span>vk_info = vk::SemaphoreWaitInfo::default()
+                    .semaphores(<span class="kw-2">&amp;</span>semaphores)
+                    .values(<span class="kw-2">&amp;</span>values);
+                <span class="kw">let </span>result = <span class="kw">match </span><span class="self">self</span>.extension_fns.timeline_semaphore {
+                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Extension(<span class="kw-2">ref </span>ext)) =&gt; <span class="kw">unsafe </span>{
+                        ext.wait_semaphores(<span class="kw-2">&amp;</span>vk_info, timeout_ns)
+                    },
+                    <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted) =&gt; <span class="kw">unsafe </span>{
+                        <span class="self">self</span>.raw.wait_semaphores(<span class="kw-2">&amp;</span>vk_info, timeout_ns)
+                    },
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">unreachable!</span>(),
+                };
+                <span class="kw">match </span>result {
+                    <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                    <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                    <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
+                }
+            }
+            <span class="kw">super</span>::Fence::FencePool {
+                last_completed,
+                <span class="kw-2">ref </span>active,
+                free: <span class="kw">_</span>,
+            } =&gt; {
+                <span class="kw">if </span>wait_value &lt;= last_completed {
+                    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+                } <span class="kw">else </span>{
+                    <span class="kw">match </span>active.iter().find(|&amp;&amp;(value, <span class="kw">_</span>)| value &gt;= wait_value) {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, raw)) =&gt; {
+                            <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw.wait_for_fences(<span class="kw-2">&amp;</span>[raw], <span class="bool-val">true</span>, timeout_ns) } {
+                                <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                                <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                                <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
+                            }
+                        }
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="macro">log::error!</span>(<span class="string">"No signals reached value {}"</span>, wait_value);
+                            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost)
+                        }
+                    }
+                }
+            }
         }
     }
 }

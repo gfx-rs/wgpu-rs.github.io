@@ -443,6 +443,9 @@
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -599,17 +602,20 @@ extract it from the hub.
                 parent_id: surface_id,
             });
         }
-        <span class="attr">#[cfg(not(feature = <span class="string">"trace"</span>))]
-        </span><span class="kw">let _ </span>= device;
+
+        <span class="kw">let </span>fence_guard = device.fence.read();
+        <span class="kw">let </span>fence = fence_guard.as_ref().unwrap();
 
         <span class="kw">let </span>suf = A::surface_as_hal(surface.as_ref());
         <span class="kw">let </span>(texture_id, status) = <span class="kw">match unsafe </span>{
-            suf.unwrap()
-                .acquire_texture(<span class="prelude-val">Some</span>(std::time::Duration::from_millis(
-                    FRAME_TIMEOUT_MS <span class="kw">as </span>u64,
-                )))
+            suf.unwrap().acquire_texture(
+                <span class="prelude-val">Some</span>(std::time::Duration::from_millis(FRAME_TIMEOUT_MS <span class="kw">as </span>u64)),
+                fence,
+            )
         } {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast)) =&gt; {
+                drop(fence_guard);
+
                 <span class="kw">let </span>texture_desc = wgt::TextureDescriptor {
                     label: (),
                     size: wgt::Extent3d {
