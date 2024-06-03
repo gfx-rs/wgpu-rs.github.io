@@ -1326,23 +1326,6 @@
 <a href="#1325" id="1325">1325</a>
 <a href="#1326" id="1326">1326</a>
 <a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a>
-<a href="#1329" id="1329">1329</a>
-<a href="#1330" id="1330">1330</a>
-<a href="#1331" id="1331">1331</a>
-<a href="#1332" id="1332">1332</a>
-<a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a>
-<a href="#1335" id="1335">1335</a>
-<a href="#1336" id="1336">1336</a>
-<a href="#1337" id="1337">1337</a>
-<a href="#1338" id="1338">1338</a>
-<a href="#1339" id="1339">1339</a>
-<a href="#1340" id="1340">1340</a>
-<a href="#1341" id="1341">1341</a>
-<a href="#1342" id="1342">1342</a>
-<a href="#1343" id="1343">1343</a>
-<a href="#1344" id="1344">1344</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 
@@ -1586,9 +1569,7 @@
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         valid_expressions: <span class="kw-2">&amp;</span>BitSet,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner, WithSpan&lt;ExpressionError&gt;&gt; {
-        <span class="kw">if </span>handle.index() &gt;= <span class="self">self</span>.expressions.len() {
-            <span class="prelude-val">Err</span>(ExpressionError::DoesntExist.with_span())
-        } <span class="kw">else if </span>!valid_expressions.contains(handle.index()) {
+        <span class="kw">if </span>!valid_expressions.contains(handle.index()) {
             <span class="prelude-val">Err</span>(ExpressionError::NotInScope.with_span_handle(handle, <span class="self">self</span>.expressions))
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(<span class="self">self</span>.info[handle].ty.inner_with(<span class="self">self</span>.types))
@@ -1604,18 +1585,8 @@
             .map_err_inner(|source| FunctionError::Expression { handle, source }.with_span())
     }
 
-    <span class="kw">fn </span>resolve_pointer_type(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner, FunctionError&gt; {
-        <span class="kw">if </span>handle.index() &gt;= <span class="self">self</span>.expressions.len() {
-            <span class="prelude-val">Err</span>(FunctionError::Expression {
-                handle,
-                source: ExpressionError::DoesntExist,
-            })
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(<span class="self">self</span>.info[handle].ty.inner_with(<span class="self">self</span>.types))
-        }
+    <span class="kw">fn </span>resolve_pointer_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner {
+        <span class="self">self</span>.info[handle].ty.inner_with(<span class="self">self</span>.types)
     }
 }
 
@@ -2164,9 +2135,6 @@
                 S::Store { pointer, value } =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>current = pointer;
                     <span class="kw">loop </span>{
-                        <span class="kw">let _ </span>= context
-                            .resolve_pointer_type(current)
-                            .map_err(|e| e.with_span())<span class="question-mark">?</span>;
                         <span class="kw">match </span>context.expressions[current] {
                             <span class="kw">crate</span>::Expression::Access { base, .. }
                             | <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; current = base,
@@ -2189,9 +2157,7 @@
                         <span class="kw">_ </span>=&gt; {}
                     }
 
-                    <span class="kw">let </span>pointer_ty = context
-                        .resolve_pointer_type(pointer)
-                        .map_err(|e| e.with_span())<span class="question-mark">?</span>;
+                    <span class="kw">let </span>pointer_ty = context.resolve_pointer_type(pointer);
 
                     <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>pointer_ty {
                         Ti::Pointer { base, space: <span class="kw">_ </span>} =&gt; <span class="kw">match </span>context.types[base].inner {
