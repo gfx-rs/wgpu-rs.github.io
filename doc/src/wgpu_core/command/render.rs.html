@@ -2800,8 +2800,10 @@
 <a href="#2799" id="2799">2799</a>
 <a href="#2800" id="2800">2800</a>
 <a href="#2801" id="2801">2801</a>
-<a href="#2802" id="2802">2802</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::command::{
+    validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
+};
+<span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
     api_log,
@@ -5061,7 +5063,6 @@
                         query_set
                             .validate_and_write_timestamp(
                                 raw,
-                                query_set_id,
                                 query_index,
                                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
                             )
@@ -5081,22 +5082,20 @@
                             .ok_or(RenderCommandError::InvalidQuerySet(query_set_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        query_set
-                            .validate_and_begin_occlusion_query(
-                                raw,
-                                query_set_id,
-                                query_index,
-                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
-                                <span class="kw-2">&amp;mut </span>active_query,
-                            )
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        validate_and_begin_occlusion_query(
+                            query_set.clone(),
+                            raw,
+                            query_index,
+                            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
+                            <span class="kw-2">&amp;mut </span>active_query,
+                        )
+                        .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndOcclusionQuery =&gt; {
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::end_occlusion_query"</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndOcclusionQuery;
 
-                        end_occlusion_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        end_occlusion_query(raw, <span class="kw-2">&amp;mut </span>active_query).map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::BeginPipelineStatisticsQuery {
                         query_set_id,
@@ -5111,21 +5110,20 @@
                             .ok_or(RenderCommandError::InvalidQuerySet(query_set_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        query_set
-                            .validate_and_begin_pipeline_statistics_query(
-                                raw,
-                                query_set_id,
-                                query_index,
-                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
-                                <span class="kw-2">&amp;mut </span>active_query,
-                            )
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        validate_and_begin_pipeline_statistics_query(
+                            query_set.clone(),
+                            raw,
+                            query_index,
+                            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets),
+                            <span class="kw-2">&amp;mut </span>active_query,
+                        )
+                        .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndPipelineStatisticsQuery =&gt; {
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::end_pipeline_statistics_query"</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
 
-                        end_pipeline_statistics_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
+                        end_pipeline_statistics_query(raw, <span class="kw-2">&amp;mut </span>active_query)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::ExecuteBundle(bundle_id) =&gt; {

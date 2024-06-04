@@ -1162,6 +1162,54 @@
 <a href="#1161" id="1161">1161</a>
 <a href="#1162" id="1162">1162</a>
 <a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     command::{
@@ -1169,15 +1217,15 @@
         compute_command::{ArcComputeCommand, ComputeCommand},
         end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
-        BasePass, BindGroupStateChange, CommandBuffer, CommandEncoderError, CommandEncoderStatus,
-        MapPassErr, PassErrorScope, QueryUseError, StateChange,
+        validate_and_begin_pipeline_statistics_query, BasePass, BindGroupStateChange,
+        CommandBuffer, CommandEncoderError, CommandEncoderStatus, MapPassErr, PassErrorScope,
+        QueryUseError, StateChange,
     },
     device::{DeviceError, MissingDownlevelFlags, MissingFeatures},
     error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
-    hal_label,
-    id::{<span class="self">self</span>},
+    hal_label, id,
     init_tracker::MemoryInitKind,
     resource::{<span class="self">self</span>, Resource},
     snatch::SnatchGuard,
@@ -1212,7 +1260,7 @@
     /// If it is none, this pass is invalid and any operation on it will return an error.
     </span>parent: <span class="prelude-ty">Option</span>&lt;Arc&lt;CommandBuffer&lt;A&gt;&gt;&gt;,
 
-    timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&gt;,
+    timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
 
     <span class="comment">// Resource binding dedupe state.
     </span>current_bind_groups: BindGroupStateChange,
@@ -1221,11 +1269,16 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ComputePass&lt;A&gt; {
     <span class="doccomment">/// If the parent command buffer is invalid, the returned pass will be invalid.
-    </span><span class="kw">fn </span>new(parent: <span class="prelude-ty">Option</span>&lt;Arc&lt;CommandBuffer&lt;A&gt;&gt;&gt;, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">fn </span>new(parent: <span class="prelude-ty">Option</span>&lt;Arc&lt;CommandBuffer&lt;A&gt;&gt;&gt;, desc: ArcComputePassDescriptor&lt;A&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>ArcComputePassDescriptor {
+            label,
+            timestamp_writes,
+        } = desc;
+
         <span class="self">Self </span>{
-            base: <span class="prelude-val">Some</span>(BasePass::new(<span class="kw-2">&amp;</span>desc.label)),
+            base: <span class="prelude-val">Some</span>(BasePass::new(label)),
             parent,
-            timestamp_writes: desc.timestamp_writes.cloned(),
+            timestamp_writes,
 
             current_bind_groups: BindGroupStateChange::new(),
             current_pipeline: StateChange::new(),
@@ -1271,11 +1324,27 @@
     </span><span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
+<span class="doccomment">/// Describes the writing of timestamp values in a compute pass with the query set resolved.
+</span><span class="kw">struct </span>ArcComputePassTimestampWrites&lt;A: HalApi&gt; {
+    <span class="doccomment">/// The query set to write the timestamps to.
+    </span><span class="kw">pub </span>query_set: Arc&lt;resource::QuerySet&lt;A&gt;&gt;,
+    <span class="doccomment">/// The index of the query set at which a start timestamp of this pass is written, if any.
+    </span><span class="kw">pub </span>beginning_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="doccomment">/// The index of the query set at which an end timestamp of this pass is written, if any.
+    </span><span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}
+
 <span class="attr">#[derive(Clone, Debug, Default)]
 </span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Defines where and when timestamp values will be written for this pass.
     </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ComputePassTimestampWrites&gt;,
+}
+
+<span class="kw">struct </span>ArcComputePassDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="kw">pub </span>label: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// Defines where and when timestamp values will be written for this pass.
+    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]
@@ -1474,13 +1543,37 @@
     </span><span class="kw">pub fn </span>command_encoder_create_compute_pass&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
-        desc: <span class="kw-2">&amp;</span>ComputePassDescriptor,
+        desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (ComputePass&lt;A&gt;, <span class="prelude-ty">Option</span>&lt;CommandEncoderError&gt;) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
+        <span class="kw">let </span><span class="kw-2">mut </span>arc_desc = ArcComputePassDescriptor {
+            label: <span class="kw-2">&amp;</span>desc.label,
+            timestamp_writes: <span class="prelude-val">None</span>, <span class="comment">// Handle only once we resolved the encoder.
+        </span>};
+
         <span class="kw">match </span>CommandBuffer::lock_encoder(hub, encoder_id) {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; (ComputePass::new(<span class="prelude-val">Some</span>(cmd_buf), desc), <span class="prelude-val">None</span>),
-            <span class="prelude-val">Err</span>(err) =&gt; (ComputePass::new(<span class="prelude-val">None</span>, desc), <span class="prelude-val">Some</span>(err)),
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
+                arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
+                    <span class="kw">let </span><span class="prelude-val">Ok</span>(query_set) = hub.query_sets.read().get_owned(tw.query_set) <span class="kw">else </span>{
+                        <span class="kw">return </span>(
+                            ComputePass::new(<span class="prelude-val">None</span>, arc_desc),
+                            <span class="prelude-val">Some</span>(CommandEncoderError::InvalidTimestampWritesQuerySetId),
+                        );
+                    };
+
+                    <span class="prelude-val">Some</span>(ArcComputePassTimestampWrites {
+                        query_set,
+                        beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                        end_of_pass_write_index: tw.end_of_pass_write_index,
+                    })
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
+                (ComputePass::new(<span class="prelude-val">Some</span>(cmd_buf), arc_desc), <span class="prelude-val">None</span>)
+            }
+            <span class="prelude-val">Err</span>(err) =&gt; (ComputePass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(err)),
         }
     }
 
@@ -1513,7 +1606,7 @@
             .take()
             .ok_or(ComputePassErrorInner::PassEnded)
             .map_pass_err(scope)<span class="question-mark">?</span>;
-        <span class="self">self</span>.compute_pass_end_impl(parent, base, pass.timestamp_writes.as_ref())
+        <span class="self">self</span>.compute_pass_end_impl(parent, base, pass.timestamp_writes.take())
     }
 
     <span class="attr">#[doc(hidden)]
@@ -1524,10 +1617,25 @@
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span>scope = PassErrorScope::PassEncoder(encoder_id);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id)
-            .map_pass_err(PassErrorScope::PassEncoder(encoder_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(scope)<span class="question-mark">?</span>;
         <span class="kw">let </span>commands = ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), <span class="kw-2">&amp;</span>base.commands)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes {
+            <span class="prelude-val">Some</span>(ArcComputePassTimestampWrites {
+                query_set: hub
+                    .query_sets
+                    .read()
+                    .get_owned(tw.query_set)
+                    .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidQuerySet(tw.query_set))
+                    .map_pass_err(scope)<span class="question-mark">?</span>,
+                beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                end_of_pass_write_index: tw.end_of_pass_write_index,
+            })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
         <span class="self">self</span>.compute_pass_end_impl::&lt;A&gt;(
             <span class="kw-2">&amp;</span>cmd_buf,
@@ -1546,12 +1654,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer&lt;A&gt;,
         base: BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;,
-        timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
+        <span class="kw-2">mut </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
         <span class="kw">let </span>pass_scope = PassErrorScope::Pass(<span class="prelude-val">Some</span>(cmd_buf.as_info().id()));
-
-        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">if </span>!device.is_valid() {
@@ -1574,7 +1680,13 @@
                     string_data: base.string_data.to_vec(),
                     push_constant_data: base.push_constant_data.to_vec(),
                 },
-                timestamp_writes: timestamp_writes.cloned(),
+                timestamp_writes: timestamp_writes
+                    .as_ref()
+                    .map(|tw| ComputePassTimestampWrites {
+                        query_set: tw.query_set.as_info().id(),
+                        beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                        end_of_pass_write_index: tw.end_of_pass_write_index,
+                    }),
             });
         }
 
@@ -1592,8 +1704,6 @@
         </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
         <span class="kw">let </span>raw = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
-
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
             binder: Binder::new(),
             pipeline: <span class="prelude-val">None</span>,
@@ -1605,12 +1715,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>string_offset = <span class="number">0</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>active_query = <span class="prelude-val">None</span>;
 
-        <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes {
-            <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
-                .query_sets
-                .add_single(<span class="kw-2">&amp;*</span>query_set_guard, tw.query_set)
-                .ok_or(ComputePassErrorInner::InvalidQuerySet(tw.query_set))
-                .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
+
+        <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
+        tracker.buffers.set_size(indices.buffers.size());
+        tracker.textures.set_size(indices.textures.size());
+        tracker.bind_groups.set_size(indices.bind_groups.size());
+        tracker
+            .compute_pipelines
+            .set_size(indices.compute_pipelines.size());
+        tracker.query_sets.set_size(indices.query_sets.size());
+
+        <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes.take() {
+            <span class="kw">let </span>query_set = tracker.query_sets.insert_single(tw.query_set);
 
             <span class="comment">// Unlike in render passes we can't delay resetting the query sets since
             // there is no auxiliary pass.
@@ -1639,17 +1756,6 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
-
-        <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-
-        <span class="kw">let </span>indices = <span class="kw-2">&amp;</span>device.tracker_indices;
-        tracker.buffers.set_size(indices.buffers.size());
-        tracker.textures.set_size(indices.textures.size());
-        tracker.bind_groups.set_size(indices.bind_groups.size());
-        tracker
-            .compute_pipelines
-            .set_size(indices.compute_pipelines.size());
-        tracker.query_sets.set_size(indices.query_sets.size());
 
         <span class="kw">let </span>discard_hal_labels = <span class="self">self
             </span>.instance
@@ -1976,7 +2082,6 @@
                     query_set,
                     query_index,
                 } =&gt; {
-                    <span class="kw">let </span>query_set_id = query_set.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
 
                     device
@@ -1986,33 +2091,29 @@
                     <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
                     query_set
-                        .validate_and_write_timestamp(raw, query_set_id, query_index, <span class="prelude-val">None</span>)
+                        .validate_and_write_timestamp(raw, query_index, <span class="prelude-val">None</span>)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
                 ArcComputeCommand::BeginPipelineStatisticsQuery {
                     query_set,
                     query_index,
                 } =&gt; {
-                    <span class="kw">let </span>query_set_id = query_set.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
                     <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
-                    query_set
-                        .validate_and_begin_pipeline_statistics_query(
-                            raw,
-                            query_set_id,
-                            query_index,
-                            <span class="prelude-val">None</span>,
-                            <span class="kw-2">&amp;mut </span>active_query,
-                        )
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    validate_and_begin_pipeline_statistics_query(
+                        query_set.clone(),
+                        raw,
+                        query_index,
+                        <span class="prelude-val">None</span>,
+                        <span class="kw-2">&amp;mut </span>active_query,
+                    )
+                    .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
                 ArcComputeCommand::EndPipelineStatisticsQuery =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
-
-                    end_pipeline_statistics_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    end_pipeline_statistics_query(raw, <span class="kw-2">&amp;mut </span>active_query).map_pass_err(scope)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -2083,10 +2184,9 @@
         <span class="kw">let </span>bind_group = hub
             .bind_groups
             .read()
-            .get(bind_group_id)
+            .get_owned(bind_group_id)
             .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBindGroup(index))
-            .map_pass_err(scope)<span class="question-mark">?
-            </span>.clone();
+            .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands.push(ArcComputeCommand::SetBindGroup {
             index,
@@ -2116,10 +2216,9 @@
         <span class="kw">let </span>pipeline = hub
             .compute_pipelines
             .read()
-            .get(pipeline_id)
+            .get_owned(pipeline_id)
             .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidPipeline(pipeline_id))
-            .map_pass_err(scope)<span class="question-mark">?
-            </span>.clone();
+            .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands.push(ArcComputeCommand::SetPipeline(pipeline));
 
@@ -2199,10 +2298,9 @@
         <span class="kw">let </span>buffer = hub
             .buffers
             .read()
-            .get(buffer_id)
+            .get_owned(buffer_id)
             .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBuffer(buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?
-            </span>.clone();
+            .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands
             .push(ArcComputeCommand::&lt;A&gt;::DispatchIndirect { buffer, offset });
@@ -2273,10 +2371,9 @@
         <span class="kw">let </span>query_set = hub
             .query_sets
             .read()
-            .get(query_set_id)
+            .get_owned(query_set_id)
             .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidQuerySet(query_set_id))
-            .map_pass_err(scope)<span class="question-mark">?
-            </span>.clone();
+            .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands.push(ArcComputeCommand::WriteTimestamp {
             query_set,
@@ -2299,10 +2396,9 @@
         <span class="kw">let </span>query_set = hub
             .query_sets
             .read()
-            .get(query_set_id)
+            .get_owned(query_set_id)
             .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidQuerySet(query_set_id))
-            .map_pass_err(scope)<span class="question-mark">?
-            </span>.clone();
+            .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands
             .push(ArcComputeCommand::BeginPipelineStatisticsQuery {
