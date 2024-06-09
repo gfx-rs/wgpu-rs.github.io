@@ -366,6 +366,10 @@
 <a href="#365" id="365">365</a>
 <a href="#366" id="366">366</a>
 <a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::functions::FunctionTracer;
 <span class="kw">use </span><span class="kw">super</span>::FunctionMap;
 <span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
@@ -443,7 +447,9 @@
                         <span class="self">self</span>.expressions_used.insert(pointer);
                         <span class="self">self</span>.trace_atomic_function(fun);
                         <span class="self">self</span>.expressions_used.insert(value);
-                        <span class="self">self</span>.expressions_used.insert(result);
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                            <span class="self">self</span>.expressions_used.insert(result);
+                        }
                     }
                     St::WorkGroupUniformLoad { pointer, result } =&gt; {
                         <span class="self">self</span>.expressions_used.insert(pointer);
@@ -623,7 +629,9 @@
                         adjust(pointer);
                         <span class="self">self</span>.adjust_atomic_function(fun);
                         adjust(value);
-                        adjust(result);
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>result) = <span class="kw-2">*</span>result {
+                            adjust(result);
+                        }
                     }
                     St::WorkGroupUniformLoad {
                         <span class="kw-2">ref mut </span>pointer,

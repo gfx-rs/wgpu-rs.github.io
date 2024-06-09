@@ -2961,6 +2961,21 @@
 <a href="#2960" id="2960">2960</a>
 <a href="#2961" id="2961">2961</a>
 <a href="#2962" id="2962">2962</a>
+<a href="#2963" id="2963">2963</a>
+<a href="#2964" id="2964">2964</a>
+<a href="#2965" id="2965">2965</a>
+<a href="#2966" id="2966">2966</a>
+<a href="#2967" id="2967">2967</a>
+<a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
+<a href="#2972" id="2972">2972</a>
+<a href="#2973" id="2973">2973</a>
+<a href="#2974" id="2974">2974</a>
+<a href="#2975" id="2975">2975</a>
+<a href="#2976" id="2976">2976</a>
+<a href="#2977" id="2977">2977</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4454,6 +4469,7 @@
                     function,
                     arguments,
                     <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter),
+                    <span class="bool-val">true</span>,
                 )<span class="question-mark">?</span>;
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -4710,7 +4726,7 @@
                 <span class="kw-2">ref </span>arguments,
             } =&gt; {
                 <span class="kw">let </span>handle = <span class="self">self
-                    </span>.call(span, function, arguments, ctx)<span class="question-mark">?
+                    </span>.call(span, function, arguments, ctx, <span class="bool-val">false</span>)<span class="question-mark">?
                     </span>.ok_or(Error::FunctionReturnsVoid(function.span))<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Plain(handle));
             }
@@ -4904,6 +4920,7 @@
         function: <span class="kw-2">&amp;</span>ast::Ident&lt;<span class="lifetime">'source</span>&gt;,
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        is_statement: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">match </span>ctx.globals.get(function.name) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Type(ty)) =&gt; {
@@ -5049,7 +5066,7 @@
                         <span class="self">self</span>.subgroup_gather_helper(span, mode, arguments, ctx)<span class="question-mark">?</span>,
                     ));
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fun) = <span class="kw">crate</span>::AtomicFunction::map(function.name) {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.atomic_helper(span, fun, arguments, ctx)<span class="question-mark">?</span>));
+                    <span class="kw">return </span><span class="self">self</span>.atomic_helper(span, fun, arguments, is_statement, ctx);
                 } <span class="kw">else </span>{
                     <span class="kw">match </span>function.name {
                         <span class="string">"select" </span>=&gt; {
@@ -5131,7 +5148,7 @@
                                         compare: <span class="prelude-val">Some</span>(compare),
                                     },
                                     value,
-                                    result,
+                                    result: <span class="prelude-val">Some</span>(result),
                                 },
                                 span,
                             );
@@ -5422,25 +5439,38 @@
         span: Span,
         fun: <span class="kw">crate</span>::AtomicFunction,
         args: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
+        is_statement: bool,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, <span class="number">2</span>, span);
 
         <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>value = args.next()<span class="question-mark">?</span>;
-        <span class="kw">let </span>value = <span class="self">self</span>.expression(value, ctx)<span class="question-mark">?</span>;
-        <span class="kw">let </span>ty = ctx.register_type(value)<span class="question-mark">?</span>;
-
+        <span class="kw">let </span>value = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>value_inner = <span class="macro">resolve_inner!</span>(ctx, value);
         args.finish()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>result = ctx.interrupt_emitter(
-            <span class="kw">crate</span>::Expression::AtomicResult {
-                ty,
-                comparison: <span class="bool-val">false</span>,
-            },
-            span,
-        )<span class="question-mark">?</span>;
+        <span class="comment">// If we don't use the return value of a 64-bit `min` or `max`
+        // operation, generate a no-result form of the `Atomic` statement, so
+        // that we can pass validation with only `SHADER_INT64_ATOMIC_MIN_MAX`
+        // whenever possible.
+        </span><span class="kw">let </span>is_64_bit_min_max =
+            <span class="macro">matches!</span>(fun, <span class="kw">crate</span>::AtomicFunction::Min | <span class="kw">crate</span>::AtomicFunction::Max)
+                &amp;&amp; <span class="macro">matches!</span>(
+                    <span class="kw-2">*</span>value_inner,
+                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar { width: <span class="number">8</span>, .. })
+                );
+        <span class="kw">let </span>result = <span class="kw">if </span>is_64_bit_min_max &amp;&amp; is_statement {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
+            <span class="kw">let </span>ty = ctx.register_type(value)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(ctx.interrupt_emitter(
+                <span class="kw">crate</span>::Expression::AtomicResult {
+                    ty,
+                    comparison: <span class="bool-val">false</span>,
+                },
+                span,
+            )<span class="question-mark">?</span>)
+        };
         <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
         rctx.block.push(
             <span class="kw">crate</span>::Statement::Atomic {

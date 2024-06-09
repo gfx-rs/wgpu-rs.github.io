@@ -2170,6 +2170,78 @@
 <a href="#2169" id="2169">2169</a>
 <a href="#2170" id="2170">2170</a>
 <a href="#2171" id="2171">2171</a>
+<a href="#2172" id="2172">2172</a>
+<a href="#2173" id="2173">2173</a>
+<a href="#2174" id="2174">2174</a>
+<a href="#2175" id="2175">2175</a>
+<a href="#2176" id="2176">2176</a>
+<a href="#2177" id="2177">2177</a>
+<a href="#2178" id="2178">2178</a>
+<a href="#2179" id="2179">2179</a>
+<a href="#2180" id="2180">2180</a>
+<a href="#2181" id="2181">2181</a>
+<a href="#2182" id="2182">2182</a>
+<a href="#2183" id="2183">2183</a>
+<a href="#2184" id="2184">2184</a>
+<a href="#2185" id="2185">2185</a>
+<a href="#2186" id="2186">2186</a>
+<a href="#2187" id="2187">2187</a>
+<a href="#2188" id="2188">2188</a>
+<a href="#2189" id="2189">2189</a>
+<a href="#2190" id="2190">2190</a>
+<a href="#2191" id="2191">2191</a>
+<a href="#2192" id="2192">2192</a>
+<a href="#2193" id="2193">2193</a>
+<a href="#2194" id="2194">2194</a>
+<a href="#2195" id="2195">2195</a>
+<a href="#2196" id="2196">2196</a>
+<a href="#2197" id="2197">2197</a>
+<a href="#2198" id="2198">2198</a>
+<a href="#2199" id="2199">2199</a>
+<a href="#2200" id="2200">2200</a>
+<a href="#2201" id="2201">2201</a>
+<a href="#2202" id="2202">2202</a>
+<a href="#2203" id="2203">2203</a>
+<a href="#2204" id="2204">2204</a>
+<a href="#2205" id="2205">2205</a>
+<a href="#2206" id="2206">2206</a>
+<a href="#2207" id="2207">2207</a>
+<a href="#2208" id="2208">2208</a>
+<a href="#2209" id="2209">2209</a>
+<a href="#2210" id="2210">2210</a>
+<a href="#2211" id="2211">2211</a>
+<a href="#2212" id="2212">2212</a>
+<a href="#2213" id="2213">2213</a>
+<a href="#2214" id="2214">2214</a>
+<a href="#2215" id="2215">2215</a>
+<a href="#2216" id="2216">2216</a>
+<a href="#2217" id="2217">2217</a>
+<a href="#2218" id="2218">2218</a>
+<a href="#2219" id="2219">2219</a>
+<a href="#2220" id="2220">2220</a>
+<a href="#2221" id="2221">2221</a>
+<a href="#2222" id="2222">2222</a>
+<a href="#2223" id="2223">2223</a>
+<a href="#2224" id="2224">2224</a>
+<a href="#2225" id="2225">2225</a>
+<a href="#2226" id="2226">2226</a>
+<a href="#2227" id="2227">2227</a>
+<a href="#2228" id="2228">2228</a>
+<a href="#2229" id="2229">2229</a>
+<a href="#2230" id="2230">2230</a>
+<a href="#2231" id="2231">2231</a>
+<a href="#2232" id="2232">2232</a>
+<a href="#2233" id="2233">2233</a>
+<a href="#2234" id="2234">2234</a>
+<a href="#2235" id="2235">2235</a>
+<a href="#2236" id="2236">2236</a>
+<a href="#2237" id="2237">2237</a>
+<a href="#2238" id="2238">2238</a>
+<a href="#2239" id="2239">2239</a>
+<a href="#2240" id="2240">2240</a>
+<a href="#2241" id="2241">2241</a>
+<a href="#2242" id="2242">2242</a>
+<a href="#2243" id="2243">2243</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
@@ -3784,8 +3856,29 @@ An override expression can be evaluated at pipeline creation time.
     },
     <span class="doccomment">/// Result of calling another function.
     </span>CallResult(Handle&lt;Function&gt;),
+
     <span class="doccomment">/// Result of an atomic operation.
+    ///
+    /// This expression must be referred to by the [`result`] field of exactly one
+    /// [`Atomic`][stmt] statement somewhere in the same function. Let `T` be the
+    /// scalar type contained by the [`Atomic`][type] value that the statement
+    /// operates on.
+    ///
+    /// If `comparison` is `false`, then `ty` must be the scalar type `T`.
+    ///
+    /// If `comparison` is `true`, then `ty` must be a [`Struct`] with two members:
+    ///
+    /// - A member named `old_value`, whose type is `T`, and
+    ///
+    /// - A member named `exchanged`, of type [`BOOL`].
+    ///
+    /// [`result`]: Statement::Atomic::result
+    /// [stmt]: Statement::Atomic
+    /// [type]: TypeInner::Atomic
+    /// [`Struct`]: TypeInner::Struct
+    /// [`BOOL`]: Scalar::BOOL
     </span>AtomicResult { ty: Handle&lt;Type&gt;, comparison: bool },
+
     <span class="doccomment">/// Result of a [`WorkGroupUniformLoad`] statement.
     ///
     /// [`WorkGroupUniformLoad`]: Statement::WorkGroupUniformLoad
@@ -4062,15 +4155,66 @@ An override expression can be evaluated at pipeline creation time.
     <span class="doccomment">/// Atomic function.
     </span>Atomic {
         <span class="doccomment">/// Pointer to an atomic value.
+        ///
+        /// This must be a [`Pointer`] to an [`Atomic`] value. The atomic's
+        /// scalar type may be [`I32`] or [`U32`].
+        ///
+        /// If [`SHADER_INT64_ATOMIC_MIN_MAX`] or [`SHADER_INT64_ATOMIC_ALL_OPS`] are
+        /// enabled, this may also be [`I64`] or [`U64`].
+        ///
+        /// [`Pointer`]: TypeInner::Pointer
+        /// [`Atomic`]: TypeInner::Atomic
+        /// [`I32`]: Scalar::I32
+        /// [`U32`]: Scalar::U32
+        /// [`SHADER_INT64_ATOMIC_MIN_MAX`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX
+        /// [`SHADER_INT64_ATOMIC_ALL_OPS`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
+        /// [`I64`]: Scalar::I64
+        /// [`U64`]: Scalar::U64
         </span>pointer: Handle&lt;Expression&gt;,
-        <span class="doccomment">/// Function to run on the atomic.
+
+        <span class="doccomment">/// Function to run on the atomic value.
+        ///
+        /// If [`pointer`] refers to a 64-bit atomic value, then:
+        ///
+        /// - The [`SHADER_INT64_ATOMIC_ALL_OPS`] capability allows any [`AtomicFunction`]
+        ///   value here.
+        ///
+        /// - The [`SHADER_INT64_ATOMIC_MIN_MAX`] capability allows
+        ///   [`AtomicFunction::Min`] and [`AtomicFunction::Max`] here.
+        ///
+        /// - If neither of those capabilities are present, then 64-bit scalar
+        ///   atomics are not allowed.
+        ///
+        /// [`pointer`]: Statement::Atomic::pointer
+        /// [`SHADER_INT64_ATOMIC_MIN_MAX`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX
+        /// [`SHADER_INT64_ATOMIC_ALL_OPS`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
         </span>fun: AtomicFunction,
+
         <span class="doccomment">/// Value to use in the function.
+        ///
+        /// This must be a scalar of the same type as [`pointer`]'s atomic's scalar type.
+        ///
+        /// [`pointer`]: Statement::Atomic::pointer
         </span>value: Handle&lt;Expression&gt;,
+
         <span class="doccomment">/// [`AtomicResult`] expression representing this function's result.
         ///
+        /// If [`fun`] is [`Exchange { compare: None }`], this must be `Some`,
+        /// as otherwise that operation would be equivalent to a simple [`Store`]
+        /// to the atomic.
+        ///
+        /// Otherwise, this may be `None` if the return value of the operation is not needed.
+        ///
+        /// If `pointer` refers to a 64-bit atomic value, [`SHADER_INT64_ATOMIC_MIN_MAX`]
+        /// is enabled, and [`SHADER_INT64_ATOMIC_ALL_OPS`] is not, this must be `None`.
+        ///
         /// [`AtomicResult`]: crate::Expression::AtomicResult
-        </span>result: Handle&lt;Expression&gt;,
+        /// [`fun`]: Statement::Atomic::fun
+        /// [`Store`]: Statement::Store
+        /// [`Exchange { compare: None }`]: AtomicFunction::Exchange
+        /// [`SHADER_INT64_ATOMIC_MIN_MAX`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX
+        /// [`SHADER_INT64_ATOMIC_ALL_OPS`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
+        </span>result: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
     },
     <span class="doccomment">/// Load uniformly from a uniform pointer in the workgroup address space.
     ///

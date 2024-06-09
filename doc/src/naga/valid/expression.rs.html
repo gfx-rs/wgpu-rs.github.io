@@ -1841,34 +1841,7 @@
 <a href="#1840" id="1840">1840</a>
 <a href="#1841" id="1841">1841</a>
 <a href="#1842" id="1842">1842</a>
-<a href="#1843" id="1843">1843</a>
-<a href="#1844" id="1844">1844</a>
-<a href="#1845" id="1845">1845</a>
-<a href="#1846" id="1846">1846</a>
-<a href="#1847" id="1847">1847</a>
-<a href="#1848" id="1848">1848</a>
-<a href="#1849" id="1849">1849</a>
-<a href="#1850" id="1850">1850</a>
-<a href="#1851" id="1851">1851</a>
-<a href="#1852" id="1852">1852</a>
-<a href="#1853" id="1853">1853</a>
-<a href="#1854" id="1854">1854</a>
-<a href="#1855" id="1855">1855</a>
-<a href="#1856" id="1856">1856</a>
-<a href="#1857" id="1857">1857</a>
-<a href="#1858" id="1858">1858</a>
-<a href="#1859" id="1859">1859</a>
-<a href="#1860" id="1860">1860</a>
-<a href="#1861" id="1861">1861</a>
-<a href="#1862" id="1862">1862</a>
-<a href="#1863" id="1863">1863</a>
-<a href="#1864" id="1864">1864</a>
-<a href="#1865" id="1865">1865</a>
-<a href="#1866" id="1866">1866</a>
-</pre></div><pre class="rust"><code><span class="kw">use super</span>::{
-    compose::validate_compose, validate_atomic_compare_exchange_struct, FunctionInfo, ModuleInfo,
-    ShaderStages, TypeFlags,
-};
+</pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 
 <span class="kw">use crate</span>::{
@@ -1981,8 +1954,6 @@
     </span>WrongArgumentCount(<span class="kw">crate</span>::MathFunction),
     <span class="attr">#[error(<span class="string">"Argument [{1}] to {0:?} as expression {2:?} has an invalid type."</span>)]
     </span>InvalidArgumentType(<span class="kw">crate</span>::MathFunction, u32, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">"Atomic result type can't be {0:?}"</span>)]
-    </span>InvalidAtomicResultType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(
         <span class="string">"workgroupUniformLoad result type can't be {0:?}. It can only be a constructible type."
     </span>)]
@@ -3449,31 +3420,12 @@
                 ShaderStages::all()
             }
             E::CallResult(function) =&gt; mod_info.functions[function.index()].available_stages,
-            E::AtomicResult { ty, comparison } =&gt; {
-                <span class="kw">let </span>scalar_predicate = |ty: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner| <span class="kw">match </span>ty {
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(
-                        scalar @ Sc {
-                            kind: <span class="kw">crate</span>::ScalarKind::Uint | <span class="kw">crate</span>::ScalarKind::Sint,
-                            ..
-                        },
-                    ) =&gt; <span class="self">self</span>.check_width(scalar).is_ok(),
-                    <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-                };
-                <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">&amp;</span>module.types[ty].inner {
-                    ty <span class="kw">if </span>!comparison =&gt; scalar_predicate(ty),
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } <span class="kw">if </span>comparison =&gt; {
-                        validate_atomic_compare_exchange_struct(
-                            <span class="kw-2">&amp;</span>module.types,
-                            members,
-                            scalar_predicate,
-                        )
-                    }
-                    <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-                };
-                <span class="kw">if </span>!good {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidAtomicResultType(ty));
-                }
-                ShaderStages::all()
+            E::AtomicResult { .. } =&gt; {
+                <span class="comment">// These expressions are validated when we check the `Atomic` statement
+                // that refers to them, because we have all the information we need at
+                // that point. The checks driven by `Validator::needs_visit` ensure
+                // that this expression is indeed visited by one `Atomic` statement.
+                </span>ShaderStages::all()
             }
             E::WorkGroupUniformLoadResult { ty } =&gt; {
                 <span class="kw">if </span><span class="self">self</span>.types[ty.index()]

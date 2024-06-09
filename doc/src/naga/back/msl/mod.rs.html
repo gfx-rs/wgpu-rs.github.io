@@ -667,21 +667,11 @@
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
 <a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
-<a href="#671" id="671">671</a>
-<a href="#672" id="672">672</a>
-<a href="#673" id="673">673</a>
-<a href="#674" id="674">674</a>
-<a href="#675" id="675">675</a>
-<a href="#676" id="676">676</a>
-<a href="#677" id="677">677</a>
-<a href="#678" id="678">678</a>
-<a href="#679" id="679">679</a>
-<a href="#680" id="680">680</a>
-<a href="#681" id="681">681</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [MSL][msl] (Metal Shading Language).
+
+This backend does not support the [`SHADER_INT64_ATOMIC_ALL_OPS`][all-atom]
+capability.
 
 ## Binding model
 
@@ -706,6 +696,8 @@ For the result type, if it's a structure, we re-compose it with a temporary valu
 holding the result.
 
 [msl]: https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf
+[all-atom]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
+
 */
 
 </span><span class="kw">use crate</span>::{arena::Handle, proc::index, valid::ModuleInfo};
@@ -1342,23 +1334,5 @@ holding the result.
 </span><span class="kw">fn </span>test_error_size() {
     <span class="kw">use </span>std::mem::size_of;
     <span class="macro">assert_eq!</span>(size_of::&lt;Error&gt;(), <span class="number">32</span>);
-}
-
-<span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
-    <span class="kw">fn </span>to_msl(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Add =&gt; <span class="string">"fetch_add"</span>,
-            <span class="self">Self</span>::Subtract =&gt; <span class="string">"fetch_sub"</span>,
-            <span class="self">Self</span>::And =&gt; <span class="string">"fetch_and"</span>,
-            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">"fetch_or"</span>,
-            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">"fetch_xor"</span>,
-            <span class="self">Self</span>::Min =&gt; <span class="string">"fetch_min"</span>,
-            <span class="self">Self</span>::Max =&gt; <span class="string">"fetch_max"</span>,
-            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"exchange"</span>,
-            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
-                <span class="string">"atomic CompareExchange"</span>.to_string(),
-            ))<span class="question-mark">?</span>,
-        })
-    }
 }
 </code></pre></div></section></main></body></html>

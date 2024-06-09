@@ -3609,6 +3609,22 @@
 <a href="#3608" id="3608">3608</a>
 <a href="#3609" id="3609">3609</a>
 <a href="#3610" id="3610">3610</a>
+<a href="#3611" id="3611">3611</a>
+<a href="#3612" id="3612">3612</a>
+<a href="#3613" id="3613">3613</a>
+<a href="#3614" id="3614">3614</a>
+<a href="#3615" id="3615">3615</a>
+<a href="#3616" id="3616">3616</a>
+<a href="#3617" id="3617">3617</a>
+<a href="#3618" id="3618">3618</a>
+<a href="#3619" id="3619">3619</a>
+<a href="#3620" id="3620">3620</a>
+<a href="#3621" id="3621">3621</a>
+<a href="#3622" id="3622">3622</a>
+<a href="#3623" id="3623">3623</a>
+<a href="#3624" id="3624">3624</a>
+<a href="#3625" id="3625">3625</a>
+<a href="#3626" id="3626">3626</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -5530,12 +5546,21 @@
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
-                <span class="kw">match </span>func_ctx.info[result].ty {
-                    proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
-                    proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
-                        <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?
-                    </span>}
+                <span class="kw">let </span>res_name = <span class="kw">match </span>result {
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                    <span class="prelude-val">Some</span>(result) =&gt; {
+                        <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                        <span class="kw">match </span>func_ctx.info[result].ty {
+                            proc::TypeResolution::Handle(handle) =&gt; {
+                                <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?
+                            </span>}
+                            proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
+                                <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?
+                            </span>}
+                        };
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}; "</span>)<span class="question-mark">?</span>;
+                        <span class="prelude-val">Some</span>((result, name))
+                    }
                 };
 
                 <span class="comment">// Validation ensures that `pointer` has a `Pointer` type.
@@ -5545,7 +5570,6 @@
                     .unwrap();
 
                 <span class="kw">let </span>fun_str = fun.to_hlsl_suffix();
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name}; "</span>)<span class="question-mark">?</span>;
                 <span class="kw">match </span>pointer_space {
                     <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"Interlocked{fun_str}("</span>)<span class="question-mark">?</span>;
@@ -5581,8 +5605,16 @@
                     <span class="kw">_ </span>=&gt; {}
                 }
                 <span class="self">self</span>.write_expr(module, value, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">", {res_name});"</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.named_expressions.insert(result, res_name);
+
+                <span class="comment">// The `original_value` out parameter is optional for all the
+                // `Interlocked` functions we generate other than
+                // `InterlockedExchange`.
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>((result, name)) = res_name {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {name}"</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.named_expressions.insert(result, name);
+                }
+
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }
             Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
                 <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;

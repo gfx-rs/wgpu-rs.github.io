@@ -4802,6 +4802,8 @@
 <a href="#4801" id="4801">4801</a>
 <a href="#4802" id="4802">4802</a>
 <a href="#4803" id="4803">4803</a>
+<a href="#4804" id="4804">4804</a>
+<a href="#4805" id="4805">4805</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -7172,11 +7174,13 @@ to output a [`Module`](crate::Module) into glsl
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
-                <span class="kw">let </span>res_ty = ctx.resolve_type(result, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
-                <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.named_expressions.insert(result, res_name);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                    <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                    <span class="kw">let </span>res_ty = ctx.resolve_type(result, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
+                    <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.named_expressions.insert(result, res_name);
+                }
 
                 <span class="kw">let </span>fun_str = fun.to_glsl();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"atomic{fun_str}("</span>)<span class="question-mark">?</span>;

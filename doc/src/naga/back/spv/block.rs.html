@@ -2694,6 +2694,12 @@
 <a href="#2693" id="2693">2693</a>
 <a href="#2694" id="2694">2694</a>
 <a href="#2695" id="2695">2695</a>
+<a href="#2696" id="2696">2696</a>
+<a href="#2697" id="2697">2697</a>
+<a href="#2698" id="2698">2698</a>
+<a href="#2699" id="2699">2699</a>
+<a href="#2700" id="2700">2700</a>
+<a href="#2701" id="2701">2701</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -5119,9 +5125,15 @@ Implementations for `BlockContext` methods.
                     result,
                 } =&gt; {
                     <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
-                    <span class="kw">let </span>result_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[result].ty);
+                    <span class="comment">// Compare-and-exchange operations produce a struct result,
+                    // so use `result`'s type if it is available. For no-result
+                    // operations, fall back to `value`'s type.
+                    </span><span class="kw">let </span>result_type_id =
+                        <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[result.unwrap_or(value)].ty);
 
-                    <span class="self">self</span>.cached[result] = id;
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                        <span class="self">self</span>.cached[result] = id;
+                    }
 
                     <span class="kw">let </span>pointer_id =
                         <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(pointer, <span class="kw-2">&amp;mut </span>block, <span class="prelude-val">None</span>)<span class="question-mark">? </span>{

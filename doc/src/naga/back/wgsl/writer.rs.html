@@ -2110,6 +2110,8 @@
 <a href="#2109" id="2109">2109</a>
 <a href="#2110" id="2110">2110</a>
 <a href="#2111" id="2111">2111</a>
+<a href="#2112" id="2112">2112</a>
+<a href="#2113" id="2113">2113</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
     back,
@@ -2866,9 +2868,11 @@
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
-                <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
-                <span class="self">self</span>.named_expressions.insert(result, res_name);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                    <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                    <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.named_expressions.insert(result, res_name);
+                }
 
                 <span class="kw">let </span>fun_str = fun.to_wgsl();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"atomic{fun_str}("</span>)<span class="question-mark">?</span>;

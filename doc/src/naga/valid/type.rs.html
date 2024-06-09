@@ -679,6 +679,18 @@
 <a href="#678" id="678">678</a>
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
 
@@ -1041,16 +1053,28 @@
                 )
             }
             Ti::Atomic(<span class="kw">crate</span>::Scalar { kind, width }) =&gt; {
-                <span class="kw">let </span>good = <span class="kw">match </span>kind {
+                <span class="kw">match </span>kind {
                     <span class="kw">crate</span>::ScalarKind::Bool
                     | <span class="kw">crate</span>::ScalarKind::Float
                     | <span class="kw">crate</span>::ScalarKind::AbstractInt
-                    | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; <span class="bool-val">false</span>,
-                    <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; width == <span class="number">4</span>,
+                    | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(kind, width))
+                    }
+                    <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                        <span class="kw">if </span>width == <span class="number">8 </span>{
+                            <span class="kw">if </span>!<span class="self">self</span>.capabilities.intersects(
+                                Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
+                                    | Capabilities::SHADER_INT64_ATOMIC_MIN_MAX,
+                            ) {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MissingCapability(
+                                    Capabilities::SHADER_INT64_ATOMIC_ALL_OPS,
+                                ));
+                            }
+                        } <span class="kw">else if </span>width != <span class="number">4 </span>{
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(kind, width));
+                        }
+                    }
                 };
-                <span class="kw">if </span>!good {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(kind, width));
-                }
                 TypeInfo::new(
                     TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
                     Alignment::from_width(width),

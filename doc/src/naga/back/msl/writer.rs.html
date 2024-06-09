@@ -5915,6 +5915,45 @@
 <a href="#5914" id="5914">5914</a>
 <a href="#5915" id="5915">5915</a>
 <a href="#5916" id="5916">5916</a>
+<a href="#5917" id="5917">5917</a>
+<a href="#5918" id="5918">5918</a>
+<a href="#5919" id="5919">5919</a>
+<a href="#5920" id="5920">5920</a>
+<a href="#5921" id="5921">5921</a>
+<a href="#5922" id="5922">5922</a>
+<a href="#5923" id="5923">5923</a>
+<a href="#5924" id="5924">5924</a>
+<a href="#5925" id="5925">5925</a>
+<a href="#5926" id="5926">5926</a>
+<a href="#5927" id="5927">5927</a>
+<a href="#5928" id="5928">5928</a>
+<a href="#5929" id="5929">5929</a>
+<a href="#5930" id="5930">5930</a>
+<a href="#5931" id="5931">5931</a>
+<a href="#5932" id="5932">5932</a>
+<a href="#5933" id="5933">5933</a>
+<a href="#5934" id="5934">5934</a>
+<a href="#5935" id="5935">5935</a>
+<a href="#5936" id="5936">5936</a>
+<a href="#5937" id="5937">5937</a>
+<a href="#5938" id="5938">5938</a>
+<a href="#5939" id="5939">5939</a>
+<a href="#5940" id="5940">5940</a>
+<a href="#5941" id="5941">5941</a>
+<a href="#5942" id="5942">5942</a>
+<a href="#5943" id="5943">5943</a>
+<a href="#5944" id="5944">5944</a>
+<a href="#5945" id="5945">5945</a>
+<a href="#5946" id="5946">5946</a>
+<a href="#5947" id="5947">5947</a>
+<a href="#5948" id="5948">5948</a>
+<a href="#5949" id="5949">5949</a>
+<a href="#5950" id="5950">5950</a>
+<a href="#5951" id="5951">5951</a>
+<a href="#5952" id="5952">5952</a>
+<a href="#5953" id="5953">5953</a>
+<a href="#5954" id="5954">5954</a>
+<a href="#5955" id="5955">5955</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -8975,11 +9014,22 @@
                     value,
                     result,
                 } =&gt; {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
-                    <span class="self">self</span>.start_baking_expression(result, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.named_expressions.insert(result, res_name);
-                    <span class="kw">let </span>fun_str = fun.to_msl()<span class="question-mark">?</span>;
+                    <span class="comment">// This backend supports `SHADER_INT64_ATOMIC_MIN_MAX` but not
+                    // `SHADER_INT64_ATOMIC_ALL_OPS`, so we can assume that if `result` is
+                    // `Some`, we are not operating on a 64-bit value, and that if we are
+                    // operating on a 64-bit value, `result` is `None`.
+                    </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>fun_str = <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                        <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                        <span class="self">self</span>.start_baking_expression(result, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.named_expressions.insert(result, res_name);
+                        fun.to_msl()<span class="question-mark">?
+                    </span>} <span class="kw">else if </span>context.expression.resolve_type(value).scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
+                        fun.to_msl_64_bit()<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        fun.to_msl()<span class="question-mark">?
+                    </span>};
+
                     <span class="self">self</span>.put_atomic_operation(pointer, fun_str, value, <span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;
                     <span class="comment">// done
                     </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
@@ -11829,6 +11879,34 @@
         </span><span class="kw">if </span>!(<span class="number">15000</span>..=<span class="number">25000</span>).contains(<span class="kw-2">&amp;</span>stack_size) {
             <span class="macro">panic!</span>(<span class="string">"`put_block` stack size {stack_size} has changed!"</span>);
         }
+    }
+}
+
+<span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
+    <span class="kw">fn </span>to_msl(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Add =&gt; <span class="string">"fetch_add"</span>,
+            <span class="self">Self</span>::Subtract =&gt; <span class="string">"fetch_sub"</span>,
+            <span class="self">Self</span>::And =&gt; <span class="string">"fetch_and"</span>,
+            <span class="self">Self</span>::InclusiveOr =&gt; <span class="string">"fetch_or"</span>,
+            <span class="self">Self</span>::ExclusiveOr =&gt; <span class="string">"fetch_xor"</span>,
+            <span class="self">Self</span>::Min =&gt; <span class="string">"fetch_min"</span>,
+            <span class="self">Self</span>::Max =&gt; <span class="string">"fetch_max"</span>,
+            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"exchange"</span>,
+            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
+                <span class="string">"atomic CompareExchange"</span>.to_string(),
+            ))<span class="question-mark">?</span>,
+        })
+    }
+
+    <span class="kw">fn </span>to_msl_64_bit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Min =&gt; <span class="string">"min"</span>,
+            <span class="self">Self</span>::Max =&gt; <span class="string">"max"</span>,
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
+                <span class="string">"64-bit atomic operation other than min/max"</span>.to_string(),
+            ))<span class="question-mark">?</span>,
+        })
     }
 }
 </code></pre></div></section></main></body></html>
