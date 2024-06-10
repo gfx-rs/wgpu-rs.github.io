@@ -4057,8 +4057,6 @@
 <a href="#4056" id="4056">4056</a>
 <a href="#4057" id="4057">4057</a>
 <a href="#4058" id="4058">4058</a>
-<a href="#4059" id="4059">4059</a>
-<a href="#4060" id="4060">4060</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4139,7 +4137,6 @@
     <span class="kw">type </span>SurfaceData: ContextData;
 
     <span class="kw">type </span>SurfaceOutputDetail: WasmNotSendSync + <span class="lifetime">'static</span>;
-    <span class="kw">type </span>SubmissionIndex: ContextId + Clone + Copy + WasmNotSendSync;
     <span class="kw">type </span>SubmissionIndexData: ContextData + Copy;
 
     <span class="kw">type </span>RequestAdapterFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::AdapterId, <span class="self">Self</span>::AdapterData)&gt;&gt;
@@ -4658,7 +4655,7 @@
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         command_buffers: I,
-    ) -&gt; (<span class="self">Self</span>::SubmissionIndex, <span class="self">Self</span>::SubmissionIndexData);
+    ) -&gt; <span class="self">Self</span>::SubmissionIndexData;
     <span class="kw">fn </span>queue_get_timestamp_period(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
@@ -5654,7 +5651,7 @@
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         command_buffers: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;,
-    ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;);
+    ) -&gt; Arc&lt;<span class="kw">crate</span>::Data&gt;;
     <span class="kw">fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; f32;
     <span class="kw">fn </span>queue_on_submitted_work_done(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -7100,17 +7097,16 @@
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         command_buffers: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;,
-    ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;) {
+    ) -&gt; Arc&lt;<span class="kw">crate</span>::Data&gt; {
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
         <span class="kw">let </span>queue_data = downcast_ref(queue_data);
         <span class="kw">let </span>command_buffers = command_buffers.map(|(id, data)| {
             <span class="kw">let </span>command_buffer_data: &lt;T <span class="kw">as </span>Context&gt;::CommandBufferData = <span class="kw-2">*</span>data.downcast().unwrap();
             (&lt;T::CommandBufferId&gt;::from(id), command_buffer_data)
         });
-        <span class="kw">let </span>(submission_index, data) =
-            Context::queue_submit(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, command_buffers);
-        (submission_index.into(), Arc::new(data) <span class="kw">as _</span>)
-    }
+        <span class="kw">let </span>data = Context::queue_submit(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, command_buffers);
+        Arc::new(data) <span class="kw">as _
+    </span>}
 
     <span class="kw">fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; f32 {
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
