@@ -1583,6 +1583,12 @@
 <a href="#1582" id="1582">1582</a>
 <a href="#1583" id="1583">1583</a>
 <a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2757,7 +2763,9 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::default();
 
-            <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures_owned = SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::new();
+            <span class="comment">// Use a hashmap here to deduplicate the surface textures that are used in the command buffers.
+            // This avoids vulkan deadlocking from the same surface texture being submitted multiple times.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures_owned = FastHashMap::default();
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>command_buffer_guard = hub.command_buffers.write();
@@ -2848,7 +2856,9 @@
                                         <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; <span class="bool-val">false</span>,
                                         <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>raw, .. }) =&gt; {
                                             <span class="kw">if </span>raw.is_some() {
-                                                submit_surface_textures_owned.push(texture.clone());
+                                                <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq.
+                                                </span>submit_surface_textures_owned
+                                                    .insert(Arc::as_ptr(<span class="kw-2">&amp;</span>texture), texture.clone());
                                             }
 
                                             <span class="bool-val">true
@@ -3027,7 +3037,9 @@
                         <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; {}
                         <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>raw, .. }) =&gt; {
                             <span class="kw">if </span>raw.is_some() {
-                                submit_surface_textures_owned.push(texture.clone());
+                                <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq
+                                </span>submit_surface_textures_owned
+                                    .insert(Arc::as_ptr(texture), texture.clone());
                             }
 
                             <span class="kw">unsafe </span>{
@@ -3072,7 +3084,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures =
                 SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::with_capacity(submit_surface_textures_owned.len());
 
-            <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span>submit_surface_textures_owned {
+            <span class="kw">for </span>texture <span class="kw">in </span>submit_surface_textures_owned.values() {
                 submit_surface_textures.extend(<span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
                     <span class="prelude-val">Some</span>(TextureInner::Surface { raw, .. }) =&gt; raw.as_ref(),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
