@@ -2317,15 +2317,15 @@
         <span class="kw">let </span>device_fid = hub.devices.prepare(device_id_in);
         <span class="kw">let </span>queue_fid = hub.queues.prepare(queue_id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>RequestDeviceError::InvalidAdapter,
             };
             <span class="kw">let </span>(device, <span class="kw-2">mut </span>queue) =
                 <span class="kw">match </span>adapter.create_device_and_queue(desc, <span class="self">self</span>.instance.flags, trace_path) {
                     <span class="prelude-val">Ok</span>((device, queue)) =&gt; (device, queue),
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
                 };
             <span class="kw">let </span>(device_id, <span class="kw">_</span>) = device_fid.assign(Arc::new(device));
             <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);
@@ -2365,10 +2365,10 @@
         <span class="kw">let </span>devices_fid = hub.devices.prepare(device_id_in);
         <span class="kw">let </span>queues_fid = hub.queues.prepare(queue_id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>RequestDeviceError::InvalidAdapter,
             };
             <span class="kw">let </span>(device, <span class="kw-2">mut </span>queue) = <span class="kw">match </span>adapter.create_device_and_queue_from_hal(
                 hal_device,
@@ -2377,7 +2377,7 @@
                 trace_path,
             ) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
             <span class="kw">let </span>(device_id, <span class="kw">_</span>) = devices_fid.assign(Arc::new(device));
             <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);

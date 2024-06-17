@@ -2714,6 +2714,12 @@
 <a href="#2713" id="2713">2713</a>
 <a href="#2714" id="2714">2714</a>
 <a href="#2715" id="2715">2715</a>
+<a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2869,20 +2875,20 @@
         <span class="kw">let </span>fid = hub.buffers.prepare(id_in);
 
         <span class="kw">let </span><span class="kw-2">mut </span>to_destroy: ArrayVec&lt;resource::Buffer&lt;A&gt;, <span class="number">2</span>&gt; = ArrayVec::new();
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">break </span>DeviceError::Invalid.into();
+                    <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into();
                 }
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="kw">if </span>desc.usage.is_empty() {
                 <span class="comment">// Per spec, `usage` must not be zero.
-                </span><span class="kw">break </span>CreateBufferError::InvalidUsage(desc.usage);
+                </span><span class="kw">break </span><span class="lifetime">'error </span>CreateBufferError::InvalidUsage(desc.usage);
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -2898,7 +2904,7 @@
             <span class="kw">let </span>buffer = <span class="kw">match </span>device.create_buffer(desc, <span class="bool-val">false</span>) {
                 <span class="prelude-val">Ok</span>(buffer) =&gt; buffer,
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="kw">break </span>e;
+                    <span class="kw">break </span><span class="lifetime">'error </span>e;
                 }
             };
 
@@ -2922,7 +2928,7 @@
                         <span class="prelude-val">Ok</span>(ptr) =&gt; ptr,
                         <span class="prelude-val">Err</span>(e) =&gt; {
                             to_destroy.push(buffer);
-                            <span class="kw">break </span>e.into();
+                            <span class="kw">break </span><span class="lifetime">'error </span>e.into();
                         }
                     }
                 };
@@ -2946,7 +2952,7 @@
                     <span class="prelude-val">Ok</span>(stage) =&gt; Arc::new(stage),
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         to_destroy.push(buffer);
-                        <span class="kw">break </span>e;
+                        <span class="kw">break </span><span class="lifetime">'error </span>e;
                     }
                 };
 
@@ -2956,7 +2962,7 @@
                     <span class="prelude-val">Ok</span>(mapping) =&gt; mapping,
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         to_destroy.push(buffer);
-                        <span class="kw">break </span>CreateBufferError::Device(e.into());
+                        <span class="kw">break </span><span class="lifetime">'error </span>CreateBufferError::Device(e.into());
                     }
                 };
 
@@ -3272,13 +3278,13 @@
 
         <span class="kw">let </span>fid = hub.textures.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
@@ -3287,7 +3293,7 @@
 
             <span class="kw">let </span>texture = <span class="kw">match </span>device.create_texture(<span class="kw-2">&amp;</span>device.adapter, desc) {
                 <span class="prelude-val">Ok</span>(texture) =&gt; texture,
-                <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span>error,
+                <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>error,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(texture));
@@ -3326,13 +3332,13 @@
 
         <span class="kw">let </span>fid = hub.textures.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="comment">// NB: Any change done through the raw texture handle will not be
@@ -3347,7 +3353,7 @@
                 .map_err(|error| resource::CreateTextureError::MissingFeatures(desc.format, error))
             {
                 <span class="prelude-val">Ok</span>(features) =&gt; features,
-                <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span>error,
+                <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>error,
             };
 
             <span class="kw">let </span><span class="kw-2">mut </span>texture = device.create_texture_from_hal(
@@ -3401,13 +3407,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.buffers.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="comment">// NB: Any change done through the raw buffer handle will not be
@@ -3512,16 +3518,16 @@
 
         <span class="kw">let </span>fid = hub.texture_views.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>texture = <span class="kw">match </span>hub.textures.get(texture_id) {
                 <span class="prelude-val">Ok</span>(texture) =&gt; texture,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>resource::CreateTextureViewError::InvalidTexture,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>resource::CreateTextureViewError::InvalidTexture,
             };
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>texture.device;
             {
                 <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
                 <span class="kw">if </span>texture.is_destroyed(<span class="kw-2">&amp;</span>snatch_guard) {
-                    <span class="kw">break </span>resource::CreateTextureViewError::InvalidTexture;
+                    <span class="kw">break </span><span class="lifetime">'error </span>resource::CreateTextureViewError::InvalidTexture;
                 }
             }
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3535,7 +3541,7 @@
 
             <span class="kw">let </span>view = <span class="kw">match unsafe </span>{ device.create_texture_view(<span class="kw-2">&amp;</span>texture, desc) } {
                 <span class="prelude-val">Ok</span>(view) =&gt; view,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(view));
@@ -3601,13 +3607,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.samplers.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3617,7 +3623,7 @@
 
             <span class="kw">let </span>sampler = <span class="kw">match </span>device.create_sampler(desc) {
                 <span class="prelude-val">Ok</span>(sampler) =&gt; sampler,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(sampler));
@@ -3665,13 +3671,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3681,7 +3687,7 @@
 
             <span class="kw">let </span>entry_map = <span class="kw">match </span>bgl::EntryMap::from_entries(<span class="kw-2">&amp;</span>device.limits, <span class="kw-2">&amp;</span>desc.entries) {
                 <span class="prelude-val">Ok</span>(map) =&gt; map,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="comment">// Currently we make a distinction between fid.assign and fid.assign_existing. This distinction is incorrect,
@@ -3710,7 +3716,7 @@
 
             <span class="kw">let </span>layout = <span class="kw">match </span>bgl_result {
                 <span class="prelude-val">Ok</span>(layout) =&gt; layout,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="comment">// If the ID was not assigned, and we survived the above check,
@@ -3764,13 +3770,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.pipeline_layouts.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3780,7 +3786,7 @@
 
             <span class="kw">let </span>layout = <span class="kw">match </span>device.create_pipeline_layout(desc, <span class="kw-2">&amp;</span>hub.bind_group_layouts) {
                 <span class="prelude-val">Ok</span>(layout) =&gt; layout,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(layout));
@@ -3822,13 +3828,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.bind_groups.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3838,16 +3844,16 @@
 
             <span class="kw">let </span>bind_group_layout = <span class="kw">match </span>hub.bind_group_layouts.get(desc.layout) {
                 <span class="prelude-val">Ok</span>(layout) =&gt; layout,
-                <span class="prelude-val">Err</span>(..) =&gt; <span class="kw">break </span>binding_model::CreateBindGroupError::InvalidLayout,
+                <span class="prelude-val">Err</span>(..) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>binding_model::CreateBindGroupError::InvalidLayout,
             };
 
             <span class="kw">if </span>bind_group_layout.device.as_info().id() != device.as_info().id() {
-                <span class="kw">break </span>DeviceError::WrongDevice.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::WrongDevice.into();
             }
 
             <span class="kw">let </span>bind_group = <span class="kw">match </span>device.create_bind_group(<span class="kw-2">&amp;</span>bind_group_layout, desc, hub) {
                 <span class="prelude-val">Ok</span>(bind_group) =&gt; bind_group,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(bind_group));
@@ -3919,13 +3925,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.shader_modules.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3962,7 +3968,7 @@
 
             <span class="kw">let </span>shader = <span class="kw">match </span>device.create_shader_module(desc, source) {
                 <span class="prelude-val">Ok</span>(shader) =&gt; shader,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(shader));
@@ -3997,13 +4003,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.shader_modules.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4020,7 +4026,7 @@
 
             <span class="kw">let </span>shader = <span class="kw">match unsafe </span>{ device.create_shader_module_spirv(desc, <span class="kw-2">&amp;</span>source) } {
                 <span class="prelude-val">Ok</span>(shader) =&gt; shader,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(Arc::new(shader));
             <span class="macro">api_log!</span>(<span class="string">"Device::create_shader_module_spirv -&gt; {id:?}"</span>);
@@ -4058,23 +4064,23 @@
             .command_buffers
             .prepare(id_in.map(|id| id.into_command_buffer_id()));
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid,
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost;
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost;
             }
             <span class="kw">let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() <span class="kw">else </span>{
-                <span class="kw">break </span>DeviceError::InvalidQueueId;
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::InvalidQueueId;
             };
             <span class="kw">let </span>encoder = <span class="kw">match </span>device
                 .command_allocator
                 .acquire_encoder(device.raw(), queue.raw.as_ref().unwrap())
             {
                 <span class="prelude-val">Ok</span>(raw) =&gt; raw,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::OutOfMemory,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::OutOfMemory,
             };
             <span class="kw">let </span>command_buffer = command::CommandBuffer::new(
                 encoder,
@@ -4149,13 +4155,13 @@
 
         <span class="kw">let </span>fid = hub.render_bundles.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(bundle_encoder.parent()) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>command::RenderBundleError::INVALID_DEVICE,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>command::RenderBundleError::INVALID_DEVICE,
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>command::RenderBundleError::INVALID_DEVICE;
+                <span class="kw">break </span><span class="lifetime">'error </span>command::RenderBundleError::INVALID_DEVICE;
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4174,7 +4180,7 @@
 
             <span class="kw">let </span>render_bundle = <span class="kw">match </span>bundle_encoder.finish(desc, <span class="kw-2">&amp;</span>device, hub) {
                 <span class="prelude-val">Ok</span>(bundle) =&gt; bundle,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(render_bundle));
@@ -4218,13 +4224,13 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>fid = hub.query_sets.prepare(id_in);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4237,7 +4243,7 @@
 
             <span class="kw">let </span>query_set = <span class="kw">match </span>device.create_query_set(desc) {
                 <span class="prelude-val">Ok</span>(query_set) =&gt; query_set,
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">break </span>err,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>err,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(query_set));
@@ -4295,13 +4301,13 @@
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         <span class="kw">let </span>implicit_error_context = implicit_context.clone();
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
@@ -4315,7 +4321,7 @@
             <span class="kw">let </span>pipeline =
                 <span class="kw">match </span>device.create_render_pipeline(<span class="kw-2">&amp;</span>device.adapter, desc, implicit_context, hub) {
                     <span class="prelude-val">Ok</span>(pair) =&gt; pair,
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
                 };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(pipeline));
@@ -4367,14 +4373,16 @@
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>pipeline = <span class="kw">match </span>hub.render_pipelines.get(pipeline_id) {
                 <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
             };
             <span class="kw">let </span>id = <span class="kw">match </span>pipeline.layout.bind_group_layouts.get(index <span class="kw">as </span>usize) {
                 <span class="prelude-val">Some</span>(bg) =&gt; hub.bind_group_layouts.prepare(id_in).assign_existing(bg),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">break </span><span class="lifetime">'error </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index)
+                }
             };
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -4429,13 +4437,13 @@
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
         <span class="kw">let </span>implicit_error_context = implicit_context.clone();
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
             };
             <span class="kw">if </span>!device.is_valid() {
-                <span class="kw">break </span>DeviceError::Lost.into();
+                <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
             }
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4448,7 +4456,7 @@
             }
             <span class="kw">let </span>pipeline = <span class="kw">match </span>device.create_compute_pipeline(desc, implicit_context, hub) {
                 <span class="prelude-val">Ok</span>(pair) =&gt; pair,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(pipeline));
@@ -4496,15 +4504,17 @@
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>error = <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>pipeline = <span class="kw">match </span>hub.compute_pipelines.get(pipeline_id) {
                 <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
             };
 
             <span class="kw">let </span>id = <span class="kw">match </span>pipeline.layout.bind_group_layouts.get(index <span class="kw">as </span>usize) {
                 <span class="prelude-val">Some</span>(bg) =&gt; hub.bind_group_layouts.prepare(id_in).assign_existing(bg),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">break </span><span class="lifetime">'error </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index)
+                }
             };
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
@@ -4628,36 +4638,38 @@
             }
 
             <span class="kw">if </span>!caps.present_modes.contains(<span class="kw-2">&amp;</span>config.present_mode) {
-                <span class="kw">let </span>new_mode = <span class="lifetime">'b</span>: <span class="kw">loop </span>{
-                    <span class="comment">// Automatic present mode checks.
-                    //
-                    // The "Automatic" modes are never supported by the backends.
-                    </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.present_mode {
-                        wgt::PresentMode::AutoVsync =&gt; {
-                            <span class="kw-2">&amp;</span>[wgt::PresentMode::FifoRelaxed, wgt::PresentMode::Fifo][..]
-                        }
-                        <span class="comment">// Always end in FIFO to make sure it's always supported
-                        </span>wgt::PresentMode::AutoNoVsync =&gt; <span class="kw-2">&amp;</span>[
-                            wgt::PresentMode::Immediate,
-                            wgt::PresentMode::Mailbox,
-                            wgt::PresentMode::Fifo,
-                        ][..],
-                        <span class="kw">_ </span>=&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedPresentMode {
-                                requested: config.present_mode,
-                                available: caps.present_modes.clone(),
-                            });
-                        }
-                    };
-
-                    <span class="kw">for </span><span class="kw-2">&amp;</span>fallback <span class="kw">in </span>fallbacks {
-                        <span class="kw">if </span>caps.present_modes.contains(<span class="kw-2">&amp;</span>fallback) {
-                            <span class="kw">break </span><span class="lifetime">'b </span>fallback;
-                        }
+                <span class="comment">// Automatic present mode checks.
+                //
+                // The "Automatic" modes are never supported by the backends.
+                </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.present_mode {
+                    wgt::PresentMode::AutoVsync =&gt; {
+                        <span class="kw-2">&amp;</span>[wgt::PresentMode::FifoRelaxed, wgt::PresentMode::Fifo][..]
                     }
-
-                    <span class="macro">unreachable!</span>(<span class="string">"Fallback system failed to choose present mode. This is a bug. Mode: {:?}, Options: {:?}"</span>, config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes);
+                    <span class="comment">// Always end in FIFO to make sure it's always supported
+                    </span>wgt::PresentMode::AutoNoVsync =&gt; <span class="kw-2">&amp;</span>[
+                        wgt::PresentMode::Immediate,
+                        wgt::PresentMode::Mailbox,
+                        wgt::PresentMode::Fifo,
+                    ][..],
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(E::UnsupportedPresentMode {
+                            requested: config.present_mode,
+                            available: caps.present_modes.clone(),
+                        });
+                    }
                 };
+
+                <span class="kw">let </span>new_mode = fallbacks
+                    .iter()
+                    .copied()
+                    .find(|fallback| caps.present_modes.contains(fallback))
+                    .unwrap_or_else(|| {
+                        <span class="macro">unreachable!</span>(
+                            <span class="string">"Fallback system failed to choose present mode. \
+                            This is a bug. Mode: {:?}, Options: {:?}"</span>,
+                            config.present_mode, <span class="kw-2">&amp;</span>caps.present_modes
+                        );
+                    });
 
                 <span class="macro">api_log!</span>(
                     <span class="string">"Automatically choosing presentation mode by rule {:?}. Chose {new_mode:?}"</span>,
@@ -4675,7 +4687,7 @@
                 .composite_alpha_modes
                 .contains(<span class="kw-2">&amp;</span>config.composite_alpha_mode)
             {
-                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">'alpha</span>: <span class="kw">loop </span>{
+                <span class="kw">let </span>new_alpha_mode = <span class="lifetime">'alpha</span>: {
                     <span class="comment">// Automatic alpha mode checks.
                     </span><span class="kw">let </span>fallbacks = <span class="kw">match </span>config.composite_alpha_mode {
                         wgt::CompositeAlphaMode::Auto =&gt; <span class="kw-2">&amp;</span>[
@@ -4720,7 +4732,7 @@
 
         <span class="macro">log::debug!</span>(<span class="string">"configuring surface with {:?}"</span>, config);
 
-        <span class="kw">let </span>error = <span class="lifetime">'outer</span>: <span class="kw">loop </span>{
+        <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="comment">// User callbacks must not be called while we are holding locks.
             </span><span class="kw">let </span>user_callbacks;
             {
@@ -4730,10 +4742,10 @@
 
                 <span class="kw">let </span>device = <span class="kw">match </span>device_guard.get(device_id) {
                     <span class="prelude-val">Ok</span>(device) =&gt; device,
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Invalid.into(),
                 };
                 <span class="kw">if </span>!device.is_valid() {
-                    <span class="kw">break </span>DeviceError::Lost.into();
+                    <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::Lost.into();
                 }
 
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4743,7 +4755,7 @@
 
                 <span class="kw">let </span>surface = <span class="kw">match </span>surface_guard.get(surface_id) {
                     <span class="prelude-val">Ok</span>(surface) =&gt; surface,
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>E::InvalidSurface,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>E::InvalidSurface,
                 };
 
                 <span class="kw">let </span>caps = <span class="kw">unsafe </span>{
@@ -4751,7 +4763,7 @@
                     <span class="kw">let </span>adapter = <span class="kw-2">&amp;</span>device.adapter;
                     <span class="kw">match </span>adapter.raw.adapter.surface_capabilities(suf.unwrap()) {
                         <span class="prelude-val">Some</span>(caps) =&gt; caps,
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>E::UnsupportedQueueFamily,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedQueueFamily,
                     }
                 };
 
@@ -4761,13 +4773,13 @@
                         <span class="kw">continue</span>;
                     }
                     <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
-                        <span class="kw">break </span><span class="lifetime">'outer </span>E::UnsupportedFormat {
+                        <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedFormat {
                             requested: config.format,
                             available: caps.formats,
                         };
                     }
                     <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
-                        <span class="kw">break </span><span class="lifetime">'outer </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+                        <span class="kw">break </span><span class="lifetime">'error </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
                     }
                     hal_view_formats.push(<span class="kw-2">*</span>format);
                 }
@@ -4776,7 +4788,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
                         device.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
                     {
-                        <span class="kw">break </span><span class="lifetime">'outer </span>E::MissingDownlevelFlags(missing_flag);
+                        <span class="kw">break </span><span class="lifetime">'error </span>E::MissingDownlevelFlags(missing_flag);
                     }
                 }
 
@@ -4803,7 +4815,7 @@
                     <span class="kw-2">&amp;</span>caps,
                     device.limits.max_texture_dimension_2d,
                 ) {
-                    <span class="kw">break </span>error;
+                    <span class="kw">break </span><span class="lifetime">'error </span>error;
                 }
 
                 <span class="comment">// Wait for all work to finish before configuring the surface.
@@ -4814,14 +4826,14 @@
                         user_callbacks = closures;
                     }
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="kw">break </span>e.into();
+                        <span class="kw">break </span><span class="lifetime">'error </span>e.into();
                     }
                 }
 
                 <span class="comment">// All textures must be destroyed before the surface can be re-configured.
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
                     <span class="kw">if </span>present.acquired_texture.is_some() {
-                        <span class="kw">break </span>E::PreviousOutputExists;
+                        <span class="kw">break </span><span class="lifetime">'error </span>E::PreviousOutputExists;
                     }
                 }
 
@@ -4838,7 +4850,7 @@
                 } {
                     <span class="prelude-val">Ok</span>(()) =&gt; (),
                     <span class="prelude-val">Err</span>(error) =&gt; {
-                        <span class="kw">break match </span>error {
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="kw">match </span>error {
                             hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; {
                                 E::InvalidSurface
                             }

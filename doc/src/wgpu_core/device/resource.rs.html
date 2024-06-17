@@ -3695,6 +3695,12 @@
 <a href="#3694" id="3694">3694</a>
 <a href="#3695" id="3695">3695</a>
 <a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4871,26 +4877,26 @@
         };
 
         <span class="comment">// https://gpuweb.github.io/gpuweb/#abstract-opdef-renderable-texture-view
-        </span><span class="kw">let </span>render_extent = <span class="lifetime">'b</span>: <span class="kw">loop </span>{
+        </span><span class="kw">let </span>render_extent = <span class="lifetime">'error</span>: {
             <span class="kw">if </span>!texture
                 .desc
                 .usage
                 .contains(wgt::TextureUsages::RENDER_ATTACHMENT)
             {
-                <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Usage(texture.desc.usage));
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Usage(texture.desc.usage));
             }
 
             <span class="kw">if </span>!(resolved_dimension == TextureViewDimension::D2
                 || (<span class="self">self</span>.features.contains(wgt::Features::MULTIVIEW)
                     &amp;&amp; resolved_dimension == TextureViewDimension::D2Array))
             {
-                <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Dimension(
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Dimension(
                     resolved_dimension,
                 ));
             }
 
             <span class="kw">if </span>resolved_mip_level_count != <span class="number">1 </span>{
-                <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::MipLevelCount(
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::MipLevelCount(
                     resolved_mip_level_count,
                 ));
             }
@@ -4898,18 +4904,18 @@
             <span class="kw">if </span>resolved_array_layer_count != <span class="number">1
                 </span>&amp;&amp; !(<span class="self">self</span>.features.contains(wgt::Features::MULTIVIEW))
             {
-                <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::ArrayLayerCount(
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::ArrayLayerCount(
                     resolved_array_layer_count,
                 ));
             }
 
             <span class="kw">if </span>aspects != hal::FormatAspects::from(texture.desc.format) {
-                <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Aspects(aspects));
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(TextureViewNotRenderableReason::Aspects(aspects));
             }
 
-            <span class="kw">break </span><span class="lifetime">'b </span><span class="prelude-val">Ok</span>(texture
+            <span class="prelude-val">Ok</span>(texture
                 .desc
-                .compute_render_extent(desc.range.base_mip_level));
+                .compute_render_extent(desc.range.base_mip_level))
         };
 
         <span class="comment">// filter the usages based on the other criteria
@@ -6645,9 +6651,11 @@
         <span class="kw">for </span>(i, cs) <span class="kw">in </span>color_targets.iter().enumerate() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(cs) = cs.as_ref() {
                 target_specified = <span class="bool-val">true</span>;
-                <span class="kw">let </span>error = <span class="kw">loop </span>{
+                <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
                     <span class="kw">if </span>cs.write_mask.contains_invalid_bits() {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidWriteMask(cs.write_mask));
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidWriteMask(
+                            cs.write_mask,
+                        ));
                     }
 
                     <span class="kw">let </span>format_features = <span class="self">self</span>.describe_format_features(adapter, cs.format)<span class="question-mark">?</span>;
@@ -6655,7 +6663,9 @@
                         .allowed_usages
                         .contains(wgt::TextureUsages::RENDER_ATTACHMENT)
                     {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotRenderable(cs.format));
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotRenderable(
+                            cs.format,
+                        ));
                     }
                     <span class="kw">let </span>blendable = format_features.flags.contains(Tfff::BLENDABLE);
                     <span class="kw">let </span>filterable = format_features.flags.contains(Tfff::FILTERABLE);
@@ -6667,10 +6677,12 @@
                     // [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] to elude
                     // this limitation
                     </span><span class="kw">if </span>cs.blend.is_some() &amp;&amp; (!blendable || (!filterable &amp;&amp; !adapter_specific)) {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotBlendable(cs.format));
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotBlendable(
+                            cs.format,
+                        ));
                     }
                     <span class="kw">if </span>!hal::FormatAspects::from(cs.format).contains(hal::FormatAspects::COLOR) {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotColor(cs.format));
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotColor(cs.format));
                     }
 
                     <span class="kw">if </span>desc.multisample.count &gt; <span class="number">1
@@ -6678,7 +6690,7 @@
                             .flags
                             .sample_count_supported(desc.multisample.count)
                     {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidSampleCount(
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidSampleCount(
                             desc.multisample.count,
                             cs.format,
                             cs.format
@@ -6712,7 +6724,7 @@
                         }
                     }
 
-                    <span class="kw">break </span><span class="prelude-val">None</span>;
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">None</span>;
                 };
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::ColorState(i <span class="kw">as </span>u8, e));
@@ -6732,23 +6744,23 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ds) = depth_stencil_state {
             target_specified = <span class="bool-val">true</span>;
-            <span class="kw">let </span>error = <span class="kw">loop </span>{
+            <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
                 <span class="kw">let </span>format_features = <span class="self">self</span>.describe_format_features(adapter, ds.format)<span class="question-mark">?</span>;
                 <span class="kw">if </span>!format_features
                     .allowed_usages
                     .contains(wgt::TextureUsages::RENDER_ATTACHMENT)
                 {
-                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotRenderable(
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotRenderable(
                         ds.format,
                     ));
                 }
 
                 <span class="kw">let </span>aspect = hal::FormatAspects::from(ds.format);
                 <span class="kw">if </span>ds.is_depth_enabled() &amp;&amp; !aspect.contains(hal::FormatAspects::DEPTH) {
-                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotDepth(ds.format));
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotDepth(ds.format));
                 }
                 <span class="kw">if </span>ds.stencil.is_enabled() &amp;&amp; !aspect.contains(hal::FormatAspects::STENCIL) {
-                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotStencil(
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotStencil(
                         ds.format,
                     ));
                 }
@@ -6757,7 +6769,7 @@
                         .flags
                         .sample_count_supported(desc.multisample.count)
                 {
-                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::InvalidSampleCount(
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::InvalidSampleCount(
                         desc.multisample.count,
                         ds.format,
                         ds.format
@@ -6771,7 +6783,7 @@
                     ));
                 }
 
-                <span class="kw">break </span><span class="prelude-val">None</span>;
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">None</span>;
             };
             <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::DepthStencilState(e));
