@@ -1749,6 +1749,12 @@
 <a href="#1748" id="1748">1748</a>
 <a href="#1749" id="1749">1749</a>
 <a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -2100,6 +2106,10 @@ index format changes.
         device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RenderBundle&lt;A&gt;, RenderBundleError&gt; {
+        <span class="kw">let </span>scope = PassErrorScope::Bundle;
+
+        device.check_is_valid().map_pass_err(scope)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
         <span class="kw">let </span>pipeline_guard = hub.render_pipelines.read();
         <span class="kw">let </span>buffer_guard = hub.buffers.read();
@@ -3261,10 +3271,12 @@ index format changes.
 }
 
 <span class="kw">impl </span>RenderBundleError {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>INVALID_DEVICE: <span class="self">Self </span>= RenderBundleError {
-        scope: PassErrorScope::Bundle,
-        inner: RenderBundleErrorInner::Device(DeviceError::Invalid),
-    };
+    <span class="kw">pub fn </span>from_device_error(e: DeviceError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            scope: PassErrorScope::Bundle,
+            inner: e.into(),
+        }
+    }
 }
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>RenderBundleError {
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {

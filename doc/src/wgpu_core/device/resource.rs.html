@@ -3670,6 +3670,55 @@
 <a href="#3669" id="3669">3669</a>
 <a href="#3670" id="3670">3670</a>
 <a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a>
+<a href="#3676" id="3676">3676</a>
+<a href="#3677" id="3677">3677</a>
+<a href="#3678" id="3678">3678</a>
+<a href="#3679" id="3679">3679</a>
+<a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
+<a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
+<a href="#3710" id="3710">3710</a>
+<a href="#3711" id="3711">3711</a>
+<a href="#3712" id="3712">3712</a>
+<a href="#3713" id="3713">3713</a>
+<a href="#3714" id="3714">3714</a>
+<a href="#3715" id="3715">3715</a>
+<a href="#3716" id="3716">3716</a>
+<a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3985,6 +4034,12 @@
         <span class="self">self</span>.valid.load(Ordering::Acquire)
     }
 
+    <span class="kw">pub fn </span>check_is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+        <span class="self">self</span>.is_valid()
+            .then_some(())
+            .ok_or_else(|| DeviceError::Invalid(<span class="self">self</span>.error_ident()))
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_queue(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: A::Queue) {
         <span class="macro">assert!</span>(<span class="self">self</span>.queue_to_drop.set(queue).is_ok());
     }
@@ -4236,6 +4291,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Buffer&lt;A&gt;, resource::CreateBufferError&gt; {
         <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
 
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">if </span>desc.size &gt; <span class="self">self</span>.limits.max_buffer_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(resource::CreateBufferError::MaxBufferSize {
                 requested: desc.size,
@@ -4400,6 +4457,8 @@
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Texture&lt;A&gt;, resource::CreateTextureError&gt; {
         <span class="kw">use </span>resource::{CreateTextureError, TextureDimensionError};
+
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>desc.usage.is_empty() || desc.usage.contains_invalid_bits() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidUsage(desc.usage));
@@ -4976,6 +5035,8 @@
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         desc: <span class="kw-2">&amp;</span>resource::SamplerDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Sampler&lt;A&gt;, resource::CreateSamplerError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">if </span>desc
             .address_modes
             .iter()
@@ -5087,6 +5148,8 @@
         desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor&lt;<span class="lifetime">'a</span>&gt;,
         source: pipeline::ShaderModuleSource&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::ShaderModule&lt;A&gt;, pipeline::CreateShaderModuleError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>(module, source) = <span class="kw">match </span>source {
             <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
             </span>pipeline::ShaderModuleSource::Wgsl(code) =&gt; {
@@ -5217,6 +5280,8 @@
         desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor&lt;<span class="lifetime">'a</span>&gt;,
         source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u32],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::ShaderModule&lt;A&gt;, pipeline::CreateShaderModuleError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="self">self</span>.require_features(wgt::Features::SPIRV_SHADER_PASSTHROUGH)<span class="question-mark">?</span>;
         <span class="kw">let </span>hal_desc = hal::ShaderModuleDescriptor {
             label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
@@ -5250,6 +5315,27 @@
             info: ResourceInfo::new(desc.label.borrow_or_default(), <span class="prelude-val">None</span>),
             label: desc.label.borrow_or_default().to_string(),
         })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_command_encoder(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        label: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Label,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;command::CommandBuffer&lt;A&gt;, DeviceError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>queue = <span class="self">self</span>.get_queue().unwrap();
+
+        <span class="kw">let </span>encoder = <span class="self">self
+            </span>.command_allocator
+            .acquire_encoder(<span class="self">self</span>.raw(), queue.raw.as_ref().unwrap())<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(command::CommandBuffer::new(
+            encoder,
+            <span class="self">self</span>,
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="self">self</span>.trace.lock().is_some(),
+            label.to_hal(<span class="self">self</span>.instance_flags).map(str::to_owned),
+        ))
     }
 
     <span class="doccomment">/// Generate information about late-validated buffer bindings for pipelines.
@@ -5738,6 +5824,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BindGroup&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindingResource <span class="kw">as </span>Br, CreateBindGroupError <span class="kw">as </span>Error};
 
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
         layout.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         {
@@ -6131,6 +6218,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;binding_model::PipelineLayout&lt;A&gt;, binding_model::CreatePipelineLayoutError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreatePipelineLayoutError <span class="kw">as </span>Error;
 
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>bind_group_layouts_count = desc.bind_group_layouts.len();
         <span class="kw">let </span>device_max_bind_groups = <span class="self">self</span>.limits.max_bind_groups <span class="kw">as </span>usize;
         <span class="kw">if </span>bind_group_layouts_count &gt; device_max_bind_groups {
@@ -6282,6 +6371,8 @@
         implicit_context: <span class="prelude-ty">Option</span>&lt;ImplicitPipelineContext&gt;,
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::ComputePipeline&lt;A&gt;, pipeline::CreateComputePipelineError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="comment">// This has to be done first, or otherwise the IDs may be pointing to entries
         // that are not even in the storage.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ids) = implicit_context {
@@ -6429,6 +6520,8 @@
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::RenderPipeline&lt;A&gt;, pipeline::CreateRenderPipelineError&gt; {
         <span class="kw">use </span>wgt::TextureFormatFeatureFlags <span class="kw">as </span>Tfff;
+
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="comment">// This has to be done first, or otherwise the IDs may be pointing to entries
         // that are not even in the storage.
@@ -7080,6 +7173,9 @@
         desc: <span class="kw-2">&amp;</span>pipeline::PipelineCacheDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::PipelineCache&lt;A&gt;, pipeline::CreatePipelineCacheError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::pipeline_cache;
+
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="self">self</span>.require_features(wgt::Features::PIPELINE_CACHE)<span class="question-mark">?</span>;
         <span class="kw">let </span>data = <span class="kw">if let </span><span class="prelude-val">Some</span>((data, validation_key)) = desc
             .data
@@ -7201,6 +7297,8 @@
         desc: <span class="kw-2">&amp;</span>resource::QuerySetDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;QuerySet&lt;A&gt;, resource::CreateQuerySetError&gt; {
         <span class="kw">use </span>resource::CreateQuerySetError <span class="kw">as </span>Error;
+
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">match </span>desc.ty {
             wgt::QueryType::Occlusion =&gt; {}

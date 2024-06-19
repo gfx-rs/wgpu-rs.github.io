@@ -1242,16 +1242,6 @@
 <a href="#1241" id="1241">1241</a>
 <a href="#1242" id="1242">1242</a>
 <a href="#1243" id="1243">1243</a>
-<a href="#1244" id="1244">1244</a>
-<a href="#1245" id="1245">1245</a>
-<a href="#1246" id="1246">1246</a>
-<a href="#1247" id="1247">1247</a>
-<a href="#1248" id="1248">1248</a>
-<a href="#1249" id="1249">1249</a>
-<a href="#1250" id="1250">1250</a>
-<a href="#1251" id="1251">1251</a>
-<a href="#1252" id="1252">1252</a>
-<a href="#1253" id="1253">1253</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1262,12 +1252,12 @@
     error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
-    id::{BufferId, CommandEncoderId, DeviceId, TextureId},
+    id::{BufferId, CommandEncoderId, TextureId},
     init_tracker::{
         has_copy_partial_init_tracker_coverage, MemoryInitKind, TextureInitRange,
         TextureInitTrackerAction,
     },
-    resource::{ParentDevice, Resource, Texture, TextureErrorDimension},
+    resource::{ParentDevice, Texture, TextureErrorDimension},
     snatch::SnatchGuard,
     track::{TextureSelector, Tracker},
 };
@@ -1295,8 +1285,6 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TransferError {
-    <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
-    </span>InvalidDevice(DeviceId),
     <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
     </span>InvalidBuffer(BufferId),
     <span class="attr">#[error(<span class="string">"Texture {0:?} is invalid or destroyed"</span>)]
@@ -1833,9 +1821,7 @@
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        <span class="kw">if </span>!device.is_valid() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDevice(cmd_buf.device.as_info().id()).into());
-        }
+        device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -2000,9 +1986,7 @@
 
         <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        <span class="kw">if </span>!device.is_valid() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDevice(cmd_buf.device.as_info().id()).into());
-        }
+        device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
@@ -2167,9 +2151,7 @@
 
         <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        <span class="kw">if </span>!device.is_valid() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDevice(cmd_buf.device.as_info().id()).into());
-        }
+        device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
@@ -2346,9 +2328,7 @@
 
         <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        <span class="kw">if </span>!device.is_valid() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDevice(cmd_buf.device.as_info().id()).into());
-        }
+        device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 

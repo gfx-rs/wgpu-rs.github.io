@@ -1217,13 +1217,6 @@
 <a href="#1216" id="1216">1216</a>
 <a href="#1217" id="1217">1217</a>
 <a href="#1218" id="1218">1218</a>
-<a href="#1219" id="1219">1219</a>
-<a href="#1220" id="1220">1220</a>
-<a href="#1221" id="1221">1221</a>
-<a href="#1222" id="1222">1222</a>
-<a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     command::{
@@ -1387,8 +1380,6 @@
     </span>InvalidParentEncoder,
     <span class="attr">#[error(<span class="string">"Bind group at index {0:?} is invalid"</span>)]
     </span>InvalidBindGroup(u32),
-    <span class="attr">#[error(<span class="string">"Device {0:?} is invalid"</span>)]
-    </span>InvalidDevice(id::DeviceId),
     <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
     </span>BindGroupIndexOutOfRange { index: u32, max: u32 },
     <span class="attr">#[error(<span class="string">"Compute pipeline {0:?} is invalid"</span>)]
@@ -1678,12 +1669,7 @@
         <span class="kw">let </span>pass_scope = PassErrorScope::Pass(<span class="prelude-val">Some</span>(cmd_buf.as_info().id()));
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
-        <span class="kw">if </span>!device.is_valid() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::InvalidDevice(
-                cmd_buf.device.as_info().id(),
-            ))
-            .map_pass_err(pass_scope);
-        }
+        device.check_is_valid().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
