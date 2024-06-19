@@ -2827,7 +2827,7 @@
     hal_label, id,
     init_tracker::{MemoryInitKind, TextureInitRange, TextureInitTrackerAction},
     pipeline::{<span class="self">self</span>, PipelineFlags},
-    resource::{QuerySet, Texture, TextureView, TextureViewNotRenderableReason},
+    resource::{ParentDevice, QuerySet, Texture, TextureView, TextureViewNotRenderableReason},
     storage::Storage,
     track::{TextureSelector, Tracker, UsageConflict, UsageScope},
     validation::{
@@ -4278,9 +4278,9 @@
                             .ok_or(RenderCommandError::InvalidBindGroup(bind_group_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>bind_group.device.as_info().id() != device.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
-                        }
+                        bind_group
+                            .same_device_as(cmd_buf.as_ref())
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         bind_group
                             .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
@@ -4346,9 +4346,9 @@
                             .ok_or(RenderCommandError::InvalidPipeline(pipeline_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>pipeline.device.as_info().id() != device.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
-                        }
+                        pipeline
+                            .same_device_as(cmd_buf.as_ref())
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         info.context
                             .check_compatible(
@@ -4475,9 +4475,9 @@
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>buffer.device.as_info().id() != device.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
-                        }
+                        buffer
+                            .same_device_as(cmd_buf.as_ref())
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         check_buffer_usage(buffer_id, buffer.usage, BufferUsages::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -4528,9 +4528,9 @@
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>buffer.device.as_info().id() != device.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
-                        }
+                        buffer
+                            .same_device_as(cmd_buf.as_ref())
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>max_vertex_buffers = device.limits.max_vertex_buffers;
                         <span class="kw">if </span>slot &gt;= max_vertex_buffers {
@@ -5135,9 +5135,9 @@
                             .ok_or(RenderCommandError::InvalidRenderBundle(bundle_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>bundle.device.as_info().id() != device.as_info().id() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
-                        }
+                        bundle
+                            .same_device_as(cmd_buf.as_ref())
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         info.context
                             .check_compatible(

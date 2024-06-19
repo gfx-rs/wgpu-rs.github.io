@@ -979,6 +979,9 @@
 <a href="#978" id="978">978</a>
 <a href="#979" id="979">979</a>
 <a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -1010,7 +1013,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
-<span class="kw">use </span><span class="kw">crate</span>::resource::{Resource, ResourceInfo, ResourceType};
+<span class="kw">use </span><span class="kw">crate</span>::resource::{ParentDevice, Resource, ResourceInfo, ResourceType};
 <span class="kw">use </span><span class="kw">crate</span>::track::{Tracker, UsageScope};
 <span class="kw">use crate</span>::{api_log, global::Global, hal_api::HalApi, id, resource_log, Label};
 
@@ -1522,6 +1525,12 @@
     }
 }
 
+<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>CommandBuffer&lt;A&gt; {
+    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.device
+    }
+}
+
 <span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>BasePassRef&lt;<span class="lifetime">'a</span>, C&gt; {
     <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
@@ -1614,11 +1623,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Command encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
     </span>Locked,
-
     <span class="attr">#[error(<span class="string">"QuerySet provided for pass timestamp writes is invalid."</span>)]
     </span>InvalidTimestampWritesQuerySetId,
-    <span class="attr">#[error(<span class="string">"QuerySet provided for pass timestamp writes that was created by a different device."</span>)]
-    </span>WrongDeviceForTimestampWritesQuerySet,
 }
 
 <span class="kw">impl </span>Global {

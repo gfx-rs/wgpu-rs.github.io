@@ -505,10 +505,6 @@
 <a href="#504" id="504">504</a>
 <a href="#505" id="505">505</a>
 <a href="#506" id="506">506</a>
-<a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -522,7 +518,7 @@
     hal_api::HalApi,
     id::{BufferId, CommandEncoderId, DeviceId, TextureId},
     init_tracker::{MemoryInitKind, TextureInitRange},
-    resource::{Resource, Texture, TextureClearMode},
+    resource::{ParentDevice, Resource, Texture, TextureClearMode},
     snatch::SnatchGuard,
     track::{TextureSelector, TextureTracker},
 };
@@ -615,9 +611,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                 .get(dst)
                 .map_err(|<span class="kw">_</span>| ClearError::InvalidBuffer(dst))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>dst_buffer.device.as_info().id() != cmd_buf.device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             cmd_buf_data
                 .trackers
@@ -714,9 +708,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             .get(dst)
             .map_err(|<span class="kw">_</span>| ClearError::InvalidTexture(dst))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst_texture.device.as_info().id() != cmd_buf.device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
         <span class="comment">// Check if subresource aspects are valid.
         </span><span class="kw">let </span>clear_aspects =

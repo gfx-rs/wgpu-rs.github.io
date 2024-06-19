@@ -3670,37 +3670,6 @@
 <a href="#3669" id="3669">3669</a>
 <a href="#3670" id="3670">3670</a>
 <a href="#3671" id="3671">3671</a>
-<a href="#3672" id="3672">3672</a>
-<a href="#3673" id="3673">3673</a>
-<a href="#3674" id="3674">3674</a>
-<a href="#3675" id="3675">3675</a>
-<a href="#3676" id="3676">3676</a>
-<a href="#3677" id="3677">3677</a>
-<a href="#3678" id="3678">3678</a>
-<a href="#3679" id="3679">3679</a>
-<a href="#3680" id="3680">3680</a>
-<a href="#3681" id="3681">3681</a>
-<a href="#3682" id="3682">3682</a>
-<a href="#3683" id="3683">3683</a>
-<a href="#3684" id="3684">3684</a>
-<a href="#3685" id="3685">3685</a>
-<a href="#3686" id="3686">3686</a>
-<a href="#3687" id="3687">3687</a>
-<a href="#3688" id="3688">3688</a>
-<a href="#3689" id="3689">3689</a>
-<a href="#3690" id="3690">3690</a>
-<a href="#3691" id="3691">3691</a>
-<a href="#3692" id="3692">3692</a>
-<a href="#3693" id="3693">3693</a>
-<a href="#3694" id="3694">3694</a>
-<a href="#3695" id="3695">3695</a>
-<a href="#3696" id="3696">3696</a>
-<a href="#3697" id="3697">3697</a>
-<a href="#3698" id="3698">3698</a>
-<a href="#3699" id="3699">3699</a>
-<a href="#3700" id="3700">3700</a>
-<a href="#3701" id="3701">3701</a>
-<a href="#3702" id="3702">3702</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3727,8 +3696,8 @@
     pool::ResourcePool,
     registry::Registry,
     resource::{
-        <span class="self">self</span>, Buffer, QuerySet, Resource, ResourceInfo, ResourceType, Sampler, Texture,
-        TextureView, TextureViewNotRenderableReason,
+        <span class="self">self</span>, Buffer, ParentDevice, QuerySet, Resource, ResourceInfo, ResourceType, Sampler,
+        Texture, TextureView, TextureViewNotRenderableReason,
     },
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
@@ -5540,6 +5509,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         bb: <span class="kw-2">&amp;</span>binding_model::BufferBinding,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
@@ -5549,7 +5519,6 @@
         used: <span class="kw-2">&amp;mut </span>BindGroupStates&lt;A&gt;,
         storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
-        device_id: id::Id&lt;id::markers::Device&gt;,
         snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
@@ -5601,9 +5570,7 @@
             .add_single(storage, bb.buffer_id, internal_use)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>buffer.device.as_info().id() != device_id {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        buffer.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         check_buffer_usage(bb.buffer_id, buffer.usage, pub_usage)<span class="question-mark">?</span>;
         <span class="kw">let </span>raw_buffer = buffer
@@ -5684,10 +5651,10 @@
     }
 
     <span class="kw">fn </span>create_sampler_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         used: <span class="kw-2">&amp;</span>BindGroupStates&lt;A&gt;,
         storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Sampler&lt;A&gt;&gt;,
         id: id::Id&lt;id::markers::Sampler&gt;,
-        device_id: id::Id&lt;id::markers::Device&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Sampler&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
 
@@ -5696,9 +5663,7 @@
             .add_single(storage, id)
             .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>sampler.device.as_info().id() != device_id {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        sampler.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(sampler)
     }
@@ -5720,9 +5685,7 @@
             .add_single(storage, id)
             .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>view.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        view.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(pub_usage, internal_use) = <span class="self">self</span>.texture_use_parameters(
             binding,
@@ -5741,9 +5704,7 @@
                 texture_id,
             ))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>texture.device.as_info().id() != view.device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        texture.same_device_as(view)<span class="question-mark">?</span>;
 
         check_texture_usage(texture.desc.usage, pub_usage)<span class="question-mark">?</span>;
 
@@ -5776,6 +5737,9 @@
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BindGroup&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::{BindingResource <span class="kw">as </span>Br, CreateBindGroupError <span class="kw">as </span>Error};
+
+        layout.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
+
         {
             <span class="comment">// Check that the number of entries in the descriptor matches
             // the number of entries in the layout.
@@ -5816,7 +5780,7 @@
                 .ok_or(Error::MissingBindingDeclaration(binding))<span class="question-mark">?</span>;
             <span class="kw">let </span>(res_index, count) = <span class="kw">match </span>entry.resource {
                 Br::Buffer(<span class="kw-2">ref </span>bb) =&gt; {
-                    <span class="kw">let </span>bb = <span class="self">Self</span>::create_buffer_binding(
+                    <span class="kw">let </span>bb = <span class="self">self</span>.create_buffer_binding(
                         bb,
                         binding,
                         decl,
@@ -5826,7 +5790,6 @@
                         <span class="kw-2">&amp;mut </span>used,
                         <span class="kw-2">&amp;*</span>buffer_guard,
                         <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
-                        <span class="self">self</span>.as_info().id(),
                         <span class="kw-2">&amp;</span>snatch_guard,
                     )<span class="question-mark">?</span>;
 
@@ -5840,7 +5803,7 @@
 
                     <span class="kw">let </span>res_index = hal_buffers.len();
                     <span class="kw">for </span>bb <span class="kw">in </span>bindings_array.iter() {
-                        <span class="kw">let </span>bb = <span class="self">Self</span>::create_buffer_binding(
+                        <span class="kw">let </span>bb = <span class="self">self</span>.create_buffer_binding(
                             bb,
                             binding,
                             decl,
@@ -5850,7 +5813,6 @@
                             <span class="kw-2">&amp;mut </span>used,
                             <span class="kw-2">&amp;*</span>buffer_guard,
                             <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
-                            <span class="self">self</span>.as_info().id(),
                             <span class="kw-2">&amp;</span>snatch_guard,
                         )<span class="question-mark">?</span>;
                         hal_buffers.push(bb);
@@ -5859,12 +5821,7 @@
                 }
                 Br::Sampler(id) =&gt; <span class="kw">match </span>decl.ty {
                     wgt::BindingType::Sampler(ty) =&gt; {
-                        <span class="kw">let </span>sampler = <span class="self">Self</span>::create_sampler_binding(
-                            <span class="kw-2">&amp;</span>used,
-                            <span class="kw-2">&amp;</span>sampler_guard,
-                            id,
-                            <span class="self">self</span>.as_info().id(),
-                        )<span class="question-mark">?</span>;
+                        <span class="kw">let </span>sampler = <span class="self">self</span>.create_sampler_binding(<span class="kw-2">&amp;</span>used, <span class="kw-2">&amp;</span>sampler_guard, id)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>(allowed_filtering, allowed_comparison) = <span class="kw">match </span>ty {
                             wgt::SamplerBindingType::Filtering =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">false</span>),
@@ -5906,12 +5863,7 @@
 
                     <span class="kw">let </span>res_index = hal_samplers.len();
                     <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>bindings_array.iter() {
-                        <span class="kw">let </span>sampler = <span class="self">Self</span>::create_sampler_binding(
-                            <span class="kw-2">&amp;</span>used,
-                            <span class="kw-2">&amp;</span>sampler_guard,
-                            id,
-                            <span class="self">self</span>.as_info().id(),
-                        )<span class="question-mark">?</span>;
+                        <span class="kw">let </span>sampler = <span class="self">self</span>.create_sampler_binding(<span class="kw-2">&amp;</span>used, <span class="kw-2">&amp;</span>sampler_guard, id)<span class="question-mark">?</span>;
 
                         hal_samplers.push(sampler.raw());
                     }
@@ -6240,9 +6192,7 @@
 
         <span class="comment">// Validate total resource counts and check for a matching device
         </span><span class="kw">for </span>bgl <span class="kw">in </span><span class="kw-2">&amp;</span>bind_group_layouts {
-            <span class="kw">if </span>bgl.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            bgl.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
             count_validator.merge(<span class="kw-2">&amp;</span>bgl.binding_count_validator);
         }
@@ -6350,9 +6300,7 @@
             .get(desc.stage.module)
             .map_err(|<span class="kw">_</span>| validation::StageError::InvalidModule)<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>shader_module.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        shader_module.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Get the pipeline layout from the desc if it is provided.
         </span><span class="kw">let </span>pipeline_layout = <span class="kw">match </span>desc.layout {
@@ -6362,9 +6310,7 @@
                     .get(pipeline_layout_id)
                     .map_err(|<span class="kw">_</span>| pipeline::CreateComputePipelineError::InvalidLayout)<span class="question-mark">?</span>;
 
-                <span class="kw">if </span>pipeline_layout.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-                }
+                pipeline_layout.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(pipeline_layout)
             }
@@ -6426,9 +6372,7 @@
                 <span class="kw">break </span><span class="lifetime">'cache </span><span class="prelude-val">None</span>;
             };
 
-            <span class="kw">if </span>cache.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            cache.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(cache)
         };
 
@@ -6806,9 +6750,7 @@
                     .get(pipeline_layout_id)
                     .map_err(|<span class="kw">_</span>| pipeline::CreateRenderPipelineError::InvalidLayout)<span class="question-mark">?</span>;
 
-                <span class="kw">if </span>pipeline_layout.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-                }
+                pipeline_layout.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(pipeline_layout)
             }
@@ -6843,9 +6785,7 @@
                     error: validation::StageError::InvalidModule,
                 }
             })<span class="question-mark">?</span>;
-            <span class="kw">if </span>vertex_shader_module.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            vertex_shader_module.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>stage_err = |error| pipeline::CreateRenderPipelineError::Stage { stage, error };
 
@@ -7037,9 +6977,7 @@
                 <span class="kw">break </span><span class="lifetime">'cache </span><span class="prelude-val">None</span>;
             };
 
-            <span class="kw">if </span>cache.device.as_info().id() != <span class="self">self</span>.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            cache.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(cache)
         };
 

@@ -1572,23 +1572,6 @@
 <a href="#1571" id="1571">1571</a>
 <a href="#1572" id="1572">1572</a>
 <a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
-<a href="#1576" id="1576">1576</a>
-<a href="#1577" id="1577">1577</a>
-<a href="#1578" id="1578">1578</a>
-<a href="#1579" id="1579">1579</a>
-<a href="#1580" id="1580">1580</a>
-<a href="#1581" id="1581">1581</a>
-<a href="#1582" id="1582">1582</a>
-<a href="#1583" id="1583">1583</a>
-<a href="#1584" id="1584">1584</a>
-<a href="#1585" id="1585">1585</a>
-<a href="#1586" id="1586">1586</a>
-<a href="#1587" id="1587">1587</a>
-<a href="#1588" id="1588">1588</a>
-<a href="#1589" id="1589">1589</a>
-<a href="#1590" id="1590">1590</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1603,12 +1586,12 @@
     global::Global,
     hal_api::HalApi,
     hal_label,
-    id::{<span class="self">self</span>, DeviceId, QueueId},
+    id::{<span class="self">self</span>, QueueId},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
     lock::{rank, Mutex, RwLockWriteGuard},
     resource::{
-        Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, Resource,
-        ResourceInfo, ResourceType, StagingBuffer, Texture, TextureInner,
+        Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, ParentDevice,
+        Resource, ResourceInfo, ResourceType, StagingBuffer, Texture, TextureInner,
     },
     resource_log, track, FastHashMap, SubmissionIndex,
 };
@@ -1641,6 +1624,12 @@
 
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>Queue&lt;A&gt; {
+    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
+        <span class="self">self</span>.device.as_ref().unwrap()
     }
 }
 
@@ -1943,15 +1932,6 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueWriteError {
-    <span class="attr">#[error(
-        <span class="string">"Device of queue ({:?}) does not match device of write recipient ({:?})"</span>,
-        queue_device_id,
-        target_device_id
-    )]
-    </span>DeviceMismatch {
-        queue_device_id: DeviceId,
-        target_device_id: DeviceId,
-    },
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -1996,13 +1976,10 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>buffer_device_id = hub
+        <span class="kw">let </span>buffer = hub
             .buffers
             .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?
-            </span>.device
-            .as_info()
-            .id();
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>queue = hub
             .queues
@@ -2011,15 +1988,7 @@
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
-        {
-            <span class="kw">let </span>queue_device_id = device.as_info().id();
-            <span class="kw">if </span>buffer_device_id != queue_device_id {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(QueueWriteError::DeviceMismatch {
-                    queue_device_id,
-                    target_device_id: buffer_device_id,
-                });
-            }
-        }
+        buffer.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
 
@@ -2060,6 +2029,7 @@
         }
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
+            <span class="kw-2">&amp;</span>queue,
             device,
             pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
@@ -2134,6 +2104,7 @@
         }
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
+            <span class="kw-2">&amp;</span>queue,
             device,
             pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
@@ -2198,7 +2169,8 @@
 
     <span class="kw">fn </span>queue_write_staging_buffer_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
+        queue: <span class="kw-2">&amp;</span>Arc&lt;Queue&lt;A&gt;&gt;,
+        device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
         pending_writes: <span class="kw-2">&amp;mut </span>PendingWrites&lt;A&gt;,
         staging_buffer: <span class="kw-2">&amp;</span>StagingBuffer&lt;A&gt;,
         buffer_id: id::BufferId,
@@ -2223,9 +2195,7 @@
             .get(<span class="kw-2">&amp;</span>snatch_guard)
             .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst.device.as_info().id() != device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>src_buffer_size = staging_buffer.size;
         <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_id, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
@@ -2308,9 +2278,7 @@
             .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst.device.as_info().id().into_queue_id() != queue_id {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">if </span>!dst.desc.usage.contains(wgt::TextureUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -2791,9 +2759,7 @@
                             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                         };
 
-                        <span class="kw">if </span>cmdbuf.device.as_info().id().into_queue_id() != queue_id {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-                        }
+                        cmdbuf.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
                         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {

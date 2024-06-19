@@ -488,10 +488,6 @@
 <a href="#487" id="487">487</a>
 <a href="#488" id="488">488</a>
 <a href="#489" id="489">489</a>
-<a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -503,7 +499,7 @@
     hal_api::HalApi,
     id::{<span class="self">self</span>, Id},
     init_tracker::MemoryInitKind,
-    resource::{QuerySet, Resource},
+    resource::{ParentDevice, QuerySet},
     storage::Storage,
     Epoch, FastHashMap, Index,
 };
@@ -899,9 +895,7 @@
             .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
             .ok_or(QueryError::InvalidQuerySet(query_set_id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>query_set.device.as_info().id() != cmd_buf.device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        query_set.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(dst_buffer, dst_pending) = {
             <span class="kw">let </span>buffer_guard = hub.buffers.read();
@@ -909,9 +903,7 @@
                 .get(destination)
                 .map_err(|<span class="kw">_</span>| QueryError::InvalidBuffer(destination))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>dst_buffer.device.as_info().id() != cmd_buf.device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             tracker
                 .buffers

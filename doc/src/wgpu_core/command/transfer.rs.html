@@ -1252,22 +1252,6 @@
 <a href="#1251" id="1251">1251</a>
 <a href="#1252" id="1252">1252</a>
 <a href="#1253" id="1253">1253</a>
-<a href="#1254" id="1254">1254</a>
-<a href="#1255" id="1255">1255</a>
-<a href="#1256" id="1256">1256</a>
-<a href="#1257" id="1257">1257</a>
-<a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a>
-<a href="#1260" id="1260">1260</a>
-<a href="#1261" id="1261">1261</a>
-<a href="#1262" id="1262">1262</a>
-<a href="#1263" id="1263">1263</a>
-<a href="#1264" id="1264">1264</a>
-<a href="#1265" id="1265">1265</a>
-<a href="#1266" id="1266">1266</a>
-<a href="#1267" id="1267">1267</a>
-<a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1283,7 +1267,7 @@
         has_copy_partial_init_tracker_coverage, MemoryInitKind, TextureInitRange,
         TextureInitTrackerAction,
     },
-    resource::{Resource, Texture, TextureErrorDimension},
+    resource::{ParentDevice, Resource, Texture, TextureErrorDimension},
     snatch::SnatchGuard,
     track::{TextureSelector, Tracker},
 };
@@ -1872,9 +1856,7 @@
                 .get(source)
                 .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(source))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>src_buffer.device.as_info().id() != device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            src_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             cmd_buf_data
                 .trackers
@@ -1898,9 +1880,7 @@
                 .get(destination)
                 .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(destination))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>dst_buffer.device.as_info().id() != device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             cmd_buf_data
                 .trackers
@@ -2051,9 +2031,7 @@
             .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst_texture.device.as_info().id() != device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(hal_copy_size, array_layer_count) = validate_texture_copy_range(
             destination,
@@ -2086,9 +2064,7 @@
                 .get(source.buffer)
                 .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(source.buffer))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>src_buffer.device.as_info().id() != device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            src_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             tracker
                 .buffers
@@ -2221,9 +2197,7 @@
             .get(source.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>src_texture.device.as_info().id() != device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        src_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(hal_copy_size, array_layer_count) =
             validate_texture_copy_range(source, <span class="kw-2">&amp;</span>src_texture.desc, CopySide::Source, copy_size)<span class="question-mark">?</span>;
@@ -2277,9 +2251,7 @@
                 .get(destination.buffer)
                 .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(destination.buffer))<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>dst_buffer.device.as_info().id() != device.as_info().id() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-            }
+            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
             tracker
                 .buffers
@@ -2409,12 +2381,8 @@
             .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(source.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>src_texture.device.as_info().id() != device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
-        <span class="kw">if </span>dst_texture.device.as_info().id() != device.as_info().id() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
-        }
+        src_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+        dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
         <span class="comment">// src and dst texture format must be copy-compatible
         // https://gpuweb.github.io/gpuweb/#copy-compatible
