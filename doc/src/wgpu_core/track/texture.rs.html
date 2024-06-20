@@ -1477,6 +1477,21 @@
 <a href="#1476" id="1476">1476</a>
 <a href="#1477" id="1477">1477</a>
 <a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are significantly more complicated than
@@ -1505,6 +1520,7 @@
     hal_api::HalApi,
     lock::{rank, Mutex},
     resource::{Resource, Texture, TextureInner},
+    resource_log,
     snatch::SnatchGuard,
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
@@ -1903,15 +1919,29 @@
                 <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
                 //so it's already been released from user and so it's not inside Registry\Storage
                 </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
+                    <span class="macro">resource_log!</span>(
+                        <span class="string">"TextureTracker::remove_abandoned: removing {:?}"</span>,
+                        <span class="self">self</span>.metadata.get_resource_unchecked(index).as_info().id()
+                    );
+
                     <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index);
                     <span class="self">self</span>.metadata.remove(index);
                     <span class="kw">return </span><span class="bool-val">true</span>;
                 }
 
+                <span class="macro">resource_log!</span>(
+                    <span class="string">"TextureTracker::remove_abandoned: not removing {:?}, ref count {}"</span>,
+                    <span class="self">self</span>.metadata.get_resource_unchecked(index).as_info().id(),
+                    existing_ref_count
+                );
+
                 <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
+
+        <span class="macro">resource_log!</span>(<span class="string">"TextureTracker::remove_abandoned: does not contain index {index:?}"</span>,);
+
         <span class="bool-val">true
     </span>}
 }

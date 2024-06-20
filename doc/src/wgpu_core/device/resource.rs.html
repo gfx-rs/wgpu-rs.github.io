@@ -3719,6 +3719,7 @@
 <a href="#3718" id="3718">3718</a>
 <a href="#3719" id="3719">3719</a>
 <a href="#3720" id="3720">3720</a>
+<a href="#3721" id="3721">3721</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3884,7 +3885,6 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Device&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Device {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">let </span>raw = <span class="self">self</span>.raw.take().unwrap();
         <span class="kw">let </span>pending_writes = <span class="self">self</span>.pending_writes.lock().take().unwrap();
         pending_writes.dispose(<span class="kw-2">&amp;</span>raw);
@@ -3893,6 +3893,7 @@
             raw.destroy_buffer(<span class="self">self</span>.zero_buffer.take().unwrap());
             raw.destroy_fence(<span class="self">self</span>.fence.write().take().unwrap());
             <span class="kw">let </span>queue = <span class="self">self</span>.queue_to_drop.take().unwrap();
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Device {:?} and its Queue"</span>, <span class="self">self</span>.info.label());
             raw.exit(queue);
         }
     }
@@ -4154,6 +4155,7 @@
                     .map_err(DeviceError::from)<span class="question-mark">?
             </span>}
         };
+        <span class="macro">log::info!</span>(<span class="string">"Device::maintain: last done index {last_done_index}"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life();
         <span class="kw">let </span>submission_closures =

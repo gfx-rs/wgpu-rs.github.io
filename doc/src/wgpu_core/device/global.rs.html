@@ -2546,6 +2546,14 @@
 <a href="#2545" id="2545">2545</a>
 <a href="#2546" id="2546">2546</a>
 <a href="#2547" id="2547">2547</a>
+<a href="#2548" id="2548">2548</a>
+<a href="#2549" id="2549">2549</a>
+<a href="#2550" id="2550">2550</a>
+<a href="#2551" id="2551">2551</a>
+<a href="#2552" id="2552">2552</a>
+<a href="#2553" id="2553">2553</a>
+<a href="#2554" id="2554">2554</a>
+<a href="#2555" id="2555">2555</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2804,7 +2812,15 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(Arc::new(buffer));
-            <span class="macro">api_log!</span>(<span class="string">"Device::create_buffer({desc:?}) -&gt; {id:?}"</span>);
+            <span class="macro">api_log!</span>(
+                <span class="string">"Device::create_buffer({:?}{}) -&gt; {id:?}"</span>,
+                desc.label.as_deref().unwrap_or(<span class="string">""</span>),
+                <span class="kw">if </span>desc.mapped_at_creation {
+                    <span class="string">", mapped_at_creation"
+                </span>} <span class="kw">else </span>{
+                    <span class="string">""
+                </span>}
+            );
 
             device
                 .trackers
@@ -4668,7 +4684,7 @@
         device_id: DeviceId,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
-        <span class="macro">api_log!</span>(<span class="string">"Device::poll"</span>);
+        <span class="macro">api_log!</span>(<span class="string">"Device::poll {maintain:?}"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>device = hub

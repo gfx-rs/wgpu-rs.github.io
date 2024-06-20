@@ -832,6 +832,21 @@
 <a href="#831" id="831">831</a>
 <a href="#832" id="832">832</a>
 <a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -847,6 +862,7 @@
     id::BufferId,
     lock::{rank, Mutex},
     resource::{Buffer, Resource},
+    resource_log,
     snatch::SnatchGuard,
     storage::Storage,
     track::{
@@ -1168,13 +1184,27 @@
                 <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
                 //so it's already been released from user and so it's not inside Registry\Storage
                 </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
+                    <span class="macro">resource_log!</span>(
+                        <span class="string">"BufferTracker::remove_abandoned: removing {:?}"</span>,
+                        <span class="self">self</span>.metadata.get_resource_unchecked(index).as_info().id()
+                    );
+
                     <span class="self">self</span>.metadata.remove(index);
                     <span class="kw">return </span><span class="bool-val">true</span>;
                 }
 
+                <span class="macro">resource_log!</span>(
+                    <span class="string">"BufferTracker::remove_abandoned: not removing {:?}, ref count {}"</span>,
+                    <span class="self">self</span>.metadata.get_resource_unchecked(index).as_info().id(),
+                    existing_ref_count
+                );
+
                 <span class="kw">return </span><span class="bool-val">false</span>;
             }
         }
+
+        <span class="macro">resource_log!</span>(<span class="string">"BufferTracker::remove_abandoned: does not contain index {index:?}"</span>,);
+
         <span class="bool-val">true
     </span>}
 }
