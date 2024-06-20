@@ -239,7 +239,6 @@
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `ResourceMetadata` type.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
@@ -424,21 +423,20 @@
     </span>Indirect { metadata: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ResourceMetadata&lt;T&gt; },
 }
 <span class="kw">impl</span>&lt;T: Resource&gt; ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, T&gt; {
-    <span class="doccomment">/// Get the epoch and an owned refcount from this.
+    <span class="doccomment">/// Get a reference to the resource from this.
     ///
     /// # Safety
     ///
     /// - The index must be in bounds of the metadata tracker if this uses an indirect source.
-    /// - info must be Some if this uses a Resource source.
     </span><span class="attr">#[inline(always)]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>get_own(<span class="self">self</span>, index: usize) -&gt; Arc&lt;T&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span>Arc&lt;T&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            ResourceMetadataProvider::Direct { resource } =&gt; resource.into_owned(),
+            ResourceMetadataProvider::Direct { resource } =&gt; resource,
             ResourceMetadataProvider::Indirect { metadata } =&gt; {
                 metadata.tracker_assert_in_bounds(index);
                 {
-                    <span class="kw">let </span>resource = <span class="kw">unsafe </span>{ metadata.resources.get_unchecked(index) };
-                    <span class="kw">unsafe </span>{ resource.clone().unwrap_unchecked() }
+                    <span class="kw">let </span>resource = <span class="kw">unsafe </span>{ metadata.resources.get_unchecked(index) }.as_ref();
+                    <span class="kw">unsafe </span>{ resource.unwrap_unchecked() }
                 }
             }
         }

@@ -993,6 +993,12 @@
 <a href="#992" id="992">992</a>
 <a href="#993" id="993">993</a>
 <a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1001,13 +1007,15 @@
     },
     error::{ErrorFormatter, PrettyError},
     hal_api::HalApi,
-    id::{BindGroupLayoutId, BufferId, SamplerId, TextureId, TextureViewId},
+    id::{BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
-    resource::{ParentDevice, Resource, ResourceInfo, ResourceType},
+    resource::{
+        DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError, ParentDevice,
+        Resource, ResourceInfo, ResourceType,
+    },
     resource_log,
     snatch::{SnatchGuard, Snatchable},
-    track::{BindGroupStates, UsageConflict},
-    validation::{MissingBufferUsageError, MissingTextureUsageError},
+    track::{BindGroupStates, ResourceUsageCompatibilityError},
     Label,
 };
 
@@ -1071,14 +1079,14 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Bind group layout is invalid"</span>)]
     </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidBuffer(BufferId),
-    <span class="attr">#[error(<span class="string">"Texture view {0:?} is invalid"</span>)]
-    </span>InvalidTextureView(TextureViewId),
-    <span class="attr">#[error(<span class="string">"Texture {0:?} is invalid"</span>)]
-    </span>InvalidTexture(TextureId),
+    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
+    </span>InvalidBufferId(BufferId),
+    <span class="attr">#[error(<span class="string">"Texture view Id {0:?} is invalid"</span>)]
+    </span>InvalidTextureViewId(TextureViewId),
     <span class="attr">#[error(<span class="string">"Sampler {0:?} is invalid"</span>)]
     </span>InvalidSampler(SamplerId),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(
         <span class="string">"Binding count declared with at most {expected} items, but {actual} items were provided"
     </span>)]
@@ -1177,7 +1185,7 @@
     <span class="attr">#[error(<span class="string">"The adapter does not support read access for storages texture of format {0:?}"</span>)]
     </span>StorageReadNotSupported(wgt::TextureFormat),
     <span class="attr">#[error(transparent)]
-    </span>ResourceUsageConflict(<span class="attr">#[from] </span>UsageConflict),
+    </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
 }
 
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>CreateBindGroupError {
@@ -1193,10 +1201,7 @@
             <span class="self">Self</span>::BindingSizeTooSmall { buffer, .. } =&gt; {
                 fmt.buffer_label(<span class="kw-2">&amp;</span>buffer);
             }
-            <span class="self">Self</span>::InvalidBuffer(id) =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::InvalidTextureView(id) =&gt; {
+            <span class="self">Self</span>::InvalidTextureViewId(id) =&gt; {
                 fmt.texture_view_label(<span class="kw-2">&amp;</span>id);
             }
             <span class="self">Self</span>::InvalidSampler(id) =&gt; {
@@ -1890,17 +1895,24 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroup&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::BindGroup&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_raw&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
+        guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>A::BindGroup, DestroyedResourceError&gt; {
         <span class="comment">// Clippy insist on writing it this way. The idea is to return None
         // if any of the raw buffer is not valid anymore.
         </span><span class="kw">for </span>buffer <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_buffer_ranges {
-            <span class="kw">let _ </span>= buffer.buffer.raw(guard)<span class="question-mark">?</span>;
+            buffer.buffer.try_raw(guard)<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.used_texture_ranges {
-            <span class="kw">let _ </span>= texture.texture.raw(guard)<span class="question-mark">?</span>;
+            texture.texture.try_raw(guard)<span class="question-mark">?</span>;
         }
-        <span class="self">self</span>.raw.get(guard)
+
+        <span class="self">self</span>.raw
+            .get(guard)
+            .ok_or_else(|| DestroyedResourceError(<span class="self">self</span>.error_ident()))
     }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_dynamic_bindings(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bind_group_index: u32,

@@ -819,34 +819,6 @@
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
 <a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
-<a href="#830" id="830">830</a>
-<a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
-<a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
-<a href="#837" id="837">837</a>
-<a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -859,15 +831,13 @@
 <span class="kw">use super</span>::{PendingTransition, ResourceTracker, TrackerIndex};
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
-    id::BufferId,
     lock::{rank, Mutex},
     resource::{Buffer, Resource},
     resource_log,
     snatch::SnatchGuard,
-    storage::Storage,
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
-        ResourceUses, UsageConflict,
+        ResourceUsageCompatibilityError, ResourceUses,
     },
 };
 <span class="kw">use </span>hal::{BufferBarrier, BufferUses};
@@ -939,18 +909,9 @@
     }
 
     <span class="doccomment">/// Adds the given resource with the given state.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
-        id: BufferId,
-        state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
-        <span class="kw">let </span>buffer = storage.get(id).ok()<span class="question-mark">?</span>;
-
+    </span><span class="kw">pub fn </span>add_single(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
         buffers.push((buffer.clone(), state));
-
-        <span class="prelude-val">Some</span>(buffer)
     }
 }
 
@@ -1018,7 +979,7 @@
     </span><span class="kw">pub unsafe fn </span>merge_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bind_group: <span class="kw-2">&amp;</span>BufferBindGroupState&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>buffers = bind_group.buffers.lock();
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>resource, state) <span class="kw">in </span><span class="kw-2">&amp;*</span>buffers {
             <span class="kw">let </span>index = resource.as_info().tracker_index().as_usize();
@@ -1048,7 +1009,10 @@
     ///
     /// If the given tracker uses IDs higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>merge_usage_scope(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scope: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    </span><span class="kw">pub fn </span>merge_usage_scope(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        scope: <span class="kw-2">&amp;</span><span class="self">Self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>incoming_size = scope.state.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.state.len() {
             <span class="self">self</span>.set_size(incoming_size);
@@ -1085,32 +1049,11 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>merge_single&lt;<span class="lifetime">'a</span>&gt;(
+    </span><span class="kw">pub fn </span>merge_single(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Storage&lt;Buffer&lt;A&gt;&gt;,
-        id: BufferId,
+        buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;,
         new_state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Buffer&lt;A&gt;&gt;, UsageConflict&gt; {
-        <span class="kw">let </span>buffer = storage
-            .get(id)
-            .map_err(|<span class="kw">_</span>| UsageConflict::BufferInvalid { id })<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.insert_merge_single(buffer.clone(), new_state)
-            .map(|<span class="kw">_</span>| buffer)
-    }
-
-    <span class="doccomment">/// Merge a single state into the UsageScope, using an already resolved buffer.
-    ///
-    /// If the resulting state is invalid, returns a usage
-    /// conflict with the details of the invalid state.
-    ///
-    /// If the ID is higher than the length of internal vectors,
-    /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_merge_single(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
-        new_state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>index = buffer.info.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
@@ -1126,7 +1069,7 @@
                 index,
                 BufferStateProvider::Direct { state: new_state },
                 ResourceMetadataProvider::Direct {
-                    resource: Cow::Owned(buffer),
+                    resource: Cow::Owned(buffer.clone()),
                 },
             )<span class="question-mark">?</span>;
         }
@@ -1134,9 +1077,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 }
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>SetSingleResult&lt;A&gt; =
-    <span class="prelude-ty">Option</span>&lt;(Arc&lt;Buffer&lt;A&gt;&gt;, <span class="prelude-ty">Option</span>&lt;PendingTransition&lt;BufferUses&gt;&gt;)&gt;;
 
 <span class="doccomment">/// Stores all buffer state within a command buffer or device.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferTracker&lt;A: HalApi&gt; {
@@ -1303,7 +1243,11 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>set_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) -&gt; SetSingleResult&lt;A&gt; {
+    </span><span class="kw">pub fn </span>set_single(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;,
+        state: BufferUses,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;PendingTransition&lt;BufferUses&gt;&gt; {
         <span class="kw">let </span>index: usize = buffer.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
@@ -1327,7 +1271,7 @@
 
         <span class="macro">strict_assert!</span>(<span class="self">self</span>.temp.len() &lt;= <span class="number">1</span>);
 
-        <span class="prelude-val">Some</span>((buffer.clone(), <span class="self">self</span>.temp.pop()))
+        <span class="self">self</span>.temp.pop()
     }
 
     <span class="doccomment">/// Sets the given state for all buffers in the given tracker.
@@ -1521,7 +1465,7 @@
     index: usize,
     state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
 
     <span class="kw">if </span>!currently_owned {
@@ -1628,8 +1572,8 @@
         }
         <span class="kw-2">*</span>current_states.get_unchecked_mut(index) = new_end_state;
 
-        <span class="kw">let </span>resource = metadata_provider.get_own(index);
-        resource_metadata.insert(index, resource);
+        <span class="kw">let </span>resource = metadata_provider.get(index);
+        resource_metadata.insert(index, resource.clone());
     }
 }
 
@@ -1640,15 +1584,15 @@
     index: usize,
     state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_states.get_unchecked_mut(index) };
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(index) };
 
     <span class="kw">let </span>merged_state = <span class="kw-2">*</span>current_state | new_state;
 
     <span class="kw">if </span>invalid_resource_state(merged_state) {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_buffer(
-            <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_buffer(
+            <span class="kw">unsafe </span>{ metadata_provider.get(index) },
             <span class="kw-2">*</span>current_state,
             new_state,
         ));

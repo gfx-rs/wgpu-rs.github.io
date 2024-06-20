@@ -3699,27 +3699,6 @@
 <a href="#3698" id="3698">3698</a>
 <a href="#3699" id="3699">3699</a>
 <a href="#3700" id="3700">3700</a>
-<a href="#3701" id="3701">3701</a>
-<a href="#3702" id="3702">3702</a>
-<a href="#3703" id="3703">3703</a>
-<a href="#3704" id="3704">3704</a>
-<a href="#3705" id="3705">3705</a>
-<a href="#3706" id="3706">3706</a>
-<a href="#3707" id="3707">3707</a>
-<a href="#3708" id="3708">3708</a>
-<a href="#3709" id="3709">3709</a>
-<a href="#3710" id="3710">3710</a>
-<a href="#3711" id="3711">3711</a>
-<a href="#3712" id="3712">3712</a>
-<a href="#3713" id="3713">3713</a>
-<a href="#3714" id="3714">3714</a>
-<a href="#3715" id="3715">3715</a>
-<a href="#3716" id="3716">3716</a>
-<a href="#3717" id="3717">3717</a>
-<a href="#3718" id="3718">3718</a>
-<a href="#3719" id="3719">3719</a>
-<a href="#3720" id="3720">3720</a>
-<a href="#3721" id="3721">3721</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3756,9 +3735,7 @@
         BindGroupStates, TextureSelector, Tracker, TrackerIndexAllocators, UsageScope,
         UsageScopePool,
     },
-    validation::{
-        <span class="self">self</span>, check_buffer_usage, check_texture_usage, validate_color_attachment_bytes_per_sample,
-    },
+    validation::{<span class="self">self</span>, validate_color_attachment_bytes_per_sample},
     FastHashMap, LabelHelpers <span class="kw">as _</span>, SubmissionIndex,
 };
 
@@ -4291,8 +4268,6 @@
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
         transient: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Buffer&lt;A&gt;, resource::CreateBufferError&gt; {
-        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
-
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>desc.size &gt; <span class="self">self</span>.limits.max_buffer_size {
@@ -4401,8 +4376,6 @@
         format_features: wgt::TextureFormatFeatures,
         clear_mode: resource::TextureClearMode&lt;A&gt;,
     ) -&gt; Texture&lt;A&gt; {
-        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
-
         Texture {
             inner: Snatchable::new(resource::TextureInner::Native { raw: hal_texture }),
             device: <span class="self">self</span>.clone(),
@@ -4432,8 +4405,6 @@
         hal_buffer: A::Buffer,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
     ) -&gt; Buffer&lt;A&gt; {
-        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.as_info().id().backend(), A::VARIANT);
-
         Buffer {
             raw: Snatchable::new(hal_buffer),
             device: <span class="self">self</span>.clone(),
@@ -4738,9 +4709,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TextureView&lt;A&gt;, resource::CreateTextureViewError&gt; {
         <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
 
-        <span class="kw">let </span>texture_raw = texture
-            .raw(<span class="kw-2">&amp;</span>snatch_guard)
-            .ok_or(resource::CreateTextureViewError::InvalidTexture)<span class="question-mark">?</span>;
+        <span class="kw">let </span>texture_raw = texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
         <span class="comment">// resolve TextureViewDescriptor defaults
         // https://gpuweb.github.io/gpuweb/#abstract-opdef-resolving-gputextureviewdescriptor-defaults
@@ -4971,8 +4940,8 @@
         };
 
         <span class="macro">log::debug!</span>(
-            <span class="string">"Create view for texture {:?} filters usages to {:?}"</span>,
-            texture.as_info().id(),
+            <span class="string">"Create view for {} filters usages to {:?}"</span>,
+            texture.error_ident(),
             usage
         );
 
@@ -5653,18 +5622,16 @@
             ));
         }
 
-        <span class="kw">let </span>buffer = used
-            .buffers
-            .add_single(storage, bb.buffer_id, internal_use)
-            .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = storage
+            .get(bb.buffer_id)
+            .map_err(|<span class="kw">_</span>| Error::InvalidBufferId(bb.buffer_id))<span class="question-mark">?</span>;
+
+        used.buffers.add_single(buffer, internal_use);
 
         buffer.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
-        check_buffer_usage(bb.buffer_id, buffer.usage, pub_usage)<span class="question-mark">?</span>;
-        <span class="kw">let </span>raw_buffer = buffer
-            .raw
-            .get(snatch_guard)
-            .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
+        buffer.check_usage(pub_usage)<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw_buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(bind_size, bind_end) = <span class="kw">match </span>bb.size {
             <span class="prelude-val">Some</span>(size) =&gt; {
@@ -5746,10 +5713,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Sampler&lt;A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
 
-        <span class="kw">let </span>sampler = used
-            .samplers
-            .add_single(storage, id)
-            .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>sampler = storage.get(id).map_err(|<span class="kw">_</span>| Error::InvalidSampler(id))<span class="question-mark">?</span>;
+        used.samplers.add_single(sampler);
 
         sampler.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
@@ -5768,10 +5733,10 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::TextureBinding&lt;<span class="lifetime">'a</span>, A&gt;, binding_model::CreateBindGroupError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
 
-        <span class="kw">let </span>view = used
-            .views
-            .add_single(storage, id)
-            .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>view = storage
+            .get(id)
+            .map_err(|<span class="kw">_</span>| Error::InvalidTextureViewId(id))<span class="question-mark">?</span>;
+        used.views.add_single(view);
 
         view.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
@@ -5782,19 +5747,14 @@
             <span class="string">"SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture"</span>,
         )<span class="question-mark">?</span>;
         <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>view.parent;
-        <span class="kw">let </span>texture_id = texture.as_info().id();
         <span class="comment">// Careful here: the texture may no longer have its own ref count,
         // if it was deleted by the user.
-        </span><span class="kw">let </span>texture = used
-            .textures
-            .add_single(texture, <span class="prelude-val">Some</span>(view.selector.clone()), internal_use)
-            .ok_or(binding_model::CreateBindGroupError::InvalidTexture(
-                texture_id,
-            ))<span class="question-mark">?</span>;
+        </span>used.textures
+            .add_single(texture, <span class="prelude-val">Some</span>(view.selector.clone()), internal_use);
 
-        texture.same_device_as(view)<span class="question-mark">?</span>;
+        texture.same_device_as(view.as_ref())<span class="question-mark">?</span>;
 
-        check_texture_usage(texture.desc.usage, pub_usage)<span class="question-mark">?</span>;
+        texture.check_usage(pub_usage)<span class="question-mark">?</span>;
 
         used_texture_ranges.push(TextureInitTrackerAction {
             texture: texture.clone(),
@@ -5809,9 +5769,7 @@
         });
 
         <span class="prelude-val">Ok</span>(hal::TextureBinding {
-            view: view
-                .raw(snatch_guard)
-                .ok_or(Error::InvalidTextureView(id))<span class="question-mark">?</span>,
+            view: view.try_raw(snatch_guard)<span class="question-mark">?</span>,
             usage: internal_use,
         })
     }

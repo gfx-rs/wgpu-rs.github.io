@@ -1492,6 +1492,8 @@
 <a href="#1491" id="1491">1491</a>
 <a href="#1492" id="1492">1492</a>
 <a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are significantly more complicated than
@@ -1524,7 +1526,7 @@
     snatch::SnatchGuard,
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
-        ResourceUses, UsageConflict,
+        ResourceUsageCompatibilityError, ResourceUses,
     },
 };
 <span class="kw">use </span>hal::TextureUses;
@@ -1683,19 +1685,18 @@
     }
 
     <span class="doccomment">/// Adds the given resource with the given state.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">'a</span>&gt;(
+    </span><span class="kw">pub fn </span>add_single(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Texture&lt;A&gt;&gt;,
+        texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
         state: TextureUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Texture&lt;A&gt;&gt;&gt; {
+    ) {
         <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
         textures.push(TextureBindGroupStateData {
             selector,
             texture: texture.clone(),
             usage: state,
         });
-        <span class="prelude-val">Some</span>(texture)
     }
 }
 
@@ -1790,7 +1791,10 @@
     ///
     /// If the given tracker uses IDs higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>merge_usage_scope(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scope: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    </span><span class="kw">pub fn </span>merge_usage_scope(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        scope: <span class="kw-2">&amp;</span><span class="self">Self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>incoming_size = scope.set.simple.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.set.simple.len() {
             <span class="self">self</span>.set_size(incoming_size);
@@ -1834,7 +1838,7 @@
     </span><span class="kw">pub unsafe fn </span>merge_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bind_group: <span class="kw-2">&amp;</span>TextureBindGroupState&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>textures = bind_group.textures.lock();
         <span class="kw">for </span>t <span class="kw">in </span><span class="kw-2">&amp;*</span>textures {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.merge_single(<span class="kw-2">&amp;</span>t.texture, t.selector.clone(), t.usage)<span class="question-mark">? </span>};
@@ -1861,7 +1865,7 @@
         texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
         new_state: TextureUses,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.tracker_assert_in_bounds(index);
@@ -2070,7 +2074,7 @@
         texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: TextureSelector,
         new_state: TextureUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;Drain&lt;<span class="lifetime">'_</span>, PendingTransition&lt;TextureUses&gt;&gt;&gt; {
+    ) -&gt; Drain&lt;<span class="lifetime">'_</span>, PendingTransition&lt;TextureUses&gt;&gt; {
         <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
@@ -2096,7 +2100,7 @@
             )
         }
 
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.temp.drain(..))
+        <span class="self">self</span>.temp.drain(..)
     }
 
     <span class="doccomment">/// Sets the given state for all texture in the given tracker.
@@ -2378,7 +2382,7 @@
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Texture&lt;A&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
 
     <span class="kw">if </span>!currently_owned {
@@ -2559,8 +2563,8 @@
     }
 
     <span class="kw">unsafe </span>{
-        <span class="kw">let </span>resource = metadata_provider.get_own(index);
-        resource_metadata.insert(index, resource);
+        <span class="kw">let </span>resource = metadata_provider.get(index);
+        resource_metadata.insert(index, resource.clone());
     }
 }
 
@@ -2571,7 +2575,7 @@
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Texture&lt;A&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ current_state_set.simple.get_unchecked_mut(index) };
     <span class="kw">let </span>current_state = <span class="kw">if </span><span class="kw-2">*</span>current_simple == TextureUses::COMPLEX {
         SingleOrManyStates::Many(<span class="kw">unsafe </span>{
@@ -2590,8 +2594,8 @@
             <span class="macro">log::trace!</span>(<span class="string">"\ttex {index}: merge simple {current_simple:?} + {new_simple:?}"</span>);
 
             <span class="kw">if </span>invalid_resource_state(merged_state) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                    <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_texture(
+                    <span class="kw">unsafe </span>{ metadata_provider.get(index) },
                     texture_selector.clone(),
                     <span class="kw-2">*</span>current_simple,
                     new_simple,
@@ -2617,8 +2621,8 @@
                 <span class="macro">log::trace!</span>(<span class="string">"\ttex {index}: merge {selector:?} {current_simple:?} + {new_state:?}"</span>);
 
                 <span class="kw">if </span>invalid_resource_state(merged_state) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                        <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_texture(
+                        <span class="kw">unsafe </span>{ metadata_provider.get(index) },
                         selector,
                         <span class="kw-2">*</span>current_simple,
                         new_state,
@@ -2658,8 +2662,8 @@
                     </span>);
 
                     <span class="kw">if </span>invalid_resource_state(merged_state) {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                            <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_texture(
+                            <span class="kw">unsafe </span>{ metadata_provider.get(index) },
                             TextureSelector {
                                 mips: mip_id..mip_id + <span class="number">1</span>,
                                 layers: layers.clone(),
@@ -2699,8 +2703,8 @@
                         </span>);
 
                         <span class="kw">if </span>invalid_resource_state(merged_state) {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
-                                <span class="kw">unsafe </span>{ metadata_provider.get_own(index).info.id() },
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(ResourceUsageCompatibilityError::from_texture(
+                                <span class="kw">unsafe </span>{ metadata_provider.get(index) },
                                 TextureSelector {
                                     mips: mip_id..mip_id + <span class="number">1</span>,
                                     layers: layers.clone(),

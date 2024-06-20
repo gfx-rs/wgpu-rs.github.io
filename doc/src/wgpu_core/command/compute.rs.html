@@ -1203,20 +1203,6 @@
 <a href="#1202" id="1202">1202</a>
 <a href="#1203" id="1203">1203</a>
 <a href="#1204" id="1204">1204</a>
-<a href="#1205" id="1205">1205</a>
-<a href="#1206" id="1206">1206</a>
-<a href="#1207" id="1207">1207</a>
-<a href="#1208" id="1208">1208</a>
-<a href="#1209" id="1209">1209</a>
-<a href="#1210" id="1210">1210</a>
-<a href="#1211" id="1211">1211</a>
-<a href="#1212" id="1212">1212</a>
-<a href="#1213" id="1213">1213</a>
-<a href="#1214" id="1214">1214</a>
-<a href="#1215" id="1215">1215</a>
-<a href="#1216" id="1216">1216</a>
-<a href="#1217" id="1217">1217</a>
-<a href="#1218" id="1218">1218</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     command::{
@@ -1234,10 +1220,9 @@
     hal_api::HalApi,
     hal_label, id,
     init_tracker::MemoryInitKind,
-    resource::{<span class="self">self</span>, ParentDevice, Resource},
+    resource::{<span class="self">self</span>, DestroyedResourceError, MissingBufferUsageError, ParentDevice, Resource},
     snatch::SnatchGuard,
-    track::{Tracker, TrackerIndex, UsageConflict, UsageScope},
-    validation::{check_buffer_usage, MissingBufferUsageError},
+    track::{ResourceUsageCompatibilityError, Tracker, TrackerIndex, UsageScope},
     Label,
 };
 
@@ -1378,26 +1363,26 @@
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(<span class="string">"Parent encoder is invalid"</span>)]
     </span>InvalidParentEncoder,
-    <span class="attr">#[error(<span class="string">"Bind group at index {0:?} is invalid"</span>)]
-    </span>InvalidBindGroup(u32),
+    <span class="attr">#[error(<span class="string">"BindGroupId {0:?} is invalid"</span>)]
+    </span>InvalidBindGroupId(id::BindGroupId),
     <span class="attr">#[error(<span class="string">"Bind group index {index} is greater than the device's requested `max_bind_group` limit {max}"</span>)]
     </span>BindGroupIndexOutOfRange { index: u32, max: u32 },
     <span class="attr">#[error(<span class="string">"Compute pipeline {0:?} is invalid"</span>)]
     </span>InvalidPipeline(id::ComputePipelineId),
     <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid"</span>)]
     </span>InvalidQuerySet(id::QuerySetId),
-    <span class="attr">#[error(<span class="string">"Indirect buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidIndirectBuffer(id::BufferId),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"Indirect buffer uses bytes {offset}..{end_offset} which overruns indirect buffer of size {buffer_size}"</span>)]
     </span>IndirectBufferOverrun {
         offset: u64,
         end_offset: u64,
         buffer_size: u64,
     },
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidBuffer(id::BufferId),
+    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
+    </span>InvalidBufferId(id::BufferId),
     <span class="attr">#[error(transparent)]
-    </span>ResourceUsageConflict(<span class="attr">#[from] </span>UsageConflict),
+    </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
     <span class="attr">#[error(transparent)]
     </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
     <span class="attr">#[error(<span class="string">"Cannot pop debug group, because number of pushed debug groups is zero"</span>)]
@@ -1430,9 +1415,6 @@
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::InvalidPipeline(id) =&gt; {
                 fmt.compute_pipeline_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::InvalidIndirectBuffer(id) =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
             }
             <span class="self">Self</span>::Dispatch(DispatchError::IncompatibleBindGroup { <span class="kw-2">ref </span>diff, .. }) =&gt; {
                 <span class="kw">for </span>d <span class="kw">in </span>diff {
@@ -1508,7 +1490,7 @@
         base_trackers: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         indirect_buffer: <span class="prelude-ty">Option</span>&lt;TrackerIndex&gt;,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">for </span>bind_group <span class="kw">in </span><span class="self">self</span>.binder.list_active() {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.scope.merge_bind_group(<span class="kw-2">&amp;</span>bind_group.used)<span class="question-mark">? </span>};
             <span class="comment">// Note: stateless trackers are not merged: the lifetime reference
@@ -1838,10 +1820,7 @@
                         <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                         <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                <span class="kw">let </span>raw_bg = group
-                                    .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                    .ok_or(ComputePassErrorInner::InvalidBindGroup(i <span class="kw">as </span>u32))
-                                    .map_pass_err(scope)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>raw_bg = group.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
                                 <span class="kw">unsafe </span>{
                                     raw.set_bind_group(
                                         pipeline_layout,
@@ -1884,10 +1863,8 @@
                         <span class="kw">if </span>!entries.is_empty() {
                             <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                    <span class="kw">let </span>raw_bg = group
-                                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                        .ok_or(ComputePassErrorInner::InvalidBindGroup(i <span class="kw">as </span>u32))
-                                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                                    <span class="kw">let </span>raw_bg =
+                                        group.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
                                     <span class="kw">unsafe </span>{
                                         raw.set_bind_group(
                                             pipeline.layout.raw(),
@@ -1993,7 +1970,6 @@
                     }
                 }
                 ArcComputeCommand::DispatchIndirect { buffer, offset } =&gt; {
-                    <span class="kw">let </span>buffer_id = buffer.as_info().id();
                     <span class="kw">let </span>scope = PassErrorScope::Dispatch {
                         indirect: <span class="bool-val">true</span>,
                         pipeline: state.pipeline,
@@ -2010,9 +1986,10 @@
                     state
                         .scope
                         .buffers
-                        .insert_merge_single(buffer.clone(), hal::BufferUses::INDIRECT)
+                        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::INDIRECT)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
-                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::INDIRECT)
+                    buffer
+                        .check_usage(wgt::BufferUsages::INDIRECT)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>end_offset = offset + mem::size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
@@ -2025,11 +2002,7 @@
                         .map_pass_err(scope);
                     }
 
-                    <span class="kw">let </span>buf_raw = buffer
-                        .raw
-                        .get(<span class="kw-2">&amp;</span>snatch_guard)
-                        .ok_or(ComputePassErrorInner::InvalidIndirectBuffer(buffer_id))
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>buf_raw = buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>stride = <span class="number">3 </span>* <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size
 
@@ -2199,7 +2172,7 @@
             .bind_groups
             .read()
             .get_owned(bind_group_id)
-            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBindGroup(index))
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBindGroupId(bind_group_id))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands.push(ArcComputeCommand::SetBindGroup {
@@ -2311,9 +2284,8 @@
 
         <span class="kw">let </span>buffer = hub
             .buffers
-            .read()
-            .get_owned(buffer_id)
-            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBuffer(buffer_id))
+            .get(buffer_id)
+            .map_err(|<span class="kw">_</span>| ComputePassErrorInner::InvalidBufferId(buffer_id))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands

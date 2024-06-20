@@ -2794,10 +2794,6 @@
 <a href="#2793" id="2793">2793</a>
 <a href="#2794" id="2794">2794</a>
 <a href="#2795" id="2795">2795</a>
-<a href="#2796" id="2796">2796</a>
-<a href="#2797" id="2797">2797</a>
-<a href="#2798" id="2798">2798</a>
-<a href="#2799" id="2799">2799</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
 };
@@ -2807,7 +2803,6 @@
     api_log,
     binding_model::BindError,
     command::{
-        <span class="self">self</span>,
         bind::Binder,
         end_occlusion_query, end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
@@ -2825,12 +2820,12 @@
     hal_label, id,
     init_tracker::{MemoryInitKind, TextureInitRange, TextureInitTrackerAction},
     pipeline::{<span class="self">self</span>, PipelineFlags},
-    resource::{ParentDevice, QuerySet, Texture, TextureView, TextureViewNotRenderableReason},
-    storage::Storage,
-    track::{TextureSelector, Tracker, UsageConflict, UsageScope},
-    validation::{
-        check_buffer_usage, check_texture_usage, MissingBufferUsageError, MissingTextureUsageError,
+    resource::{
+        DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError, ParentDevice,
+        QuerySet, Texture, TextureView, TextureViewNotRenderableReason,
     },
+    storage::Storage,
+    track::{ResourceUsageCompatibilityError, TextureSelector, Tracker, UsageScope},
     Label,
 };
 
@@ -3353,10 +3348,8 @@
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
-    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
-    </span>InvalidAttachment(id::TextureViewId),
-    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
-    </span>InvalidResolveTarget(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Attachment texture view Id {0:?} is invalid"</span>)]
+    </span>InvalidAttachmentId(id::TextureViewId),
     <span class="attr">#[error(<span class="string">"The format of the depth-stencil attachment ({0:?}) is not a depth-stencil format"</span>)]
     </span>InvalidDepthStencilAttachmentFormat(wgt::TextureFormat),
     <span class="attr">#[error(<span class="string">"The format of the {location} ({format:?}) is not resolvable"</span>)]
@@ -3404,8 +3397,6 @@
     </span>SurfaceTextureDropped,
     <span class="attr">#[error(<span class="string">"Not enough memory left for render pass"</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">"The bind group at index {0:?} is invalid"</span>)]
-    </span>InvalidBindGroup(usize),
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only depth"</span>)]
     </span>InvalidDepthOps,
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only stencil"</span>)]
@@ -3433,7 +3424,7 @@
     <span class="attr">#[error(<span class="string">"Cannot pop debug group, because number of pushed debug groups is zero"</span>)]
     </span>InvalidPopDebugGroup,
     <span class="attr">#[error(transparent)]
-    </span>ResourceUsageConflict(<span class="attr">#[from] </span>UsageConflict),
+    </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
     <span class="attr">#[error(<span class="string">"Render bundle has incompatible targets, {0}"</span>)]
     </span>IncompatibleBundleTargets(<span class="attr">#[from] </span>RenderPassCompatibilityError),
     <span class="attr">#[error(
@@ -3466,12 +3457,14 @@
     </span>InvalidQuerySet(id::QuerySetId),
     <span class="attr">#[error(<span class="string">"missing occlusion query set"</span>)]
     </span>MissingOcclusionQuerySet,
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
 }
 
 <span class="kw">impl </span>PrettyError <span class="kw">for </span>RenderPassErrorInner {
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
         fmt.error(<span class="self">self</span>);
-        <span class="kw">if let </span><span class="self">Self</span>::InvalidAttachment(id) = <span class="kw-2">*</span><span class="self">self </span>{
+        <span class="kw">if let </span><span class="self">Self</span>::InvalidAttachmentId(id) = <span class="kw-2">*</span><span class="self">self </span>{
             fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"attachment"</span>);
         };
         <span class="kw">if let </span><span class="self">Self</span>::Draw(DrawError::IncompatibleBindGroup { diff, .. }) = <span class="self">self </span>{
@@ -3701,10 +3694,14 @@
         <span class="kw">let </span><span class="kw-2">mut </span>depth_stencil = <span class="prelude-val">None</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(at) = depth_stencil_attachment {
-            <span class="kw">let </span>view: <span class="kw-2">&amp;</span>TextureView&lt;A&gt; = trackers
-                .views
-                .add_single(view_guard, at.view)
-                .ok_or(RenderPassErrorInner::InvalidAttachment(at.view))<span class="question-mark">?</span>;
+            <span class="kw">let </span>view = view_guard
+                .get(at.view)
+                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidAttachmentId(at.view))<span class="question-mark">?</span>;
+
+            trackers.views.add_single(view);
+
+            <span class="kw">let </span>view = view.as_ref();
+
             check_multiview(view)<span class="question-mark">?</span>;
             add_view(view, AttachmentErrorLocation::Depth)<span class="question-mark">?</span>;
 
@@ -3816,9 +3813,7 @@
 
             depth_stencil = <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                 target: hal::Attachment {
-                    view: view
-                        .raw(snatch_guard)
-                        .ok_or_else(|| RenderPassErrorInner::InvalidAttachment(view.info.id()))<span class="question-mark">?</span>,
+                    view: view.try_raw(snatch_guard)<span class="question-mark">?</span>,
                     usage,
                 },
                 depth_ops: at.depth.hal_ops(),
@@ -3834,10 +3829,13 @@
                 colors.push(<span class="prelude-val">None</span>);
                 <span class="kw">continue</span>;
             };
-            <span class="kw">let </span>color_view: <span class="kw-2">&amp;</span>TextureView&lt;A&gt; = trackers
-                .views
-                .add_single(view_guard, at.view)
-                .ok_or(RenderPassErrorInner::InvalidAttachment(at.view))<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>color_view = view_guard
+                .get(at.view)
+                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidAttachmentId(at.view))<span class="question-mark">?</span>;
+
+            trackers.views.add_single(color_view);
+
             check_multiview(color_view)<span class="question-mark">?</span>;
             add_view(
                 color_view,
@@ -3868,10 +3866,11 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>hal_resolve_target = <span class="prelude-val">None</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_target) = at.resolve_target {
-                <span class="kw">let </span>resolve_view: <span class="kw-2">&amp;</span>TextureView&lt;A&gt; = trackers
-                    .views
-                    .add_single(view_guard, resolve_target)
-                    .ok_or(RenderPassErrorInner::InvalidAttachment(resolve_target))<span class="question-mark">?</span>;
+                <span class="kw">let </span>resolve_view = view_guard
+                    .get(resolve_target)
+                    .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidAttachmentId(resolve_target))<span class="question-mark">?</span>;
+
+                trackers.views.add_single(resolve_view);
 
                 check_multiview(resolve_view)<span class="question-mark">?</span>;
 
@@ -3927,18 +3926,14 @@
                     .push(resolve_view.to_render_attachment(hal::TextureUses::COLOR_TARGET));
 
                 hal_resolve_target = <span class="prelude-val">Some</span>(hal::Attachment {
-                    view: resolve_view.raw(snatch_guard).ok_or_else(|| {
-                        RenderPassErrorInner::InvalidResolveTarget(resolve_view.info.id())
-                    })<span class="question-mark">?</span>,
+                    view: resolve_view.try_raw(snatch_guard)<span class="question-mark">?</span>,
                     usage: hal::TextureUses::COLOR_TARGET,
                 });
             }
 
             colors.push(<span class="prelude-val">Some</span>(hal::ColorAttachment {
                 target: hal::Attachment {
-                    view: color_view.raw(snatch_guard).ok_or_else(|| {
-                        RenderPassErrorInner::InvalidAttachment(color_view.info.id())
-                    })<span class="question-mark">?</span>,
+                    view: color_view.try_raw(snatch_guard)<span class="question-mark">?</span>,
                     usage: hal::TextureUses::COLOR_TARGET,
                 },
                 resolve_target: hal_resolve_target,
@@ -3975,10 +3970,11 @@
         };
 
         <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes {
-            <span class="kw">let </span>query_set = trackers
-                .query_sets
-                .add_single(query_set_guard, tw.query_set)
-                .ok_or(RenderPassErrorInner::InvalidQuerySet(tw.query_set))<span class="question-mark">?</span>;
+            <span class="kw">let </span>query_set = query_set_guard
+                .get(tw.query_set)
+                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(tw.query_set))<span class="question-mark">?</span>;
+
+            trackers.query_sets.add_single(query_set);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = tw.beginning_of_pass_write_index {
                 pending_query_resets.use_query_set(tw.query_set, query_set, index);
@@ -3997,10 +3993,11 @@
         </span>};
 
         <span class="kw">let </span>occlusion_query_set = <span class="kw">if let </span><span class="prelude-val">Some</span>(occlusion_query_set) = occlusion_query_set {
-            <span class="kw">let </span>query_set = trackers
-                .query_sets
-                .add_single(query_set_guard, occlusion_query_set)
-                .ok_or(RenderPassErrorInner::InvalidQuerySet(occlusion_query_set))<span class="question-mark">?</span>;
+            <span class="kw">let </span>query_set = query_set_guard
+                .get(occlusion_query_set)
+                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(occlusion_query_set))<span class="question-mark">?</span>;
+
+            trackers.query_sets.add_single(query_set);
 
             <span class="prelude-val">Some</span>(query_set.raw.as_ref().unwrap())
         } <span class="kw">else </span>{
@@ -4047,14 +4044,15 @@
 
         <span class="kw">for </span>ra <span class="kw">in </span><span class="self">self</span>.render_attachments {
             <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>ra.texture;
-            check_texture_usage(texture.desc.usage, TextureUsages::RENDER_ATTACHMENT)<span class="question-mark">?</span>;
+            texture.check_usage(TextureUsages::RENDER_ATTACHMENT)<span class="question-mark">?</span>;
 
             <span class="comment">// the tracker set of the pass is always in "extend" mode
             </span><span class="kw">unsafe </span>{
-                <span class="self">self</span>.usage_scope
-                    .textures
-                    .merge_single(texture, <span class="prelude-val">Some</span>(ra.selector.clone()), ra.usage)
-                    .map_err(UsageConflict::from)<span class="question-mark">?
+                <span class="self">self</span>.usage_scope.textures.merge_single(
+                    texture,
+                    <span class="prelude-val">Some</span>(ra.selector.clone()),
+                    ra.usage,
+                )<span class="question-mark">?
             </span>};
         }
 
@@ -4086,9 +4084,7 @@
                 color_attachments: <span class="kw-2">&amp;</span>[],
                 depth_stencil_attachment: <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                     target: hal::Attachment {
-                        view: view.raw(snatch_guard).ok_or_else(|| {
-                            RenderPassErrorInner::InvalidAttachment(view.info.id())
-                        })<span class="question-mark">?</span>,
+                        view: view.try_raw(snatch_guard)<span class="question-mark">?</span>,
                         usage: hal::TextureUses::DEPTH_STENCIL_WRITE,
                     },
                     depth_ops,
@@ -4268,11 +4264,12 @@
                         );
                         dynamic_offset_count += num_dynamic_offsets;
 
-                        <span class="kw">let </span>bind_group = tracker
-                            .bind_groups
-                            .add_single(<span class="kw-2">&amp;*</span>bind_group_guard, bind_group_id)
-                            .ok_or(RenderCommandError::InvalidBindGroup(bind_group_id))
+                        <span class="kw">let </span>bind_group = bind_group_guard
+                            .get(bind_group_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBindGroupId(bind_group_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.bind_groups.add_single(bind_group);
 
                         bind_group
                             .same_device_as(cmd_buf.as_ref())
@@ -4314,10 +4311,8 @@
                             <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                             <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                    <span class="kw">let </span>raw_bg = group
-                                        .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                        .ok_or(RenderPassErrorInner::InvalidBindGroup(i))
-                                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                                    <span class="kw">let </span>raw_bg =
+                                        group.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
                                     <span class="kw">unsafe </span>{
                                         raw.set_bind_group(
                                             pipeline_layout,
@@ -4336,11 +4331,12 @@
                         <span class="kw">let </span>scope = PassErrorScope::SetPipelineRender(pipeline_id);
                         state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
 
-                        <span class="kw">let </span>pipeline: <span class="kw-2">&amp;</span>pipeline::RenderPipeline&lt;A&gt; = tracker
-                            .render_pipelines
-                            .add_single(<span class="kw-2">&amp;*</span>render_pipeline_guard, pipeline_id)
-                            .ok_or(RenderCommandError::InvalidPipeline(pipeline_id))
+                        <span class="kw">let </span>pipeline = render_pipeline_guard
+                            .get(pipeline_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidPipeline(pipeline_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.render_pipelines.add_single(pipeline);
 
                         pipeline
                             .same_device_as(cmd_buf.as_ref())
@@ -4395,10 +4391,8 @@
                             <span class="kw">if </span>!entries.is_empty() {
                                 <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
-                                        <span class="kw">let </span>raw_bg = group
-                                            .raw(<span class="kw-2">&amp;</span>snatch_guard)
-                                            .ok_or(RenderPassErrorInner::InvalidBindGroup(i))
-                                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                                        <span class="kw">let </span>raw_bg =
+                                            group.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
                                         <span class="kw">unsafe </span>{
                                             raw.set_bind_group(
                                                 pipeline.layout.raw(),
@@ -4465,23 +4459,25 @@
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::set_index_buffer {buffer_id:?}"</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetIndexBuffer(buffer_id);
-                        <span class="kw">let </span>buffer = info
-                            .usage_scope
+
+                        <span class="kw">let </span>buffer = buffer_guard
+                            .get(buffer_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        info.usage_scope
                             .buffers
-                            .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDEX)
+                            .merge_single(buffer, hal::BufferUses::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         buffer
                             .same_device_as(cmd_buf.as_ref())
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        check_buffer_usage(buffer_id, buffer.usage, BufferUsages::INDEX)
+                        buffer
+                            .check_usage(BufferUsages::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>buf_raw = buffer
-                            .raw
-                            .get(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>buf_raw = buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>end = <span class="kw">match </span>size {
                             <span class="prelude-val">Some</span>(s) =&gt; offset + s.get(),
@@ -4518,10 +4514,15 @@
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::set_vertex_buffer {slot} {buffer_id:?}"</span>);
 
                         <span class="kw">let </span>scope = PassErrorScope::SetVertexBuffer(buffer_id);
-                        <span class="kw">let </span>buffer = info
-                            .usage_scope
+
+                        <span class="kw">let </span>buffer = buffer_guard
+                            .get(buffer_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        info.usage_scope
                             .buffers
-                            .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::VERTEX)
+                            .merge_single(buffer, hal::BufferUses::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
                         buffer
@@ -4537,13 +4538,10 @@
                             .map_pass_err(scope);
                         }
 
-                        check_buffer_usage(buffer_id, buffer.usage, BufferUsages::VERTEX)
+                        buffer
+                            .check_usage(BufferUsages::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>buf_raw = buffer
-                            .raw
-                            .get(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>buf_raw = buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>empty_slots =
                             (<span class="number">1 </span>+ slot <span class="kw">as </span>usize).saturating_sub(state.vertex.inputs.len());
@@ -4829,22 +4827,21 @@
                             .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>indirect_buffer = info
-                            .usage_scope
+                        <span class="kw">let </span>indirect_buffer = buffer_guard
+                            .get(buffer_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        info.usage_scope
                             .buffers
-                            .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
+                            .merge_single(indirect_buffer, hal::BufferUses::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(
-                            buffer_id,
-                            indirect_buffer.usage,
-                            BufferUsages::INDIRECT,
-                        )
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>indirect_raw = indirect_buffer
-                            .raw
-                            .get(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
+
+                        indirect_buffer
+                            .check_usage(BufferUsages::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>indirect_raw =
+                            indirect_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>actual_count = count.map_or(<span class="number">1</span>, |c| c.get());
 
@@ -4905,39 +4902,36 @@
                             .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>indirect_buffer = info
-                            .usage_scope
-                            .buffers
-                            .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
-                            .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(
-                            buffer_id,
-                            indirect_buffer.usage,
-                            BufferUsages::INDIRECT,
-                        )
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>indirect_raw = indirect_buffer
-                            .raw
-                            .get(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(RenderCommandError::DestroyedBuffer(buffer_id))
+                        <span class="kw">let </span>indirect_buffer = buffer_guard
+                            .get(buffer_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>count_buffer = info
-                            .usage_scope
+                        info.usage_scope
                             .buffers
-                            .merge_single(
-                                <span class="kw-2">&amp;*</span>buffer_guard,
-                                count_buffer_id,
-                                hal::BufferUses::INDIRECT,
-                            )
+                            .merge_single(indirect_buffer, hal::BufferUses::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        check_buffer_usage(buffer_id, count_buffer.usage, BufferUsages::INDIRECT)
+
+                        indirect_buffer
+                            .check_usage(BufferUsages::INDIRECT)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>count_raw = count_buffer
-                            .raw
-                            .get(<span class="kw-2">&amp;</span>snatch_guard)
-                            .ok_or(RenderCommandError::DestroyedBuffer(count_buffer_id))
+                        <span class="kw">let </span>indirect_raw =
+                            indirect_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">let </span>count_buffer = buffer_guard
+                            .get(count_buffer_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(count_buffer_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        info.usage_scope
+                            .buffers
+                            .merge_single(count_buffer, hal::BufferUses::INDIRECT)
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        count_buffer
+                            .check_usage(BufferUsages::INDIRECT)
+                            .map_pass_err(scope)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>count_raw = count_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard).map_pass_err(scope)<span class="question-mark">?</span>;
 
                         <span class="kw">let </span>end_offset = offset + stride * max_count <span class="kw">as </span>u64;
                         <span class="kw">if </span>end_offset &gt; indirect_buffer.size {
@@ -5050,11 +5044,12 @@
                             .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>query_set = tracker
-                            .query_sets
-                            .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
-                            .ok_or(RenderCommandError::InvalidQuerySet(query_set_id))
+                        <span class="kw">let </span>query_set = query_set_guard
+                            .get(query_set_id)
+                            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(query_set_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.query_sets.add_single(query_set);
 
                         query_set
                             .validate_and_write_timestamp(
@@ -5072,11 +5067,12 @@
                             .ok_or(RenderPassErrorInner::MissingOcclusionQuerySet)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>query_set = tracker
-                            .query_sets
-                            .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
-                            .ok_or(RenderCommandError::InvalidQuerySet(query_set_id))
+                        <span class="kw">let </span>query_set = query_set_guard
+                            .get(query_set_id)
+                            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(query_set_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.query_sets.add_single(query_set);
 
                         validate_and_begin_occlusion_query(
                             query_set.clone(),
@@ -5100,11 +5096,12 @@
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::begin_pipeline_statistics_query {query_set_id:?} {query_index}"</span>);
                         <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
-                        <span class="kw">let </span>query_set = tracker
-                            .query_sets
-                            .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
-                            .ok_or(RenderCommandError::InvalidQuerySet(query_set_id))
+                        <span class="kw">let </span>query_set = query_set_guard
+                            .get(query_set_id)
+                            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(query_set_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.query_sets.add_single(query_set);
 
                         validate_and_begin_pipeline_statistics_query(
                             query_set.clone(),
@@ -5125,11 +5122,13 @@
                     RenderCommand::ExecuteBundle(bundle_id) =&gt; {
                         <span class="macro">api_log!</span>(<span class="string">"RenderPass::execute_bundle {bundle_id:?}"</span>);
                         <span class="kw">let </span>scope = PassErrorScope::ExecuteBundle;
-                        <span class="kw">let </span>bundle: <span class="kw-2">&amp;</span>command::RenderBundle&lt;A&gt; = tracker
-                            .bundles
-                            .add_single(<span class="kw-2">&amp;*</span>bundle_guard, bundle_id)
-                            .ok_or(RenderCommandError::InvalidRenderBundle(bundle_id))
+
+                        <span class="kw">let </span>bundle = bundle_guard
+                            .get(bundle_id)
+                            .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidRenderBundle(bundle_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        tracker.bundles.add_single(bundle);
 
                         bundle
                             .same_device_as(cmd_buf.as_ref())
@@ -5176,11 +5175,8 @@
 
                         <span class="kw">unsafe </span>{ bundle.execute(raw, <span class="kw-2">&amp;</span>snatch_guard) }
                             .map_err(|e| <span class="kw">match </span>e {
-                                ExecutionError::DestroyedBuffer(id) =&gt; {
-                                    RenderCommandError::DestroyedBuffer(id)
-                                }
-                                ExecutionError::InvalidBindGroup(id) =&gt; {
-                                    RenderCommandError::InvalidBindGroup(id)
+                                ExecutionError::DestroyedResource(e) =&gt; {
+                                    RenderCommandError::DestroyedResource(e)
                                 }
                                 ExecutionError::Unimplemented(what) =&gt; {
                                     RenderCommandError::Unimplemented(what)
@@ -5235,11 +5231,7 @@
 
             cmd_buf_data
                 .pending_query_resets
-                .reset_queries(
-                    transit,
-                    <span class="kw-2">&amp;</span>query_set_guard,
-                    cmd_buf.device.info.id().backend(),
-                )
+                .reset_queries(transit, <span class="kw-2">&amp;</span>query_set_guard)
                 .map_err(RenderCommandError::InvalidQuerySet)
                 .map_pass_err(PassErrorScope::QueryReset)<span class="question-mark">?</span>;
 

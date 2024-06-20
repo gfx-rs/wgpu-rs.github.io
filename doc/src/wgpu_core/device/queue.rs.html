@@ -1570,10 +1570,6 @@
 <a href="#1569" id="1569">1569</a>
 <a href="#1570" id="1570">1570</a>
 <a href="#1571" id="1571">1571</a>
-<a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1592,10 +1588,13 @@
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
     lock::{rank, Mutex, RwLockWriteGuard},
     resource::{
-        Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedTexture, ParentDevice,
-        Resource, ResourceInfo, ResourceType, StagingBuffer, Texture, TextureInner,
+        Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedResourceError,
+        DestroyedTexture, ParentDevice, Resource, ResourceErrorIdent, ResourceInfo, ResourceType,
+        StagingBuffer, Texture, TextureInner,
     },
-    resource_log, track, FastHashMap, SubmissionIndex,
+    resource_log,
+    track::{<span class="self">self</span>, TrackerIndex},
+    FastHashMap, SubmissionIndex,
 };
 
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>, Queue <span class="kw">as _</span>};
@@ -1786,9 +1785,9 @@
     /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     </span><span class="kw">pub </span>is_recording: bool,
 
-    <span class="kw">pub </span>temp_resources: Vec&lt;TempResource&lt;A&gt;&gt;,
-    <span class="kw">pub </span>dst_buffers: FastHashMap&lt;id::BufferId, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
-    <span class="kw">pub </span>dst_textures: FastHashMap&lt;id::TextureId, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
+    temp_resources: Vec&lt;TempResource&lt;A&gt;&gt;,
+    dst_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    dst_textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
 
     <span class="doccomment">/// All command buffers allocated from `command_encoder`.
     </span><span class="kw">pub </span>executing_command_buffers: Vec&lt;A::CommandBuffer&gt;,
@@ -1817,6 +1816,25 @@
         }
 
         <span class="self">self</span>.temp_resources.clear();
+    }
+
+    <span class="kw">pub fn </span>insert_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;) {
+        <span class="self">self</span>.dst_buffers
+            .insert(buffer.info.tracker_index(), buffer.clone());
+    }
+
+    <span class="kw">pub fn </span>insert_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;) {
+        <span class="self">self</span>.dst_textures
+            .insert(texture.info.tracker_index(), texture.clone());
+    }
+
+    <span class="kw">pub fn </span>contains_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;) -&gt; bool {
+        <span class="self">self</span>.dst_buffers.contains_key(<span class="kw-2">&amp;</span>buffer.info.tracker_index())
+    }
+
+    <span class="kw">pub fn </span>contains_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;) -&gt; bool {
+        <span class="self">self</span>.dst_textures
+            .contains_key(<span class="kw-2">&amp;</span>texture.info.tracker_index())
     }
 
     <span class="kw">pub fn </span>consume_temp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: TempResource&lt;A&gt;) {
@@ -1940,6 +1958,8 @@
     </span>Transfer(<span class="attr">#[from] </span>TransferError),
     <span class="attr">#[error(transparent)]
     </span>MemoryInitFailure(<span class="attr">#[from] </span>ClearError),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1947,14 +1967,12 @@
 </span><span class="kw">pub enum </span>QueueSubmitError {
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is destroyed"</span>)]
-    </span>DestroyedBuffer(id::BufferId),
-    <span class="attr">#[error(<span class="string">"Texture {0:?} is destroyed"</span>)]
-    </span>DestroyedTexture(id::TextureId),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(transparent)]
     </span>Unmap(<span class="attr">#[from] </span>BufferAccessError),
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is still mapped"</span>)]
-    </span>BufferStillMapped(id::BufferId),
+    <span class="attr">#[error(<span class="string">"{0} is still mapped"</span>)]
+    </span>BufferStillMapped(ResourceErrorIdent),
     <span class="attr">#[error(<span class="string">"Surface output was dropped before the command buffer got submitted"</span>)]
     </span>SurfaceOutputDropped,
     <span class="attr">#[error(<span class="string">"Surface was unconfigured before the command buffer got submitted"</span>)]
@@ -1981,7 +1999,7 @@
         <span class="kw">let </span>buffer = hub
             .buffers
             .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>queue = hub
             .queues
@@ -2088,7 +2106,7 @@
 
         <span class="kw">let </span>staging_buffer = hub.staging_buffers.unregister(staging_buffer_id);
         <span class="kw">if </span>staging_buffer.is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueWriteError::Transfer(TransferError::InvalidBuffer(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueWriteError::Transfer(TransferError::InvalidBufferId(
                 buffer_id,
             )));
         }
@@ -2131,7 +2149,7 @@
         <span class="kw">let </span>buffer = hub
             .buffers
             .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
         <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>buffer, buffer_id, buffer_offset, buffer_size)<span class="question-mark">?</span>;
 
@@ -2180,22 +2198,18 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>(dst, transition) = {
-            <span class="kw">let </span>buffer_guard = hub.buffers.read();
-            <span class="kw">let </span>dst = buffer_guard
-                .get(buffer_id)
-                .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst = hub
+            .buffers
+            .get(buffer_id)
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>transition = {
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-            trackers
-                .buffers
-                .set_single(dst, hal::BufferUses::COPY_DST)
-                .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?
-        </span>};
+            trackers.buffers.set_single(<span class="kw-2">&amp;</span>dst, hal::BufferUses::COPY_DST)
+        };
+
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-        <span class="kw">let </span>dst_raw = dst
-            .raw
-            .get(<span class="kw-2">&amp;</span>snatch_guard)
-            .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
@@ -2225,8 +2239,8 @@
                 region.into_iter(),
             );
         }
-        <span class="kw">let </span>dst = hub.buffers.get(buffer_id).unwrap();
-        pending_writes.dst_buffers.insert(buffer_id, dst.clone());
+
+        pending_writes.insert_buffer(<span class="kw-2">&amp;</span>dst);
 
         <span class="comment">// Ensure the overwritten bytes are marked as initialized so
         // they don't need to be nulled prior to mapping or binding.
@@ -2278,7 +2292,7 @@
         <span class="kw">let </span>dst = hub
             .textures
             .get(destination.texture)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| TransferError::InvalidTextureId(destination.texture))<span class="question-mark">?</span>;
 
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
@@ -2406,9 +2420,7 @@
         dst.info
             .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
-        <span class="kw">let </span>dst_raw = dst
-            .raw(<span class="kw-2">&amp;</span>snatch_guard)
-            .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bytes_per_row = data_layout
             .bytes_per_row
@@ -2485,10 +2497,10 @@
             };
 
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-            <span class="kw">let </span>transition = trackers
-                .textures
-                .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST)
-                .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+            <span class="kw">let </span>transition =
+                trackers
+                    .textures
+                    .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST);
             <span class="kw">unsafe </span>{
                 encoder.transition_textures(transition.map(|pending| pending.into_hal(dst_raw)));
                 encoder.transition_buffers(iter::once(barrier));
@@ -2497,9 +2509,7 @@
         }
 
         pending_writes.consume(staging_buffer);
-        pending_writes
-            .dst_textures
-            .insert(destination.texture, dst.clone());
+        pending_writes.insert_texture(<span class="kw-2">&amp;</span>dst);
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2669,9 +2679,7 @@
             .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-        <span class="kw">let </span>dst_raw = dst
-            .raw(<span class="kw-2">&amp;</span>snatch_guard)
-            .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>regions = hal::TextureCopy {
             src_base: hal::TextureCopyBase {
@@ -2686,10 +2694,10 @@
 
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-            <span class="kw">let </span>transitions = trackers
-                .textures
-                .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST)
-                .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+            <span class="kw">let </span>transitions =
+                trackers
+                    .textures
+                    .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST);
             encoder.transition_textures(transitions.map(|pending| pending.into_hal(dst_raw)));
             encoder.copy_external_image_to_texture(
                 source,
@@ -2795,18 +2803,14 @@
                             </span>{
                                 <span class="macro">profiling::scope!</span>(<span class="string">"buffers"</span>);
                                 <span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
-                                    <span class="kw">if </span>buffer.raw.get(<span class="kw-2">&amp;</span>snatch_guard).is_none() {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(
-                                            buffer.info.id(),
-                                        ));
-                                    }
+                                    buffer.check_destroyed(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
                                     buffer.info.use_at(submit_index);
 
                                     <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
                                         BufferMapState::Idle =&gt; (),
                                         <span class="kw">_ </span>=&gt; {
                                             <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(
-                                                buffer.info.id(),
+                                                buffer.error_ident(),
                                             ))
                                         }
                                     }
@@ -2815,14 +2819,9 @@
                             {
                                 <span class="macro">profiling::scope!</span>(<span class="string">"textures"</span>);
                                 <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_trackers.textures.used_resources() {
-                                    <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
-                                        <span class="prelude-val">None </span>=&gt; {
-                                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(
-                                                texture.info.id(),
-                                            ));
-                                        }
-                                        <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; <span class="bool-val">false</span>,
-                                        <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>raw, .. }) =&gt; {
+                                    <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.try_inner(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">? </span>{
+                                        TextureInner::Native { .. } =&gt; <span class="bool-val">false</span>,
+                                        TextureInner::Surface { <span class="kw-2">ref </span>raw, .. } =&gt; {
                                             <span class="kw">if </span>raw.is_some() {
                                                 <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq.
                                                 </span>submit_surface_textures_owned
@@ -2926,12 +2925,8 @@
 
                         <span class="comment">//Note: locking the trackers has to be done after the storages
                         </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-                        baked
-                            .initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers, <span class="kw-2">&amp;</span>snatch_guard)
-                            .map_err(|err| QueueSubmitError::DestroyedBuffer(err.<span class="number">0</span>))<span class="question-mark">?</span>;
-                        baked
-                            .initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, device, <span class="kw-2">&amp;</span>snatch_guard)
-                            .map_err(|err| QueueSubmitError::DestroyedTexture(err.<span class="number">0</span>))<span class="question-mark">?</span>;
+                        baked.initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
+                        baked.initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, device, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
                         <span class="comment">//Note: stateless trackers are not merged:
                         // device already knows these resources exist.
                         </span>CommandBuffer::insert_barriers_from_tracker(
@@ -2997,13 +2992,10 @@
 
             {
                 used_surface_textures.set_size(hub.textures.read().len());
-                <span class="kw">for </span>(<span class="kw-2">&amp;</span>id, texture) <span class="kw">in </span>pending_writes.dst_textures.iter() {
-                    <span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
-                        <span class="prelude-val">None </span>=&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
-                        }
-                        <span class="prelude-val">Some</span>(TextureInner::Native { .. }) =&gt; {}
-                        <span class="prelude-val">Some</span>(TextureInner::Surface { <span class="kw-2">ref </span>raw, .. }) =&gt; {
+                <span class="kw">for </span>texture <span class="kw">in </span>pending_writes.dst_textures.values() {
+                    <span class="kw">match </span>texture.try_inner(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">? </span>{
+                        TextureInner::Native { .. } =&gt; {}
+                        TextureInner::Surface { <span class="kw-2">ref </span>raw, .. } =&gt; {
                             <span class="kw">if </span>raw.is_some() {
                                 <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq
                                 </span>submit_surface_textures_owned

@@ -703,22 +703,6 @@
 <a href="#702" id="702">702</a>
 <a href="#703" id="703">703</a>
 <a href="#704" id="704">704</a>
-<a href="#705" id="705">705</a>
-<a href="#706" id="706">706</a>
-<a href="#707" id="707">707</a>
-<a href="#708" id="708">708</a>
-<a href="#709" id="709">709</a>
-<a href="#710" id="710">710</a>
-<a href="#711" id="711">711</a>
-<a href="#712" id="712">712</a>
-<a href="#713" id="713">713</a>
-<a href="#714" id="714">714</a>
-<a href="#715" id="715">715</a>
-<a href="#716" id="716">716</a>
-<a href="#717" id="717">717</a>
-<a href="#718" id="718">718</a>
-<a href="#719" id="719">719</a>
-<a href="#720" id="720">720</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -825,9 +809,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">use crate</span>::{
     binding_model, command, conv,
     hal_api::HalApi,
-    id,
     lock::{rank, Mutex, RwLock},
-    pipeline, resource,
+    pipeline,
+    resource::{<span class="self">self</span>, Resource, ResourceErrorIdent},
     snatch::SnatchGuard,
 };
 
@@ -991,7 +975,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         buf: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>resource::Buffer&lt;A&gt;,
         snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; hal::BufferBarrier&lt;<span class="lifetime">'a</span>, A&gt; {
-        <span class="kw">let </span>buffer = buf.raw.get(snatch_guard).expect(<span class="string">"Buffer is destroyed"</span>);
+        <span class="kw">let </span>buffer = buf.raw(snatch_guard).expect(<span class="string">"Buffer is destroyed"</span>);
         hal::BufferBarrier {
             buffer,
             usage: <span class="self">self</span>.usage,
@@ -1059,34 +1043,32 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span>old_state == new_state &amp;&amp; old_state.all_ordered()
 }
 
-<span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]
-</span><span class="kw">pub enum </span>UsageConflict {
-    <span class="attr">#[error(<span class="string">"Attempted to use invalid buffer"</span>)]
-    </span>BufferInvalid { id: id::BufferId },
-    <span class="attr">#[error(<span class="string">"Attempted to use invalid texture"</span>)]
-    </span>TextureInvalid { id: id::TextureId },
-    <span class="attr">#[error(<span class="string">"Attempted to use buffer with {invalid_use}."</span>)]
+<span class="attr">#[derive(Clone, Debug, Error)]
+</span><span class="kw">pub enum </span>ResourceUsageCompatibilityError {
+    <span class="attr">#[error(<span class="string">"Attempted to use {res} with {invalid_use}."</span>)]
     </span>Buffer {
-        id: id::BufferId,
+        res: ResourceErrorIdent,
         invalid_use: InvalidUse&lt;hal::BufferUses&gt;,
     },
-    <span class="attr">#[error(<span class="string">"Attempted to use a texture (mips {mip_levels:?} layers {array_layers:?}) with {invalid_use}."</span>)]
+    <span class="attr">#[error(
+        <span class="string">"Attempted to use {res} (mips {mip_levels:?} layers {array_layers:?}) with {invalid_use}."
+    </span>)]
     </span>Texture {
-        id: id::TextureId,
+        res: ResourceErrorIdent,
         mip_levels: ops::Range&lt;u32&gt;,
         array_layers: ops::Range&lt;u32&gt;,
         invalid_use: InvalidUse&lt;hal::TextureUses&gt;,
     },
 }
 
-<span class="kw">impl </span>UsageConflict {
-    <span class="kw">fn </span>from_buffer(
-        id: id::BufferId,
+<span class="kw">impl </span>ResourceUsageCompatibilityError {
+    <span class="kw">fn </span>from_buffer&lt;A: HalApi&gt;(
+        buffer: <span class="kw-2">&amp;</span>resource::Buffer&lt;A&gt;,
         current_state: hal::BufferUses,
         new_state: hal::BufferUses,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Buffer {
-            id,
+            res: buffer.error_ident(),
             invalid_use: InvalidUse {
                 current_state,
                 new_state,
@@ -1094,14 +1076,14 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         }
     }
 
-    <span class="kw">fn </span>from_texture(
-        id: id::TextureId,
+    <span class="kw">fn </span>from_texture&lt;A: HalApi&gt;(
+        texture: <span class="kw-2">&amp;</span>resource::Texture&lt;A&gt;,
         selector: TextureSelector,
         current_state: hal::TextureUses,
         new_state: hal::TextureUses,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Texture {
-            id,
+            res: texture.error_ident(),
             mip_levels: selector.mips,
             array_layers: selector.layers,
             invalid_use: InvalidUse {
@@ -1112,23 +1094,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     }
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::error::PrettyError <span class="kw">for </span>UsageConflict {
+<span class="kw">impl </span><span class="kw">crate</span>::error::PrettyError <span class="kw">for </span>ResourceUsageCompatibilityError {
     <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::error::ErrorFormatter) {
         fmt.error(<span class="self">self</span>);
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::BufferInvalid { id } =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::TextureInvalid { id } =&gt; {
-                fmt.texture_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::Buffer { id, .. } =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::Texture { id, .. } =&gt; {
-                fmt.texture_label(<span class="kw-2">&amp;</span>id);
-            }
-        }
     }
 }
 
@@ -1246,7 +1214,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span><span class="kw">pub unsafe fn </span>merge_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bind_group: <span class="kw-2">&amp;</span>BindGroupStates&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.buffers.write().merge_bind_group(<span class="kw-2">&amp;</span>bind_group.buffers)<span class="question-mark">? </span>};
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.textures
@@ -1316,7 +1284,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span><span class="kw">pub unsafe fn </span>merge_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bind_group: <span class="kw-2">&amp;</span>BindGroupStates&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.buffers.merge_bind_group(<span class="kw-2">&amp;</span>bind_group.buffers)<span class="question-mark">?</span>;
             <span class="self">self</span>.textures.merge_bind_group(<span class="kw-2">&amp;</span>bind_group.textures)<span class="question-mark">?</span>;
@@ -1337,7 +1305,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span><span class="kw">pub unsafe fn </span>merge_render_bundle(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         render_bundle: <span class="kw-2">&amp;</span>RenderBundleScope&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="self">self</span>.buffers
             .merge_usage_scope(<span class="kw-2">&amp;*</span>render_bundle.buffers.read())<span class="question-mark">?</span>;
         <span class="self">self</span>.textures
@@ -1428,7 +1396,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     </span><span class="kw">pub unsafe fn </span>add_from_render_bundle(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         render_bundle: <span class="kw-2">&amp;</span>RenderBundleScope&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="self">self</span>.bind_groups
             .add_from_tracker(<span class="kw-2">&amp;*</span>render_bundle.bind_groups.read());
         <span class="self">self</span>.render_pipelines

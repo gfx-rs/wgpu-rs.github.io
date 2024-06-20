@@ -345,11 +345,6 @@
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::hash_map::Entry, ops::Range, sync::Arc, vec::Drain};
 
 <span class="kw">use </span>hal::CommandEncoder;
@@ -358,15 +353,13 @@
     device::Device,
     hal_api::HalApi,
     init_tracker::<span class="kw-2">*</span>,
-    resource::{Resource, Texture},
+    resource::{DestroyedResourceError, Resource, Texture},
     snatch::SnatchGuard,
     track::{TextureTracker, Tracker},
     FastHashMap,
 };
 
-<span class="kw">use super</span>::{
-    clear::clear_texture, BakedCommands, ClearError, DestroyedBufferError, DestroyedTextureError,
-};
+<span class="kw">use super</span>::{clear::clear_texture, BakedCommands, ClearError};
 
 <span class="doccomment">/// Surface that was discarded by `StoreOp::Discard` of a preceding renderpass.
 /// Any read access to this surface needs to be preceded by a texture initialization.
@@ -437,7 +430,7 @@
         // self.discards is empty!)
         </span><span class="kw">let </span>init_actions = <span class="kw-2">&amp;mut </span><span class="self">self</span>.init_actions;
         <span class="self">self</span>.discards.retain(|discarded_surface| {
-            <span class="kw">if </span>discarded_surface.texture.as_info().id() == action.texture.as_info().id()
+            <span class="kw">if </span>discarded_surface.texture.is_equal(<span class="kw-2">&amp;</span>action.texture)
                 &amp;&amp; action.range.layer_range.contains(<span class="kw-2">&amp;</span>discarded_surface.layer)
                 &amp;&amp; action
                     .range
@@ -523,7 +516,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         device_tracker: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedBufferError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedResourceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"initialize_buffer_memory"</span>);
 
         <span class="comment">// Gather init ranges for each buffer so we can collapse them.
@@ -545,7 +538,9 @@
             <span class="kw">match </span>buffer_use.kind {
                 MemoryInitKind::ImplicitlyInitialized =&gt; {}
                 MemoryInitKind::NeedsInitializedMemory =&gt; {
-                    <span class="kw">match </span>uninitialized_ranges_per_buffer.entry(buffer_use.buffer.as_info().id()) {
+                    <span class="kw">match </span>uninitialized_ranges_per_buffer
+                        .entry(buffer_use.buffer.as_info().tracker_index())
+                    {
                         Entry::Vacant(e) =&gt; {
                             e.insert((
                                 buffer_use.buffer.clone(),
@@ -560,7 +555,7 @@
             }
         }
 
-        <span class="kw">for </span>(buffer_id, (buffer, <span class="kw-2">mut </span>ranges)) <span class="kw">in </span>uninitialized_ranges_per_buffer {
+        <span class="kw">for </span>(buffer, <span class="kw-2">mut </span>ranges) <span class="kw">in </span>uninitialized_ranges_per_buffer.into_values() {
             <span class="comment">// Collapse touching ranges.
             </span>ranges.sort_by_key(|r| r.start);
             <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">1</span>..ranges.len()).rev() {
@@ -579,14 +574,9 @@
             // must already know about it.
             </span><span class="kw">let </span>transition = device_tracker
                 .buffers
-                .set_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::COPY_DST)
-                .unwrap()
-                .<span class="number">1</span>;
+                .set_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::COPY_DST);
 
-            <span class="kw">let </span>raw_buf = buffer
-                .raw
-                .get(snatch_guard)
-                .ok_or(DestroyedBufferError(buffer_id))<span class="question-mark">?</span>;
+            <span class="kw">let </span>raw_buf = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
 
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.encoder.transition_buffers(
@@ -629,7 +619,7 @@
         device_tracker: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedTextureError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedResourceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"initialize_texture_memory"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>ranges: Vec&lt;TextureInitRange&gt; = Vec::new();
@@ -676,8 +666,8 @@
                 <span class="comment">// A Texture can be destroyed between the command recording
                 // and now, this is out of our control so we have to handle
                 // it gracefully.
-                </span><span class="kw">if let </span><span class="prelude-val">Err</span>(ClearError::InvalidTexture(id)) = clear_result {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(DestroyedTextureError(id));
+                </span><span class="kw">if let </span><span class="prelude-val">Err</span>(ClearError::DestroyedResource(e)) = clear_result {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(e);
                 }
 
                 <span class="comment">// Other errors are unexpected.

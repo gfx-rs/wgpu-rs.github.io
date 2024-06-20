@@ -497,10 +497,6 @@
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -514,7 +510,10 @@
     hal_api::HalApi,
     id::{BufferId, CommandEncoderId, TextureId},
     init_tracker::{MemoryInitKind, TextureInitRange},
-    resource::{ParentDevice, Resource, Texture, TextureClearMode},
+    resource::{
+        DestroyedResourceError, ParentDevice, Resource, ResourceErrorIdent, Texture,
+        TextureClearMode,
+    },
     snatch::SnatchGuard,
     track::{TextureSelector, TextureTracker},
 };
@@ -529,12 +528,14 @@
 </span><span class="kw">pub enum </span>ClearError {
     <span class="attr">#[error(<span class="string">"To use clear_texture the CLEAR_TEXTURE feature needs to be enabled"</span>)]
     </span>MissingClearTextureFeature,
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidBuffer(BufferId),
-    <span class="attr">#[error(<span class="string">"Texture {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidTexture(TextureId),
-    <span class="attr">#[error(<span class="string">"Texture {0:?} can not be cleared"</span>)]
-    </span>NoValidTextureClearMode(TextureId),
+    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
+    </span>InvalidBufferId(BufferId),
+    <span class="attr">#[error(<span class="string">"TextureId {0:?} is invalid"</span>)]
+    </span>InvalidTextureId(TextureId),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(<span class="string">"{0} can not be cleared"</span>)]
+    </span>NoValidTextureClearMode(ResourceErrorIdent),
     <span class="attr">#[error(<span class="string">"Buffer clear size {0:?} is not a multiple of `COPY_BUFFER_ALIGNMENT`"</span>)]
     </span>UnalignedFillSize(BufferAddress),
     <span class="attr">#[error(<span class="string">"Buffer offset {0:?} is not a multiple of `COPY_BUFFER_ALIGNMENT`"</span>)]
@@ -599,25 +600,20 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             list.push(TraceCommand::ClearBuffer { dst, offset, size });
         }
 
-        <span class="kw">let </span>(dst_buffer, dst_pending) = {
-            <span class="kw">let </span>buffer_guard = hub.buffers.read();
-            <span class="kw">let </span>dst_buffer = buffer_guard
-                .get(dst)
-                .map_err(|<span class="kw">_</span>| ClearError::InvalidBuffer(dst))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_buffer = hub
+            .buffers
+            .get(dst)
+            .map_err(|<span class="kw">_</span>| ClearError::InvalidBufferId(dst))<span class="question-mark">?</span>;
 
-            dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+        dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-            cmd_buf_data
-                .trackers
-                .buffers
-                .set_single(dst_buffer, hal::BufferUses::COPY_DST)
-                .ok_or(ClearError::InvalidBuffer(dst))<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>dst_pending = cmd_buf_data
+            .trackers
+            .buffers
+            .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
+
         <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
-        <span class="kw">let </span>dst_raw = dst_buffer
-            .raw
-            .get(<span class="kw-2">&amp;</span>snatch_guard)
-            .ok_or(ClearError::InvalidBuffer(dst))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(dst), <span class="prelude-val">None</span>));
         }
@@ -700,7 +696,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let </span>dst_texture = hub
             .textures
             .get(dst)
-            .map_err(|<span class="kw">_</span>| ClearError::InvalidTexture(dst))<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ClearError::InvalidTextureId(dst))<span class="question-mark">?</span>;
 
         dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
@@ -767,9 +763,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     zero_buffer: <span class="kw-2">&amp;</span>A::Buffer,
     snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
-    <span class="kw">let </span>dst_raw = dst_texture
-        .raw(snatch_guard)
-        .ok_or_else(|| ClearError::InvalidTexture(dst_texture.as_info().id()))<span class="question-mark">?</span>;
+    <span class="kw">let </span>dst_raw = dst_texture.try_raw(snatch_guard)<span class="question-mark">?</span>;
 
     <span class="comment">// Issue the right barrier.
     </span><span class="kw">let </span>clear_usage = <span class="kw">match </span><span class="kw-2">*</span>dst_texture.clear_mode.read() {
@@ -782,7 +776,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         }
         TextureClearMode::None =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::NoValidTextureClearMode(
-                dst_texture.as_info().id(),
+                dst_texture.error_ident(),
             ));
         }
     };
@@ -807,7 +801,6 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     // change_replace_tracked whenever possible.
     </span><span class="kw">let </span>dst_barrier = texture_tracker
         .set_single(dst_texture, selector, clear_usage)
-        .unwrap()
         .map(|pending| pending.into_hal(dst_raw));
     <span class="kw">unsafe </span>{
         encoder.transition_textures(dst_barrier.into_iter());
@@ -824,14 +817,14 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             dst_raw,
         ),
         TextureClearMode::Surface { .. } =&gt; {
-            clear_texture_via_render_passes(dst_texture, range, <span class="bool-val">true</span>, encoder)<span class="question-mark">?
-        </span>}
+            clear_texture_via_render_passes(dst_texture, range, <span class="bool-val">true</span>, encoder)
+        }
         TextureClearMode::RenderPass { is_color, .. } =&gt; {
-            clear_texture_via_render_passes(dst_texture, range, is_color, encoder)<span class="question-mark">?
-        </span>}
+            clear_texture_via_render_passes(dst_texture, range, is_color, encoder)
+        }
         TextureClearMode::None =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::NoValidTextureClearMode(
-                dst_texture.as_info().id(),
+                dst_texture.error_ident(),
             ));
         }
     }
@@ -937,7 +930,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     range: TextureInitRange,
     is_color: bool,
     encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), ClearError&gt; {
+) {
     <span class="macro">assert_eq!</span>(dst_texture.desc.dimension, wgt::TextureDimension::D2);
 
     <span class="kw">let </span>extent_base = wgt::Extent3d {
@@ -1001,6 +994,5 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             }
         }
     }
-    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>
