@@ -720,6 +720,27 @@
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
 <a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
@@ -846,9 +867,13 @@ Shader validator.
         <span class="doccomment">/// Support for 64-bit signed and unsigned integers.
         </span><span class="kw">const </span>SHADER_INT64 = <span class="number">0x8000</span>;
         <span class="doccomment">/// Support for subgroup operations.
+        /// Implies support for subgroup operations in both fragment and compute stages,
+        /// but not necessarily in the vertex stage, which requires [`Capabilities::SUBGROUP_VERTEX_STAGE`].
         </span><span class="kw">const </span>SUBGROUP = <span class="number">0x10000</span>;
         <span class="doccomment">/// Support for subgroup barriers.
         </span><span class="kw">const </span>SUBGROUP_BARRIER = <span class="number">0x20000</span>;
+        <span class="doccomment">/// Support for subgroup operations in the vertex stage.
+        </span><span class="kw">const </span>SUBGROUP_VERTEX_STAGE = <span class="number">0x40000</span>;
         <span class="doccomment">/// Support for [`AtomicFunction::Min`] and [`AtomicFunction::Max`] on
         /// 64-bit integers in the [`Storage`] address space, when the return
         /// value is not used.
@@ -858,9 +883,9 @@ Shader validator.
         /// [`AtomicFunction::Min`]: crate::AtomicFunction::Min
         /// [`AtomicFunction::Max`]: crate::AtomicFunction::Max
         /// [`Storage`]: crate::AddressSpace::Storage
-        </span><span class="kw">const </span>SHADER_INT64_ATOMIC_MIN_MAX = <span class="number">0x40000</span>;
+        </span><span class="kw">const </span>SHADER_INT64_ATOMIC_MIN_MAX = <span class="number">0x80000</span>;
         <span class="doccomment">/// Support for all atomic operations on 64-bit integers.
-        </span><span class="kw">const </span>SHADER_INT64_ATOMIC_ALL_OPS = <span class="number">0x80000</span>;
+        </span><span class="kw">const </span>SHADER_INT64_ATOMIC_ALL_OPS = <span class="number">0x100000</span>;
     }
 }
 
@@ -1138,11 +1163,28 @@ Shader validator.
 <span class="kw">impl </span>Validator {
     <span class="doccomment">/// Construct a new validator instance.
     </span><span class="kw">pub fn </span>new(flags: ValidationFlags, capabilities: Capabilities) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>subgroup_operations = <span class="kw">if </span>capabilities.contains(Capabilities::SUBGROUP) {
+            <span class="kw">use </span>SubgroupOperationSet <span class="kw">as </span>S;
+            S::BASIC | S::VOTE | S::ARITHMETIC | S::BALLOT | S::SHUFFLE | S::SHUFFLE_RELATIVE
+        } <span class="kw">else </span>{
+            SubgroupOperationSet::empty()
+        };
+        <span class="kw">let </span>subgroup_stages = {
+            <span class="kw">let </span><span class="kw-2">mut </span>stages = ShaderStages::empty();
+            <span class="kw">if </span>capabilities.contains(Capabilities::SUBGROUP_VERTEX_STAGE) {
+                stages |= ShaderStages::VERTEX;
+            }
+            <span class="kw">if </span>capabilities.contains(Capabilities::SUBGROUP) {
+                stages |= ShaderStages::FRAGMENT | ShaderStages::COMPUTE;
+            }
+            stages
+        };
+
         Validator {
             flags,
             capabilities,
-            subgroup_stages: ShaderStages::empty(),
-            subgroup_operations: SubgroupOperationSet::empty(),
+            subgroup_stages,
+            subgroup_operations,
             types: Vec::new(),
             layouter: Layouter::default(),
             location_mask: BitSet::new(),
