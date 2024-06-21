@@ -2148,7 +2148,7 @@
     PhysicalLayout, PipelineOptions, ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
 };
 <span class="kw">use crate</span>::{
-    arena::{Handle, UniqueArena},
+    arena::{Handle, HandleVec, UniqueArena},
     back::spv::BindingInfo,
     proc::{Alignment, TypeResolution},
     valid::{FunctionInfo, ModuleInfo},
@@ -2212,9 +2212,9 @@
             lookup_type: <span class="kw">crate</span>::FastHashMap::default(),
             lookup_function: <span class="kw">crate</span>::FastHashMap::default(),
             lookup_function_type: <span class="kw">crate</span>::FastHashMap::default(),
-            constant_ids: Vec::new(),
+            constant_ids: HandleVec::new(),
             cached_constants: <span class="kw">crate</span>::FastHashMap::default(),
-            global_variables: Vec::new(),
+            global_variables: HandleVec::new(),
             binding_map: options.binding_map.clone(),
             saved_cached: CachedExpressions::default(),
             gl450_ext_inst_id,
@@ -2695,7 +2695,7 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>gv = <span class="self">self</span>.global_variables[handle.index()].clone();
+            <span class="kw">let </span><span class="kw-2">mut </span>gv = <span class="self">self</span>.global_variables[handle].clone();
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>iface) = interface {
                 <span class="comment">// Have to include global variables in the interface
                 </span><span class="kw">if </span><span class="self">self</span>.physical_layout.version &gt;= <span class="number">0x10400 </span>{
@@ -2740,7 +2740,7 @@
             }
 
             <span class="comment">// work around borrow checking in the presence of `self.xxx()` calls
-            </span><span class="self">self</span>.global_variables[handle.index()] = gv;
+            </span><span class="self">self</span>.global_variables[handle] = gv;
         }
 
         <span class="comment">// Create a `BlockContext` for generating SPIR-V for the function's
@@ -3407,7 +3407,7 @@
             <span class="kw">crate</span>::Expression::Literal(literal) =&gt; <span class="self">self</span>.get_constant_scalar(literal),
             <span class="kw">crate</span>::Expression::Constant(constant) =&gt; {
                 <span class="kw">let </span>constant = <span class="kw-2">&amp;</span>ir_module.constants[constant];
-                <span class="self">self</span>.constant_ids[constant.init.index()]
+                <span class="self">self</span>.constant_ids[constant.init]
             }
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; {
                 <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(ty));
@@ -3420,12 +3420,12 @@
                     <span class="kw-2">&amp;</span>ir_module.global_expressions,
                     <span class="kw-2">&amp;</span>ir_module.types,
                 )
-                .map(|component| <span class="self">self</span>.constant_ids[component.index()])
+                .map(|component| <span class="self">self</span>.constant_ids[component])
                 .collect();
                 <span class="self">self</span>.get_constant_composite(LookupType::Handle(ty), component_ids.as_slice())
             }
             <span class="kw">crate</span>::Expression::Splat { size, value } =&gt; {
-                <span class="kw">let </span>value_id = <span class="self">self</span>.constant_ids[value.index()];
+                <span class="kw">let </span>value_id = <span class="self">self</span>.constant_ids[value];
                 <span class="kw">let </span>component_ids = <span class="kw-2">&amp;</span>[value_id; <span class="number">4</span>][..size <span class="kw">as </span>usize];
 
                 <span class="kw">let </span>ty = <span class="self">self</span>.get_expression_lookup_type(<span class="kw-2">&amp;</span>mod_info[handle]);
@@ -3435,7 +3435,7 @@
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
 
-        <span class="self">self</span>.constant_ids[handle.index()] = id;
+        <span class="self">self</span>.constant_ids[handle] = id;
 
         <span class="prelude-val">Ok</span>(id)
     }
@@ -3488,7 +3488,7 @@
                 <span class="comment">// It's safe to use `var_id` here, not `access_id`, because only
                 // variables in the `Uniform` and `StorageBuffer` address spaces
                 // get wrapped, and we're initializing `WorkGroup` variables.
-                </span><span class="kw">let </span>var_id = <span class="self">self</span>.global_variables[handle.index()].var_id;
+                </span><span class="kw">let </span>var_id = <span class="self">self</span>.global_variables[handle].var_id;
                 <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
                 <span class="kw">let </span>init_word = <span class="self">self</span>.get_constant_null(var_type_id);
                 Instruction::store(var_id, init_word, <span class="prelude-val">None</span>)
@@ -3869,7 +3869,7 @@
 
         <span class="kw">let </span>init_word = global_variable
             .init
-            .map(|constant| <span class="self">self</span>.constant_ids[constant.index()]);
+            .map(|constant| <span class="self">self</span>.constant_ids[constant]);
         <span class="kw">let </span>inner_type_id = <span class="self">self</span>.get_type_id(
             substitute_inner_type_lookup.unwrap_or(LookupType::Handle(global_variable.ty)),
         );
@@ -4127,7 +4127,7 @@
         </span><span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::DEBUG) {
             <span class="kw">for </span>(<span class="kw">_</span>, constant) <span class="kw">in </span>ir_module.constants.iter() {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) = constant.name {
-                    <span class="kw">let </span>id = <span class="self">self</span>.constant_ids[constant.init.index()];
+                    <span class="kw">let </span>id = <span class="self">self</span>.constant_ids[constant.init];
                     <span class="self">self</span>.debugs.push(Instruction::name(id, name));
                 }
             }
@@ -4147,7 +4147,7 @@
                     GlobalVariable::new(id)
                 }
             };
-            <span class="self">self</span>.global_variables.push(gvar);
+            <span class="self">self</span>.global_variables.insert(handle, gvar);
         }
 
         <span class="comment">// write all functions

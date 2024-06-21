@@ -956,10 +956,9 @@
 <a href="#955" id="955">955</a>
 <a href="#956" id="956">956</a>
 <a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
 <span class="kw">use crate</span>::{
+    arena::HandleVec,
     proc::{ConstantEvaluator, ConstantEvaluatorError, Emitter},
     valid::{Capabilities, ModuleInfo, ValidationError, ValidationFlags, Validator},
     Arena, Block, Constant, Expression, Function, Handle, Literal, Module, Override, Range, Scalar,
@@ -1009,11 +1008,11 @@
 
     <span class="comment">// A map from override handles to the handles of the constants
     // we've replaced them with.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>override_map = Vec::with_capacity(module.overrides.len());
+    </span><span class="kw">let </span><span class="kw-2">mut </span>override_map = HandleVec::with_capacity(module.overrides.len());
 
     <span class="comment">// A map from `module`'s original global expression handles to
     // handles in the new, simplified global expression arena.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>adjusted_global_expressions = Vec::with_capacity(module.global_expressions.len());
+    </span><span class="kw">let </span><span class="kw-2">mut </span>adjusted_global_expressions = HandleVec::with_capacity(module.global_expressions.len());
 
     <span class="comment">// The set of constants whose initializer handles we've already
     // updated to refer to the newly built global expression arena.
@@ -1065,7 +1064,7 @@
     </span><span class="kw">for </span>(old_h, expr, span) <span class="kw">in </span>module.global_expressions.drain() {
         <span class="kw">let </span><span class="kw-2">mut </span>expr = <span class="kw">match </span>expr {
             Expression::Override(h) =&gt; {
-                <span class="kw">let </span>c_h = <span class="kw">if let </span><span class="prelude-val">Some</span>(new_h) = override_map.get(h.index()) {
+                <span class="kw">let </span>c_h = <span class="kw">if let </span><span class="prelude-val">Some</span>(new_h) = override_map.get(h) {
                     <span class="kw-2">*</span>new_h
                 } <span class="kw">else </span>{
                     <span class="kw">let </span><span class="kw-2">mut </span>new_h = <span class="prelude-val">None</span>;
@@ -1091,7 +1090,7 @@
             Expression::Constant(c_h) =&gt; {
                 <span class="kw">if </span>adjusted_constant_initializers.insert(c_h) {
                     <span class="kw">let </span>init = <span class="kw-2">&amp;mut </span>module.constants[c_h].init;
-                    <span class="kw-2">*</span>init = adjusted_global_expressions[init.index()];
+                    <span class="kw-2">*</span>init = adjusted_global_expressions[<span class="kw-2">*</span>init];
                 }
                 expr
             }
@@ -1104,8 +1103,7 @@
         );
         adjust_expr(<span class="kw-2">&amp;</span>adjusted_global_expressions, <span class="kw-2">&amp;mut </span>expr);
         <span class="kw">let </span>h = evaluator.try_eval_and_append(expr, span)<span class="question-mark">?</span>;
-        <span class="macro">debug_assert_eq!</span>(old_h.index(), adjusted_global_expressions.len());
-        adjusted_global_expressions.push(h);
+        adjusted_global_expressions.insert(old_h, h);
     }
 
     <span class="comment">// Finish processing any overrides we didn't visit in the loop above.
@@ -1129,12 +1127,12 @@
         .iter_mut()
         .filter(|<span class="kw-2">&amp;</span>(c_h, <span class="kw">_</span>)| !adjusted_constant_initializers.contains(<span class="kw-2">&amp;</span>c_h))
     {
-        c.init = adjusted_global_expressions[c.init.index()];
+        c.init = adjusted_global_expressions[c.init];
     }
 
     <span class="kw">for </span>(<span class="kw">_</span>, v) <span class="kw">in </span>module.global_variables.iter_mut() {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>init) = v.init {
-            <span class="kw-2">*</span>init = adjusted_global_expressions[init.index()];
+            <span class="kw-2">*</span>init = adjusted_global_expressions[<span class="kw-2">*</span>init];
         }
     }
 
@@ -1166,8 +1164,8 @@
     (old_h, override_, span): (Handle&lt;Override&gt;, Override, Span),
     pipeline_constants: <span class="kw-2">&amp;</span>PipelineConstants,
     module: <span class="kw-2">&amp;mut </span>Module,
-    override_map: <span class="kw-2">&amp;mut </span>Vec&lt;Handle&lt;Constant&gt;&gt;,
-    adjusted_global_expressions: <span class="kw-2">&amp;</span>[Handle&lt;Expression&gt;],
+    override_map: <span class="kw-2">&amp;mut </span>HandleVec&lt;Override, Handle&lt;Constant&gt;&gt;,
+    adjusted_global_expressions: <span class="kw-2">&amp;</span>HandleVec&lt;Expression, Handle&lt;Expression&gt;&gt;,
     adjusted_constant_initializers: <span class="kw-2">&amp;mut </span>HashSet&lt;Handle&lt;Constant&gt;&gt;,
     global_expression_kind_tracker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Constant&gt;, PipelineConstantError&gt; {
@@ -1194,7 +1192,7 @@
         global_expression_kind_tracker.insert(expr, <span class="kw">crate</span>::proc::ExpressionKind::Const);
         expr
     } <span class="kw">else if let </span><span class="prelude-val">Some</span>(init) = override_.init {
-        adjusted_global_expressions[init.index()]
+        adjusted_global_expressions[init]
     } <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineConstantError::MissingValue(key.to_string()));
     };
@@ -1206,8 +1204,7 @@
         init,
     };
     <span class="kw">let </span>h = module.constants.append(constant, span);
-    <span class="macro">debug_assert_eq!</span>(old_h.index(), override_map.len());
-    override_map.push(h);
+    override_map.insert(old_h, h);
     adjusted_constant_initializers.insert(h);
     <span class="prelude-val">Ok</span>(h)
 }
@@ -1219,16 +1216,16 @@
 /// Replace any expressions whose values are now known with their fully
 /// evaluated form.
 ///
-/// If `h` is a `Handle&lt;Override&gt;`, then `override_map[h.index()]` is the
+/// If `h` is a `Handle&lt;Override&gt;`, then `override_map[h]` is the
 /// `Handle&lt;Constant&gt;` for the override's final value.
 </span><span class="kw">fn </span>process_function(
     module: <span class="kw-2">&amp;mut </span>Module,
-    override_map: <span class="kw-2">&amp;</span>[Handle&lt;Constant&gt;],
+    override_map: <span class="kw-2">&amp;</span>HandleVec&lt;Override, Handle&lt;Constant&gt;&gt;,
     function: <span class="kw-2">&amp;mut </span>Function,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ConstantEvaluatorError&gt; {
     <span class="comment">// A map from original local expression handles to
     // handles in the new, local expression arena.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>adjusted_local_expressions = Vec::with_capacity(function.expressions.len());
+    </span><span class="kw">let </span><span class="kw-2">mut </span>adjusted_local_expressions = HandleVec::with_capacity(function.expressions.len());
 
     <span class="kw">let </span><span class="kw-2">mut </span>local_expression_kind_tracker = <span class="kw">crate</span>::proc::ExpressionKindTracker::new();
 
@@ -1254,12 +1251,11 @@
 
     <span class="kw">for </span>(old_h, <span class="kw-2">mut </span>expr, span) <span class="kw">in </span>expressions.drain() {
         <span class="kw">if let </span>Expression::Override(h) = expr {
-            expr = Expression::Constant(override_map[h.index()]);
+            expr = Expression::Constant(override_map[h]);
         }
         adjust_expr(<span class="kw-2">&amp;</span>adjusted_local_expressions, <span class="kw-2">&amp;mut </span>expr);
         <span class="kw">let </span>h = evaluator.try_eval_and_append(expr, span)<span class="question-mark">?</span>;
-        <span class="macro">debug_assert_eq!</span>(old_h.index(), adjusted_local_expressions.len());
-        adjusted_local_expressions.push(h);
+        adjusted_local_expressions.insert(old_h, h);
     }
 
     adjust_block(<span class="kw-2">&amp;</span>adjusted_local_expressions, <span class="kw-2">&amp;mut </span>function.body);
@@ -1269,7 +1265,7 @@
     <span class="comment">// Update local expression initializers.
     </span><span class="kw">for </span>(<span class="kw">_</span>, local) <span class="kw">in </span>function.local_variables.iter_mut() {
         <span class="kw">if let </span><span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>init) = <span class="kw-2">&amp;mut </span>local.init {
-            <span class="kw-2">*</span>init = adjusted_local_expressions[init.index()];
+            <span class="kw-2">*</span>init = adjusted_local_expressions[<span class="kw-2">*</span>init];
         }
     }
 
@@ -1279,7 +1275,7 @@
     <span class="kw">for </span>(expr_h, name) <span class="kw">in </span>named_expressions {
         function
             .named_expressions
-            .insert(adjusted_local_expressions[expr_h.index()], name);
+            .insert(adjusted_local_expressions[expr_h], name);
     }
 
     <span class="prelude-val">Ok</span>(())
@@ -1287,9 +1283,9 @@
 
 <span class="doccomment">/// Replace every expression handle in `expr` with its counterpart
 /// given by `new_pos`.
-</span><span class="kw">fn </span>adjust_expr(new_pos: <span class="kw-2">&amp;</span>[Handle&lt;Expression&gt;], expr: <span class="kw-2">&amp;mut </span>Expression) {
+</span><span class="kw">fn </span>adjust_expr(new_pos: <span class="kw-2">&amp;</span>HandleVec&lt;Expression, Handle&lt;Expression&gt;&gt;, expr: <span class="kw-2">&amp;mut </span>Expression) {
     <span class="kw">let </span>adjust = |expr: <span class="kw-2">&amp;mut </span>Handle&lt;Expression&gt;| {
-        <span class="kw-2">*</span>expr = new_pos[expr.index()];
+        <span class="kw-2">*</span>expr = new_pos[<span class="kw-2">*</span>expr];
     };
     <span class="kw">match </span><span class="kw-2">*</span>expr {
         Expression::Compose {
@@ -1492,7 +1488,7 @@
 
 <span class="doccomment">/// Replace every expression handle in `block` with its counterpart
 /// given by `new_pos`.
-</span><span class="kw">fn </span>adjust_block(new_pos: <span class="kw-2">&amp;</span>[Handle&lt;Expression&gt;], block: <span class="kw-2">&amp;mut </span>Block) {
+</span><span class="kw">fn </span>adjust_block(new_pos: <span class="kw-2">&amp;</span>HandleVec&lt;Expression, Handle&lt;Expression&gt;&gt;, block: <span class="kw-2">&amp;mut </span>Block) {
     <span class="kw">for </span>stmt <span class="kw">in </span>block.iter_mut() {
         adjust_stmt(new_pos, stmt);
     }
@@ -1500,9 +1496,9 @@
 
 <span class="doccomment">/// Replace every expression handle in `stmt` with its counterpart
 /// given by `new_pos`.
-</span><span class="kw">fn </span>adjust_stmt(new_pos: <span class="kw-2">&amp;</span>[Handle&lt;Expression&gt;], stmt: <span class="kw-2">&amp;mut </span>Statement) {
+</span><span class="kw">fn </span>adjust_stmt(new_pos: <span class="kw-2">&amp;</span>HandleVec&lt;Expression, Handle&lt;Expression&gt;&gt;, stmt: <span class="kw-2">&amp;mut </span>Statement) {
     <span class="kw">let </span>adjust = |expr: <span class="kw-2">&amp;mut </span>Handle&lt;Expression&gt;| {
-        <span class="kw-2">*</span>expr = new_pos[expr.index()];
+        <span class="kw-2">*</span>expr = new_pos[<span class="kw-2">*</span>expr];
     };
     <span class="kw">match </span><span class="kw-2">*</span>stmt {
         Statement::Emit(<span class="kw-2">ref mut </span>range) =&gt; {
