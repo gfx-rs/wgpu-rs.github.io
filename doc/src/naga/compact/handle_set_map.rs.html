@@ -159,27 +159,16 @@
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, Range, UniqueArena};
 
-<span class="kw">type </span>Index = std::num::NonZeroU32;
+<span class="kw">type </span>Index = <span class="kw">crate</span>::non_max_u32::NonMaxU32;
 
 <span class="doccomment">/// A set of `Handle&lt;T&gt;` values.
 </span><span class="kw">pub struct </span>HandleSet&lt;T&gt; {
-    <span class="doccomment">/// Bound on zero-based indexes of handles stored in this set.
+    <span class="doccomment">/// Bound on indexes of handles stored in this set.
     </span>len: usize,
 
-    <span class="doccomment">/// `members[i]` is true if the handle with zero-based index `i`
-    /// is a member.
+    <span class="doccomment">/// `members[i]` is true if the handle with index `i` is a member.
     </span>members: bit_set::BitSet,
 
     <span class="doccomment">/// This type is indexed by values of type `T`.
@@ -198,9 +187,7 @@
 
     <span class="doccomment">/// Add `handle` to the set.
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;T&gt;) {
-        <span class="comment">// Note that, oddly, `Handle::index` does not return a 1-based
-        // `Index`, but rather a zero-based `usize`.
-        </span><span class="self">self</span>.members.insert(handle.index());
+        <span class="self">self</span>.members.insert(handle.index());
     }
 
     <span class="doccomment">/// Add handles from `iter` to the set.
@@ -211,9 +198,7 @@
     }
 
     <span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; bool {
-        <span class="comment">// Note that, oddly, `Handle::index` does not return a 1-based
-        // `Index`, but rather a zero-based `usize`.
-        </span><span class="self">self</span>.members.contains(handle.index())
+        <span class="self">self</span>.members.contains(handle.index())
     }
 }
 
@@ -237,10 +222,9 @@
 </span><span class="kw">pub struct </span>HandleMap&lt;T&gt; {
     <span class="doccomment">/// The indices assigned to handles in the compacted module.
     ///
-    /// If `new_index[i]` is `Some(n)`, then `n` is the 1-based
-    /// `Index` of the compacted `Handle` corresponding to the
-    /// pre-compacted `Handle` whose zero-based index is `i`. ("Clear
-    /// as mud.")
+    /// If `new_index[i]` is `Some(n)`, then `n` is the `Index` of the
+    /// compacted `Handle` corresponding to the pre-compacted `Handle`
+    /// whose index is `i`.
     </span>new_index: Vec&lt;<span class="prelude-ty">Option</span>&lt;Index&gt;&gt;,
 
     <span class="doccomment">/// This type is indexed by values of type `T`.
@@ -249,11 +233,11 @@
 
 <span class="kw">impl</span>&lt;T: <span class="lifetime">'static</span>&gt; HandleMap&lt;T&gt; {
     <span class="kw">pub fn </span>from_set(set: HandleSet&lt;T&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>next_index = Index::new(<span class="number">1</span>).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>next_index = Index::new(<span class="number">0</span>).unwrap();
         <span class="self">Self </span>{
             new_index: (<span class="number">0</span>..set.len)
-                .map(|zero_based_index| {
-                    <span class="kw">if </span>set.members.contains(zero_based_index) {
+                .map(|index| {
+                    <span class="kw">if </span>set.members.contains(index) {
                         <span class="comment">// This handle will be retained in the compacted version,
                         // so assign it a new index.
                         </span><span class="kw">let </span>this = next_index;
@@ -282,12 +266,10 @@
         <span class="macro">log::trace!</span>(
             <span class="string">"adjusting {} handle [{}] -&gt; [{:?}]"</span>,
             std::any::type_name::&lt;T&gt;(),
-            old.index() + <span class="number">1</span>,
+            old.index(),
             <span class="self">self</span>.new_index[old.index()]
         );
-        <span class="comment">// Note that `Handle::index` returns a zero-based index,
-        // but `Handle::new` accepts a 1-based `Index`.
-        </span><span class="self">self</span>.new_index[old.index()].map(Handle::new)
+        <span class="self">self</span>.new_index[old.index()].map(Handle::new)
     }
 
     <span class="doccomment">/// Return the counterpart to `old` in the compacted module.
@@ -316,27 +298,25 @@
     ///
     /// Use `compacted_arena` to bounds-check the result.
     </span><span class="kw">pub fn </span>adjust_range(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;mut </span>Range&lt;T&gt;, compacted_arena: <span class="kw-2">&amp;</span>Arena&lt;T&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>index_range = range.zero_based_index_range();
+        <span class="kw">let </span><span class="kw-2">mut </span>index_range = range.index_range();
         <span class="kw">let </span>compacted;
-        <span class="comment">// Remember that the indices we retrieve from `new_index` are 1-based
-        // compacted indices, but the index range we're computing is zero-based
-        // compacted indices.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(first1) = index_range.find_map(|i| <span class="self">self</span>.new_index[i <span class="kw">as </span>usize]) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(first) = index_range.find_map(|i| <span class="self">self</span>.new_index[i <span class="kw">as </span>usize]) {
             <span class="comment">// The first call to `find_map` mutated `index_range` to hold the
             // remainder of original range, which is exactly the range we need
             // to search for the new last handle.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(last1) = index_range.rev().find_map(|i| <span class="self">self</span>.new_index[i <span class="kw">as </span>usize]) {
-                <span class="comment">// Build a zero-based end-exclusive range, given one-based handle indices.
-                </span>compacted = first1.get() - <span class="number">1</span>..last1.get();
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(last) = index_range.rev().find_map(|i| <span class="self">self</span>.new_index[i <span class="kw">as </span>usize]) {
+                <span class="comment">// Build an end-exclusive range, given the two included indices
+                // `first` and `last`.
+                </span>compacted = first.get()..last.get() + <span class="number">1</span>;
             } <span class="kw">else </span>{
                 <span class="comment">// The range contains only a single live handle, which
                 // we identified with the first `find_map` call.
-                </span>compacted = first1.get() - <span class="number">1</span>..first1.get();
+                </span>compacted = first.get()..first.get() + <span class="number">1</span>;
             }
         } <span class="kw">else </span>{
             compacted = <span class="number">0</span>..<span class="number">0</span>;
         };
-        <span class="kw-2">*</span>range = Range::from_zero_based_index_range(compacted, compacted_arena);
+        <span class="kw-2">*</span>range = Range::from_index_range(compacted, compacted_arena);
     }
 }
 </code></pre></div></section></main></body></html>

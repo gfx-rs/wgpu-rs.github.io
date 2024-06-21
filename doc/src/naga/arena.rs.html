@@ -785,21 +785,14 @@
 <a href="#784" id="784">784</a>
 <a href="#785" id="785">785</a>
 <a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, ops};
+
+<span class="kw">use </span><span class="kw">crate</span>::non_max_u32::NonMaxU32;
 
 <span class="doccomment">/// An unique index in the arena array that a handle points to.
-/// The "non-zero" part ensures that an `Option&lt;Handle&lt;T&gt;&gt;` has
+/// The "non-max" part ensures that an `Option&lt;Handle&lt;T&gt;&gt;` has
 /// the same size and representation as `Handle&lt;T&gt;`.
-</span><span class="kw">type </span>Index = NonZeroU32;
+</span><span class="kw">type </span>Index = NonMaxU32;
 
 <span class="kw">use crate</span>::{FastIndexSet, Span};
 
@@ -876,12 +869,6 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; Handle&lt;T&gt; {
-    <span class="attr">#[cfg(test)]
-    </span><span class="kw">pub const </span>DUMMY: <span class="self">Self </span>= Handle {
-        index: <span class="kw">unsafe </span>{ NonZeroU32::new_unchecked(u32::MAX) },
-        marker: PhantomData,
-    };
-
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>new(index: Index) -&gt; <span class="self">Self </span>{
         Handle {
             index,
@@ -889,15 +876,14 @@
         }
     }
 
-    <span class="doccomment">/// Returns the zero-based index of this handle.
+    <span class="doccomment">/// Returns the index of this handle.
     </span><span class="kw">pub const fn </span>index(<span class="self">self</span>) -&gt; usize {
-        <span class="kw">let </span>index = <span class="self">self</span>.index.get() - <span class="number">1</span>;
-        index <span class="kw">as </span>usize
+        <span class="self">self</span>.index.get() <span class="kw">as </span>usize
     }
 
     <span class="doccomment">/// Convert a `usize` index into a `Handle&lt;T&gt;`.
     </span><span class="kw">fn </span>from_usize(index: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>handle_index = u32::try_from(index + <span class="number">1</span>)
+        <span class="kw">let </span>handle_index = u32::try_from(index)
             .ok()
             .and_then(Index::new)
             .expect(<span class="string">"Failed to insert into arena. Handle overflows"</span>);
@@ -906,7 +892,7 @@
 
     <span class="doccomment">/// Convert a `usize` index into a `Handle&lt;T&gt;`, without range checks.
     </span><span class="kw">const unsafe fn </span>from_usize_unchecked(index: usize) -&gt; <span class="self">Self </span>{
-        Handle::new(Index::new_unchecked((index + <span class="number">1</span>) <span class="kw">as </span>u32))
+        Handle::new(Index::new_unchecked(index <span class="kw">as </span>u32))
     }
 
     <span class="doccomment">/// Write this handle's index to `formatter`, preceded by `prefix`.
@@ -976,7 +962,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Range&lt;T&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="macro">write!</span>(formatter, <span class="string">"[{}..{}]"</span>, <span class="self">self</span>.inner.start + <span class="number">1</span>, <span class="self">self</span>.inner.end)
+        <span class="macro">write!</span>(formatter, <span class="string">"[{}..{}]"</span>, <span class="self">self</span>.inner.start, <span class="self">self</span>.inner.end - <span class="number">1</span>)
     }
 }
 
@@ -984,9 +970,10 @@
     <span class="kw">type </span>Item = Handle&lt;T&gt;;
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">if </span><span class="self">self</span>.inner.start &lt; <span class="self">self</span>.inner.end {
+            <span class="kw">let </span>next = <span class="self">self</span>.inner.start;
             <span class="self">self</span>.inner.start += <span class="number">1</span>;
             <span class="prelude-val">Some</span>(Handle {
-                index: NonZeroU32::new(<span class="self">self</span>.inner.start).unwrap(),
+                index: NonMaxU32::new(next).unwrap(),
                 marker: <span class="self">self</span>.marker,
             })
         } <span class="kw">else </span>{
@@ -1011,24 +998,23 @@
     </span><span class="kw">pub fn </span>first_and_last(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Handle&lt;T&gt;, Handle&lt;T&gt;)&gt; {
         <span class="kw">if </span><span class="self">self</span>.inner.start &lt; <span class="self">self</span>.inner.end {
             <span class="prelude-val">Some</span>((
-                <span class="comment">// `Range::new_from_bounds` expects a 1-based, start- and
-                // end-inclusive range, but `self.inner` is a zero-based,
-                // end-exclusive range.
-                </span>Handle::new(Index::new(<span class="self">self</span>.inner.start + <span class="number">1</span>).unwrap()),
-                Handle::new(Index::new(<span class="self">self</span>.inner.end).unwrap()),
+                <span class="comment">// `Range::new_from_bounds` expects a start- and end-inclusive
+                // range, but `self.inner` is an end-exclusive range.
+                </span>Handle::new(Index::new(<span class="self">self</span>.inner.start).unwrap()),
+                Handle::new(Index::new(<span class="self">self</span>.inner.end - <span class="number">1</span>).unwrap()),
             ))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
     }
 
-    <span class="doccomment">/// Return the zero-based index range covered by `self`.
-    </span><span class="kw">pub fn </span>zero_based_index_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ops::Range&lt;u32&gt; {
+    <span class="doccomment">/// Return the index range covered by `self`.
+    </span><span class="kw">pub fn </span>index_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ops::Range&lt;u32&gt; {
         <span class="self">self</span>.inner.clone()
     }
 
-    <span class="doccomment">/// Construct a `Range` that covers the zero-based indices in `inner`.
-    </span><span class="kw">pub fn </span>from_zero_based_index_range(inner: ops::Range&lt;u32&gt;, arena: <span class="kw-2">&amp;</span>Arena&lt;T&gt;) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Construct a `Range` that covers the indices in `inner`.
+    </span><span class="kw">pub fn </span>from_index_range(inner: ops::Range&lt;u32&gt;, arena: <span class="kw-2">&amp;</span>Arena&lt;T&gt;) -&gt; <span class="self">Self </span>{
         <span class="comment">// Since `inner` is a `Range&lt;u32&gt;`, we only need to check that
         // the start and end are well-ordered, and that the end fits
         // within `arena`.
@@ -1219,10 +1205,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="comment">// `range.inner` is zero-based, but end-exclusive, so `range.inner.end`
-        // is actually the right one-based index for the last handle within the
-        // range.
-        </span><span class="kw">let </span>last_handle = Handle::new(range.inner.end.try_into().unwrap());
+        <span class="kw">let </span>last_handle = Handle::new(Index::new(range.inner.end - <span class="number">1</span>).unwrap());
         <span class="kw">if </span><span class="self">self</span>.check_contains_handle(last_handle).is_err() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(BadRangeError::new(range.clone()));
         }
@@ -1238,7 +1221,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>retained = <span class="number">0</span>;
         <span class="self">self</span>.data.retain_mut(|elt| {
-            <span class="kw">let </span>handle = Handle::new(Index::new(index <span class="kw">as </span>u32 + <span class="number">1</span>).unwrap());
+            <span class="kw">let </span>handle = Handle::from_usize(index);
             <span class="kw">let </span>keep = predicate(handle, elt);
 
             <span class="comment">// Since `predicate` needs mutable access to each element,
@@ -1404,7 +1387,7 @@
         UniqueArenaDrain {
             inner_elts: <span class="self">self</span>.set.drain(..),
             inner_spans: <span class="self">self</span>.span_info.drain(..),
-            index: Index::new(<span class="number">1</span>).unwrap(),
+            index: Index::new(<span class="number">0</span>).unwrap(),
         }
     }
 }
@@ -1438,8 +1421,7 @@
     /// the item's handle and a reference to it.
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, <span class="kw-2">&amp;</span>T)&gt; {
         <span class="self">self</span>.set.iter().enumerate().map(|(i, v)| {
-            <span class="kw">let </span>position = i + <span class="number">1</span>;
-            <span class="kw">let </span>index = <span class="kw">unsafe </span>{ Index::new_unchecked(position <span class="kw">as </span>u32) };
+            <span class="kw">let </span>index = <span class="kw">unsafe </span>{ Index::new_unchecked(i <span class="kw">as </span>u32) };
             (Handle::new(index), v)
         })
     }
