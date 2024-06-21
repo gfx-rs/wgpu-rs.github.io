@@ -5954,10 +5954,41 @@
 <a href="#5953" id="5953">5953</a>
 <a href="#5954" id="5954">5954</a>
 <a href="#5955" id="5955">5955</a>
+<a href="#5956" id="5956">5956</a>
+<a href="#5957" id="5957">5957</a>
+<a href="#5958" id="5958">5958</a>
+<a href="#5959" id="5959">5959</a>
+<a href="#5960" id="5960">5960</a>
+<a href="#5961" id="5961">5961</a>
+<a href="#5962" id="5962">5962</a>
+<a href="#5963" id="5963">5963</a>
+<a href="#5964" id="5964">5964</a>
+<a href="#5965" id="5965">5965</a>
+<a href="#5966" id="5966">5966</a>
+<a href="#5967" id="5967">5967</a>
+<a href="#5968" id="5968">5968</a>
+<a href="#5969" id="5969">5969</a>
+<a href="#5970" id="5970">5970</a>
+<a href="#5971" id="5971">5971</a>
+<a href="#5972" id="5972">5972</a>
+<a href="#5973" id="5973">5973</a>
+<a href="#5974" id="5974">5974</a>
+<a href="#5975" id="5975">5975</a>
+<a href="#5976" id="5976">5976</a>
+<a href="#5977" id="5977">5977</a>
+<a href="#5978" id="5978">5978</a>
+<a href="#5979" id="5979">5979</a>
+<a href="#5980" id="5980">5980</a>
+<a href="#5981" id="5981">5981</a>
+<a href="#5982" id="5982">5982</a>
+<a href="#5983" id="5983">5983</a>
+<a href="#5984" id="5984">5984</a>
+<a href="#5985" id="5985">5985</a>
+<a href="#5986" id="5986">5986</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
-    back,
+    back::{<span class="self">self</span>, Baked},
     proc::index,
     proc::{<span class="self">self</span>, NameKey, TypeResolution},
     valid, FastHashMap, FastHashSet,
@@ -6041,6 +6072,39 @@
 
 <span class="doccomment">/// Prefix for cached clamped level-of-detail values for `ImageLoad` expressions.
 </span><span class="kw">const </span>CLAMPED_LOD_LOAD_PREFIX: <span class="kw-2">&amp;</span>str = <span class="string">"clamped_lod_e"</span>;
+
+<span class="doccomment">/// Wrapper for identifier names for clamped level-of-detail values
+///
+/// Values of this type implement [`std::fmt::Display`], formatting as
+/// the name of the variable used to hold the cached clamped
+/// level-of-detail value for an `ImageLoad` expression.
+</span><span class="kw">struct </span>ClampedLod(Handle&lt;<span class="kw">crate</span>::Expression&gt;);
+
+<span class="kw">impl </span>Display <span class="kw">for </span>ClampedLod {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, CLAMPED_LOD_LOAD_PREFIX)
+    }
+}
+
+<span class="doccomment">/// Wrapper for generating `struct _mslBufferSizes` member names for
+/// runtime-sized array lengths.
+///
+/// On Metal, `wgpu_hal` passes the element counts for all runtime-sized arrays
+/// as an argument to the entry point. This argument's type in the MSL is
+/// `struct _mslBufferSizes`, a Naga-synthesized struct with a `uint` member for
+/// each global variable containing a runtime-sized array.
+///
+/// If `global` is a [`Handle`] for a [`GlobalVariable`] that contains a
+/// runtime-sized array, then the value `ArraySize(global)` implements
+/// [`std::fmt::Display`], formatting as the name of the struct member carrying
+/// the number of elements in that runtime-sized array.
+</span><span class="kw">struct </span>ArraySizeMember(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;);
+
+<span class="kw">impl </span>Display <span class="kw">for </span>ArraySizeMember {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"size"</span>)
+    }
+}
 
 <span class="kw">struct </span>TypeContext&lt;<span class="lifetime">'a</span>&gt; {
     handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
@@ -6633,9 +6697,7 @@
     ) -&gt; BackendResult {
         <span class="kw">match </span>level {
             LevelOfDetail::Direct(expr) =&gt; <span class="self">self</span>.put_expression(expr, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>,
-            LevelOfDetail::Restricted(load) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{}"</span>, CLAMPED_LOD_LOAD_PREFIX, load.index())<span class="question-mark">?
-            </span>}
+            LevelOfDetail::Restricted(load) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, ClampedLod(load))<span class="question-mark">?</span>,
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -7102,8 +7164,8 @@
         // prevent that.
         </span><span class="macro">write!</span>(
             <span class="self">self</span>.out,
-            <span class="string">"(_buffer_sizes.size{idx} - {offset} - {size}) / {stride}"</span>,
-            idx = handle.index(),
+            <span class="string">"(_buffer_sizes.{member} - {offset} - {size}) / {stride}"</span>,
+            member = ArraySizeMember(handle),
             offset = offset,
             size = size,
             stride = stride,
@@ -8734,13 +8796,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="macro">write!</span>(
-            <span class="self">self</span>.out,
-            <span class="string">"{}uint {}{} = "</span>,
-            indent,
-            CLAMPED_LOD_LOAD_PREFIX,
-            load.index(),
-        )<span class="question-mark">?</span>;
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}uint {} = "</span>, indent, ClampedLod(load),)<span class="question-mark">?</span>;
         <span class="self">self</span>.put_restricted_scalar_image_index(
             image,
             level_of_detail,
@@ -8810,7 +8866,7 @@
                                 };
 
                             <span class="kw">if </span>bake {
-                                <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, handle.index()))
+                                <span class="prelude-val">Some</span>(Baked(handle).to_string())
                             } <span class="kw">else </span>{
                                 <span class="prelude-val">None
                             </span>}
@@ -8965,7 +9021,7 @@
                 } =&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = result {
-                        <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, expr.index());
+                        <span class="kw">let </span>name = Baked(expr).to_string();
                         <span class="self">self</span>.start_baking_expression(expr, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
                         <span class="self">self</span>.named_expressions.insert(expr, name);
                     }
@@ -9020,7 +9076,7 @@
                     // operating on a 64-bit value, `result` is `None`.
                     </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>fun_str = <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
-                        <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                        <span class="kw">let </span>res_name = Baked(result).to_string();
                         <span class="self">self</span>.start_baking_expression(result, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                         <span class="self">self</span>.named_expressions.insert(result, res_name);
                         fun.to_msl()<span class="question-mark">?
@@ -9126,7 +9182,7 @@
                         }
                         <span class="kw">crate</span>::RayQueryFunction::Proceed { result } =&gt; {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                            <span class="kw">let </span>name = Baked(result).to_string();
                             <span class="self">self</span>.start_baking_expression(result, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
                             <span class="self">self</span>.named_expressions.insert(result, name);
                             <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
@@ -9400,24 +9456,30 @@
         <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
 
         {
-            <span class="kw">let </span><span class="kw-2">mut </span>indices = <span class="macro">vec!</span>[];
-            <span class="kw">for </span>(handle, var) <span class="kw">in </span>module.global_variables.iter() {
-                <span class="kw">if </span>needs_array_length(var.ty, <span class="kw-2">&amp;</span>module.types) {
-                    <span class="kw">let </span>idx = handle.index();
-                    indices.push(idx);
-                }
-            }
+            <span class="comment">// Make a `Vec` of all the `GlobalVariable`s that contain
+            // runtime-sized arrays.
+            </span><span class="kw">let </span>globals: Vec&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt; = module
+                .global_variables
+                .iter()
+                .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, var)| needs_array_length(var.ty, <span class="kw-2">&amp;</span>module.types))
+                .map(|(handle, <span class="kw">_</span>)| handle)
+                .collect();
 
             <span class="kw">let </span><span class="kw-2">mut </span>buffer_indices = <span class="macro">vec!</span>[];
             <span class="kw">for </span>vbm <span class="kw">in </span><span class="kw-2">&amp;</span>pipeline_options.vertex_buffer_mappings {
                 buffer_indices.push(vbm.id);
             }
 
-            <span class="kw">if </span>!indices.is_empty() || !buffer_indices.is_empty() {
+            <span class="kw">if </span>!globals.is_empty() || !buffer_indices.is_empty() {
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"struct _mslBufferSizes {{"</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>idx <span class="kw">in </span>indices {
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{}uint size{};"</span>, back::INDENT, idx)<span class="question-mark">?</span>;
+                <span class="kw">for </span>global <span class="kw">in </span>globals {
+                    <span class="macro">writeln!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"{}uint {};"</span>,
+                        back::INDENT,
+                        ArraySizeMember(global)
+                    )<span class="question-mark">?</span>;
                 }
 
                 <span class="kw">for </span>idx <span class="kw">in </span>buffer_indices {

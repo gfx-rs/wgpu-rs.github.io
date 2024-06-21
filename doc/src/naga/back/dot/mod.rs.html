@@ -795,6 +795,33 @@
 <a href="#794" id="794">794</a>
 <a href="#795" id="795">795</a>
 <a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [DOT][dot] (Graphviz).
 
@@ -1189,6 +1216,32 @@ of IR inspection and debugging.
     <span class="string">"#d9d9d9"</span>,
 ];
 
+<span class="kw">struct </span>Prefixed&lt;T&gt;(Handle&lt;T&gt;);
+
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Prefixed&lt;<span class="kw">crate</span>::Expression&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"e"</span>)
+    }
+}
+
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Prefixed&lt;<span class="kw">crate</span>::LocalVariable&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"l"</span>)
+    }
+}
+
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Prefixed&lt;<span class="kw">crate</span>::GlobalVariable&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"g"</span>)
+    }
+}
+
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Prefixed&lt;<span class="kw">crate</span>::Function&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"f"</span>)
+    }
+}
+
 <span class="kw">fn </span>write_fun(
     output: <span class="kw-2">&amp;mut </span>String,
     prefix: String,
@@ -1202,9 +1255,9 @@ of IR inspection and debugging.
         <span class="kw">for </span>(handle, var) <span class="kw">in </span>fun.local_variables.iter() {
             <span class="macro">writeln!</span>(
                 output,
-                <span class="string">"\t\t{}_l{} [ shape=hexagon label=\"{:?} '{}'\" ]"</span>,
+                <span class="string">"\t\t{}_{} [ shape=hexagon label=\"{:?} '{}'\" ]"</span>,
                 prefix,
-                handle.index(),
+                Prefixed(handle),
                 handle,
                 name(<span class="kw-2">&amp;</span>var.name),
             )<span class="question-mark">?</span>;
@@ -1239,9 +1292,9 @@ of IR inspection and debugging.
         <span class="kw">for </span>(to, expr, label) <span class="kw">in </span>sg.dependencies {
             <span class="macro">writeln!</span>(
                 output,
-                <span class="string">"\t\t{}_e{} -&gt; {}_s{} [ label=\"{}\" ]"</span>,
+                <span class="string">"\t\t{}_{} -&gt; {}_s{} [ label=\"{}\" ]"</span>,
                 prefix,
-                expr.index(),
+                Prefixed(expr),
                 prefix,
                 to,
                 label,
@@ -1250,22 +1303,23 @@ of IR inspection and debugging.
         <span class="kw">for </span>(from, to) <span class="kw">in </span>sg.emits {
             <span class="macro">writeln!</span>(
                 output,
-                <span class="string">"\t\t{}_s{} -&gt; {}_e{} [ style=dotted ]"</span>,
+                <span class="string">"\t\t{}_s{} -&gt; {}_{} [ style=dotted ]"</span>,
                 prefix,
                 from,
                 prefix,
-                to.index(),
+                Prefixed(to),
             )<span class="question-mark">?</span>;
         }
     }
 
+    <span class="macro">assert!</span>(sg.calls.is_empty());
     <span class="kw">for </span>(from, function) <span class="kw">in </span>sg.calls {
         <span class="macro">writeln!</span>(
             output,
-            <span class="string">"\t\t{}_s{} -&gt; f{}_s0"</span>,
+            <span class="string">"\t\t{}_s{} -&gt; {}_s0"</span>,
             prefix,
             from,
-            function.index(),
+            Prefixed(function),
         )<span class="question-mark">?</span>;
     }
 
@@ -1485,9 +1539,9 @@ of IR inspection and debugging.
         };
         <span class="macro">writeln!</span>(
             output,
-            <span class="string">"\t\t{}_e{} [ {}=\"{}\" label=\"{:?} {}\" ]"</span>,
+            <span class="string">"\t\t{}_{} [ {}=\"{}\" label=\"{:?} {}\" ]"</span>,
             prefix,
-            handle.index(),
+            Prefixed(handle),
             color_attr,
             COLORS[color_id],
             handle,
@@ -1497,11 +1551,11 @@ of IR inspection and debugging.
         <span class="kw">for </span>(key, edge) <span class="kw">in </span>edges.drain() {
             <span class="macro">writeln!</span>(
                 output,
-                <span class="string">"\t\t{}_e{} -&gt; {}_e{} [ label=\"{}\" ]"</span>,
+                <span class="string">"\t\t{}_{} -&gt; {}_{} [ label=\"{}\" ]"</span>,
                 prefix,
-                edge.index(),
+                Prefixed(edge),
                 prefix,
-                handle.index(),
+                Prefixed(handle),
                 key,
             )<span class="question-mark">?</span>;
         }
@@ -1509,27 +1563,27 @@ of IR inspection and debugging.
             <span class="prelude-val">Some</span>(Payload::Arguments(list)) =&gt; {
                 <span class="macro">write!</span>(output, <span class="string">"\t\t{{"</span>)<span class="question-mark">?</span>;
                 <span class="kw">for </span><span class="kw-2">&amp;</span>comp <span class="kw">in </span>list {
-                    <span class="macro">write!</span>(output, <span class="string">" {}_e{}"</span>, prefix, comp.index())<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(output, <span class="string">" {}_{}"</span>, prefix, Prefixed(comp))<span class="question-mark">?</span>;
                 }
-                <span class="macro">writeln!</span>(output, <span class="string">" }} -&gt; {}_e{}"</span>, prefix, handle.index())<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(output, <span class="string">" }} -&gt; {}_{}"</span>, prefix, Prefixed(handle))<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Some</span>(Payload::Local(h)) =&gt; {
                 <span class="macro">writeln!</span>(
                     output,
-                    <span class="string">"\t\t{}_l{} -&gt; {}_e{}"</span>,
+                    <span class="string">"\t\t{}_{} -&gt; {}_{}"</span>,
                     prefix,
-                    h.index(),
+                    Prefixed(h),
                     prefix,
-                    handle.index(),
+                    Prefixed(handle),
                 )<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Some</span>(Payload::Global(h)) =&gt; {
                 <span class="macro">writeln!</span>(
                     output,
-                    <span class="string">"\t\tg{} -&gt; {}_e{} [fillcolor=gray]"</span>,
-                    h.index(),
+                    <span class="string">"\t\t{} -&gt; {}_{} [fillcolor=gray]"</span>,
+                    Prefixed(h),
                     prefix,
-                    handle.index(),
+                    Prefixed(handle),
                 )<span class="question-mark">?</span>;
             }
             <span class="prelude-val">None </span>=&gt; {}
@@ -1556,8 +1610,8 @@ of IR inspection and debugging.
         <span class="kw">for </span>(handle, var) <span class="kw">in </span>module.global_variables.iter() {
             <span class="macro">writeln!</span>(
                 output,
-                <span class="string">"\t\tg{} [ shape=hexagon label=\"{:?} {:?}/'{}'\" ]"</span>,
-                handle.index(),
+                <span class="string">"\t\t{} [ shape=hexagon label=\"{:?} {:?}/'{}'\" ]"</span>,
+                Prefixed(handle),
                 handle,
                 var.space,
                 name(<span class="kw-2">&amp;</span>var.name),
@@ -1567,7 +1621,7 @@ of IR inspection and debugging.
     }
 
     <span class="kw">for </span>(handle, fun) <span class="kw">in </span>module.functions.iter() {
-        <span class="kw">let </span>prefix = <span class="macro">format!</span>(<span class="string">"f{}"</span>, handle.index());
+        <span class="kw">let </span>prefix = Prefixed(handle).to_string();
         <span class="macro">writeln!</span>(output, <span class="string">"\tsubgraph cluster_{prefix} {{"</span>)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(
             output,

@@ -4791,19 +4791,6 @@
 <a href="#4790" id="4790">4790</a>
 <a href="#4791" id="4791">4791</a>
 <a href="#4792" id="4792">4792</a>
-<a href="#4793" id="4793">4793</a>
-<a href="#4794" id="4794">4794</a>
-<a href="#4795" id="4795">4795</a>
-<a href="#4796" id="4796">4796</a>
-<a href="#4797" id="4797">4797</a>
-<a href="#4798" id="4798">4798</a>
-<a href="#4799" id="4799">4799</a>
-<a href="#4800" id="4800">4800</a>
-<a href="#4801" id="4801">4801</a>
-<a href="#4802" id="4802">4802</a>
-<a href="#4803" id="4803">4803</a>
-<a href="#4804" id="4804">4804</a>
-<a href="#4805" id="4805">4805</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -4852,7 +4839,7 @@ to output a [`Module`](crate::Module) into glsl
 </span><span class="kw">pub use </span>features::Features;
 
 <span class="kw">use crate</span>::{
-    back,
+    back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, NameKey},
     valid, Handle, ShaderStage, TypeInner,
 };
@@ -6788,7 +6775,7 @@ to output a [`Module`](crate::Module) into glsl
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
                         </span><span class="prelude-val">Some</span>(<span class="self">self</span>.namer.call(name))
                     } <span class="kw">else if </span><span class="self">self</span>.need_bake_expressions.contains(<span class="kw-2">&amp;</span>handle) {
-                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, handle.index()))
+                        <span class="prelude-val">Some</span>(Baked(handle).to_string())
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
@@ -7116,7 +7103,7 @@ to output a [`Module`](crate::Module) into glsl
                 // This is done in `Emit` by never emitting a variable name for pointer variables
                 </span><span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>result_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>result_name = Baked(result).to_string();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="comment">// Expressions cannot have side effects, so just writing the expression here is fine.
                 </span><span class="self">self</span>.write_named_expr(pointer, result_name, result, ctx)<span class="question-mark">?</span>;
@@ -7141,7 +7128,7 @@ to output a [`Module`](crate::Module) into glsl
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = result {
-                    <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, expr.index());
+                    <span class="kw">let </span>name = Baked(expr).to_string();
                     <span class="kw">let </span>result = <span class="self">self</span>.module.functions[function].result.as_ref().unwrap();
                     <span class="self">self</span>.write_type(result.ty)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}"</span>)<span class="question-mark">?</span>;
@@ -7175,7 +7162,7 @@ to output a [`Module`](crate::Module) into glsl
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
-                    <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                    <span class="kw">let </span>res_name = Baked(result).to_string();
                     <span class="kw">let </span>res_ty = ctx.resolve_type(result, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
                     <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
@@ -7205,7 +7192,7 @@ to output a [`Module`](crate::Module) into glsl
             Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="kw">let </span>res_ty = ctx.info[result].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
                 <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
@@ -7225,7 +7212,7 @@ to output a [`Module`](crate::Module) into glsl
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="kw">let </span>res_ty = ctx.info[result].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
                 <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
@@ -7282,7 +7269,7 @@ to output a [`Module`](crate::Module) into glsl
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="kw">let </span>res_ty = ctx.info[result].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.module.types);
                 <span class="self">self</span>.write_value_type(res_ty)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {res_name} = "</span>)<span class="question-mark">?</span>;
@@ -8671,9 +8658,8 @@ to output a [`Module`](crate::Module) into glsl
         <span class="comment">// Define our local and start a call to `clamp`
         </span><span class="macro">write!</span>(
             <span class="self">self</span>.out,
-            <span class="string">"int {}{}{} = clamp("</span>,
-            back::BAKE_PREFIX,
-            expr.index(),
+            <span class="string">"int {}{} = clamp("</span>,
+            Baked(expr),
             CLAMPED_LOD_SUFFIX
         )<span class="question-mark">?</span>;
         <span class="comment">// Write the lod that will be clamped
@@ -9011,13 +8997,7 @@ to output a [`Module`](crate::Module) into glsl
             // `textureSize` call, but this needs to be the clamped lod, this should
             // have been generated earlier and put in a local.
             </span><span class="kw">if </span>class.is_mipmapped() {
-                <span class="macro">write!</span>(
-                    <span class="self">self</span>.out,
-                    <span class="string">", {}{}{}"</span>,
-                    back::BAKE_PREFIX,
-                    handle.index(),
-                    CLAMPED_LOD_SUFFIX
-                )<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {}{}"</span>, Baked(handle), CLAMPED_LOD_SUFFIX)<span class="question-mark">?</span>;
             }
             <span class="comment">// Close the `textureSize` call
             </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -9035,13 +9015,7 @@ to output a [`Module`](crate::Module) into glsl
             <span class="comment">// Add the clamped lod (if present) as the second argument to the
             // image load function.
             </span><span class="kw">if </span>level.is_some() {
-                <span class="macro">write!</span>(
-                    <span class="self">self</span>.out,
-                    <span class="string">", {}{}{}"</span>,
-                    back::BAKE_PREFIX,
-                    handle.index(),
-                    CLAMPED_LOD_SUFFIX
-                )<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {}{}"</span>, Baked(handle), CLAMPED_LOD_SUFFIX)<span class="question-mark">?</span>;
             }
 
             <span class="comment">// If a sample argument is needed we need to clamp it between 0 and

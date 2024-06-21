@@ -2114,7 +2114,7 @@
 <a href="#2113" id="2113">2113</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
-    back,
+    back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, NameKey},
     valid, Handle, Module, ShaderStage, TypeInner,
 };
@@ -2755,7 +2755,7 @@
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if </span>min_ref_count &lt;= info.ref_count || required_baking_expr {
-                            <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, handle.index()))
+                            <span class="prelude-val">Some</span>(Baked(handle).to_string())
                         } <span class="kw">else </span>{
                             <span class="prelude-val">None
                         </span>}
@@ -2847,7 +2847,7 @@
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = result {
-                    <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, expr.index());
+                    <span class="kw">let </span>name = Baked(expr).to_string();
                     <span class="self">self</span>.start_named_expr(module, expr, func_ctx, <span class="kw-2">&amp;</span>name)<span class="question-mark">?</span>;
                     <span class="self">self</span>.named_expressions.insert(expr, name);
                 }
@@ -2869,7 +2869,7 @@
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
-                    <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                    <span class="kw">let </span>res_name = Baked(result).to_string();
                     <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                     <span class="self">self</span>.named_expressions.insert(result, res_name);
                 }
@@ -2888,7 +2888,7 @@
             Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="comment">// TODO: Obey named expressions here.
-                </span><span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                </span><span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, res_name);
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"workgroupUniformLoad("</span>)<span class="question-mark">?</span>;
@@ -3048,7 +3048,7 @@
             Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, res_name);
 
@@ -3065,7 +3065,7 @@
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, res_name);
 
@@ -3120,7 +3120,7 @@
                 result,
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>res_name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>res_name = Baked(result).to_string();
                 <span class="self">self</span>.start_named_expr(module, result, func_ctx, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, res_name);
 

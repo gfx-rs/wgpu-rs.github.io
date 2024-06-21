@@ -3634,7 +3634,7 @@
     BackendResult, Error, Options,
 };
 <span class="kw">use crate</span>::{
-    back,
+    back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, NameKey},
     valid, Handle, Module, ScalarKind, ShaderStage, TypeInner,
 };
@@ -5037,7 +5037,7 @@
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
                         </span><span class="prelude-val">Some</span>(<span class="self">self</span>.namer.call(name))
                     } <span class="kw">else if </span><span class="self">self</span>.need_bake_expressions.contains(<span class="kw-2">&amp;</span>handle) {
-                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"_expr{}"</span>, handle.index()))
+                        <span class="prelude-val">Some</span>(Baked(handle).to_string())
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
@@ -5518,7 +5518,7 @@
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = result {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const "</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, expr.index());
+                    <span class="kw">let </span>name = Baked(expr).to_string();
                     <span class="kw">let </span>expr_ty = <span class="kw-2">&amp;</span>func_ctx.info[expr].ty;
                     <span class="kw">match </span><span class="kw-2">*</span>expr_ty {
                         proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
@@ -5549,7 +5549,7 @@
                 <span class="kw">let </span>res_name = <span class="kw">match </span>result {
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                     <span class="prelude-val">Some</span>(result) =&gt; {
-                        <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                        <span class="kw">let </span>name = Baked(result).to_string();
                         <span class="kw">match </span>func_ctx.info[result].ty {
                             proc::TypeResolution::Handle(handle) =&gt; {
                                 <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?
@@ -5619,7 +5619,7 @@
             Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
                 <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"_expr{}"</span>, result.index());
+                <span class="kw">let </span>name = Baked(result).to_string();
                 <span class="self">self</span>.write_named_expr(module, pointer, name, result, func_ctx)<span class="question-mark">?</span>;
 
                 <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
@@ -5726,7 +5726,7 @@
             Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>name = Baked(result).to_string();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const uint4 {name} = "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.named_expressions.insert(result, name);
 
@@ -5745,7 +5745,7 @@
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const "</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>name = Baked(result).to_string();
                 <span class="kw">match </span>func_ctx.info[result].ty {
                     proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
                     proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
@@ -5809,7 +5809,7 @@
             } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const "</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, back::BAKE_PREFIX, result.index());
+                <span class="kw">let </span>name = Baked(result).to_string();
                 <span class="kw">match </span>func_ctx.info[result].ty {
                     proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
                     proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
