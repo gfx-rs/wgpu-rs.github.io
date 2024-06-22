@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["glsl","spv","wgsl"],"struct":["SymbolTable","Typifier"]};
+window.SIDEBAR_ITEMS = {"mod":["atomic_upgrade","glsl","spv","wgsl"],"struct":["SymbolTable","Typifier"]};

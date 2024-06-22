@@ -5722,6 +5722,32 @@
 <a href="#5721" id="5721">5721</a>
 <a href="#5722" id="5722">5722</a>
 <a href="#5723" id="5723">5723</a>
+<a href="#5724" id="5724">5724</a>
+<a href="#5725" id="5725">5725</a>
+<a href="#5726" id="5726">5726</a>
+<a href="#5727" id="5727">5727</a>
+<a href="#5728" id="5728">5728</a>
+<a href="#5729" id="5729">5729</a>
+<a href="#5730" id="5730">5730</a>
+<a href="#5731" id="5731">5731</a>
+<a href="#5732" id="5732">5732</a>
+<a href="#5733" id="5733">5733</a>
+<a href="#5734" id="5734">5734</a>
+<a href="#5735" id="5735">5735</a>
+<a href="#5736" id="5736">5736</a>
+<a href="#5737" id="5737">5737</a>
+<a href="#5738" id="5738">5738</a>
+<a href="#5739" id="5739">5739</a>
+<a href="#5740" id="5740">5740</a>
+<a href="#5741" id="5741">5741</a>
+<a href="#5742" id="5742">5742</a>
+<a href="#5743" id="5743">5743</a>
+<a href="#5744" id="5744">5744</a>
+<a href="#5745" id="5745">5745</a>
+<a href="#5746" id="5746">5746</a>
+<a href="#5747" id="5747">5747</a>
+<a href="#5748" id="5748">5748</a>
+<a href="#5749" id="5749">5749</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -5760,6 +5786,7 @@ This value then gets used instead of `OpLoad` result later on.
 <span class="kw">use </span>convert::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>error::Error;
 <span class="kw">use </span>function::<span class="kw-2">*</span>;
+<span class="kw">use </span>indexmap::IndexSet;
 
 <span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
@@ -6284,23 +6311,42 @@ This value then gets used instead of `OpLoad` result later on.
     </span>parameter_sampling: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>[image::SamplingFlags],
 }
 
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BlockContext&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="doccomment">/// Descend into the expression with the given handle, locating a contained
+    /// global variable.
+    ///
+    /// This is used to track atomic upgrades.
+    </span><span class="kw">fn </span>get_contained_global_variable(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">mut </span>handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt; {
+        <span class="macro">log::debug!</span>(<span class="string">"\t\tlocating global variable in {handle:?}"</span>);
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="self">self</span>.expressions[handle] {
+                <span class="kw">crate</span>::Expression::Access { base, index: <span class="kw">_ </span>} =&gt; {
+                    handle = base;
+                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  access {handle:?}"</span>);
+                }
+                <span class="kw">crate</span>::Expression::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; {
+                    handle = base;
+                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  access index {handle:?}"</span>);
+                }
+                <span class="kw">crate</span>::Expression::GlobalVariable(h) =&gt; {
+                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  found {h:?}"</span>);
+                    <span class="kw">return </span><span class="prelude-val">Some</span>(h);
+                }
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">break</span>;
+                }
+            }
+        }
+        <span class="prelude-val">None
+    </span>}
+}
+
 <span class="kw">enum </span>SignAnchor {
     <span class="prelude-ty">Result</span>,
     Operand,
-}
-
-<span class="kw">enum </span>AtomicOpInst {
-    AtomicIIncrement,
-}
-
-<span class="attr">#[allow(dead_code)]
-</span><span class="kw">struct </span>AtomicOp {
-    instruction: AtomicOpInst,
-    result_type_id: spirv::Word,
-    result_id: spirv::Word,
-    pointer_id: spirv::Word,
-    scope_id: spirv::Word,
-    memory_semantics_id: spirv::Word,
 }
 
 <span class="kw">pub struct </span>Frontend&lt;I&gt; {
@@ -6314,8 +6360,12 @@ This value then gets used instead of `OpLoad` result later on.
     future_member_decor: FastHashMap&lt;(spirv::Word, MemberIndex), Decoration&gt;,
     lookup_member: FastHashMap&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, MemberIndex), LookupMember&gt;,
     handle_sampling: FastHashMap&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;, image::SamplingFlags&gt;,
-    <span class="comment">// Used to upgrade types used in atomic ops to atomic types, keyed by pointer id
-    </span>lookup_atomic: FastHashMap&lt;spirv::Word, AtomicOp&gt;,
+    <span class="doccomment">/// The set of all global variables accessed by [`Atomic`] statements we've
+    /// generated, so we can upgrade the types of their operands.
+    ///
+    /// [`Atomic`]: crate::Statement::Atomic
+    </span>upgrade_atomics: IndexSet&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt;,
+
     lookup_type: FastHashMap&lt;spirv::Word, LookupType&gt;,
     lookup_void_type: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
     lookup_storage_buffer_types: FastHashMap&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, <span class="kw">crate</span>::StorageAccess&gt;,
@@ -6371,7 +6421,7 @@ This value then gets used instead of `OpLoad` result later on.
             future_member_decor: FastHashMap::default(),
             handle_sampling: FastHashMap::default(),
             lookup_member: FastHashMap::default(),
-            lookup_atomic: FastHashMap::default(),
+            upgrade_atomics: Default::default(),
             lookup_type: FastHashMap::default(),
             lookup_void_type: <span class="prelude-val">None</span>,
             lookup_storage_buffer_types: FastHashMap::default(),
@@ -9692,30 +9742,21 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>result_type_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                     <span class="kw">let </span>result_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                     <span class="kw">let </span>pointer_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>scope_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>memory_semantics_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
-                    <span class="comment">// Store the op for a later pass where we "upgrade" the pointer type
-                    </span><span class="kw">let </span>atomic = AtomicOp {
-                        instruction: AtomicOpInst::AtomicIIncrement,
-                        result_type_id,
-                        result_id,
-                        pointer_id,
-                        scope_id,
-                        memory_semantics_id,
-                    };
-                    <span class="self">self</span>.lookup_atomic.insert(pointer_id, atomic);
+                    <span class="kw">let </span>_scope_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>_memory_semantics_id = <span class="self">self</span>.next()<span class="question-mark">?</span>;
 
                     <span class="macro">log::trace!</span>(<span class="string">"\t\t\tlooking up expr {:?}"</span>, pointer_id);
-
                     <span class="kw">let </span>(p_lexp_handle, p_lexp_ty_id) = {
                         <span class="kw">let </span>lexp = <span class="self">self</span>.lookup_expression.lookup(pointer_id)<span class="question-mark">?</span>;
                         <span class="kw">let </span>handle = <span class="macro">get_expr_handle!</span>(pointer_id, <span class="kw-2">&amp;</span>lexp);
                         (handle, lexp.type_id)
                     };
+
                     <span class="macro">log::trace!</span>(<span class="string">"\t\t\tlooking up type {pointer_id:?}"</span>);
                     <span class="kw">let </span>p_ty = <span class="self">self</span>.lookup_type.lookup(p_lexp_ty_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>p_ty_base_id =
                         p_ty.base_id.ok_or(Error::InvalidAccessType(p_lexp_ty_id))<span class="question-mark">?</span>;
+
                     <span class="macro">log::trace!</span>(<span class="string">"\t\t\tlooking up base type {p_ty_base_id:?} of {p_ty:?}"</span>);
                     <span class="kw">let </span>p_base_ty = <span class="self">self</span>.lookup_type.lookup(p_ty_base_id)<span class="question-mark">?</span>;
 
@@ -9756,6 +9797,10 @@ This value then gets used instead of `OpLoad` result later on.
                         result: <span class="prelude-val">Some</span>(r_lexp_handle),
                     };
                     block.push(stmt, span);
+
+                    <span class="comment">// Store any associated global variables so we can upgrade their types later
+                    </span><span class="self">self</span>.upgrade_atomics
+                        .extend(ctx.get_contained_global_variable(p_lexp_handle));
                 }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedInstruction(<span class="self">self</span>.state, inst.op));
@@ -10036,6 +10081,11 @@ This value then gets used instead of `OpLoad` result later on.
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnsupportedInstruction(<span class="self">self</span>.state, inst.op)), <span class="comment">//TODO
             </span>}<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span>!<span class="self">self</span>.upgrade_atomics.is_empty() {
+            <span class="macro">log::info!</span>(<span class="string">"Upgrading atomic pointers..."</span>);
+            module.upgrade_atomics(std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.upgrade_atomics))<span class="question-mark">?</span>;
         }
 
         <span class="comment">// Do entry point specific processing after all functions are parsed so that we can
@@ -11413,17 +11463,20 @@ This value then gets used instead of `OpLoad` result later on.
     <span class="attr">#[cfg(all(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>))]
     #[test]
     </span><span class="kw">fn </span>atomic_i_inc() {
-        <span class="kw">let _ </span>= env_logger::builder()
-            .is_test(<span class="bool-val">true</span>)
-            .filter_level(log::LevelFilter::Trace)
-            .try_init();
+        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
         <span class="kw">let </span>bytes = <span class="macro">include_bytes!</span>(<span class="string">"../../../tests/in/spv/atomic_i_increment.spv"</span>);
         <span class="kw">let </span>m = <span class="kw">super</span>::parse_u8_slice(bytes, <span class="kw-2">&amp;</span>Default::default()).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>validator = <span class="kw">crate</span>::valid::Validator::new(
             <span class="kw">crate</span>::valid::ValidationFlags::empty(),
             Default::default(),
         );
-        <span class="kw">let </span>info = validator.validate(<span class="kw-2">&amp;</span>m).unwrap();
+        <span class="kw">let </span>info = <span class="kw">match </span>validator.validate(<span class="kw-2">&amp;</span>m) {
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="macro">log::error!</span>(<span class="string">"{}"</span>, e.emit_to_string(<span class="string">""</span>));
+                <span class="kw">return</span>;
+            }
+            <span class="prelude-val">Ok</span>(i) =&gt; i,
+        };
         <span class="kw">let </span>wgsl =
             <span class="kw">crate</span>::back::wgsl::write_string(<span class="kw-2">&amp;</span>m, <span class="kw-2">&amp;</span>info, <span class="kw">crate</span>::back::wgsl::WriterFlags::empty())
                 .unwrap();
@@ -11433,15 +11486,14 @@ This value then gets used instead of `OpLoad` result later on.
             <span class="prelude-val">Ok</span>(m) =&gt; m,
             <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">"{}"</span>, e.emit_to_string(<span class="kw-2">&amp;</span>wgsl));
-                <span class="comment">// at this point we know atomics create invalid modules
-                // so simply bail
-                </span><span class="kw">return</span>;
+                <span class="macro">panic!</span>(<span class="string">"invalid module"</span>);
             }
         };
         <span class="kw">let </span><span class="kw-2">mut </span>validator =
             <span class="kw">crate</span>::valid::Validator::new(<span class="kw">crate</span>::valid::ValidationFlags::all(), Default::default());
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = validator.validate(<span class="kw-2">&amp;</span>m) {
             <span class="macro">log::error!</span>(<span class="string">"{}"</span>, e.emit_to_string(<span class="kw-2">&amp;</span>wgsl));
+            <span class="macro">panic!</span>(<span class="string">"invalid generated wgsl"</span>);
         }
     }
 }
