@@ -3025,17 +3025,17 @@
     }
 
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
-        <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
         <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache`
         // This is safe to assume as long as:
         // - `RenderPipeline` can't be cloned
         // - The only place that we can get a new reference is during `program_cache.lock()`
         </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
+            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
             program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
                 <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
             });
-            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
         }
 
@@ -3057,17 +3057,17 @@
     }
 
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
-        <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
         <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache``
         // This is safe to assume as long as:
         // - `ComputePipeline` can't be cloned
         // - The only place that we can get a new reference is during `program_cache.lock()`
         </span><span class="kw">if </span>Arc::strong_count(<span class="kw-2">&amp;</span>pipeline.inner) == <span class="number">2 </span>{
+            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+            <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
             program_cache.retain(|<span class="kw">_</span>, v| <span class="kw">match </span><span class="kw-2">*</span>v {
                 <span class="prelude-val">Ok</span>(<span class="kw-2">ref </span>p) =&gt; p.program != pipeline.inner.program,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
             });
-            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
         }
 
