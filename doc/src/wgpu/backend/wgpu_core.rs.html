@@ -3318,6 +3318,13 @@
 <a href="#3317" id="3317">3317</a>
 <a href="#3318" id="3318">3318</a>
 <a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -5646,10 +5653,17 @@
             .map(|(i, <span class="kw">_</span>)| i)
             .collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
 
-        <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>queue =&gt; <span class="self">self</span>.<span class="number">0</span>.queue_submit(<span class="kw-2">*</span>queue, <span class="kw-2">&amp;</span>temp_command_buffers)) {
+        <span class="kw">let </span>index = <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>queue =&gt; <span class="self">self</span>.<span class="number">0</span>.queue_submit(<span class="kw-2">*</span>queue, <span class="kw-2">&amp;</span>temp_command_buffers))
+        {
             <span class="prelude-val">Ok</span>(index) =&gt; index,
             <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">"Queue::submit"</span>),
+        };
+
+        <span class="kw">for </span>cmdbuf <span class="kw">in </span><span class="kw-2">&amp;</span>temp_command_buffers {
+            <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>queue =&gt; <span class="self">self</span>.<span class="number">0</span>.command_buffer_drop(<span class="kw-2">*</span>cmdbuf));
         }
+
+        index
     }
 
     <span class="kw">fn </span>queue_get_timestamp_period(
