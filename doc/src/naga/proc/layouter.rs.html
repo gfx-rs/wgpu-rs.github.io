@@ -248,9 +248,7 @@
 <a href="#247" id="247">247</a>
 <a href="#248" id="248">248</a>
 <a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleVec};
 <span class="kw">use </span>std::{fmt::Display, num::NonZeroU32, ops};
 
 <span class="doccomment">/// A newtype struct where its only valid values are powers of 2
@@ -360,17 +358,15 @@
 ///
 /// [WGSL §4.3.7, "Memory Layout"](https://gpuweb.github.io/gpuweb/wgsl/#memory-layouts)
 </span><span class="attr">#[derive(Debug, Default)]
-#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
-#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>Layouter {
-    <span class="doccomment">/// Layouts for types in an arena, indexed by `Handle` index.
-    </span>layouts: Vec&lt;TypeLayout&gt;,
+    <span class="doccomment">/// Layouts for types in an arena.
+    </span>layouts: HandleVec&lt;<span class="kw">crate</span>::Type, TypeLayout&gt;,
 }
 
 <span class="kw">impl </span>ops::Index&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; <span class="kw">for </span>Layouter {
     <span class="kw">type </span>Output = TypeLayout;
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>TypeLayout {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.layouts[handle.index()]
+        <span class="kw-2">&amp;</span><span class="self">self</span>.layouts[handle]
     }
 }
 
@@ -495,7 +491,7 @@
                 },
             };
             <span class="macro">debug_assert!</span>(size &lt;= layout.size);
-            <span class="self">self</span>.layouts.push(layout);
+            <span class="self">self</span>.layouts.insert(ty_handle, layout);
         }
 
         <span class="prelude-val">Ok</span>(())
