@@ -3699,6 +3699,14 @@
 <a href="#3698" id="3698">3698</a>
 <a href="#3699" id="3699">3699</a>
 <a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4105,6 +4113,7 @@
         snatch_guard: SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
+
         <span class="kw">let </span>fence = fence_guard.as_ref().unwrap();
         <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
             <span class="kw">let </span>index_to_wait_for = <span class="kw">match </span>maintain {
@@ -7341,6 +7350,13 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_usage_scope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UsageScope&lt;<span class="lifetime">'_</span>, A&gt; {
         UsageScope::new_pooled(<span class="kw-2">&amp;</span><span class="self">self</span>.usage_scopes, <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices)
+    }
+
+    <span class="kw">pub fn </span>get_hal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+        <span class="self">self</span>.raw
+            .as_ref()
+            .map(|raw| raw.get_internal_counters())
+            .unwrap_or_default()
     }
 }
 

@@ -2418,6 +2418,80 @@
 <a href="#2417" id="2417">2417</a>
 <a href="#2418" id="2418">2418</a>
 <a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a>
+<a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a>
+<a href="#2470" id="2470">2470</a>
+<a href="#2471" id="2471">2471</a>
+<a href="#2472" id="2472">2472</a>
+<a href="#2473" id="2473">2473</a>
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
+<a href="#2478" id="2478">2478</a>
+<a href="#2479" id="2479">2479</a>
+<a href="#2480" id="2480">2480</a>
+<a href="#2481" id="2481">2481</a>
+<a href="#2482" id="2482">2482</a>
+<a href="#2483" id="2483">2483</a>
+<a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
+<a href="#2486" id="2486">2486</a>
+<a href="#2487" id="2487">2487</a>
+<a href="#2488" id="2488">2488</a>
+<a href="#2489" id="2489">2489</a>
+<a href="#2490" id="2490">2490</a>
+<a href="#2491" id="2491">2491</a>
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PipelineCache};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2732,7 +2806,10 @@
         }
 
         <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw.allocate_memory(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) } {
-            <span class="prelude-val">Ok</span>(memory) =&gt; <span class="prelude-val">Ok</span>(memory),
+            <span class="prelude-val">Ok</span>(memory) =&gt; {
+                <span class="self">self</span>.memory_allocations_counter.add(<span class="number">1</span>);
+                <span class="prelude-val">Ok</span>(memory)
+            }
             <span class="prelude-val">Err</span>(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_alloc::OutOfMemory::OutOfDeviceMemory)
             }
@@ -2745,6 +2822,8 @@
     }
 
     <span class="kw">unsafe fn </span>deallocate_memory(<span class="kw-2">&amp;</span><span class="self">self</span>, memory: vk::DeviceMemory) {
+        <span class="self">self</span>.memory_allocations_counter.sub(<span class="number">1</span>);
+
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.free_memory(memory, <span class="prelude-val">None</span>) };
     }
 
@@ -3330,6 +3409,9 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
+        <span class="self">self</span>.counters.buffer_memory.add(block.size() <span class="kw">as </span>isize);
+        <span class="self">self</span>.counters.buffers.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
             raw,
             block: <span class="prelude-val">Some</span>(Mutex::new(block)),
@@ -3338,12 +3420,12 @@
     <span class="kw">unsafe fn </span>destroy_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw">super</span>::Buffer) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_buffer(buffer.raw, <span class="prelude-val">None</span>) };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = buffer.block {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.mem_allocator
-                    .lock()
-                    .dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, block.into_inner())
-            };
+            <span class="kw">let </span>block = block.into_inner();
+            <span class="self">self</span>.counters.buffer_memory.sub(block.size() <span class="kw">as </span>isize);
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.mem_allocator.lock().dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, block) };
         }
+
+        <span class="self">self</span>.counters.buffers.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>map_buffer(
@@ -3469,6 +3551,8 @@
             )<span class="question-mark">?
         </span>};
 
+        <span class="self">self</span>.counters.texture_memory.add(block.size() <span class="kw">as </span>isize);
+
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.shared
                 .raw
@@ -3478,6 +3562,8 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
+
+        <span class="self">self</span>.counters.textures.add(<span class="number">1</span>);
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Texture {
             raw,
@@ -3495,8 +3581,12 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_image(texture.raw, <span class="prelude-val">None</span>) };
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = texture.block {
+            <span class="self">self</span>.counters.texture_memory.sub(block.size() <span class="kw">as </span>isize);
+
             <span class="kw">unsafe </span>{ <span class="self">self</span>.mem_allocator.lock().dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, block) };
         }
+
+        <span class="self">self</span>.counters.textures.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_texture_view(
@@ -3546,6 +3636,8 @@
                 .collect(),
         };
 
+        <span class="self">self</span>.counters.texture_views.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::TextureView {
             raw,
             layers,
@@ -3563,6 +3655,8 @@
             fbuf_lock.retain(|key, <span class="kw">_</span>| !key.attachments.iter().any(|at| at.raw == view.raw));
         }
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_image_view(view.raw, <span class="prelude-val">None</span>) };
+
+        <span class="self">self</span>.counters.texture_views.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_sampler(
@@ -3604,10 +3698,14 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
+        <span class="self">self</span>.counters.samplers.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Sampler { raw })
     }
     <span class="kw">unsafe fn </span>destroy_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: <span class="kw">super</span>::Sampler) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_sampler(sampler.raw, <span class="prelude-val">None</span>) };
+
+        <span class="self">self</span>.counters.samplers.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_command_encoder(
@@ -3618,6 +3716,8 @@
             .queue_family_index(desc.queue.family_index)
             .flags(vk::CommandPoolCreateFlags::TRANSIENT);
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_command_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+
+        <span class="self">self</span>.counters.command_encoders.add(<span class="number">1</span>);
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::CommandEncoder {
             raw,
@@ -3639,6 +3739,8 @@
             // fields.
             </span><span class="self">self</span>.shared.raw.destroy_command_pool(cmd_encoder.raw, <span class="prelude-val">None</span>);
         }
+
+        <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_bind_group_layout(
@@ -3759,6 +3861,8 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
+        <span class="self">self</span>.counters.bind_group_layouts.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroupLayout {
             raw,
             desc_count,
@@ -3772,6 +3876,8 @@
                 .raw
                 .destroy_descriptor_set_layout(bg_layout.raw, <span class="prelude-val">None</span>)
         };
+
+        <span class="self">self</span>.counters.bind_group_layouts.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_pipeline_layout(
@@ -3823,6 +3929,8 @@
             }
         }
 
+        <span class="self">self</span>.counters.pipeline_layouts.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineLayout {
             raw,
             binding_arrays,
@@ -3834,6 +3942,8 @@
                 .raw
                 .destroy_pipeline_layout(pipeline_layout.raw, <span class="prelude-val">None</span>)
         };
+
+        <span class="self">self</span>.counters.pipeline_layouts.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_bind_group(
@@ -4016,14 +4126,20 @@
         }
 
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.update_descriptor_sets(<span class="kw-2">&amp;</span>writes, <span class="kw-2">&amp;</span>[]) };
+
+        <span class="self">self</span>.counters.bind_groups.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroup { set })
     }
+
     <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, group: <span class="kw">super</span>::BindGroup) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.desc_allocator
                 .lock()
                 .free(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, <span class="prelude-val">Some</span>(group.set))
         };
+
+        <span class="self">self</span>.counters.bind_groups.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_shader_module(
@@ -4081,8 +4197,11 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
+        <span class="self">self</span>.counters.shader_modules.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule::Raw(raw))
     }
+
     <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, module: <span class="kw">super</span>::ShaderModule) {
         <span class="kw">match </span>module {
             <span class="kw">super</span>::ShaderModule::Raw(raw) =&gt; {
@@ -4090,6 +4209,8 @@
             }
             <span class="kw">super</span>::ShaderModule::Intermediate { .. } =&gt; {}
         }
+
+        <span class="self">self</span>.counters.shader_modules.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_render_pipeline(
@@ -4320,10 +4441,14 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_shader_module(raw_module, <span class="prelude-val">None</span>) };
         }
 
+        <span class="self">self</span>.counters.render_pipelines.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::RenderPipeline { raw })
     }
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_pipeline(pipeline.raw, <span class="prelude-val">None</span>) };
+
+        <span class="self">self</span>.counters.render_pipelines.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_compute_pipeline(
@@ -4366,10 +4491,15 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_shader_module(raw_module, <span class="prelude-val">None</span>) };
         }
 
+        <span class="self">self</span>.counters.compute_pipelines.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ComputePipeline { raw })
     }
+
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_pipeline(pipeline.raw, <span class="prelude-val">None</span>) };
+
+        <span class="self">self</span>.counters.compute_pipelines.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_pipeline_cache(
@@ -4421,18 +4551,26 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
+        <span class="self">self</span>.counters.query_sets.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::QuerySet { raw })
     }
+
     <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: <span class="kw">super</span>::QuerySet) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_query_pool(set.raw, <span class="prelude-val">None</span>) };
+
+        <span class="self">self</span>.counters.query_sets.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="self">self</span>.counters.fences.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">if </span><span class="self">self</span>.shared.private_caps.timeline_semaphores {
             <span class="kw">let </span><span class="kw-2">mut </span>sem_type_info =
                 vk::SemaphoreTypeCreateInfo::default().semaphore_type(vk::SemaphoreType::TIMELINE);
             <span class="kw">let </span>vk_info = vk::SemaphoreCreateInfo::default().push_next(<span class="kw-2">&amp;mut </span>sem_type_info);
             <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_semaphore(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
+
             <span class="kw">super</span>::Fence::TimelineSemaphore(raw)
         } <span class="kw">else </span>{
             <span class="kw">super</span>::Fence::FencePool {
@@ -4460,6 +4598,8 @@
                 }
             }
         }
+
+        <span class="self">self</span>.counters.fences.sub(<span class="number">1</span>);
     }
     <span class="kw">unsafe fn </span>get_fence_value(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4739,6 +4879,14 @@
                 .lock()
                 .dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, acceleration_structure.block.into_inner());
         }
+    }
+
+    <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+        <span class="self">self</span>.counters
+            .memory_allocations
+            .set(<span class="self">self</span>.shared.memory_allocations_counter.read());
+
+        <span class="self">self</span>.counters.clone()
     }
 }
 

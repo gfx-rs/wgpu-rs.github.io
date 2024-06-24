@@ -9,6 +9,6 @@ var srcIndex = new Map(JSON.parse('[\
 ["wgpu_hal",["",[["auxil",[],["mod.rs","renderdoc.rs"]],["gles",[],["adapter.rs","command.rs","conv.rs","device.rs","egl.rs","mod.rs","queue.rs"]],["vulkan",[],["adapter.rs","command.rs","conv.rs","device.rs","instance.rs","mod.rs"]]],["empty.rs","lib.rs"]]],\
 ["wgpu_macros",["",[],["lib.rs"]]],\
 ["wgpu_test",["",[],["config.rs","expectations.rs","image.rs","init.rs","isolation.rs","lib.rs","native.rs","params.rs","poll.rs","report.rs","run.rs"]]],\
-["wgpu_types",["",[],["assertions.rs","lib.rs","math.rs"]]]\
+["wgpu_types",["",[],["assertions.rs","counters.rs","lib.rs","math.rs"]]]\
 ]'));
 createSrcSidebar();

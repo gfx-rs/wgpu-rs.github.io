@@ -1549,6 +1549,71 @@
 <a href="#1548" id="1548">1548</a>
 <a href="#1549" id="1549">1549</a>
 <a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2183,6 +2248,8 @@
             <span class="prelude-val">None
         </span>};
 
+        <span class="self">self</span>.counters.buffers.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
             raw,
             target,
@@ -2191,11 +2258,14 @@
             data,
         })
     }
+
     <span class="kw">unsafe fn </span>destroy_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw">super</span>::Buffer) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = buffer.raw {
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">unsafe </span>{ gl.delete_buffer(raw) };
         }
+
+        <span class="self">self</span>.counters.buffers.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>map_buffer(
@@ -2492,6 +2562,8 @@
             <span class="kw">super</span>::TextureInner::Texture { raw, target }
         };
 
+        <span class="self">self</span>.counters.textures.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Texture {
             inner,
             drop_guard: <span class="prelude-val">None</span>,
@@ -2502,6 +2574,7 @@
             copy_size: desc.copy_extent(),
         })
     }
+
     <span class="kw">unsafe fn </span>destroy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw">super</span>::Texture) {
         <span class="kw">if </span>texture.drop_guard.is_none() {
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
@@ -2521,6 +2594,8 @@
         <span class="comment">// For clarity, we explicitly drop the drop guard. Although this has no real semantic effect as the
         // end of the scope will drop the drop guard since this function takes ownership of the texture.
         </span>drop(texture.drop_guard);
+
+        <span class="self">self</span>.counters.textures.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_texture_view(
@@ -2528,6 +2603,7 @@
         texture: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureViewDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::TextureView, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="self">self</span>.counters.texture_views.add(<span class="number">1</span>);
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::TextureView {
             <span class="comment">//TODO: use `conv::map_view_dimension(desc.dimension)`?
             </span>inner: texture.inner.clone(),
@@ -2537,7 +2613,10 @@
             format: texture.format,
         })
     }
-    <span class="kw">unsafe fn </span>destroy_texture_view(<span class="kw-2">&amp;</span><span class="self">self</span>, _view: <span class="kw">super</span>::TextureView) {}
+
+    <span class="kw">unsafe fn </span>destroy_texture_view(<span class="kw-2">&amp;</span><span class="self">self</span>, _view: <span class="kw">super</span>::TextureView) {
+        <span class="self">self</span>.counters.texture_views.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_sampler(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2631,34 +2710,47 @@
             }
         }
 
+        <span class="self">self</span>.counters.samplers.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Sampler { raw })
     }
+
     <span class="kw">unsafe fn </span>destroy_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: <span class="kw">super</span>::Sampler) {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
         <span class="kw">unsafe </span>{ gl.delete_sampler(sampler.raw) };
+        <span class="self">self</span>.counters.samplers.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_command_encoder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Api&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandEncoder, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="self">self</span>.counters.command_encoders.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::CommandEncoder {
             cmd_buffer: <span class="kw">super</span>::CommandBuffer::default(),
             state: Default::default(),
             private_caps: <span class="self">self</span>.shared.private_caps,
         })
     }
-    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, _encoder: <span class="kw">super</span>::CommandEncoder) {}
+
+    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, _encoder: <span class="kw">super</span>::CommandEncoder) {
+        <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_bind_group_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BindGroupLayoutDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::BindGroupLayout, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="self">self</span>.counters.bind_group_layouts.add(<span class="number">1</span>);
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroupLayout {
             entries: Arc::from(desc.entries),
         })
     }
-    <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, _bg_layout: <span class="kw">super</span>::BindGroupLayout) {}
+
+    <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, _bg_layout: <span class="kw">super</span>::BindGroupLayout) {
+        <span class="self">self</span>.counters.bind_group_layouts.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_pipeline_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2735,6 +2827,8 @@
             });
         }
 
+        <span class="self">self</span>.counters.pipeline_layouts.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineLayout {
             group_infos: group_infos.into_boxed_slice(),
             naga_options: glsl::Options {
@@ -2745,7 +2839,10 @@
             },
         })
     }
-    <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, _pipeline_layout: <span class="kw">super</span>::PipelineLayout) {}
+
+    <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, _pipeline_layout: <span class="kw">super</span>::PipelineLayout) {
+        <span class="self">self</span>.counters.pipeline_layouts.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2821,17 +2918,24 @@
             contents.push(binding);
         }
 
+        <span class="self">self</span>.counters.bind_groups.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::BindGroup {
             contents: contents.into_boxed_slice(),
         })
     }
-    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, _group: <span class="kw">super</span>::BindGroup) {}
+
+    <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, _group: <span class="kw">super</span>::BindGroup) {
+        <span class="self">self</span>.counters.bind_groups.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_shader_module(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ShaderModuleDescriptor,
         shader: <span class="kw">crate</span>::ShaderInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ShaderModule, <span class="kw">crate</span>::ShaderError&gt; {
+        <span class="self">self</span>.counters.shader_modules.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ShaderModule {
             naga: <span class="kw">match </span>shader {
                 <span class="kw">crate</span>::ShaderInput::SpirV(<span class="kw">_</span>) =&gt; {
@@ -2843,7 +2947,10 @@
             id: <span class="self">self</span>.shared.next_shader_id.fetch_add(<span class="number">1</span>, Ordering::Relaxed),
         })
     }
-    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, _module: <span class="kw">super</span>::ShaderModule) {}
+
+    <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, _module: <span class="kw">super</span>::ShaderModule) {
+        <span class="self">self</span>.counters.shader_modules.sub(<span class="number">1</span>);
+    }
 
     <span class="kw">unsafe fn </span>create_render_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2892,6 +2999,8 @@
             </span>targets.into_boxed_slice()
         };
 
+        <span class="self">self</span>.counters.render_pipelines.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::RenderPipeline {
             inner,
             primitive: desc.primitive,
@@ -2914,6 +3023,7 @@
             alpha_to_coverage_enabled: desc.multisample.alpha_to_coverage_enabled,
         })
     }
+
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
         <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
         <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache`
@@ -2928,6 +3038,8 @@
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
         }
+
+        <span class="self">self</span>.counters.render_pipelines.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_compute_pipeline(
@@ -2939,8 +3051,11 @@
         shaders.push((naga::ShaderStage::Compute, <span class="kw-2">&amp;</span>desc.stage));
         <span class="kw">let </span>inner = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_pipeline(gl, shaders, desc.layout, desc.label, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
 
+        <span class="self">self</span>.counters.compute_pipelines.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::ComputePipeline { inner })
     }
+
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::ComputePipeline) {
         <span class="kw">let </span><span class="kw-2">mut </span>program_cache = <span class="self">self</span>.shared.program_cache.lock();
         <span class="comment">// If the pipeline only has 2 strong references remaining, they're `pipeline` and `program_cache``
@@ -2955,6 +3070,8 @@
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">unsafe </span>{ gl.delete_program(pipeline.inner.program) };
         }
+
+        <span class="self">self</span>.counters.compute_pipelines.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_pipeline_cache(
@@ -2988,6 +3105,8 @@
             </span>queries.push(query);
         }
 
+        <span class="self">self</span>.counters.query_sets.add(<span class="number">1</span>);
+
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::QuerySet {
             queries: queries.into_boxed_slice(),
             target: <span class="kw">match </span>desc.ty {
@@ -2997,24 +3116,31 @@
             },
         })
     }
+
     <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, set: <span class="kw">super</span>::QuerySet) {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
         <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in </span>set.queries.iter() {
             <span class="kw">unsafe </span>{ gl.delete_query(query) };
         }
+        <span class="self">self</span>.counters.query_sets.sub(<span class="number">1</span>);
     }
+
     <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="self">self</span>.counters.fences.add(<span class="number">1</span>);
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Fence {
             last_completed: <span class="number">0</span>,
             pending: Vec::new(),
         })
     }
+
     <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: <span class="kw">super</span>::Fence) {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
         <span class="kw">for </span>(<span class="kw">_</span>, sync) <span class="kw">in </span>fence.pending {
             <span class="kw">unsafe </span>{ gl.delete_sync(sync) };
         }
+        <span class="self">self</span>.counters.fences.sub(<span class="number">1</span>);
     }
+
     <span class="kw">unsafe fn </span>get_fence_value(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
@@ -3093,6 +3219,10 @@
         <span class="macro">unimplemented!</span>()
     }
     <span class="kw">unsafe fn </span>destroy_acceleration_structure(<span class="kw-2">&amp;</span><span class="self">self</span>, _acceleration_structure: ()) {}
+
+    <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
+        <span class="self">self</span>.counters.clone()
+    }
 }
 
 <span class="attr">#[cfg(send_sync)]

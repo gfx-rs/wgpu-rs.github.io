@@ -1136,6 +1136,9 @@
 <a href="#1135" id="1135">1135</a>
 <a href="#1136" id="1136">1136</a>
 <a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -1181,6 +1184,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{ext, khr, vk};
 <span class="kw">use </span>parking_lot::{Mutex, RwLock};
+<span class="kw">use </span>wgt::InternalCounter;
 
 <span class="kw">const </span>MILLIS_TO_NANOS: u64 = <span class="number">1_000_000</span>;
 <span class="kw">const </span>MAX_TOTAL_ATTACHMENTS: usize = <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS * <span class="number">2 </span>+ <span class="number">1</span>;
@@ -1665,6 +1669,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     features: wgt::Features,
     render_passes: Mutex&lt;rustc_hash::FxHashMap&lt;RenderPassKey, vk::RenderPass&gt;&gt;,
     framebuffers: Mutex&lt;rustc_hash::FxHashMap&lt;FramebufferKey, vk::Framebuffer&gt;&gt;,
+    memory_allocations_counter: InternalCounter,
 }
 
 <span class="kw">pub struct </span>Device {
@@ -1676,6 +1681,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     naga_options: naga::back::spv::Options&lt;<span class="lifetime">'static</span>&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
     </span>render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
+    counters: wgt::HalCounters,
 }
 
 <span class="doccomment">/// Semaphores for forcing queue submissions to run in order.
