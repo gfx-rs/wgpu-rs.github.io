@@ -2723,12 +2723,15 @@
 <a href="#2722" id="2722">2722</a>
 <a href="#2723" id="2723">2723</a>
 <a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
 <span class="kw">use crate</span>::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, Handle, HandleVec, UniqueArena},
     ArraySize, BinaryOperator, Constant, Expression, Literal, Override, ScalarKind, Span, Type,
     TypeInner, UnaryOperator,
 };
@@ -3077,22 +3080,23 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ExpressionKindTracker {
-    inner: Vec&lt;ExpressionKind&gt;,
+    inner: HandleVec&lt;Expression, ExpressionKind&gt;,
 }
 
 <span class="kw">impl </span>ExpressionKindTracker {
     <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ inner: Vec::new() }
+        <span class="self">Self </span>{
+            inner: HandleVec::new(),
+        }
     }
 
     <span class="doccomment">/// Forces the the expression to not be const
     </span><span class="kw">pub fn </span>force_non_const(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Handle&lt;Expression&gt;) {
-        <span class="self">self</span>.inner[value.index()] = ExpressionKind::Runtime;
+        <span class="self">self</span>.inner[value] = ExpressionKind::Runtime;
     }
 
     <span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Handle&lt;Expression&gt;, expr_type: ExpressionKind) {
-        <span class="macro">assert_eq!</span>(<span class="self">self</span>.inner.len(), value.index());
-        <span class="self">self</span>.inner.push(expr_type);
+        <span class="self">self</span>.inner.insert(value, expr_type);
     }
     <span class="kw">pub fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, h: Handle&lt;Expression&gt;) -&gt; bool {
         <span class="macro">matches!</span>(<span class="self">self</span>.type_of(h), ExpressionKind::Const)
@@ -3106,15 +3110,17 @@
     }
 
     <span class="kw">fn </span>type_of(<span class="kw-2">&amp;</span><span class="self">self</span>, value: Handle&lt;Expression&gt;) -&gt; ExpressionKind {
-        <span class="self">self</span>.inner[value.index()]
+        <span class="self">self</span>.inner[value]
     }
 
     <span class="kw">pub fn </span>from_arena(arena: <span class="kw-2">&amp;</span>Arena&lt;Expression&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>tracker = <span class="self">Self </span>{
-            inner: Vec::with_capacity(arena.len()),
+            inner: HandleVec::with_capacity(arena.len()),
         };
-        <span class="kw">for </span>(<span class="kw">_</span>, expr) <span class="kw">in </span>arena.iter() {
-            tracker.inner.push(tracker.type_of_with_expr(expr));
+        <span class="kw">for </span>(handle, expr) <span class="kw">in </span>arena.iter() {
+            tracker
+                .inner
+                .insert(handle, tracker.type_of_with_expr(expr));
         }
         tracker
     }
