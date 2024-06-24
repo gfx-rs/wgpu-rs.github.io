@@ -346,7 +346,7 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
 </span><span class="kw">pub mod </span>wgsl;
 
 <span class="kw">use crate</span>::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, Handle, HandleVec, UniqueArena},
     proc::{ResolveContext, ResolveError, TypeResolution},
     FastHashMap,
 };
@@ -383,13 +383,13 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
 /// [`LocalVariable`]: crate::LocalVariable
 </span><span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>Typifier {
-    resolutions: Vec&lt;TypeResolution&gt;,
+    resolutions: HandleVec&lt;<span class="kw">crate</span>::Expression, TypeResolution&gt;,
 }
 
 <span class="kw">impl </span>Typifier {
     <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         Typifier {
-            resolutions: Vec::new(),
+            resolutions: HandleVec::new(),
         }
     }
 
@@ -402,7 +402,7 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
         expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     ) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::TypeInner {
-        <span class="self">self</span>.resolutions[expr_handle.index()].inner_with(types)
+        <span class="self">self</span>.resolutions[expr_handle].inner_with(types)
     }
 
     <span class="doccomment">/// Add an expression's type to an `Arena&lt;Type&gt;`.
@@ -442,9 +442,9 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
         <span class="kw">if </span><span class="self">self</span>.resolutions.len() &lt;= expr_handle.index() {
             <span class="kw">for </span>(eh, expr) <span class="kw">in </span>expressions.iter().skip(<span class="self">self</span>.resolutions.len()) {
                 <span class="comment">//Note: the closure can't `Err` by construction
-                </span><span class="kw">let </span>resolution = ctx.resolve(expr, |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[h.index()]))<span class="question-mark">?</span>;
+                </span><span class="kw">let </span>resolution = ctx.resolve(expr, |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[h]))<span class="question-mark">?</span>;
                 <span class="macro">log::debug!</span>(<span class="string">"Resolving {:?} = {:?} : {:?}"</span>, eh, expr, resolution);
-                <span class="self">self</span>.resolutions.push(resolution);
+                <span class="self">self</span>.resolutions.insert(eh, resolution);
             }
         }
         <span class="prelude-val">Ok</span>(())
@@ -468,8 +468,8 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
         } <span class="kw">else </span>{
             <span class="kw">let </span>expr = <span class="kw-2">&amp;</span>expressions[expr_handle];
             <span class="comment">//Note: the closure can't `Err` by construction
-            </span><span class="kw">let </span>resolution = ctx.resolve(expr, |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[h.index()]))<span class="question-mark">?</span>;
-            <span class="self">self</span>.resolutions[expr_handle.index()] = resolution;
+            </span><span class="kw">let </span>resolution = ctx.resolve(expr, |h| <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[h]))<span class="question-mark">?</span>;
+            <span class="self">self</span>.resolutions[expr_handle] = resolution;
             <span class="prelude-val">Ok</span>(())
         }
     }
@@ -478,7 +478,7 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
 <span class="kw">impl </span>ops::Index&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; <span class="kw">for </span>Typifier {
     <span class="kw">type </span>Output = TypeResolution;
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[handle.index()]
+        <span class="kw-2">&amp;</span><span class="self">self</span>.resolutions[handle]
     }
 }
 
