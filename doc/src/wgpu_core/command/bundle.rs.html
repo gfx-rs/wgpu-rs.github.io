@@ -1761,6 +1761,10 @@
 <a href="#1760" id="1760">1760</a>
 <a href="#1761" id="1761">1761</a>
 <a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1811,7 +1815,7 @@ To create a render bundle:
 3) Call [`Global::render_bundle_encoder_finish`][Grbef], which analyzes and cleans up
    the command stream and returns a `RenderBundleId`.
 
-4) Then, any number of times, call [`wgpu_render_pass_execute_bundles`][wrpeb] to
+4) Then, any number of times, call [`render_pass_execute_bundles`][wrpeb] to
    execute the bundle as part of some render pass.
 
 ## Implementation
@@ -1836,7 +1840,7 @@ index format changes.
 
 [Gdcrbe]: crate::global::Global::device_create_render_bundle_encoder
 [Grbef]: crate::global::Global::render_bundle_encoder_finish
-[wrpeb]: crate::command::render::render_commands::wgpu_render_pass_execute_bundles
+[wrpeb]: crate::global::Global::render_pass_execute_bundles
 !*/
 
 </span><span class="attr">#![allow(clippy::reversed_empty_ranges)]
@@ -1847,7 +1851,7 @@ index format changes.
     binding_model::{buffer_binding_type_alignment, BindGroup, BindGroupLayout, PipelineLayout},
     command::{
         BasePass, BindGroupStateChange, ColorAttachmentError, DrawError, MapPassErr,
-        PassErrorScope, RenderCommand, RenderCommandError, StateChange,
+        PassErrorScope, RenderCommandError, StateChange,
     },
     conv,
     device::{
@@ -1875,7 +1879,10 @@ index format changes.
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
-<span class="kw">use </span><span class="kw">super</span>::ArcRenderCommand;
+<span class="kw">use super</span>::{
+    render_command::{ArcRenderCommand, RenderCommand},
+    DrawKind,
+};
 
 <span class="doccomment">/// &lt;https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-draw&gt;
 </span><span class="kw">fn </span>validate_draw&lt;A: HalApi&gt;(
@@ -2090,7 +2097,7 @@ index format changes.
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>to_base_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BasePass&lt;RenderCommand&gt; {
-        BasePass::from_ref(<span class="self">self</span>.base.as_ref())
+        <span class="self">self</span>.base.clone()
     }
 
     <span class="kw">pub fn </span>parent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; id::DeviceId {
@@ -2161,10 +2168,11 @@ index format changes.
         <span class="kw">let </span><span class="kw-2">mut </span>buffer_memory_init_actions = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>texture_memory_init_actions = Vec::new();
 
-        <span class="kw">let </span>base = <span class="self">self</span>.base.as_ref();
         <span class="kw">let </span><span class="kw-2">mut </span>next_dynamic_offset = <span class="number">0</span>;
 
-        <span class="kw">for </span><span class="kw-2">&amp;</span>command <span class="kw">in </span>base.commands {
+        <span class="kw">let </span>base = <span class="kw-2">&amp;</span><span class="self">self</span>.base;
+
+        <span class="kw">for </span><span class="kw-2">&amp;</span>command <span class="kw">in </span><span class="kw-2">&amp;</span>base.commands {
             <span class="kw">match </span>command {
                 RenderCommand::SetBindGroup {
                     index,
@@ -2384,8 +2392,8 @@ index format changes.
                     first_instance,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
+                        kind: DrawKind::Draw,
                         indexed: <span class="bool-val">false</span>,
-                        indirect: <span class="bool-val">false</span>,
                         pipeline: state.pipeline_id(),
                     };
                     <span class="kw">let </span>pipeline = state.pipeline(scope)<span class="question-mark">?</span>;
@@ -2402,7 +2410,7 @@ index format changes.
 
                     <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; vertex_count &gt; <span class="number">0 </span>{
                         commands.extend(state.flush_vertices());
-                        commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                        commands.extend(state.flush_binds(used_bind_groups, <span class="kw-2">&amp;</span>base.dynamic_offsets));
                         commands.push(ArcRenderCommand::Draw {
                             vertex_count,
                             instance_count,
@@ -2419,8 +2427,8 @@ index format changes.
                     first_instance,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
+                        kind: DrawKind::Draw,
                         indexed: <span class="bool-val">true</span>,
-                        indirect: <span class="bool-val">false</span>,
                         pipeline: state.pipeline_id(),
                     };
                     <span class="kw">let </span>pipeline = state.pipeline(scope)<span class="question-mark">?</span>;
@@ -2443,7 +2451,7 @@ index format changes.
                     <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; index_count &gt; <span class="number">0 </span>{
                         commands.extend(state.flush_index());
                         commands.extend(state.flush_vertices());
-                        commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                        commands.extend(state.flush_binds(used_bind_groups, <span class="kw-2">&amp;</span>base.dynamic_offsets));
                         commands.push(ArcRenderCommand::DrawIndexed { index_count, instance_count, first_index, base_vertex, first_instance });
                     }
                 }
@@ -2454,8 +2462,8 @@ index format changes.
                     indexed: <span class="bool-val">false</span>,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
+                        kind: DrawKind::DrawIndirect,
                         indexed: <span class="bool-val">false</span>,
-                        indirect: <span class="bool-val">true</span>,
                         pipeline: state.pipeline_id(),
                     };
                     device
@@ -2487,7 +2495,7 @@ index format changes.
                     ));
 
                     commands.extend(state.flush_vertices());
-                    commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                    commands.extend(state.flush_binds(used_bind_groups, <span class="kw-2">&amp;</span>base.dynamic_offsets));
                     commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: <span class="prelude-val">None</span>, indexed: <span class="bool-val">false </span>});
                 }
                 RenderCommand::MultiDrawIndirect {
@@ -2497,8 +2505,8 @@ index format changes.
                     indexed: <span class="bool-val">true</span>,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
+                        kind: DrawKind::DrawIndirect,
                         indexed: <span class="bool-val">true</span>,
-                        indirect: <span class="bool-val">true</span>,
                         pipeline: state.pipeline_id(),
                     };
                     device
@@ -2536,7 +2544,7 @@ index format changes.
 
                     commands.extend(index.flush());
                     commands.extend(state.flush_vertices());
-                    commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
+                    commands.extend(state.flush_binds(used_bind_groups, <span class="kw-2">&amp;</span>base.dynamic_offsets));
                     commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: <span class="prelude-val">None</span>, indexed: <span class="bool-val">true </span>});
                 }
                 RenderCommand::MultiDrawIndirect { .. }

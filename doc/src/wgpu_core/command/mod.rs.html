@@ -963,22 +963,6 @@
 <a href="#962" id="962">962</a>
 <a href="#963" id="963">963</a>
 <a href="#964" id="964">964</a>
-<a href="#965" id="965">965</a>
-<a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a>
-<a href="#968" id="968">968</a>
-<a href="#969" id="969">969</a>
-<a href="#970" id="970">970</a>
-<a href="#971" id="971">971</a>
-<a href="#972" id="972">972</a>
-<a href="#973" id="973">973</a>
-<a href="#974" id="974">974</a>
-<a href="#975" id="975">975</a>
-<a href="#976" id="976">976</a>
-<a href="#977" id="977">977</a>
-<a href="#978" id="978">978</a>
-<a href="#979" id="979">979</a>
-<a href="#980" id="980">980</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -990,6 +974,7 @@
 <span class="kw">mod </span>memory_init;
 <span class="kw">mod </span>query;
 <span class="kw">mod </span>render;
+<span class="kw">mod </span>render_command;
 <span class="kw">mod </span>transfer;
 
 <span class="kw">use </span>std::sync::Arc;
@@ -997,7 +982,8 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::clear::clear_texture;
 <span class="kw">pub use </span><span class="self">self</span>::{
     bundle::<span class="kw-2">*</span>, clear::ClearError, compute::<span class="kw-2">*</span>, compute_command::ComputeCommand, draw::<span class="kw-2">*</span>,
-    dyn_compute_pass::DynComputePass, query::<span class="kw-2">*</span>, render::<span class="kw-2">*</span>, transfer::<span class="kw-2">*</span>,
+    dyn_compute_pass::DynComputePass, query::<span class="kw-2">*</span>, render::<span class="kw-2">*</span>, render_command::RenderCommand,
+    transfer::<span class="kw-2">*</span>,
 };
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>allocator::CommandAllocator;
 
@@ -1525,15 +1511,6 @@
     }
 }
 
-<span class="attr">#[derive(Copy, Clone, Debug)]
-</span><span class="kw">pub struct </span>BasePassRef&lt;<span class="lifetime">'a</span>, C&gt; {
-    <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
-    <span class="kw">pub </span>commands: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[C],
-    <span class="kw">pub </span>dynamic_offsets: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[wgt::DynamicOffset],
-    <span class="kw">pub </span>string_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
-    <span class="kw">pub </span>push_constant_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u32],
-}
-
 <span class="doccomment">/// A stream of commands for a render pass or compute pass.
 ///
 /// This also contains side tables referred to by certain commands,
@@ -1546,7 +1523,7 @@
 /// [`SetBindGroup`]: RenderCommand::SetBindGroup
 /// [`InsertDebugMarker`]: RenderCommand::InsertDebugMarker
 </span><span class="attr">#[doc(hidden)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub struct </span>BasePass&lt;C&gt; {
     <span class="kw">pub </span>label: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -1581,27 +1558,6 @@
             dynamic_offsets: Vec::new(),
             string_data: Vec::new(),
             push_constant_data: Vec::new(),
-        }
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-    </span><span class="kw">fn </span>from_ref(base: BasePassRef&lt;C&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            label: base.label.map(str::to_string),
-            commands: base.commands.to_vec(),
-            dynamic_offsets: base.dynamic_offsets.to_vec(),
-            string_data: base.string_data.to_vec(),
-            push_constant_data: base.push_constant_data.to_vec(),
-        }
-    }
-
-    <span class="kw">pub fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BasePassRef&lt;C&gt; {
-        BasePassRef {
-            label: <span class="self">self</span>.label.as_deref(),
-            commands: <span class="kw-2">&amp;</span><span class="self">self</span>.commands,
-            dynamic_offsets: <span class="kw-2">&amp;</span><span class="self">self</span>.dynamic_offsets,
-            string_data: <span class="kw-2">&amp;</span><span class="self">self</span>.string_data,
-            push_constant_data: <span class="kw-2">&amp;</span><span class="self">self</span>.push_constant_data,
         }
     }
 }
@@ -1860,6 +1816,14 @@
     <span class="kw">fn </span>map_pass_err(<span class="self">self</span>, scope: PassErrorScope) -&gt; <span class="prelude-ty">Result</span>&lt;T, O&gt;;
 }
 
+<span class="attr">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub enum </span>DrawKind {
+    Draw,
+    DrawIndirect,
+    MultiDrawIndirect,
+    MultiDrawIndirectCount,
+}
+
 <span class="attr">#[derive(Clone, Copy, Debug, Error)]
 </span><span class="kw">pub enum </span>PassErrorScope {
     <span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
@@ -1883,14 +1847,18 @@
     </span>SetVertexBuffer(id::BufferId),
     <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
     </span>SetIndexBuffer(id::BufferId),
+    <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
+    </span>SetBlendConstant,
+    <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
+    </span>SetStencilReference,
     <span class="attr">#[error(<span class="string">"In a set_viewport command"</span>)]
     </span>SetViewport,
     <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
     </span>SetScissorRect,
-    <span class="attr">#[error(<span class="string">"In a draw command, indexed:{indexed} indirect:{indirect}"</span>)]
+    <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
     </span>Draw {
+        kind: DrawKind,
         indexed: bool,
-        indirect: bool,
         pipeline: <span class="prelude-ty">Option</span>&lt;id::RenderPipelineId&gt;,
     },
     <span class="attr">#[error(<span class="string">"While resetting queries after the renderpass was ran"</span>)]
