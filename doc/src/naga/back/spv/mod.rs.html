@@ -1347,32 +1347,32 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 /// - OpConstantComposite
 /// - OpConstantNull
 </span><span class="kw">struct </span>ExpressionConstnessTracker {
-    inner: bit_set::BitSet,
+    inner: <span class="kw">crate</span>::arena::HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 }
 
 <span class="kw">impl </span>ExpressionConstnessTracker {
     <span class="kw">fn </span>from_arena(arena: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = bit_set::BitSet::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">crate</span>::arena::HandleSet::for_arena(arena);
         <span class="kw">for </span>(handle, expr) <span class="kw">in </span>arena.iter() {
             <span class="kw">let </span>insert = <span class="kw">match </span><span class="kw-2">*</span>expr {
                 <span class="kw">crate</span>::Expression::Literal(<span class="kw">_</span>)
                 | <span class="kw">crate</span>::Expression::ZeroValue(<span class="kw">_</span>)
                 | <span class="kw">crate</span>::Expression::Constant(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
                 <span class="kw">crate</span>::Expression::Compose { <span class="kw-2">ref </span>components, .. } =&gt; {
-                    components.iter().all(|h| inner.contains(h.index()))
+                    components.iter().all(|<span class="kw-2">&amp;</span>h| inner.contains(h))
                 }
-                <span class="kw">crate</span>::Expression::Splat { value, .. } =&gt; inner.contains(value.index()),
+                <span class="kw">crate</span>::Expression::Splat { value, .. } =&gt; inner.contains(value),
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             };
             <span class="kw">if </span>insert {
-                inner.insert(handle.index());
+                inner.insert(handle);
             }
         }
         <span class="self">Self </span>{ inner }
     }
 
     <span class="kw">fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, value: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
-        <span class="self">self</span>.inner.contains(value.index())
+        <span class="self">self</span>.inner.contains(value)
     }
 }
 

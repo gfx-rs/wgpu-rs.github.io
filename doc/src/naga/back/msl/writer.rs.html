@@ -5984,18 +5984,14 @@
 <a href="#5983" id="5983">5983</a>
 <a href="#5984" id="5984">5984</a>
 <a href="#5985" id="5985">5985</a>
-<a href="#5986" id="5986">5986</a>
-<a href="#5987" id="5987">5987</a>
-<a href="#5988" id="5988">5988</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
-    arena::Handle,
+    arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
     proc::index,
     proc::{<span class="self">self</span>, NameKey, TypeResolution},
     valid, FastHashMap, FastHashSet,
 };
-<span class="kw">use </span>bit_set::BitSet;
 <span class="kw">use </span>std::{
     fmt::{Display, Error <span class="kw">as </span>FmtError, Formatter, Write},
     iter,
@@ -6573,11 +6569,10 @@
     lang_version: (u8, u8),
     policies: index::BoundsCheckPolicies,
 
-    <span class="doccomment">/// A bitset containing the `Expression` handle indexes of expressions used
-    /// as indices in `ReadZeroSkipWrite`-policy accesses. These may need to be
-    /// cached in temporary variables. See `index::find_checked_indexes` for
-    /// details.
-    </span>guarded_indices: BitSet,
+    <span class="doccomment">/// The set of expressions used as indices in `ReadZeroSkipWrite`-policy
+    /// accesses. These may need to be cached in temporary variables. See
+    /// `index::find_checked_indexes` for details.
+    </span>guarded_indices: HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ExpressionContext&lt;<span class="lifetime">'a</span>&gt; {
@@ -8862,12 +8857,11 @@
                             <span class="comment">// If this expression is an index that we're going to first compare
                             // against a limit, and then actually use as an index, then we may
                             // want to cache it in a temporary, to avoid evaluating it twice.
-                            </span><span class="kw">let </span>bake =
-                                <span class="kw">if </span>context.expression.guarded_indices.contains(handle.index()) {
-                                    <span class="bool-val">true
-                                </span>} <span class="kw">else </span>{
-                                    <span class="self">self</span>.need_bake_expressions.contains(<span class="kw-2">&amp;</span>handle)
-                                };
+                            </span><span class="kw">let </span>bake = <span class="kw">if </span>context.expression.guarded_indices.contains(handle) {
+                                <span class="bool-val">true
+                            </span>} <span class="kw">else </span>{
+                                <span class="self">self</span>.need_bake_expressions.contains(<span class="kw-2">&amp;</span>handle)
+                            };
 
                             <span class="kw">if </span>bake {
                                 <span class="prelude-val">Some</span>(Baked(handle).to_string())

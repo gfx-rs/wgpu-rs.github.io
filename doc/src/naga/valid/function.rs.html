@@ -1481,12 +1481,8 @@
 <a href="#1480" id="1480">1480</a>
 <a href="#1481" id="1481">1481</a>
 <a href="#1482" id="1482">1482</a>
-<a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
-<span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
+<span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleSet};
 
 <span class="kw">use </span><span class="kw">super</span>::validate_atomic_compare_exchange_struct;
 
@@ -1496,8 +1492,6 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::span::WithSpan;
 <span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, MapErrWithSpan <span class="kw">as _</span>};
-
-<span class="kw">use </span>bit_set::BitSet;
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -1744,9 +1738,9 @@
     <span class="kw">fn </span>resolve_type_impl(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        valid_expressions: <span class="kw-2">&amp;</span>BitSet,
+        valid_expressions: <span class="kw-2">&amp;</span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner, WithSpan&lt;ExpressionError&gt;&gt; {
-        <span class="kw">if </span>!valid_expressions.contains(handle.index()) {
+        <span class="kw">if </span>!valid_expressions.contains(handle) {
             <span class="prelude-val">Err</span>(ExpressionError::NotInScope.with_span_handle(handle, <span class="self">self</span>.expressions))
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(<span class="self">self</span>.info[handle].ty.inner_with(<span class="self">self</span>.types))
@@ -1756,7 +1750,7 @@
     <span class="kw">fn </span>resolve_type(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        valid_expressions: <span class="kw-2">&amp;</span>BitSet,
+        valid_expressions: <span class="kw-2">&amp;</span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner, WithSpan&lt;FunctionError&gt;&gt; {
         <span class="self">self</span>.resolve_type_impl(handle, valid_expressions)
             .map_err_inner(|source| FunctionError::Expression { handle, source }.with_span())
@@ -1802,7 +1796,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = result {
-            <span class="kw">if </span><span class="self">self</span>.valid_expression_set.insert(expr.index()) {
+            <span class="kw">if </span><span class="self">self</span>.valid_expression_set.insert(expr) {
                 <span class="self">self</span>.valid_expression_list.push(expr);
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(CallError::ResultAlreadyInScope(expr)
@@ -1812,7 +1806,7 @@
                 <span class="kw">crate</span>::Expression::CallResult(callee)
                     <span class="kw">if </span>fun.result.is_some() &amp;&amp; callee == function =&gt;
                 {
-                    <span class="kw">if </span>!<span class="self">self</span>.needs_visit.remove(expr.index()) {
+                    <span class="kw">if </span>!<span class="self">self</span>.needs_visit.remove(expr) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(CallError::ResultAlreadyPopulated(expr)
                             .with_span_handle(expr, context.expressions));
                     }
@@ -1835,7 +1829,7 @@
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         context: <span class="kw-2">&amp;</span>BlockContext,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), WithSpan&lt;FunctionError&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.valid_expression_set.insert(handle.index()) {
+        <span class="kw">if </span><span class="self">self</span>.valid_expression_set.insert(handle) {
             <span class="self">self</span>.valid_expression_list.push(handle);
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
@@ -1951,7 +1945,7 @@
 
                 <span class="comment">// Note that this expression has been visited by the proper kind
                 // of statement.
-                </span><span class="kw">if </span>!<span class="self">self</span>.needs_visit.remove(result.index()) {
+                </span><span class="kw">if </span>!<span class="self">self</span>.needs_visit.remove(result) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::ResultAlreadyPopulated(result)
                         .with_span_handle(result, context.expressions)
                         .into_other());
@@ -2351,7 +2345,7 @@
                     }
 
                     <span class="kw">for </span>handle <span class="kw">in </span><span class="self">self</span>.valid_expression_list.drain(base_expression_count..) {
-                        <span class="self">self</span>.valid_expression_set.remove(handle.index());
+                        <span class="self">self</span>.valid_expression_set.remove(handle);
                     }
                 }
                 S::Break =&gt; {
@@ -2808,7 +2802,7 @@
         <span class="kw">let </span>base_expression_count = <span class="self">self</span>.valid_expression_list.len();
         <span class="kw">let </span>info = <span class="self">self</span>.validate_block_impl(statements, context)<span class="question-mark">?</span>;
         <span class="kw">for </span>handle <span class="kw">in </span><span class="self">self</span>.valid_expression_list.drain(base_expression_count..) {
-            <span class="self">self</span>.valid_expression_set.remove(handle.index());
+            <span class="self">self</span>.valid_expression_set.remove(handle);
         }
         <span class="prelude-val">Ok</span>(info)
     }
@@ -2916,12 +2910,12 @@
             }
         }
 
-        <span class="self">self</span>.valid_expression_set.clear();
+        <span class="self">self</span>.valid_expression_set.clear_for_arena(<span class="kw-2">&amp;</span>fun.expressions);
         <span class="self">self</span>.valid_expression_list.clear();
-        <span class="self">self</span>.needs_visit.clear();
+        <span class="self">self</span>.needs_visit.clear_for_arena(<span class="kw-2">&amp;</span>fun.expressions);
         <span class="kw">for </span>(handle, expr) <span class="kw">in </span>fun.expressions.iter() {
             <span class="kw">if </span>expr.needs_pre_emit() {
-                <span class="self">self</span>.valid_expression_set.insert(handle.index());
+                <span class="self">self</span>.valid_expression_set.insert(handle);
             }
             <span class="kw">if </span><span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::EXPRESSIONS) {
                 <span class="comment">// Mark expressions that need to be visited by a particular kind of
@@ -2929,7 +2923,7 @@
                 </span><span class="kw">if let </span><span class="kw">crate</span>::Expression::CallResult(<span class="kw">_</span>) | <span class="kw">crate</span>::Expression::AtomicResult { .. } =
                     <span class="kw-2">*</span>expr
                 {
-                    <span class="self">self</span>.needs_visit.insert(handle.index());
+                    <span class="self">self</span>.needs_visit.insert(handle);
                 }
 
                 <span class="kw">match </span><span class="self">self</span>.validate_expression(
@@ -2960,9 +2954,7 @@
             info.available_stages &amp;= stages;
 
             <span class="kw">if </span><span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::EXPRESSIONS) {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(unvisited) = <span class="self">self</span>.needs_visit.iter().next() {
-                    <span class="kw">let </span>index = <span class="kw">crate</span>::non_max_u32::NonMaxU32::new(unvisited <span class="kw">as </span>u32).unwrap();
-                    <span class="kw">let </span>handle = Handle::new(index);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = <span class="self">self</span>.needs_visit.iter().next() {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::UnvisitedExpression(handle)
                         .with_span_handle(handle, <span class="kw-2">&amp;</span>fun.expressions));
                 }
