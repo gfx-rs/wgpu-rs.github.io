@@ -975,33 +975,7 @@
 <a href="#974" id="974">974</a>
 <a href="#975" id="975">975</a>
 <a href="#976" id="976">976</a>
-<a href="#977" id="977">977</a>
-<a href="#978" id="978">978</a>
-<a href="#979" id="979">979</a>
-<a href="#980" id="980">980</a>
-<a href="#981" id="981">981</a>
-<a href="#982" id="982">982</a>
-<a href="#983" id="983">983</a>
-<a href="#984" id="984">984</a>
-<a href="#985" id="985">985</a>
-<a href="#986" id="986">986</a>
-<a href="#987" id="987">987</a>
-<a href="#988" id="988">988</a>
-<a href="#989" id="989">989</a>
-<a href="#990" id="990">990</a>
-<a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a>
-<a href="#1000" id="1000">1000</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
-<span class="kw">use crate</span>::{
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
@@ -1478,7 +1452,6 @@
     <span class="attr">#[allow(unused)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding_count_validator: BindingTypeMaxCountValidator,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupLayout&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
@@ -1487,12 +1460,7 @@
             <span class="self">self</span>.device.bgl_pool.remove(<span class="kw-2">&amp;</span><span class="self">self</span>.entries);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyBindGroupLayout(<span class="self">self</span>.info.id()));
-            }
-
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw BindGroupLayout {:?}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_bind_group_layout(raw);
@@ -1512,10 +1480,6 @@
 
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.label
     }
 }
 
@@ -1638,13 +1602,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>PipelineLayout&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw PipelineLayout {:?}"</span>, <span class="self">self</span>.info.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyPipelineLayout(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_pipeline_layout(raw);
@@ -1879,13 +1837,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroup&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw BindGroup {:?}"</span>, <span class="self">self</span>.info.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyBindGroup(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_bind_group(raw);

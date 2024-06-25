@@ -1203,6 +1203,7 @@
 <a href="#1202" id="1202">1202</a>
 <a href="#1203" id="1203">1203</a>
 <a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     command::{
@@ -1278,11 +1279,6 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>parent_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt; {
-        <span class="self">self</span>.parent.as_ref().map(|cmd_buf| cmd_buf.as_info().id())
-    }
-
-    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="self">self</span>.base.as_ref().and_then(|base| base.label.as_deref())
     }
@@ -1300,7 +1296,10 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; fmt::Debug <span class="kw">for </span>ComputePass&lt;A&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">"ComputePass {{ parent: {:?} }}"</span>, <span class="self">self</span>.parent_id())
+        <span class="kw">match </span><span class="self">self</span>.parent {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>cmd_buf) =&gt; <span class="macro">write!</span>(f, <span class="string">"ComputePass {{ parent: {} }}"</span>, cmd_buf.error_ident()),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">write!</span>(f, <span class="string">"ComputePass {{ parent: None }}"</span>),
+        }
     }
 }
 
@@ -1585,19 +1584,22 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
-        <span class="kw">let </span>scope = PassErrorScope::Pass(pass.parent_id());
-        <span class="kw">let </span><span class="prelude-val">Some</span>(parent) = pass.parent.as_ref() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::InvalidParentEncoder).map_pass_err(scope);
-        };
+        <span class="kw">let </span>cmd_buf = pass
+            .parent
+            .as_ref()
+            .ok_or(ComputePassErrorInner::InvalidParentEncoder)
+            .map_pass_err(PassErrorScope::Pass(<span class="prelude-val">None</span>))<span class="question-mark">?</span>;
 
-        parent.unlock_encoder().map_pass_err(scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>scope = PassErrorScope::Pass(<span class="prelude-val">Some</span>(cmd_buf.as_info().id()));
+
+        cmd_buf.unlock_encoder().map_pass_err(scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>base = pass
             .base
             .take()
             .ok_or(ComputePassErrorInner::PassEnded)
             .map_pass_err(scope)<span class="question-mark">?</span>;
-        <span class="self">self</span>.compute_pass_end_impl(parent, base, pass.timestamp_writes.take())
+        <span class="self">self</span>.compute_pass_end_impl(cmd_buf, base, pass.timestamp_writes.take())
     }
 
     <span class="attr">#[doc(hidden)]

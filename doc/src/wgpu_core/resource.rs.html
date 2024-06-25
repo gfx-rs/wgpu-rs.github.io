@@ -1815,72 +1815,6 @@
 <a href="#1814" id="1814">1814</a>
 <a href="#1815" id="1815">1815</a>
 <a href="#1816" id="1816">1816</a>
-<a href="#1817" id="1817">1817</a>
-<a href="#1818" id="1818">1818</a>
-<a href="#1819" id="1819">1819</a>
-<a href="#1820" id="1820">1820</a>
-<a href="#1821" id="1821">1821</a>
-<a href="#1822" id="1822">1822</a>
-<a href="#1823" id="1823">1823</a>
-<a href="#1824" id="1824">1824</a>
-<a href="#1825" id="1825">1825</a>
-<a href="#1826" id="1826">1826</a>
-<a href="#1827" id="1827">1827</a>
-<a href="#1828" id="1828">1828</a>
-<a href="#1829" id="1829">1829</a>
-<a href="#1830" id="1830">1830</a>
-<a href="#1831" id="1831">1831</a>
-<a href="#1832" id="1832">1832</a>
-<a href="#1833" id="1833">1833</a>
-<a href="#1834" id="1834">1834</a>
-<a href="#1835" id="1835">1835</a>
-<a href="#1836" id="1836">1836</a>
-<a href="#1837" id="1837">1837</a>
-<a href="#1838" id="1838">1838</a>
-<a href="#1839" id="1839">1839</a>
-<a href="#1840" id="1840">1840</a>
-<a href="#1841" id="1841">1841</a>
-<a href="#1842" id="1842">1842</a>
-<a href="#1843" id="1843">1843</a>
-<a href="#1844" id="1844">1844</a>
-<a href="#1845" id="1845">1845</a>
-<a href="#1846" id="1846">1846</a>
-<a href="#1847" id="1847">1847</a>
-<a href="#1848" id="1848">1848</a>
-<a href="#1849" id="1849">1849</a>
-<a href="#1850" id="1850">1850</a>
-<a href="#1851" id="1851">1851</a>
-<a href="#1852" id="1852">1852</a>
-<a href="#1853" id="1853">1853</a>
-<a href="#1854" id="1854">1854</a>
-<a href="#1855" id="1855">1855</a>
-<a href="#1856" id="1856">1856</a>
-<a href="#1857" id="1857">1857</a>
-<a href="#1858" id="1858">1858</a>
-<a href="#1859" id="1859">1859</a>
-<a href="#1860" id="1860">1860</a>
-<a href="#1861" id="1861">1861</a>
-<a href="#1862" id="1862">1862</a>
-<a href="#1863" id="1863">1863</a>
-<a href="#1864" id="1864">1864</a>
-<a href="#1865" id="1865">1865</a>
-<a href="#1866" id="1866">1866</a>
-<a href="#1867" id="1867">1867</a>
-<a href="#1868" id="1868">1868</a>
-<a href="#1869" id="1869">1869</a>
-<a href="#1870" id="1870">1870</a>
-<a href="#1871" id="1871">1871</a>
-<a href="#1872" id="1872">1872</a>
-<a href="#1873" id="1873">1873</a>
-<a href="#1874" id="1874">1874</a>
-<a href="#1875" id="1875">1875</a>
-<a href="#1876" id="1876">1876</a>
-<a href="#1877" id="1877">1877</a>
-<a href="#1878" id="1878">1878</a>
-<a href="#1879" id="1879">1879</a>
-<a href="#1880" id="1880">1880</a>
-<a href="#1881" id="1881">1881</a>
-<a href="#1882" id="1882">1882</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1954,7 +1888,7 @@
     </span>submission_index: AtomicUsize,
 
     <span class="doccomment">/// The `label` from the descriptor used to create the resource.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    </span>label: String,
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; Drop <span class="kw">for </span>ResourceInfo&lt;T&gt; {
@@ -1966,10 +1900,8 @@
 }
 
 <span class="kw">impl</span>&lt;T: Resource&gt; ResourceInfo&lt;T&gt; {
-    <span class="comment">// Note: Abstractly, this function should take `label: String` to minimize string cloning.
-    // But as actually used, every input is a literal or borrowed `&amp;str`, so this is convenient.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
-        label: <span class="kw-2">&amp;</span>str,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        label: <span class="kw-2">&amp;</span>Label,
         tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>tracker_index = tracker_indices
@@ -1981,24 +1913,12 @@
             tracker_index,
             tracker_indices,
             submission_index: AtomicUsize::new(<span class="number">0</span>),
-            label: label.to_string(),
+            label: label
+                .as_ref()
+                .map(|label| label.to_string())
+                .unwrap_or_default(),
         }
     }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug
-    <span class="kw">where
-        </span>Id&lt;T::Marker&gt;: Debug,
-    {
-        <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
-            <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="kw-2">&amp;</span><span class="self">self</span>.id {
-            <span class="kw">return </span>id;
-        }
-
-        <span class="kw-2">&amp;</span><span class="string">""
-    </span>}
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
         <span class="self">self</span>.id.unwrap()
@@ -2041,28 +1961,29 @@
     <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;;
 
     <span class="kw">fn </span>same_device_as&lt;O: ParentDevice&lt;A&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>O) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="self">self</span>.device()
-            .is_equal(other.device())
-            .then_some(())
-            .ok_or_else(|| {
-                DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
-                    res: <span class="self">self</span>.error_ident(),
-                    res_device: <span class="self">self</span>.device().error_ident(),
-                    target: <span class="prelude-val">Some</span>(other.error_ident()),
-                    target_device: other.device().error_ident(),
-                }))
-            })
+        <span class="kw">if </span><span class="self">self</span>.device().is_equal(other.device()) {
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
+                res: <span class="self">self</span>.error_ident(),
+                res_device: <span class="self">self</span>.device().error_ident(),
+                target: <span class="prelude-val">Some</span>(other.error_ident()),
+                target_device: other.device().error_ident(),
+            })))
+        }
     }
 
     <span class="kw">fn </span>same_device(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="self">self</span>.device().is_equal(device).then_some(()).ok_or_else(|| {
-            DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
+        <span class="kw">if </span><span class="self">self</span>.device().is_equal(device) {
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
                 res: <span class="self">self</span>.error_ident(),
                 res_device: <span class="self">self</span>.device().error_ident(),
                 target: <span class="prelude-val">None</span>,
                 target_device: device.error_ident(),
-            }))
-        })
+            })))
+        }
     }
 }
 
@@ -2353,13 +2274,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Buffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer (dropped) {:?}"</span>, <span class="self">self</span>.info.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyBuffer(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -2398,14 +2313,15 @@
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         expected: wgt::BufferUsages,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MissingBufferUsageError&gt; {
-        <span class="self">self</span>.usage
-            .contains(expected)
-            .then_some(())
-            .ok_or_else(|| MissingBufferUsageError {
+        <span class="kw">if </span><span class="self">self</span>.usage.contains(expected) {
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(MissingBufferUsageError {
                 res: <span class="self">self</span>.error_ident(),
                 actual: <span class="self">self</span>.usage,
                 expected,
             })
+        }
     }
 
     <span class="doccomment">/// Returns the mapping callback in case of error so that the callback can be fired outside
@@ -2509,8 +2425,14 @@
     }
 
     <span class="comment">// Note: This must not be called while holding a lock.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unmap(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), BufferAccessError&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>operation, status)) = <span class="self">self</span>.unmap_inner()<span class="question-mark">? </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unmap(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>buffer_id: BufferId,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BufferAccessError&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>operation, status)) = <span class="self">self</span>.unmap_inner(
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span>buffer_id,
+        )<span class="question-mark">? </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
                 callback.call(status);
             }
@@ -2519,7 +2441,10 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>unmap_inner(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BufferMapPendingClosure&gt;, BufferAccessError&gt; {
+    <span class="kw">fn </span>unmap_inner(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>buffer_id: BufferId,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BufferMapPendingClosure&gt;, BufferAccessError&gt; {
         <span class="kw">use </span>hal::Device;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
@@ -2538,7 +2463,7 @@
                         std::slice::from_raw_parts(ptr.as_ptr(), <span class="self">self</span>.size <span class="kw">as </span>usize)
                     });
                     trace.add(trace::Action::WriteBuffer {
-                        id: <span class="self">self</span>.info.id(),
+                        id: buffer_id,
                         data,
                         range: <span class="number">0</span>..<span class="self">self</span>.size,
                         queued: <span class="bool-val">true</span>,
@@ -2602,7 +2527,7 @@
                             std::slice::from_raw_parts(ptr.as_ptr(), size <span class="kw">as </span>usize)
                         });
                         trace.add(trace::Action::WriteBuffer {
-                            id: <span class="self">self</span>.info.id(),
+                            id: buffer_id,
                             data,
                             range: range.clone(),
                             queued: <span class="bool-val">false</span>,
@@ -2624,11 +2549,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyError&gt; {
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            trace.add(trace::Action::FreeBuffer(<span class="self">self</span>.info.id()));
-        }
-
         <span class="kw">let </span>temp = {
             <span class="kw">let </span>snatch_guard = device.snatchable_lock.write();
             <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.raw.snatch(snatch_guard) {
@@ -2647,9 +2567,8 @@
                 raw: <span class="prelude-val">Some</span>(raw),
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 submission_index: <span class="self">self</span>.info.submission_index(),
-                id: <span class="self">self</span>.info.id.unwrap(),
                 tracker_index: <span class="self">self</span>.info.tracker_index(),
-                label: <span class="self">self</span>.info.label.clone(),
+                label: <span class="self">self</span>.label().to_owned(),
                 bind_groups,
             }))
         };
@@ -2714,7 +2633,6 @@
     raw: <span class="prelude-ty">Option</span>&lt;A::Buffer&gt;,
     device: Arc&lt;Device&lt;A&gt;&gt;,
     label: String,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: BufferId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracker_index: TrackerIndex,
     <span class="kw">pub</span>(<span class="kw">crate</span>) submission_index: u64,
     bind_groups: Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;,
@@ -2722,11 +2640,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; DestroyedBuffer&lt;A&gt; {
     <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug {
-        <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
-            <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
-        }
-
-        <span class="kw-2">&amp;</span><span class="self">self</span>.id
+        <span class="kw-2">&amp;</span><span class="self">self</span>.label
     }
 }
 
@@ -2740,11 +2654,6 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Buffer (destroyed) {:?}"</span>, <span class="self">self</span>.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyBuffer(<span class="self">self</span>.id));
-            }
 
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
@@ -2785,7 +2694,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.lock().take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw StagingBuffer {:?}"</span>, <span class="self">self</span>.info.label());
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_buffer(raw);
@@ -2806,10 +2715,6 @@
     <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
-
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="string">"&lt;StagingBuffer&gt;"
-    </span>}
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>StagingBuffer&lt;A&gt; {
@@ -2879,21 +2784,20 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         expected: wgt::TextureUsages,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MissingTextureUsageError&gt; {
-        <span class="self">self</span>.desc
-            .usage
-            .contains(expected)
-            .then_some(())
-            .ok_or_else(|| MissingTextureUsageError {
+        <span class="kw">if </span><span class="self">self</span>.desc.usage.contains(expected) {
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(MissingTextureUsageError {
                 res: <span class="self">self</span>.error_ident(),
                 actual: <span class="self">self</span>.desc.usage,
                 expected,
             })
+        }
     }
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Texture&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">use </span>hal::Device;
         <span class="kw">let </span><span class="kw-2">mut </span>clear_mode = <span class="self">self</span>.clear_mode.write();
         <span class="kw">let </span>clear_mode = <span class="kw-2">&amp;mut *</span>clear_mode;
@@ -2923,11 +2827,7 @@
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(TextureInner::Native { raw }) = <span class="self">self</span>.inner.take() {
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyTexture(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.device.raw().destroy_texture(raw);
             }
@@ -3007,11 +2907,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyError&gt; {
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            trace.add(trace::Action::FreeTexture(<span class="self">self</span>.info.id()));
-        }
-
         <span class="kw">let </span>temp = {
             <span class="kw">let </span>snatch_guard = device.snatchable_lock.write();
             <span class="kw">let </span>raw = <span class="kw">match </span><span class="self">self</span>.inner.snatch(snatch_guard) {
@@ -3041,8 +2936,7 @@
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 tracker_index: <span class="self">self</span>.info.tracker_index(),
                 submission_index: <span class="self">self</span>.info.submission_index(),
-                id: <span class="self">self</span>.info.id.unwrap(),
-                label: <span class="self">self</span>.info.label.clone(),
+                label: <span class="self">self</span>.label().to_owned(),
             }))
         };
 
@@ -3225,18 +3119,13 @@
     bind_groups: Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;,
     device: Arc&lt;Device&lt;A&gt;&gt;,
     label: String,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: TextureId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracker_index: TrackerIndex,
     <span class="kw">pub</span>(<span class="kw">crate</span>) submission_index: u64,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; DestroyedTexture&lt;A&gt; {
     <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug {
-        <span class="kw">if </span>!<span class="self">self</span>.label.is_empty() {
-            <span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
-        }
-
-        <span class="kw-2">&amp;</span><span class="self">self</span>.id
+        <span class="kw-2">&amp;</span><span class="self">self</span>.label
     }
 }
 
@@ -3255,11 +3144,6 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture (destroyed) {:?}"</span>, <span class="self">self</span>.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyTexture(<span class="self">self</span>.id));
-            }
 
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
@@ -3459,13 +3343,7 @@
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>TextureView&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw TextureView {:?}"</span>, <span class="self">self</span>.info.label());
-
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyTextureView(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_texture_view(raw);
@@ -3604,13 +3482,8 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Sampler&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Sampler {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroySampler(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_sampler(raw);
@@ -3714,13 +3587,8 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>QuerySet&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw QuerySet {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
-            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-                t.add(trace::Action::DestroyQuerySet(<span class="self">self</span>.info.id()));
-            }
-
+            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
                 <span class="kw">use </span>hal::Device;
                 <span class="self">self</span>.device.raw().destroy_query_set(raw);

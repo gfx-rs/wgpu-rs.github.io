@@ -3002,12 +3002,6 @@
 <a href="#3001" id="3001">3001</a>
 <a href="#3002" id="3002">3002</a>
 <a href="#3003" id="3003">3003</a>
-<a href="#3004" id="3004">3004</a>
-<a href="#3005" id="3005">3005</a>
-<a href="#3006" id="3006">3006</a>
-<a href="#3007" id="3007">3007</a>
-<a href="#3008" id="3008">3008</a>
-<a href="#3009" id="3009">3009</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
 };
@@ -3821,7 +3815,7 @@
 
     <span class="kw">fn </span>start(
         device: <span class="kw-2">&amp;</span><span class="lifetime">'d </span>Device&lt;A&gt;,
-        label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        hal_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;RenderPassColorAttachment&gt;],
         depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>RenderPassDepthStencilAttachment&gt;,
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>RenderPassTimestampWrites&gt;,
@@ -4205,10 +4199,10 @@
             trackers.query_sets.add_single(query_set);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = tw.beginning_of_pass_write_index {
-                pending_query_resets.use_query_set(tw.query_set, query_set, index);
+                pending_query_resets.use_query_set(query_set, index);
             }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = tw.end_of_pass_write_index {
-                pending_query_resets.use_query_set(tw.query_set, query_set, index);
+                pending_query_resets.use_query_set(query_set, index);
             }
 
             <span class="prelude-val">Some</span>(hal::RenderPassTimestampWrites {
@@ -4233,7 +4227,7 @@
         </span>};
 
         <span class="kw">let </span>hal_desc = hal::RenderPassDescriptor {
-            label: hal_label(label, device.instance_flags),
+            label: hal_label,
             extent,
             sample_count,
             color_attachments: <span class="kw-2">&amp;</span>colors,
@@ -4399,7 +4393,7 @@
             </span>.instance
             .flags
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS);
-        <span class="kw">let </span>label = hal_label(base.label.as_deref(), <span class="self">self</span>.instance.flags);
+        <span class="kw">let </span>hal_label = hal_label(base.label.as_deref(), <span class="self">self</span>.instance.flags);
 
         <span class="kw">let </span>pass_scope = PassErrorScope::PassEncoder(encoder_id);
 
@@ -4446,7 +4440,7 @@
             </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             <span class="comment">// We will reset this to `Recording` if we succeed, acts as a fail-safe.
             </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
-            encoder.open_pass(label).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            encoder.open_pass(hal_label).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>query_set_guard = hub.query_sets.read();
             <span class="kw">let </span>view_guard = hub.texture_views.read();
@@ -4458,7 +4452,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>info = RenderPassInfo::start(
                 device,
-                label,
+                hal_label,
                 color_attachments,
                 depth_stencil_attachment,
                 timestamp_writes,
@@ -5441,8 +5435,6 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
-        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
-
         <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
         <span class="kw">let </span>status = <span class="kw-2">&amp;mut </span>cmd_buf_data.status;
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
@@ -5458,11 +5450,7 @@
                 <span class="kw-2">&amp;</span>snatch_guard,
             );
 
-            cmd_buf_data
-                .pending_query_resets
-                .reset_queries(transit, <span class="kw-2">&amp;</span>query_set_guard)
-                .map_err(RenderCommandError::InvalidQuerySet)
-                .map_pass_err(PassErrorScope::QueryReset)<span class="question-mark">?</span>;
+            cmd_buf_data.pending_query_resets.reset_queries(transit);
 
             CommandBuffer::insert_barriers_from_scope(transit, tracker, <span class="kw-2">&amp;</span>scope, <span class="kw-2">&amp;</span>snatch_guard);
         }

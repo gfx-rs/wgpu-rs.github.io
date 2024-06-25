@@ -1742,29 +1742,6 @@
 <a href="#1741" id="1741">1741</a>
 <a href="#1742" id="1742">1742</a>
 <a href="#1743" id="1743">1743</a>
-<a href="#1744" id="1744">1744</a>
-<a href="#1745" id="1745">1745</a>
-<a href="#1746" id="1746">1746</a>
-<a href="#1747" id="1747">1747</a>
-<a href="#1748" id="1748">1748</a>
-<a href="#1749" id="1749">1749</a>
-<a href="#1750" id="1750">1750</a>
-<a href="#1751" id="1751">1751</a>
-<a href="#1752" id="1752">1752</a>
-<a href="#1753" id="1753">1753</a>
-<a href="#1754" id="1754">1754</a>
-<a href="#1755" id="1755">1755</a>
-<a href="#1756" id="1756">1756</a>
-<a href="#1757" id="1757">1757</a>
-<a href="#1758" id="1758">1758</a>
-<a href="#1759" id="1759">1759</a>
-<a href="#1760" id="1760">1760</a>
-<a href="#1761" id="1761">1761</a>
-<a href="#1762" id="1762">1762</a>
-<a href="#1763" id="1763">1763</a>
-<a href="#1764" id="1764">1764</a>
-<a href="#1765" id="1765">1765</a>
-<a href="#1766" id="1766">1766</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1845,9 +1822,7 @@ index format changes.
 
 </span><span class="attr">#![allow(clippy::reversed_empty_ranges)]
 
-#[cfg(feature = <span class="string">"trace"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
-<span class="kw">use crate</span>::{
+</span><span class="kw">use crate</span>::{
     binding_model::{buffer_binding_type_alignment, BindGroup, BindGroupLayout, PipelineLayout},
     command::{
         BasePass, BindGroupStateChange, ColorAttachmentError, DrawError, MapPassErr,
@@ -1870,7 +1845,7 @@ index format changes.
     resource_log,
     snatch::SnatchGuard,
     track::RenderBundleScope,
-    Label, LabelHelpers,
+    Label,
 };
 <span class="kw">use </span>arrayvec::ArrayVec;
 
@@ -2192,8 +2167,7 @@ index format changes.
                         .write()
                         .add_single(bind_group);
 
-                    <span class="self">self</span>.check_valid_to_use(bind_group.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    bind_group.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>max_bind_groups = device.limits.max_bind_groups;
                     <span class="kw">if </span>index &gt;= max_bind_groups {
@@ -2261,8 +2235,7 @@ index format changes.
                         .write()
                         .add_single(pipeline);
 
-                    <span class="self">self</span>.check_valid_to_use(pipeline.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    pipeline.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="self">self</span>.context
                         .check_compatible(<span class="kw-2">&amp;</span>pipeline.pass_context, RenderPassCompatibilityCheckType::RenderPipeline)
@@ -2278,7 +2251,7 @@ index format changes.
                             .map_pass_err(scope);
                     }
 
-                    <span class="kw">let </span>pipeline_state = PipelineState::new(pipeline);
+                    <span class="kw">let </span>pipeline_state = PipelineState::new(pipeline, pipeline_id);
 
                     commands.push(ArcRenderCommand::SetPipeline(pipeline.clone()));
 
@@ -2310,8 +2283,7 @@ index format changes.
                         .merge_single(buffer, hal::BufferUses::INDEX)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="self">self</span>.check_valid_to_use(buffer.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    buffer.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
                     buffer.check_usage(wgt::BufferUsages::INDEX).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>end = <span class="kw">match </span>size {
@@ -2353,8 +2325,7 @@ index format changes.
                         .merge_single(buffer, hal::BufferUses::VERTEX)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="self">self</span>.check_valid_to_use(buffer.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    buffer.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
                     buffer.check_usage(wgt::BufferUsages::VERTEX).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>end = <span class="kw">match </span>size {
@@ -2484,8 +2455,7 @@ index format changes.
                         .merge_single(buffer, hal::BufferUses::INDIRECT)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="self">self</span>.check_valid_to_use(buffer.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    buffer.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
                     buffer.check_usage(wgt::BufferUsages::INDIRECT).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     buffer_memory_init_actions.extend(buffer.initialization_status.read().create_action(
@@ -2527,8 +2497,7 @@ index format changes.
                         .merge_single(buffer, hal::BufferUses::INDIRECT)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="self">self</span>.check_valid_to_use(buffer.device.info.id())
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    buffer.same_device(device).map_pass_err(scope)<span class="question-mark">?</span>;
                     buffer.check_usage(wgt::BufferUsages::INDIRECT).map_pass_err(scope)<span class="question-mark">?</span>;
 
                     buffer_memory_init_actions.extend(buffer.initialization_status.read().create_action(
@@ -2580,22 +2549,11 @@ index format changes.
             buffer_memory_init_actions,
             texture_memory_init_actions,
             context: <span class="self">self</span>.context,
-            info: ResourceInfo::new(
-                desc.label.borrow_or_default(),
-                <span class="prelude-val">Some</span>(device.tracker_indices.bundles.clone()),
-            ),
+            info: ResourceInfo::new(<span class="kw-2">&amp;</span>desc.label, <span class="prelude-val">Some</span>(device.tracker_indices.bundles.clone())),
             discard_hal_labels: device
                 .instance_flags
                 .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS),
         })
-    }
-
-    <span class="kw">fn </span>check_valid_to_use(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: id::DeviceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
-        <span class="kw">if </span>device_id != <span class="self">self</span>.parent_id {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(RenderBundleErrorInner::NotValidToUse);
-        }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>set_index_buffer(
@@ -2662,12 +2620,7 @@ index format changes.
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>RenderBundle&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw RenderBundle {:?}"</span>, <span class="self">self</span>.info.label());
-
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.device.trace.lock().as_mut() {
-            t.add(trace::Action::DestroyRenderBundle(<span class="self">self</span>.info.id()));
-        }
+        <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
     }
 }
 
@@ -3000,6 +2953,8 @@ index format changes.
     <span class="doccomment">/// The pipeline
     </span>pipeline: Arc&lt;RenderPipeline&lt;A&gt;&gt;,
 
+    pipeline_id: id::RenderPipelineId,
+
     <span class="doccomment">/// How this pipeline's vertex shader traverses each vertex buffer, indexed
     /// by vertex buffer slot number.
     </span>steps: Vec&lt;VertexStep&gt;,
@@ -3013,9 +2968,10 @@ index format changes.
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; PipelineState&lt;A&gt; {
-    <span class="kw">fn </span>new(pipeline: <span class="kw-2">&amp;</span>Arc&lt;RenderPipeline&lt;A&gt;&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>new(pipeline: <span class="kw-2">&amp;</span>Arc&lt;RenderPipeline&lt;A&gt;&gt;, pipeline_id: id::RenderPipelineId) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             pipeline: pipeline.clone(),
+            pipeline_id,
             steps: pipeline.vertex_steps.to_vec(),
             push_constant_ranges: pipeline
                 .layout
@@ -3089,7 +3045,7 @@ index format changes.
 <span class="kw">impl</span>&lt;A: HalApi&gt; State&lt;A&gt; {
     <span class="doccomment">/// Return the id of the current pipeline, if any.
     </span><span class="kw">fn </span>pipeline_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;id::RenderPipelineId&gt; {
-        <span class="self">self</span>.pipeline.as_ref().map(|p| p.pipeline.as_info().id())
+        <span class="self">self</span>.pipeline.as_ref().map(|p| p.pipeline_id)
     }
 
     <span class="doccomment">/// Return the current pipeline state. Return an error if none is set.
@@ -3260,8 +3216,6 @@ index format changes.
 <span class="doccomment">/// Error encountered when finishing recording a render bundle.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>RenderBundleErrorInner {
-    <span class="attr">#[error(<span class="string">"Resource is not valid to use with this render bundle because the resource and the bundle come from different devices"</span>)]
-    </span>NotValidToUse,
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]

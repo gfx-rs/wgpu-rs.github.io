@@ -961,8 +961,6 @@
 <a href="#960" id="960">960</a>
 <a href="#961" id="961">961</a>
 <a href="#962" id="962">962</a>
-<a href="#963" id="963">963</a>
-<a href="#964" id="964">964</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -998,6 +996,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::resource::{ParentDevice, Resource, ResourceInfo, ResourceType};
 <span class="kw">use </span><span class="kw">crate</span>::track::{Tracker, UsageScope};
+<span class="kw">use </span><span class="kw">crate</span>::LabelHelpers;
 <span class="kw">use crate</span>::{api_log, global::Global, hal_api::HalApi, id, resource_log, Label};
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
@@ -1107,7 +1106,7 @@
     /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     </span>is_open: bool,
 
-    label: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    hal_label: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="comment">//TODO: handle errors better
@@ -1183,8 +1182,8 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder, DeviceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
-            <span class="kw">let </span>label = <span class="self">self</span>.label.as_deref();
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label)<span class="question-mark">? </span>};
+            <span class="kw">let </span>hal_label = <span class="self">self</span>.hal_label.as_deref();
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label)<span class="question-mark">? </span>};
         }
 
         <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.raw)
@@ -1194,9 +1193,9 @@
     /// its own label.
     ///
     /// The underlying hal encoder is put in the "recording" state.
-    </span><span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+    </span><span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hal_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(label)<span class="question-mark">? </span>};
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label)<span class="question-mark">? </span>};
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1284,10 +1283,10 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>CommandBuffer&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">if </span><span class="self">self</span>.data.lock().is_none() {
             <span class="kw">return</span>;
         }
-        <span class="macro">resource_log!</span>(<span class="string">"resource::CommandBuffer::drop {:?}"</span>, <span class="self">self</span>.info.label());
         <span class="kw">let </span><span class="kw-2">mut </span>baked = <span class="self">self</span>.extract_baked_commands();
         <span class="kw">unsafe </span>{
             baked.encoder.reset_all(baked.list.into_iter());
@@ -1304,13 +1303,13 @@
         encoder: A::CommandEncoder,
         device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)] </span>enable_tracing: bool,
-        label: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        label: <span class="kw-2">&amp;</span>Label,
     ) -&gt; <span class="self">Self </span>{
         CommandBuffer {
             device: device.clone(),
             limits: device.limits.clone(),
             support_clear_texture: device.features.contains(wgt::Features::CLEAR_TEXTURE),
-            info: ResourceInfo::new(label.as_deref().unwrap_or(<span class="string">"&lt;CommandBuffer&gt;"</span>), <span class="prelude-val">None</span>),
+            info: ResourceInfo::new(label, <span class="prelude-val">None</span>),
             data: Mutex::new(
                 rank::COMMAND_BUFFER_DATA,
                 <span class="prelude-val">Some</span>(CommandBufferMutable {
@@ -1318,7 +1317,7 @@
                         raw: encoder,
                         is_open: <span class="bool-val">false</span>,
                         list: Vec::new(),
-                        label,
+                        hal_label: label.to_hal(device.instance_flags).map(str::to_owned),
                     },
                     status: CommandEncoderStatus::Recording,
                     trackers: Tracker::new(),
@@ -1470,10 +1469,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_baked_commands(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; BakedCommands&lt;A&gt; {
-        <span class="macro">log::trace!</span>(
-            <span class="string">"Extracting BakedCommands from CommandBuffer {:?}"</span>,
-            <span class="self">self</span>.info.label()
-        );
+        <span class="macro">log::trace!</span>(<span class="string">"Extracting BakedCommands from {}"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">let </span>data = <span class="self">self</span>.data.lock().take().unwrap();
         BakedCommands {
             encoder: data.encoder.raw,

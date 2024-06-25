@@ -1570,6 +1570,9 @@
 <a href="#1569" id="1569">1569</a>
 <a href="#1570" id="1570">1570</a>
 <a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1636,6 +1639,7 @@
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Queue&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">let </span>queue = <span class="self">self</span>.raw.take().unwrap();
         <span class="self">self</span>.device.as_ref().unwrap().release_queue(queue);
     }
@@ -1920,10 +1924,7 @@
         raw: Mutex::new(rank::STAGING_BUFFER_RAW, <span class="prelude-val">Some</span>(buffer)),
         device: device.clone(),
         size,
-        info: ResourceInfo::new(
-            <span class="string">"&lt;StagingBuffer&gt;"</span>,
-            <span class="prelude-val">Some</span>(device.tracker_indices.staging_buffers.clone()),
-        ),
+        info: ResourceInfo::new(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(device.tracker_indices.staging_buffers.clone())),
         is_coherent: mapping.is_coherent,
     };
 
@@ -1952,6 +1953,8 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueWriteError {
+    <span class="attr">#[error(<span class="string">"QueueId is invalid"</span>)]
+    </span>InvalidQueueId,
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -1965,6 +1968,8 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueSubmitError {
+    <span class="attr">#[error(<span class="string">"QueueId is invalid"</span>)]
+    </span>InvalidQueueId,
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -2004,11 +2009,9 @@
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
-
-        buffer.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
 
@@ -2022,6 +2025,8 @@
                 queued: <span class="bool-val">true</span>,
             });
         }
+
+        buffer.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">if </span>data_size == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring write_buffer of size 0"</span>);
@@ -2073,7 +2078,7 @@
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
@@ -2100,7 +2105,7 @@
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
@@ -2269,7 +2274,7 @@
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
@@ -2529,7 +2534,7 @@
         <span class="kw">let </span>queue = hub
             .queues
             .get(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
@@ -2724,7 +2729,7 @@
             <span class="kw">let </span>queue = hub
                 .queues
                 .get(queue_id)
-                .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+                .map_err(|<span class="kw">_</span>| QueueSubmitError::InvalidQueueId)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
@@ -2769,8 +2774,6 @@
                             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                         };
 
-                        cmdbuf.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
-
                         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                             trace.add(Action::Submit(
@@ -2785,6 +2788,9 @@
                                     .unwrap(),
                             ));
                         }
+
+                        cmdbuf.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
+
                         <span class="kw">if </span>!cmdbuf.is_finished() {
                             <span class="kw">let </span>cmdbuf = Arc::into_inner(cmdbuf).expect(
                                 <span class="string">"Command buffer cannot be destroyed because is still in use"</span>,
