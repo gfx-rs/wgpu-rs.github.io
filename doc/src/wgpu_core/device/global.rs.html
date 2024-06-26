@@ -2651,6 +2651,20 @@
 <a href="#2650" id="2650">2650</a>
 <a href="#2651" id="2651">2651</a>
 <a href="#2652" id="2652">2652</a>
+<a href="#2653" id="2653">2653</a>
+<a href="#2654" id="2654">2654</a>
+<a href="#2655" id="2655">2655</a>
+<a href="#2656" id="2656">2656</a>
+<a href="#2657" id="2657">2657</a>
+<a href="#2658" id="2658">2658</a>
+<a href="#2659" id="2659">2659</a>
+<a href="#2660" id="2660">2660</a>
+<a href="#2661" id="2661">2661</a>
+<a href="#2662" id="2662">2662</a>
+<a href="#2663" id="2663">2663</a>
+<a href="#2664" id="2664">2664</a>
+<a href="#2665" id="2665">2665</a>
+<a href="#2666" id="2666">2666</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3494,6 +3508,10 @@
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>views = texture.views.lock();
+
+                <span class="comment">// Remove stale weak references
+                </span>views.retain(|view| view.strong_count() &gt; <span class="number">0</span>);
+
                 views.push(Arc::downgrade(<span class="kw-2">&amp;</span>resource));
             }
 
@@ -3815,10 +3833,20 @@
 
             <span class="kw">let </span>weak_ref = Arc::downgrade(<span class="kw-2">&amp;</span>resource);
             <span class="kw">for </span>range <span class="kw">in </span><span class="kw-2">&amp;</span>resource.used_texture_ranges {
-                range.texture.bind_groups.lock().push(weak_ref.clone());
+                <span class="kw">let </span><span class="kw-2">mut </span>bind_groups = range.texture.bind_groups.lock();
+
+                <span class="comment">// Remove stale weak references
+                </span>bind_groups.retain(|bg| bg.strong_count() &gt; <span class="number">0</span>);
+
+                bind_groups.push(weak_ref.clone());
             }
             <span class="kw">for </span>range <span class="kw">in </span><span class="kw-2">&amp;</span>resource.used_buffer_ranges {
-                range.buffer.bind_groups.lock().push(weak_ref.clone());
+                <span class="kw">let </span><span class="kw-2">mut </span>bind_groups = range.buffer.bind_groups.lock();
+
+                <span class="comment">// Remove stale weak references
+                </span>bind_groups.retain(|bg| bg.strong_count() &gt; <span class="number">0</span>);
+
+                bind_groups.push(weak_ref.clone());
             }
 
             <span class="macro">api_log!</span>(<span class="string">"Device::create_bind_group -&gt; {id:?}"</span>);
