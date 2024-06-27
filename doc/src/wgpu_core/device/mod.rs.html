@@ -544,18 +544,14 @@
 <a href="#543" id="543">543</a>
 <a href="#544" id="544">544</a>
 <a href="#545" id="545">545</a>
-<a href="#546" id="546">546</a>
-<a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a>
-<a href="#549" id="549">549</a>
-<a href="#550" id="550">550</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
     hub::Hub,
     id::{BindGroupLayoutId, PipelineLayoutId},
     resource::{
-        Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation, ResourceErrorIdent,
+        Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation, Resource,
+        ResourceErrorIdent,
     },
     snatch::SnatchGuard,
     Label, DOWNLEVEL_ERROR_MESSAGE,
@@ -620,12 +616,6 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Copy, Clone)]
-</span><span class="kw">pub enum </span>RenderPassCompatibilityCheckType {
-    RenderPipeline,
-    RenderBundle,
-}
-
 <span class="attr">#[derive(Clone, Debug, Hash, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderPassContext {
@@ -637,44 +627,44 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>RenderPassCompatibilityError {
     <span class="attr">#[error(
-        <span class="string">"Incompatible color attachments at indices {indices:?}: the RenderPass uses textures with formats {expected:?} but the {ty:?} uses attachments with formats {actual:?}"</span>,
+        <span class="string">"Incompatible color attachments at indices {indices:?}: the RenderPass uses textures with formats {expected:?} but the {res} uses attachments with formats {actual:?}"</span>,
     )]
     </span>IncompatibleColorAttachment {
         indices: Vec&lt;usize&gt;,
         expected: Vec&lt;<span class="prelude-ty">Option</span>&lt;TextureFormat&gt;&gt;,
         actual: Vec&lt;<span class="prelude-ty">Option</span>&lt;TextureFormat&gt;&gt;,
-        ty: RenderPassCompatibilityCheckType,
+        res: ResourceErrorIdent,
     },
     <span class="attr">#[error(
-        <span class="string">"Incompatible depth-stencil attachment format: the RenderPass uses a texture with format {expected:?} but the {ty:?} uses an attachment with format {actual:?}"</span>,
+        <span class="string">"Incompatible depth-stencil attachment format: the RenderPass uses a texture with format {expected:?} but the {res} uses an attachment with format {actual:?}"</span>,
     )]
     </span>IncompatibleDepthStencilAttachment {
         expected: <span class="prelude-ty">Option</span>&lt;TextureFormat&gt;,
         actual: <span class="prelude-ty">Option</span>&lt;TextureFormat&gt;,
-        ty: RenderPassCompatibilityCheckType,
+        res: ResourceErrorIdent,
     },
     <span class="attr">#[error(
-        <span class="string">"Incompatible sample count: the RenderPass uses textures with sample count {expected:?} but the {ty:?} uses attachments with format {actual:?}"</span>,
+        <span class="string">"Incompatible sample count: the RenderPass uses textures with sample count {expected:?} but the {res} uses attachments with format {actual:?}"</span>,
     )]
     </span>IncompatibleSampleCount {
         expected: u32,
         actual: u32,
-        ty: RenderPassCompatibilityCheckType,
+        res: ResourceErrorIdent,
     },
-    <span class="attr">#[error(<span class="string">"Incompatible multiview setting: the RenderPass uses setting {expected:?} but the {ty:?} uses setting {actual:?}"</span>)]
+    <span class="attr">#[error(<span class="string">"Incompatible multiview setting: the RenderPass uses setting {expected:?} but the {res} uses setting {actual:?}"</span>)]
     </span>IncompatibleMultiview {
         expected: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
         actual: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
-        ty: RenderPassCompatibilityCheckType,
+        res: ResourceErrorIdent,
     },
 }
 
 <span class="kw">impl </span>RenderPassContext {
     <span class="comment">// Assumes the renderpass only contains one subpass
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_compatible(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_compatible&lt;T: Resource&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         other: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-        ty: RenderPassCompatibilityCheckType,
+        res: <span class="kw-2">&amp;</span>T,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassCompatibilityError&gt; {
         <span class="kw">if </span><span class="self">self</span>.attachments.colors != other.attachments.colors {
             <span class="kw">let </span>indices = <span class="self">self
@@ -689,7 +679,7 @@
                 indices,
                 expected: <span class="self">self</span>.attachments.colors.iter().cloned().collect(),
                 actual: other.attachments.colors.iter().cloned().collect(),
-                ty,
+                res: res.error_ident(),
             });
         }
         <span class="kw">if </span><span class="self">self</span>.attachments.depth_stencil != other.attachments.depth_stencil {
@@ -697,7 +687,7 @@
                 RenderPassCompatibilityError::IncompatibleDepthStencilAttachment {
                     expected: <span class="self">self</span>.attachments.depth_stencil,
                     actual: other.attachments.depth_stencil,
-                    ty,
+                    res: res.error_ident(),
                 },
             );
         }
@@ -705,14 +695,14 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassCompatibilityError::IncompatibleSampleCount {
                 expected: <span class="self">self</span>.sample_count,
                 actual: other.sample_count,
-                ty,
+                res: res.error_ident(),
             });
         }
         <span class="kw">if </span><span class="self">self</span>.multiview != other.multiview {
             <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassCompatibilityError::IncompatibleMultiview {
                 expected: <span class="self">self</span>.multiview,
                 actual: other.multiview,
-                ty,
+                res: res.error_ident(),
             });
         }
         <span class="prelude-val">Ok</span>(())

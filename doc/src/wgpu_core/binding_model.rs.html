@@ -975,6 +975,12 @@
 <a href="#974" id="974">974</a>
 <a href="#975" id="975">975</a>
 <a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
@@ -985,7 +991,7 @@
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     resource::{
         DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError, ParentDevice,
-        Resource, ResourceInfo, ResourceType,
+        Resource, ResourceErrorIdent, ResourceInfo, ResourceType,
     },
     resource_log,
     snatch::{SnatchGuard, Snatchable},
@@ -1748,19 +1754,21 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>BindError {
     <span class="attr">#[error(
-        <span class="string">"Bind group {group} expects {expected} dynamic offset{s0}. However {actual} dynamic offset{s1} were provided."</span>,
+        <span class="string">"{bind_group} {group} expects {expected} dynamic offset{s0}. However {actual} dynamic offset{s1} were provided."</span>,
         s0 = <span class="kw">if </span><span class="kw-2">*</span>.expected &gt;= <span class="number">2 </span>{ <span class="string">"s" </span>} <span class="kw">else </span>{ <span class="string">"" </span>},
         s1 = <span class="kw">if </span><span class="kw-2">*</span>.actual &gt;= <span class="number">2 </span>{ <span class="string">"s" </span>} <span class="kw">else </span>{ <span class="string">"" </span>},
     )]
     </span>MismatchedDynamicOffsetCount {
+        bind_group: ResourceErrorIdent,
         group: u32,
         actual: usize,
         expected: usize,
     },
     <span class="attr">#[error(
-        <span class="string">"Dynamic binding index {idx} (targeting bind group {group}, binding {binding}) with value {offset}, does not respect device's requested `{limit_name}` limit: {alignment}"
+        <span class="string">"Dynamic binding index {idx} (targeting {bind_group} {group}, binding {binding}) with value {offset}, does not respect device's requested `{limit_name}` limit: {alignment}"
     </span>)]
     </span>UnalignedDynamicBinding {
+        bind_group: ResourceErrorIdent,
         idx: usize,
         group: u32,
         binding: u32,
@@ -1769,10 +1777,11 @@
         limit_name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     },
     <span class="attr">#[error(
-        <span class="string">"Dynamic binding offset index {idx} with offset {offset} would overrun the buffer bound to bind group {group} -&gt; binding {binding}. \
+        <span class="string">"Dynamic binding offset index {idx} with offset {offset} would overrun the buffer bound to {bind_group} {group} -&gt; binding {binding}. \
          Buffer size is {buffer_size} bytes, the binding binds bytes {binding_range:?}, meaning the maximum the binding can be offset is {maximum_dynamic_offset} bytes"</span>,
     )]
     </span>DynamicBindingOutOfBounds {
+        bind_group: ResourceErrorIdent,
         idx: usize,
         group: u32,
         binding: u32,
@@ -1869,10 +1878,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bind_group_index: u32,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-        limits: <span class="kw-2">&amp;</span>wgt::Limits,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BindError&gt; {
         <span class="kw">if </span><span class="self">self</span>.dynamic_binding_info.len() != offsets.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(BindError::MismatchedDynamicOffsetCount {
+                bind_group: <span class="self">self</span>.error_ident(),
                 group: bind_group_index,
                 expected: <span class="self">self</span>.dynamic_binding_info.len(),
                 actual: offsets.len(),
@@ -1885,9 +1894,11 @@
             .zip(offsets.iter())
             .enumerate()
         {
-            <span class="kw">let </span>(alignment, limit_name) = buffer_binding_type_alignment(limits, info.binding_type);
+            <span class="kw">let </span>(alignment, limit_name) =
+                buffer_binding_type_alignment(<span class="kw-2">&amp;</span><span class="self">self</span>.device.limits, info.binding_type);
             <span class="kw">if </span>offset <span class="kw">as </span>wgt::BufferAddress % alignment <span class="kw">as </span>u64 != <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(BindError::UnalignedDynamicBinding {
+                    bind_group: <span class="self">self</span>.error_ident(),
                     group: bind_group_index,
                     binding: info.binding_idx,
                     idx,
@@ -1899,6 +1910,7 @@
 
             <span class="kw">if </span>offset <span class="kw">as </span>wgt::BufferAddress &gt; info.maximum_dynamic_offset {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(BindError::DynamicBindingOutOfBounds {
+                    bind_group: <span class="self">self</span>.error_ident(),
                     group: bind_group_index,
                     binding: info.binding_idx,
                     idx,

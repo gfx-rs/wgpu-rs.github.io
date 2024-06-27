@@ -927,40 +927,6 @@
 <a href="#926" id="926">926</a>
 <a href="#927" id="927">927</a>
 <a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
-<a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
-<a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -1268,7 +1234,6 @@
 ///   whose contents eventually become the property of the submission queue.
 </span><span class="kw">pub struct </span>CommandBuffer&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    limits: wgt::Limits,
     support_clear_texture: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;CommandBuffer&lt;A&gt;&gt;,
 
@@ -1307,7 +1272,6 @@
     ) -&gt; <span class="self">Self </span>{
         CommandBuffer {
             device: device.clone(),
-            limits: device.limits.clone(),
             support_clear_texture: device.features.contains(wgt::Features::CLEAR_TEXTURE),
             info: ResourceInfo::new(label, <span class="prelude-val">None</span>),
             data: Mutex::new(
@@ -1832,17 +1796,17 @@
     <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
     </span>Pass(<span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;),
     <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
-    </span>SetBindGroup(id::BindGroupId),
+    </span>SetBindGroup,
     <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-    </span>SetPipelineRender(id::RenderPipelineId),
+    </span>SetPipelineRender,
     <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
-    </span>SetPipelineCompute(id::ComputePipelineId),
+    </span>SetPipelineCompute,
     <span class="attr">#[error(<span class="string">"In a set_push_constant command"</span>)]
     </span>SetPushConstant,
     <span class="attr">#[error(<span class="string">"In a set_vertex_buffer command"</span>)]
-    </span>SetVertexBuffer(id::BufferId),
+    </span>SetVertexBuffer,
     <span class="attr">#[error(<span class="string">"In a set_index_buffer command"</span>)]
-    </span>SetIndexBuffer(id::BufferId),
+    </span>SetIndexBuffer,
     <span class="attr">#[error(<span class="string">"In a set_blend_constant command"</span>)]
     </span>SetBlendConstant,
     <span class="attr">#[error(<span class="string">"In a set_stencil_reference command"</span>)]
@@ -1852,11 +1816,7 @@
     <span class="attr">#[error(<span class="string">"In a set_scissor_rect command"</span>)]
     </span>SetScissorRect,
     <span class="attr">#[error(<span class="string">"In a draw command, kind: {kind:?}"</span>)]
-    </span>Draw {
-        kind: DrawKind,
-        indexed: bool,
-        pipeline: <span class="prelude-ty">Option</span>&lt;id::RenderPipelineId&gt;,
-    },
+    </span>Draw { kind: DrawKind, indexed: bool },
     <span class="attr">#[error(<span class="string">"While resetting queries after the renderpass was ran"</span>)]
     </span>QueryReset,
     <span class="attr">#[error(<span class="string">"In a write_timestamp command"</span>)]
@@ -1872,10 +1832,7 @@
     <span class="attr">#[error(<span class="string">"In a execute_bundle command"</span>)]
     </span>ExecuteBundle,
     <span class="attr">#[error(<span class="string">"In a dispatch command, indirect:{indirect}"</span>)]
-    </span>Dispatch {
-        indirect: bool,
-        pipeline: <span class="prelude-ty">Option</span>&lt;id::ComputePipelineId&gt;,
-    },
+    </span>Dispatch { indirect: bool },
     <span class="attr">#[error(<span class="string">"In a push_debug_group command"</span>)]
     </span>PushDebugGroup,
     <span class="attr">#[error(<span class="string">"In a pop_debug_group command"</span>)]
@@ -1893,31 +1850,6 @@
             }
             <span class="self">Self</span>::Pass(<span class="prelude-val">Some</span>(id)) =&gt; {
                 fmt.command_buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::SetBindGroup(id) =&gt; {
-                fmt.bind_group_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::SetPipelineRender(id) =&gt; {
-                fmt.render_pipeline_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::SetPipelineCompute(id) =&gt; {
-                fmt.compute_pipeline_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::SetVertexBuffer(id) =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::SetIndexBuffer(id) =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::Draw {
-                pipeline: <span class="prelude-val">Some</span>(id), ..
-            } =&gt; {
-                fmt.render_pipeline_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::Dispatch {
-                pipeline: <span class="prelude-val">Some</span>(id), ..
-            } =&gt; {
-                fmt.compute_pipeline_label(<span class="kw-2">&amp;</span>id);
             }
             <span class="kw">_ </span>=&gt; {}
         }

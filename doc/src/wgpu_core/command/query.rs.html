@@ -474,6 +474,17 @@
 <a href="#473" id="473">473</a>
 <a href="#474" id="474">474</a>
 <a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -486,7 +497,7 @@
     id,
     init_tracker::MemoryInitKind,
     resource::{DestroyedResourceError, ParentDevice, QuerySet},
-    track::TrackerIndex,
+    track::{StatelessTracker, TrackerIndex},
     FastHashMap,
 };
 <span class="kw">use </span>std::{iter, marker::PhantomData, sync::Arc};
@@ -600,6 +611,8 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueryUseError {
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Query {query_index} is out of bounds for a query set of size {query_set_size}"</span>)]
     </span>OutOfBounds {
         query_index: u32,
@@ -704,12 +717,15 @@
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validate_and_begin_occlusion_query&lt;A: HalApi&gt;(
     query_set: Arc&lt;QuerySet&lt;A&gt;&gt;,
     raw_encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
+    tracker: <span class="kw-2">&amp;mut </span>StatelessTracker&lt;QuerySet&lt;A&gt;&gt;,
     query_index: u32,
     reset_state: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>QueryResetMap&lt;A&gt;&gt;,
     active_query: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;(Arc&lt;QuerySet&lt;A&gt;&gt;, u32)&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryUseError&gt; {
     <span class="kw">let </span>needs_reset = reset_state.is_none();
     query_set.validate_query(SimplifiedQueryType::Occlusion, query_index, reset_state)<span class="question-mark">?</span>;
+
+    tracker.add_single(<span class="kw-2">&amp;</span>query_set);
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((_old, old_idx)) = active_query.take() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::AlreadyStarted {
@@ -745,16 +761,22 @@
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validate_and_begin_pipeline_statistics_query&lt;A: HalApi&gt;(
     query_set: Arc&lt;QuerySet&lt;A&gt;&gt;,
     raw_encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
+    tracker: <span class="kw-2">&amp;mut </span>StatelessTracker&lt;QuerySet&lt;A&gt;&gt;,
+    cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer&lt;A&gt;,
     query_index: u32,
     reset_state: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>QueryResetMap&lt;A&gt;&gt;,
     active_query: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;(Arc&lt;QuerySet&lt;A&gt;&gt;, u32)&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryUseError&gt; {
+    query_set.same_device_as(cmd_buf)<span class="question-mark">?</span>;
+
     <span class="kw">let </span>needs_reset = reset_state.is_none();
     query_set.validate_query(
         SimplifiedQueryType::PipelineStatistics,
         query_index,
         reset_state,
     )<span class="question-mark">?</span>;
+
+    tracker.add_single(<span class="kw-2">&amp;</span>query_set);
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((_old, old_idx)) = active_query.take() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::AlreadyStarted {

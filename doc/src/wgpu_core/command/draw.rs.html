@@ -125,11 +125,25 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     error::ErrorFormatter,
     id,
-    resource::{DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError},
+    resource::{
+        DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError,
+        ResourceErrorIdent,
+    },
     track::ResourceUsageCompatibilityError,
 };
 <span class="kw">use </span>wgt::VertexStepMode;
@@ -137,19 +151,26 @@
 <span class="kw">use </span>thiserror::Error;
 
 <span class="doccomment">/// Error validating a draw call.
-</span><span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]
+</span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DrawError {
     <span class="attr">#[error(<span class="string">"Blend constant needs to be set"</span>)]
     </span>MissingBlendConstant,
     <span class="attr">#[error(<span class="string">"Render pipeline must be set"</span>)]
     </span>MissingPipeline,
-    <span class="attr">#[error(<span class="string">"Vertex buffer {index} must be set"</span>)]
-    </span>MissingVertexBuffer { index: u32 },
+    <span class="attr">#[error(<span class="string">"Currently set {pipeline} requires vertex buffer {index} to be set"</span>)]
+    </span>MissingVertexBuffer {
+        pipeline: ResourceErrorIdent,
+        index: u32,
+    },
     <span class="attr">#[error(<span class="string">"Index buffer must be set"</span>)]
     </span>MissingIndexBuffer,
-    <span class="attr">#[error(<span class="string">"Incompatible bind group at index {index} in the current render pipeline"</span>)]
-    </span>IncompatibleBindGroup { index: u32, diff: Vec&lt;String&gt; },
+    <span class="attr">#[error(<span class="string">"Bind group at index {index} is incompatible with the current set {pipeline}"</span>)]
+    </span>IncompatibleBindGroup {
+        index: u32,
+        pipeline: ResourceErrorIdent,
+        diff: Vec&lt;String&gt;,
+    },
     <span class="attr">#[error(<span class="string">"Vertex {last_vertex} extends beyond limit {vertex_limit} imposed by the buffer in slot {slot}. Did you bind the correct `Vertex` step-rate vertex buffer?"</span>)]
     </span>VertexBeyondLimit {
         last_vertex: u64,
@@ -172,11 +193,12 @@
     <span class="attr">#[error(<span class="string">"Index {last_index} extends beyond limit {index_limit}. Did you bind the correct index buffer?"</span>)]
     </span>IndexBeyondLimit { last_index: u64, index_limit: u64 },
     <span class="attr">#[error(
-        <span class="string">"Pipeline index format ({pipeline:?}) and buffer index format ({buffer:?}) do not match"
+        <span class="string">"Index buffer format {buffer_format:?} doesn't match {pipeline}'s index format {pipeline_format:?}"
     </span>)]
     </span>UnmatchedIndexFormats {
-        pipeline: wgt::IndexFormat,
-        buffer: wgt::IndexFormat,
+        pipeline: ResourceErrorIdent,
+        pipeline_format: wgt::IndexFormat,
+        buffer_format: wgt::IndexFormat,
     },
     <span class="attr">#[error(transparent)]
     </span>BindingSizeTooSmall(<span class="attr">#[from] </span>LateMinBufferBindingSizeMismatch),
@@ -199,16 +221,16 @@
     </span>VertexBufferIndexOutOfRange { index: u32, max: u32 },
     <span class="attr">#[error(<span class="string">"Dynamic buffer offset {0} does not respect device's requested `{1}` limit {2}"</span>)]
     </span>UnalignedBufferOffset(u64, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32),
-    <span class="attr">#[error(<span class="string">"Number of buffer offsets ({actual}) does not match the number of dynamic bindings ({expected})"</span>)]
-    </span>InvalidDynamicOffsetCount { actual: usize, expected: usize },
     <span class="attr">#[error(<span class="string">"Render pipeline {0:?} is invalid"</span>)]
     </span>InvalidPipeline(id::RenderPipelineId),
     <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid"</span>)]
     </span>InvalidQuerySet(id::QuerySetId),
     <span class="attr">#[error(<span class="string">"Render pipeline targets are incompatible with render pass"</span>)]
     </span>IncompatiblePipelineTargets(<span class="attr">#[from] </span><span class="kw">crate</span>::device::RenderPassCompatibilityError),
-    <span class="attr">#[error(<span class="string">"Pipeline writes to depth/stencil, while the pass has read-only depth/stencil"</span>)]
-    </span>IncompatiblePipelineRods,
+    <span class="attr">#[error(<span class="string">"{0} writes to depth, while the pass has read-only depth access"</span>)]
+    </span>IncompatibleDepthAccess(ResourceErrorIdent),
+    <span class="attr">#[error(<span class="string">"{0} writes to stencil, while the pass has read-only stencil access"</span>)]
+    </span>IncompatibleStencilAccess(ResourceErrorIdent),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
     <span class="attr">#[error(transparent)]
