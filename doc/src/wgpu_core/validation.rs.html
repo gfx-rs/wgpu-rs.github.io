@@ -1270,6 +1270,12 @@
 <a href="#1269" id="1269">1269</a>
 <a href="#1270" id="1270">1270</a>
 <a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, FastHashMap, FastHashSet};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
@@ -1419,8 +1425,11 @@
         binding: naga::AddressSpace,
         shader: naga::AddressSpace,
     },
-    <span class="attr">#[error(<span class="string">"Buffer structure size {0}, added to one element of an unbound array, if it's the last field, ended up greater than the given `min_binding_size`"</span>)]
-    </span>WrongBufferSize(wgt::BufferSize),
+    <span class="attr">#[error(<span class="string">"Buffer structure size {buffer_size}, added to one element of an unbound array, if it's the last field, ended up greater than the given `min_binding_size`, which is {min_binding_size}"</span>)]
+    </span>WrongBufferSize {
+        buffer_size: wgt::BufferSize,
+        min_binding_size: wgt::BufferSize,
+    },
     <span class="attr">#[error(<span class="string">"View dimension {dim:?} (is array: {is_array}) doesn't match the binding {binding:?}"</span>)]
     </span>WrongTextureViewDimension {
         dim: naga::ImageDimension,
@@ -1657,7 +1666,10 @@
                 };
                 <span class="kw">match </span>min_size {
                     <span class="prelude-val">Some</span>(non_zero) <span class="kw">if </span>non_zero &lt; size =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(BindingError::WrongBufferSize(size))
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(BindingError::WrongBufferSize {
+                            buffer_size: size,
+                            min_binding_size: non_zero,
+                        })
                     }
                     <span class="kw">_ </span>=&gt; (),
                 }
