@@ -664,7 +664,6 @@
 <a href="#663" id="663">663</a>
 <a href="#664" id="664">664</a>
 <a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::BindGroup,
     hal_api::HalApi,
@@ -676,10 +675,7 @@
 
 <span class="kw">use </span>std::{num::NonZeroU32, sync::Arc};
 
-<span class="kw">use super</span>::{
-    DrawKind, PassErrorScope, Rect, RenderBundle, RenderCommandError, RenderPassError,
-    RenderPassErrorInner,
-};
+<span class="kw">use super</span>::{Rect, RenderBundle};
 
 <span class="attr">#[doc(hidden)]
 #[derive(Clone, Copy, Debug)]
@@ -795,13 +791,15 @@
 
 <span class="kw">impl </span>RenderCommand {
     <span class="doccomment">/// Resolves all ids in a list of commands into the corresponding resource Arc.
-    </span><span class="comment">//
-    // TODO: Once resolving is done on-the-fly during recording, this function should be only needed with the replay feature:
-    // #[cfg(feature = "replay")]
+    </span><span class="attr">#[cfg(feature = <span class="string">"replay"</span>)]
     </span><span class="kw">pub fn </span>resolve_render_command_ids&lt;A: HalApi&gt;(
         hub: <span class="kw-2">&amp;</span><span class="kw">crate</span>::hub::Hub&lt;A&gt;,
         commands: <span class="kw-2">&amp;</span>[RenderCommand],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ArcRenderCommand&lt;A&gt;&gt;, RenderPassError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ArcRenderCommand&lt;A&gt;&gt;, <span class="kw">super</span>::RenderPassError&gt; {
+        <span class="kw">use super</span>::{
+            DrawKind, PassErrorScope, RenderCommandError, RenderPassError, RenderPassErrorInner,
+        };
+
         <span class="kw">let </span>buffers_guard = hub.buffers.read();
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
         <span class="kw">let </span>query_set_guard = hub.query_sets.read();

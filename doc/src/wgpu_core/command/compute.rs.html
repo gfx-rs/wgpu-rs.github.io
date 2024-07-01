@@ -1270,42 +1270,18 @@
 <a href="#1269" id="1269">1269</a>
 <a href="#1270" id="1270">1270</a>
 <a href="#1271" id="1271">1271</a>
-<a href="#1272" id="1272">1272</a>
-<a href="#1273" id="1273">1273</a>
-<a href="#1274" id="1274">1274</a>
-<a href="#1275" id="1275">1275</a>
-<a href="#1276" id="1276">1276</a>
-<a href="#1277" id="1277">1277</a>
-<a href="#1278" id="1278">1278</a>
-<a href="#1279" id="1279">1279</a>
-<a href="#1280" id="1280">1280</a>
-<a href="#1281" id="1281">1281</a>
-<a href="#1282" id="1282">1282</a>
-<a href="#1283" id="1283">1283</a>
-<a href="#1284" id="1284">1284</a>
-<a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
-<a href="#1287" id="1287">1287</a>
-<a href="#1288" id="1288">1288</a>
-<a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
     },
     command::{
         bind::Binder,
-        compute_command::{ArcComputeCommand, ComputeCommand},
+        compute_command::ArcComputeCommand,
         end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
-        validate_and_begin_pipeline_statistics_query, BasePass, BindGroupStateChange,
-        CommandBuffer, CommandEncoderError, CommandEncoderStatus, MapPassErr, PassErrorScope,
-        QueryUseError, StateChange,
+        validate_and_begin_pipeline_statistics_query, ArcPassTimestampWrites, BasePass,
+        BindGroupStateChange, CommandBuffer, CommandEncoderError, CommandEncoderStatus, MapPassErr,
+        PassErrorScope, PassTimestampWrites, QueryUseError, StateChange,
     },
     device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures},
     error::{ErrorFormatter, PrettyError},
@@ -1324,10 +1300,6 @@
 };
 
 <span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
-<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-</span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-</span><span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
@@ -1349,7 +1321,7 @@
     /// If it is none, this pass is invalid and any operation on it will return an error.
     </span>parent: <span class="prelude-ty">Option</span>&lt;Arc&lt;CommandBuffer&lt;A&gt;&gt;&gt;,
 
-    timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
+    timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcPassTimestampWrites&lt;A&gt;&gt;,
 
     <span class="comment">// Resource binding dedupe state.
     </span>current_bind_groups: BindGroupStateChange,
@@ -1399,39 +1371,17 @@
     }
 }
 
-<span class="doccomment">/// Describes the writing of timestamp values in a compute pass.
-</span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>ComputePassTimestampWrites {
-    <span class="doccomment">/// The query set to write the timestamps to.
-    </span><span class="kw">pub </span>query_set: id::QuerySetId,
-    <span class="doccomment">/// The index of the query set at which a start timestamp of this pass is written, if any.
-    </span><span class="kw">pub </span>beginning_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-    <span class="doccomment">/// The index of the query set at which an end timestamp of this pass is written, if any.
-    </span><span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-}
-
-<span class="doccomment">/// Describes the writing of timestamp values in a compute pass with the query set resolved.
-</span><span class="kw">struct </span>ArcComputePassTimestampWrites&lt;A: HalApi&gt; {
-    <span class="doccomment">/// The query set to write the timestamps to.
-    </span><span class="kw">pub </span>query_set: Arc&lt;resource::QuerySet&lt;A&gt;&gt;,
-    <span class="doccomment">/// The index of the query set at which a start timestamp of this pass is written, if any.
-    </span><span class="kw">pub </span>beginning_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-    <span class="doccomment">/// The index of the query set at which an end timestamp of this pass is written, if any.
-    </span><span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-}
-
 <span class="attr">#[derive(Clone, Debug, Default)]
 </span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Defines where and when timestamp values will be written for this pass.
-    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ComputePassTimestampWrites&gt;,
+    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>PassTimestampWrites&gt;,
 }
 
 <span class="kw">struct </span>ArcComputePassDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
     <span class="kw">pub </span>label: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Defines where and when timestamp values will be written for this pass.
-    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
+    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcPassTimestampWrites&lt;A&gt;&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1666,7 +1616,9 @@
                     <span class="kw">let </span><span class="prelude-val">Ok</span>(query_set) = hub.query_sets.read().get_owned(tw.query_set) <span class="kw">else </span>{
                         <span class="kw">return </span>(
                             ComputePass::new(<span class="prelude-val">None</span>, arc_desc),
-                            <span class="prelude-val">Some</span>(CommandEncoderError::InvalidTimestampWritesQuerySetId),
+                            <span class="prelude-val">Some</span>(CommandEncoderError::InvalidTimestampWritesQuerySetId(
+                                tw.query_set,
+                            )),
                         );
                     };
 
@@ -1674,7 +1626,7 @@
                         <span class="kw">return </span>(ComputePass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e.into()));
                     }
 
-                    <span class="prelude-val">Some</span>(ArcComputePassTimestampWrites {
+                    <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                         query_set,
                         beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                         end_of_pass_write_index: tw.end_of_pass_write_index,
@@ -1725,20 +1677,22 @@
     }
 
     <span class="attr">#[doc(hidden)]
+    #[cfg(feature = <span class="string">"replay"</span>)]
     </span><span class="kw">pub fn </span>compute_pass_end_with_unresolved_commands&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
-        base: BasePass&lt;ComputeCommand&gt;,
-        timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ComputePassTimestampWrites&gt;,
+        base: BasePass&lt;<span class="kw">super</span>::ComputeCommand&gt;,
+        timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PassTimestampWrites&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>scope = PassErrorScope::PassEncoder(encoder_id);
 
         <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(scope)<span class="question-mark">?</span>;
-        <span class="kw">let </span>commands = ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), <span class="kw-2">&amp;</span>base.commands)<span class="question-mark">?</span>;
+        <span class="kw">let </span>commands =
+            <span class="kw">super</span>::ComputeCommand::resolve_compute_command_ids(A::hub(<span class="self">self</span>), <span class="kw-2">&amp;</span>base.commands)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes {
-            <span class="prelude-val">Some</span>(ArcComputePassTimestampWrites {
+            <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                 query_set: hub
                     .query_sets
                     .read()
@@ -1769,7 +1723,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer&lt;A&gt;,
         base: BasePass&lt;ArcComputeCommand&lt;A&gt;&gt;,
-        <span class="kw-2">mut </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcComputePassTimestampWrites&lt;A&gt;&gt;,
+        <span class="kw-2">mut </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ArcPassTimestampWrites&lt;A&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ComputePassError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::run_compute_pass"</span>);
         <span class="kw">let </span>pass_scope = PassErrorScope::Pass(<span class="prelude-val">Some</span>(cmd_buf.as_info().id()));
@@ -1790,13 +1744,11 @@
                     string_data: base.string_data.to_vec(),
                     push_constant_data: base.push_constant_data.to_vec(),
                 },
-                timestamp_writes: timestamp_writes
-                    .as_ref()
-                    .map(|tw| ComputePassTimestampWrites {
-                        query_set: tw.query_set.as_info().id(),
-                        beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
-                        end_of_pass_write_index: tw.end_of_pass_write_index,
-                    }),
+                timestamp_writes: timestamp_writes.as_ref().map(|tw| PassTimestampWrites {
+                    query_set: tw.query_set.as_info().id(),
+                    beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                    end_of_pass_write_index: tw.end_of_pass_write_index,
+                }),
             });
         }
 
@@ -2400,7 +2352,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>compute_pass_set_push_constant&lt;A: HalApi&gt;(
+    <span class="kw">pub fn </span>compute_pass_set_push_constants&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ComputePass&lt;A&gt;,
         offset: u32,

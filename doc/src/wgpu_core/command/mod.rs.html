@@ -927,6 +927,28 @@
 <a href="#926" id="926">926</a>
 <a href="#927" id="927">927</a>
 <a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -935,10 +957,12 @@
 <span class="kw">mod </span>compute_command;
 <span class="kw">mod </span>draw;
 <span class="kw">mod </span>dyn_compute_pass;
+<span class="kw">mod </span>dyn_render_pass;
 <span class="kw">mod </span>memory_init;
 <span class="kw">mod </span>query;
 <span class="kw">mod </span>render;
 <span class="kw">mod </span>render_command;
+<span class="kw">mod </span>timestamp_writes;
 <span class="kw">mod </span>transfer;
 
 <span class="kw">use </span>std::sync::Arc;
@@ -946,10 +970,13 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::clear::clear_texture;
 <span class="kw">pub use </span><span class="self">self</span>::{
     bundle::<span class="kw-2">*</span>, clear::ClearError, compute::<span class="kw-2">*</span>, compute_command::ComputeCommand, draw::<span class="kw-2">*</span>,
-    dyn_compute_pass::DynComputePass, query::<span class="kw-2">*</span>, render::<span class="kw-2">*</span>, render_command::RenderCommand,
-    transfer::<span class="kw-2">*</span>,
+    dyn_compute_pass::DynComputePass, dyn_render_pass::DynRenderPass, query::<span class="kw-2">*</span>, render::<span class="kw-2">*</span>,
+    render_command::RenderCommand, transfer::<span class="kw-2">*</span>,
 };
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>allocator::CommandAllocator;
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>timestamp_writes::ArcPassTimestampWrites;
+<span class="kw">pub use </span>timestamp_writes::PassTimestampWrites;
 
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
@@ -1533,8 +1560,28 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Command encoder is locked by a previously created render/compute pass. Before recording any new commands, the pass must be ended."</span>)]
     </span>Locked,
-    <span class="attr">#[error(<span class="string">"QuerySet provided for pass timestamp writes is invalid."</span>)]
-    </span>InvalidTimestampWritesQuerySetId,
+
+    <span class="attr">#[error(<span class="string">"QuerySet {0:?} for pass timestamp writes is invalid."</span>)]
+    </span>InvalidTimestampWritesQuerySetId(id::QuerySetId),
+    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
+    </span>InvalidAttachment(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} for resolve is invalid"</span>)]
+    </span>InvalidResolveTarget(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Depth stencil attachment view {0:?}  is invalid"</span>)]
+    </span>InvalidDepthStencilAttachment(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Occlusion query set {0:?} is invalid"</span>)]
+    </span>InvalidOcclusionQuerySetId(id::QuerySetId),
+}
+
+<span class="kw">impl </span>PrettyError <span class="kw">for </span>CommandEncoderError {
+    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
+        fmt.error(<span class="self">self</span>);
+        <span class="kw">if let </span><span class="self">Self</span>::InvalidAttachment(id) = <span class="kw-2">*</span><span class="self">self </span>{
+            fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"attachment"</span>);
+        } <span class="kw">else if let </span><span class="self">Self</span>::InvalidResolveTarget(id) = <span class="kw-2">*</span><span class="self">self </span>{
+            fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"resolve target"</span>);
+        };
+    }
 }
 
 <span class="kw">impl </span>Global {
@@ -1789,11 +1836,8 @@
     <span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
     </span>Bundle,
     <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-    </span><span class="comment">// TODO: To be removed in favor of `Pass`.
-    // ComputePass is already operating on command buffer instead,
-    // same should apply to RenderPass in the future.
-    </span>PassEncoder(id::CommandEncoderId),
-    <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
+    </span>PassEncoder(id::CommandEncoderId), <span class="comment">// Needed only for ending pass via tracing.
+    </span><span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
     </span>Pass(<span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;),
     <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
     </span>SetBindGroup,

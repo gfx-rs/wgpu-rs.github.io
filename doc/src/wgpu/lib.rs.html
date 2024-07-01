@@ -6000,6 +6000,38 @@
 <a href="#5999" id="5999">5999</a>
 <a href="#6000" id="6000">6000</a>
 <a href="#6001" id="6001">6001</a>
+<a href="#6002" id="6002">6002</a>
+<a href="#6003" id="6003">6003</a>
+<a href="#6004" id="6004">6004</a>
+<a href="#6005" id="6005">6005</a>
+<a href="#6006" id="6006">6006</a>
+<a href="#6007" id="6007">6007</a>
+<a href="#6008" id="6008">6008</a>
+<a href="#6009" id="6009">6009</a>
+<a href="#6010" id="6010">6010</a>
+<a href="#6011" id="6011">6011</a>
+<a href="#6012" id="6012">6012</a>
+<a href="#6013" id="6013">6013</a>
+<a href="#6014" id="6014">6014</a>
+<a href="#6015" id="6015">6015</a>
+<a href="#6016" id="6016">6016</a>
+<a href="#6017" id="6017">6017</a>
+<a href="#6018" id="6018">6018</a>
+<a href="#6019" id="6019">6019</a>
+<a href="#6020" id="6020">6020</a>
+<a href="#6021" id="6021">6021</a>
+<a href="#6022" id="6022">6022</a>
+<a href="#6023" id="6023">6023</a>
+<a href="#6024" id="6024">6024</a>
+<a href="#6025" id="6025">6025</a>
+<a href="#6026" id="6026">6026</a>
+<a href="#6027" id="6027">6027</a>
+<a href="#6028" id="6028">6028</a>
+<a href="#6029" id="6029">6029</a>
+<a href="#6030" id="6030">6030</a>
+<a href="#6031" id="6031">6031</a>
+<a href="#6032" id="6032">6032</a>
+<a href="#6033" id="6033">6033</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -7275,10 +7307,20 @@
 /// Corresponds to [WebGPU `GPURenderPassEncoder`](
 /// https://gpuweb.github.io/gpuweb/#render-pass-encoder).
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
+    <span class="doccomment">/// The inner data of the render pass, separated out so it's easy to replace the lifetime with 'static if desired.
+    </span>inner: RenderPassInner,
+
+    <span class="doccomment">/// This lifetime is used to protect the [`CommandEncoder`] from being used
+    /// while the pass is alive.
+    </span>encoder_guard: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'encoder </span>()&gt;,
+}
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">struct </span>RenderPassInner {
     id: ObjectId,
     data: Box&lt;Data&gt;,
-    parent: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandEncoder,
+    context: Arc&lt;C&gt;,
 }
 
 <span class="doccomment">/// In-progress recording of a compute pass.
@@ -7827,28 +7869,25 @@
 ///
 /// For use with [`CommandEncoder::begin_render_pass`].
 ///
-/// Note: separate lifetimes are needed because the texture views (`'tex`)
-/// have to live as long as the pass is recorded, while everything else (`'desc`) doesn't.
-///
 /// Corresponds to [WebGPU `GPURenderPassDescriptor`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpurenderpassdescriptor).
 </span><span class="attr">#[derive(Clone, Debug, Default)]
-</span><span class="kw">pub struct </span>RenderPassDescriptor&lt;<span class="lifetime">'tex</span>, <span class="lifetime">'desc</span>&gt; {
+</span><span class="kw">pub struct </span>RenderPassDescriptor&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'desc</span>&gt;,
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The color attachments of the render pass.
-    </span><span class="kw">pub </span>color_attachments: <span class="kw-2">&amp;</span><span class="lifetime">'desc </span>[<span class="prelude-ty">Option</span>&lt;RenderPassColorAttachment&lt;<span class="lifetime">'tex</span>&gt;&gt;],
+    </span><span class="kw">pub </span>color_attachments: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;RenderPassColorAttachment&lt;<span class="lifetime">'a</span>&gt;&gt;],
     <span class="doccomment">/// The depth and stencil attachment of the render pass, if any.
-    </span><span class="kw">pub </span>depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;RenderPassDepthStencilAttachment&lt;<span class="lifetime">'tex</span>&gt;&gt;,
+    </span><span class="kw">pub </span>depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;RenderPassDepthStencilAttachment&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="doccomment">/// Defines which timestamp values will be written for this pass, and where to write them to.
     ///
     /// Requires [`Features::TIMESTAMP_QUERY`] to be enabled.
-    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;RenderPassTimestampWrites&lt;<span class="lifetime">'desc</span>&gt;&gt;,
+    </span><span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;RenderPassTimestampWrites&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="doccomment">/// Defines where the occlusion query results will be stored for this pass.
-    </span><span class="kw">pub </span>occlusion_query_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'tex </span>QuerySet&gt;,
+    </span><span class="kw">pub </span>occlusion_query_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>QuerySet&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
-</span><span class="macro">static_assertions::assert_impl_all!</span>(RenderPassDescriptor&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;: Send, Sync);
+</span><span class="macro">static_assertions::assert_impl_all!</span>(RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.
 ///
@@ -9888,16 +9927,17 @@
     <span class="doccomment">/// Begins recording of a render pass.
     ///
     /// This function returns a [`RenderPass`] object which records a single render pass.
-    </span><span class="comment">//
-    // TODO(https://github.com/gfx-rs/wgpu/issues/1453):
-    // Just like with compute passes, we should have a way to opt out of the lifetime constraint.
-    // See https://github.com/gfx-rs/wgpu/pull/5768 for details
-    // Once this is done, the documentation for `begin_render_pass` and `begin_compute_pass` should
-    // be nearly identical.
-    </span><span class="kw">pub fn </span>begin_render_pass&lt;<span class="lifetime">'pass</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="lifetime">'pass</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; RenderPass&lt;<span class="lifetime">'pass</span>&gt; {
+    ///
+    /// As long as the returned  [`RenderPass`] has not ended,
+    /// any mutating operation on this command encoder causes an error and invalidates it.
+    /// Note that the `'encoder` lifetime relationship protects against this,
+    /// but it is possible to opt out of it by calling [`RenderPass::forget_lifetime`].
+    /// This can be useful for runtime handling of the encoder-&gt;pass
+    /// dependency e.g. when pass and encoder are stored in the same data structure.
+    </span><span class="kw">pub fn </span>begin_render_pass&lt;<span class="lifetime">'encoder</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'encoder </span><span class="kw-2">mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
+    ) -&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
         <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
         <span class="kw">let </span>(id, data) = DynContext::command_encoder_begin_render_pass(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
@@ -9906,9 +9946,12 @@
             desc,
         );
         RenderPass {
-            id,
-            data,
-            parent: <span class="self">self</span>,
+            inner: RenderPassInner {
+                id,
+                data,
+                context: <span class="self">self</span>.context.clone(),
+            },
+            encoder_guard: PhantomData,
         }
     }
 
@@ -10179,7 +10222,26 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
+    <span class="doccomment">/// Drops the lifetime relationship to the parent command encoder, making usage of
+    /// the encoder while this pass is recorded a run-time error instead.
+    ///
+    /// Attention: As long as the render pass has not been ended, any mutating operation on the parent
+    /// command encoder will cause a run-time error and invalidate it!
+    /// By default, the lifetime constraint prevents this, but it can be useful
+    /// to handle this at run time, such as when storing the pass and encoder in the same
+    /// data structure.
+    ///
+    /// This operation has no effect on pass recording.
+    /// It's a safe operation, since [`CommandEncoder`] is in a locked state as long as the pass is active
+    /// regardless of the lifetime constraint or its absence.
+    </span><span class="kw">pub fn </span>forget_lifetime(<span class="self">self</span>) -&gt; RenderPass&lt;<span class="lifetime">'static</span>&gt; {
+        RenderPass {
+            inner: <span class="self">self</span>.inner,
+            encoder_guard: PhantomData,
+        }
+    }
+
     <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout
     /// in the active pipeline when any `draw_*()` method is called must match the layout of
     /// this bind group.
@@ -10192,13 +10254,13 @@
     </span><span class="kw">pub fn </span>set_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         index: u32,
-        bind_group: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BindGroup,
+        bind_group: <span class="kw-2">&amp;</span>BindGroup,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
         DynContext::render_pass_set_bind_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             index,
             <span class="kw-2">&amp;</span>bind_group.id,
             bind_group.data.as_ref(),
@@ -10209,11 +10271,11 @@
     <span class="doccomment">/// Sets the active render pipeline.
     ///
     /// Subsequent draw calls will exhibit the behavior defined by `pipeline`.
-    </span><span class="kw">pub fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>RenderPipeline) {
+    </span><span class="kw">pub fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>RenderPipeline) {
         DynContext::render_pass_set_pipeline(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>pipeline.id,
             pipeline.data.as_ref(),
         )
@@ -10226,9 +10288,9 @@
     /// (all components zero).
     </span><span class="kw">pub fn </span>set_blend_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: Color) {
         DynContext::render_pass_set_blend_constant(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             color,
         )
     }
@@ -10237,11 +10299,11 @@
     ///
     /// Subsequent calls to [`draw_indexed`](RenderPass::draw_indexed) on this [`RenderPass`] will
     /// use `buffer` as the source index buffer.
-    </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;, index_format: IndexFormat) {
+    </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;, index_format: IndexFormat) {
         DynContext::render_pass_set_index_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>buffer_slice.buffer.id,
             buffer_slice.buffer.data.as_ref(),
             index_format,
@@ -10260,11 +10322,11 @@
     ///
     /// [`draw`]: RenderPass::draw
     /// [`draw_indexed`]: RenderPass::draw_indexed
-    </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;) {
+    </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;) {
         DynContext::render_pass_set_vertex_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             slot,
             <span class="kw-2">&amp;</span>buffer_slice.buffer.id,
             buffer_slice.buffer.data.as_ref(),
@@ -10284,9 +10346,9 @@
     /// but it does not affect the coordinate system, only which fragments are discarded.
     </span><span class="kw">pub fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: u32, y: u32, width: u32, height: u32) {
         DynContext::render_pass_set_scissor_rect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             x,
             y,
             width,
@@ -10302,9 +10364,9 @@
     /// targets.
     </span><span class="kw">pub fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: f32, y: f32, w: f32, h: f32, min_depth: f32, max_depth: f32) {
         DynContext::render_pass_set_viewport(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             x,
             y,
             w,
@@ -10320,9 +10382,9 @@
     /// If this method has not been called, the stencil reference value defaults to `0`.
     </span><span class="kw">pub fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reference: u32) {
         DynContext::render_pass_set_stencil_reference(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             reference,
         );
     }
@@ -10330,9 +10392,9 @@
     <span class="doccomment">/// Inserts debug marker.
     </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::render_pass_insert_debug_marker(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             label,
         );
     }
@@ -10340,9 +10402,9 @@
     <span class="doccomment">/// Start record commands and group it into debug marker group.
     </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::render_pass_push_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             label,
         );
     }
@@ -10350,9 +10412,9 @@
     <span class="doccomment">/// Stops command recording and creates debug group.
     </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::render_pass_pop_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
         );
     }
 
@@ -10379,9 +10441,9 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
         DynContext::render_pass_draw(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             vertices,
             instances,
         )
@@ -10413,9 +10475,9 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
         DynContext::render_pass_draw_indexed(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             indices,
             base_vertex,
             instances,
@@ -10435,11 +10497,11 @@
     ///   any use of `@builtin(vertex_index)` or `@builtin(instance_index)` in the vertex shader will have different values.
     ///
     /// See details on the individual flags for more information.
-    </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer, indirect_offset: BufferAddress) {
+    </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span>Buffer, indirect_offset: BufferAddress) {
         DynContext::render_pass_draw_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10462,13 +10524,13 @@
     /// See details on the individual flags for more information.
     </span><span class="kw">pub fn </span>draw_indexed_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        indirect_buffer: <span class="kw-2">&amp;</span>Buffer,
         indirect_offset: BufferAddress,
     ) {
         DynContext::render_pass_draw_indexed_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10480,22 +10542,25 @@
     ///
     /// Commands in the bundle do not inherit this render pass's current render state, and after the
     /// bundle has executed, the state is **cleared** (reset to defaults, not the previous state).
-    </span><span class="kw">pub fn </span>execute_bundles&lt;I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>RenderBundle&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, render_bundles: I) {
+    </span><span class="kw">pub fn </span>execute_bundles&lt;<span class="lifetime">'a</span>, I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>RenderBundle&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        render_bundles: I,
+    ) {
         <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles
             .into_iter()
             .map(|rb| (<span class="kw-2">&amp;</span>rb.id, rb.data.as_ref()));
 
         DynContext::render_pass_execute_bundles(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;mut </span>render_bundles,
         )
     }
 }
 
 <span class="doccomment">/// [`Features::MULTI_DRAW_INDIRECT`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Dispatches multiple draw calls from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
     /// `count` draw calls are issued.
     ///
@@ -10508,14 +10573,14 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>multi_draw_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        indirect_buffer: <span class="kw-2">&amp;</span>Buffer,
         indirect_offset: BufferAddress,
         count: u32,
     ) {
         DynContext::render_pass_multi_draw_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10536,14 +10601,14 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>multi_draw_indexed_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        indirect_buffer: <span class="kw-2">&amp;</span>Buffer,
         indirect_offset: BufferAddress,
         count: u32,
     ) {
         DynContext::render_pass_multi_draw_indexed_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10553,7 +10618,7 @@
 }
 
 <span class="doccomment">/// [`Features::MULTI_DRAW_INDIRECT_COUNT`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Dispatches multiple draw calls from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
     /// The count buffer is read to determine how many draws to issue.
     ///
@@ -10578,16 +10643,16 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>multi_draw_indirect_count(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        indirect_buffer: <span class="kw-2">&amp;</span>Buffer,
         indirect_offset: BufferAddress,
-        count_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        count_buffer: <span class="kw-2">&amp;</span>Buffer,
         count_offset: BufferAddress,
         max_count: u32,
     ) {
         DynContext::render_pass_multi_draw_indirect_count(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10625,16 +10690,16 @@
     /// It is not affected by changes to the state that are performed after it is called.
     </span><span class="kw">pub fn </span>multi_draw_indexed_indirect_count(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        indirect_buffer: <span class="kw-2">&amp;</span>Buffer,
         indirect_offset: BufferAddress,
-        count_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
+        count_buffer: <span class="kw-2">&amp;</span>Buffer,
         count_offset: BufferAddress,
         max_count: u32,
     ) {
         DynContext::render_pass_multi_draw_indexed_indirect_count(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
@@ -10647,7 +10712,7 @@
 }
 
 <span class="doccomment">/// [`Features::PUSH_CONSTANTS`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Set push constant data for subsequent draw calls.
     ///
     /// Write the bytes in `data` at offset `offset` within push constant
@@ -10690,9 +10755,9 @@
     /// [`PushConstant`]: https://docs.rs/naga/latest/naga/enum.StorageClass.html#variant.PushConstant
     </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
         DynContext::render_pass_set_push_constants(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             stages,
             offset,
             data,
@@ -10701,7 +10766,7 @@
 }
 
 <span class="doccomment">/// [`Features::TIMESTAMP_QUERY_INSIDE_PASSES`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Issue a timestamp command at this point in the queue. The
     /// timestamp will be written to the specified query set, at the specified index.
     ///
@@ -10711,9 +10776,9 @@
     /// for a string of operations to complete.
     </span><span class="kw">pub fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::render_pass_write_timestamp(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
@@ -10721,14 +10786,14 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Start a occlusion query on this render pass. It can be ended with
     /// `end_occlusion_query`. Occlusion queries may not be nested.
     </span><span class="kw">pub fn </span>begin_occlusion_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_index: u32) {
         DynContext::render_pass_begin_occlusion_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             query_index,
         );
     }
@@ -10737,22 +10802,22 @@
     /// `begin_occlusion_query`. Occlusion queries may not be nested.
     </span><span class="kw">pub fn </span>end_occlusion_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::render_pass_end_occlusion_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
         );
     }
 }
 
 <span class="doccomment">/// [`Features::PIPELINE_STATISTICS_QUERY`] must be enabled on the device in order to call these functions.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'encoder</span>&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
     <span class="doccomment">/// Start a pipeline statistics query on this render pass. It can be ended with
     /// `end_pipeline_statistics_query`. Pipeline statistics queries may not be nested.
     </span><span class="kw">pub fn </span>begin_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::render_pass_begin_pipeline_statistics_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
@@ -10763,18 +10828,17 @@
     /// `begin_pipeline_statistics_query`. Pipeline statistics queries may not be nested.
     </span><span class="kw">pub fn </span>end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::render_pass_end_pipeline_statistics_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
+            <span class="self">self</span>.inner.data.as_mut(),
         );
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Drop <span class="kw">for </span>RenderPass&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>RenderPassInner {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.parent
-                .context
+            <span class="self">self</span>.context
                 .render_pass_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>.id, <span class="self">self</span>.data.as_mut());
         }
     }

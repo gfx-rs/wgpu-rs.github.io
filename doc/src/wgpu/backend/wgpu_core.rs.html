@@ -3552,30 +3552,6 @@
 <a href="#3551" id="3551">3551</a>
 <a href="#3552" id="3552">3552</a>
 <a href="#3553" id="3553">3553</a>
-<a href="#3554" id="3554">3554</a>
-<a href="#3555" id="3555">3555</a>
-<a href="#3556" id="3556">3556</a>
-<a href="#3557" id="3557">3557</a>
-<a href="#3558" id="3558">3558</a>
-<a href="#3559" id="3559">3559</a>
-<a href="#3560" id="3560">3560</a>
-<a href="#3561" id="3561">3561</a>
-<a href="#3562" id="3562">3562</a>
-<a href="#3563" id="3563">3563</a>
-<a href="#3564" id="3564">3564</a>
-<a href="#3565" id="3565">3565</a>
-<a href="#3566" id="3566">3566</a>
-<a href="#3567" id="3567">3567</a>
-<a href="#3568" id="3568">3568</a>
-<a href="#3569" id="3569">3569</a>
-<a href="#3570" id="3570">3570</a>
-<a href="#3571" id="3571">3571</a>
-<a href="#3572" id="3572">3572</a>
-<a href="#3573" id="3573">3573</a>
-<a href="#3574" id="3574">3574</a>
-<a href="#3575" id="3575">3575</a>
-<a href="#3576" id="3576">3576</a>
-<a href="#3577" id="3577">3577</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -4068,7 +4044,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>RenderPass {
-    pass: wgc::command::RenderPass,
+    pass: Box&lt;<span class="kw">dyn </span>wgc::command::DynRenderPass&gt;,
     error_sink: ErrorSink,
 }
 
@@ -5491,7 +5467,7 @@
         <span class="kw">let </span>timestamp_writes =
             desc.timestamp_writes
                 .as_ref()
-                .map(|tw| wgc::command::ComputePassTimestampWrites {
+                .map(|tw| wgc::command::PassTimestampWrites {
                     query_set: tw.query_set.id.into(),
                     beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                     end_of_pass_write_index: tw.end_of_pass_write_index,
@@ -5525,7 +5501,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderId,
         encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::RenderPassId, <span class="self">Self</span>::RenderPassData) {
         <span class="kw">if </span>desc.color_attachments.len() &gt; wgc::MAX_COLOR_ATTACHMENTS {
             <span class="self">self</span>.handle_error_fatal(
@@ -5560,27 +5536,34 @@
         <span class="kw">let </span>timestamp_writes =
             desc.timestamp_writes
                 .as_ref()
-                .map(|tw| wgc::command::RenderPassTimestampWrites {
+                .map(|tw| wgc::command::PassTimestampWrites {
                     query_set: tw.query_set.id.into(),
                     beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                     end_of_pass_write_index: tw.end_of_pass_write_index,
                 });
 
+        <span class="kw">let </span>(pass, err) = <span class="macro">gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.command_encoder_create_render_pass_dyn(<span class="kw-2">*</span>encoder, <span class="kw-2">&amp;</span>wgc::command::RenderPassDescriptor {
+            label: desc.label.map(Borrowed),
+            timestamp_writes: timestamp_writes.as_ref(),
+            color_attachments: std::borrow::Cow::Borrowed(<span class="kw-2">&amp;</span>colors),
+            depth_stencil_attachment: depth_stencil.as_ref(),
+            occlusion_query_set: desc.occlusion_query_set.map(|query_set| query_set.id.into()),
+        }));
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = err {
+            <span class="self">self</span>.handle_error(
+                <span class="kw-2">&amp;</span>encoder_data.error_sink,
+                cause,
+                LABEL,
+                desc.label,
+                <span class="string">"CommandEncoder::begin_compute_pass"</span>,
+            );
+        }
+
         (
             Unused,
-            RenderPass {
-                pass: wgc::command::RenderPass::new(
-                    <span class="kw-2">*</span>encoder,
-                    <span class="kw-2">&amp;</span>wgc::command::RenderPassDescriptor {
-                        label: desc.label.map(Borrowed),
-                        color_attachments: Borrowed(<span class="kw-2">&amp;</span>colors),
-                        depth_stencil_attachment: depth_stencil.as_ref(),
-                        timestamp_writes: timestamp_writes.as_ref(),
-                        occlusion_query_set: desc
-                            .occlusion_query_set
-                            .map(|query_set| query_set.id.into()),
-                    },
-                ),
+            <span class="self">Self</span>::RenderPassData {
+                pass,
                 error_sink: encoder_data.error_sink.clone(),
             },
         )
@@ -6016,7 +5999,7 @@
         offset: u32,
         data: <span class="kw-2">&amp;</span>[u8],
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_push_constant(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, offset, data) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_push_constants(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, offset, data) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6388,10 +6371,7 @@
         pipeline: <span class="kw-2">&amp;</span><span class="self">Self</span>::RenderPipelineId,
         _pipeline_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::RenderPipelineData,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_set_pipeline(<span class="kw-2">&amp;mut </span>pass_data.pass, <span class="kw-2">*</span>pipeline)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>pipeline) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6411,9 +6391,9 @@
         _bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_set_bind_group(<span class="kw-2">&amp;mut </span>pass_data.pass, index, <span class="kw-2">*</span>bind_group, offsets)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, index, <span class="kw-2">*</span>bind_group, offsets)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6435,13 +6415,11 @@
         offset: wgt::BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_set_index_buffer(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            <span class="kw-2">*</span>buffer,
-            index_format,
-            offset,
-            size,
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .set_index_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>buffer, index_format, offset, size)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6462,9 +6440,9 @@
         offset: wgt::BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_set_vertex_buffer(<span class="kw-2">&amp;mut </span>pass_data.pass, slot, <span class="kw-2">*</span>buffer, offset, size)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_vertex_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, slot, <span class="kw-2">*</span>buffer, offset, size)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6484,9 +6462,9 @@
         offset: u32,
         data: <span class="kw-2">&amp;</span>[u8],
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_set_push_constants(<span class="kw-2">&amp;mut </span>pass_data.pass, stages, offset, data)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_push_constants(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, stages, offset, data)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6505,8 +6483,8 @@
         vertices: Range&lt;u32&gt;,
         instances: Range&lt;u32&gt;,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_draw(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.draw(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
             vertices.end - vertices.start,
             instances.end - instances.start,
             vertices.start,
@@ -6530,8 +6508,8 @@
         base_vertex: i32,
         instances: Range&lt;u32&gt;,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_draw_indexed(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.draw_indexed(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
             indices.end - indices.start,
             instances.end - instances.start,
             indices.start,
@@ -6556,9 +6534,9 @@
         _indirect_buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         indirect_offset: wgt::BufferAddress,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_draw_indirect(<span class="kw-2">&amp;mut </span>pass_data.pass, <span class="kw-2">*</span>indirect_buffer, indirect_offset)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .draw_indirect(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>indirect_buffer, indirect_offset)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6578,11 +6556,11 @@
         _indirect_buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         indirect_offset: wgt::BufferAddress,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_draw_indexed_indirect(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            <span class="kw-2">*</span>indirect_buffer,
-            indirect_offset,
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .draw_indexed_indirect(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>indirect_buffer, indirect_offset)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6602,12 +6580,11 @@
         indirect_offset: wgt::BufferAddress,
         count: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_multi_draw_indirect(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            <span class="kw-2">*</span>indirect_buffer,
-            indirect_offset,
-            count,
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .multi_draw_indirect(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>indirect_buffer, indirect_offset, count)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6627,8 +6604,8 @@
         indirect_offset: wgt::BufferAddress,
         count: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_multi_draw_indexed_indirect(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.multi_draw_indexed_indirect(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
             <span class="kw-2">*</span>indirect_buffer,
             indirect_offset,
             count,
@@ -6655,8 +6632,8 @@
         count_buffer_offset: wgt::BufferAddress,
         max_count: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_multi_draw_indirect_count(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.multi_draw_indirect_count(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
             <span class="kw-2">*</span>indirect_buffer,
             indirect_offset,
             <span class="kw-2">*</span>count_buffer,
@@ -6685,8 +6662,8 @@
         count_buffer_offset: wgt::BufferAddress,
         max_count: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_multi_draw_indexed_indirect_count(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.multi_draw_indexed_indirect_count(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
             <span class="kw-2">*</span>indirect_buffer,
             indirect_offset,
             <span class="kw-2">*</span>count_buffer,
@@ -6709,10 +6686,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         color: wgt::Color,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_set_blend_constant(<span class="kw-2">&amp;mut </span>pass_data.pass, <span class="kw-2">&amp;</span>color)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_blend_constant(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, color) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6732,9 +6706,9 @@
         width: u32,
         height: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_set_scissor_rect(<span class="kw-2">&amp;mut </span>pass_data.pass, x, y, width, height)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_scissor_rect(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, x, y, width, height)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6757,15 +6731,10 @@
         min_depth: f32,
         max_depth: f32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_set_viewport(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            x,
-            y,
-            width,
-            height,
-            min_depth,
-            max_depth,
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .set_viewport(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, x, y, width, height, min_depth, max_depth)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6782,10 +6751,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         reference: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_set_stencil_reference(<span class="kw-2">&amp;mut </span>pass_data.pass, reference)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.set_stencil_reference(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, reference) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6802,10 +6768,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         label: <span class="kw-2">&amp;</span>str,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_insert_debug_marker(<span class="kw-2">&amp;mut </span>pass_data.pass, label, <span class="number">0</span>)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.insert_debug_marker(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, label, <span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6822,10 +6785,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         group_label: <span class="kw-2">&amp;</span>str,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_push_debug_group(<span class="kw-2">&amp;mut </span>pass_data.pass, group_label, <span class="number">0</span>)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.push_debug_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, group_label, <span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6841,7 +6801,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_pop_debug_group(<span class="kw-2">&amp;mut </span>pass_data.pass) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.pop_debug_group(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6860,9 +6820,9 @@
         _query_set_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QuerySetData,
         query_index: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
-            <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_write_timestamp(<span class="kw-2">&amp;mut </span>pass_data.pass, <span class="kw-2">*</span>query_set, query_index)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .write_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>query_set, query_index)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6880,10 +6840,7 @@
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         query_index: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_begin_occlusion_query(<span class="kw-2">&amp;mut </span>pass_data.pass, query_index)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.begin_occlusion_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, query_index) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6899,7 +6856,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_end_occlusion_query(<span class="kw-2">&amp;mut </span>pass_data.pass) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.end_occlusion_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6918,11 +6875,11 @@
         _query_set_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QuerySetData,
         query_index: u32,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.render_pass_begin_pipeline_statistics_query(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            <span class="kw-2">*</span>query_set,
-            query_index,
-        ) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            pass_data
+                .pass
+                .begin_pipeline_statistics_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">*</span>query_set, query_index)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6938,10 +6895,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span>pass_data.pass)
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.end_pipeline_statistics_query(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -6959,9 +6913,9 @@
         render_bundles: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = (<span class="self">Self</span>::RenderBundleId, <span class="kw-2">&amp;</span><span class="self">Self</span>::RenderBundleData)&gt;,
     ) {
         <span class="kw">let </span>temp_render_bundles = render_bundles.map(|(i, <span class="kw">_</span>)| i).collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
-            </span>.<span class="number">0
-            </span>.render_pass_execute_bundles(<span class="kw-2">&amp;mut </span>pass_data.pass, <span class="kw-2">&amp;</span>temp_render_bundles)
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data
+            .pass
+            .execute_bundles(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>temp_render_bundles)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
@@ -6978,9 +6932,7 @@
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
     ) {
-        <span class="kw">let </span>encoder = pass_data.pass.parent_id();
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="macro">wgc::gfx_select!</span>(encoder =&gt; <span class="self">self</span>.<span class="number">0</span>.render_pass_end(<span class="kw-2">&amp;mut </span>pass_data.pass))
-        {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = pass_data.pass.end(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
