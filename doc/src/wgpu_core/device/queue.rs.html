@@ -1573,6 +1573,8 @@
 <a href="#1572" id="1572">1572</a>
 <a href="#1573" id="1573">1573</a>
 <a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -3047,23 +3049,25 @@
                 )
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures =
-                SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::with_capacity(submit_surface_textures_owned.len());
+            {
+                <span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures =
+                    SmallVec::&lt;[<span class="kw">_</span>; <span class="number">2</span>]&gt;::with_capacity(submit_surface_textures_owned.len());
 
-            <span class="kw">for </span>texture <span class="kw">in </span>submit_surface_textures_owned.values() {
-                submit_surface_textures.extend(<span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
-                    <span class="prelude-val">Some</span>(TextureInner::Surface { raw, .. }) =&gt; raw.as_ref(),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-                });
-            }
+                <span class="kw">for </span>texture <span class="kw">in </span>submit_surface_textures_owned.values() {
+                    submit_surface_textures.extend(<span class="kw">match </span>texture.inner.get(<span class="kw-2">&amp;</span>snatch_guard) {
+                        <span class="prelude-val">Some</span>(TextureInner::Surface { raw, .. }) =&gt; raw.as_ref(),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                    });
+                }
 
-            <span class="kw">unsafe </span>{
-                queue
-                    .raw
-                    .as_ref()
-                    .unwrap()
-                    .submit(<span class="kw-2">&amp;</span>refs, <span class="kw-2">&amp;</span>submit_surface_textures, (fence, submit_index))
-                    .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                <span class="kw">unsafe </span>{
+                    queue
+                        .raw
+                        .as_ref()
+                        .unwrap()
+                        .submit(<span class="kw-2">&amp;</span>refs, <span class="kw-2">&amp;</span>submit_surface_textures, (fence, submit_index))
+                        .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                }
             }
 
             <span class="macro">profiling::scope!</span>(<span class="string">"cleanup"</span>);

@@ -1813,8 +1813,6 @@
 <a href="#1812" id="1812">1812</a>
 <a href="#1813" id="1813">1813</a>
 <a href="#1814" id="1814">1814</a>
-<a href="#1815" id="1815">1815</a>
-<a href="#1816" id="1816">1816</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2284,7 +2282,7 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Buffer&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Buffer&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer&gt; {
         <span class="self">self</span>.raw.get(guard)
     }
 
@@ -2871,7 +2869,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inner_mut&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
-        guard: <span class="kw-2">&amp;mut </span>ExclusiveSnatchGuard,
+        guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExclusiveSnatchGuard,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>TextureInner&lt;A&gt;&gt; {
         <span class="self">self</span>.inner.get_mut(guard)
     }
@@ -2970,10 +2968,8 @@
         <span class="kw">let </span>buffer_opt = { hub.buffers.try_get(id).ok().flatten() };
         <span class="kw">let </span>buffer = buffer_opt.as_ref().unwrap();
 
-        <span class="kw">let </span>hal_buffer = {
-            <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
-            buffer.raw(<span class="kw-2">&amp;</span>snatch_guard)
-        };
+        <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+        <span class="kw">let </span>hal_buffer = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
 
         hal_buffer_callback(hal_buffer)
     }
