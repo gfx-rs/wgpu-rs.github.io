@@ -1541,40 +1541,6 @@
 <a href="#1540" id="1540">1540</a>
 <a href="#1541" id="1541">1541</a>
 <a href="#1542" id="1542">1542</a>
-<a href="#1543" id="1543">1543</a>
-<a href="#1544" id="1544">1544</a>
-<a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
-<a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
-<a href="#1553" id="1553">1553</a>
-<a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a>
-<a href="#1556" id="1556">1556</a>
-<a href="#1557" id="1557">1557</a>
-<a href="#1558" id="1558">1558</a>
-<a href="#1559" id="1559">1559</a>
-<a href="#1560" id="1560">1560</a>
-<a href="#1561" id="1561">1561</a>
-<a href="#1562" id="1562">1562</a>
-<a href="#1563" id="1563">1563</a>
-<a href="#1564" id="1564">1564</a>
-<a href="#1565" id="1565">1565</a>
-<a href="#1566" id="1566">1566</a>
-<a href="#1567" id="1567">1567</a>
-<a href="#1568" id="1568">1568</a>
-<a href="#1569" id="1569">1569</a>
-<a href="#1570" id="1570">1570</a>
-<a href="#1571" id="1571">1571</a>
-<a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
-<a href="#1576" id="1576">1576</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1594,8 +1560,8 @@
     lock::{rank, Mutex, RwLockWriteGuard},
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedResourceError,
-        DestroyedTexture, ParentDevice, Resource, ResourceErrorIdent, ResourceInfo, ResourceType,
-        StagingBuffer, Texture, TextureInner,
+        DestroyedTexture, Labeled, ParentDevice, ResourceErrorIdent, StagingBuffer, Texture,
+        TextureInner, Trackable, TrackingData,
     },
     resource_log,
     track::{<span class="self">self</span>, TrackerIndex},
@@ -1614,36 +1580,25 @@
 <span class="kw">use </span><span class="kw">super</span>::Device;
 
 <span class="kw">pub struct </span>Queue&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device: <span class="prelude-ty">Option</span>&lt;Arc&lt;Device&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::Queue&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Queue&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Queue&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Queue"</span>;
-
-    <span class="kw">type </span>Marker = id::markers::Queue;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
+<span class="macro">crate::impl_resource_type!</span>(Queue);
+<span class="comment">// TODO: https://github.com/gfx-rs/wgpu/issues/4014
+</span><span class="kw">impl</span>&lt;A: HalApi&gt; Labeled <span class="kw">for </span>Queue&lt;A&gt; {
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="string">""
+    </span>}
 }
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>Queue&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="self">self</span>.device.as_ref().unwrap()
-    }
-}
+<span class="macro">crate::impl_parent_device!</span>(Queue);
+<span class="macro">crate::impl_storage_item!</span>(Queue);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Queue&lt;A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">let </span>queue = <span class="self">self</span>.raw.take().unwrap();
-        <span class="self">self</span>.device.as_ref().unwrap().release_queue(queue);
+        <span class="self">self</span>.device.release_queue(queue);
     }
 }
 
@@ -1826,21 +1781,20 @@
 
     <span class="kw">pub fn </span>insert_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;) {
         <span class="self">self</span>.dst_buffers
-            .insert(buffer.info.tracker_index(), buffer.clone());
+            .insert(buffer.tracker_index(), buffer.clone());
     }
 
     <span class="kw">pub fn </span>insert_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;) {
         <span class="self">self</span>.dst_textures
-            .insert(texture.info.tracker_index(), texture.clone());
+            .insert(texture.tracker_index(), texture.clone());
     }
 
     <span class="kw">pub fn </span>contains_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;) -&gt; bool {
-        <span class="self">self</span>.dst_buffers.contains_key(<span class="kw-2">&amp;</span>buffer.info.tracker_index())
+        <span class="self">self</span>.dst_buffers.contains_key(<span class="kw-2">&amp;</span>buffer.tracker_index())
     }
 
     <span class="kw">pub fn </span>contains_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;) -&gt; bool {
-        <span class="self">self</span>.dst_textures
-            .contains_key(<span class="kw-2">&amp;</span>texture.info.tracker_index())
+        <span class="self">self</span>.dst_textures.contains_key(<span class="kw-2">&amp;</span>texture.tracker_index())
     }
 
     <span class="kw">pub fn </span>consume_temp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: TempResource&lt;A&gt;) {
@@ -1926,7 +1880,7 @@
         raw: Mutex::new(rank::STAGING_BUFFER_RAW, <span class="prelude-val">Some</span>(buffer)),
         device: device.clone(),
         size,
-        info: ResourceInfo::new(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(device.tracker_indices.staging_buffers.clone())),
+        tracking_data: TrackingData::new(device.tracker_indices.staging_buffers.clone()),
         is_coherent: mapping.is_coherent,
     };
 
@@ -2013,7 +1967,7 @@
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
 
@@ -2043,8 +1997,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
         <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
-        <span class="kw">let </span>stage_fid = hub.staging_buffers.request();
-        <span class="kw">let </span>staging_buffer = stage_fid.init(staging_buffer);
+        <span class="kw">let </span>staging_buffer = Arc::new(staging_buffer);
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"copy"</span>);
@@ -2082,7 +2035,7 @@
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
             prepare_staging_buffer(device, buffer_size.get(), device.instance_flags)<span class="question-mark">?</span>;
@@ -2109,7 +2062,7 @@
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="kw">let </span>staging_buffer = hub.staging_buffers.unregister(staging_buffer_id);
         <span class="kw">if </span>staging_buffer.is_none() {
@@ -2158,7 +2111,7 @@
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>buffer, buffer_id, buffer_offset, buffer_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>buffer, buffer_offset, buffer_size)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2166,16 +2119,10 @@
     <span class="kw">fn </span>queue_validate_write_buffer_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt;,
-        buffer_id: id::BufferId,
         buffer_offset: u64,
         buffer_size: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
-        <span class="kw">if </span>!buffer.usage.contains(wgt::BufferUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopyDstUsageFlag(
-                <span class="prelude-val">Some</span>(buffer_id),
-                <span class="prelude-val">None</span>,
-            ));
-        }
+        buffer.check_usage(wgt::BufferUsages::COPY_DST)<span class="question-mark">?</span>;
         <span class="kw">if </span>buffer_size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopySize(buffer_size));
         }
@@ -2221,10 +2168,9 @@
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>src_buffer_size = staging_buffer.size;
-        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_id, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
 
-        dst.info
-            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
+        dst.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
         <span class="kw">let </span>region = wgt::BufferSize::new(src_buffer_size).map(|size| hal::BufferCopy {
             src_offset: <span class="number">0</span>,
@@ -2278,7 +2224,7 @@
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
@@ -2303,11 +2249,8 @@
 
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>!dst.desc.usage.contains(wgt::TextureUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(destination.texture)).into(),
-            );
-        }
+        dst.check_usage(wgt::TextureUsages::COPY_DST)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
 
         <span class="comment">// Note: Doing the copy range validation early is important because ensures that the
         // dimensions are not going to cause overflow in other parts of the validation.
@@ -2424,8 +2367,7 @@
         // call above. Since we've held `texture_guard` the whole time, we know
         // the texture hasn't gone away in the mean time, so we can unwrap.
         </span><span class="kw">let </span>dst = hub.textures.get(destination.texture).unwrap();
-        dst.info
-            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
+        dst.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
         <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
@@ -2439,8 +2381,7 @@
         </span><span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
             prepare_staging_buffer(device, stage_size, device.instance_flags)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>stage_fid = hub.staging_buffers.request();
-        <span class="kw">let </span>staging_buffer = stage_fid.init(staging_buffer);
+        <span class="kw">let </span>staging_buffer = Arc::new(staging_buffer);
 
         <span class="kw">if </span>stage_bytes_per_row == bytes_per_row {
             <span class="macro">profiling::scope!</span>(<span class="string">"copy aligned"</span>);
@@ -2538,7 +2479,7 @@
             .get(queue_id)
             .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="kw">if </span>size.width == <span class="number">0 </span>|| size.height == <span class="number">0 </span>|| size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring write_texture of size 0"</span>);
@@ -2574,11 +2515,8 @@
         <span class="kw">if </span>dst.desc.dimension != wgt::TextureDimension::D2 {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidDimensionExternal(destination.texture).into());
         }
-        <span class="kw">if </span>!dst.desc.usage.contains(wgt::TextureUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(destination.texture)).into(),
-            );
-        }
+        dst.check_usage(wgt::TextureUsages::COPY_DST)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
         <span class="kw">if </span>!dst
             .desc
             .usage
@@ -2682,8 +2620,7 @@
                     .drain(init_layer_range);
             }
         }
-        dst.info
-            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
+        dst.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
@@ -2733,7 +2670,7 @@
                 .get(queue_id)
                 .map_err(|<span class="kw">_</span>| QueueSubmitError::InvalidQueueId)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
             <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
 
@@ -2812,7 +2749,7 @@
                                 <span class="macro">profiling::scope!</span>(<span class="string">"buffers"</span>);
                                 <span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
                                     buffer.check_destroyed(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-                                    buffer.info.use_at(submit_index);
+                                    buffer.use_at(submit_index);
 
                                     <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
                                         BufferMapState::Idle =&gt; (),
@@ -2839,7 +2776,7 @@
                                             <span class="bool-val">true
                                         </span>}
                                     };
-                                    texture.info.use_at(submit_index);
+                                    texture.use_at(submit_index);
                                     <span class="kw">if </span>should_extend {
                                         <span class="kw">unsafe </span>{
                                             used_surface_textures
@@ -2856,21 +2793,21 @@
                             {
                                 <span class="macro">profiling::scope!</span>(<span class="string">"views"</span>);
                                 <span class="kw">for </span>texture_view <span class="kw">in </span>cmd_buf_trackers.views.used_resources() {
-                                    texture_view.info.use_at(submit_index);
+                                    texture_view.use_at(submit_index);
                                 }
                             }
                             {
                                 <span class="macro">profiling::scope!</span>(<span class="string">"bind groups (+ referenced views/samplers)"</span>);
                                 <span class="kw">for </span>bg <span class="kw">in </span>cmd_buf_trackers.bind_groups.used_resources() {
-                                    bg.info.use_at(submit_index);
+                                    bg.use_at(submit_index);
                                     <span class="comment">// We need to update the submission indices for the contained
                                     // state-less (!) resources as well, so that they don't get
                                     // deleted too early if the parent bind group goes out of scope.
                                     </span><span class="kw">for </span>view <span class="kw">in </span>bg.used.views.used_resources() {
-                                        view.info.use_at(submit_index);
+                                        view.use_at(submit_index);
                                     }
                                     <span class="kw">for </span>sampler <span class="kw">in </span>bg.used.samplers.used_resources() {
-                                        sampler.info.use_at(submit_index);
+                                        sampler.use_at(submit_index);
                                     }
                                 }
                             }
@@ -2879,7 +2816,7 @@
                                 <span class="kw">for </span>compute_pipeline <span class="kw">in
                                     </span>cmd_buf_trackers.compute_pipelines.used_resources()
                                 {
-                                    compute_pipeline.info.use_at(submit_index);
+                                    compute_pipeline.use_at(submit_index);
                                 }
                             }
                             {
@@ -2887,13 +2824,13 @@
                                 <span class="kw">for </span>render_pipeline <span class="kw">in
                                     </span>cmd_buf_trackers.render_pipelines.used_resources()
                                 {
-                                    render_pipeline.info.use_at(submit_index);
+                                    render_pipeline.use_at(submit_index);
                                 }
                             }
                             {
                                 <span class="macro">profiling::scope!</span>(<span class="string">"query sets"</span>);
                                 <span class="kw">for </span>query_set <span class="kw">in </span>cmd_buf_trackers.query_sets.used_resources() {
-                                    query_set.info.use_at(submit_index);
+                                    query_set.use_at(submit_index);
                                 }
                             }
                             {
@@ -2901,18 +2838,18 @@
                                     <span class="string">"render bundles (+ referenced pipelines/query sets)"
                                 </span>);
                                 <span class="kw">for </span>bundle <span class="kw">in </span>cmd_buf_trackers.bundles.used_resources() {
-                                    bundle.info.use_at(submit_index);
+                                    bundle.use_at(submit_index);
                                     <span class="comment">// We need to update the submission indices for the contained
                                     // state-less (!) resources as well, excluding the bind groups.
                                     // They don't get deleted too early if the bundle goes out of scope.
                                     </span><span class="kw">for </span>render_pipeline <span class="kw">in
                                         </span>bundle.used.render_pipelines.read().used_resources()
                                     {
-                                        render_pipeline.info.use_at(submit_index);
+                                        render_pipeline.use_at(submit_index);
                                     }
                                     <span class="kw">for </span>query_set <span class="kw">in </span>bundle.used.query_sets.read().used_resources()
                                     {
-                                        query_set.info.use_at(submit_index);
+                                        query_set.use_at(submit_index);
                                     }
                                 }
                             }
@@ -3140,12 +3077,7 @@
         <span class="comment">//TODO: flush pending writes
         </span><span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">match </span>hub.queues.get(queue_id) {
-            <span class="prelude-val">Ok</span>(queue) =&gt; queue
-                .device
-                .as_ref()
-                .unwrap()
-                .lock_life()
-                .add_work_done_closure(closure),
+            <span class="prelude-val">Ok</span>(queue) =&gt; queue.device.lock_life().add_work_done_closure(closure),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidQueue),
         }
         <span class="prelude-val">Ok</span>(())

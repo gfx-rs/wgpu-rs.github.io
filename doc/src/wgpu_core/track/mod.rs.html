@@ -693,16 +693,6 @@
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
 <a href="#694" id="694">694</a>
-<a href="#695" id="695">695</a>
-<a href="#696" id="696">696</a>
-<a href="#697" id="697">697</a>
-<a href="#698" id="698">698</a>
-<a href="#699" id="699">699</a>
-<a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a>
-<a href="#703" id="703">703</a>
-<a href="#704" id="704">704</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -811,7 +801,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     hal_api::HalApi,
     lock::{rank, Mutex, RwLock},
     pipeline,
-    resource::{<span class="self">self</span>, Resource, ResourceErrorIdent},
+    resource::{<span class="self">self</span>, Labeled, ResourceErrorIdent},
     snatch::SnatchGuard,
 };
 
@@ -831,11 +821,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TrackerIndex(u32);
 
 <span class="kw">impl </span>TrackerIndex {
-    <span class="doccomment">/// A dummy value to place in ResourceInfo for resources that are never tracked.
-    </span><span class="kw">pub const </span>INVALID: <span class="self">Self </span>= TrackerIndex(u32::MAX);
-
     <span class="kw">pub fn </span>as_usize(<span class="self">self</span>) -&gt; usize {
-        <span class="macro">debug_assert!</span>(<span class="self">self </span>!= <span class="self">Self</span>::INVALID);
         <span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span>usize
     }
 }
@@ -1091,12 +1077,6 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
                 new_state,
             },
         }
-    }
-}
-
-<span class="kw">impl </span><span class="kw">crate</span>::error::PrettyError <span class="kw">for </span>ResourceUsageCompatibilityError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::error::ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
     }
 }
 

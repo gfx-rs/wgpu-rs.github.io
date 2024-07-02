@@ -238,11 +238,9 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `ResourceMetadata` type.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
-<span class="kw">use </span>bit_vec::BitVec;
+</span><span class="kw">use </span>bit_vec::BitVec;
 <span class="kw">use </span>std::{borrow::Cow, mem, sync::Arc};
 <span class="kw">use </span>wgt::strict_assert;
 
@@ -254,7 +252,7 @@
 /// members, but a bit vector tracks occupancy, so iteration touches
 /// only occupied elements.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ResourceMetadata&lt;T: Resource&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ResourceMetadata&lt;T&gt; {
     <span class="doccomment">/// If the resource with index `i` is a member, `owned[i]` is `true`.
     </span>owned: BitVec&lt;usize&gt;,
 
@@ -262,7 +260,7 @@
     </span>resources: Vec&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;T: Resource&gt; ResourceMetadata&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; ResourceMetadata&lt;T&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             owned: BitVec::default(),
@@ -416,13 +414,13 @@
 ///
 /// This is used to abstract over the various places
 /// trackers can get new resource metadata from.
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>ResourceMetadataProvider&lt;<span class="lifetime">'a</span>, T: Resource&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>ResourceMetadataProvider&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="doccomment">/// Comes directly from explicit values.
     </span>Direct { resource: Cow&lt;<span class="lifetime">'a</span>, Arc&lt;T&gt;&gt; },
     <span class="doccomment">/// Comes from another metadata tracker.
     </span>Indirect { metadata: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ResourceMetadata&lt;T&gt; },
 }
-<span class="kw">impl</span>&lt;T: Resource&gt; ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="doccomment">/// Get a reference to the resource from this.
     ///
     /// # Safety

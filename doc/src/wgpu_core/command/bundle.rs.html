@@ -1817,33 +1817,6 @@
 <a href="#1816" id="1816">1816</a>
 <a href="#1817" id="1817">1817</a>
 <a href="#1818" id="1818">1818</a>
-<a href="#1819" id="1819">1819</a>
-<a href="#1820" id="1820">1820</a>
-<a href="#1821" id="1821">1821</a>
-<a href="#1822" id="1822">1822</a>
-<a href="#1823" id="1823">1823</a>
-<a href="#1824" id="1824">1824</a>
-<a href="#1825" id="1825">1825</a>
-<a href="#1826" id="1826">1826</a>
-<a href="#1827" id="1827">1827</a>
-<a href="#1828" id="1828">1828</a>
-<a href="#1829" id="1829">1829</a>
-<a href="#1830" id="1830">1830</a>
-<a href="#1831" id="1831">1831</a>
-<a href="#1832" id="1832">1832</a>
-<a href="#1833" id="1833">1833</a>
-<a href="#1834" id="1834">1834</a>
-<a href="#1835" id="1835">1835</a>
-<a href="#1836" id="1836">1836</a>
-<a href="#1837" id="1837">1837</a>
-<a href="#1838" id="1838">1838</a>
-<a href="#1839" id="1839">1839</a>
-<a href="#1840" id="1840">1840</a>
-<a href="#1841" id="1841">1841</a>
-<a href="#1842" id="1842">1842</a>
-<a href="#1843" id="1843">1843</a>
-<a href="#1844" id="1844">1844</a>
-<a href="#1845" id="1845">1845</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1935,19 +1908,16 @@ index format changes.
         AttachmentData, Device, DeviceError, MissingDownlevelFlags, RenderPassContext,
         SHADER_STAGE_COUNT,
     },
-    error::{ErrorFormatter, PrettyError},
     hal_api::HalApi,
     hub::Hub,
     id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
     pipeline::{PipelineFlags, RenderPipeline, VertexStep},
-    resource::{
-        Buffer, DestroyedResourceError, ParentDevice, Resource, ResourceInfo, ResourceType,
-    },
+    resource::{Buffer, DestroyedResourceError, Labeled, ParentDevice, TrackingData},
     resource_log,
     snatch::SnatchGuard,
     track::RenderBundleScope,
-    Label,
+    Label, LabelHelpers,
 };
 <span class="kw">use </span>arrayvec::ArrayVec;
 
@@ -2426,7 +2396,8 @@ index format changes.
             buffer_memory_init_actions,
             texture_memory_init_actions,
             context: <span class="self">self</span>.context,
-            info: ResourceInfo::new(<span class="kw-2">&amp;</span>desc.label, <span class="prelude-val">Some</span>(tracker_indices)),
+            label: desc.label.to_string(),
+            tracking_data: TrackingData::new(tracker_indices),
             discard_hal_labels,
         })
     }
@@ -2508,7 +2479,7 @@ index format changes.
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>pipeline = pipeline_guard
         .get(pipeline_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidPipeline(pipeline_id))<span class="question-mark">?</span>;
+        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidPipelineId(pipeline_id))<span class="question-mark">?</span>;
 
     state.trackers.render_pipelines.write().add_single(pipeline);
 
@@ -2795,11 +2766,6 @@ index format changes.
     <span class="attr">#[error(<span class="string">"Using {0} in a render bundle is not implemented"</span>)]
     </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
 }
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>ExecutionError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-    }
-}
 
 <span class="kw">pub type </span>RenderBundleDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::RenderBundleDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 
@@ -2818,7 +2784,9 @@ index format changes.
     <span class="kw">pub</span>(<span class="kw">super</span>) buffer_memory_init_actions: Vec&lt;BufferInitTrackerAction&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">super</span>) texture_memory_init_actions: Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">super</span>) context: RenderPassContext,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;RenderBundle&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span>label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     discard_hal_labels: bool,
 }
 
@@ -3028,25 +2996,11 @@ index format changes.
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>RenderBundle&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"RenderBundle"</span>;
-
-    <span class="kw">type </span>Marker = id::markers::RenderBundle;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>RenderBundle&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(RenderBundle);
+<span class="macro">crate::impl_labeled!</span>(RenderBundle);
+<span class="macro">crate::impl_parent_device!</span>(RenderBundle);
+<span class="macro">crate::impl_storage_item!</span>(RenderBundle);
+<span class="macro">crate::impl_trackable!</span>(RenderBundle);
 
 <span class="doccomment">/// A render bundle's current index buffer state.
 ///
@@ -3454,14 +3408,6 @@ index format changes.
             scope: PassErrorScope::Bundle,
             inner: e.into(),
         }
-    }
-}
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>RenderBundleError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        <span class="comment">// This error is wrapper for the inner error,
-        // but the scope has useful labels
-        </span>fmt.error(<span class="self">self</span>);
-        <span class="self">self</span>.scope.fmt_pretty(fmt);
     }
 }
 

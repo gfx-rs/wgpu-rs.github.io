@@ -194,51 +194,13 @@
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgt::Backend;
 
-<span class="kw">use </span><span class="kw">crate</span>::id::Id;
-<span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
+<span class="kw">use </span><span class="kw">crate</span>::id::{Id, Marker};
+<span class="kw">use </span><span class="kw">crate</span>::resource::ResourceType;
 <span class="kw">use crate</span>::{Epoch, Index};
 
 <span class="doccomment">/// An entry in a `Storage::map` table.
@@ -253,13 +215,24 @@
 
     <span class="doccomment">/// Like `Occupied`, but an error occurred when creating the
     /// resource.
-    ///
-    /// The given `String` is the resource's descriptor label.
-    </span>Error(Epoch, String),
+    </span>Error(Epoch),
 }
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>InvalidId;
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>StorageItem: ResourceType {
+    <span class="kw">type </span>Marker: Marker;
+}
+
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_storage_item {
+    (<span class="macro-nonterminal">$ty</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;A: HalApi&gt; <span class="macro-nonterminal">$crate::storage::StorageItem </span><span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;A&gt; {
+            <span class="kw">type </span>Marker = <span class="macro-nonterminal">$crate::id::markers</span>::<span class="macro-nonterminal">$ty</span>;
+        }
+    };
+}
 
 <span class="doccomment">/// A table of `T` values indexed by the id type `I`.
 ///
@@ -272,7 +245,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Storage&lt;T&gt;
 <span class="kw">where
-    </span>T: Resource,
+    </span>T: StorageItem,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) map: Vec&lt;Element&lt;T&gt;&gt;,
     kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
@@ -280,7 +253,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; ops::Index&lt;Id&lt;T::Marker&gt;&gt; <span class="kw">for </span>Storage&lt;T&gt;
 <span class="kw">where
-    </span>T: Resource,
+    </span>T: StorageItem,
 {
     <span class="kw">type </span>Output = Arc&lt;T&gt;;
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="kw-2">&amp;</span>Arc&lt;T&gt; {
@@ -289,7 +262,7 @@
 }
 <span class="kw">impl</span>&lt;T&gt; Storage&lt;T&gt;
 <span class="kw">where
-    </span>T: Resource,
+    </span>T: StorageItem,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -301,41 +274,18 @@
 
 <span class="kw">impl</span>&lt;T&gt; Storage&lt;T&gt;
 <span class="kw">where
-    </span>T: Resource,
+    </span>T: StorageItem,
 {
     <span class="attr">#[allow(dead_code)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; bool {
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="bool-val">false</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw">_</span>, storage_epoch) | <span class="kw-2">&amp;</span>Element::Error(storage_epoch, <span class="kw">_</span>)) =&gt; {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw">_</span>, storage_epoch) | <span class="kw-2">&amp;</span>Element::Error(storage_epoch)) =&gt; {
                 storage_epoch == epoch
             }
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         }
-    }
-
-    <span class="doccomment">/// Attempts to get a reference to an item behind a potentially invalid ID.
-    ///
-    /// Returns [`None`] if there is an epoch mismatch, or the entry is empty.
-    ///
-    /// This function is primarily intended for the `as_hal` family of functions
-    /// where you may need to fallibly get a object backed by an id that could
-    /// be in a different hub.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;T&gt;&gt;, InvalidId&gt; {
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v)), epoch),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(epoch, ..)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidId),
-        };
-        <span class="macro">assert_eq!</span>(
-            epoch, storage_epoch,
-            <span class="string">"{}[{:?}] is no longer alive"</span>,
-            <span class="self">self</span>.kind, id
-        );
-        result
     }
 
     <span class="doccomment">/// Get a reference to an item behind a potentially invalid ID.
@@ -344,9 +294,8 @@
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (<span class="prelude-val">Ok</span>(v), epoch),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="macro">panic!</span>(<span class="string">"{}[{:?}] does not exist"</span>, <span class="self">self</span>.kind, id),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(epoch, ..)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidId),
+            <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="macro">panic!</span>(<span class="string">"{}[{:?}] does not exist"</span>, <span class="self">self</span>.kind, id),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(epoch)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
         };
         <span class="macro">assert_eq!</span>(
             epoch, storage_epoch,
@@ -360,14 +309,6 @@
     /// Panics if there is an epoch mismatch, or the entry is empty.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_owned(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;T&gt;, InvalidId&gt; {
         <span class="prelude-val">Ok</span>(Arc::clone(<span class="self">self</span>.get(id)<span class="question-mark">?</span>))
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>label_for_invalid_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="kw">let </span>(index, <span class="kw">_</span>, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
-            <span class="prelude-val">Some</span>(Element::Error(<span class="kw">_</span>, label)) =&gt; label,
-            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
-        }
     }
 
     <span class="kw">fn </span>insert_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, epoch: Epoch, element: Element&lt;T&gt;) {
@@ -384,7 +325,7 @@
                     T::TYPE
                 );
             }
-            Element::Error(storage_epoch, <span class="kw">_</span>) =&gt; {
+            Element::Error(storage_epoch) =&gt; {
                 <span class="macro">assert_ne!</span>(
                     epoch,
                     storage_epoch,
@@ -401,22 +342,15 @@
         <span class="self">self</span>.insert_impl(index <span class="kw">as </span>usize, epoch, Element::Occupied(value, epoch))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, label: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) {
         <span class="macro">log::trace!</span>(<span class="string">"User is inserting as error {}{:?}"</span>, T::TYPE, id);
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="self">self</span>.insert_impl(
-            index <span class="kw">as </span>usize,
-            epoch,
-            Element::Error(epoch, label.to_string()),
-        )
+        <span class="self">self</span>.insert_impl(index <span class="kw">as </span>usize, epoch, Element::Error(epoch))
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>replace_with_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;T&gt;, InvalidId&gt; {
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">match </span>std::mem::replace(
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize],
-            Element::Error(epoch, String::new()),
-        ) {
+        <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Error(epoch)) {
             Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">"Cannot access vacant resource"</span>),
             Element::Occupied(value, storage_epoch) =&gt; {
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
@@ -424,12 +358,6 @@
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(InvalidId),
         }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, value: T) {
-        <span class="macro">log::trace!</span>(<span class="string">"User is replacing {}{:?}"</span>, T::TYPE, id);
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="self">self</span>.map[index <span class="kw">as </span>usize] = Element::Occupied(Arc::new(value), epoch);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
@@ -440,7 +368,7 @@
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
                 <span class="prelude-val">Some</span>(value)
             }
-            Element::Error(..) =&gt; <span class="prelude-val">None</span>,
+            Element::Error(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             Element::Vacant =&gt; <span class="macro">panic!</span>(<span class="string">"Cannot remove a vacant resource"</span>),
         }
     }
@@ -455,10 +383,6 @@
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             })
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>kind(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="self">self</span>.kind
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {

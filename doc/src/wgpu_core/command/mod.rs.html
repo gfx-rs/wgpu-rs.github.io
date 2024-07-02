@@ -908,47 +908,6 @@
 <a href="#907" id="907">907</a>
 <a href="#908" id="908">908</a>
 <a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
-<a href="#921" id="921">921</a>
-<a href="#922" id="922">922</a>
-<a href="#923" id="923">923</a>
-<a href="#924" id="924">924</a>
-<a href="#925" id="925">925</a>
-<a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
-<a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -981,13 +940,12 @@
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
 <span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError};
-<span class="kw">use </span><span class="kw">crate</span>::error::{ErrorFormatter, PrettyError};
 <span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
-<span class="kw">use </span><span class="kw">crate</span>::resource::{ParentDevice, Resource, ResourceInfo, ResourceType};
+<span class="kw">use </span><span class="kw">crate</span>::resource::Labeled;
 <span class="kw">use </span><span class="kw">crate</span>::track::{Tracker, UsageScope};
 <span class="kw">use </span><span class="kw">crate</span>::LabelHelpers;
 <span class="kw">use crate</span>::{api_log, global::Global, hal_api::HalApi, id, resource_log, Label};
@@ -1262,7 +1220,8 @@
 </span><span class="kw">pub struct </span>CommandBuffer&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     support_clear_texture: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;CommandBuffer&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span>label: String,
 
     <span class="doccomment">/// The mutable state of this command buffer.
     ///
@@ -1300,7 +1259,7 @@
         CommandBuffer {
             device: device.clone(),
             support_clear_texture: device.features.contains(wgt::Features::CLEAR_TEXTURE),
-            info: ResourceInfo::new(label, <span class="prelude-val">None</span>),
+            label: label.to_string(),
             data: Mutex::new(
                 rank::COMMAND_BUFFER_DATA,
                 <span class="prelude-val">Some</span>(CommandBufferMutable {
@@ -1478,25 +1437,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>CommandBuffer&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"CommandBuffer"</span>;
-
-    <span class="kw">type </span>Marker = id::markers::CommandBuffer;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>CommandBuffer&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(CommandBuffer);
+<span class="macro">crate::impl_labeled!</span>(CommandBuffer);
+<span class="macro">crate::impl_parent_device!</span>(CommandBuffer);
+<span class="macro">crate::impl_storage_item!</span>(CommandBuffer);
 
 <span class="doccomment">/// A stream of commands for a render pass or compute pass.
 ///
@@ -1563,25 +1507,14 @@
 
     <span class="attr">#[error(<span class="string">"QuerySet {0:?} for pass timestamp writes is invalid."</span>)]
     </span>InvalidTimestampWritesQuerySetId(id::QuerySetId),
-    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} is invalid"</span>)]
-    </span>InvalidAttachment(id::TextureViewId),
-    <span class="attr">#[error(<span class="string">"Attachment texture view {0:?} for resolve is invalid"</span>)]
-    </span>InvalidResolveTarget(id::TextureViewId),
-    <span class="attr">#[error(<span class="string">"Depth stencil attachment view {0:?}  is invalid"</span>)]
-    </span>InvalidDepthStencilAttachment(id::TextureViewId),
-    <span class="attr">#[error(<span class="string">"Occlusion query set {0:?} is invalid"</span>)]
+    <span class="attr">#[error(<span class="string">"Attachment TextureViewId {0:?} is invalid"</span>)]
+    </span>InvalidAttachmentId(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Resolve attachment TextureViewId {0:?} is invalid"</span>)]
+    </span>InvalidResolveTargetId(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Depth stencil attachment TextureViewId {0:?} is invalid"</span>)]
+    </span>InvalidDepthStencilAttachmentId(id::TextureViewId),
+    <span class="attr">#[error(<span class="string">"Occlusion QuerySetId {0:?} is invalid"</span>)]
     </span>InvalidOcclusionQuerySetId(id::QuerySetId),
-}
-
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>CommandEncoderError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-        <span class="kw">if let </span><span class="self">Self</span>::InvalidAttachment(id) = <span class="kw-2">*</span><span class="self">self </span>{
-            fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"attachment"</span>);
-        } <span class="kw">else if let </span><span class="self">Self</span>::InvalidResolveTarget(id) = <span class="kw-2">*</span><span class="self">self </span>{
-            fmt.texture_view_label_with_key(<span class="kw-2">&amp;</span>id, <span class="string">"resolve target"</span>);
-        };
-    }
 }
 
 <span class="kw">impl </span>Global {
@@ -1833,12 +1766,12 @@
 
 <span class="attr">#[derive(Clone, Copy, Debug, Error)]
 </span><span class="kw">pub enum </span>PassErrorScope {
-    <span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
+    <span class="comment">// TODO: Extract out the 2 error variants below so that we can always
+    // include the ResourceErrorIdent of the pass around all inner errors
+    </span><span class="attr">#[error(<span class="string">"In a bundle parameter"</span>)]
     </span>Bundle,
     <span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-    </span>PassEncoder(id::CommandEncoderId), <span class="comment">// Needed only for ending pass via tracing.
-    </span><span class="attr">#[error(<span class="string">"In a pass parameter"</span>)]
-    </span>Pass(<span class="prelude-ty">Option</span>&lt;id::CommandBufferId&gt;),
+    </span>Pass,
     <span class="attr">#[error(<span class="string">"In a set_bind_group command"</span>)]
     </span>SetBindGroup,
     <span class="attr">#[error(<span class="string">"In a set_pipeline command"</span>)]
@@ -1883,20 +1816,5 @@
     </span>PopDebugGroup,
     <span class="attr">#[error(<span class="string">"In a insert_debug_marker command"</span>)]
     </span>InsertDebugMarker,
-}
-
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>PassErrorScope {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        <span class="comment">// This error is not in the error chain, only notes are needed
-        </span><span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::PassEncoder(id) =&gt; {
-                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id.into_command_buffer_id());
-            }
-            <span class="self">Self</span>::Pass(<span class="prelude-val">Some</span>(id)) =&gt; {
-                fmt.command_buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="kw">_ </span>=&gt; {}
-        }
-    }
 }
 </code></pre></div></section></main></body></html>

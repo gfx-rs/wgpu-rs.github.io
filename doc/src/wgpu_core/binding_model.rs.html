@@ -981,17 +981,50 @@
 <a href="#980" id="980">980</a>
 <a href="#981" id="981">981</a>
 <a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
-    error::{ErrorFormatter, PrettyError},
     hal_api::HalApi,
     id::{BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
+    pipeline::{ComputePipeline, RenderPipeline},
     resource::{
-        DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError, ParentDevice,
-        Resource, ResourceErrorIdent, ResourceInfo, ResourceType,
+        Buffer, DestroyedResourceError, Labeled, MissingBufferUsageError, MissingTextureUsageError,
+        ResourceErrorIdent, Sampler, TextureView, TrackingData,
     },
     resource_log,
     snatch::{SnatchGuard, Snatchable},
@@ -1001,12 +1034,17 @@
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
+<span class="kw">use </span>once_cell::sync::OnceCell;
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
-<span class="kw">use </span>std::{borrow::Cow, ops::Range, sync::Arc};
+<span class="kw">use </span>std::{
+    borrow::Cow,
+    ops::Range,
+    sync::{Arc, Weak},
+};
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -1061,10 +1099,10 @@
     </span>InvalidLayout,
     <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
     </span>InvalidBufferId(BufferId),
-    <span class="attr">#[error(<span class="string">"Texture view Id {0:?} is invalid"</span>)]
+    <span class="attr">#[error(<span class="string">"TextureViewId {0:?} is invalid"</span>)]
     </span>InvalidTextureViewId(TextureViewId),
-    <span class="attr">#[error(<span class="string">"Sampler {0:?} is invalid"</span>)]
-    </span>InvalidSampler(SamplerId),
+    <span class="attr">#[error(<span class="string">"SamplerId {0:?} is invalid"</span>)]
+    </span>InvalidSamplerId(SamplerId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(
@@ -1077,20 +1115,20 @@
     </span>BindingArrayLengthMismatch { actual: usize, expected: usize },
     <span class="attr">#[error(<span class="string">"Array binding provided zero elements"</span>)]
     </span>BindingArrayZeroLength,
-    <span class="attr">#[error(<span class="string">"Bound buffer range {range:?} does not fit in buffer of size {size}"</span>)]
+    <span class="attr">#[error(<span class="string">"The bound range {range:?} of {buffer} overflows its size ({size})"</span>)]
     </span>BindingRangeTooLarge {
-        buffer: BufferId,
+        buffer: ResourceErrorIdent,
         range: Range&lt;wgt::BufferAddress&gt;,
         size: u64,
     },
-    <span class="attr">#[error(<span class="string">"Buffer binding size {actual} is less than minimum {min}"</span>)]
+    <span class="attr">#[error(<span class="string">"Binding size {actual} of {buffer} is less than minimum {min}"</span>)]
     </span>BindingSizeTooSmall {
-        buffer: BufferId,
+        buffer: ResourceErrorIdent,
         actual: u64,
         min: u64,
     },
-    <span class="attr">#[error(<span class="string">"Buffer binding size is zero"</span>)]
-    </span>BindingZeroSize(BufferId),
+    <span class="attr">#[error(<span class="string">"{0} binding size is zero"</span>)]
+    </span>BindingZeroSize(ResourceErrorIdent),
     <span class="attr">#[error(<span class="string">"Number of bindings in bind group descriptor ({actual}) does not match the number of bindings defined in the bind group layout ({expected})"</span>)]
     </span>BindingsNumMismatch { actual: usize, expected: usize },
     <span class="attr">#[error(<span class="string">"Binding {0} is used at least twice in the descriptor"</span>)]
@@ -1166,30 +1204,6 @@
     </span>StorageReadNotSupported(wgt::TextureFormat),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
-}
-
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>CreateBindGroupError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::BindingZeroSize(id) =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::BindingRangeTooLarge { buffer, .. } =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>buffer);
-            }
-            <span class="self">Self</span>::BindingSizeTooSmall { buffer, .. } =&gt; {
-                fmt.buffer_label(<span class="kw-2">&amp;</span>buffer);
-            }
-            <span class="self">Self</span>::InvalidTextureViewId(id) =&gt; {
-                fmt.texture_view_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::InvalidSampler(id) =&gt; {
-                fmt.sampler_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="kw">_ </span>=&gt; {}
-        };
-    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1416,6 +1430,16 @@
     </span><span class="kw">pub </span>resource: BindingResource&lt;<span class="lifetime">'a</span>&gt;,
 }
 
+<span class="doccomment">/// Bindable resource and the slot to bind it to.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same
+    /// binding index in the [`BindGroupLayoutDescriptor`].
+    </span><span class="kw">pub </span>binding: u32,
+    <span class="doccomment">/// Resource to attach to the binding
+    </span><span class="kw">pub </span>resource: ResolvedBindingResource&lt;<span class="lifetime">'a</span>, A&gt;,
+}
+
 <span class="doccomment">/// Describes a group of bindings and the resources to be bound.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -1430,6 +1454,19 @@
     </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [BindGroupEntry&lt;<span class="lifetime">'a</span>&gt;]&gt;,
 }
 
+<span class="doccomment">/// Describes a group of bindings and the resources to be bound.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedBindGroupDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// Debug label of the bind group.
+    ///
+    /// This will show up in graphics debuggers for easy identification.
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// The [`BindGroupLayout`] that corresponds to this bind group.
+    </span><span class="kw">pub </span>layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
+    <span class="doccomment">/// The resources to bind to this bind group.
+    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>, A&gt;]&gt;,
+}
+
 <span class="doccomment">/// Describes a [`BindGroupLayout`].
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
@@ -1440,6 +1477,38 @@
     </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Array of entries in this BindGroupLayout
     </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [wgt::BindGroupLayoutEntry]&gt;,
+}
+
+<span class="doccomment">/// Used by [`BindGroupLayout`]. It indicates whether the BGL must be
+/// used with a specific pipeline. This constraint only happens when
+/// the BGLs have been derived from a pipeline without a layout.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExclusivePipeline&lt;A: HalApi&gt; {
+    <span class="prelude-val">None</span>,
+    Render(Weak&lt;RenderPipeline&lt;A&gt;&gt;),
+    Compute(Weak&lt;ComputePipeline&lt;A&gt;&gt;),
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; std::fmt::Display <span class="kw">for </span>ExclusivePipeline&lt;A&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            ExclusivePipeline::None =&gt; f.write_str(<span class="string">"None"</span>),
+            ExclusivePipeline::Render(p) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = p.upgrade() {
+                    p.error_ident().fmt(f)
+                } <span class="kw">else </span>{
+                    f.write_str(<span class="string">"RenderPipeline"</span>)
+                }
+            }
+            ExclusivePipeline::Compute(p) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = p.upgrade() {
+                    p.error_ident().fmt(f)
+                } <span class="kw">else </span>{
+                    f.write_str(<span class="string">"ComputePipeline"</span>)
+                }
+            }
+        }
+    }
 }
 
 <span class="doccomment">/// Bind group layout.
@@ -1455,9 +1524,12 @@
     /// We cannot unconditionally remove from the pool, as BGLs that don't come from the pool
     /// (derived BGLs) must not be removed.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) origin: bgl::Origin,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) exclusive_pipeline: OnceCell&lt;ExclusivePipeline&lt;A&gt;&gt;,
     <span class="attr">#[allow(unused)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding_count_validator: BindingTypeMaxCountValidator,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupLayout&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
@@ -1475,25 +1547,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroupLayout"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::BindGroupLayout;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(BindGroupLayout);
+<span class="macro">crate::impl_labeled!</span>(BindGroupLayout);
+<span class="macro">crate::impl_parent_device!</span>(BindGroupLayout);
+<span class="macro">crate::impl_storage_item!</span>(BindGroupLayout);
+<span class="macro">crate::impl_trackable!</span>(BindGroupLayout);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroupLayout&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::BindGroupLayout {
@@ -1506,8 +1564,8 @@
 </span><span class="kw">pub enum </span>CreatePipelineLayoutError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Bind group layout {0:?} is invalid"</span>)]
-    </span>InvalidBindGroupLayout(BindGroupLayoutId),
+    <span class="attr">#[error(<span class="string">"BindGroupLayoutId {0:?} is invalid"</span>)]
+    </span>InvalidBindGroupLayoutId(BindGroupLayoutId),
     <span class="attr">#[error(
         <span class="string">"Push constant at index {index} has range bound {bound} not aligned to {}"</span>,
         wgt::PUSH_CONSTANT_ALIGNMENT
@@ -1531,15 +1589,6 @@
     </span>TooManyBindings(BindingTypeMaxCountError),
     <span class="attr">#[error(<span class="string">"Bind group layout count {actual} exceeds device bind group limit {max}"</span>)]
     </span>TooManyGroups { actual: usize, max: usize },
-}
-
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>CreatePipelineLayoutError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-        <span class="kw">if let </span><span class="self">Self</span>::InvalidBindGroupLayout(id) = <span class="kw-2">*</span><span class="self">self </span>{
-            fmt.bind_group_layout_label(<span class="kw-2">&amp;</span>id);
-        };
-    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1596,11 +1645,35 @@
     </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
 }
 
+<span class="doccomment">/// Describes a pipeline layout.
+///
+/// A `PipelineLayoutDescriptor` can be used to create a pipeline layout.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ResolvedPipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// Debug label of the pipeline layout.
+    ///
+    /// This will show up in graphics debuggers for easy identification.
+    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// Bind groups that this pipeline uses. The first entry will provide all the bindings for
+    /// "set = 0", second entry will provide all the bindings for "set = 1" etc.
+    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;BindGroupLayout&lt;A&gt;&gt;]&gt;,
+    <span class="doccomment">/// Set of push constant ranges this pipeline uses. Each shader stage that
+    /// uses push constants must define the range in push constant memory that
+    /// corresponds to its single `layout(push_constant)` uniform block.
+    ///
+    /// If this array is non-empty, the
+    /// [`Features::PUSH_CONSTANTS`](wgt::Features::PUSH_CONSTANTS) feature must
+    /// be enabled.
+    </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
+}
+
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PipelineLayout&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::PipelineLayout&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;PipelineLayout&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: ArrayVec&lt;Arc&lt;BindGroupLayout&lt;A&gt;&gt;, { hal::MAX_BIND_GROUPS }&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) push_constant_ranges: ArrayVec&lt;wgt::PushConstantRange, { SHADER_STAGE_COUNT }&gt;,
 }
@@ -1708,31 +1781,24 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>PipelineLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"PipelineLayout"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::PipelineLayout;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>PipelineLayout&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(PipelineLayout);
+<span class="macro">crate::impl_labeled!</span>(PipelineLayout);
+<span class="macro">crate::impl_parent_device!</span>(PipelineLayout);
+<span class="macro">crate::impl_storage_item!</span>(PipelineLayout);
+<span class="macro">crate::impl_trackable!</span>(PipelineLayout);
 
 <span class="attr">#[repr(C)]
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>BufferBinding {
     <span class="kw">pub </span>buffer_id: BufferId,
+    <span class="kw">pub </span>offset: wgt::BufferAddress,
+    <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
+}
+
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedBufferBinding&lt;A: HalApi&gt; {
+    <span class="kw">pub </span>buffer: Arc&lt;Buffer&lt;A&gt;&gt;,
     <span class="kw">pub </span>offset: wgt::BufferAddress,
     <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
 }
@@ -1748,6 +1814,18 @@
     SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [SamplerId]&gt;),
     TextureView(TextureViewId),
     TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [TextureViewId]&gt;),
+}
+
+<span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`
+// They're different enough that it doesn't make sense to share a common type
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>ResolvedBindingResource&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    Buffer(ResolvedBufferBinding&lt;A&gt;),
+    BufferArray(Cow&lt;<span class="lifetime">'a</span>, [ResolvedBufferBinding&lt;A&gt;]&gt;),
+    Sampler(Arc&lt;Sampler&lt;A&gt;&gt;),
+    SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;Sampler&lt;A&gt;&gt;]&gt;),
+    TextureView(Arc&lt;TextureView&lt;A&gt;&gt;),
+    TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;TextureView&lt;A&gt;&gt;]&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1833,7 +1911,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Snatchable&lt;A::BindGroup&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroup&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used: BindGroupStates&lt;A&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_buffer_ranges: Vec&lt;BufferInitTrackerAction&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used_texture_ranges: Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
@@ -1926,25 +2006,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>BindGroup&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"BindGroup"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::BindGroup;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>BindGroup&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(BindGroup);
+<span class="macro">crate::impl_labeled!</span>(BindGroup);
+<span class="macro">crate::impl_parent_device!</span>(BindGroup);
+<span class="macro">crate::impl_storage_item!</span>(BindGroup);
+<span class="macro">crate::impl_trackable!</span>(BindGroup);
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]

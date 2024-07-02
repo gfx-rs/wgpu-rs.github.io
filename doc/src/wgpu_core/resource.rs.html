@@ -1771,48 +1771,6 @@
 <a href="#1770" id="1770">1770</a>
 <a href="#1771" id="1771">1771</a>
 <a href="#1772" id="1772">1772</a>
-<a href="#1773" id="1773">1773</a>
-<a href="#1774" id="1774">1774</a>
-<a href="#1775" id="1775">1775</a>
-<a href="#1776" id="1776">1776</a>
-<a href="#1777" id="1777">1777</a>
-<a href="#1778" id="1778">1778</a>
-<a href="#1779" id="1779">1779</a>
-<a href="#1780" id="1780">1780</a>
-<a href="#1781" id="1781">1781</a>
-<a href="#1782" id="1782">1782</a>
-<a href="#1783" id="1783">1783</a>
-<a href="#1784" id="1784">1784</a>
-<a href="#1785" id="1785">1785</a>
-<a href="#1786" id="1786">1786</a>
-<a href="#1787" id="1787">1787</a>
-<a href="#1788" id="1788">1788</a>
-<a href="#1789" id="1789">1789</a>
-<a href="#1790" id="1790">1790</a>
-<a href="#1791" id="1791">1791</a>
-<a href="#1792" id="1792">1792</a>
-<a href="#1793" id="1793">1793</a>
-<a href="#1794" id="1794">1794</a>
-<a href="#1795" id="1795">1795</a>
-<a href="#1796" id="1796">1796</a>
-<a href="#1797" id="1797">1797</a>
-<a href="#1798" id="1798">1798</a>
-<a href="#1799" id="1799">1799</a>
-<a href="#1800" id="1800">1800</a>
-<a href="#1801" id="1801">1801</a>
-<a href="#1802" id="1802">1802</a>
-<a href="#1803" id="1803">1803</a>
-<a href="#1804" id="1804">1804</a>
-<a href="#1805" id="1805">1805</a>
-<a href="#1806" id="1806">1806</a>
-<a href="#1807" id="1807">1807</a>
-<a href="#1808" id="1808">1808</a>
-<a href="#1809" id="1809">1809</a>
-<a href="#1810" id="1810">1810</a>
-<a href="#1811" id="1811">1811</a>
-<a href="#1812" id="1812">1812</a>
-<a href="#1813" id="1813">1813</a>
-<a href="#1814" id="1814">1814</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1823,10 +1781,7 @@
     },
     global::Global,
     hal_api::HalApi,
-    id::{
-        AdapterId, BufferId, CommandEncoderId, DeviceId, Id, Marker, SurfaceId, TextureId,
-        TextureViewId,
-    },
+    id::{AdapterId, BufferId, CommandEncoderId, DeviceId, SurfaceId, TextureId, TextureViewId},
     init_tracker::{BufferInitTracker, TextureInitTracker},
     lock::{Mutex, RwLock},
     resource_log,
@@ -1838,7 +1793,6 @@
 <span class="kw">use </span>hal::CommandEncoder;
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="kw">use </span>std::{
     borrow::Borrow,
@@ -1872,10 +1826,9 @@
 /// [`Device`]: crate::device::resource::Device
 /// [`Buffer`]: crate::resource::Buffer
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ResourceInfo&lt;T: Resource&gt; {
-    id: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TrackingData {
     tracker_index: TrackerIndex,
-    tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
+    tracker_indices: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="doccomment">/// The index of the last queue submission in which the resource
     /// was used.
     ///
@@ -1884,51 +1837,25 @@
     /// resources used in that submission and any lower-numbered submissions are
     /// no longer in use by the GPU.
     </span>submission_index: AtomicUsize,
-
-    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
-    </span>label: String,
 }
 
-<span class="kw">impl</span>&lt;T: Resource&gt; Drop <span class="kw">for </span>ResourceInfo&lt;T&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>TrackingData {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(indices) = <span class="kw-2">&amp;</span><span class="self">self</span>.tracker_indices {
-            indices.free(<span class="self">self</span>.tracker_index);
-        }
+        <span class="self">self</span>.tracker_indices.free(<span class="self">self</span>.tracker_index);
     }
 }
 
-<span class="kw">impl</span>&lt;T: Resource&gt; ResourceInfo&lt;T&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
-        label: <span class="kw-2">&amp;</span>Label,
-        tracker_indices: <span class="prelude-ty">Option</span>&lt;Arc&lt;SharedTrackerIndexAllocator&gt;&gt;,
-    ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>tracker_index = tracker_indices
-            .as_ref()
-            .map(|indices| indices.alloc())
-            .unwrap_or(TrackerIndex::INVALID);
+<span class="kw">impl </span>TrackingData {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(tracker_indices: Arc&lt;SharedTrackerIndexAllocator&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            id: <span class="prelude-val">None</span>,
-            tracker_index,
+            tracker_index: tracker_indices.alloc(),
             tracker_indices,
             submission_index: AtomicUsize::new(<span class="number">0</span>),
-            label: label
-                .as_ref()
-                .map(|label| label.to_string())
-                .unwrap_or_default(),
         }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
-        <span class="self">self</span>.id.unwrap()
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>tracker_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TrackerIndex {
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.tracker_index != TrackerIndex::INVALID);
         <span class="self">self</span>.tracker_index
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) {
-        <span class="self">self</span>.id = <span class="prelude-val">Some</span>(id);
     }
 
     <span class="doccomment">/// Record that this resource will be used by the queue submission with the
@@ -1945,7 +1872,7 @@
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>ResourceErrorIdent {
-    r#type: ResourceType,
+    r#type: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     label: String,
 }
 
@@ -1955,11 +1882,15 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ParentDevice&lt;A: HalApi&gt;: Resource {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ParentDevice&lt;A: HalApi&gt;: Labeled {
     <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;;
 
+    <span class="kw">fn </span>is_equal(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;, other: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; bool {
+        Arc::ptr_eq(<span class="self">self</span>, other)
+    }
+
     <span class="kw">fn </span>same_device_as&lt;O: ParentDevice&lt;A&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>O) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.device().is_equal(other.device()) {
+        <span class="kw">if </span>Arc::ptr_eq(<span class="self">self</span>.device(), other.device()) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
@@ -1972,7 +1903,7 @@
     }
 
     <span class="kw">fn </span>same_device(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.device().is_equal(device) {
+        <span class="kw">if </span>Arc::ptr_eq(<span class="self">self</span>.device(), device) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
@@ -1985,38 +1916,84 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>ResourceType = <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_parent_device {
+    (<span class="macro-nonterminal">$ty</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;A: HalApi&gt; <span class="macro-nonterminal">$crate::resource::ParentDevice</span>&lt;A&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;A&gt; {
+            <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.device
+            }
+        }
+    };
+}
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>Resource: <span class="lifetime">'static </span>+ Sized + WasmNotSendSync {
-    <span class="kw">type </span>Marker: Marker;
-    <span class="kw">const </span>TYPE: ResourceType;
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt;;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ResourceType {
+    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
+}
 
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_resource_type {
+    (<span class="macro-nonterminal">$ty</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;A: HalApi&gt; <span class="macro-nonterminal">$crate::resource::ResourceType </span><span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;A&gt; {
+            <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="macro">stringify!</span>(<span class="macro-nonterminal">$ty</span>);
+        }
+    };
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>Labeled: ResourceType {
     <span class="doccomment">/// Returns a string identifying this resource for logging and errors.
     ///
     /// It may be a user-provided string or it may be a placeholder from wgpu.
     ///
     /// It is non-empty unless the user-provided string was empty.
-    </span><span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.as_info().label
-    }
+    </span><span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str;
 
-    <span class="kw">fn </span>ref_count(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; usize {
-        Arc::strong_count(<span class="self">self</span>)
-    }
-    <span class="kw">fn </span>is_unique(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; bool {
-        <span class="self">self</span>.ref_count() == <span class="number">1
-    </span>}
-    <span class="kw">fn </span>is_equal(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;, other: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; bool {
-        Arc::ptr_eq(<span class="self">self</span>, other)
-    }
     <span class="kw">fn </span>error_ident(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ResourceErrorIdent {
         ResourceErrorIdent {
             r#type: <span class="self">Self</span>::TYPE,
             label: <span class="self">self</span>.label().to_owned(),
         }
     }
+}
+
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_labeled {
+    (<span class="macro-nonterminal">$ty</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;A: HalApi&gt; <span class="macro-nonterminal">$crate::resource::Labeled </span><span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;A&gt; {
+            <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.label
+            }
+        }
+    };
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>Trackable: Labeled {
+    <span class="kw">fn </span>tracker_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TrackerIndex;
+    <span class="doccomment">/// Record that this resource will be used by the queue submission with the
+    /// given index.
+    </span><span class="kw">fn </span>use_at(<span class="kw-2">&amp;</span><span class="self">self</span>, submit_index: SubmissionIndex);
+    <span class="kw">fn </span>submission_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SubmissionIndex;
+
+    <span class="kw">fn </span>is_unique(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;) -&gt; bool {
+        Arc::strong_count(<span class="self">self</span>) == <span class="number">1
+    </span>}
+}
+
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_trackable {
+    (<span class="macro-nonterminal">$ty</span>:ident) =&gt; {
+        <span class="kw">impl</span>&lt;A: HalApi&gt; <span class="macro-nonterminal">$crate::resource::Trackable </span><span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;A&gt; {
+            <span class="kw">fn </span>tracker_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$crate::track::TrackerIndex </span>{
+                <span class="self">self</span>.tracking_data.tracker_index()
+            }
+            <span class="kw">fn </span>use_at(<span class="kw-2">&amp;</span><span class="self">self</span>, submit_index: <span class="macro-nonterminal">$crate::SubmissionIndex</span>) {
+                <span class="self">self</span>.tracking_data.use_at(submit_index)
+            }
+            <span class="kw">fn </span>submission_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="macro-nonterminal">$crate::SubmissionIndex </span>{
+                <span class="self">self</span>.tracking_data.submission_index()
+            }
+        }
+    };
 }
 
 <span class="doccomment">/// The status code provided to the buffer mapping callback.
@@ -2264,7 +2241,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
     <span class="kw">pub</span>(<span class="kw">crate</span>) initialization_status: RwLock&lt;BufferInitTracker&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) sync_mapped_writes: Mutex&lt;<span class="prelude-ty">Option</span>&lt;hal::MemoryRange&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Buffer&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) map_state: Mutex&lt;BufferMapState&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;&gt;,
 }
@@ -2308,7 +2287,7 @@
     <span class="doccomment">/// Checks that the given buffer usage contains the required buffer usage,
     /// returns an error otherwise.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_usage(
-        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         expected: wgt::BufferUsages,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MissingBufferUsageError&gt; {
         <span class="kw">if </span><span class="self">self</span>.usage.contains(expected) {
@@ -2477,8 +2456,7 @@
                     }
                 }
 
-                <span class="self">self</span>.info
-                    .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
+                <span class="self">self</span>.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
                 <span class="kw">let </span>region = wgt::BufferSize::new(<span class="self">self</span>.size).map(|size| hal::BufferCopy {
                     src_offset: <span class="number">0</span>,
                     dst_offset: <span class="number">0</span>,
@@ -2564,8 +2542,8 @@
             queue::TempResource::DestroyedBuffer(Arc::new(DestroyedBuffer {
                 raw: <span class="prelude-val">Some</span>(raw),
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
-                submission_index: <span class="self">self</span>.info.submission_index(),
-                tracker_index: <span class="self">self</span>.info.tracker_index(),
+                submission_index: <span class="self">self</span>.submission_index(),
+                tracker_index: <span class="self">self</span>.tracker_index(),
                 label: <span class="self">self</span>.label().to_owned(),
                 bind_groups,
             }))
@@ -2576,7 +2554,7 @@
         <span class="kw">if </span>pending_writes.contains_buffer(<span class="self">self</span>) {
             pending_writes.consume_temp(temp);
         } <span class="kw">else </span>{
-            <span class="kw">let </span>last_submit_index = <span class="self">self</span>.info.submission_index();
+            <span class="kw">let </span>last_submit_index = <span class="self">self</span>.submission_index();
             device
                 .lock_life()
                 .schedule_resource_destruction(temp, last_submit_index);
@@ -2605,25 +2583,11 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Buffer&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Buffer"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Buffer;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>Buffer&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(Buffer);
+<span class="macro">crate::impl_labeled!</span>(Buffer);
+<span class="macro">crate::impl_parent_device!</span>(Buffer);
+<span class="macro">crate::impl_storage_item!</span>(Buffer);
+<span class="macro">crate::impl_trackable!</span>(Buffer);
 
 <span class="doccomment">/// A buffer that has been marked as destroyed and is staged for actual deletion soon.
 </span><span class="attr">#[derive(Debug)]
@@ -2686,7 +2650,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_coherent: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;StagingBuffer&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
@@ -2701,25 +2665,16 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>StagingBuffer&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"StagingBuffer"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::StagingBuffer;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
+<span class="macro">crate::impl_resource_type!</span>(StagingBuffer);
+<span class="comment">// TODO: add label
+</span><span class="kw">impl</span>&lt;A: HalApi&gt; Labeled <span class="kw">for </span>StagingBuffer&lt;A&gt; {
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="string">""
+    </span>}
 }
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>StagingBuffer&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_parent_device!</span>(StagingBuffer);
+<span class="macro">crate::impl_storage_item!</span>(StagingBuffer);
+<span class="macro">crate::impl_trackable!</span>(StagingBuffer);
 
 <span class="kw">pub type </span>TextureDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;, Vec&lt;wgt::TextureFormat&gt;&gt;;
 
@@ -2769,7 +2724,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) format_features: wgt::TextureFormatFeatures,
     <span class="kw">pub</span>(<span class="kw">crate</span>) initialization_status: RwLock&lt;TextureInitTracker&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) full_range: TextureSelector,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;Texture&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: RwLock&lt;TextureClearMode&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;Vec&lt;Weak&lt;TextureView&lt;A&gt;&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&lt;A&gt;&gt;&gt;&gt;,
@@ -2932,8 +2889,8 @@
                 views,
                 bind_groups,
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
-                tracker_index: <span class="self">self</span>.info.tracker_index(),
-                submission_index: <span class="self">self</span>.info.submission_index(),
+                tracker_index: <span class="self">self</span>.tracker_index(),
+                submission_index: <span class="self">self</span>.submission_index(),
                 label: <span class="self">self</span>.label().to_owned(),
             }))
         };
@@ -2943,7 +2900,7 @@
         <span class="kw">if </span>pending_writes.contains_texture(<span class="self">self</span>) {
             pending_writes.consume_temp(temp);
         } <span class="kw">else </span>{
-            <span class="kw">let </span>last_submit_index = <span class="self">self</span>.info.submission_index();
+            <span class="kw">let </span>last_submit_index = <span class="self">self</span>.submission_index();
             device
                 .lock_life()
                 .schedule_resource_destruction(temp, last_submit_index);
@@ -2965,13 +2922,14 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>buffer_opt = { hub.buffers.try_get(id).ok().flatten() };
-        <span class="kw">let </span>buffer = buffer_opt.as_ref().unwrap();
 
-        <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
-        <span class="kw">let </span>hal_buffer = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
-
-        hal_buffer_callback(hal_buffer)
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(buffer) = hub.buffers.get(id) {
+            <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
+            <span class="kw">let </span>hal_buffer = buffer.raw(<span class="kw-2">&amp;</span>snatch_guard);
+            hal_buffer_callback(hal_buffer)
+        } <span class="kw">else </span>{
+            hal_buffer_callback(<span class="prelude-val">None</span>)
+        }
     }
 
     <span class="doccomment">/// # Safety
@@ -2985,12 +2943,14 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Texture::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>texture_opt = { hub.textures.try_get(id).ok().flatten() };
-        <span class="kw">let </span>texture = texture_opt.as_ref().unwrap();
-        <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
-        <span class="kw">let </span>hal_texture = texture.raw(<span class="kw-2">&amp;</span>snatch_guard);
 
-        hal_texture_callback(hal_texture)
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = hub.textures.get(id) {
+            <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
+            <span class="kw">let </span>hal_texture = texture.raw(<span class="kw-2">&amp;</span>snatch_guard);
+            hal_texture_callback(hal_texture)
+        } <span class="kw">else </span>{
+            hal_texture_callback(<span class="prelude-val">None</span>)
+        }
     }
 
     <span class="doccomment">/// # Safety
@@ -3004,12 +2964,14 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"TextureView::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>texture_view_opt = { hub.texture_views.try_get(id).ok().flatten() };
-        <span class="kw">let </span>texture_view = texture_view_opt.as_ref().unwrap();
-        <span class="kw">let </span>snatch_guard = texture_view.device.snatchable_lock.read();
-        <span class="kw">let </span>hal_texture_view = texture_view.raw(<span class="kw-2">&amp;</span>snatch_guard);
 
-        hal_texture_view_callback(hal_texture_view)
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture_view) = hub.texture_views.get(id) {
+            <span class="kw">let </span>snatch_guard = texture_view.device.snatchable_lock.read();
+            <span class="kw">let </span>hal_texture_view = texture_view.raw(<span class="kw-2">&amp;</span>snatch_guard);
+            hal_texture_view_callback(hal_texture_view)
+        } <span class="kw">else </span>{
+            hal_texture_view_callback(<span class="prelude-val">None</span>)
+        }
     }
 
     <span class="doccomment">/// # Safety
@@ -3023,7 +2985,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Adapter::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>adapter = hub.adapters.try_get(id).ok().flatten();
+        <span class="kw">let </span>adapter = hub.adapters.get(id).ok();
         <span class="kw">let </span>hal_adapter = adapter.as_ref().map(|adapter| <span class="kw-2">&amp;</span>adapter.raw.adapter);
 
         hal_adapter_callback(hal_adapter)
@@ -3040,7 +3002,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>device = hub.devices.try_get(id).ok().flatten();
+        <span class="kw">let </span>device = hub.devices.get(id).ok();
         <span class="kw">let </span>hal_device = device.as_ref().map(|device| device.raw());
 
         hal_device_callback(hal_device)
@@ -3057,10 +3019,14 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::fence_as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>device = hub.devices.try_get(id).ok().flatten();
-        <span class="kw">let </span>hal_fence = device.as_ref().map(|device| device.fence.read());
 
-        hal_fence_callback(hal_fence.as_deref().unwrap().as_ref())
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(id) {
+            <span class="kw">let </span>hal_fence = device.fence.read();
+            <span class="kw">let </span>hal_fence = hal_fence.as_ref();
+            hal_fence_callback(hal_fence)
+        } <span class="kw">else </span>{
+            hal_fence_callback(<span class="prelude-val">None</span>)
+        }
     }
 
     <span class="doccomment">/// # Safety
@@ -3095,15 +3061,15 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::as_hal"</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>cmd_buf = hub
-            .command_buffers
-            .get(id.into_command_buffer_id())
-            .unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open().ok();
 
-        hal_command_encoder_callback(cmd_buf_raw)
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(cmd_buf) = hub.command_buffers.get(id.into_command_buffer_id()) {
+            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open().ok();
+            hal_command_encoder_callback(cmd_buf_raw)
+        } <span class="kw">else </span>{
+            hal_command_encoder_callback(<span class="prelude-val">None</span>)
+        }
     }
 }
 
@@ -3241,25 +3207,11 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Texture&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Texture"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Texture;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>Texture&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(Texture);
+<span class="macro">crate::impl_labeled!</span>(Texture);
+<span class="macro">crate::impl_parent_device!</span>(Texture);
+<span class="macro">crate::impl_storage_item!</span>(Texture);
+<span class="macro">crate::impl_trackable!</span>(Texture);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Borrow&lt;TextureSelector&gt; <span class="kw">for </span>Texture&lt;A&gt; {
     <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TextureSelector {
@@ -3333,7 +3285,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) render_extent: <span class="prelude-ty">Result</span>&lt;wgt::Extent3d, TextureViewNotRenderableReason&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) samples: u32,
     <span class="kw">pub</span>(<span class="kw">crate</span>) selector: TextureSelector,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;TextureView&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>TextureView&lt;A&gt; {
@@ -3416,25 +3370,11 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TextureViewDestroyError {}
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>TextureView&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"TextureView"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::TextureView;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>TextureView&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(TextureView);
+<span class="macro">crate::impl_labeled!</span>(TextureView);
+<span class="macro">crate::impl_parent_device!</span>(TextureView);
+<span class="macro">crate::impl_storage_item!</span>(TextureView);
+<span class="macro">crate::impl_trackable!</span>(TextureView);
 
 <span class="doccomment">/// Describes a [`Sampler`]
 </span><span class="attr">#[derive(Clone, Debug, PartialEq)]
@@ -3469,7 +3409,9 @@
 </span><span class="kw">pub struct </span>Sampler&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::Sampler&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;<span class="self">Self</span>&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="doccomment">/// `true` if this is a comparison sampler
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) comparison: bool,
     <span class="doccomment">/// `true` if this is a filtering sampler
@@ -3538,25 +3480,11 @@
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>Sampler&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"Sampler"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::Sampler;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>Sampler&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(Sampler);
+<span class="macro">crate::impl_labeled!</span>(Sampler);
+<span class="macro">crate::impl_parent_device!</span>(Sampler);
+<span class="macro">crate::impl_storage_item!</span>(Sampler);
+<span class="macro">crate::impl_trackable!</span>(Sampler);
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -3577,7 +3505,9 @@
 </span><span class="kw">pub struct </span>QuerySet&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::QuerySet&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;<span class="self">Self</span>&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) desc: wgt::QuerySetDescriptor&lt;()&gt;,
 }
 
@@ -3593,25 +3523,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>QuerySet&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>QuerySet&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"QuerySet"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::QuerySet;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(QuerySet);
+<span class="macro">crate::impl_labeled!</span>(QuerySet);
+<span class="macro">crate::impl_parent_device!</span>(QuerySet);
+<span class="macro">crate::impl_storage_item!</span>(QuerySet);
+<span class="macro">crate::impl_trackable!</span>(QuerySet);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; QuerySet&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::QuerySet {

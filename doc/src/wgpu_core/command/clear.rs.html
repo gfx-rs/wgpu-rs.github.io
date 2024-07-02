@@ -495,8 +495,6 @@
 <a href="#494" id="494">494</a>
 <a href="#495" id="495">495</a>
 <a href="#496" id="496">496</a>
-<a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -511,8 +509,8 @@
     id::{BufferId, CommandEncoderId, TextureId},
     init_tracker::{MemoryInitKind, TextureInitRange},
     resource::{
-        DestroyedResourceError, ParentDevice, Resource, ResourceErrorIdent, Texture,
-        TextureClearMode,
+        DestroyedResourceError, Labeled, MissingBufferUsageError, ParentDevice, ResourceErrorIdent,
+        Texture, TextureClearMode,
     },
     snatch::SnatchGuard,
     track::{TextureSelector, TextureTracker},
@@ -551,8 +549,8 @@
         end_offset: BufferAddress,
         buffer_size: BufferAddress,
     },
-    <span class="attr">#[error(<span class="string">"Destination buffer is missing the `COPY_DST` usage flag"</span>)]
-    </span>MissingCopyDstUsageFlag(<span class="prelude-ty">Option</span>&lt;BufferId&gt;, <span class="prelude-ty">Option</span>&lt;TextureId&gt;),
+    <span class="attr">#[error(transparent)]
+    </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
     <span class="attr">#[error(<span class="string">"Texture lacks the aspects that were specified in the image subresource range. Texture with format {texture_format:?}, specified was {subresource_range_aspects:?}"</span>)]
     </span>MissingTextureAspect {
         texture_format: wgt::TextureFormat,
@@ -614,9 +612,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(dst), <span class="prelude-val">None</span>));
-        }
+        dst_buffer.check_usage(BufferUsages::COPY_DST)<span class="question-mark">?</span>;
 
         <span class="comment">// Check if offset &amp; size are valid.
         </span><span class="kw">if </span>offset % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{

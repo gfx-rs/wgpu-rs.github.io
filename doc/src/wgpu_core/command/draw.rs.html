@@ -119,26 +119,8 @@
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
 <a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{LateMinBufferBindingSizeMismatch, PushConstantUploadError},
-    error::ErrorFormatter,
     id,
     resource::{
         DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError,
@@ -149,6 +131,8 @@
 <span class="kw">use </span>wgt::VertexStepMode;
 
 <span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span><span class="kw">super</span>::bind::BinderError;
 
 <span class="doccomment">/// Error validating a draw call.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
@@ -165,12 +149,8 @@
     },
     <span class="attr">#[error(<span class="string">"Index buffer must be set"</span>)]
     </span>MissingIndexBuffer,
-    <span class="attr">#[error(<span class="string">"Bind group at index {index} is incompatible with the current set {pipeline}"</span>)]
-    </span>IncompatibleBindGroup {
-        index: u32,
-        pipeline: ResourceErrorIdent,
-        diff: Vec&lt;String&gt;,
-    },
+    <span class="attr">#[error(transparent)]
+    </span>IncompatibleBindGroup(<span class="attr">#[from] </span>Box&lt;BinderError&gt;),
     <span class="attr">#[error(<span class="string">"Vertex {last_vertex} extends beyond limit {vertex_limit} imposed by the buffer in slot {slot}. Did you bind the correct `Vertex` step-rate vertex buffer?"</span>)]
     </span>VertexBeyondLimit {
         last_vertex: u64,
@@ -221,8 +201,8 @@
     </span>VertexBufferIndexOutOfRange { index: u32, max: u32 },
     <span class="attr">#[error(<span class="string">"Dynamic buffer offset {0} does not respect device's requested `{1}` limit {2}"</span>)]
     </span>UnalignedBufferOffset(u64, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32),
-    <span class="attr">#[error(<span class="string">"Render pipeline {0:?} is invalid"</span>)]
-    </span>InvalidPipeline(id::RenderPipelineId),
+    <span class="attr">#[error(<span class="string">"RenderPipelineId {0:?} is invalid"</span>)]
+    </span>InvalidPipelineId(id::RenderPipelineId),
     <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid"</span>)]
     </span>InvalidQuerySet(id::QuerySetId),
     <span class="attr">#[error(<span class="string">"Render pipeline targets are incompatible with render pass"</span>)]
@@ -249,20 +229,6 @@
     </span>InvalidScissorRect(Rect&lt;u32&gt;, wgt::Extent3d),
     <span class="attr">#[error(<span class="string">"Support for {0} is not implemented yet"</span>)]
     </span>Unimplemented(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
-}
-<span class="kw">impl </span><span class="kw">crate</span>::error::PrettyError <span class="kw">for </span>RenderCommandError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::InvalidBindGroupId(id) =&gt; {
-                fmt.bind_group_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="self">Self</span>::InvalidPipeline(id) =&gt; {
-                fmt.render_pipeline_label(<span class="kw-2">&amp;</span>id);
-            }
-            <span class="kw">_ </span>=&gt; {}
-        };
-    }
 }
 
 <span class="attr">#[derive(Clone, Copy, Debug, Default)]

@@ -586,6 +586,42 @@
 <a href="#585" id="585">585</a>
 <a href="#586" id="586">586</a>
 <a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
 </pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::pipeline_cache::PipelineCacheValidationError;
 <span class="kw">use crate</span>::{
     binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError, PipelineLayout},
@@ -593,7 +629,7 @@
     device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures, RenderPassContext},
     hal_api::HalApi,
     id::{PipelineCacheId, PipelineLayoutId, ShaderModuleId},
-    resource::{ParentDevice, Resource, ResourceInfo, ResourceType},
+    resource::{Labeled, TrackingData},
     resource_log, validation, Label,
 };
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -638,7 +674,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::ShaderModule&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) interface: <span class="prelude-ty">Option</span>&lt;validation::Interface&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;ShaderModule&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ShaderModule&lt;A&gt; {
@@ -653,25 +690,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>ShaderModule&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"ShaderModule"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::ShaderModule;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>ShaderModule&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(ShaderModule);
+<span class="macro">crate::impl_labeled!</span>(ShaderModule);
+<span class="macro">crate::impl_parent_device!</span>(ShaderModule);
+<span class="macro">crate::impl_storage_item!</span>(ShaderModule);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ShaderModule&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::ShaderModule {
@@ -753,6 +775,35 @@
     </span><span class="kw">pub </span>vertex_pulling_transform: bool,
 }
 
+<span class="doccomment">/// Describes a programmable pipeline stage.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// The compiled shader module for this stage.
+    </span><span class="kw">pub </span>module: Arc&lt;ShaderModule&lt;A&gt;&gt;,
+    <span class="doccomment">/// The name of the entry point in the compiled shader. The name is selected using the
+    /// following logic:
+    ///
+    /// * If `Some(name)` is specified, there must be a function with this name in the shader.
+    /// * If a single entry point associated with this stage must be in the shader, then proceed as
+    ///   if `Some(…)` was specified with that entry point's name.
+    </span><span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
+    <span class="doccomment">/// Specifies the values of pipeline-overridable constants in the shader module.
+    ///
+    /// If an `@id` attribute was specified on the declaration,
+    /// the key must be the pipeline constant ID as a decimal ASCII number; if not,
+    /// the key must be the constant's identifier name.
+    ///
+    /// The value may represent any of WGSL's concrete scalar types.
+    </span><span class="kw">pub </span>constants: Cow&lt;<span class="lifetime">'a</span>, naga::back::PipelineConstants&gt;,
+    <span class="doccomment">/// Whether workgroup scoped memory will be initialized with zero values for this stage.
+    ///
+    /// This is required by the WebGPU spec, but may have overhead which can be avoided
+    /// for cross-platform applications
+    </span><span class="kw">pub </span>zero_initialize_workgroup_memory: bool,
+    <span class="doccomment">/// Should the pipeline attempt to transform vertex shaders to use vertex pulling.
+    </span><span class="kw">pub </span>vertex_pulling_transform: bool,
+}
+
 <span class="doccomment">/// Number of implicit bind groups derived at pipeline creation.
 </span><span class="kw">pub type </span>ImplicitBindGroupCount = u8;
 
@@ -782,6 +833,18 @@
     </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PipelineCacheId&gt;,
 }
 
+<span class="doccomment">/// Describes a compute pipeline.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedComputePipelineDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// The layout of bind groups for this pipeline.
+    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
+    <span class="doccomment">/// The compiled compute stage and its entry point.
+    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, A&gt;,
+    <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineCache&lt;A&gt;&gt;&gt;,
+}
+
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateComputePipelineError {
@@ -789,6 +852,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
     </span>InvalidLayout,
+    <span class="attr">#[error(<span class="string">"Cache is invalid"</span>)]
+    </span>InvalidCache,
     <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
     <span class="attr">#[error(<span class="string">"Error matching shader requirements against the pipeline"</span>)]
@@ -806,7 +871,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) _shader_module: Arc&lt;ShaderModule&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) late_sized_buffer_groups: ArrayVec&lt;LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;ComputePipeline&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ComputePipeline&lt;A&gt; {
@@ -821,25 +888,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>ComputePipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"ComputePipeline"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::ComputePipeline;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>ComputePipeline&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(ComputePipeline);
+<span class="macro">crate::impl_labeled!</span>(ComputePipeline);
+<span class="macro">crate::impl_parent_device!</span>(ComputePipeline);
+<span class="macro">crate::impl_storage_item!</span>(ComputePipeline);
+<span class="macro">crate::impl_trackable!</span>(ComputePipeline);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; ComputePipeline&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::ComputePipeline {
@@ -874,7 +927,9 @@
 </span><span class="kw">pub struct </span>PipelineCache&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::PipelineCache&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;PipelineCache&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>PipelineCache&lt;A&gt; {
@@ -889,25 +944,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>PipelineCache&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"PipelineCache"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::PipelineCache;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>PipelineCache&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(PipelineCache);
+<span class="macro">crate::impl_labeled!</span>(PipelineCache);
+<span class="macro">crate::impl_parent_device!</span>(PipelineCache);
+<span class="macro">crate::impl_storage_item!</span>(PipelineCache);
+<span class="macro">crate::impl_trackable!</span>(PipelineCache);
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.
 </span><span class="attr">#[derive(Clone, Debug)]
@@ -932,12 +973,30 @@
     </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">'a</span>, [VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;]&gt;,
 }
 
+<span class="doccomment">/// Describes the vertex process in a render pipeline.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedVertexState&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// The compiled vertex stage and its entry point.
+    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, A&gt;,
+    <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
+    </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">'a</span>, [VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;]&gt;,
+}
+
 <span class="doccomment">/// Describes fragment processing in a render pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub struct </span>FragmentState&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The compiled fragment stage and its entry point.
     </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
+    </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
+}
+
+<span class="doccomment">/// Describes fragment processing in a render pipeline.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedFragmentState&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="doccomment">/// The compiled fragment stage and its entry point.
+    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, A&gt;,
     <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
     </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
 }
@@ -967,6 +1026,29 @@
     </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
     <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
     </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PipelineCacheId&gt;,
+}
+
+<span class="doccomment">/// Describes a render (graphics) pipeline.
+</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ResolvedRenderPipelineDescriptor&lt;<span class="lifetime">'a</span>, A: HalApi&gt; {
+    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="doccomment">/// The layout of bind groups for this pipeline.
+    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
+    <span class="doccomment">/// The vertex processing state for this pipeline.
+    </span><span class="kw">pub </span>vertex: ResolvedVertexState&lt;<span class="lifetime">'a</span>, A&gt;,
+    <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.
+    </span><span class="kw">pub </span>primitive: wgt::PrimitiveState,
+    <span class="doccomment">/// The effect of draw calls on the depth and stencil aspects of the output target, if any.
+    </span><span class="kw">pub </span>depth_stencil: <span class="prelude-ty">Option</span>&lt;wgt::DepthStencilState&gt;,
+    <span class="doccomment">/// The multi-sampling properties of the pipeline.
+    </span><span class="kw">pub </span>multisample: wgt::MultisampleState,
+    <span class="doccomment">/// The fragment processing state for this pipeline.
+    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;ResolvedFragmentState&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+    <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
+    /// layers the attachments will have.
+    </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineCache&lt;A&gt;&gt;&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug)]
@@ -1021,6 +1103,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
     </span>InvalidLayout,
+    <span class="attr">#[error(<span class="string">"Pipeline cache is invalid"</span>)]
+    </span>InvalidCache,
     <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
     <span class="attr">#[error(<span class="string">"Color state [{0}] is invalid"</span>)]
@@ -1133,7 +1217,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) strip_index_format: <span class="prelude-ty">Option</span>&lt;wgt::IndexFormat&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_steps: Vec&lt;VertexStep&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) late_sized_buffer_groups: ArrayVec&lt;LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;RenderPipeline&lt;A&gt;&gt;,
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>RenderPipeline&lt;A&gt; {
@@ -1148,25 +1234,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>RenderPipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: ResourceType = <span class="string">"RenderPipeline"</span>;
-
-    <span class="kw">type </span>Marker = <span class="kw">crate</span>::id::markers::RenderPipeline;
-
-    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.info
-    }
-
-    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;<span class="self">Self</span>&gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
-    }
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; ParentDevice&lt;A&gt; <span class="kw">for </span>RenderPipeline&lt;A&gt; {
-    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.device
-    }
-}
+<span class="macro">crate::impl_resource_type!</span>(RenderPipeline);
+<span class="macro">crate::impl_labeled!</span>(RenderPipeline);
+<span class="macro">crate::impl_parent_device!</span>(RenderPipeline);
+<span class="macro">crate::impl_storage_item!</span>(RenderPipeline);
+<span class="macro">crate::impl_trackable!</span>(RenderPipeline);
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; RenderPipeline&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::RenderPipeline {

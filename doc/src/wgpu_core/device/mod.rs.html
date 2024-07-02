@@ -534,14 +534,13 @@
 <a href="#533" id="533">533</a>
 <a href="#534" id="534">534</a>
 <a href="#535" id="535">535</a>
-<a href="#536" id="536">536</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
     hub::Hub,
     id::{BindGroupLayoutId, PipelineLayoutId},
     resource::{
-        Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation, Resource,
+        Buffer, BufferAccessError, BufferAccessResult, BufferMapOperation, Labeled,
         ResourceErrorIdent,
     },
     snatch::SnatchGuard,
@@ -576,7 +575,6 @@
 // See https://github.com/gfx-rs/wgpu/issues/4589. 60s to reduce the chances of this.
 </span><span class="kw">const </span>CLEANUP_WAIT_MS: u32 = <span class="number">60000</span>;
 
-<span class="kw">const </span>IMPLICIT_BIND_GROUP_LAYOUT_ERROR_LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"Implicit BindGroupLayout in the Error State"</span>;
 <span class="kw">const </span>ENTRYPOINT_FAILURE_ERROR: <span class="kw-2">&amp;</span>str = <span class="string">"The given EntryPoint is Invalid"</span>;
 
 <span class="kw">pub type </span>DeviceDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::DeviceDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
@@ -643,7 +641,7 @@
 
 <span class="kw">impl </span>RenderPassContext {
     <span class="comment">// Assumes the renderpass only contains one subpass
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_compatible&lt;T: Resource&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_compatible&lt;T: Labeled&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         other: <span class="kw-2">&amp;</span><span class="self">Self</span>,
         res: <span class="kw-2">&amp;</span>T,

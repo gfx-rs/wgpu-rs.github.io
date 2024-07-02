@@ -437,6 +437,93 @@
 <a href="#436" id="436">436</a>
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -444,18 +531,37 @@
     device::SHADER_STAGE_COUNT,
     hal_api::HalApi,
     pipeline::LateSizedBufferGroup,
-    resource::Resource,
+    resource::{Labeled, ResourceErrorIdent},
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-
-<span class="kw">type </span>BindGroupMask = u8;
+<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">mod </span>compat {
     <span class="kw">use </span>arrayvec::ArrayVec;
+    <span class="kw">use </span>thiserror::Error;
+    <span class="kw">use </span>wgt::{BindingType, ShaderStages};
 
-    <span class="kw">use crate</span>::{binding_model::BindGroupLayout, device::bgl, hal_api::HalApi, resource::Resource};
-    <span class="kw">use </span>std::{ops::Range, sync::Arc};
+    <span class="kw">use crate</span>::{
+        binding_model::BindGroupLayout,
+        error::MultiError,
+        hal_api::HalApi,
+        resource::{Labeled, ParentDevice, ResourceErrorIdent},
+    };
+    <span class="kw">use </span>std::{
+        num::NonZeroU32,
+        ops::Range,
+        sync::{Arc, Weak},
+    };
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Error {
+        Incompatible {
+            expected_bgl: ResourceErrorIdent,
+            assigned_bgl: ResourceErrorIdent,
+            inner: MultiError,
+        },
+        Missing,
+    }
 
     <span class="attr">#[derive(Debug, Clone)]
     </span><span class="kw">struct </span>Entry&lt;A: HalApi&gt; {
@@ -475,98 +581,141 @@
         }
 
         <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-            <span class="kw">if </span><span class="self">self</span>.expected.is_none() {
-                <span class="kw">return </span><span class="bool-val">true</span>;
-            }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_bgl) = <span class="self">self</span>.expected.as_ref() {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(assigned_bgl) = <span class="self">self</span>.assigned.as_ref() {
-                    <span class="kw">if </span>expected_bgl.is_equal(assigned_bgl) {
-                        <span class="kw">return </span><span class="bool-val">true</span>;
-                    }
-                }
-            }
-            <span class="bool-val">false
-        </span>}
+                    expected_bgl.is_equal(assigned_bgl)
+                } <span class="kw">else </span>{
+                    <span class="bool-val">false
+                </span>}
+            } <span class="kw">else </span>{
+                <span class="bool-val">true
+            </span>}
+        }
 
         <span class="kw">fn </span>is_incompatible(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="self">self</span>.expected.is_none() || !<span class="self">self</span>.is_valid()
         }
 
-        <span class="comment">// Describe how bind group layouts are incompatible, for validation
-        // error message.
-        </span><span class="kw">fn </span>bgl_diff(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>diff = Vec::new();
-
+        <span class="kw">fn </span>check(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_bgl) = <span class="self">self</span>.expected.as_ref() {
-                <span class="kw">let </span>expected_bgl_type = <span class="kw">match </span>expected_bgl.origin {
-                    bgl::Origin::Derived =&gt; <span class="string">"implicit"</span>,
-                    bgl::Origin::Pool =&gt; <span class="string">"explicit"</span>,
-                };
-                diff.push(<span class="macro">format!</span>(
-                    <span class="string">"Should be compatible an with an {expected_bgl_type} {}"</span>,
-                    expected_bgl.error_ident()
-                ));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(assigned_bgl) = <span class="self">self</span>.assigned.as_ref() {
-                    <span class="kw">let </span>assigned_bgl_type = <span class="kw">match </span>assigned_bgl.origin {
-                        bgl::Origin::Derived =&gt; <span class="string">"implicit"</span>,
-                        bgl::Origin::Pool =&gt; <span class="string">"explicit"</span>,
-                    };
-                    diff.push(<span class="macro">format!</span>(
-                        <span class="string">"Assigned {assigned_bgl_type} {}"</span>,
-                        assigned_bgl.error_ident()
-                    ));
-                    <span class="kw">for </span>(id, e_entry) <span class="kw">in </span>expected_bgl.entries.iter() {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(a_entry) = assigned_bgl.entries.get(<span class="kw-2">*</span>id) {
-                            <span class="kw">if </span>a_entry.binding != e_entry.binding {
-                                diff.push(<span class="macro">format!</span>(
-                                    <span class="string">"Entry {id} binding expected {}, got {}"</span>,
-                                    e_entry.binding, a_entry.binding
-                                ));
-                            }
-                            <span class="kw">if </span>a_entry.count != e_entry.count {
-                                diff.push(<span class="macro">format!</span>(
-                                    <span class="string">"Entry {id} count expected {:?}, got {:?}"</span>,
-                                    e_entry.count, a_entry.count
-                                ));
-                            }
-                            <span class="kw">if </span>a_entry.ty != e_entry.ty {
-                                diff.push(<span class="macro">format!</span>(
-                                    <span class="string">"Entry {id} type expected {:?}, got {:?}"</span>,
-                                    e_entry.ty, a_entry.ty
-                                ));
-                            }
-                            <span class="kw">if </span>a_entry.visibility != e_entry.visibility {
-                                diff.push(<span class="macro">format!</span>(
-                                    <span class="string">"Entry {id} visibility expected {:?}, got {:?}"</span>,
-                                    e_entry.visibility, a_entry.visibility
-                                ));
-                            }
-                        } <span class="kw">else </span>{
-                            diff.push(<span class="macro">format!</span>(
-                                <span class="string">"Entry {id} not found in assigned bind group layout"
-                            </span>))
+                    <span class="kw">if </span>expected_bgl.is_equal(assigned_bgl) {
+                        <span class="prelude-val">Ok</span>(())
+                    } <span class="kw">else </span>{
+                        <span class="attr">#[derive(Clone, Debug, Error)]
+                        #[error(
+                            <span class="string">"Exclusive pipelines don't match: expected {expected}, got {assigned}"
+                        </span>)]
+                        </span><span class="kw">struct </span>IncompatibleExclusivePipelines {
+                            expected: String,
+                            assigned: String,
                         }
-                    }
 
-                    assigned_bgl.entries.iter().for_each(|(id, _e_entry)| {
-                        <span class="kw">if </span>!expected_bgl.entries.contains_key(<span class="kw-2">*</span>id) {
-                            diff.push(<span class="macro">format!</span>(
-                                <span class="string">"Entry {id} not found in expected bind group layout"
-                            </span>))
+                        <span class="kw">use </span><span class="kw">crate</span>::binding_model::ExclusivePipeline;
+                        <span class="kw">match </span>(
+                            expected_bgl.exclusive_pipeline.get().unwrap(),
+                            assigned_bgl.exclusive_pipeline.get().unwrap(),
+                        ) {
+                            (ExclusivePipeline::None, ExclusivePipeline::None) =&gt; {}
+                            (
+                                ExclusivePipeline::Render(e_pipeline),
+                                ExclusivePipeline::Render(a_pipeline),
+                            ) <span class="kw">if </span>Weak::ptr_eq(e_pipeline, a_pipeline) =&gt; {}
+                            (
+                                ExclusivePipeline::Compute(e_pipeline),
+                                ExclusivePipeline::Compute(a_pipeline),
+                            ) <span class="kw">if </span>Weak::ptr_eq(e_pipeline, a_pipeline) =&gt; {}
+                            (expected, assigned) =&gt; {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Incompatible {
+                                    expected_bgl: expected_bgl.error_ident(),
+                                    assigned_bgl: assigned_bgl.error_ident(),
+                                    inner: MultiError::new(core::iter::once(
+                                        IncompatibleExclusivePipelines {
+                                            expected: expected.to_string(),
+                                            assigned: assigned.to_string(),
+                                        },
+                                    ))
+                                    .unwrap(),
+                                });
+                            }
                         }
-                    });
 
-                    <span class="kw">if </span>expected_bgl.origin != assigned_bgl.origin {
-                        diff.push(<span class="macro">format!</span>(<span class="string">"Expected {expected_bgl_type} bind group layout, got {assigned_bgl_type}"</span>))
+                        <span class="attr">#[derive(Clone, Debug, Error)]
+                        </span><span class="kw">enum </span>EntryError {
+                            <span class="attr">#[error(<span class="string">"Entries with binding {binding} differ in visibility: expected {expected:?}, got {assigned:?}"</span>)]
+                            </span>Visibility {
+                                binding: u32,
+                                expected: ShaderStages,
+                                assigned: ShaderStages,
+                            },
+                            <span class="attr">#[error(<span class="string">"Entries with binding {binding} differ in type: expected {expected:?}, got {assigned:?}"</span>)]
+                            </span>Type {
+                                binding: u32,
+                                expected: BindingType,
+                                assigned: BindingType,
+                            },
+                            <span class="attr">#[error(<span class="string">"Entries with binding {binding} differ in count: expected {expected:?}, got {assigned:?}"</span>)]
+                            </span>Count {
+                                binding: u32,
+                                expected: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+                                assigned: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+                            },
+                            <span class="attr">#[error(<span class="string">"Expected entry with binding {binding} not found in assigned bind group layout"</span>)]
+                            </span>ExtraExpected { binding: u32 },
+                            <span class="attr">#[error(<span class="string">"Assigned entry with binding {binding} not found in expected bind group layout"</span>)]
+                            </span>ExtraAssigned { binding: u32 },
+                        }
+
+                        <span class="kw">let </span><span class="kw-2">mut </span>errors = Vec::new();
+
+                        <span class="kw">let </span><span class="kw-2">mut </span>expected_bgl_entries = expected_bgl.entries.iter();
+                        <span class="kw">let </span><span class="kw-2">mut </span>assigned_bgl_entries = assigned_bgl.entries.iter();
+                        <span class="kw">let </span>zipped = (<span class="kw-2">&amp;mut </span>expected_bgl_entries).zip(<span class="kw-2">&amp;mut </span>assigned_bgl_entries);
+
+                        <span class="kw">for </span>((<span class="kw-2">&amp;</span>binding, expected_entry), (<span class="kw">_</span>, assigned_entry)) <span class="kw">in </span>zipped {
+                            <span class="kw">if </span>assigned_entry.visibility != expected_entry.visibility {
+                                errors.push(EntryError::Visibility {
+                                    binding,
+                                    expected: expected_entry.visibility,
+                                    assigned: assigned_entry.visibility,
+                                });
+                            }
+                            <span class="kw">if </span>assigned_entry.ty != expected_entry.ty {
+                                errors.push(EntryError::Type {
+                                    binding,
+                                    expected: expected_entry.ty,
+                                    assigned: assigned_entry.ty,
+                                });
+                            }
+                            <span class="kw">if </span>assigned_entry.count != expected_entry.count {
+                                errors.push(EntryError::Count {
+                                    binding,
+                                    expected: expected_entry.count,
+                                    assigned: assigned_entry.count,
+                                });
+                            }
+                        }
+
+                        <span class="kw">for </span>(<span class="kw-2">&amp;</span>binding, <span class="kw">_</span>) <span class="kw">in </span>expected_bgl_entries {
+                            errors.push(EntryError::ExtraExpected { binding });
+                        }
+
+                        <span class="kw">for </span>(<span class="kw-2">&amp;</span>binding, <span class="kw">_</span>) <span class="kw">in </span>assigned_bgl_entries {
+                            errors.push(EntryError::ExtraAssigned { binding });
+                        }
+
+                        <span class="prelude-val">Err</span>(Error::Incompatible {
+                            expected_bgl: expected_bgl.error_ident(),
+                            assigned_bgl: assigned_bgl.error_ident(),
+                            inner: MultiError::new(errors.drain(..)).unwrap(),
+                        })
                     }
                 } <span class="kw">else </span>{
-                    diff.push(<span class="string">"Assigned bind group layout not found (internal error)"</span>.to_owned());
+                    <span class="prelude-val">Err</span>(Error::Missing)
                 }
             } <span class="kw">else </span>{
-                diff.push(<span class="string">"Expected bind group layout not found (internal error)"</span>.to_owned());
+                <span class="prelude-val">Ok</span>(())
             }
-
-            diff
         }
     }
 
@@ -627,25 +776,32 @@
                 .filter_map(|(i, e)| <span class="kw">if </span>e.is_active() { <span class="prelude-val">Some</span>(i) } <span class="kw">else </span>{ <span class="prelude-val">None </span>})
         }
 
-        <span class="kw">pub fn </span>invalid_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::BindGroupMask {
-            <span class="self">self</span>.entries.iter().enumerate().fold(<span class="number">0</span>, |mask, (i, entry)| {
-                <span class="kw">if </span>entry.is_valid() {
-                    mask
-                } <span class="kw">else </span>{
-                    mask | <span class="number">1u8 </span>&lt;&lt; i
-                }
-            })
-        }
-
-        <span class="kw">pub fn </span>bgl_diff(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
-            <span class="kw">for </span>e <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.entries {
-                <span class="kw">if </span>!e.is_valid() {
-                    <span class="kw">return </span>e.bgl_diff();
-                }
+        <span class="kw">pub fn </span>get_invalid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), (usize, Error)&gt; {
+            <span class="kw">for </span>(index, entry) <span class="kw">in </span><span class="self">self</span>.entries.iter().enumerate() {
+                entry.check().map_err(|e| (index, e))<span class="question-mark">?</span>;
             }
-            <span class="macro">vec!</span>[String::from(<span class="string">"No differences detected? (internal error)"</span>)]
+            <span class="prelude-val">Ok</span>(())
         }
     }
+}
+
+<span class="attr">#[derive(Clone, Debug, Error)]
+</span><span class="kw">pub enum </span>BinderError {
+    <span class="attr">#[error(<span class="string">"The current set {pipeline} expects a BindGroup to be set at index {index}"</span>)]
+    </span>MissingBindGroup {
+        index: usize,
+        pipeline: ResourceErrorIdent,
+    },
+    <span class="attr">#[error(<span class="string">"The {assigned_bgl} of current set {assigned_bg} at index {index} is not compatible with the corresponding {expected_bgl} of {pipeline}"</span>)]
+    </span>IncompatibleBindGroup {
+        expected_bgl: ResourceErrorIdent,
+        assigned_bgl: ResourceErrorIdent,
+        assigned_bg: ResourceErrorIdent,
+        index: usize,
+        pipeline: ResourceErrorIdent,
+        <span class="attr">#[source]
+        </span>inner: <span class="kw">crate</span>::error::MultiError,
+    },
 }
 
 <span class="attr">#[derive(Debug)]
@@ -792,12 +948,30 @@
             .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>invalid_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BindGroupMask {
-        <span class="self">self</span>.manager.invalid_mask()
-    }
-
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>bgl_diff(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
-        <span class="self">self</span>.manager.bgl_diff()
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_compatibility&lt;T: Labeled&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pipeline: <span class="kw-2">&amp;</span>T,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;BinderError&gt;&gt; {
+        <span class="self">self</span>.manager.get_invalid().map_err(|(index, error)| {
+            Box::new(<span class="kw">match </span>error {
+                compat::Error::Incompatible {
+                    expected_bgl,
+                    assigned_bgl,
+                    inner,
+                } =&gt; BinderError::IncompatibleBindGroup {
+                    expected_bgl,
+                    assigned_bgl,
+                    assigned_bg: <span class="self">self</span>.payloads[index].group.as_ref().unwrap().error_ident(),
+                    index,
+                    pipeline: pipeline.error_ident(),
+                    inner,
+                },
+                compat::Error::Missing =&gt; BinderError::MissingBindGroup {
+                    index,
+                    pipeline: pipeline.error_ident(),
+                },
+            })
+        })
     }
 
     <span class="doccomment">/// Scan active buffer bindings corresponding to layouts without `min_binding_size` specified.

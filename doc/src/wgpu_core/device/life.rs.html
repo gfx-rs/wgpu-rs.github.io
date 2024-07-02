@@ -908,15 +908,6 @@
 <a href="#907" id="907">907</a>
 <a href="#908" id="908">908</a>
 <a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindGroup, BindGroupLayout, PipelineLayout},
     command::RenderBundle,
@@ -929,8 +920,8 @@
     lock::Mutex,
     pipeline::{ComputePipeline, RenderPipeline},
     resource::{
-        <span class="self">self</span>, Buffer, DestroyedBuffer, DestroyedTexture, QuerySet, Resource, Sampler,
-        StagingBuffer, Texture, TextureView,
+        <span class="self">self</span>, Buffer, DestroyedBuffer, DestroyedTexture, Labeled, QuerySet, Sampler, StagingBuffer,
+        Texture, TextureView, Trackable,
     },
     snatch::SnatchGuard,
     track::{ResourceTracker, Tracker, TrackerIndex},
@@ -1233,14 +1224,12 @@
         <span class="kw">for </span>res <span class="kw">in </span>temp_resources {
             <span class="kw">match </span>res {
                 TempResource::Buffer(raw) =&gt; {
-                    last_resources
-                        .buffers
-                        .insert(raw.as_info().tracker_index(), raw);
+                    last_resources.buffers.insert(raw.tracker_index(), raw);
                 }
                 TempResource::StagingBuffer(raw) =&gt; {
                     last_resources
                         .staging_buffers
-                        .insert(raw.as_info().tracker_index(), raw);
+                        .insert(raw.tracker_index(), raw);
                 }
                 TempResource::DestroyedBuffer(destroyed) =&gt; {
                     last_resources
@@ -1248,9 +1237,7 @@
                         .insert(destroyed.tracker_index, destroyed);
                 }
                 TempResource::Texture(raw) =&gt; {
-                    last_resources
-                        .textures
-                        .insert(raw.as_info().tracker_index(), raw);
+                    last_resources.textures.insert(raw.tracker_index(), raw);
                 }
                 TempResource::DestroyedTexture(destroyed) =&gt; {
                     last_resources
@@ -1273,12 +1260,12 @@
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_buffers.drain(..) {
             <span class="self">self</span>.suspected_resources
                 .buffers
-                .insert(v.as_info().tracker_index(), v);
+                .insert(v.tracker_index(), v);
         }
         <span class="kw">for </span>v <span class="kw">in </span><span class="self">self</span>.future_suspected_textures.drain(..) {
             <span class="self">self</span>.suspected_resources
                 .textures
-                .insert(v.as_info().tracker_index(), v);
+                .insert(v.tracker_index(), v);
         }
     }
 
@@ -1346,12 +1333,10 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(resources) = resources {
             <span class="kw">match </span>temp_resource {
                 TempResource::Buffer(raw) =&gt; {
-                    resources.buffers.insert(raw.as_info().tracker_index(), raw);
+                    resources.buffers.insert(raw.tracker_index(), raw);
                 }
                 TempResource::StagingBuffer(raw) =&gt; {
-                    resources
-                        .staging_buffers
-                        .insert(raw.as_info().tracker_index(), raw);
+                    resources.staging_buffers.insert(raw.tracker_index(), raw);
                 }
                 TempResource::DestroyedBuffer(destroyed) =&gt; {
                     resources
@@ -1359,9 +1344,7 @@
                         .insert(destroyed.tracker_index, destroyed);
                 }
                 TempResource::Texture(raw) =&gt; {
-                    resources
-                        .textures
-                        .insert(raw.as_info().tracker_index(), raw);
+                    resources.textures.insert(raw.tracker_index(), raw);
                 }
                 TempResource::DestroyedTexture(destroyed) =&gt; {
                     resources
@@ -1408,7 +1391,7 @@
         get_resource_map: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>ResourceMaps&lt;A&gt;) -&gt; <span class="kw-2">&amp;mut </span>FastHashMap&lt;TrackerIndex, Arc&lt;R&gt;&gt;,
     ) -&gt; Vec&lt;Arc&lt;R&gt;&gt;
     <span class="kw">where
-        </span>R: Resource,
+        </span>R: Trackable,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>removed_resources = Vec::new();
         suspected_resources.retain(|<span class="kw-2">&amp;</span>index, resource| {
@@ -1418,7 +1401,7 @@
 
             <span class="comment">// If this resource is used by commands in flight, save
             // it in that submission's `last_resources` list.
-            </span><span class="kw">let </span>submit_index = resource.as_info().submission_index();
+            </span><span class="kw">let </span>submit_index = resource.submission_index();
             <span class="kw">let </span>last_resources = active
                 .iter_mut()
                 .find(|a| a.index == submit_index)
@@ -1446,27 +1429,27 @@
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.buffers.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .buffers
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.textures.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .textures
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.bind_groups.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .bind_groups
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.render_pipelines.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .render_pipelines
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bundle.used.query_sets.write().drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .query_sets
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
         }
         <span class="self">self
@@ -1485,28 +1468,27 @@
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.buffers.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .buffers
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.textures.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .textures
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.views.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .texture_views
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
             <span class="kw">for </span>v <span class="kw">in </span>bind_group.used.samplers.drain_resources() {
                 <span class="self">self</span>.suspected_resources
                     .samplers
-                    .insert(v.as_info().tracker_index(), v);
+                    .insert(v.tracker_index(), v);
             }
 
-            <span class="self">self</span>.suspected_resources.bind_group_layouts.insert(
-                bind_group.layout.as_info().tracker_index(),
-                bind_group.layout.clone(),
-            );
+            <span class="self">self</span>.suspected_resources
+                .bind_group_layouts
+                .insert(bind_group.layout.tracker_index(), bind_group.layout.clone());
         }
         <span class="self">self
     </span>}
@@ -1600,7 +1582,7 @@
         );
         <span class="kw">for </span>compute_pipeline <span class="kw">in </span>removed_resources {
             <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
-                compute_pipeline.layout.as_info().tracker_index(),
+                compute_pipeline.layout.tracker_index(),
                 compute_pipeline.layout.clone(),
             );
         }
@@ -1618,7 +1600,7 @@
         );
         <span class="kw">for </span>render_pipeline <span class="kw">in </span>removed_resources {
             <span class="self">self</span>.suspected_resources.pipeline_layouts.insert(
-                render_pipeline.layout.as_info().tracker_index(),
+                render_pipeline.layout.tracker_index(),
                 render_pipeline.layout.clone(),
             );
         }
@@ -1637,7 +1619,7 @@
             <span class="kw">for </span>bgl <span class="kw">in </span><span class="kw-2">&amp;</span>pipeline_layout.bind_group_layouts {
                 <span class="self">self</span>.suspected_resources
                     .bind_group_layouts
-                    .insert(bgl.as_info().tracker_index(), bgl.clone());
+                    .insert(bgl.tracker_index(), bgl.clone());
             }
         });
         <span class="self">self
@@ -1732,7 +1714,7 @@
         }
 
         <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.mapped.drain(..) {
-            <span class="kw">let </span>submit_index = buffer.info.submission_index();
+            <span class="kw">let </span>submit_index = buffer.submission_index();
             <span class="macro">log::trace!</span>(
                 <span class="string">"Mapping of {} at submission {:?} gets assigned to active {:?}"</span>,
                 buffer.error_ident(),
@@ -1767,7 +1749,7 @@
             Vec::with_capacity(<span class="self">self</span>.ready_to_map.len());
 
         <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.ready_to_map.drain(..) {
-            <span class="kw">let </span>tracker_index = buffer.info.tracker_index();
+            <span class="kw">let </span>tracker_index = buffer.tracker_index();
             <span class="kw">let </span>is_removed = {
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
                 trackers.buffers.remove_abandoned(tracker_index)

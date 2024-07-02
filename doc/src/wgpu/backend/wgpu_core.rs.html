@@ -3498,60 +3498,6 @@
 <a href="#3497" id="3497">3497</a>
 <a href="#3498" id="3498">3498</a>
 <a href="#3499" id="3499">3499</a>
-<a href="#3500" id="3500">3500</a>
-<a href="#3501" id="3501">3501</a>
-<a href="#3502" id="3502">3502</a>
-<a href="#3503" id="3503">3503</a>
-<a href="#3504" id="3504">3504</a>
-<a href="#3505" id="3505">3505</a>
-<a href="#3506" id="3506">3506</a>
-<a href="#3507" id="3507">3507</a>
-<a href="#3508" id="3508">3508</a>
-<a href="#3509" id="3509">3509</a>
-<a href="#3510" id="3510">3510</a>
-<a href="#3511" id="3511">3511</a>
-<a href="#3512" id="3512">3512</a>
-<a href="#3513" id="3513">3513</a>
-<a href="#3514" id="3514">3514</a>
-<a href="#3515" id="3515">3515</a>
-<a href="#3516" id="3516">3516</a>
-<a href="#3517" id="3517">3517</a>
-<a href="#3518" id="3518">3518</a>
-<a href="#3519" id="3519">3519</a>
-<a href="#3520" id="3520">3520</a>
-<a href="#3521" id="3521">3521</a>
-<a href="#3522" id="3522">3522</a>
-<a href="#3523" id="3523">3523</a>
-<a href="#3524" id="3524">3524</a>
-<a href="#3525" id="3525">3525</a>
-<a href="#3526" id="3526">3526</a>
-<a href="#3527" id="3527">3527</a>
-<a href="#3528" id="3528">3528</a>
-<a href="#3529" id="3529">3529</a>
-<a href="#3530" id="3530">3530</a>
-<a href="#3531" id="3531">3531</a>
-<a href="#3532" id="3532">3532</a>
-<a href="#3533" id="3533">3533</a>
-<a href="#3534" id="3534">3534</a>
-<a href="#3535" id="3535">3535</a>
-<a href="#3536" id="3536">3536</a>
-<a href="#3537" id="3537">3537</a>
-<a href="#3538" id="3538">3538</a>
-<a href="#3539" id="3539">3539</a>
-<a href="#3540" id="3540">3540</a>
-<a href="#3541" id="3541">3541</a>
-<a href="#3542" id="3542">3542</a>
-<a href="#3543" id="3543">3543</a>
-<a href="#3544" id="3544">3544</a>
-<a href="#3545" id="3545">3545</a>
-<a href="#3546" id="3546">3546</a>
-<a href="#3547" id="3547">3547</a>
-<a href="#3548" id="3548">3548</a>
-<a href="#3549" id="3549">3549</a>
-<a href="#3550" id="3550">3550</a>
-<a href="#3551" id="3551">3551</a>
-<a href="#3552" id="3552">3552</a>
-<a href="#3553" id="3553">3553</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3582,8 +3528,6 @@
     id::TextureViewId, pipeline::CreateShaderModuleError,
 };
 <span class="kw">use </span>wgt::WasmNotSendSync;
-
-<span class="kw">const </span>LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"label"</span>;
 
 <span class="kw">pub struct </span>ContextWgpuCore(wgc::global::Global);
 
@@ -3616,10 +3560,6 @@
     <span class="kw">pub unsafe fn </span>from_core_instance(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="kw">unsafe </span>{ wgc::global::Global::from_instance(core_instance) })
     }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>global(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgc::global::Global {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
-    </span>}
 
     <span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, backends: wgt::Backends) -&gt; Vec&lt;wgc::id::AdapterId&gt; {
         <span class="self">self</span>.<span class="number">0
@@ -3704,7 +3644,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_texture_from_hal"</span>,
             );
@@ -3733,7 +3672,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_buffer_from_hal"</span>,
             );
@@ -3827,16 +3765,14 @@
     <span class="kw">fn </span>handle_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        cause: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
-        label_key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
         label: Label&lt;<span class="lifetime">'_</span>&gt;,
-        string: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
         <span class="kw">let </span>error = wgc::error::ContextError {
-            string,
-            cause: Box::new(cause),
+            fn_ident,
+            source: Box::new(source),
             label: label.unwrap_or_default().to_string(),
-            label_key,
         };
         <span class="kw">let </span><span class="kw-2">mut </span>sink = sink_mutex.lock();
         <span class="kw">let </span><span class="kw-2">mut </span>source_opt: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>error);
@@ -3861,10 +3797,10 @@
     <span class="kw">fn </span>handle_error_nolabel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        cause: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
-        string: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
+        fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="self">self</span>.handle_error(sink_mutex, cause, <span class="string">""</span>, <span class="prelude-val">None</span>, string)
+        <span class="self">self</span>.handle_error(sink_mutex, source, <span class="prelude-val">None</span>, fn_ident)
     }
 
     <span class="attr">#[track_caller]
@@ -3877,22 +3813,32 @@
     }
 
     <span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Error + <span class="lifetime">'static</span>)) -&gt; String {
-        <span class="kw">let </span>global = <span class="self">self</span>.global();
-        <span class="kw">let </span><span class="kw-2">mut </span>err_descs = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>level = <span class="number">1</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>err_str = String::new();
-        wgc::error::format_pretty_any(<span class="kw-2">&amp;mut </span>err_str, global, err);
-        err_descs.push(err_str);
+        <span class="kw">fn </span>print_tree(output: <span class="kw-2">&amp;mut </span>String, level: <span class="kw-2">&amp;mut </span>usize, e: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)) {
+            <span class="kw">let </span><span class="kw-2">mut </span>print = |e: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)| {
+                <span class="kw">use </span>std::fmt::Write;
+                <span class="macro">writeln!</span>(output, <span class="string">"{}{}"</span>, <span class="string">" "</span>.repeat(<span class="kw-2">*</span>level * <span class="number">2</span>), e).unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>source_opt = err.source();
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(source) = source_opt {
-            <span class="kw">let </span><span class="kw-2">mut </span>source_str = String::new();
-            wgc::error::format_pretty_any(<span class="kw-2">&amp;mut </span>source_str, global, source);
-            err_descs.push(source_str);
-            source_opt = source.source();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = e.source() {
+                    <span class="kw-2">*</span>level += <span class="number">1</span>;
+                    print_tree(output, level, e);
+                    <span class="kw-2">*</span>level -= <span class="number">1</span>;
+                }
+            };
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(multi) = e.downcast_ref::&lt;wgc::error::MultiError&gt;() {
+                <span class="kw">for </span>e <span class="kw">in </span>multi.errors() {
+                    print(e);
+                }
+            } <span class="kw">else </span>{
+                print(e);
+            }
         }
 
-        <span class="macro">format!</span>(<span class="string">"Validation Error\n\nCaused by:\n{}"</span>, err_descs.join(<span class="string">""</span>))
+        print_tree(<span class="kw-2">&amp;mut </span>output, <span class="kw-2">&amp;mut </span>level, err);
+
+        <span class="macro">format!</span>(<span class="string">"Validation Error\n\nCaused by:\n{}"</span>, output)
     }
 }
 
@@ -4477,7 +4423,6 @@
                 <span class="self">self</span>.handle_error(
                     <span class="kw-2">&amp;</span>device_data.error_sink,
                     cause.clone(),
-                    LABEL,
                     desc.label,
                     <span class="string">"Device::create_shader_module"</span>,
                 );
@@ -4509,7 +4454,6 @@
                 <span class="self">self</span>.handle_error(
                     <span class="kw-2">&amp;</span>device_data.error_sink,
                     cause.clone(),
-                    LABEL,
                     desc.label,
                     <span class="string">"Device::create_shader_module_spirv"</span>,
                 );
@@ -4537,7 +4481,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_bind_group_layout"</span>,
             );
@@ -4651,7 +4594,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_bind_group"</span>,
             );
@@ -4693,7 +4635,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_pipeline_layout"</span>,
             );
@@ -4778,7 +4719,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_render_pipeline"</span>,
             );
@@ -4833,7 +4773,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_compute_pipeline"</span>,
             );
@@ -4863,7 +4802,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::device_create_pipeline_cache_init"</span>,
             );
@@ -4886,7 +4824,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_buffer"</span>,
             );
@@ -4914,7 +4851,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_texture"</span>,
             );
@@ -4959,7 +4895,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_sampler"</span>,
             );
@@ -4997,7 +4932,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Device::create_command_encoder"</span>,
             );
@@ -5208,7 +5142,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>texture_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"Texture::create_view"</span>,
             );
@@ -5482,7 +5415,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"CommandEncoder::begin_compute_pass"</span>,
             );
@@ -5554,7 +5486,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>encoder_data.error_sink,
                 cause,
-                LABEL,
                 desc.label,
                 <span class="string">"CommandEncoder::begin_compute_pass"</span>,
             );
@@ -5962,7 +5893,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::set_pipeline"</span>,
             );
@@ -5985,7 +5915,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::set_bind_group"</span>,
             );
@@ -6003,7 +5932,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::set_push_constant"</span>,
             );
@@ -6020,7 +5948,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::insert_debug_marker"</span>,
             );
@@ -6037,7 +5964,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::push_debug_group"</span>,
             );
@@ -6053,7 +5979,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::pop_debug_group"</span>,
             );
@@ -6075,7 +6000,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::write_timestamp"</span>,
             );
@@ -6098,7 +6022,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::begin_pipeline_statistics_query"</span>,
             );
@@ -6114,7 +6037,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::end_pipeline_statistics_query"</span>,
             );
@@ -6133,7 +6055,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::dispatch_workgroups"</span>,
             );
@@ -6156,7 +6077,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::dispatch_workgroups_indirect"</span>,
             );
@@ -6172,7 +6092,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"ComputePass::end"</span>,
             );
@@ -6375,7 +6294,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_pipeline"</span>,
             );
@@ -6398,7 +6316,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_bind_group"</span>,
             );
@@ -6423,7 +6340,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_index_buffer"</span>,
             );
@@ -6447,7 +6363,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_vertex_buffer"</span>,
             );
@@ -6469,7 +6384,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_push_constants"</span>,
             );
@@ -6493,7 +6407,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::draw"</span>,
             );
@@ -6519,7 +6432,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::draw_indexed"</span>,
             );
@@ -6541,7 +6453,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::draw_indirect"</span>,
             );
@@ -6564,7 +6475,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::draw_indexed_indirect"</span>,
             );
@@ -6588,7 +6498,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::multi_draw_indirect"</span>,
             );
@@ -6613,7 +6522,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::multi_draw_indexed_indirect"</span>,
             );
@@ -6643,7 +6551,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::multi_draw_indirect_count"</span>,
             );
@@ -6673,7 +6580,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::multi_draw_indexed_indirect_count"</span>,
             );
@@ -6690,7 +6596,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_blend_constant"</span>,
             );
@@ -6713,7 +6618,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_scissor_rect"</span>,
             );
@@ -6738,7 +6642,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_viewport"</span>,
             );
@@ -6755,7 +6658,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::set_stencil_reference"</span>,
             );
@@ -6772,7 +6674,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::insert_debug_marker"</span>,
             );
@@ -6789,7 +6690,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::push_debug_group"</span>,
             );
@@ -6805,7 +6705,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::pop_debug_group"</span>,
             );
@@ -6827,7 +6726,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::write_timestamp"</span>,
             );
@@ -6844,7 +6742,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::begin_occlusion_query"</span>,
             );
@@ -6860,7 +6757,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::end_occlusion_query"</span>,
             );
@@ -6883,7 +6779,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::begin_pipeline_statistics_query"</span>,
             );
@@ -6899,7 +6794,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::end_pipeline_statistics_query"</span>,
             );
@@ -6920,7 +6814,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::execute_bundles"</span>,
             );
@@ -6936,7 +6829,6 @@
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
-                LABEL,
                 pass_data.pass.label(),
                 <span class="string">"RenderPass::end"</span>,
             );

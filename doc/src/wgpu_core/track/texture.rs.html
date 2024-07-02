@@ -1521,7 +1521,7 @@
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     lock::{rank, Mutex},
-    resource::{Resource, Texture, TextureInner},
+    resource::{Labeled, Texture, TextureInner, Trackable},
     resource_log,
     snatch::SnatchGuard,
     track::{
@@ -1671,7 +1671,7 @@
     /// accesses will be in a constant ascending order.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
-        textures.sort_unstable_by_key(|v| v.texture.as_info().tracker_index());
+        textures.sort_unstable_by_key(|v| v.texture.tracker_index());
     }
 
     <span class="doccomment">/// Returns a list of all textures tracked. May contain duplicates.
@@ -1866,7 +1866,7 @@
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
         new_state: TextureUses,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
-        <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
+        <span class="kw">let </span>index = texture.tracker_index().as_usize();
 
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
@@ -2034,7 +2034,7 @@
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
-        <span class="kw">let </span>index = resource.info.tracker_index().as_usize();
+        <span class="kw">let </span>index = resource.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2075,7 +2075,7 @@
         selector: TextureSelector,
         new_state: TextureUses,
     ) -&gt; Drain&lt;<span class="lifetime">'_</span>, PendingTransition&lt;TextureUses&gt;&gt; {
-        <span class="kw">let </span>index = texture.as_info().tracker_index().as_usize();
+        <span class="kw">let </span>index = texture.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2209,7 +2209,7 @@
 
         <span class="kw">let </span>textures = bind_group_state.textures.lock();
         <span class="kw">for </span>t <span class="kw">in </span>textures.iter() {
-            <span class="kw">let </span>index = t.texture.as_info().tracker_index().as_usize();
+            <span class="kw">let </span>index = t.texture.tracker_index().as_usize();
             scope.tracker_assert_in_bounds(index);
 
             <span class="kw">if unsafe </span>{ !scope.metadata.contains_unchecked(index) } {

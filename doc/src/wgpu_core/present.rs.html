@@ -440,11 +440,6 @@
 <a href="#439" id="439">439</a>
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -456,10 +451,7 @@ When this texture is presented, we remove it from the device tracker as well as
 extract it from the hub.
 !*/
 
-</span><span class="kw">use </span>std::{
-    borrow::{Borrow, Cow},
-    sync::Arc,
-};
+</span><span class="kw">use </span>std::{borrow::Borrow, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
@@ -472,7 +464,7 @@ extract it from the hub.
     hal_label, id,
     init_tracker::TextureInitTracker,
     lock::{rank, Mutex, RwLock},
-    resource::{<span class="self">self</span>, ResourceInfo},
+    resource::{<span class="self">self</span>, Trackable, TrackingData},
     snatch::Snatchable,
     track,
 };
@@ -674,10 +666,8 @@ extract it from the hub.
                         layers: <span class="number">0</span>..<span class="number">1</span>,
                         mips: <span class="number">0</span>..<span class="number">1</span>,
                     },
-                    info: ResourceInfo::new(
-                        <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(Cow::Borrowed(<span class="string">"&lt;Surface Texture&gt;"</span>)),
-                        <span class="prelude-val">Some</span>(device.tracker_indices.textures.clone()),
-                    ),
+                    label: String::from(<span class="string">"&lt;Surface Texture&gt;"</span>),
+                    tracking_data: TrackingData::new(device.tracker_indices.textures.clone()),
                     clear_mode: RwLock::new(
                         rank::TEXTURE_CLEAR_MODE,
                         resource::TextureClearMode::Surface {
@@ -778,7 +768,7 @@ extract it from the hub.
                     .trackers
                     .lock()
                     .textures
-                    .remove(texture.info.tracker_index());
+                    .remove(texture.tracker_index());
                 <span class="kw">let </span><span class="kw-2">mut </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">let </span>suf = A::surface_as_hal(<span class="kw-2">&amp;</span>surface);
                 <span class="kw">let </span><span class="kw-2">mut </span>inner = texture.inner_mut(<span class="kw-2">&amp;mut </span>exclusive_snatch_guard);
@@ -872,7 +862,7 @@ extract it from the hub.
                     .trackers
                     .lock()
                     .textures
-                    .remove(texture.info.tracker_index());
+                    .remove(texture.tracker_index());
                 <span class="kw">let </span>suf = A::surface_as_hal(<span class="kw-2">&amp;</span>surface);
                 <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
                 <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {

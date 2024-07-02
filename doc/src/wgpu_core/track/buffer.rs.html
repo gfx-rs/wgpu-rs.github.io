@@ -832,11 +832,11 @@
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     lock::{rank, Mutex},
-    resource::{Buffer, Resource},
+    resource::{Buffer, Trackable},
     resource_log,
     snatch::SnatchGuard,
     track::{
-        invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
+        invalid_resource_state, skip_barrier, Labeled, ResourceMetadata, ResourceMetadataProvider,
         ResourceUsageCompatibilityError, ResourceUses,
     },
 };
@@ -884,7 +884,7 @@
     </span><span class="attr">#[allow(clippy::pattern_type_mismatch)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
-        buffers.sort_unstable_by_key(|(b, <span class="kw">_</span>)| b.as_info().tracker_index());
+        buffers.sort_unstable_by_key(|(b, <span class="kw">_</span>)| b.tracker_index());
     }
 
     <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
@@ -893,7 +893,7 @@
         <span class="kw">let </span>buffers = <span class="self">self</span>.buffers.lock();
         buffers
             .iter()
-            .map(|(<span class="kw-2">ref </span>b, <span class="kw">_</span>)| b.as_info().tracker_index())
+            .map(|(<span class="kw-2">ref </span>b, <span class="kw">_</span>)| b.tracker_index())
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             .into_iter()
     }
@@ -982,7 +982,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
         <span class="kw">let </span>buffers = bind_group.buffers.lock();
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw-2">ref </span>resource, state) <span class="kw">in </span><span class="kw-2">&amp;*</span>buffers {
-            <span class="kw">let </span>index = resource.as_info().tracker_index().as_usize();
+            <span class="kw">let </span>index = resource.tracker_index().as_usize();
 
             <span class="kw">unsafe </span>{
                 insert_or_merge(
@@ -1054,7 +1054,7 @@
         buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;,
         new_state: BufferUses,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
-        <span class="kw">let </span>index = buffer.info.tracker_index().as_usize();
+        <span class="kw">let </span>index = buffer.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -1209,7 +1209,7 @@
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
-        <span class="kw">let </span>index = resource.info.tracker_index().as_usize();
+        <span class="kw">let </span>index = resource.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 
@@ -1248,7 +1248,7 @@
         buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;,
         state: BufferUses,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;PendingTransition&lt;BufferUses&gt;&gt; {
-        <span class="kw">let </span>index: usize = buffer.as_info().tracker_index().as_usize();
+        <span class="kw">let </span>index: usize = buffer.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
 

@@ -1180,23 +1180,6 @@
 <a href="#1179" id="1179">1179</a>
 <a href="#1180" id="1180">1180</a>
 <a href="#1181" id="1181">1181</a>
-<a href="#1182" id="1182">1182</a>
-<a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a>
-<a href="#1185" id="1185">1185</a>
-<a href="#1186" id="1186">1186</a>
-<a href="#1187" id="1187">1187</a>
-<a href="#1188" id="1188">1188</a>
-<a href="#1189" id="1189">1189</a>
-<a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
-<a href="#1198" id="1198">1198</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1204,7 +1187,6 @@
     command::{clear_texture, CommandBuffer, CommandEncoderError},
     conv,
     device::{Device, DeviceError, MissingDownlevelFlags},
-    error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
     id::{BufferId, CommandEncoderId, TextureId},
@@ -1212,7 +1194,10 @@
         has_copy_partial_init_tracker_coverage, MemoryInitKind, TextureInitRange,
         TextureInitTrackerAction,
     },
-    resource::{DestroyedResourceError, ParentDevice, Texture, TextureErrorDimension},
+    resource::{
+        DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError, ParentDevice,
+        Texture, TextureErrorDimension,
+    },
     snatch::SnatchGuard,
     track::{TextureSelector, Tracker},
 };
@@ -1246,10 +1231,10 @@
     </span>InvalidTextureId(TextureId),
     <span class="attr">#[error(<span class="string">"Source and destination cannot be the same buffer"</span>)]
     </span>SameSourceDestinationBuffer,
-    <span class="attr">#[error(<span class="string">"Source buffer/texture is missing the `COPY_SRC` usage flag"</span>)]
-    </span>MissingCopySrcUsageFlag,
-    <span class="attr">#[error(<span class="string">"Destination buffer/texture is missing the `COPY_DST` usage flag"</span>)]
-    </span>MissingCopyDstUsageFlag(<span class="prelude-ty">Option</span>&lt;BufferId&gt;, <span class="prelude-ty">Option</span>&lt;TextureId&gt;),
+    <span class="attr">#[error(transparent)]
+    </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
+    <span class="attr">#[error(transparent)]
+    </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
     <span class="attr">#[error(<span class="string">"Destination texture is missing the `RENDER_ATTACHMENT` usage flag"</span>)]
     </span>MissingRenderAttachmentUsageFlag(TextureId),
     <span class="attr">#[error(<span class="string">"Copy of {start_offset}..{end_offset} would end up overrunning the bounds of the {side:?} buffer of size {buffer_size}"</span>)]
@@ -1339,19 +1324,6 @@
     </span>InvalidMipLevel { requested: u32, count: u32 },
 }
 
-<span class="kw">impl </span>PrettyError <span class="kw">for </span>TransferError {
-    <span class="kw">fn </span>fmt_pretty(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>ErrorFormatter) {
-        fmt.error(<span class="self">self</span>);
-        <span class="kw">if let </span><span class="self">Self</span>::MissingCopyDstUsageFlag(buf_opt, tex_opt) = <span class="kw-2">*</span><span class="self">self </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(buf) = buf_opt {
-                fmt.buffer_label_with_key(<span class="kw-2">&amp;</span>buf, <span class="string">"destination"</span>);
-            }
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(tex) = tex_opt {
-                fmt.texture_label_with_key(<span class="kw-2">&amp;</span>tex, <span class="string">"destination"</span>);
-            }
-        }
-    }
-}
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -1787,9 +1759,9 @@
             .set_single(<span class="kw-2">&amp;</span>src_buffer, hal::BufferUses::COPY_SRC);
 
         <span class="kw">let </span>src_raw = src_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!src_buffer.usage.contains(BufferUsages::COPY_SRC) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
-        }
+        src_buffer
+            .check_usage(BufferUsages::COPY_SRC)
+            .map_err(TransferError::MissingBufferUsage)<span class="question-mark">?</span>;
         <span class="comment">// expecting only a single barrier
         </span><span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
@@ -1806,9 +1778,9 @@
             .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
 
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(destination), <span class="prelude-val">None</span>).into());
-        }
+        dst_buffer
+            .check_usage(BufferUsages::COPY_DST)
+            .map_err(TransferError::MissingBufferUsage)<span class="question-mark">?</span>;
         <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">if </span>size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
@@ -1982,9 +1954,9 @@
             .set_single(<span class="kw-2">&amp;</span>src_buffer, hal::BufferUses::COPY_SRC);
 
         <span class="kw">let </span>src_raw = src_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!src_buffer.usage.contains(BufferUsages::COPY_SRC) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
-        }
+        src_buffer
+            .check_usage(BufferUsages::COPY_SRC)
+            .map_err(TransferError::MissingBufferUsage)<span class="question-mark">?</span>;
         <span class="kw">let </span>src_barrier = src_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>src_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">let </span>dst_pending =
@@ -1992,11 +1964,9 @@
                 .textures
                 .set_single(<span class="kw-2">&amp;</span>dst_texture, dst_range, hal::TextureUses::COPY_DST);
         <span class="kw">let </span>dst_raw = dst_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!dst_texture.desc.usage.contains(TextureUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(destination.texture)).into(),
-            );
-        }
+        dst_texture
+            .check_usage(TextureUsages::COPY_DST)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
         <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(dst_raw));
 
         <span class="kw">if </span>!dst_base.aspect.is_one() {
@@ -2128,9 +2098,9 @@
                 .textures
                 .set_single(<span class="kw-2">&amp;</span>src_texture, src_range, hal::TextureUses::COPY_SRC);
         <span class="kw">let </span>src_raw = src_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!src_texture.desc.usage.contains(TextureUsages::COPY_SRC) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
-        }
+        src_texture
+            .check_usage(TextureUsages::COPY_SRC)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
         <span class="kw">if </span>src_texture.desc.sample_count != <span class="number">1 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::InvalidSampleCount {
                 sample_count: src_texture.desc.sample_count,
@@ -2158,11 +2128,9 @@
             .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
 
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!dst_buffer.usage.contains(BufferUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">Some</span>(destination.buffer), <span class="prelude-val">None</span>).into(),
-            );
-        }
+        dst_buffer
+            .check_usage(BufferUsages::COPY_DST)
+            .map_err(TransferError::MissingBufferUsage)<span class="question-mark">?</span>;
         <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer, <span class="kw-2">&amp;</span>snatch_guard));
 
         <span class="kw">if </span>!src_base.aspect.is_one() {
@@ -2341,9 +2309,9 @@
             hal::TextureUses::COPY_SRC,
         );
         <span class="kw">let </span>src_raw = src_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!src_texture.desc.usage.contains(TextureUsages::COPY_SRC) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::MissingCopySrcUsageFlag.into());
-        }
+        src_texture
+            .check_usage(TextureUsages::COPY_SRC)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
 
         <span class="comment">//TODO: try to avoid this the collection. It's needed because both
         // `src_pending` and `dst_pending` try to hold `trackers.textures` mutably.
@@ -2357,11 +2325,9 @@
             hal::TextureUses::COPY_DST,
         );
         <span class="kw">let </span>dst_raw = dst_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!dst_texture.desc.usage.contains(TextureUsages::COPY_DST) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                TransferError::MissingCopyDstUsageFlag(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(destination.texture)).into(),
-            );
-        }
+        dst_texture
+            .check_usage(TextureUsages::COPY_DST)
+            .map_err(TransferError::MissingTextureUsage)<span class="question-mark">?</span>;
 
         barriers.extend(dst_pending.map(|pending| pending.into_hal(dst_raw)));
 
