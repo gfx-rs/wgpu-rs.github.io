@@ -898,16 +898,6 @@
 <a href="#897" id="897">897</a>
 <a href="#898" id="898">898</a>
 <a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
-<a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -940,7 +930,6 @@
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
 <span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError};
-<span class="kw">use </span><span class="kw">crate</span>::hub::Hub;
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 
@@ -1335,65 +1324,41 @@
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; CommandBuffer&lt;A&gt; {
-    <span class="kw">fn </span>get_encoder_impl(
-        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
-        id: id::CommandEncoderId,
-        lock_on_acquire: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
-        <span class="kw">let </span>storage = hub.command_buffers.read();
-        <span class="kw">match </span>storage.get(id.into_command_buffer_id()) {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-                <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
-                <span class="kw">match </span>cmd_buf_data.status {
-                    CommandEncoderStatus::Recording =&gt; {
-                        <span class="kw">if </span>lock_on_acquire {
-                            cmd_buf_data.status = CommandEncoderStatus::Locked;
-                        }
-                        <span class="prelude-val">Ok</span>(cmd_buf.clone())
-                    }
-                    CommandEncoderStatus::Locked =&gt; {
-                        <span class="comment">// Any operation on a locked encoder is required to put it into the invalid/error state.
-                        // See https://www.w3.org/TR/webgpu/#encoder-state-locked
-                        </span>cmd_buf_data.encoder.discard();
-                        cmd_buf_data.status = CommandEncoderStatus::Error;
-                        <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
-                    }
-                    CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
-                    CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+    <span class="kw">fn </span>lock_encoder_impl(<span class="kw-2">&amp;</span><span class="self">self</span>, lock: bool) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = <span class="self">self</span>.data.lock();
+        <span class="kw">let </span>cmd_buf_data = cmd_buf_data_guard.as_mut().unwrap();
+        <span class="kw">match </span>cmd_buf_data.status {
+            CommandEncoderStatus::Recording =&gt; {
+                <span class="kw">if </span>lock {
+                    cmd_buf_data.status = CommandEncoderStatus::Locked;
                 }
+                <span class="prelude-val">Ok</span>(())
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            CommandEncoderStatus::Locked =&gt; {
+                <span class="comment">// Any operation on a locked encoder is required to put it into the invalid/error state.
+                // See https://www.w3.org/TR/webgpu/#encoder-state-locked
+                </span>cmd_buf_data.encoder.discard();
+                cmd_buf_data.status = CommandEncoderStatus::Error;
+                <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
+            }
+            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
+            CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
         }
     }
 
-    <span class="doccomment">/// Return the [`CommandBuffer`] for `id`, for recording new commands.
-    ///
-    /// In `wgpu_core`, the [`CommandBuffer`] type serves both as encoder and
-    /// buffer, which is why this function takes an [`id::CommandEncoderId`] but
-    /// returns a [`CommandBuffer`]. The returned command buffer must be in the
-    /// "recording" state. Otherwise, an error is returned.
-    </span><span class="kw">fn </span>get_encoder(
-        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
-        id: id::CommandEncoderId,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
-        <span class="kw">let </span>lock_on_acquire = <span class="bool-val">false</span>;
-        <span class="self">Self</span>::get_encoder_impl(hub, id, lock_on_acquire)
+    <span class="doccomment">/// Checks that the encoder is in the [`CommandEncoderStatus::Recording`] state.
+    </span><span class="kw">fn </span>check_recording(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="self">self</span>.lock_encoder_impl(<span class="bool-val">false</span>)
     }
 
-    <span class="doccomment">/// Return the [`CommandBuffer`] for `id` and if successful puts it into the [`CommandEncoderStatus::Locked`] state.
+    <span class="doccomment">/// Locks the encoder by putting it in the [`CommandEncoderStatus::Locked`] state.
     ///
-    /// See [`CommandBuffer::get_encoder`].
     /// Call [`CommandBuffer::unlock_encoder`] to put the [`CommandBuffer`] back into the [`CommandEncoderStatus::Recording`] state.
-    </span><span class="kw">fn </span>lock_encoder(
-        hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
-        id: id::CommandEncoderId,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, CommandEncoderError&gt; {
-        <span class="kw">let </span>lock_on_acquire = <span class="bool-val">true</span>;
-        <span class="self">Self</span>::get_encoder_impl(hub, id, lock_on_acquire)
+    </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="self">self</span>.lock_encoder_impl(<span class="bool-val">true</span>)
     }
 
-    <span class="doccomment">/// Unlocks the [`CommandBuffer`] for `id` and puts it back into the [`CommandEncoderStatus::Recording`] state.
+    <span class="doccomment">/// Unlocks the [`CommandBuffer`] and puts it back into the [`CommandEncoderStatus::Recording`] state.
     ///
     /// This function is the counterpart to [`CommandBuffer::lock_encoder`].
     /// It is only valid to call this function if the encoder is in the [`CommandEncoderStatus::Locked`] state.
@@ -1571,7 +1536,12 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        };
+        cmd_buf.check_recording()<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -1602,7 +1572,12 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        };
+        cmd_buf.check_recording()<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
@@ -1633,7 +1608,12 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        };
+        cmd_buf.check_recording()<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 

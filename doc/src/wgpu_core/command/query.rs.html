@@ -478,6 +478,21 @@
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -711,7 +726,7 @@
     <span class="kw">let </span>needs_reset = reset_state.is_none();
     query_set.validate_query(SimplifiedQueryType::Occlusion, query_index, reset_state)<span class="question-mark">?</span>;
 
-    tracker.add_single(<span class="kw-2">&amp;</span>query_set);
+    tracker.insert_single(query_set.clone());
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((_old, old_idx)) = active_query.take() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::AlreadyStarted {
@@ -762,7 +777,7 @@
         reset_state,
     )<span class="question-mark">?</span>;
 
-    tracker.add_single(<span class="kw-2">&amp;</span>query_set);
+    tracker.insert_single(query_set.clone());
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((_old, old_idx)) = active_query.take() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(QueryUseError::AlreadyStarted {
@@ -804,7 +819,14 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+            .command_buffers
+            .get(command_encoder_id.into_command_buffer_id())
+        {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
+        };
+        cmd_buf.check_recording()<span class="question-mark">?</span>;
 
         cmd_buf
             .device
@@ -826,12 +848,12 @@
 
         <span class="kw">let </span>raw_encoder = encoder.open()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
-        <span class="kw">let </span>query_set = query_set_guard
+        <span class="kw">let </span>query_set = hub
+            .query_sets
             .get(query_set_id)
             .map_err(|<span class="kw">_</span>| QueryError::InvalidQuerySetId(query_set_id))<span class="question-mark">?</span>;
 
-        tracker.query_sets.add_single(query_set);
+        <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
         query_set.validate_and_write_timestamp(raw_encoder, query_index, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
@@ -849,7 +871,15 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+            .command_buffers
+            .get(command_encoder_id.into_command_buffer_id())
+        {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
+        };
+        cmd_buf.check_recording()<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
@@ -873,12 +903,12 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Resolve(ResolveError::BufferOffsetAlignment));
         }
 
-        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
-        <span class="kw">let </span>query_set = query_set_guard
+        <span class="kw">let </span>query_set = hub
+            .query_sets
             .get(query_set_id)
             .map_err(|<span class="kw">_</span>| QueryError::InvalidQuerySetId(query_set_id))<span class="question-mark">?</span>;
 
-        tracker.query_sets.add_single(query_set);
+        <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
 
         query_set.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 

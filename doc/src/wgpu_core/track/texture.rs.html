@@ -1488,12 +1488,6 @@
 <a href="#1487" id="1487">1487</a>
 <a href="#1488" id="1488">1488</a>
 <a href="#1489" id="1489">1489</a>
-<a href="#1490" id="1490">1490</a>
-<a href="#1491" id="1491">1491</a>
-<a href="#1492" id="1492">1492</a>
-<a href="#1493" id="1493">1493</a>
-<a href="#1494" id="1494">1494</a>
-<a href="#1495" id="1495">1495</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are significantly more complicated than
@@ -1536,7 +1530,7 @@
 
 <span class="kw">use </span>wgt::{strict_assert, strict_assert_eq};
 
-<span class="kw">use </span>std::{borrow::Cow, iter, marker::PhantomData, ops::Range, sync::Arc, vec::Drain};
+<span class="kw">use </span>std::{iter, marker::PhantomData, ops::Range, sync::Arc, vec::Drain};
 
 <span class="doccomment">/// Specifies a particular set of subresources in a texture.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
@@ -1878,9 +1872,7 @@
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
                 index,
                 TextureStateProvider::from_option(selector, new_state),
-                ResourceMetadataProvider::Direct {
-                    resource: Cow::Borrowed(texture),
-                },
+                ResourceMetadataProvider::Direct { resource: texture },
             )<span class="question-mark">?
         </span>};
 
@@ -2033,7 +2025,7 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
         <span class="kw">let </span>index = resource.tracker_index().as_usize();
 
         <span class="self">self</span>.allow_index(index);
@@ -2055,9 +2047,7 @@
                 index,
                 TextureStateProvider::KnownSingle { state: usage },
                 <span class="prelude-val">None</span>,
-                ResourceMetadataProvider::Direct {
-                    resource: Cow::Owned(resource),
-                },
+                ResourceMetadataProvider::Direct { resource },
             )
         };
     }
@@ -2093,9 +2083,7 @@
                     state: new_state,
                 },
                 <span class="prelude-val">None</span>,
-                ResourceMetadataProvider::Direct {
-                    resource: Cow::Owned(texture.clone()),
-                },
+                ResourceMetadataProvider::Direct { resource: texture },
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
             )
         }

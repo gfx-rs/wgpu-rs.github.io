@@ -488,6 +488,7 @@
 <a href="#487" id="487">487</a>
 <a href="#488" id="488">488</a>
 <a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::BindGroup,
     hal_api::HalApi,
@@ -628,6 +629,7 @@
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
         <span class="kw">let </span>query_set_guard = hub.query_sets.read();
         <span class="kw">let </span>pipelines_guard = hub.render_pipelines.read();
+        <span class="kw">let </span>render_bundles_guard = hub.render_bundles.read();
 
         <span class="kw">let </span>resolved_commands: Vec&lt;ArcRenderCommand&lt;A&gt;&gt; = commands
             .iter()
@@ -853,12 +855,12 @@
                     RenderCommand::EndOcclusionQuery =&gt; ArcRenderCommand::EndOcclusionQuery,
 
                     RenderCommand::ExecuteBundle(bundle) =&gt; ArcRenderCommand::ExecuteBundle(
-                        hub.render_bundles.read().get_owned(bundle).map_err(|<span class="kw">_</span>| {
-                            RenderPassError {
+                        render_bundles_guard
+                            .get_owned(bundle)
+                            .map_err(|<span class="kw">_</span>| RenderPassError {
                                 scope: PassErrorScope::ExecuteBundle,
                                 inner: RenderCommandError::InvalidRenderBundle(bundle).into(),
-                            }
-                        })<span class="question-mark">?</span>,
+                            })<span class="question-mark">?</span>,
                     ),
                 })
             })

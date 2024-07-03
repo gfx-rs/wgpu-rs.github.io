@@ -3373,6 +3373,12 @@
 <a href="#3372" id="3372">3372</a>
 <a href="#3373" id="3373">3373</a>
 <a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4807,9 +4813,16 @@
             occlusion_query_set: <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>CommandBuffer::lock_encoder(hub, encoder_id) {
+        <span class="kw">let </span>make_err = |e, arc_desc| (RenderPass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e));
+
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
             <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>(RenderPass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>make_err(CommandEncoderError::Invalid, arc_desc),
+        };
+
+        <span class="kw">match </span>cmd_buf.lock_encoder() {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
         };
 
         <span class="kw">let </span>err = fill_arc_desc(hub, <span class="kw-2">&amp;</span>cmd_buf.device, desc, <span class="kw-2">&amp;mut </span>arc_desc).err();
@@ -4846,8 +4859,11 @@
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{
             <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-            <span class="kw">let </span>cmd_buf: Arc&lt;CommandBuffer&lt;A&gt;&gt; =
-                CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+                <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid).map_pass_err(pass_scope)<span class="question-mark">?</span>,
+            };
 
             <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
             <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
@@ -6137,8 +6153,7 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>buffer = hub
             .buffers
-            .read()
-            .get_owned(buffer_id)
+            .get(buffer_id)
             .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(buffer_id))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -6153,8 +6168,7 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>query_set = hub
             .query_sets
-            .read()
-            .get_owned(query_set_id)
+            .get(query_set_id)
             .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(query_set_id))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -6188,8 +6202,7 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>bind_group = hub
             .bind_groups
-            .read()
-            .get_owned(bind_group_id)
+            .get(bind_group_id)
             .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBindGroup(index))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
@@ -6220,8 +6233,7 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>pipeline = hub
             .render_pipelines
-            .read()
-            .get_owned(pipeline_id)
+            .get(pipeline_id)
             .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidPipeline(pipeline_id))
             .map_pass_err(scope)<span class="question-mark">?</span>;
 

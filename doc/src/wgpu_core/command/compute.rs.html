@@ -1229,6 +1229,15 @@
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
 <a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1532,35 +1541,40 @@
             timestamp_writes: <span class="prelude-val">None</span>, <span class="comment">// Handle only once we resolved the encoder.
         </span>};
 
-        <span class="kw">match </span>CommandBuffer::lock_encoder(hub, encoder_id) {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; {
-                arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
-                    <span class="kw">let </span><span class="prelude-val">Ok</span>(query_set) = hub.query_sets.get(tw.query_set) <span class="kw">else </span>{
-                        <span class="kw">return </span>(
-                            ComputePass::new(<span class="prelude-val">None</span>, arc_desc),
-                            <span class="prelude-val">Some</span>(CommandEncoderError::InvalidTimestampWritesQuerySetId(
-                                tw.query_set,
-                            )),
-                        );
-                    };
+        <span class="kw">let </span>make_err = |e, arc_desc| (ComputePass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e));
 
-                    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = query_set.same_device_as(cmd_buf.as_ref()) {
-                        <span class="kw">return </span>(ComputePass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e.into()));
-                    }
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>make_err(CommandEncoderError::Invalid, arc_desc),
+        };
 
-                    <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
-                        query_set,
-                        beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
-                        end_of_pass_write_index: tw.end_of_pass_write_index,
-                    })
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>};
+        <span class="kw">match </span>cmd_buf.lock_encoder() {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
+        };
 
-                (ComputePass::new(<span class="prelude-val">Some</span>(cmd_buf), arc_desc), <span class="prelude-val">None</span>)
+        arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(query_set) = hub.query_sets.get(tw.query_set) <span class="kw">else </span>{
+                <span class="kw">return </span>make_err(
+                    CommandEncoderError::InvalidTimestampWritesQuerySetId(tw.query_set),
+                    arc_desc,
+                );
+            };
+
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = query_set.same_device_as(cmd_buf.as_ref()) {
+                <span class="kw">return </span>make_err(e.into(), arc_desc);
             }
-            <span class="prelude-val">Err</span>(err) =&gt; (ComputePass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(err)),
-        }
+
+            <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
+                query_set,
+                beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                end_of_pass_write_index: tw.end_of_pass_write_index,
+            })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+
+        (ComputePass::new(<span class="prelude-val">Some</span>(cmd_buf), arc_desc), <span class="prelude-val">None</span>)
     }
 
     <span class="doccomment">/// Creates a type erased compute pass.
@@ -1609,7 +1623,11 @@
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span>scope = PassErrorScope::Pass;
 
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
+            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid).map_pass_err(scope),
+        };
+        cmd_buf.check_recording().map_pass_err(scope)<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{

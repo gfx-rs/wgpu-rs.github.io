@@ -1817,6 +1817,9 @@
 <a href="#1816" id="1816">1816</a>
 <a href="#1817" id="1817">1817</a>
 <a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1898,7 +1901,7 @@ index format changes.
 </span><span class="attr">#![allow(clippy::reversed_empty_ranges)]
 
 </span><span class="kw">use crate</span>::{
-    binding_model::{BindError, BindGroup, BindGroupLayout, PipelineLayout},
+    binding_model::{BindError, BindGroup, PipelineLayout},
     command::{
         BasePass, BindGroupStateChange, ColorAttachmentError, DrawError, MapPassErr,
         PassErrorScope, RenderCommandError, StateChange,
@@ -2166,7 +2169,7 @@ index format changes.
         desc: <span class="kw-2">&amp;</span>RenderBundleDescriptor,
         device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
         hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RenderBundle&lt;A&gt;, RenderBundleError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;RenderBundle&lt;A&gt;&gt;, RenderBundleError&gt; {
         <span class="kw">let </span>scope = PassErrorScope::Bundle;
 
         device.check_is_valid().map_pass_err(scope)<span class="question-mark">?</span>;
@@ -2381,7 +2384,7 @@ index format changes.
             .instance_flags
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS);
 
-        <span class="prelude-val">Ok</span>(RenderBundle {
+        <span class="kw">let </span>render_bundle = RenderBundle {
             base: BasePass {
                 label: desc.label.as_ref().map(|cow| cow.to_string()),
                 commands,
@@ -2391,7 +2394,7 @@ index format changes.
             },
             is_depth_read_only: <span class="self">self</span>.is_depth_read_only,
             is_stencil_read_only: <span class="self">self</span>.is_stencil_read_only,
-            device,
+            device: device.clone(),
             used: trackers,
             buffer_memory_init_actions,
             texture_memory_init_actions,
@@ -2399,7 +2402,17 @@ index format changes.
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(tracker_indices),
             discard_hal_labels,
-        })
+        };
+
+        <span class="kw">let </span>render_bundle = Arc::new(render_bundle);
+
+        device
+            .trackers
+            .lock()
+            .bundles
+            .insert_single(render_bundle.clone());
+
+        <span class="prelude-val">Ok</span>(render_bundle)
     }
 
     <span class="kw">pub fn </span>set_index_buffer(
@@ -2427,10 +2440,8 @@ index format changes.
     bind_group_id: id::Id&lt;id::markers::BindGroup&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>bind_group = bind_group_guard
-        .get(bind_group_id)
+        .get_owned(bind_group_id)
         .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBindGroupId(bind_group_id))<span class="question-mark">?</span>;
-
-    state.trackers.bind_groups.write().add_single(bind_group);
 
     bind_group.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
 
@@ -2457,13 +2468,9 @@ index format changes.
         .texture_memory_init_actions
         .extend_from_slice(<span class="kw-2">&amp;</span>bind_group.used_texture_ranges);
 
-    state.set_bind_group(
-        index,
-        bind_group_guard.get(bind_group_id).as_ref().unwrap(),
-        <span class="kw-2">&amp;</span>bind_group.layout,
-        offsets_range,
-    );
+    state.set_bind_group(index, <span class="kw-2">&amp;</span>bind_group, offsets_range);
     <span class="kw">unsafe </span>{ state.trackers.merge_bind_group(<span class="kw-2">&amp;</span>bind_group.used)<span class="question-mark">? </span>};
+    state.trackers.bind_groups.write().insert_single(bind_group);
     <span class="comment">// Note: stateless trackers are not merged: the lifetime reference
     // is held to the bind group itself.
     </span><span class="prelude-val">Ok</span>(())
@@ -2478,10 +2485,8 @@ index format changes.
     pipeline_id: id::Id&lt;id::markers::RenderPipeline&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>pipeline = pipeline_guard
-        .get(pipeline_id)
+        .get_owned(pipeline_id)
         .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidPipelineId(pipeline_id))<span class="question-mark">?</span>;
-
-    state.trackers.render_pipelines.write().add_single(pipeline);
 
     pipeline.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
 
@@ -2496,7 +2501,7 @@ index format changes.
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::IncompatibleStencilAccess(pipeline.error_ident()).into());
     }
 
-    <span class="kw">let </span>pipeline_state = PipelineState::new(pipeline);
+    <span class="kw">let </span>pipeline_state = PipelineState::new(<span class="kw-2">&amp;</span>pipeline);
 
     state
         .commands
@@ -2509,6 +2514,12 @@ index format changes.
 
     state.invalidate_bind_groups(<span class="kw-2">&amp;</span>pipeline_state, <span class="kw-2">&amp;</span>pipeline.layout);
     state.pipeline = <span class="prelude-val">Some</span>(pipeline_state);
+
+    state
+        .trackers
+        .render_pipelines
+        .write()
+        .insert_single(pipeline);
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -2521,14 +2532,14 @@ index format changes.
     size: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU64&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>buffer = buffer_guard
-        .get(buffer_id)
+        .get_owned(buffer_id)
         .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
     state
         .trackers
         .buffers
         .write()
-        .merge_single(buffer, hal::BufferUses::INDEX)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::INDEX)<span class="question-mark">?</span>;
 
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::INDEX)<span class="question-mark">?</span>;
@@ -2540,11 +2551,11 @@ index format changes.
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
-            buffer,
+            <span class="kw-2">&amp;</span>buffer,
             offset..end,
             MemoryInitKind::NeedsInitializedMemory,
         ));
-    state.set_index_buffer(buffer.clone(), index_format, offset..end);
+    state.set_index_buffer(buffer, index_format, offset..end);
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -2566,14 +2577,14 @@ index format changes.
     }
 
     <span class="kw">let </span>buffer = buffer_guard
-        .get(buffer_id)
+        .get_owned(buffer_id)
         .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
     state
         .trackers
         .buffers
         .write()
-        .merge_single(buffer, hal::BufferUses::VERTEX)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::VERTEX)<span class="question-mark">?</span>;
 
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::VERTEX)<span class="question-mark">?</span>;
@@ -2585,11 +2596,11 @@ index format changes.
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
-            buffer,
+            <span class="kw-2">&amp;</span>buffer,
             offset..end,
             MemoryInitKind::NeedsInitializedMemory,
         ));
-    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer.clone(), offset..end));
+    state.vertex[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(VertexState::new(buffer, offset..end));
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -2708,14 +2719,14 @@ index format changes.
     <span class="kw">let </span>used_bind_groups = pipeline.used_bind_groups;
 
     <span class="kw">let </span>buffer = buffer_guard
-        .get(buffer_id)
+        .get_owned(buffer_id)
         .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
 
     state
         .trackers
         .buffers
         .write()
-        .merge_single(buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
 
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::INDIRECT)<span class="question-mark">?</span>;
@@ -2723,7 +2734,7 @@ index format changes.
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
-            buffer,
+            <span class="kw-2">&amp;</span>buffer,
             offset..(offset + mem::size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>u64),
             MemoryInitKind::NeedsInitializedMemory,
         ));
@@ -2739,7 +2750,7 @@ index format changes.
     state.flush_vertices();
     state.flush_binds(used_bind_groups, dynamic_offsets);
     state.commands.push(ArcRenderCommand::MultiDrawIndirect {
-        buffer: buffer.clone(),
+        buffer,
         offset,
         count: <span class="prelude-val">None</span>,
         indexed,
@@ -3094,9 +3105,6 @@ index format changes.
     <span class="doccomment">/// The id of the bind group set at this index.
     </span>bind_group: Arc&lt;BindGroup&lt;A&gt;&gt;,
 
-    <span class="doccomment">/// The layout of `group`.
-    </span>layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
-
     <span class="doccomment">/// The range of dynamic offsets for this bind group, in the original
     /// command stream's `BassPass::dynamic_offsets` array.
     </span>dynamic_offsets: Range&lt;usize&gt;,
@@ -3222,7 +3230,6 @@ index format changes.
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         slot: u32,
         bind_group: <span class="kw-2">&amp;</span>Arc&lt;BindGroup&lt;A&gt;&gt;,
-        layout: <span class="kw-2">&amp;</span>Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
         dynamic_offsets: Range&lt;usize&gt;,
     ) {
         <span class="comment">// If this call wouldn't actually change this index's state, we can
@@ -3239,7 +3246,6 @@ index format changes.
         <span class="comment">// Record the index's new state.
         </span><span class="self">self</span>.bind[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(BindState {
             bind_group: bind_group.clone(),
-            layout: layout.clone(),
             dynamic_offsets,
             is_dirty: <span class="bool-val">true</span>,
         });
@@ -3281,7 +3287,7 @@ index format changes.
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>first_changed = <span class="self">self</span>.bind.iter().zip(<span class="kw-2">&amp;</span>layout.bind_group_layouts).position(
                         |(entry, layout)| <span class="kw">match </span><span class="kw-2">*</span>entry {
-                            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>contents) =&gt; !contents.layout.is_equal(layout),
+                            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>contents) =&gt; !contents.bind_group.layout.is_equal(layout),
                             <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
                         },
                     );

@@ -172,30 +172,7 @@
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops;
-<span class="kw">use </span>std::sync::Arc;
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgt::Backend;
 
@@ -251,15 +228,6 @@
     kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
 }
 
-<span class="kw">impl</span>&lt;T&gt; ops::Index&lt;Id&lt;T::Marker&gt;&gt; <span class="kw">for </span>Storage&lt;T&gt;
-<span class="kw">where
-    </span>T: StorageItem,
-{
-    <span class="kw">type </span>Output = Arc&lt;T&gt;;
-    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="kw-2">&amp;</span>Arc&lt;T&gt; {
-        <span class="self">self</span>.get(id).unwrap()
-    }
-}
 <span class="kw">impl</span>&lt;T&gt; Storage&lt;T&gt;
 <span class="kw">where
     </span>T: StorageItem,
@@ -276,18 +244,6 @@
 <span class="kw">where
     </span>T: StorageItem,
 {
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; bool {
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="bool-val">false</span>,
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw">_</span>, storage_epoch) | <span class="kw-2">&amp;</span>Element::Error(storage_epoch)) =&gt; {
-                storage_epoch == epoch
-            }
-            <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
-        }
-    }
-
     <span class="doccomment">/// Get a reference to an item behind a potentially invalid ID.
     /// Panics if there is an epoch mismatch, or the entry is empty.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;T&gt;, InvalidId&gt; {
