@@ -147,6 +147,13 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
 <span class="kw">use </span>wgt::{Backends, Features, Limits};
 
@@ -190,15 +197,17 @@
 </span><span class="kw">pub async fn </span>initialize_adapter(adapter_index: usize) -&gt; (Instance, Adapter, <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;) {
     <span class="kw">let </span>instance = initialize_instance();
     <span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">let </span>_surface: wgpu::Surface;
+    </span><span class="kw">let </span>surface: <span class="prelude-ty">Option</span>&lt;wgpu::Surface&gt;;
     <span class="kw">let </span>surface_guard: <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;;
 
-    <span class="comment">// Create a canvas iff we need a WebGL2RenderingContext to have a working device.
+    <span class="attr">#[allow(unused_assignments)]
+    </span><span class="comment">// Create a canvas if we need a WebGL2RenderingContext to have a working device.
     </span><span class="attr">#[cfg(not(all(
         target_arch = <span class="string">"wasm32"</span>,
         any(target_os = <span class="string">"emscripten"</span>, feature = <span class="string">"webgl"</span>)
     )))]
     </span>{
+        surface = <span class="prelude-val">None</span>;
         surface_guard = <span class="prelude-val">None</span>;
     }
     <span class="attr">#[cfg(all(
@@ -209,15 +218,17 @@
         <span class="comment">// On wasm, append a canvas to the document body for initializing the adapter
         </span><span class="kw">let </span>canvas = initialize_html_canvas();
 
-        _surface = instance
-            .create_surface(wgpu::SurfaceTarget::Canvas(canvas.clone()))
-            .expect(<span class="string">"could not create surface from canvas"</span>);
+        surface = <span class="prelude-val">Some</span>(
+            instance
+                .create_surface(wgpu::SurfaceTarget::Canvas(canvas.clone()))
+                .expect(<span class="string">"could not create surface from canvas"</span>),
+        );
 
         surface_guard = <span class="prelude-val">Some</span>(SurfaceGuard { canvas });
     }
 
     <span class="macro">cfg_if::cfg_if! </span>{
-        <span class="kw">if </span><span class="attr">#[cfg(any(not(target_arch = <span class="string">"wasm32"</span>), feature = <span class="string">"webgl"</span>))] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))] </span>{
             <span class="kw">let </span>adapter_iter = instance.enumerate_adapters(wgpu::Backends::all());
             <span class="kw">let </span>adapter_count = adapter_iter.len();
             <span class="kw">let </span>adapter = adapter_iter.into_iter()
@@ -225,7 +236,10 @@
                 .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Tried to get index {adapter_index} adapter, but adapter list was only {adapter_count} long. Is .gpuconfig out of date?"</span>));
         } <span class="kw">else </span>{
             <span class="macro">assert_eq!</span>(adapter_index, <span class="number">0</span>);
-            <span class="kw">let </span>adapter = instance.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions::default()).<span class="kw">await</span>.unwrap();
+            <span class="kw">let </span>adapter = instance.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
+                compatible_surface: surface.as_ref(),
+                ..Default::default()
+            }).<span class="kw">await</span>.unwrap();
         }
     }
 

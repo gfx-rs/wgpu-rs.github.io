@@ -6031,7 +6031,6 @@
 <a href="#6030" id="6030">6030</a>
 <a href="#6031" id="6031">6031</a>
 <a href="#6032" id="6032">6032</a>
-<a href="#6033" id="6033">6033</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -8403,13 +8402,10 @@
 
     <span class="doccomment">/// Retrieves all available [`Adapter`]s that match the given [`Backends`].
     ///
-    /// Always returns an empty vector if the instance decided upon creation to
-    /// target WebGPU since adapter creation is always async on WebGPU.
-    ///
     /// # Arguments
     ///
     /// - `backends` - Backends from which to enumerate adapters.
-    </span><span class="attr">#[cfg(wgpu_core)]
+    </span><span class="attr">#[cfg(native)]
     </span><span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, backends: Backends) -&gt; Vec&lt;Adapter&gt; {
         <span class="kw">let </span>context = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context);
         <span class="self">self</span>.context
@@ -8425,7 +8421,7 @@
                     })
                     .collect()
             })
-            .unwrap_or_default()
+            .unwrap()
     }
 
     <span class="doccomment">/// Retrieves an [`Adapter`] which matches the given [`RequestAdapterOptions`].
@@ -8433,6 +8429,8 @@
     /// Some options are "soft", so treated as non-mandatory. Others are "hard".
     ///
     /// If no adapters are found that suffice all the "hard" options, `None` is returned.
+    ///
+    /// A `compatible_surface` is required when targeting WebGL2.
     </span><span class="kw">pub fn </span>request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,

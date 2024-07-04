@@ -1165,6 +1165,8 @@
 <a href="#1164" id="1164">1164</a>
 <a href="#1165" id="1165">1165</a>
 <a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -1884,7 +1886,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"enumerating"</span>, <span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, A::VARIANT));
         <span class="kw">let </span>hub = HalApi::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>hal_adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters() };
+        <span class="kw">let </span>hal_adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters(<span class="prelude-val">None</span>) };
         <span class="kw">for </span>raw <span class="kw">in </span>hal_adapters {
             <span class="kw">let </span>adapter = Adapter::new(raw);
             <span class="macro">log::info!</span>(<span class="string">"Adapter {:?} {:?}"</span>, A::VARIANT, adapter.raw.info);
@@ -1963,7 +1965,9 @@
             <span class="kw">let </span>id = inputs.find(A::VARIANT);
             <span class="kw">match </span>(id, instance) {
                 (<span class="prelude-val">Some</span>(id), <span class="prelude-val">Some</span>(inst)) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters() };
+                    <span class="kw">let </span>compatible_hal_surface =
+                        compatible_surface.and_then(|surface| A::surface_as_hal(surface));
+                    <span class="kw">let </span><span class="kw-2">mut </span>adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters(compatible_hal_surface) };
                     <span class="kw">if </span>force_software {
                         adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
                     }
