@@ -1246,36 +1246,6 @@
 <a href="#1245" id="1245">1245</a>
 <a href="#1246" id="1246">1246</a>
 <a href="#1247" id="1247">1247</a>
-<a href="#1248" id="1248">1248</a>
-<a href="#1249" id="1249">1249</a>
-<a href="#1250" id="1250">1250</a>
-<a href="#1251" id="1251">1251</a>
-<a href="#1252" id="1252">1252</a>
-<a href="#1253" id="1253">1253</a>
-<a href="#1254" id="1254">1254</a>
-<a href="#1255" id="1255">1255</a>
-<a href="#1256" id="1256">1256</a>
-<a href="#1257" id="1257">1257</a>
-<a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a>
-<a href="#1260" id="1260">1260</a>
-<a href="#1261" id="1261">1261</a>
-<a href="#1262" id="1262">1262</a>
-<a href="#1263" id="1263">1263</a>
-<a href="#1264" id="1264">1264</a>
-<a href="#1265" id="1265">1265</a>
-<a href="#1266" id="1266">1266</a>
-<a href="#1267" id="1267">1267</a>
-<a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a>
-<a href="#1270" id="1270">1270</a>
-<a href="#1271" id="1271">1271</a>
-<a href="#1272" id="1272">1272</a>
-<a href="#1273" id="1273">1273</a>
-<a href="#1274" id="1274">1274</a>
-<a href="#1275" id="1275">1275</a>
-<a href="#1276" id="1276">1276</a>
-<a href="#1277" id="1277">1277</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, FastHashMap, FastHashSet};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
@@ -1406,7 +1376,6 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Interface {
     limits: wgt::Limits,
-    features: wgt::Features,
     resources: naga::Arena&lt;Resource&gt;,
     entry_points: FastHashMap&lt;(naga::ShaderStage, String), EntryPoint&gt;,
 }
@@ -1510,8 +1479,6 @@
         <span class="attr">#[source]
         </span>error: InputError,
     },
-    <span class="attr">#[error(<span class="string">"Location[{location}] is provided by the previous stage output but is not consumed as input by this stage."</span>)]
-    </span>InputNotConsumed { location: wgt::ShaderLocation },
     <span class="attr">#[error(
         <span class="string">"Unable to select an entry point: no entry point was found in the provided shader module"
     </span>)]
@@ -2116,12 +2083,7 @@
         list.push(varying);
     }
 
-    <span class="kw">pub fn </span>new(
-        module: <span class="kw-2">&amp;</span>naga::Module,
-        info: <span class="kw-2">&amp;</span>naga::valid::ModuleInfo,
-        limits: wgt::Limits,
-        features: wgt::Features,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(module: <span class="kw-2">&amp;</span>naga::Module, info: <span class="kw-2">&amp;</span>naga::valid::ModuleInfo, limits: wgt::Limits) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>resources = naga::Arena::new();
         <span class="kw">let </span><span class="kw-2">mut </span>resource_mapping = FastHashMap::default();
         <span class="kw">for </span>(var_handle, var) <span class="kw">in </span>module.global_variables.iter() {
@@ -2199,7 +2161,6 @@
 
         <span class="self">Self </span>{
             limits,
-            features,
             resources,
             entry_points,
         }
@@ -2447,27 +2408,6 @@
                     }
                 }
                 Varying::BuiltIn(<span class="kw">_</span>) =&gt; {}
-            }
-        }
-
-        <span class="comment">// Check all vertex outputs and make sure the fragment shader consumes them.
-        // This requirement is removed if the `SHADER_UNUSED_VERTEX_OUTPUT` feature is enabled.
-        </span><span class="kw">if </span>shader_stage == naga::ShaderStage::Fragment
-            &amp;&amp; !<span class="self">self
-                </span>.features
-                .contains(wgt::Features::SHADER_UNUSED_VERTEX_OUTPUT)
-        {
-            <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>inputs.keys() {
-                <span class="comment">// This is a linear scan, but the count should be low enough
-                // that this should be fine.
-                </span><span class="kw">let </span>found = entry_point.inputs.iter().any(|v| <span class="kw">match </span><span class="kw-2">*</span>v {
-                    Varying::Local { location, .. } =&gt; location == index,
-                    Varying::BuiltIn(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
-                });
-
-                <span class="kw">if </span>!found {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(StageError::InputNotConsumed { location: index });
-                }
             }
         }
 

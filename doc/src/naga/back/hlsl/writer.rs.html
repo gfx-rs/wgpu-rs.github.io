@@ -3625,13 +3625,71 @@
 <a href="#3624" id="3624">3624</a>
 <a href="#3625" id="3625">3625</a>
 <a href="#3626" id="3626">3626</a>
+<a href="#3627" id="3627">3627</a>
+<a href="#3628" id="3628">3628</a>
+<a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
+<a href="#3645" id="3645">3645</a>
+<a href="#3646" id="3646">3646</a>
+<a href="#3647" id="3647">3647</a>
+<a href="#3648" id="3648">3648</a>
+<a href="#3649" id="3649">3649</a>
+<a href="#3650" id="3650">3650</a>
+<a href="#3651" id="3651">3651</a>
+<a href="#3652" id="3652">3652</a>
+<a href="#3653" id="3653">3653</a>
+<a href="#3654" id="3654">3654</a>
+<a href="#3655" id="3655">3655</a>
+<a href="#3656" id="3656">3656</a>
+<a href="#3657" id="3657">3657</a>
+<a href="#3658" id="3658">3658</a>
+<a href="#3659" id="3659">3659</a>
+<a href="#3660" id="3660">3660</a>
+<a href="#3661" id="3661">3661</a>
+<a href="#3662" id="3662">3662</a>
+<a href="#3663" id="3663">3663</a>
+<a href="#3664" id="3664">3664</a>
+<a href="#3665" id="3665">3665</a>
+<a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a>
+<a href="#3676" id="3676">3676</a>
+<a href="#3677" id="3677">3677</a>
+<a href="#3678" id="3678">3678</a>
+<a href="#3679" id="3679">3679</a>
+<a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
         WrappedZeroValue,
     },
     storage::StoreValue,
-    BackendResult, Error, Options,
+    BackendResult, Error, FragmentEntryPoint, Options,
 };
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
@@ -3656,6 +3714,7 @@
     name: String,
     ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="comment">// technically, this should always be `Some`
+    // (we `debug_assert!` this in `write_interface_struct`)
     </span>binding: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Binding&gt;,
     index: u32,
 }
@@ -3827,6 +3886,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span>Module,
         module_info: <span class="kw-2">&amp;</span>valid::ModuleInfo,
+        fragment_entry_point: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>FragmentEntryPoint&lt;<span class="lifetime">'_</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ReflectionInfo, Error&gt; {
         <span class="kw">if </span>!module.overrides.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
@@ -3927,7 +3987,13 @@
         <span class="comment">// Write all entry points wrapped structs
         </span><span class="kw">for </span>(index, ep) <span class="kw">in </span>module.entry_points.iter().enumerate() {
             <span class="kw">let </span>ep_name = <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::EntryPoint(index <span class="kw">as </span>u16)].clone();
-            <span class="kw">let </span>ep_io = <span class="self">self</span>.write_ep_interface(module, <span class="kw-2">&amp;</span>ep.function, ep.stage, <span class="kw-2">&amp;</span>ep_name)<span class="question-mark">?</span>;
+            <span class="kw">let </span>ep_io = <span class="self">self</span>.write_ep_interface(
+                module,
+                <span class="kw-2">&amp;</span>ep.function,
+                ep.stage,
+                <span class="kw-2">&amp;</span>ep_name,
+                fragment_entry_point,
+            )<span class="question-mark">?</span>;
             <span class="self">self</span>.entry_point_io.push(ep_io);
         }
 
@@ -4108,6 +4174,10 @@
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"struct {struct_name}"</span>)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>m <span class="kw">in </span>members.iter() {
+            <span class="comment">// Sanity check that each IO member is a built-in or is assigned a
+            // location. Also see note about nesting in `write_ep_input_struct`.
+            </span><span class="macro">debug_assert!</span>(m.binding.is_some());
+
             <span class="kw">if </span>is_subgroup_builtin_binding(<span class="kw-2">&amp;</span>m.binding) {
                 <span class="kw">continue</span>;
             }
@@ -4135,7 +4205,8 @@
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}};"</span>)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
 
-        <span class="kw">match </span>shader_stage.<span class="number">1 </span>{
+        <span class="comment">// See ordering notes on EntryPointInterface fields
+        </span><span class="kw">match </span>shader_stage.<span class="number">1 </span>{
             Io::Input =&gt; {
                 <span class="comment">// bring back the original order
                 </span>members.sort_by_key(|m| m.index);
@@ -4166,7 +4237,11 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>fake_members = Vec::new();
         <span class="kw">for </span>arg <span class="kw">in </span>func.arguments.iter() {
-            <span class="kw">match </span>module.types[arg.ty].inner {
+            <span class="comment">// NOTE: We don't need to handle nesting structs. All members must
+            // be either built-ins or assigned a location. I.E. `binding` is
+            // `Some`. This is checked in `VaryingContext::validate`. See:
+            // https://gpuweb.github.io/gpuweb/wgsl/#input-output-locations
+            </span><span class="kw">match </span>module.types[arg.ty].inner {
                 TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                     <span class="kw">for </span>member <span class="kw">in </span>members.iter() {
                         <span class="kw">let </span>name = <span class="self">self</span>.namer.call_or(<span class="kw-2">&amp;</span>member.name, <span class="string">"member"</span>);
@@ -4204,10 +4279,10 @@
         result: <span class="kw-2">&amp;</span><span class="kw">crate</span>::FunctionResult,
         stage: ShaderStage,
         entry_point_name: <span class="kw-2">&amp;</span>str,
+        frag_ep: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>FragmentEntryPoint&lt;<span class="lifetime">'_</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;EntryPointBinding, Error&gt; {
         <span class="kw">let </span>struct_name = <span class="macro">format!</span>(<span class="string">"{stage:?}Output_{entry_point_name}"</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>fake_members = Vec::new();
         <span class="kw">let </span>empty = [];
         <span class="kw">let </span>members = <span class="kw">match </span>module.types[result.ty].inner {
             TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; members,
@@ -4217,14 +4292,54 @@
             }
         };
 
-        <span class="kw">for </span>member <span class="kw">in </span>members.iter() {
+        <span class="comment">// Gather list of fragment input locations. We use this below to remove user-defined
+        // varyings from VS outputs that aren't in the FS inputs. This makes the VS interface match
+        // as long as the FS inputs are a subset of the VS outputs. This is only applied if the
+        // writer is supplied with information about the fragment entry point.
+        </span><span class="kw">let </span>fs_input_locs = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(frag_ep), ShaderStage::Vertex) = (frag_ep, stage) {
+            <span class="kw">let </span><span class="kw-2">mut </span>fs_input_locs = Vec::new();
+            <span class="kw">for </span>arg <span class="kw">in </span>frag_ep.func.arguments.iter() {
+                <span class="kw">let </span><span class="kw-2">mut </span>push_if_location = |binding: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Binding&gt;| <span class="kw">match </span><span class="kw-2">*</span>binding {
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::Location { location, .. }) =&gt; fs_input_locs.push(location),
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>)) | <span class="prelude-val">None </span>=&gt; {}
+                };
+
+                <span class="comment">// NOTE: We don't need to handle struct nesting. See note in
+                // `write_ep_input_struct`.
+                </span><span class="kw">match </span>frag_ep.module.types[arg.ty].inner {
+                    TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+                        <span class="kw">for </span>member <span class="kw">in </span>members.iter() {
+                            push_if_location(<span class="kw-2">&amp;</span>member.binding);
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; push_if_location(<span class="kw-2">&amp;</span>arg.binding),
+                }
+            }
+            fs_input_locs.sort();
+            <span class="prelude-val">Some</span>(fs_input_locs)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+
+        <span class="kw">let </span><span class="kw-2">mut </span>fake_members = Vec::new();
+        <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>fs_input_locs) = fs_input_locs {
+                <span class="kw">match </span>member.binding {
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::Location { location, .. }) =&gt; {
+                        <span class="kw">if </span>fs_input_locs.binary_search(<span class="kw-2">&amp;</span>location).is_err() {
+                            <span class="kw">continue</span>;
+                        }
+                    }
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">_</span>)) | <span class="prelude-val">None </span>=&gt; {}
+                }
+            }
+
             <span class="kw">let </span>member_name = <span class="self">self</span>.namer.call_or(<span class="kw-2">&amp;</span>member.name, <span class="string">"member"</span>);
-            <span class="kw">let </span>index = fake_members.len() <span class="kw">as </span>u32;
             fake_members.push(EpStructMember {
                 name: member_name,
                 ty: member.ty,
                 binding: member.binding.clone(),
-                index,
+                index: index <span class="kw">as </span>u32,
             });
         }
 
@@ -4240,6 +4355,7 @@
         func: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Function,
         stage: ShaderStage,
         ep_name: <span class="kw-2">&amp;</span>str,
+        frag_ep: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>FragmentEntryPoint&lt;<span class="lifetime">'_</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;EntryPointInterface, Error&gt; {
         <span class="prelude-val">Ok</span>(EntryPointInterface {
             input: <span class="kw">if </span>!func.arguments.is_empty()
@@ -4255,7 +4371,7 @@
             </span>},
             output: <span class="kw">match </span>func.result {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>fr) <span class="kw">if </span>fr.binding.is_none() &amp;&amp; stage == ShaderStage::Vertex =&gt; {
-                    <span class="prelude-val">Some</span>(<span class="self">self</span>.write_ep_output_struct(module, fr, stage, ep_name)<span class="question-mark">?</span>)
+                    <span class="prelude-val">Some</span>(<span class="self">self</span>.write_ep_output_struct(module, fr, stage, ep_name, frag_ep)<span class="question-mark">?</span>)
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
