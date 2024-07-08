@@ -2299,6 +2299,56 @@
 <a href="#2298" id="2298">2298</a>
 <a href="#2299" id="2299">2299</a>
 <a href="#2300" id="2300">2300</a>
+<a href="#2301" id="2301">2301</a>
+<a href="#2302" id="2302">2302</a>
+<a href="#2303" id="2303">2303</a>
+<a href="#2304" id="2304">2304</a>
+<a href="#2305" id="2305">2305</a>
+<a href="#2306" id="2306">2306</a>
+<a href="#2307" id="2307">2307</a>
+<a href="#2308" id="2308">2308</a>
+<a href="#2309" id="2309">2309</a>
+<a href="#2310" id="2310">2310</a>
+<a href="#2311" id="2311">2311</a>
+<a href="#2312" id="2312">2312</a>
+<a href="#2313" id="2313">2313</a>
+<a href="#2314" id="2314">2314</a>
+<a href="#2315" id="2315">2315</a>
+<a href="#2316" id="2316">2316</a>
+<a href="#2317" id="2317">2317</a>
+<a href="#2318" id="2318">2318</a>
+<a href="#2319" id="2319">2319</a>
+<a href="#2320" id="2320">2320</a>
+<a href="#2321" id="2321">2321</a>
+<a href="#2322" id="2322">2322</a>
+<a href="#2323" id="2323">2323</a>
+<a href="#2324" id="2324">2324</a>
+<a href="#2325" id="2325">2325</a>
+<a href="#2326" id="2326">2326</a>
+<a href="#2327" id="2327">2327</a>
+<a href="#2328" id="2328">2328</a>
+<a href="#2329" id="2329">2329</a>
+<a href="#2330" id="2330">2330</a>
+<a href="#2331" id="2331">2331</a>
+<a href="#2332" id="2332">2332</a>
+<a href="#2333" id="2333">2333</a>
+<a href="#2334" id="2334">2334</a>
+<a href="#2335" id="2335">2335</a>
+<a href="#2336" id="2336">2336</a>
+<a href="#2337" id="2337">2337</a>
+<a href="#2338" id="2338">2338</a>
+<a href="#2339" id="2339">2339</a>
+<a href="#2340" id="2340">2340</a>
+<a href="#2341" id="2341">2341</a>
+<a href="#2342" id="2342">2342</a>
+<a href="#2343" id="2343">2343</a>
+<a href="#2344" id="2344">2344</a>
+<a href="#2345" id="2345">2345</a>
+<a href="#2346" id="2346">2346</a>
+<a href="#2347" id="2347">2347</a>
+<a href="#2348" id="2348">2348</a>
+<a href="#2349" id="2349">2349</a>
+<a href="#2350" id="2350">2350</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, khr, vk};
@@ -3884,6 +3934,7 @@
         handle_is_owned: bool,
         enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr],
         features: wgt::Features,
+        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
         family_index: u32,
         queue_index: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
@@ -4134,8 +4185,55 @@
 
         <span class="kw">let </span>mem_allocator = {
             <span class="kw">let </span>limits = <span class="self">self</span>.phd_capabilities.properties.limits;
-            <span class="kw">let </span>config = gpu_alloc::Config::i_am_prototyping(); <span class="comment">//TODO
-            </span><span class="kw">let </span>max_memory_allocation_size =
+
+            <span class="comment">// Note: the parameters here are not set in stone nor where they picked with
+            // strong confidence.
+            // `final_free_list_chunk` should be bigger than starting_free_list_chunk if
+            // we want the behavior of starting with smaller block sizes and using larger
+            // ones only after we observe that the small ones aren't enough, which I think
+            // is a good "I don't know what the workload is going to be like" approach.
+            //
+            // For reference, `VMA`, and `gpu_allocator` both start with 256 MB blocks
+            // (then VMA doubles the block size each time it needs a new block).
+            // At some point it would be good to experiment with real workloads
+            //
+            // TODO(#5925): The plan is to switch the Vulkan backend from `gpu_alloc` to
+            // `gpu_allocator` which has a different (simpler) set of configuration options.
+            //
+            // TODO: These parameters should take hardware capabilities into account.
+            </span><span class="kw">let </span>mb = <span class="number">1024 </span>* <span class="number">1024</span>;
+            <span class="kw">let </span>perf_cfg = gpu_alloc::Config {
+                starting_free_list_chunk: <span class="number">128 </span>* mb,
+                final_free_list_chunk: <span class="number">512 </span>* mb,
+                minimal_buddy_size: <span class="number">1</span>,
+                initial_buddy_dedicated_size: <span class="number">8 </span>* mb,
+                dedicated_threshold: <span class="number">32 </span>* mb,
+                preferred_dedicated_threshold: mb,
+                transient_dedicated_threshold: <span class="number">128 </span>* mb,
+            };
+            <span class="kw">let </span>mem_usage_cfg = gpu_alloc::Config {
+                starting_free_list_chunk: <span class="number">8 </span>* mb,
+                final_free_list_chunk: <span class="number">64 </span>* mb,
+                minimal_buddy_size: <span class="number">1</span>,
+                initial_buddy_dedicated_size: <span class="number">8 </span>* mb,
+                dedicated_threshold: <span class="number">8 </span>* mb,
+                preferred_dedicated_threshold: mb,
+                transient_dedicated_threshold: <span class="number">16 </span>* mb,
+            };
+            <span class="kw">let </span>config = <span class="kw">match </span>memory_hints {
+                wgt::MemoryHints::Performance =&gt; perf_cfg,
+                wgt::MemoryHints::MemoryUsage =&gt; mem_usage_cfg,
+                wgt::MemoryHints::Manual {
+                    suballocated_device_memory_block_size,
+                } =&gt; gpu_alloc::Config {
+                    starting_free_list_chunk: suballocated_device_memory_block_size.start,
+                    final_free_list_chunk: suballocated_device_memory_block_size.end,
+                    initial_buddy_dedicated_size: suballocated_device_memory_block_size.start,
+                    ..perf_cfg
+                },
+            };
+
+            <span class="kw">let </span>max_memory_allocation_size =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(maintenance_3) = <span class="self">self</span>.phd_capabilities.maintenance_3 {
                     maintenance_3.max_memory_allocation_size
                 } <span class="kw">else </span>{
@@ -4196,6 +4294,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         features: wgt::Features,
         _limits: <span class="kw-2">&amp;</span>wgt::Limits,
+        memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>enabled_extensions = <span class="self">self</span>.required_device_extensions(features);
         <span class="kw">let </span><span class="kw-2">mut </span>enabled_phd_features = <span class="self">self</span>.physical_device_features(<span class="kw-2">&amp;</span>enabled_extensions, features);
@@ -4229,6 +4328,7 @@
                 <span class="bool-val">true</span>,
                 <span class="kw-2">&amp;</span>enabled_extensions,
                 features,
+                memory_hints,
                 family_info.queue_family_index,
                 <span class="number">0</span>,
             )

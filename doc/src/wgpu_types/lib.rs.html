@@ -7266,6 +7266,41 @@
 <a href="#7265" id="7265">7265</a>
 <a href="#7266" id="7266">7266</a>
 <a href="#7267" id="7267">7267</a>
+<a href="#7268" id="7268">7268</a>
+<a href="#7269" id="7269">7269</a>
+<a href="#7270" id="7270">7270</a>
+<a href="#7271" id="7271">7271</a>
+<a href="#7272" id="7272">7272</a>
+<a href="#7273" id="7273">7273</a>
+<a href="#7274" id="7274">7274</a>
+<a href="#7275" id="7275">7275</a>
+<a href="#7276" id="7276">7276</a>
+<a href="#7277" id="7277">7277</a>
+<a href="#7278" id="7278">7278</a>
+<a href="#7279" id="7279">7279</a>
+<a href="#7280" id="7280">7280</a>
+<a href="#7281" id="7281">7281</a>
+<a href="#7282" id="7282">7282</a>
+<a href="#7283" id="7283">7283</a>
+<a href="#7284" id="7284">7284</a>
+<a href="#7285" id="7285">7285</a>
+<a href="#7286" id="7286">7286</a>
+<a href="#7287" id="7287">7287</a>
+<a href="#7288" id="7288">7288</a>
+<a href="#7289" id="7289">7289</a>
+<a href="#7290" id="7290">7290</a>
+<a href="#7291" id="7291">7291</a>
+<a href="#7292" id="7292">7292</a>
+<a href="#7293" id="7293">7293</a>
+<a href="#7294" id="7294">7294</a>
+<a href="#7295" id="7295">7295</a>
+<a href="#7296" id="7296">7296</a>
+<a href="#7297" id="7297">7297</a>
+<a href="#7298" id="7298">7298</a>
+<a href="#7299" id="7299">7299</a>
+<a href="#7300" id="7300">7300</a>
+<a href="#7301" id="7301">7301</a>
+<a href="#7302" id="7302">7302</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -9037,12 +9072,44 @@
     </span><span class="kw">pub </span>backend: Backend,
 }
 
+<span class="doccomment">/// Hints to the device about the memory allocation strategy.
+///
+/// Some backends may ignore these hints.
+</span><span class="attr">#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub enum </span>MemoryHints {
+    <span class="doccomment">/// Favor performance over memory usage (the default value).
+    </span><span class="attr">#[default]
+    </span>Performance,
+    <span class="doccomment">/// Favor memory usage over performance.
+    </span>MemoryUsage,
+    <span class="doccomment">/// Applications that have control over the content that is rendered
+    /// (typically games) may find an optimal compromise between memory
+    /// usage and performance by specifying the allocation configuration.
+    </span>Manual {
+        <span class="doccomment">/// Defines the range of allowed memory block sizes for sub-allocated
+        /// resources.
+        ///
+        /// The backend may attempt to group multiple resources into fewer
+        /// device memory blocks (sub-allocation) for performance reasons.
+        /// The start of the provided range specifies the initial memory
+        /// block size for sub-allocated resources. After running out of
+        /// space in existing memory blocks, the backend may chose to
+        /// progressively increase the block size of subsequent allocations
+        /// up to a limit specified by the end of the range.
+        ///
+        /// This does not limit resource sizes. If a resource does not fit
+        /// in the specified range, it will typically be placed in a dedicated
+        /// memory block.
+        </span>suballocated_device_memory_block_size: Range&lt;u64&gt;,
+    },
+}
+
 <span class="doccomment">/// Describes a [`Device`](../wgpu/struct.Device.html).
 ///
 /// Corresponds to [WebGPU `GPUDeviceDescriptor`](
 /// https://gpuweb.github.io/gpuweb/#gpudevicedescriptor).
-</span><span class="attr">#[repr(C)]
-#[derive(Clone, Debug, Default)]
+</span><span class="attr">#[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>DeviceDescriptor&lt;L&gt; {
     <span class="doccomment">/// Debug label for the device.
@@ -9059,6 +9126,8 @@
     /// Exactly the specified limits, and no better or worse,
     /// will be allowed in validation of API calls on the resulting device.
     </span><span class="kw">pub </span>required_limits: Limits,
+    <span class="doccomment">/// Hints for memory allocation strategies.
+    </span><span class="kw">pub </span>memory_hints: MemoryHints,
 }
 
 <span class="kw">impl</span>&lt;L&gt; DeviceDescriptor&lt;L&gt; {
@@ -9068,6 +9137,7 @@
             label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
             required_features: <span class="self">self</span>.required_features,
             required_limits: <span class="self">self</span>.required_limits.clone(),
+            memory_hints: <span class="self">self</span>.memory_hints.clone(),
         }
     }
 }
