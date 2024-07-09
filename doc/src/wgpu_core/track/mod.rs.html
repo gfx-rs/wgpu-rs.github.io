@@ -693,16 +693,6 @@
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
 <a href="#694" id="694">694</a>
-<a href="#695" id="695">695</a>
-<a href="#696" id="696">696</a>
-<a href="#697" id="697">697</a>
-<a href="#698" id="698">698</a>
-<a href="#699" id="699">699</a>
-<a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a>
-<a href="#703" id="703">703</a>
-<a href="#704" id="704">704</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -818,14 +808,11 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">use </span>std::{fmt, ops, sync::Arc};
 <span class="kw">use </span>thiserror::Error;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>buffer::{
-    BufferBindGroupState, BufferTracker, BufferUsageScope, DeviceBufferTracker,
-};
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>buffer::{BufferBindGroupState, BufferTracker, BufferUsageScope};
 <span class="kw">use </span>metadata::{ResourceMetadata, ResourceMetadataProvider};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>stateless::{StatelessBindGroupState, StatelessTracker};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>texture::{
-    DeviceTextureTracker, TextureBindGroupState, TextureSelector, TextureTracker,
-    TextureTrackerSetSingle, TextureUsageScope,
+    TextureBindGroupState, TextureSelector, TextureTracker, TextureUsageScope,
 };
 <span class="kw">use </span>wgt::strict_assert_ne;
 
@@ -921,6 +908,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TrackerIndexAllocators {
     <span class="kw">pub </span>buffers: Arc&lt;SharedTrackerIndexAllocator&gt;,
+    <span class="kw">pub </span>staging_buffers: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="kw">pub </span>textures: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="kw">pub </span>texture_views: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="kw">pub </span>samplers: Arc&lt;SharedTrackerIndexAllocator&gt;,
@@ -938,6 +926,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         TrackerIndexAllocators {
             buffers: Arc::new(SharedTrackerIndexAllocator::new()),
+            staging_buffers: Arc::new(SharedTrackerIndexAllocator::new()),
             textures: Arc::new(SharedTrackerIndexAllocator::new()),
             texture_views: Arc::new(SharedTrackerIndexAllocator::new()),
             samplers: Arc::new(SharedTrackerIndexAllocator::new()),
@@ -1306,26 +1295,16 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     }
 }
 
-<span class="doccomment">/// A tracker used by Device.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DeviceTracker&lt;A: HalApi&gt; {
-    <span class="kw">pub </span>buffers: DeviceBufferTracker&lt;A&gt;,
-    <span class="kw">pub </span>textures: DeviceTextureTracker&lt;A&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ResourceTracker {
+    <span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool;
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; DeviceTracker&lt;A&gt; {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            buffers: DeviceBufferTracker::new(),
-            textures: DeviceTextureTracker::new(),
-        }
-    }
-}
-
-<span class="doccomment">/// A full double sided tracker used by CommandBuffers.
+<span class="doccomment">/// A full double sided tracker used by CommandBuffers and the Device.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Tracker&lt;A: HalApi&gt; {
     <span class="kw">pub </span>buffers: BufferTracker&lt;A&gt;,
     <span class="kw">pub </span>textures: TextureTracker&lt;A&gt;,
     <span class="kw">pub </span>views: StatelessTracker&lt;resource::TextureView&lt;A&gt;&gt;,
+    <span class="kw">pub </span>samplers: StatelessTracker&lt;resource::Sampler&lt;A&gt;&gt;,
     <span class="kw">pub </span>bind_groups: StatelessTracker&lt;binding_model::BindGroup&lt;A&gt;&gt;,
     <span class="kw">pub </span>compute_pipelines: StatelessTracker&lt;pipeline::ComputePipeline&lt;A&gt;&gt;,
     <span class="kw">pub </span>render_pipelines: StatelessTracker&lt;pipeline::RenderPipeline&lt;A&gt;&gt;,
@@ -1339,6 +1318,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
             buffers: BufferTracker::new(),
             textures: TextureTracker::new(),
             views: StatelessTracker::new(),
+            samplers: StatelessTracker::new(),
             bind_groups: StatelessTracker::new(),
             compute_pipelines: StatelessTracker::new(),
             render_pipelines: StatelessTracker::new(),

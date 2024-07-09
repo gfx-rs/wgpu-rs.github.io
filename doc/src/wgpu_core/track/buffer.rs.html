@@ -806,6 +806,11 @@
 <a href="#805" id="805">805</a>
 <a href="#806" id="806">806</a>
 <a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Buffer Trackers
  *
  * Buffers are represented by a single state for the whole resource,
@@ -813,16 +818,17 @@
  * one subresource, they have no selector.
 !*/
 
-</span><span class="kw">use </span>std::sync::{Arc, Weak};
+</span><span class="kw">use </span>std::{marker::PhantomData, sync::Arc};
 
-<span class="kw">use super</span>::{PendingTransition, TrackerIndex};
+<span class="kw">use super</span>::{PendingTransition, ResourceTracker, TrackerIndex};
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
     lock::{rank, Mutex},
     resource::{Buffer, Trackable},
+    resource_log,
     snatch::SnatchGuard,
     track::{
-        invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
+        invalid_resource_state, skip_barrier, Labeled, ResourceMetadata, ResourceMetadataProvider,
         ResourceUsageCompatibilityError, ResourceUses,
     },
 };
@@ -851,11 +857,15 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferBindGroupState&lt;A: HalApi&gt; {
     buffers: Mutex&lt;Vec&lt;(Arc&lt;Buffer&lt;A&gt;&gt;, BufferUses)&gt;&gt;,
+
+    _phantom: PhantomData&lt;A&gt;,
 }
 <span class="kw">impl</span>&lt;A: HalApi&gt; BufferBindGroupState&lt;A&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buffers: Mutex::new(rank::BUFFER_BIND_GROUP_STATE_BUFFERS, Vec::new()),
+
+            _phantom: PhantomData,
         }
     }
 
@@ -880,6 +890,16 @@
             .into_iter()
     }
 
+    <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
+        buffers
+            .drain(..)
+            .map(|(buffer, _u)| buffer)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+            .into_iter()
+    }
+
     <span class="doccomment">/// Adds the given resource with the given state.
     </span><span class="kw">pub fn </span>add_single(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
         <span class="kw">let </span><span class="kw-2">mut </span>buffers = <span class="self">self</span>.buffers.lock();
@@ -891,7 +911,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferUsageScope&lt;A: HalApi&gt; {
     state: Vec&lt;BufferUses&gt;,
-    metadata: ResourceMetadata&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    metadata: ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Default <span class="kw">for </span>BufferUsageScope&lt;A&gt; {
@@ -927,6 +947,13 @@
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.state.len() {
             <span class="self">self</span>.set_size(index + <span class="number">1</span>);
         }
+    }
+
+    <span class="doccomment">/// Drains all buffers tracked.
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
+        <span class="kw">let </span>resources = <span class="self">self</span>.metadata.drain_resources();
+        <span class="self">self</span>.state.clear();
+        resources.into_iter()
     }
 
     <span class="doccomment">/// Merge the list of buffer states in the given bind group into this usage scope.
@@ -1039,14 +1066,75 @@
     }
 }
 
-<span class="doccomment">/// Stores all buffer state within a command buffer.
+<span class="doccomment">/// Stores all buffer state within a command buffer or device.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferTracker&lt;A: HalApi&gt; {
     start: Vec&lt;BufferUses&gt;,
     end: Vec&lt;BufferUses&gt;,
 
-    metadata: ResourceMetadata&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    metadata: ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
 
     temp: Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker <span class="kw">for </span>BufferTracker&lt;A&gt; {
+    <span class="doccomment">/// Try to remove the buffer `id` from this tracker if it is otherwise unused.
+    ///
+    /// A buffer is 'otherwise unused' when the only references to it are:
+    ///
+    /// 1) the `Arc` that our caller, `LifetimeTracker::triage_resources`, is
+    ///    considering draining from `LifetimeTracker::suspected_resources`,
+    ///
+    /// 2) its `Arc` in [`self.metadata`] (owned by [`Device::trackers`]), and
+    ///
+    /// 3) its `Arc` in the [`Hub::buffers`] registry.
+    ///
+    /// If the buffer is indeed unused, this function removes 2), and
+    /// `triage_suspected` will remove 3), leaving 1) as the sole
+    /// remaining reference.
+    ///
+    /// Returns true if the resource was removed or if not existing in metadata.
+    ///
+    /// [`Device::trackers`]: crate::device::Device
+    /// [`self.metadata`]: BufferTracker::metadata
+    /// [`Hub::buffers`]: crate::hub::Hub::buffers
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: TrackerIndex) -&gt; bool {
+        <span class="kw">let </span>index = index.as_usize();
+
+        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+            <span class="kw">return </span><span class="bool-val">false</span>;
+        }
+
+        <span class="self">self</span>.tracker_assert_in_bounds(index);
+
+        <span class="kw">unsafe </span>{
+            <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
+                <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
+                <span class="comment">//RefCount 2 means that resource is hold just by DeviceTracker and this suspected resource itself
+                //so it's already been released from user and so it's not inside Registry\Storage
+                </span><span class="kw">if </span>existing_ref_count &lt;= <span class="number">2 </span>{
+                    <span class="macro">resource_log!</span>(
+                        <span class="string">"BufferTracker::remove_abandoned: removing {}"</span>,
+                        <span class="self">self</span>.metadata.get_resource_unchecked(index).error_ident()
+                    );
+
+                    <span class="self">self</span>.metadata.remove(index);
+                    <span class="kw">return </span><span class="bool-val">true</span>;
+                }
+
+                <span class="macro">resource_log!</span>(
+                    <span class="string">"BufferTracker::remove_abandoned: not removing {}, ref count {}"</span>,
+                    <span class="self">self</span>.metadata.get_resource_unchecked(index).error_ident(),
+                    existing_ref_count
+                );
+
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+        }
+
+        <span class="macro">resource_log!</span>(<span class="string">"BufferTracker::remove_abandoned: does not contain index {index:?}"</span>,);
+
+        <span class="bool-val">true
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; BufferTracker&lt;A&gt; {
@@ -1100,6 +1188,38 @@
             pending.into_hal(buf, snatch_guard)
         });
         buffer_barriers
+    }
+
+    <span class="doccomment">/// Inserts a single buffer and its state into the resource tracker.
+    ///
+    /// If the resource already exists in the tracker, this will panic.
+    ///
+    /// If the ID is higher than the length of internal vectors,
+    /// the vectors will be extended. A call to set_size is not needed.
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
+        <span class="kw">let </span>index = resource.tracker_index().as_usize();
+
+        <span class="self">self</span>.allow_index(index);
+
+        <span class="self">self</span>.tracker_assert_in_bounds(index);
+
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>currently_owned = <span class="self">self</span>.metadata.contains_unchecked(index);
+
+            <span class="kw">if </span>currently_owned {
+                <span class="macro">panic!</span>(<span class="string">"Tried to insert buffer already tracked"</span>);
+            }
+
+            insert(
+                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                index,
+                BufferStateProvider::Direct { state },
+                <span class="prelude-val">None</span>,
+                ResourceMetadataProvider::Direct { resource },
+            )
+        }
     }
 
     <span class="doccomment">/// Sets the state of a single buffer.
@@ -1268,131 +1388,21 @@
             <span class="kw">unsafe </span>{ scope.metadata.remove(index) };
         }
     }
-}
 
-<span class="doccomment">/// Stores all buffer state within a device.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DeviceBufferTracker&lt;A: HalApi&gt; {
-    current_states: Vec&lt;BufferUses&gt;,
-    metadata: ResourceMetadata&lt;Weak&lt;Buffer&lt;A&gt;&gt;&gt;,
-    temp: Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; DeviceBufferTracker&lt;A&gt; {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            current_states: Vec::new(),
-            metadata: ResourceMetadata::new(),
-            temp: Vec::new(),
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: TrackerIndex) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;&gt; {
+        <span class="kw">let </span>index = index.as_usize();
+        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-    }
-
-    <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
-        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.current_states.len());
-        <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
-    }
-
-    <span class="doccomment">/// Extend the vectors to let the given index be valid.
-    </span><span class="kw">fn </span>allow_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) {
-        <span class="kw">if </span>index &gt;= <span class="self">self</span>.current_states.len() {
-            <span class="self">self</span>.current_states.resize(index + <span class="number">1</span>, BufferUses::empty());
-            <span class="self">self</span>.metadata.set_size(index + <span class="number">1</span>);
-        }
-    }
-
-    <span class="doccomment">/// Returns a list of all buffers tracked.
-    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Weak&lt;Buffer&lt;A&gt;&gt;&gt; + <span class="lifetime">'_ </span>{
-        <span class="self">self</span>.metadata.owned_resources()
-    }
-
-    <span class="doccomment">/// Inserts a single buffer and its state into the resource tracker.
-    ///
-    /// If the resource already exists in the tracker, it will be overwritten.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;, state: BufferUses) {
-        <span class="kw">let </span>index = buffer.tracker_index().as_usize();
-
-        <span class="self">self</span>.allow_index(index);
-
         <span class="self">self</span>.tracker_assert_in_bounds(index);
-
         <span class="kw">unsafe </span>{
-            insert(
-                <span class="prelude-val">None</span>,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.current_states,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                index,
-                BufferStateProvider::Direct { state },
-                <span class="prelude-val">None</span>,
-                ResourceMetadataProvider::Direct {
-                    resource: <span class="kw-2">&amp;</span>Arc::downgrade(buffer),
-                },
-            )
+            <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">self</span>.metadata.get_resource_unchecked(index));
+            }
         }
-    }
-
-    <span class="doccomment">/// Sets the state of a single buffer.
-    ///
-    /// If a transition is needed to get the buffer into the given state, that transition
-    /// is returned. No more than one transition is needed.
-    </span><span class="kw">pub fn </span>set_single(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&lt;A&gt;&gt;,
-        state: BufferUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;PendingTransition&lt;BufferUses&gt;&gt; {
-        <span class="kw">let </span>index: usize = buffer.tracker_index().as_usize();
-
-        <span class="self">self</span>.tracker_assert_in_bounds(index);
-
-        <span class="kw">let </span>start_state_provider = BufferStateProvider::Direct { state };
-
-        <span class="kw">unsafe </span>{
-            barrier(
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.current_states,
-                index,
-                start_state_provider.clone(),
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
-            )
-        };
-        <span class="kw">unsafe </span>{ update(<span class="kw-2">&amp;mut </span><span class="self">self</span>.current_states, index, start_state_provider) };
-
-        <span class="macro">strict_assert!</span>(<span class="self">self</span>.temp.len() &lt;= <span class="number">1</span>);
-
-        <span class="self">self</span>.temp.pop()
-    }
-
-    <span class="doccomment">/// Sets the given state for all buffers in the given tracker.
-    ///
-    /// If a transition is needed to get the buffers into the needed state,
-    /// those transitions are returned.
-    </span><span class="kw">pub fn </span>set_from_tracker_and_drain_transitions&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>: <span class="lifetime">'a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
-        tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BufferTracker&lt;A&gt;,
-        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>SnatchGuard&lt;<span class="lifetime">'b</span>&gt;,
-    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, A&gt;&gt; {
-        <span class="kw">for </span>index <span class="kw">in </span>tracker.metadata.owned_indices() {
-            <span class="self">self</span>.tracker_assert_in_bounds(index);
-
-            <span class="kw">let </span>start_state_provider = BufferStateProvider::Indirect {
-                state: <span class="kw-2">&amp;</span>tracker.start,
-            };
-            <span class="kw">let </span>end_state_provider = BufferStateProvider::Indirect {
-                state: <span class="kw-2">&amp;</span>tracker.end,
-            };
-            <span class="kw">unsafe </span>{
-                barrier(
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.current_states,
-                    index,
-                    start_state_provider,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
-                )
-            };
-            <span class="kw">unsafe </span>{ update(<span class="kw-2">&amp;mut </span><span class="self">self</span>.current_states, index, end_state_provider) };
-        }
-
-        <span class="self">self</span>.temp.drain(..).map(|pending| {
-            <span class="kw">let </span>buf = <span class="kw">unsafe </span>{ tracker.metadata.get_resource_unchecked(pending.id <span class="kw">as _</span>) };
-            pending.into_hal(buf, snatch_guard)
-        })
-    }
+        <span class="prelude-val">None
+    </span>}
 }
 
 <span class="doccomment">/// Source of Buffer State.
@@ -1434,11 +1444,11 @@
 </span><span class="kw">unsafe fn </span>insert_or_merge&lt;A: HalApi&gt;(
     start_states: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[BufferUses]&gt;,
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
     index32: u32,
     index: usize,
     state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
 
@@ -1489,11 +1499,11 @@
 </span><span class="kw">unsafe fn </span>insert_or_barrier_update&lt;A: HalApi&gt;(
     start_states: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[BufferUses]&gt;,
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
     index: usize,
     start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
 ) {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
@@ -1520,14 +1530,14 @@
 }
 
 <span class="attr">#[inline(always)]
-</span><span class="kw">unsafe fn </span>insert&lt;T: Clone&gt;(
+</span><span class="kw">unsafe fn </span>insert&lt;A: HalApi&gt;(
     start_states: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[BufferUses]&gt;,
     current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;T&gt;,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Buffer&lt;A&gt;&gt;,
     index: usize,
     start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, T&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
 ) {
     <span class="kw">let </span>new_start_state = <span class="kw">unsafe </span>{ start_state_provider.get_state(index) };
     <span class="kw">let </span>new_end_state =
@@ -1557,7 +1567,7 @@
     index32: u32,
     index: usize,
     state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Buffer&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
     <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_states.get_unchecked_mut(index) };
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(index) };

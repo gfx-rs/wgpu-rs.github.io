@@ -370,8 +370,26 @@
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
 <a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This is a player library for WebGPU traces.
  *
+ * # Notes
+ * - we call device_maintain_ids() before creating any refcounted resource,
+ *   which is basically everything except for BGL and shader modules,
+ *   so that we don't accidentally try to use the same ID.
 !*/
 </span><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 #![warn(unsafe_op_in_unsafe_fn)]
@@ -521,6 +539,7 @@
                 <span class="macro">panic!</span>(<span class="string">"Unexpected Surface action: winit feature is not enabled"</span>)
             }
             Action::CreateBuffer(id, desc) =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_buffer::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -533,6 +552,7 @@
                 <span class="self">self</span>.buffer_drop::&lt;A&gt;(id, <span class="bool-val">true</span>);
             }
             Action::CreateTexture(id, desc) =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_texture::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -549,6 +569,7 @@
                 parent_id,
                 desc,
             } =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.texture_create_view::&lt;A&gt;(parent_id, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -558,6 +579,7 @@
                 <span class="self">self</span>.texture_view_drop::&lt;A&gt;(id, <span class="bool-val">true</span>).unwrap();
             }
             Action::CreateSampler(id, desc) =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_sampler::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -567,6 +589,7 @@
                 <span class="self">self</span>.sampler_drop::&lt;A&gt;(id);
             }
             Action::GetSurfaceTexture { id, parent_id } =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="self">self</span>.surface_get_current_texture::&lt;A&gt;(parent_id, <span class="prelude-val">Some</span>(id))
                     .unwrap()
                     .texture_id
@@ -582,6 +605,7 @@
                 <span class="self">self</span>.bind_group_layout_drop::&lt;A&gt;(id);
             }
             Action::CreatePipelineLayout(id, desc) =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_pipeline_layout::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -591,6 +615,7 @@
                 <span class="self">self</span>.pipeline_layout_drop::&lt;A&gt;(id);
             }
             Action::CreateBindGroup(id, desc) =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_bind_group::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
@@ -624,6 +649,7 @@
                 desc,
                 implicit_context,
             } =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>implicit_ids =
                     implicit_context
                         .as_ref()
@@ -645,6 +671,7 @@
                 desc,
                 implicit_context,
             } =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>implicit_ids =
                     implicit_context
                         .as_ref()
@@ -683,6 +710,7 @@
                 <span class="self">self</span>.render_bundle_drop::&lt;A&gt;(id);
             }
             Action::CreateQuerySet { id, desc } =&gt; {
+                <span class="self">self</span>.device_maintain_ids::&lt;A&gt;(device).unwrap();
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_query_set::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
