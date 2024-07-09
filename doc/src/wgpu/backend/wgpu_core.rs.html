@@ -3499,6 +3499,7 @@
 <a href="#3498" id="3498">3498</a>
 <a href="#3499" id="3499">3499</a>
 <a href="#3500" id="3500">3500</a>
+<a href="#3501" id="3501">3501</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3521,6 +3522,7 @@
     fmt,
     future::{ready, Ready},
     ops::Range,
+    ptr::NonNull,
     slice,
     sync::Arc,
 };
@@ -6972,7 +6974,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>BufferMappedRange {
-    ptr: <span class="kw-2">*mut </span>u8,
+    ptr: NonNull&lt;u8&gt;,
     size: usize,
 }
 
@@ -6984,12 +6986,12 @@
 <span class="kw">impl </span><span class="kw">crate</span>::context::BufferMappedRange <span class="kw">for </span>BufferMappedRange {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr, <span class="self">self</span>.size) }
+        <span class="kw">unsafe </span>{ slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-        <span class="kw">unsafe </span>{ slice::from_raw_parts_mut(<span class="self">self</span>.ptr, <span class="self">self</span>.size) }
+        <span class="kw">unsafe </span>{ slice::from_raw_parts_mut(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size) }
     }
 }
 
