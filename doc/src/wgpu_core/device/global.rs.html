@@ -2580,6 +2580,24 @@
 <a href="#2579" id="2579">2579</a>
 <a href="#2580" id="2580">2580</a>
 <a href="#2581" id="2581">2581</a>
+<a href="#2582" id="2582">2582</a>
+<a href="#2583" id="2583">2583</a>
+<a href="#2584" id="2584">2584</a>
+<a href="#2585" id="2585">2585</a>
+<a href="#2586" id="2586">2586</a>
+<a href="#2587" id="2587">2587</a>
+<a href="#2588" id="2588">2588</a>
+<a href="#2589" id="2589">2589</a>
+<a href="#2590" id="2590">2590</a>
+<a href="#2591" id="2591">2591</a>
+<a href="#2592" id="2592">2592</a>
+<a href="#2593" id="2593">2593</a>
+<a href="#2594" id="2594">2594</a>
+<a href="#2595" id="2595">2595</a>
+<a href="#2596" id="2596">2596</a>
+<a href="#2597" id="2597">2597</a>
+<a href="#2598" id="2598">2598</a>
+<a href="#2599" id="2599">2599</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4114,8 +4132,17 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
                 <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
                 pipeline_layout_guard.insert(ids.root_id, pipeline.layout.clone());
-                <span class="kw">let </span>group_ids = <span class="kw-2">&amp;mut </span>ids.group_ids.iter();
-                <span class="kw">for </span>(bgl_id, bgl) <span class="kw">in </span>group_ids.zip(pipeline.layout.bind_group_layouts.iter()) {
+                <span class="kw">let </span><span class="kw-2">mut </span>group_ids = ids.group_ids.iter();
+                <span class="comment">// NOTE: If the first iterator is longer than the second, the `.zip()` impl will still advance the
+                // the first iterator before realizing that the second iterator has finished.
+                // The `pipeline.layout.bind_group_layouts` iterator will always be shorter than `ids.group_ids`,
+                // so using it as the first iterator for `.zip()` will work properly.
+                </span><span class="kw">for </span>(bgl, bgl_id) <span class="kw">in </span>pipeline
+                    .layout
+                    .bind_group_layouts
+                    .iter()
+                    .zip(<span class="kw-2">&amp;mut </span>group_ids)
+                {
                     bgl_guard.insert(<span class="kw-2">*</span>bgl_id, bgl.clone());
                 }
                 <span class="kw">for </span>bgl_id <span class="kw">in </span>group_ids {
@@ -4303,8 +4330,17 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
                 <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
                 pipeline_layout_guard.insert(ids.root_id, pipeline.layout.clone());
-                <span class="kw">let </span>group_ids = <span class="kw-2">&amp;mut </span>ids.group_ids.iter();
-                <span class="kw">for </span>(bgl_id, bgl) <span class="kw">in </span>group_ids.zip(pipeline.layout.bind_group_layouts.iter()) {
+                <span class="kw">let </span><span class="kw-2">mut </span>group_ids = ids.group_ids.iter();
+                <span class="comment">// NOTE: If the first iterator is longer than the second, the `.zip()` impl will still advance the
+                // the first iterator before realizing that the second iterator has finished.
+                // The `pipeline.layout.bind_group_layouts` iterator will always be shorter than `ids.group_ids`,
+                // so using it as the first iterator for `.zip()` will work properly.
+                </span><span class="kw">for </span>(bgl, bgl_id) <span class="kw">in </span>pipeline
+                    .layout
+                    .bind_group_layouts
+                    .iter()
+                    .zip(<span class="kw-2">&amp;mut </span>group_ids)
+                {
                     bgl_guard.insert(<span class="kw-2">*</span>bgl_id, bgl.clone());
                 }
                 <span class="kw">for </span>bgl_id <span class="kw">in </span>group_ids {
