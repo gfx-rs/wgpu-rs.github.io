@@ -1518,6 +1518,12 @@
 <a href="#1517" id="1517">1517</a>
 <a href="#1518" id="1518">1518</a>
 <a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1834,19 +1840,19 @@
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_staging_buffer&lt;A: HalApi&gt;(
     device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
-    size: wgt::BufferAddress,
+    size: wgt::BufferSize,
     instance_flags: wgt::InstanceFlags,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(StagingBuffer&lt;A&gt;, NonNull&lt;u8&gt;), DeviceError&gt; {
     <span class="macro">profiling::scope!</span>(<span class="string">"prepare_staging_buffer"</span>);
     <span class="kw">let </span>stage_desc = hal::BufferDescriptor {
         label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Staging"</span>), instance_flags),
-        size,
+        size: size.get(),
         usage: hal::BufferUses::MAP_WRITE | hal::BufferUses::COPY_SRC,
         memory_flags: hal::MemoryFlags::TRANSIENT,
     };
 
     <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
-    <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size) }<span class="question-mark">?</span>;
+    <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size.get()) }<span class="question-mark">?</span>;
 
     <span class="kw">let </span>staging_buffer = StagingBuffer {
         raw: Mutex::new(rank::STAGING_BUFFER_RAW, <span class="prelude-val">Some</span>(buffer)),
@@ -1864,7 +1870,7 @@
             <span class="kw">unsafe </span>{
                 device.flush_mapped_ranges(
                     <span class="self">self</span>.raw.lock().as_ref().unwrap(),
-                    iter::once(<span class="number">0</span>..<span class="self">self</span>.size),
+                    iter::once(<span class="number">0</span>..<span class="self">self</span>.size.get()),
                 )
             };
         }
@@ -1955,10 +1961,12 @@
 
         buffer.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>data_size == <span class="number">0 </span>{
+        <span class="kw">let </span>data_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(data_size) = wgt::BufferSize::new(data_size) {
+            data_size
+        } <span class="kw">else </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring write_buffer of size 0"</span>);
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
+        };
 
         <span class="comment">// Platform validation requires that the staging buffer always be
         // freed, even if an error occurs. All paths from here must call
@@ -1970,7 +1978,11 @@
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"copy"</span>);
-            ptr::copy_nonoverlapping(data.as_ptr(), staging_buffer_ptr.as_ptr(), data.len());
+            ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                staging_buffer_ptr.as_ptr(),
+                data_size.get() <span class="kw">as </span>usize,
+            );
             staging_buffer.flush(device.raw())
         } {
             pending_writes.consume(staging_buffer);
@@ -2007,7 +2019,7 @@
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
         <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(device, buffer_size.get(), device.instance_flags)<span class="question-mark">?</span>;
+            prepare_staging_buffer(device, buffer_size, device.instance_flags)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>fid = hub.staging_buffers.prepare(id_in);
         <span class="kw">let </span>id = fid.assign(Arc::new(staging_buffer));
@@ -2069,7 +2081,7 @@
         _queue_id: QueueId,
         buffer_id: id::BufferId,
         buffer_offset: u64,
-        buffer_size: u64,
+        buffer_size: wgt::BufferSize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::validate_write_buffer"</span>);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -2088,19 +2100,19 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt;,
         buffer_offset: u64,
-        buffer_size: u64,
+        buffer_size: wgt::BufferSize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TransferError&gt; {
         buffer.check_usage(wgt::BufferUsages::COPY_DST)<span class="question-mark">?</span>;
-        <span class="kw">if </span>buffer_size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopySize(buffer_size));
+        <span class="kw">if </span>buffer_size.get() % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedCopySize(buffer_size.get()));
         }
         <span class="kw">if </span>buffer_offset % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::UnalignedBufferOffset(buffer_offset));
         }
-        <span class="kw">if </span>buffer_offset + buffer_size &gt; buffer.size {
+        <span class="kw">if </span>buffer_offset + buffer_size.get() &gt; buffer.size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::BufferOverrun {
                 start_offset: buffer_offset,
-                end_offset: buffer_offset + buffer_size,
+                end_offset: buffer_offset + buffer_size.get(),
                 buffer_size: buffer.size,
                 side: CopySide::Destination,
             });
@@ -2135,16 +2147,15 @@
 
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>src_buffer_size = staging_buffer.size;
-        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_offset, staging_buffer.size)<span class="question-mark">?</span>;
 
         dst.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
-        <span class="kw">let </span>region = wgt::BufferSize::new(src_buffer_size).map(|size| hal::BufferCopy {
+        <span class="kw">let </span>region = hal::BufferCopy {
             src_offset: <span class="number">0</span>,
             dst_offset: buffer_offset,
-            size,
-        });
+            size: staging_buffer.size,
+        };
         <span class="kw">let </span>inner_buffer = staging_buffer.raw.lock();
         <span class="kw">let </span>barriers = iter::once(hal::BufferBarrier {
             buffer: inner_buffer.as_ref().unwrap(),
@@ -2157,7 +2168,7 @@
             encoder.copy_buffer_to_buffer(
                 inner_buffer.as_ref().unwrap(),
                 dst_raw,
-                region.into_iter(),
+                iter::once(region),
             );
         }
 
@@ -2168,7 +2179,7 @@
         </span>{
             dst.initialization_status
                 .write()
-                .drain(buffer_offset..(buffer_offset + src_buffer_size));
+                .drain(buffer_offset..(buffer_offset + staging_buffer.size.get()));
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2280,7 +2291,8 @@
 
         <span class="kw">let </span>block_rows_in_copy =
             (size.depth_or_array_layers - <span class="number">1</span>) * block_rows_per_image + height_blocks;
-        <span class="kw">let </span>stage_size = stage_bytes_per_row <span class="kw">as </span>u64 * block_rows_in_copy <span class="kw">as </span>u64;
+        <span class="kw">let </span>stage_size =
+            wgt::BufferSize::new(stage_bytes_per_row <span class="kw">as </span>u64 * block_rows_in_copy <span class="kw">as </span>u64).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
         <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
@@ -2356,7 +2368,7 @@
                 ptr::copy_nonoverlapping(
                     data.as_ptr().offset(data_layout.offset <span class="kw">as </span>isize),
                     staging_buffer_ptr.as_ptr(),
-                    stage_size <span class="kw">as </span>usize,
+                    stage_size.get() <span class="kw">as </span>usize,
                 );
             }
         } <span class="kw">else </span>{
