@@ -2589,15 +2589,6 @@
 <a href="#2588" id="2588">2588</a>
 <a href="#2589" id="2589">2589</a>
 <a href="#2590" id="2590">2590</a>
-<a href="#2591" id="2591">2591</a>
-<a href="#2592" id="2592">2592</a>
-<a href="#2593" id="2593">2593</a>
-<a href="#2594" id="2594">2594</a>
-<a href="#2595" id="2595">2595</a>
-<a href="#2596" id="2596">2596</a>
-<a href="#2597" id="2597">2597</a>
-<a href="#2598" id="2598">2598</a>
-<a href="#2599" id="2599">2599</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2921,10 +2912,7 @@
                     .raw()
                     .flush_mapped_ranges(raw_buf, iter::once(offset..offset + data.len() <span class="kw">as </span>u64));
             }
-            device
-                .raw()
-                .unmap_buffer(raw_buf)
-                .map_err(DeviceError::from)<span class="question-mark">?</span>;
+            device.raw().unmap_buffer(raw_buf);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2970,10 +2958,7 @@
                 );
             }
             ptr::copy_nonoverlapping(mapping.ptr.as_ptr(), data.as_mut_ptr(), data.len());
-            device
-                .raw()
-                .unmap_buffer(raw_buf)
-                .map_err(DeviceError::from)<span class="question-mark">?</span>;
+            device.raw().unmap_buffer(raw_buf);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -5125,7 +5110,7 @@
         }
         <span class="kw">let </span>map_state = <span class="kw-2">&amp;*</span>buffer.map_state.lock();
         <span class="kw">match </span><span class="kw-2">*</span>map_state {
-            resource::BufferMapState::Init { <span class="kw-2">ref </span>ptr, .. } =&gt; {
+            resource::BufferMapState::Init { <span class="kw-2">ref </span>staging_buffer } =&gt; {
                 <span class="comment">// offset (u64) can not be &lt; 0, so no need to validate the lower bound
                 </span><span class="kw">if </span>offset + range_size &gt; buffer.size {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(BufferAccessError::OutOfBoundsOverrun {
@@ -5133,12 +5118,9 @@
                         max: buffer.size,
                     });
                 }
-                <span class="kw">unsafe </span>{
-                    <span class="prelude-val">Ok</span>((
-                        NonNull::new_unchecked(ptr.as_ptr().offset(offset <span class="kw">as </span>isize)),
-                        range_size,
-                    ))
-                }
+                <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ staging_buffer.ptr() };
+                <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ NonNull::new_unchecked(ptr.as_ptr().offset(offset <span class="kw">as </span>isize)) };
+                <span class="prelude-val">Ok</span>((ptr, range_size))
             }
             resource::BufferMapState::Active {
                 <span class="kw-2">ref </span>ptr, <span class="kw-2">ref </span>range, ..

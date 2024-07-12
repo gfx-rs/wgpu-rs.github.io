@@ -1455,75 +1455,6 @@
 <a href="#1454" id="1454">1454</a>
 <a href="#1455" id="1455">1455</a>
 <a href="#1456" id="1456">1456</a>
-<a href="#1457" id="1457">1457</a>
-<a href="#1458" id="1458">1458</a>
-<a href="#1459" id="1459">1459</a>
-<a href="#1460" id="1460">1460</a>
-<a href="#1461" id="1461">1461</a>
-<a href="#1462" id="1462">1462</a>
-<a href="#1463" id="1463">1463</a>
-<a href="#1464" id="1464">1464</a>
-<a href="#1465" id="1465">1465</a>
-<a href="#1466" id="1466">1466</a>
-<a href="#1467" id="1467">1467</a>
-<a href="#1468" id="1468">1468</a>
-<a href="#1469" id="1469">1469</a>
-<a href="#1470" id="1470">1470</a>
-<a href="#1471" id="1471">1471</a>
-<a href="#1472" id="1472">1472</a>
-<a href="#1473" id="1473">1473</a>
-<a href="#1474" id="1474">1474</a>
-<a href="#1475" id="1475">1475</a>
-<a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a>
-<a href="#1478" id="1478">1478</a>
-<a href="#1479" id="1479">1479</a>
-<a href="#1480" id="1480">1480</a>
-<a href="#1481" id="1481">1481</a>
-<a href="#1482" id="1482">1482</a>
-<a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-<a href="#1487" id="1487">1487</a>
-<a href="#1488" id="1488">1488</a>
-<a href="#1489" id="1489">1489</a>
-<a href="#1490" id="1490">1490</a>
-<a href="#1491" id="1491">1491</a>
-<a href="#1492" id="1492">1492</a>
-<a href="#1493" id="1493">1493</a>
-<a href="#1494" id="1494">1494</a>
-<a href="#1495" id="1495">1495</a>
-<a href="#1496" id="1496">1496</a>
-<a href="#1497" id="1497">1497</a>
-<a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
-<a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a>
-<a href="#1512" id="1512">1512</a>
-<a href="#1513" id="1513">1513</a>
-<a href="#1514" id="1514">1514</a>
-<a href="#1515" id="1515">1515</a>
-<a href="#1516" id="1516">1516</a>
-<a href="#1517" id="1517">1517</a>
-<a href="#1518" id="1518">1518</a>
-<a href="#1519" id="1519">1519</a>
-<a href="#1520" id="1520">1520</a>
-<a href="#1521" id="1521">1521</a>
-<a href="#1522" id="1522">1522</a>
-<a href="#1523" id="1523">1523</a>
-<a href="#1524" id="1524">1524</a>
-<a href="#1525" id="1525">1525</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1540,11 +1471,11 @@
     hal_label,
     id::{<span class="self">self</span>, QueueId},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
-    lock::{rank, Mutex, RwLockWriteGuard},
+    lock::RwLockWriteGuard,
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedResourceError,
-        DestroyedTexture, Labeled, ParentDevice, ResourceErrorIdent, StagingBuffer, Texture,
-        TextureInner, Trackable,
+        DestroyedTexture, FlushedStagingBuffer, Labeled, ParentDevice, ResourceErrorIdent,
+        StagingBuffer, Texture, TextureInner, Trackable,
     },
     resource_log,
     track::{<span class="self">self</span>, Tracker, TrackerIndex},
@@ -1555,8 +1486,9 @@
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span>std::{
-    iter, mem,
-    ptr::{<span class="self">self</span>, NonNull},
+    iter,
+    mem::{<span class="self">self</span>},
+    ptr::NonNull,
     sync::{atomic::Ordering, Arc},
 };
 <span class="kw">use </span>thiserror::Error;
@@ -1661,7 +1593,7 @@
 ///   submission, to be freed when it completes
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>TempResource&lt;A: HalApi&gt; {
-    StagingBuffer(StagingBuffer&lt;A&gt;),
+    StagingBuffer(FlushedStagingBuffer&lt;A&gt;),
     DestroyedBuffer(DestroyedBuffer&lt;A&gt;),
     DestroyedTexture(DestroyedTexture&lt;A&gt;),
 }
@@ -1781,7 +1713,7 @@
         <span class="self">self</span>.temp_resources.push(resource);
     }
 
-    <span class="kw">fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: StagingBuffer&lt;A&gt;) {
+    <span class="kw">pub fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: FlushedStagingBuffer&lt;A&gt;) {
         <span class="self">self</span>.temp_resources
             .push(TempResource::StagingBuffer(buffer));
     }
@@ -1835,47 +1767,6 @@
             }
             <span class="self">self</span>.is_recording = <span class="bool-val">false</span>;
         }
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_staging_buffer&lt;A: HalApi&gt;(
-    device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
-    size: wgt::BufferSize,
-    instance_flags: wgt::InstanceFlags,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(StagingBuffer&lt;A&gt;, NonNull&lt;u8&gt;), DeviceError&gt; {
-    <span class="macro">profiling::scope!</span>(<span class="string">"prepare_staging_buffer"</span>);
-    <span class="kw">let </span>stage_desc = hal::BufferDescriptor {
-        label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Staging"</span>), instance_flags),
-        size: size.get(),
-        usage: hal::BufferUses::MAP_WRITE | hal::BufferUses::COPY_SRC,
-        memory_flags: hal::MemoryFlags::TRANSIENT,
-    };
-
-    <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
-    <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size.get()) }<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>staging_buffer = StagingBuffer {
-        raw: Mutex::new(rank::STAGING_BUFFER_RAW, <span class="prelude-val">Some</span>(buffer)),
-        device: device.clone(),
-        size,
-        is_coherent: mapping.is_coherent,
-    };
-
-    <span class="prelude-val">Ok</span>((staging_buffer, mapping.ptr))
-}
-
-<span class="kw">impl</span>&lt;A: HalApi&gt; StagingBuffer&lt;A&gt; {
-    <span class="kw">unsafe fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.is_coherent {
-            <span class="kw">unsafe </span>{
-                device.flush_mapped_ranges(
-                    <span class="self">self</span>.raw.lock().as_ref().unwrap(),
-                    iter::once(<span class="number">0</span>..<span class="self">self</span>.size.get()),
-                )
-            };
-        }
-        <span class="kw">unsafe </span>{ device.unmap_buffer(<span class="self">self</span>.raw.lock().as_ref().unwrap())<span class="question-mark">? </span>};
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -1971,23 +1862,15 @@
         <span class="comment">// Platform validation requires that the staging buffer always be
         // freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
-        </span><span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(device, data_size, device.instance_flags)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>staging_buffer = StagingBuffer::new(device, data_size)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
         <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{
+        <span class="kw">let </span>staging_buffer = {
             <span class="macro">profiling::scope!</span>(<span class="string">"copy"</span>);
-            ptr::copy_nonoverlapping(
-                data.as_ptr(),
-                staging_buffer_ptr.as_ptr(),
-                data_size.get() <span class="kw">as </span>usize,
-            );
-            staging_buffer.flush(device.raw())
-        } {
-            pending_writes.consume(staging_buffer);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(flush_error.into());
-        }
+            staging_buffer.write(data);
+            staging_buffer.flush()
+        };
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
             <span class="kw-2">&amp;</span>queue,
@@ -2018,14 +1901,14 @@
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
-        <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(device, buffer_size, device.instance_flags)<span class="question-mark">?</span>;
+        <span class="kw">let </span>staging_buffer = StagingBuffer::new(device, buffer_size)<span class="question-mark">?</span>;
+        <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ staging_buffer.ptr() };
 
         <span class="kw">let </span>fid = hub.staging_buffers.prepare(id_in);
         <span class="kw">let </span>id = fid.assign(Arc::new(staging_buffer));
         <span class="macro">resource_log!</span>(<span class="string">"Queue::create_staging_buffer {id:?}"</span>);
 
-        <span class="prelude-val">Ok</span>((id, staging_buffer_ptr))
+        <span class="prelude-val">Ok</span>((id, ptr))
     }
 
     <span class="kw">pub fn </span>queue_write_staging_buffer&lt;A: HalApi&gt;(
@@ -2058,10 +1941,7 @@
         // user. Platform validation requires that the staging buffer always
         // be freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
-        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{ staging_buffer.flush(device.raw()) } {
-            pending_writes.consume(staging_buffer);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(flush_error.into());
-        }
+        </span><span class="kw">let </span>staging_buffer = staging_buffer.flush();
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
             <span class="kw-2">&amp;</span>queue,
@@ -2126,7 +2006,7 @@
         queue: <span class="kw-2">&amp;</span>Arc&lt;Queue&lt;A&gt;&gt;,
         device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
         pending_writes: <span class="kw-2">&amp;mut </span>PendingWrites&lt;A&gt;,
-        staging_buffer: <span class="kw-2">&amp;</span>StagingBuffer&lt;A&gt;,
+        staging_buffer: <span class="kw-2">&amp;</span>FlushedStagingBuffer&lt;A&gt;,
         buffer_id: id::BufferId,
         buffer_offset: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
@@ -2156,20 +2036,15 @@
             dst_offset: buffer_offset,
             size: staging_buffer.size,
         };
-        <span class="kw">let </span>inner_buffer = staging_buffer.raw.lock();
         <span class="kw">let </span>barriers = iter::once(hal::BufferBarrier {
-            buffer: inner_buffer.as_ref().unwrap(),
+            buffer: staging_buffer.raw(),
             usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
         })
         .chain(transition.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>snatch_guard)));
         <span class="kw">let </span>encoder = pending_writes.activate();
         <span class="kw">unsafe </span>{
             encoder.transition_buffers(barriers);
-            encoder.copy_buffer_to_buffer(
-                inner_buffer.as_ref().unwrap(),
-                dst_raw,
-                iter::once(region),
-            );
+            encoder.copy_buffer_to_buffer(staging_buffer.raw(), dst_raw, iter::once(region));
         }
 
         pending_writes.insert_buffer(<span class="kw-2">&amp;</span>dst);
@@ -2358,46 +2233,34 @@
         <span class="comment">// Platform validation requires that the staging buffer always be
         // freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
-        </span><span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(device, stage_size, device.instance_flags)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>staging_buffer = StagingBuffer::new(device, stage_size)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>stage_bytes_per_row == bytes_per_row {
             <span class="macro">profiling::scope!</span>(<span class="string">"copy aligned"</span>);
             <span class="comment">// Fast path if the data is already being aligned optimally.
-            </span><span class="kw">unsafe </span>{
-                ptr::copy_nonoverlapping(
-                    data.as_ptr().offset(data_layout.offset <span class="kw">as </span>isize),
-                    staging_buffer_ptr.as_ptr(),
-                    stage_size.get() <span class="kw">as </span>usize,
-                );
-            }
+            </span>staging_buffer.write(<span class="kw-2">&amp;</span>data[data_layout.offset <span class="kw">as </span>usize..]);
         } <span class="kw">else </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"copy chunked"</span>);
             <span class="comment">// Copy row by row into the optimal alignment.
             </span><span class="kw">let </span>copy_bytes_per_row = stage_bytes_per_row.min(bytes_per_row) <span class="kw">as </span>usize;
             <span class="kw">for </span>layer <span class="kw">in </span><span class="number">0</span>..size.depth_or_array_layers {
                 <span class="kw">let </span>rows_offset = layer * block_rows_per_image;
-                <span class="kw">for </span>row <span class="kw">in </span><span class="number">0</span>..height_blocks {
+                <span class="kw">for </span>row <span class="kw">in </span>rows_offset..rows_offset + height_blocks {
+                    <span class="kw">let </span>src_offset = data_layout.offset <span class="kw">as </span>u32 + row * bytes_per_row;
+                    <span class="kw">let </span>dst_offset = row * stage_bytes_per_row;
                     <span class="kw">unsafe </span>{
-                        ptr::copy_nonoverlapping(
-                            data.as_ptr().offset(
-                                data_layout.offset <span class="kw">as </span>isize
-                                    + (rows_offset + row) <span class="kw">as </span>isize * bytes_per_row <span class="kw">as </span>isize,
-                            ),
-                            staging_buffer_ptr.as_ptr().offset(
-                                (rows_offset + row) <span class="kw">as </span>isize * stage_bytes_per_row <span class="kw">as </span>isize,
-                            ),
+                        staging_buffer.write_with_offset(
+                            data,
+                            src_offset <span class="kw">as </span>isize,
+                            dst_offset <span class="kw">as </span>isize,
                             copy_bytes_per_row,
-                        );
+                        )
                     }
                 }
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ staging_buffer.flush(device.raw()) } {
-            pending_writes.consume(staging_buffer);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
-        }
+        <span class="kw">let </span>staging_buffer = staging_buffer.flush();
 
         <span class="kw">let </span>regions = (<span class="number">0</span>..array_layer_count).map(|rel_array_layer| {
             <span class="kw">let </span><span class="kw-2">mut </span>texture_base = dst_base.clone();
@@ -2416,9 +2279,8 @@
         });
 
         {
-            <span class="kw">let </span>inner_buffer = staging_buffer.raw.lock();
             <span class="kw">let </span>barrier = hal::BufferBarrier {
-                buffer: inner_buffer.as_ref().unwrap(),
+                buffer: staging_buffer.raw(),
                 usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
             };
 
@@ -2430,7 +2292,7 @@
             <span class="kw">unsafe </span>{
                 encoder.transition_textures(transition.map(|pending| pending.into_hal(dst_raw)));
                 encoder.transition_buffers(iter::once(barrier));
-                encoder.copy_buffer_to_texture(inner_buffer.as_ref().unwrap(), dst_raw, regions);
+                encoder.copy_buffer_to_texture(staging_buffer.raw(), dst_raw, regions);
             }
         }
 

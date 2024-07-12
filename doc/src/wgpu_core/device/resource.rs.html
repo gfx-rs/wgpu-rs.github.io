@@ -3615,12 +3615,6 @@
 <a href="#3614" id="3614">3614</a>
 <a href="#3615" id="3615">3615</a>
 <a href="#3616" id="3616">3616</a>
-<a href="#3617" id="3617">3617</a>
-<a href="#3618" id="3618">3618</a>
-<a href="#3619" id="3619">3619</a>
-<a href="#3620" id="3620">3620</a>
-<a href="#3621" id="3621">3621</a>
-<a href="#3622" id="3622">3622</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3645,8 +3639,8 @@
     pipeline,
     pool::ResourcePool,
     resource::{
-        <span class="self">self</span>, Buffer, Labeled, ParentDevice, QuerySet, Sampler, Texture, TextureView,
-        TextureViewNotRenderableReason, TrackingData,
+        <span class="self">self</span>, Buffer, Labeled, ParentDevice, QuerySet, Sampler, StagingBuffer, Texture,
+        TextureView, TextureViewNotRenderableReason, TrackingData,
     },
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
@@ -4214,21 +4208,15 @@
             };
             hal::BufferUses::MAP_WRITE
         } <span class="kw">else </span>{
-            <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) = queue::prepare_staging_buffer(
-                <span class="self">self</span>,
-                wgt::BufferSize::new(aligned_size).unwrap(),
-                <span class="self">self</span>.instance_flags,
-            )<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>staging_buffer =
+                StagingBuffer::new(<span class="self">self</span>, wgt::BufferSize::new(aligned_size).unwrap())<span class="question-mark">?</span>;
 
             <span class="comment">// Zero initialize memory and then mark the buffer as initialized
             // (it's guaranteed that this is the case by the time the buffer is usable)
-            </span><span class="kw">unsafe </span>{ std::ptr::write_bytes(staging_buffer_ptr.as_ptr(), <span class="number">0</span>, aligned_size <span class="kw">as </span>usize) };
+            </span>staging_buffer.write_zeros();
             buffer.initialization_status.write().drain(<span class="number">0</span>..aligned_size);
 
-            <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Init {
-                staging_buffer,
-                ptr: staging_buffer_ptr,
-            };
+            <span class="kw-2">*</span>buffer.map_state.lock() = resource::BufferMapState::Init { staging_buffer };
             hal::BufferUses::COPY_DST
         };
 

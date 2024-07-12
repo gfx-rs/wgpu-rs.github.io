@@ -1781,6 +1781,85 @@
 <a href="#1780" id="1780">1780</a>
 <a href="#1781" id="1781">1781</a>
 <a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a>
+<a href="#1784" id="1784">1784</a>
+<a href="#1785" id="1785">1785</a>
+<a href="#1786" id="1786">1786</a>
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
+<a href="#1836" id="1836">1836</a>
+<a href="#1837" id="1837">1837</a>
+<a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1807,7 +1886,8 @@
 <span class="kw">use </span>std::{
     borrow::Borrow,
     fmt::Debug,
-    iter, mem,
+    iter,
+    mem::{<span class="self">self</span>, ManuallyDrop},
     ops::Range,
     ptr::NonNull,
     sync::{
@@ -2038,10 +2118,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>BufferMapState&lt;A: HalApi&gt; {
     <span class="doccomment">/// Mapped at creation.
-    </span>Init {
-        staging_buffer: StagingBuffer&lt;A&gt;,
-        ptr: NonNull&lt;u8&gt;,
-    },
+    </span>Init { staging_buffer: StagingBuffer&lt;A&gt; },
     <span class="doccomment">/// Waiting for GPU to be done before mapping
     </span>Waiting(BufferPendingMapping&lt;A&gt;),
     <span class="doccomment">/// Mapped
@@ -2433,15 +2510,10 @@
         <span class="kw">let </span>raw_buf = <span class="self">self</span>.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         <span class="macro">log::debug!</span>(<span class="string">"{} map state -&gt; Idle"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map_state.lock(), BufferMapState::Idle) {
-            BufferMapState::Init {
-                staging_buffer,
-                ptr,
-            } =&gt; {
+            BufferMapState::Init { staging_buffer } =&gt; {
                 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-                    <span class="kw">let </span>data = trace.make_binary(<span class="string">"bin"</span>, <span class="kw">unsafe </span>{
-                        std::slice::from_raw_parts(ptr.as_ptr(), <span class="self">self</span>.size <span class="kw">as </span>usize)
-                    });
+                    <span class="kw">let </span>data = trace.make_binary(<span class="string">"bin"</span>, staging_buffer.get_data());
                     trace.add(trace::Action::WriteBuffer {
                         id: buffer_id,
                         data,
@@ -2449,17 +2521,11 @@
                         queued: <span class="bool-val">true</span>,
                     });
                 }
-                <span class="kw">let _ </span>= ptr;
 
-                <span class="kw">let </span>raw_staging_buffer_guard = staging_buffer.raw.lock();
-                <span class="kw">let </span>raw_staging_buffer = raw_staging_buffer_guard.as_ref().unwrap();
-                <span class="kw">if </span>!staging_buffer.is_coherent {
-                    <span class="kw">unsafe </span>{
-                        device
-                            .raw()
-                            .flush_mapped_ranges(raw_staging_buffer, iter::once(<span class="number">0</span>..<span class="self">self</span>.size));
-                    }
-                }
+                <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+                <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
+
+                <span class="kw">let </span>staging_buffer = staging_buffer.flush();
 
                 <span class="self">self</span>.use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
                 <span class="kw">let </span>region = wgt::BufferSize::new(<span class="self">self</span>.size).map(|size| hal::BufferCopy {
@@ -2468,15 +2534,13 @@
                     size,
                 });
                 <span class="kw">let </span>transition_src = hal::BufferBarrier {
-                    buffer: raw_staging_buffer,
+                    buffer: staging_buffer.raw(),
                     usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
                 };
                 <span class="kw">let </span>transition_dst = hal::BufferBarrier {
                     buffer: raw_buf,
                     usage: hal::BufferUses::empty()..hal::BufferUses::COPY_DST,
                 };
-                <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-                <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
                 <span class="kw">let </span>encoder = pending_writes.activate();
                 <span class="kw">unsafe </span>{
                     encoder.transition_buffers(
@@ -2484,14 +2548,13 @@
                     );
                     <span class="kw">if </span><span class="self">self</span>.size &gt; <span class="number">0 </span>{
                         encoder.copy_buffer_to_buffer(
-                            raw_staging_buffer,
+                            staging_buffer.raw(),
                             raw_buf,
                             region.into_iter(),
                         );
                     }
                 }
-                drop(raw_staging_buffer_guard);
-                pending_writes.consume_temp(queue::TempResource::StagingBuffer(staging_buffer));
+                pending_writes.consume(staging_buffer);
                 pending_writes.insert_buffer(<span class="self">self</span>);
             }
             BufferMapState::Idle =&gt; {
@@ -2517,12 +2580,7 @@
                     }
                     <span class="kw">let _ </span>= (ptr, range);
                 }
-                <span class="kw">unsafe </span>{
-                    device
-                        .raw()
-                        .unmap_buffer(raw_buf)
-                        .map_err(DeviceError::from)<span class="question-mark">?
-                </span>};
+                <span class="kw">unsafe </span>{ device.raw().unmap_buffer(raw_buf) };
             }
         }
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
@@ -2627,6 +2685,11 @@
     }
 }
 
+<span class="attr">#[cfg(send_sync)]
+</span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Send <span class="kw">for </span>StagingBuffer&lt;A&gt; {}
+<span class="attr">#[cfg(send_sync)]
+</span><span class="kw">unsafe impl</span>&lt;A: HalApi&gt; Sync <span class="kw">for </span>StagingBuffer&lt;A&gt; {}
+
 <span class="doccomment">/// A temporary buffer, consumed by the command that uses it.
 ///
 /// A [`StagingBuffer`] is designed for one-shot uploads of data to the GPU. It
@@ -2648,33 +2711,128 @@
 /// [`Device::pending_writes`]: crate::device::Device
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>StagingBuffer&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: Mutex&lt;<span class="prelude-ty">Option</span>&lt;A::Buffer&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
+    raw: A::Buffer,
+    device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferSize,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) is_coherent: bool,
+    is_coherent: bool,
+    ptr: NonNull&lt;u8&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>StagingBuffer&lt;A&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.lock().take() {
-            <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
-            <span class="kw">unsafe </span>{
-                <span class="kw">use </span>hal::Device;
-                <span class="self">self</span>.device.raw().destroy_buffer(raw);
-            }
+<span class="kw">impl</span>&lt;A: HalApi&gt; StagingBuffer&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;, size: wgt::BufferSize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DeviceError&gt; {
+        <span class="kw">use </span>hal::Device;
+        <span class="macro">profiling::scope!</span>(<span class="string">"StagingBuffer::new"</span>);
+        <span class="kw">let </span>stage_desc = hal::BufferDescriptor {
+            label: <span class="kw">crate</span>::hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Staging"</span>), device.instance_flags),
+            size: size.get(),
+            usage: hal::BufferUses::MAP_WRITE | hal::BufferUses::COPY_SRC,
+            memory_flags: hal::MemoryFlags::TRANSIENT,
+        };
+
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
+        <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>raw, <span class="number">0</span>..size.get()) }<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>staging_buffer = StagingBuffer {
+            raw,
+            device: device.clone(),
+            size,
+            is_coherent: mapping.is_coherent,
+            ptr: mapping.ptr,
+        };
+
+        <span class="prelude-val">Ok</span>(staging_buffer)
+    }
+
+    <span class="doccomment">/// SAFETY: You must not call any functions of `self`
+    /// until you stopped using the returned pointer.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonNull&lt;u8&gt; {
+        <span class="self">self</span>.ptr
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">unsafe </span>{ std::slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size.get() <span class="kw">as </span>usize) }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_zeros(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{ core::ptr::write_bytes(<span class="self">self</span>.ptr.as_ptr(), <span class="number">0</span>, <span class="self">self</span>.size.get() <span class="kw">as </span>usize) };
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="macro">assert!</span>(data.len() &gt;= <span class="self">self</span>.size.get() <span class="kw">as </span>usize);
+        <span class="comment">// SAFETY: With the assert above, all of `copy_nonoverlapping`'s
+        // requirements are satisfied.
+        </span><span class="kw">unsafe </span>{
+            core::ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                <span class="self">self</span>.ptr.as_ptr(),
+                <span class="self">self</span>.size.get() <span class="kw">as </span>usize,
+            );
+        }
+    }
+
+    <span class="doccomment">/// SAFETY: The offsets and size must be in-bounds.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>write_with_offset(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        data: <span class="kw-2">&amp;</span>[u8],
+        src_offset: isize,
+        dst_offset: isize,
+        size: usize,
+    ) {
+        <span class="kw">unsafe </span>{
+            core::ptr::copy_nonoverlapping(
+                data.as_ptr().offset(src_offset),
+                <span class="self">self</span>.ptr.as_ptr().offset(dst_offset),
+                size,
+            );
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>flush(<span class="self">self</span>) -&gt; FlushedStagingBuffer&lt;A&gt; {
+        <span class="kw">use </span>hal::Device;
+        <span class="kw">let </span>device = <span class="self">self</span>.device.raw();
+        <span class="kw">if </span>!<span class="self">self</span>.is_coherent {
+            <span class="kw">unsafe </span>{ device.flush_mapped_ranges(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, iter::once(<span class="number">0</span>..<span class="self">self</span>.size.get())) };
+        }
+        <span class="kw">unsafe </span>{ device.unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.raw) };
+
+        <span class="kw">let </span>StagingBuffer {
+            raw, device, size, ..
+        } = <span class="self">self</span>;
+
+        FlushedStagingBuffer {
+            raw: ManuallyDrop::new(raw),
+            device,
+            size,
         }
     }
 }
 
 <span class="macro">crate::impl_resource_type!</span>(StagingBuffer);
-<span class="comment">// TODO: add label
-</span><span class="kw">impl</span>&lt;A: HalApi&gt; Labeled <span class="kw">for </span>StagingBuffer&lt;A&gt; {
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="string">""
-    </span>}
-}
-<span class="macro">crate::impl_parent_device!</span>(StagingBuffer);
 <span class="macro">crate::impl_storage_item!</span>(StagingBuffer);
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>FlushedStagingBuffer&lt;A: HalApi&gt; {
+    raw: ManuallyDrop&lt;A::Buffer&gt;,
+    device: Arc&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferSize,
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; FlushedStagingBuffer&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::Buffer {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.raw
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>FlushedStagingBuffer&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">use </span>hal::Device;
+        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw StagingBuffer"</span>);
+        <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.raw anymore after this point.
+        </span><span class="kw">let </span>raw = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.raw) };
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw().destroy_buffer(raw) };
+    }
+}
 
 <span class="kw">pub type </span>TextureDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::TextureDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;, Vec&lt;wgt::TextureFormat&gt;&gt;;
 
