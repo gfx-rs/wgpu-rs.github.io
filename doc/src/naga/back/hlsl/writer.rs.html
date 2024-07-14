@@ -3683,6 +3683,10 @@
 <a href="#3682" id="3682">3682</a>
 <a href="#3683" id="3683">3683</a>
 <a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -3694,7 +3698,7 @@
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, NameKey},
-    valid, Handle, Module, ScalarKind, ShaderStage, TypeInner,
+    valid, Handle, Module, Scalar, ScalarKind, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>std::{fmt, mem};
 
@@ -5698,7 +5702,11 @@
                         // ownership of our reusable access chain buffer.
                         </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                         <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{var_name}.Interlocked{fun_str}("</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>width = <span class="kw">match </span>func_ctx.resolve_type(value, <span class="kw-2">&amp;</span>module.types) {
+                            <span class="kw-2">&amp;</span>TypeInner::Scalar(Scalar { width: <span class="number">8</span>, .. }) =&gt; <span class="string">"64"</span>,
+                            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
+                        };
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{var_name}.Interlocked{fun_str}{width}("</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
                         <span class="self">self</span>.temp_access_chain = chain;
                     }
@@ -6537,7 +6545,7 @@
                 <span class="kw">let </span>inner = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
                 <span class="kw">let </span>close_paren = <span class="kw">match </span>convert {
                     <span class="prelude-val">Some</span>(dst_width) =&gt; {
-                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
+                        <span class="kw">let </span>scalar = Scalar {
                             kind,
                             width: dst_width,
                         };
@@ -6898,7 +6906,7 @@
                     // as non-32bit types are DXC only.
                     </span>Function::MissingIntOverload(fun_name) =&gt; {
                         <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar();
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(Scalar {
                             kind: ScalarKind::Sint,
                             width: <span class="number">4</span>,
                         }) = scalar_kind
@@ -6916,7 +6924,7 @@
                     // as non-32bit types are DXC only.
                     </span>Function::MissingIntReturnType(fun_name) =&gt; {
                         <span class="kw">let </span>scalar_kind = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types).scalar();
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(Scalar {
                             kind: ScalarKind::Sint,
                             width: <span class="number">4</span>,
                         }) = scalar_kind
