@@ -343,7 +343,6 @@
 <a href="#342" id="342">342</a>
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         queue::{EncoderInFlight, SubmittedWorkDoneClosure, TempResource},
@@ -441,15 +440,14 @@
 ///         submission index.
 ///
 ///     3)  `handle_mapping` drains `self.ready_to_map` and actually maps the
-///         buffers, collecting a list of notification closures to call. But any
-///         buffers that were dropped by the user get moved to
-///         `self.free_resources`.
+///         buffers, collecting a list of notification closures to call.
 ///
 /// Only calling `Global::buffer_map_async` clones a new `Arc` for the
 /// buffer. This new `Arc` is only dropped by `handle_mapping`.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>LifetimeTracker&lt;A: HalApi&gt; {
-    <span class="doccomment">/// Resources that the user has requested be mapped, but which are used by
-    /// queue submissions still in flight.
+    <span class="doccomment">/// Buffers for which a call to [`Buffer::map_async`] has succeeded, but
+    /// which haven't been examined by `triage_mapped` yet to decide when they
+    /// can be mapped.
     </span>mapped: Vec&lt;Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
 
     <span class="doccomment">/// Resources used by queue submissions still in flight. One entry per
