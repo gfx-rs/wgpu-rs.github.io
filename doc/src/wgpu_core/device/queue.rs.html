@@ -1455,6 +1455,13 @@
 <a href="#1454" id="1454">1454</a>
 <a href="#1455" id="1455">1455</a>
 <a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2238,7 +2245,14 @@
         <span class="kw">if </span>stage_bytes_per_row == bytes_per_row {
             <span class="macro">profiling::scope!</span>(<span class="string">"copy aligned"</span>);
             <span class="comment">// Fast path if the data is already being aligned optimally.
-            </span>staging_buffer.write(<span class="kw-2">&amp;</span>data[data_layout.offset <span class="kw">as </span>usize..]);
+            </span><span class="kw">unsafe </span>{
+                staging_buffer.write_with_offset(
+                    data,
+                    data_layout.offset <span class="kw">as </span>isize,
+                    <span class="number">0</span>,
+                    (data.len() <span class="kw">as </span>u64 - data_layout.offset) <span class="kw">as </span>usize,
+                );
+            }
         } <span class="kw">else </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"copy chunked"</span>);
             <span class="comment">// Copy row by row into the optimal alignment.
