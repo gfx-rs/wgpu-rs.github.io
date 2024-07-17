@@ -1462,6 +1462,11 @@
 <a href="#1461" id="1461">1461</a>
 <a href="#1462" id="1462">1462</a>
 <a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2533,7 +2538,7 @@
             <span class="kw">let </span>fence = fence_guard.as_mut().unwrap();
             <span class="kw">let </span>submit_index = device
                 .active_submission_index
-                .fetch_add(<span class="number">1</span>, Ordering::Relaxed)
+                .fetch_add(<span class="number">1</span>, Ordering::SeqCst)
                 + <span class="number">1</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
 
@@ -2856,6 +2861,11 @@
                         )
                         .map_err(DeviceError::from)<span class="question-mark">?</span>;
                 }
+
+                <span class="comment">// Advance the successful submission index.
+                </span>device
+                    .last_successful_submission_index
+                    .fetch_max(submit_index, Ordering::SeqCst);
             }
 
             <span class="macro">profiling::scope!</span>(<span class="string">"cleanup"</span>);

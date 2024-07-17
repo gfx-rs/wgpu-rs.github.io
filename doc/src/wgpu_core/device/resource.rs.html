@@ -3616,6 +3616,32 @@
 <a href="#3615" id="3615">3615</a>
 <a href="#3616" id="3616">3616</a>
 <a href="#3617" id="3617">3617</a>
+<a href="#3618" id="3618">3618</a>
+<a href="#3619" id="3619">3619</a>
+<a href="#3620" id="3620">3620</a>
+<a href="#3621" id="3621">3621</a>
+<a href="#3622" id="3622">3622</a>
+<a href="#3623" id="3623">3623</a>
+<a href="#3624" id="3624">3624</a>
+<a href="#3625" id="3625">3625</a>
+<a href="#3626" id="3626">3626</a>
+<a href="#3627" id="3627">3627</a>
+<a href="#3628" id="3628">3628</a>
+<a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3706,9 +3732,28 @@
     </span>label: String,
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: command::CommandAllocator&lt;A&gt;,
-    <span class="comment">//Note: The submission index here corresponds to the last submission that is done.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: AtomicU64, <span class="comment">//SubmissionIndex,
-    // NOTE: if both are needed, the `snatchable_lock` must be consistently acquired before the
+
+    <span class="doccomment">/// The index of the last command submission that was attempted.
+    ///
+    /// Note that `fence` may never be signalled with this value, if the command
+    /// submission failed. If you need to wait for everything running on a
+    /// `Queue` to complete, wait for [`last_successful_submission_index`].
+    ///
+    /// [`last_successful_submission_index`]: Device::last_successful_submission_index
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: hal::AtomicFenceValue,
+
+    <span class="doccomment">/// The index of the last successful submission to this device's
+    /// [`hal::Queue`].
+    ///
+    /// Unlike [`active_submission_index`], which is incremented each time
+    /// submission is attempted, this is updated only when submission succeeds,
+    /// so waiting for this value won't hang waiting for work that was never
+    /// submitted.
+    ///
+    /// [`active_submission_index`]: Device::active_submission_index
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) last_successful_submission_index: hal::AtomicFenceValue,
+
+    <span class="comment">// NOTE: if both are needed, the `snatchable_lock` must be consistently acquired before the
     // `fence` lock to avoid deadlocks.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) fence: RwLock&lt;<span class="prelude-ty">Option</span>&lt;A::Fence&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) snatchable_lock: SnatchLock,
@@ -3876,6 +3921,7 @@
             label: desc.label.to_string(),
             command_allocator,
             active_submission_index: AtomicU64::new(<span class="number">0</span>),
+            last_successful_submission_index: AtomicU64::new(<span class="number">0</span>),
             fence: RwLock::new(rank::DEVICE_FENCE, <span class="prelude-val">Some</span>(fence)),
             snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new(rank::DEVICE_SNATCHABLE_LOCK) },
             valid: AtomicBool::new(<span class="bool-val">true</span>),
@@ -4006,37 +4052,41 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
 
         <span class="kw">let </span>fence = fence_guard.as_ref().unwrap();
-        <span class="kw">let </span>last_done_index = <span class="kw">if </span>maintain.is_wait() {
-            <span class="kw">let </span>index_to_wait_for = <span class="kw">match </span>maintain {
-                wgt::Maintain::WaitForSubmissionIndex(submission_index) =&gt; {
-                    <span class="comment">// We don't need to check to see if the queue id matches
-                    // as we already checked this from inside the poll call.
-                    </span>submission_index.index
-                }
-                <span class="kw">_ </span>=&gt; <span class="self">self</span>.active_submission_index.load(Ordering::Relaxed),
-            };
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.raw
-                    .as_ref()
-                    .unwrap()
-                    .wait(fence, index_to_wait_for, CLEANUP_WAIT_MS)
-                    .map_err(DeviceError::from)<span class="question-mark">?
-            </span>};
-            index_to_wait_for
-        } <span class="kw">else </span>{
-            <span class="kw">unsafe </span>{
+
+        <span class="comment">// Determine which submission index `maintain` represents.
+        </span><span class="kw">let </span>submission_index = <span class="kw">match </span>maintain {
+            wgt::Maintain::WaitForSubmissionIndex(submission_index) =&gt; {
+                <span class="comment">// We don't need to check to see if the queue id matches
+                // as we already checked this from inside the poll call.
+                </span>submission_index.index
+            }
+            wgt::Maintain::Wait =&gt; <span class="self">self
+                </span>.last_successful_submission_index
+                .load(Ordering::Acquire),
+            wgt::Maintain::Poll =&gt; <span class="kw">unsafe </span>{
                 <span class="self">self</span>.raw
                     .as_ref()
                     .unwrap()
                     .get_fence_value(fence)
                     .map_err(DeviceError::from)<span class="question-mark">?
-            </span>}
+            </span>},
         };
-        <span class="macro">log::info!</span>(<span class="string">"Device::maintain: last done index {last_done_index}"</span>);
+
+        <span class="comment">// If necessary, wait for that submission to complete.
+        </span><span class="kw">if </span>maintain.is_wait() {
+            <span class="kw">unsafe </span>{
+                <span class="self">self</span>.raw
+                    .as_ref()
+                    .unwrap()
+                    .wait(fence, submission_index, CLEANUP_WAIT_MS)
+                    .map_err(DeviceError::from)<span class="question-mark">?
+            </span>};
+        }
+        <span class="macro">log::info!</span>(<span class="string">"Device::maintain: waiting for submission index {submission_index}"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life();
         <span class="kw">let </span>submission_closures =
-            life_tracker.triage_submissions(last_done_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
+            life_tracker.triage_submissions(submission_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
 
         life_tracker.triage_mapped();
 
@@ -7205,7 +7255,9 @@
     <span class="doccomment">/// Wait for idle and remove resources that we can, before we die.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_to_die(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.pending_writes.lock().as_mut().unwrap().deactivate();
-        <span class="kw">let </span>current_index = <span class="self">self</span>.active_submission_index.load(Ordering::Relaxed);
+        <span class="kw">let </span>current_index = <span class="self">self
+            </span>.last_successful_submission_index
+            .load(Ordering::Acquire);
         <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = <span class="kw">unsafe </span>{
             <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
             <span class="kw">let </span>fence = fence.as_ref().unwrap();
