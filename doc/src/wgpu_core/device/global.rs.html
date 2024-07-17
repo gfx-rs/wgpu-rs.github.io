@@ -2587,8 +2587,6 @@
 <a href="#2586" id="2586">2586</a>
 <a href="#2587" id="2587">2587</a>
 <a href="#2588" id="2588">2588</a>
-<a href="#2589" id="2589">2589</a>
-<a href="#2590" id="2590">2590</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3976,12 +3974,18 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
+        <span class="kw">let </span>missing_implicit_pipeline_ids =
+            desc.layout.is_none() &amp;&amp; id_in.is_some() &amp;&amp; implicit_pipeline_ids.is_none();
+
         <span class="kw">let </span>fid = hub.render_pipelines.prepare(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
 
-        <span class="kw">let </span>is_auto_layout = desc.layout.is_none();
-
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
+            <span class="kw">if </span>missing_implicit_pipeline_ids {
+                <span class="comment">// TODO: categorize this error as API misuse
+                </span><span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingImplicitPipelineIds.into();
+            }
+
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::InvalidDeviceId.into(),
@@ -4096,23 +4100,18 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
-            <span class="kw">if </span>is_auto_layout {
-                <span class="comment">// TODO: categorize the errors below as API misuse
-                </span><span class="kw">let </span>ids = <span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context.as_ref() {
-                    <span class="kw">let </span>group_count = pipeline.layout.bind_group_layouts.len();
-                    <span class="kw">if </span>ids.group_ids.len() &lt; group_count {
-                        <span class="macro">log::error!</span>(
-                            <span class="string">"Not enough bind group IDs ({}) specified for the implicit layout ({})"</span>,
-                            ids.group_ids.len(),
-                            group_count
-                        );
-                        <span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(group_count <span class="kw">as _</span>)
-                            .into();
-                    }
-                    ids
-                } <span class="kw">else </span>{
-                    <span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(<span class="number">0</span>).into();
-                };
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context.as_ref() {
+                <span class="kw">let </span>group_count = pipeline.layout.bind_group_layouts.len();
+                <span class="kw">if </span>ids.group_ids.len() &lt; group_count {
+                    <span class="macro">log::error!</span>(
+                        <span class="string">"Not enough bind group IDs ({}) specified for the implicit layout ({})"</span>,
+                        ids.group_ids.len(),
+                        group_count
+                    );
+                    <span class="comment">// TODO: categorize this error as API misuse
+                    </span><span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(group_count <span class="kw">as _</span>)
+                        .into();
+                }
 
                 <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
                 <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
@@ -4143,16 +4142,14 @@
 
         <span class="kw">let </span>id = fid.assign_error();
 
-        <span class="kw">if </span>is_auto_layout {
-            <span class="comment">// We also need to assign errors to the implicit pipeline layout and the
-            // implicit bind group layouts.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context {
-                <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
-                <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
-                pipeline_layout_guard.insert_error(ids.root_id);
-                <span class="kw">for </span>bgl_id <span class="kw">in </span>ids.group_ids {
-                    bgl_guard.insert_error(bgl_id);
-                }
+        <span class="comment">// We also need to assign errors to the implicit pipeline layout and the
+        // implicit bind group layouts.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context {
+            <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
+            <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
+            pipeline_layout_guard.insert_error(ids.root_id);
+            <span class="kw">for </span>bgl_id <span class="kw">in </span>ids.group_ids {
+                bgl_guard.insert_error(bgl_id);
             }
         }
 
@@ -4220,12 +4217,18 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
+        <span class="kw">let </span>missing_implicit_pipeline_ids =
+            desc.layout.is_none() &amp;&amp; id_in.is_some() &amp;&amp; implicit_pipeline_ids.is_none();
+
         <span class="kw">let </span>fid = hub.compute_pipelines.prepare(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
 
-        <span class="kw">let </span>is_auto_layout = desc.layout.is_none();
-
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
+            <span class="kw">if </span>missing_implicit_pipeline_ids {
+                <span class="comment">// TODO: categorize this error as API misuse
+                </span><span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingImplicitPipelineIds.into();
+            }
+
             <span class="kw">let </span>device = <span class="kw">match </span>hub.devices.get(device_id) {
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>DeviceError::InvalidDeviceId.into(),
@@ -4294,23 +4297,18 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
 
-            <span class="kw">if </span>is_auto_layout {
-                <span class="comment">// TODO: categorize the errors below as API misuse
-                </span><span class="kw">let </span>ids = <span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context.as_ref() {
-                    <span class="kw">let </span>group_count = pipeline.layout.bind_group_layouts.len();
-                    <span class="kw">if </span>ids.group_ids.len() &lt; group_count {
-                        <span class="macro">log::error!</span>(
-                            <span class="string">"Not enough bind group IDs ({}) specified for the implicit layout ({})"</span>,
-                            ids.group_ids.len(),
-                            group_count
-                        );
-                        <span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(group_count <span class="kw">as _</span>)
-                            .into();
-                    }
-                    ids
-                } <span class="kw">else </span>{
-                    <span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(<span class="number">0</span>).into();
-                };
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context.as_ref() {
+                <span class="kw">let </span>group_count = pipeline.layout.bind_group_layouts.len();
+                <span class="kw">if </span>ids.group_ids.len() &lt; group_count {
+                    <span class="macro">log::error!</span>(
+                        <span class="string">"Not enough bind group IDs ({}) specified for the implicit layout ({})"</span>,
+                        ids.group_ids.len(),
+                        group_count
+                    );
+                    <span class="comment">// TODO: categorize this error as API misuse
+                    </span><span class="kw">break </span><span class="lifetime">'error </span>pipeline::ImplicitLayoutError::MissingIds(group_count <span class="kw">as _</span>)
+                        .into();
+                }
 
                 <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
                 <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
@@ -4341,16 +4339,14 @@
 
         <span class="kw">let </span>id = fid.assign_error();
 
-        <span class="kw">if </span>is_auto_layout {
-            <span class="comment">// We also need to assign errors to the implicit pipeline layout and the
-            // implicit bind group layouts.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context {
-                <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
-                <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
-                pipeline_layout_guard.insert_error(ids.root_id);
-                <span class="kw">for </span>bgl_id <span class="kw">in </span>ids.group_ids {
-                    bgl_guard.insert_error(bgl_id);
-                }
+        <span class="comment">// We also need to assign errors to the implicit pipeline layout and the
+        // implicit bind group layouts.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ids) = implicit_context {
+            <span class="kw">let </span><span class="kw-2">mut </span>pipeline_layout_guard = hub.pipeline_layouts.write();
+            <span class="kw">let </span><span class="kw-2">mut </span>bgl_guard = hub.bind_group_layouts.write();
+            pipeline_layout_guard.insert_error(ids.root_id);
+            <span class="kw">for </span>bgl_id <span class="kw">in </span>ids.group_ids {
+                bgl_guard.insert_error(bgl_id);
             }
         }
 

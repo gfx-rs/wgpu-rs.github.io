@@ -969,18 +969,18 @@
 }
 
 <span class="kw">pub struct </span>ImplicitPipelineIds&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub </span>root_id: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
-    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;BindGroupLayoutId&gt;],
+    <span class="kw">pub </span>root_id: PipelineLayoutId,
+    <span class="kw">pub </span>group_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[BindGroupLayoutId],
 }
 
 <span class="kw">impl </span>ImplicitPipelineIds&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>prepare&lt;A: HalApi&gt;(<span class="self">self</span>, hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;) -&gt; ImplicitPipelineContext {
         ImplicitPipelineContext {
-            root_id: hub.pipeline_layouts.prepare(<span class="self">self</span>.root_id).into_id(),
+            root_id: hub.pipeline_layouts.prepare(<span class="prelude-val">Some</span>(<span class="self">self</span>.root_id)).into_id(),
             group_ids: <span class="self">self
                 </span>.group_ids
                 .iter()
-                .map(|id_in| hub.bind_group_layouts.prepare(<span class="kw-2">*</span>id_in).into_id())
+                .map(|id_in| hub.bind_group_layouts.prepare(<span class="prelude-val">Some</span>(<span class="kw-2">*</span>id_in)).into_id())
                 .collect(),
         }
     }
