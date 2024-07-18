@@ -1561,10 +1561,6 @@
                 );
             };
 
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = query_set.same_device_as(cmd_buf.as_ref()) {
-                <span class="kw">return </span>make_err(e.into(), arc_desc);
-            }
-
             <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                 query_set,
                 beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
@@ -1741,6 +1737,10 @@
         state.tracker.query_sets.set_size(indices.query_sets.size());
 
         <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes.take() {
+            tw.query_set
+                .same_device_as(cmd_buf)
+                .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+
             <span class="kw">let </span>query_set = state.tracker.query_sets.insert_single(tw.query_set);
 
             <span class="comment">// Unlike in render passes we can't delay resetting the query sets since

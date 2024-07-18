@@ -3642,6 +3642,7 @@
 <a href="#3641" id="3641">3641</a>
 <a href="#3642" id="3642">3642</a>
 <a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4635,6 +4636,8 @@
         texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         desc: <span class="kw-2">&amp;</span>resource::TextureViewDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;TextureView&lt;A&gt;&gt;, resource::CreateTextureViewError&gt; {
+        <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
 
         <span class="kw">let </span>texture_raw = texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
@@ -5713,8 +5716,6 @@
         </span>used.textures
             .add_single(texture, <span class="prelude-val">Some</span>(view.selector.clone()), internal_use);
 
-        texture.same_device_as(view.as_ref())<span class="question-mark">?</span>;
-
         texture.check_usage(pub_usage)<span class="question-mark">?</span>;
 
         used_texture_ranges.push(TextureInitTrackerAction {
@@ -6763,6 +6764,7 @@
                 <span class="kw">let </span>stage = wgt::ShaderStages::FRAGMENT;
 
                 <span class="kw">let </span>shader_module = <span class="kw-2">&amp;</span>fragment_state.stage.module;
+                shader_module.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>stage_err = |error| pipeline::CreateRenderPipelineError::Stage { stage, error };
 

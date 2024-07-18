@@ -3379,6 +3379,21 @@
 <a href="#3378" id="3378">3378</a>
 <a href="#3379" id="3379">3379</a>
 <a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
+<a href="#3391" id="3391">3391</a>
+<a href="#3392" id="3392">3392</a>
+<a href="#3393" id="3393">3393</a>
+<a href="#3394" id="3394">3394</a>
+<a href="#3395" id="3395">3395</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4198,7 +4213,7 @@
     }
 
     <span class="kw">fn </span>start(
-        device: <span class="kw-2">&amp;</span><span class="lifetime">'d </span>Device&lt;A&gt;,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'d </span>Arc&lt;Device&lt;A&gt;&gt;,
         hal_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         color_attachments: ArrayVec&lt;
             <span class="prelude-ty">Option</span>&lt;ArcRenderPassColorAttachment&lt;A&gt;&gt;,
@@ -4300,6 +4315,7 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(at) = depth_stencil_attachment.as_ref() {
             <span class="kw">let </span>view = <span class="kw-2">&amp;</span>at.view;
+            view.same_device(device)<span class="question-mark">?</span>;
             check_multiview(view)<span class="question-mark">?</span>;
             add_view(view, AttachmentErrorLocation::Depth)<span class="question-mark">?</span>;
 
@@ -4430,6 +4446,7 @@
                 <span class="kw">continue</span>;
             };
             <span class="kw">let </span>color_view: <span class="kw-2">&amp;</span>TextureView&lt;A&gt; = <span class="kw-2">&amp;</span>at.view;
+            color_view.same_device(device)<span class="question-mark">?</span>;
             check_multiview(color_view)<span class="question-mark">?</span>;
             add_view(
                 color_view,
@@ -4460,6 +4477,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>hal_resolve_target = <span class="prelude-val">None</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_view) = <span class="kw-2">&amp;</span>at.resolve_target {
+                resolve_view.same_device(device)<span class="question-mark">?</span>;
                 check_multiview(resolve_view)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>resolve_location = AttachmentErrorLocation::Color {
@@ -4559,8 +4577,9 @@
             multiview,
         };
 
-        <span class="kw">let </span>timestamp_writes_hal = timestamp_writes.as_ref().map(|tw| {
+        <span class="kw">let </span>timestamp_writes_hal = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes.as_ref() {
             <span class="kw">let </span>query_set = <span class="kw-2">&amp;</span>tw.query_set;
+            query_set.same_device(device)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = tw.beginning_of_pass_write_index {
                 pending_query_resets.use_query_set(query_set, index);
@@ -4569,16 +4588,21 @@
                 pending_query_resets.use_query_set(query_set, index);
             }
 
-            hal::RenderPassTimestampWrites {
+            <span class="prelude-val">Some</span>(hal::RenderPassTimestampWrites {
                 query_set: query_set.raw.as_ref().unwrap(),
                 beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                 end_of_pass_write_index: tw.end_of_pass_write_index,
-            }
-        });
+            })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
-        <span class="kw">let </span>occlusion_query_set_hal = occlusion_query_set
-            .as_ref()
-            .map(|query_set| query_set.raw.as_ref().unwrap());
+        <span class="kw">let </span>occlusion_query_set_hal = <span class="kw">if let </span><span class="prelude-val">Some</span>(query_set) = occlusion_query_set.as_ref() {
+            query_set.same_device(device)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(query_set.raw.as_ref().unwrap())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
         <span class="kw">let </span>hal_desc = hal::RenderPassDescriptor {
             label: hal_label,
@@ -4712,7 +4736,6 @@
     ) -&gt; (RenderPass&lt;A&gt;, <span class="prelude-ty">Option</span>&lt;CommandEncoderError&gt;) {
         <span class="kw">fn </span>fill_arc_desc&lt;A: HalApi&gt;(
             hub: <span class="kw-2">&amp;</span><span class="kw">crate</span>::hub::Hub&lt;A&gt;,
-            device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
             desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
             arc_desc: <span class="kw-2">&amp;mut </span>ArcRenderPassDescriptor&lt;A&gt;,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
@@ -4729,13 +4752,11 @@
                     <span class="kw">let </span>view = texture_views
                         .get_owned(<span class="kw-2">*</span>view_id)
                         .map_err(|<span class="kw">_</span>| CommandEncoderError::InvalidAttachmentId(<span class="kw-2">*</span>view_id))<span class="question-mark">?</span>;
-                    view.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>resolve_target = <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_target_id) = resolve_target {
                         <span class="kw">let </span>rt_arc = texture_views.get_owned(<span class="kw-2">*</span>resolve_target_id).map_err(|<span class="kw">_</span>| {
                             CommandEncoderError::InvalidResolveTargetId(<span class="kw-2">*</span>resolve_target_id)
                         })<span class="question-mark">?</span>;
-                        rt_arc.same_device(device)<span class="question-mark">?</span>;
 
                         <span class="prelude-val">Some</span>(rt_arc)
                     } <span class="kw">else </span>{
@@ -4763,7 +4784,6 @@
                                 depth_stencil_attachment.view,
                             )
                         })<span class="question-mark">?</span>;
-                    view.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(ArcRenderPassDepthStencilAttachment {
                         view,
@@ -4778,7 +4798,6 @@
                 <span class="kw">let </span>query_set = query_sets.get_owned(tw.query_set).map_err(|<span class="kw">_</span>| {
                     CommandEncoderError::InvalidTimestampWritesQuerySetId(tw.query_set)
                 })<span class="question-mark">?</span>;
-                query_set.same_device(device)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                     query_set,
@@ -4794,7 +4813,6 @@
                     <span class="kw">let </span>query_set = query_sets.get_owned(occlusion_query_set).map_err(|<span class="kw">_</span>| {
                         CommandEncoderError::InvalidOcclusionQuerySetId(occlusion_query_set)
                     })<span class="question-mark">?</span>;
-                    query_set.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(query_set)
                 } <span class="kw">else </span>{
@@ -4825,7 +4843,7 @@
             <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
         };
 
-        <span class="kw">let </span>err = fill_arc_desc(hub, <span class="kw-2">&amp;</span>cmd_buf.device, desc, <span class="kw-2">&amp;mut </span>arc_desc).err();
+        <span class="kw">let </span>err = fill_arc_desc(hub, desc, <span class="kw-2">&amp;mut </span>arc_desc).err();
 
         (RenderPass::new(<span class="prelude-val">Some</span>(cmd_buf), arc_desc), err)
     }
@@ -5169,7 +5187,7 @@
                             },
                             indexed,
                         };
-                        multi_draw_indirect(<span class="kw-2">&amp;mut </span>state, buffer, offset, count, indexed)
+                        multi_draw_indirect(<span class="kw-2">&amp;mut </span>state, cmd_buf, buffer, offset, count, indexed)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     ArcRenderCommand::MultiDrawIndirectCount {
@@ -5186,6 +5204,7 @@
                         };
                         multi_draw_indirect_count(
                             <span class="kw-2">&amp;mut </span>state,
+                            cmd_buf,
                             buffer,
                             offset,
                             count_buffer,
@@ -5212,6 +5231,7 @@
                         <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
                         write_timestamp(
                             <span class="kw-2">&amp;mut </span>state,
+                            cmd_buf,
                             <span class="kw-2">&amp;mut </span>cmd_buf_data.pending_query_resets,
                             query_set,
                             query_index,
@@ -5826,6 +5846,7 @@
 
 <span class="kw">fn </span>multi_draw_indirect&lt;A: HalApi&gt;(
     state: <span class="kw-2">&amp;mut </span>State&lt;A&gt;,
+    cmd_buf: <span class="kw-2">&amp;</span>Arc&lt;CommandBuffer&lt;A&gt;&gt;,
     indirect_buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&lt;A&gt;&gt;,
     offset: u64,
     count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
@@ -5851,6 +5872,8 @@
     state
         .device
         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)<span class="question-mark">?</span>;
+
+    indirect_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
     state
         .info
@@ -5898,6 +5921,7 @@
 
 <span class="kw">fn </span>multi_draw_indirect_count&lt;A: HalApi&gt;(
     state: <span class="kw-2">&amp;mut </span>State&lt;A&gt;,
+    cmd_buf: <span class="kw-2">&amp;</span>Arc&lt;CommandBuffer&lt;A&gt;&gt;,
     indirect_buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&lt;A&gt;&gt;,
     offset: u64,
     count_buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&lt;A&gt;&gt;,
@@ -5924,6 +5948,9 @@
     state
         .device
         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)<span class="question-mark">?</span>;
+
+    indirect_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
+    count_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
     state
         .info
@@ -6055,6 +6082,7 @@
 
 <span class="kw">fn </span>write_timestamp&lt;A: HalApi&gt;(
     state: <span class="kw-2">&amp;mut </span>State&lt;A&gt;,
+    cmd_buf: <span class="kw-2">&amp;</span>CommandBuffer&lt;A&gt;,
     pending_query_resets: <span class="kw-2">&amp;mut </span>QueryResetMap&lt;A&gt;,
     query_set: Arc&lt;QuerySet&lt;A&gt;&gt;,
     query_index: u32,
@@ -6063,6 +6091,8 @@
         <span class="string">"RenderPass::write_timestamps {query_index} {}"</span>,
         query_set.error_ident()
     );
+
+    query_set.same_device_as(cmd_buf)<span class="question-mark">?</span>;
 
     state
         .device
