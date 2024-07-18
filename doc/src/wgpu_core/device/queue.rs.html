@@ -1458,15 +1458,6 @@
 <a href="#1457" id="1457">1457</a>
 <a href="#1458" id="1458">1458</a>
 <a href="#1459" id="1459">1459</a>
-<a href="#1460" id="1460">1460</a>
-<a href="#1461" id="1461">1461</a>
-<a href="#1462" id="1462">1462</a>
-<a href="#1463" id="1463">1463</a>
-<a href="#1464" id="1464">1464</a>
-<a href="#1465" id="1465">1465</a>
-<a href="#1466" id="1466">1466</a>
-<a href="#1467" id="1467">1467</a>
-<a href="#1468" id="1468">1468</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1876,7 +1867,6 @@
         // `device.pending_writes.consume`.
         </span><span class="kw">let </span><span class="kw-2">mut </span>staging_buffer = StagingBuffer::new(device, data_size)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
         <span class="kw">let </span>staging_buffer = {
             <span class="macro">profiling::scope!</span>(<span class="string">"copy"</span>);
@@ -1887,7 +1877,7 @@
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
             <span class="kw-2">&amp;</span>queue,
             device,
-            pending_writes,
+            <span class="kw-2">&amp;mut </span>pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
             buffer_id,
             buffer_offset,
@@ -1947,7 +1937,6 @@
             .ok_or_else(|| QueueWriteError::Transfer(TransferError::InvalidBufferId(buffer_id)))<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
         <span class="comment">// At this point, we have taken ownership of the staging_buffer from the
         // user. Platform validation requires that the staging buffer always
@@ -1958,7 +1947,7 @@
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
             <span class="kw-2">&amp;</span>queue,
             device,
-            pending_writes,
+            <span class="kw-2">&amp;mut </span>pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
             buffer_id,
             buffer_offset,
@@ -2182,7 +2171,6 @@
             wgt::BufferSize::new(stage_bytes_per_row <span class="kw">as </span>u64 * block_rows_in_copy <span class="kw">as </span>u64).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
         <span class="kw">let </span>encoder = pending_writes.activate();
 
         <span class="comment">// If the copy does not fully cover the layers, we need to initialize to
@@ -2436,7 +2424,7 @@
             extract_texture_selector(<span class="kw-2">&amp;</span>destination.to_untagged(), <span class="kw-2">&amp;</span>size, <span class="kw-2">&amp;</span>dst)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
-        <span class="kw">let </span>encoder = pending_writes.as_mut().unwrap().activate();
+        <span class="kw">let </span>encoder = pending_writes.activate();
 
         <span class="comment">// If the copy does not fully cover the layers, we need to initialize to
         // zero *first* as we don't keep track of partial texture layer inits.
@@ -2784,8 +2772,7 @@
                 }
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>pending_writes_guard = device.pending_writes.lock();
-            <span class="kw">let </span>pending_writes = pending_writes_guard.as_mut().unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
 
             {
                 used_surface_textures.set_size(hub.textures.read().len());
@@ -2871,17 +2858,12 @@
             <span class="macro">profiling::scope!</span>(<span class="string">"cleanup"</span>);
 
             <span class="comment">// this will register the new submission to the life time tracker
-            </span><span class="kw">let </span><span class="kw-2">mut </span>pending_write_resources = mem::take(<span class="kw-2">&amp;mut </span>pending_writes.temp_resources);
-            device.lock_life().track_submission(
+            </span>device.lock_life().track_submission(
                 submit_index,
-                pending_write_resources.drain(..),
+                pending_writes.temp_resources.drain(..),
                 active_executions,
             );
-
-            <span class="comment">// pending_write_resources has been drained, so it's empty, but we
-            // want to retain its heap allocation.
-            </span>pending_writes.temp_resources = pending_write_resources;
-            drop(pending_writes_guard);
+            drop(pending_writes);
 
             <span class="comment">// This will schedule destruction of all resources that are no longer needed
             // by the user but used in the command stream, among other things.

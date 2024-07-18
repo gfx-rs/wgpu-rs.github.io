@@ -3643,6 +3643,11 @@
 <a href="#3642" id="3642">3642</a>
 <a href="#3643" id="3643">3643</a>
 <a href="#3644" id="3644">3644</a>
+<a href="#3645" id="3645">3645</a>
+<a href="#3646" id="3646">3646</a>
+<a href="#3647" id="3647">3647</a>
+<a href="#3648" id="3648">3648</a>
+<a href="#3649" id="3649">3649</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3691,6 +3696,7 @@
 <span class="kw">use </span>std::{
     borrow::Cow,
     iter,
+    mem::ManuallyDrop,
     num::NonZeroU32,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -3787,7 +3793,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) features: wgt::Features,
     <span class="kw">pub</span>(<span class="kw">crate</span>) downlevel: wgt::DownlevelCapabilities,
     <span class="kw">pub</span>(<span class="kw">crate</span>) instance_flags: wgt::InstanceFlags,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) pending_writes: Mutex&lt;<span class="prelude-ty">Option</span>&lt;PendingWrites&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pending_writes: Mutex&lt;ManuallyDrop&lt;PendingWrites&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) deferred_destroy: Mutex&lt;Vec&lt;DeferredDestroy&lt;A&gt;&gt;&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
@@ -3814,7 +3820,8 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
         <span class="kw">let </span>raw = <span class="self">self</span>.raw.take().unwrap();
-        <span class="kw">let </span>pending_writes = <span class="self">self</span>.pending_writes.lock().take().unwrap();
+        <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.pending_writes anymore after this point.
+        </span><span class="kw">let </span>pending_writes = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.pending_writes.lock()) };
         pending_writes.dispose(<span class="kw-2">&amp;</span>raw);
         <span class="self">self</span>.command_allocator.dispose(<span class="kw-2">&amp;</span>raw);
         <span class="kw">unsafe </span>{
@@ -3952,7 +3959,10 @@
             features: desc.required_features,
             downlevel,
             instance_flags,
-            pending_writes: Mutex::new(rank::DEVICE_PENDING_WRITES, <span class="prelude-val">Some</span>(pending_writes)),
+            pending_writes: Mutex::new(
+                rank::DEVICE_PENDING_WRITES,
+                ManuallyDrop::new(pending_writes),
+            ),
             deferred_destroy: Mutex::new(rank::DEVICE_DEFERRED_DESTROY, Vec::new()),
             usage_scopes: Mutex::new(rank::DEVICE_USAGE_SCOPES, Default::default()),
         })
@@ -7256,7 +7266,7 @@
 
     <span class="doccomment">/// Wait for idle and remove resources that we can, before we die.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_to_die(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.pending_writes.lock().as_mut().unwrap().deactivate();
+        <span class="self">self</span>.pending_writes.lock().deactivate();
         <span class="kw">let </span>current_index = <span class="self">self
             </span>.last_successful_submission_index
             .load(Ordering::Acquire);
