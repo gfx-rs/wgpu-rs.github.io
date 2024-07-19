@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BindingError","BindingLayoutSource","FilteringError","InputError","StageError"],"fn":["check_texture_format","validate_color_attachment_bytes_per_sample"],"struct":["Interface","InterfaceVar","NumericType"],"type":["StageIo"]};
