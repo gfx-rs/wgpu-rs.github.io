@@ -5984,6 +5984,14 @@
 <a href="#5983" id="5983">5983</a>
 <a href="#5984" id="5984">5984</a>
 <a href="#5985" id="5985">5985</a>
+<a href="#5986" id="5986">5986</a>
+<a href="#5987" id="5987">5987</a>
+<a href="#5988" id="5988">5988</a>
+<a href="#5989" id="5989">5989</a>
+<a href="#5990" id="5990">5990</a>
+<a href="#5991" id="5991">5991</a>
+<a href="#5992" id="5992">5992</a>
+<a href="#5993" id="5993">5993</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -9939,8 +9947,8 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::float2((float(b0) - 128.0f) / 255.0f, \
-                                            (float(b1) - 128.0f) / 255.0f);"</span>,
+                    <span class="string">"{}return metal::float2(metal::max(-1.0f, as_type&lt;char&gt;(b0) / 127.0f), \
+                                            metal::max(-1.0f, as_type&lt;char&gt;(b1) / 127.0f));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -9957,10 +9965,10 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::float4((float(b0) - 128.0f) / 255.0f, \
-                                            (float(b1) - 128.0f) / 255.0f, \
-                                            (float(b2) - 128.0f) / 255.0f, \
-                                            (float(b3) - 128.0f) / 255.0f);"</span>,
+                    <span class="string">"{}return metal::float4(metal::max(-1.0f, as_type&lt;char&gt;(b0) / 127.0f), \
+                                            metal::max(-1.0f, as_type&lt;char&gt;(b1) / 127.0f), \
+                                            metal::max(-1.0f, as_type&lt;char&gt;(b2) / 127.0f), \
+                                            metal::max(-1.0f, as_type&lt;char&gt;(b3) / 127.0f));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10019,8 +10027,8 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::int2(as_type&lt;metal::short&gt;(b1 &lt;&lt; 8 | b0), \
-                                          as_type&lt;metal::short&gt;(b3 &lt;&lt; 8 | b2));"</span>,
+                    <span class="string">"{}return metal::int2(as_type&lt;short&gt;(metal::ushort(b1 &lt;&lt; 8 | b0)), \
+                                          as_type&lt;short&gt;(metal::ushort(b3 &lt;&lt; 8 | b2)));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10041,10 +10049,10 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::int4(as_type&lt;metal::short&gt;(b1 &lt;&lt; 8 | b0), \
-                                          as_type&lt;metal::short&gt;(b3 &lt;&lt; 8 | b2), \
-                                          as_type&lt;metal::short&gt;(b5 &lt;&lt; 8 | b4), \
-                                          as_type&lt;metal::short&gt;(b7 &lt;&lt; 8 | b6));"</span>,
+                    <span class="string">"{}return metal::int4(as_type&lt;short&gt;(metal::ushort(b1 &lt;&lt; 8 | b0)), \
+                                          as_type&lt;short&gt;(metal::ushort(b3 &lt;&lt; 8 | b2)), \
+                                          as_type&lt;short&gt;(metal::ushort(b5 &lt;&lt; 8 | b4)), \
+                                          as_type&lt;short&gt;(metal::ushort(b7 &lt;&lt; 8 | b6)));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10103,8 +10111,7 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::float2((float(b1 &lt;&lt; 8 | b0) - 32767.0f) / 65535.0f, \
-                                            (float(b3 &lt;&lt; 8 | b2) - 32767.0f) / 65535.0f);"</span>,
+                    <span class="string">"{}return metal::unpack_snorm2x16_to_float(b1 &lt;&lt; 24 | b0 &lt;&lt; 16 | b3 &lt;&lt; 8 | b2);"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10125,10 +10132,8 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::float4((float(b1 &lt;&lt; 8 | b0) - 32767.0f) / 65535.0f, \
-                                            (float(b3 &lt;&lt; 8 | b2) - 32767.0f) / 65535.0f, \
-                                            (float(b5 &lt;&lt; 8 | b4) - 32767.0f) / 65535.0f, \
-                                            (float(b7 &lt;&lt; 8 | b6) - 32767.0f) / 65535.0f);"</span>,
+                    <span class="string">"{}return metal::float4(metal::unpack_snorm2x16_to_float(b1 &lt;&lt; 24 | b0 &lt;&lt; 16 | b3 &lt;&lt; 8 | b2), \
+                                            metal::unpack_snorm2x16_to_float(b5 &lt;&lt; 24 | b4 &lt;&lt; 16 | b7 &lt;&lt; 8 | b6));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10145,8 +10150,8 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::float2(as_type&lt;metal::half&gt;(b1 &lt;&lt; 8 | b0), \
-                                            as_type&lt;metal::half&gt;(b3 &lt;&lt; 8 | b2));"</span>,
+                    <span class="string">"{}return metal::float2(as_type&lt;half&gt;(metal::ushort(b1 &lt;&lt; 8 | b0)), \
+                                            as_type&lt;half&gt;(metal::ushort(b3 &lt;&lt; 8 | b2)));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10156,7 +10161,7 @@
                 <span class="kw">let </span>name = <span class="self">self</span>.namer.call(<span class="string">"unpackFloat16x4"</span>);
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"metal::int4 {name}(metal::ushort b0, \
+                    <span class="string">"metal::float4 {name}(metal::ushort b0, \
                                         metal::ushort b1, \
                                         metal::ushort b2, \
                                         metal::ushort b3, \
@@ -10167,10 +10172,10 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return metal::int4(as_type&lt;metal::half&gt;(b1 &lt;&lt; 8 | b0), \
-                                          as_type&lt;metal::half&gt;(b3 &lt;&lt; 8 | b2), \
-                                          as_type&lt;metal::half&gt;(b5 &lt;&lt; 8 | b4), \
-                                          as_type&lt;metal::half&gt;(b7 &lt;&lt; 8 | b6));"</span>,
+                    <span class="string">"{}return metal::float4(as_type&lt;half&gt;(metal::ushort(b1 &lt;&lt; 8 | b0)), \
+                                          as_type&lt;half&gt;(metal::ushort(b3 &lt;&lt; 8 | b2)), \
+                                          as_type&lt;half&gt;(metal::ushort(b5 &lt;&lt; 8 | b4)), \
+                                          as_type&lt;half&gt;(metal::ushort(b7 &lt;&lt; 8 | b6)));"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -10376,10 +10381,10 @@
                 <span class="kw">let </span>name = <span class="self">self</span>.namer.call(<span class="string">"unpackSint32"</span>);
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"metal::int {name}(uint b0, \
-                                       uint b1, \
-                                       uint b2, \
-                                       uint b3) {{"
+                    <span class="string">"int {name}(uint b0, \
+                                uint b1, \
+                                uint b2, \
+                                uint b3) {{"
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
@@ -10481,7 +10486,18 @@
                 </span>)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">"{}return unpack_unorm10a2_to_float(b3 &lt;&lt; 24 | b2 &lt;&lt; 16 | b1 &lt;&lt; 8 | b0);"</span>,
+                    <span class="comment">// The following is correct for RGBA packing, but our format seems to
+                    // match ABGR, which can be fed into the Metal builtin function
+                    // unpack_unorm10a2_to_float.
+                    /*
+                    "{}uint v = (b3 &lt;&lt; 24 | b2 &lt;&lt; 16 | b1 &lt;&lt; 8 | b0); \
+                       uint r = (v &amp; 0xFFC00000) &gt;&gt; 22; \
+                       uint g = (v &amp; 0x003FF000) &gt;&gt; 12; \
+                       uint b = (v &amp; 0x00000FFC) &gt;&gt; 2; \
+                       uint a = (v &amp; 0x00000003); \
+                       return metal::float4(float(r) / 1023.0f, float(g) / 1023.0f, float(b) / 1023.0f, float(a) / 3.0f);",
+                    */
+                    </span><span class="string">"{}return metal::unpack_unorm10a2_to_float(b3 &lt;&lt; 24 | b2 &lt;&lt; 16 | b1 &lt;&lt; 8 | b0);"</span>,
                     back::INDENT
                 )<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
