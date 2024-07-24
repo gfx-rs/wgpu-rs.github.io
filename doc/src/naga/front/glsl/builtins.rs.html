@@ -2313,6 +2313,10 @@
 <a href="#2312" id="2312">2312</a>
 <a href="#2313" id="2313">2313</a>
 <a href="#2314" id="2314">2314</a>
+<a href="#2315" id="2315">2315</a>
+<a href="#2316" id="2316">2316</a>
+<a href="#2317" id="2317">2317</a>
+<a href="#2318" id="2318">2318</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         BuiltinVariations, FunctionDeclaration, FunctionKind, Overload, ParameterInfo,
@@ -2961,8 +2965,8 @@
                 <span class="string">"bitfieldReverse" </span>=&gt; MathFunction::ReverseBits,
                 <span class="string">"bitfieldExtract" </span>=&gt; MathFunction::ExtractBits,
                 <span class="string">"bitfieldInsert" </span>=&gt; MathFunction::InsertBits,
-                <span class="string">"findLSB" </span>=&gt; MathFunction::FindLsb,
-                <span class="string">"findMSB" </span>=&gt; MathFunction::FindMsb,
+                <span class="string">"findLSB" </span>=&gt; MathFunction::FirstTrailingBit,
+                <span class="string">"findMSB" </span>=&gt; MathFunction::FirstLeadingBit,
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
 
@@ -3010,8 +3014,12 @@
                 <span class="comment">// we need to cast the return type of findLsb / findMsb
                 </span><span class="kw">let </span>mc = <span class="kw">if </span>scalar.kind == Sk::Uint {
                     <span class="kw">match </span>mc {
-                        MacroCall::MathFunction(MathFunction::FindLsb) =&gt; MacroCall::FindLsbUint,
-                        MacroCall::MathFunction(MathFunction::FindMsb) =&gt; MacroCall::FindMsbUint,
+                        MacroCall::MathFunction(MathFunction::FirstTrailingBit) =&gt; {
+                            MacroCall::FindLsbUint
+                        }
+                        MacroCall::MathFunction(MathFunction::FirstLeadingBit) =&gt; {
+                            MacroCall::FindMsbUint
+                        }
                         mc =&gt; mc,
                     }
                 } <span class="kw">else </span>{
@@ -4102,8 +4110,8 @@
             )<span class="question-mark">?</span>,
             mc @ (MacroCall::FindLsbUint | MacroCall::FindMsbUint) =&gt; {
                 <span class="kw">let </span>fun = <span class="kw">match </span>mc {
-                    MacroCall::FindLsbUint =&gt; MathFunction::FindLsb,
-                    MacroCall::FindMsbUint =&gt; MathFunction::FindMsb,
+                    MacroCall::FindLsbUint =&gt; MathFunction::FirstTrailingBit,
+                    MacroCall::FindMsbUint =&gt; MathFunction::FirstLeadingBit,
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
                 <span class="kw">let </span>res = ctx.add_expression(
