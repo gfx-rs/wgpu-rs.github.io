@@ -1609,10 +1609,6 @@
 <a href="#1608" id="1608">1608</a>
 <a href="#1609" id="1609">1609</a>
 <a href="#1610" id="1610">1610</a>
-<a href="#1611" id="1611">1611</a>
-<a href="#1612" id="1612">1612</a>
-<a href="#1613" id="1613">1613</a>
-<a href="#1614" id="1614">1614</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1624,8 +1620,6 @@
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="attr">#[cfg(native)]
-</span><span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 
 <span class="kw">type </span>ShaderStage&lt;<span class="lifetime">'a</span>&gt; = (
@@ -1793,9 +1787,7 @@
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ gl.create_shader(target) }.unwrap();
         <span class="attr">#[cfg(native)]
         </span><span class="kw">if </span>gl.supports_debug() {
-            <span class="comment">//TODO: remove all transmutes from `object_label`
-            // https://github.com/grovesNL/glow/issues/186
-            </span><span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
+            <span class="kw">let </span>name = raw.<span class="number">0</span>.get();
             <span class="kw">unsafe </span>{ gl.object_label(glow::SHADER, name, label) };
         }
 
@@ -1981,7 +1973,7 @@
         <span class="attr">#[cfg(native)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
             <span class="kw">if </span>private_caps.contains(PrivateCapabilities::DEBUG_FNS) {
-                <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(program) };
+                <span class="kw">let </span>name = program.<span class="number">0</span>.get();
                 <span class="kw">unsafe </span>{ gl.object_label(glow::PROGRAM, name, <span class="prelude-val">Some</span>(label)) };
             }
         }
@@ -2236,7 +2228,7 @@
                 .private_caps
                 .contains(PrivateCapabilities::DEBUG_FNS)
             {
-                <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
+                <span class="kw">let </span>name = raw.map_or(<span class="number">0</span>, |buf| buf.<span class="number">0</span>.get());
                 <span class="kw">unsafe </span>{ gl.object_label(glow::BUFFER, name, <span class="prelude-val">Some</span>(label)) };
             }
         }
@@ -2383,7 +2375,7 @@
                     .private_caps
                     .contains(PrivateCapabilities::DEBUG_FNS)
                 {
-                    <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
+                    <span class="kw">let </span>name = raw.<span class="number">0</span>.get();
                     <span class="kw">unsafe </span>{ gl.object_label(glow::RENDERBUFFER, name, <span class="prelude-val">Some</span>(label)) };
                 }
             }
@@ -2551,7 +2543,7 @@
                     .private_caps
                     .contains(PrivateCapabilities::DEBUG_FNS)
                 {
-                    <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
+                    <span class="kw">let </span>name = raw.<span class="number">0</span>.get();
                     <span class="kw">unsafe </span>{ gl.object_label(glow::TEXTURE, name, <span class="prelude-val">Some</span>(label)) };
                 }
             }
@@ -2703,7 +2695,7 @@
                 .private_caps
                 .contains(PrivateCapabilities::DEBUG_FNS)
             {
-                <span class="kw">let </span>name = <span class="kw">unsafe </span>{ mem::transmute(raw) };
+                <span class="kw">let </span>name = raw.<span class="number">0</span>.get();
                 <span class="kw">unsafe </span>{ gl.object_label(glow::SAMPLER, name, <span class="prelude-val">Some</span>(label)) };
             }
         }
