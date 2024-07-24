@@ -2415,6 +2415,26 @@
 <a href="#2414" id="2414">2414</a>
 <a href="#2415" id="2415">2415</a>
 <a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a>
+<a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -2454,9 +2474,30 @@
     /// [`Function::locals`]: ast::Function::locals
     </span>local_table: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>SymbolTable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'input </span>str, Handle&lt;ast::Local&gt;&gt;,
 
-    <span class="doccomment">/// The [`Function::locals`] arena for the function we're building.
+    <span class="doccomment">/// Local variable and function argument arena for the function we're building.
     ///
-    /// [`Function::locals`]: ast::Function::locals
+    /// Note that the `Local` here is actually a zero-sized type. The AST keeps
+    /// all the detailed information about locals - names, types, etc. - in
+    /// [`LocalDecl`] statements. For arguments, that information is kept in
+    /// [`arguments`]. This `Arena`'s only role is to assign a unique `Handle`
+    /// to each of them, and track their definitions' spans for use in
+    /// diagnostics.
+    ///
+    /// In the AST, when an [`Ident`] expression refers to a local variable or
+    /// argument, its [`IdentExpr`] holds the referent's `Handle&lt;Local&gt;` in this
+    /// arena.
+    ///
+    /// During lowering, [`LocalDecl`] statements add entries to a per-function
+    /// table that maps `Handle&lt;Local&gt;` values to their Naga representations,
+    /// accessed via [`StatementContext::local_table`] and
+    /// [`RuntimeExpressionContext::local_table`]. This table is then consulted when
+    /// lowering subsequent [`Ident`] expressions.
+    ///
+    /// [`LocalDecl`]: StatementKind::LocalDecl
+    /// [`arguments`]: Function::arguments
+    /// [`Ident`]: Expression::Ident
+    /// [`StatementContext::local_table`]: StatementContext::local_table
+    /// [`RuntimeExpressionContext::local_table`]: RuntimeExpressionContext::local_table
     </span>locals: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>Arena&lt;ast::Local&gt;,
 
     <span class="doccomment">/// Identifiers used by the current global declaration that have no local definition.
@@ -4575,7 +4616,6 @@
             arguments,
             result,
             body,
-            locals,
         };
 
         <span class="comment">// done
