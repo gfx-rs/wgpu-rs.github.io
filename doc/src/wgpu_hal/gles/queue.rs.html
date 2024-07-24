@@ -1799,7 +1799,6 @@
 <a href="#1798" id="1798">1798</a>
 <a href="#1799" id="1799">1799</a>
 <a href="#1800" id="1800">1800</a>
-<a href="#1801" id="1801">1801</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -2757,7 +2756,7 @@
                     }
                     <span class="kw">let </span>query_data = <span class="kw">unsafe </span>{
                         slice::from_raw_parts(
-                            temp_query_results.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
+                            temp_query_results.as_ptr().cast::&lt;u8&gt;(),
                             temp_query_results.len() * mem::size_of::&lt;u64&gt;(),
                         )
                     };
@@ -3328,8 +3327,7 @@
 
                     <span class="macro">debug_assert_eq!</span>(data_required, raw.len());
 
-                    <span class="kw">let </span>slice: <span class="kw-2">&amp;</span>[T] =
-                        <span class="kw">unsafe </span>{ slice::from_raw_parts(raw.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, COUNT) };
+                    <span class="kw">let </span>slice: <span class="kw-2">&amp;</span>[T] = <span class="kw">unsafe </span>{ slice::from_raw_parts(raw.as_ptr().cast(), COUNT) };
 
                     slice.try_into().unwrap()
                 }

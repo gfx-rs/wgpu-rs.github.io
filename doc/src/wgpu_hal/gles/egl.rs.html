@@ -1462,6 +1462,9 @@
 <a href="#1461" id="1461">1461</a>
 <a href="#1462" id="1462">1462</a>
 <a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
@@ -2383,7 +2386,10 @@
 
                 <span class="kw">let </span>ret = <span class="kw">unsafe </span>{
                     ndk_sys::ANativeWindow_setBuffersGeometry(
-                        handle.a_native_window.as_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>ndk_sys::ANativeWindow,
+                        handle
+                            .a_native_window
+                            .as_ptr()
+                            .cast::&lt;ndk_sys::ANativeWindow&gt;(),
                         <span class="number">0</span>,
                         <span class="number">0</span>,
                         format,
@@ -2693,12 +2699,12 @@
                 </span><span class="kw">let </span>native_window_ptr = <span class="kw">match </span>(<span class="self">self</span>.wsi.kind, <span class="self">self</span>.raw_window_handle) {
                     (WindowKind::Unknown | WindowKind::X11, Rwh::Xlib(handle)) =&gt; {
                         temp_xlib_handle = handle.window;
-                        <span class="kw-2">&amp;mut </span>temp_xlib_handle <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>ffi::c_void
+                        ptr::from_mut(<span class="kw-2">&amp;mut </span>temp_xlib_handle).cast::&lt;ffi::c_void&gt;()
                     }
                     (WindowKind::AngleX11, Rwh::Xlib(handle)) =&gt; handle.window <span class="kw">as </span><span class="kw-2">*mut </span>ffi::c_void,
                     (WindowKind::Unknown | WindowKind::X11, Rwh::Xcb(handle)) =&gt; {
                         temp_xcb_handle = handle.window;
-                        <span class="kw-2">&amp;mut </span>temp_xcb_handle <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>ffi::c_void
+                        ptr::from_mut(<span class="kw-2">&amp;mut </span>temp_xcb_handle).cast::&lt;ffi::c_void&gt;()
                     }
                     (WindowKind::AngleX11, Rwh::Xcb(handle)) =&gt; {
                         handle.window.get() <span class="kw">as </span><span class="kw-2">*mut </span>ffi::c_void
@@ -2712,7 +2718,7 @@
                             <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_create"</span>) }.unwrap();
                         <span class="kw">let </span>window =
                             <span class="kw">unsafe </span>{ wl_egl_window_create(handle.surface.as_ptr(), <span class="number">640</span>, <span class="number">480</span>) }
-                                <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>;
+                                .cast();
                         wl_window = <span class="prelude-val">Some</span>(window);
                         window
                     }
@@ -2729,8 +2735,8 @@
                             <span class="kw">use </span>objc::{msg_send, runtime::Object, sel, sel_impl};
                             <span class="comment">// ns_view always have a layer and don't need to verify that it exists.
                             </span><span class="kw">let </span>layer: <span class="kw-2">*mut </span>Object =
-                                <span class="macro">msg_send!</span>[handle.ns_view.as_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>Object, layer];
-                            layer <span class="kw">as </span><span class="kw-2">*mut </span>ffi::c_void
+                                <span class="macro">msg_send!</span>[handle.ns_view.as_ptr().cast::&lt;Object&gt;(), layer];
+                            layer.cast::&lt;ffi::c_void&gt;()
                         };
                         window_ptr
                     }

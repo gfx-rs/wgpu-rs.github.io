@@ -2835,7 +2835,7 @@
             <span class="self">self</span>.raw
                 .map_memory(<span class="kw-2">*</span>memory, offset, size, vk::MemoryMapFlags::empty())
         } {
-            <span class="prelude-val">Ok</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr::NonNull::new(ptr <span class="kw">as </span><span class="kw-2">*mut </span>u8)
+            <span class="prelude-val">Ok</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr::NonNull::new(ptr.cast::&lt;u8&gt;())
                 .expect(<span class="string">"Pointer to memory mapping must not be null"</span>)),
             <span class="prelude-val">Err</span>(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::OutOfDeviceMemory)
@@ -4005,7 +4005,7 @@
                     // SAFETY: similar to safety notes for `slice_get_ref`, but we have a
                     // mutable reference which is also guaranteed to be valid for writes.
                     </span><span class="kw">unsafe </span>{
-                        <span class="kw-2">&amp;mut *</span>(to_init <span class="kw">as </span><span class="kw-2">*mut </span>[MaybeUninit&lt;T&gt;] <span class="kw">as </span><span class="kw-2">*mut </span>[T])
+                        <span class="kw-2">&amp;mut *</span>(ptr::from_mut::&lt;[MaybeUninit&lt;T&gt;]&gt;(to_init) <span class="kw">as </span><span class="kw-2">*mut </span>[T])
                     }
                 };
                 (<span class="self">Self </span>{ remainder }, init)
