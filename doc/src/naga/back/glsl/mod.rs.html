@@ -4791,6 +4791,72 @@
 <a href="#4790" id="4790">4790</a>
 <a href="#4791" id="4791">4791</a>
 <a href="#4792" id="4792">4792</a>
+<a href="#4793" id="4793">4793</a>
+<a href="#4794" id="4794">4794</a>
+<a href="#4795" id="4795">4795</a>
+<a href="#4796" id="4796">4796</a>
+<a href="#4797" id="4797">4797</a>
+<a href="#4798" id="4798">4798</a>
+<a href="#4799" id="4799">4799</a>
+<a href="#4800" id="4800">4800</a>
+<a href="#4801" id="4801">4801</a>
+<a href="#4802" id="4802">4802</a>
+<a href="#4803" id="4803">4803</a>
+<a href="#4804" id="4804">4804</a>
+<a href="#4805" id="4805">4805</a>
+<a href="#4806" id="4806">4806</a>
+<a href="#4807" id="4807">4807</a>
+<a href="#4808" id="4808">4808</a>
+<a href="#4809" id="4809">4809</a>
+<a href="#4810" id="4810">4810</a>
+<a href="#4811" id="4811">4811</a>
+<a href="#4812" id="4812">4812</a>
+<a href="#4813" id="4813">4813</a>
+<a href="#4814" id="4814">4814</a>
+<a href="#4815" id="4815">4815</a>
+<a href="#4816" id="4816">4816</a>
+<a href="#4817" id="4817">4817</a>
+<a href="#4818" id="4818">4818</a>
+<a href="#4819" id="4819">4819</a>
+<a href="#4820" id="4820">4820</a>
+<a href="#4821" id="4821">4821</a>
+<a href="#4822" id="4822">4822</a>
+<a href="#4823" id="4823">4823</a>
+<a href="#4824" id="4824">4824</a>
+<a href="#4825" id="4825">4825</a>
+<a href="#4826" id="4826">4826</a>
+<a href="#4827" id="4827">4827</a>
+<a href="#4828" id="4828">4828</a>
+<a href="#4829" id="4829">4829</a>
+<a href="#4830" id="4830">4830</a>
+<a href="#4831" id="4831">4831</a>
+<a href="#4832" id="4832">4832</a>
+<a href="#4833" id="4833">4833</a>
+<a href="#4834" id="4834">4834</a>
+<a href="#4835" id="4835">4835</a>
+<a href="#4836" id="4836">4836</a>
+<a href="#4837" id="4837">4837</a>
+<a href="#4838" id="4838">4838</a>
+<a href="#4839" id="4839">4839</a>
+<a href="#4840" id="4840">4840</a>
+<a href="#4841" id="4841">4841</a>
+<a href="#4842" id="4842">4842</a>
+<a href="#4843" id="4843">4843</a>
+<a href="#4844" id="4844">4844</a>
+<a href="#4845" id="4845">4845</a>
+<a href="#4846" id="4846">4846</a>
+<a href="#4847" id="4847">4847</a>
+<a href="#4848" id="4848">4848</a>
+<a href="#4849" id="4849">4849</a>
+<a href="#4850" id="4850">4850</a>
+<a href="#4851" id="4851">4851</a>
+<a href="#4852" id="4852">4852</a>
+<a href="#4853" id="4853">4853</a>
+<a href="#4854" id="4854">4854</a>
+<a href="#4855" id="4855">4855</a>
+<a href="#4856" id="4856">4856</a>
+<a href="#4857" id="4857">4857</a>
+<a href="#4858" id="4858">4858</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -5338,6 +5404,11 @@ to output a [`Module`](crate::Module) into glsl
     </span>named_expressions: <span class="kw">crate</span>::NamedExpressions,
     <span class="doccomment">/// Set of expressions that need to be baked to avoid unnecessary repetition in output
     </span>need_bake_expressions: back::NeedBakeExpressions,
+    <span class="doccomment">/// Information about nesting of loops and switches.
+    ///
+    /// Used for forwarding continue statements in switches that have been
+    /// transformed to `do {} while(false);` loops.
+    </span>continue_ctx: back::continue_forward::ContinueCtx,
     <span class="doccomment">/// How many views to render to, if doing multiview rendering.
     </span>multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
     <span class="doccomment">/// Mapping of varying variables to their location. Needed for reflections.
@@ -5412,6 +5483,7 @@ to output a [`Module`](crate::Module) into glsl
             block_id: IdGenerator::default(),
             named_expressions: Default::default(),
             need_bake_expressions: Default::default(),
+            continue_ctx: back::continue_forward::ContinueCtx::default(),
             varying: Default::default(),
         };
 
@@ -6875,43 +6947,95 @@ to output a [`Module`](crate::Module) into glsl
                 selector,
                 <span class="kw-2">ref </span>cases,
             } =&gt; {
-                <span class="comment">// Start the switch
-                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"switch("</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_expr(selector, ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>l2 = level.next();
+                <span class="comment">// Some GLSL consumers may not handle switches with a single
+                // body correctly: See wgpu#4514. Write such switch statements
+                // as a `do {} while(false);` loop instead.
+                //
+                // Since doing so may inadvertently capture `continue`
+                // statements in the switch body, we must apply continue
+                // forwarding. See the `naga::back::continue_forward` module
+                // docs for details.
+                </span><span class="kw">let </span>one_body = cases
+                    .iter()
+                    .rev()
+                    .skip(<span class="number">1</span>)
+                    .all(|case| case.fall_through &amp;&amp; case.body.is_empty());
+                <span class="kw">if </span>one_body {
+                    <span class="comment">// Unlike HLSL, in GLSL `continue_ctx` only needs to know
+                    // about [`Switch`] statements that are being rendered as
+                    // `do-while` loops.
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(variable) = <span class="self">self</span>.continue_ctx.enter_switch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.namer) {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}bool {variable} = false;"</span>,)<span class="question-mark">?</span>;
+                    };
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}do {{"</span>)<span class="question-mark">?</span>;
+                    <span class="comment">// Note: Expressions have no side-effects so we don't need to emit selector expression.
 
-                <span class="comment">// Write all cases
-                </span><span class="kw">let </span>l2 = level.next();
-                <span class="kw">for </span>case <span class="kw">in </span>cases {
-                    <span class="kw">match </span>case.value {
-                        <span class="kw">crate</span>::SwitchValue::I32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}case {value}:"</span>)<span class="question-mark">?</span>,
-                        <span class="kw">crate</span>::SwitchValue::U32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}case {value}u:"</span>)<span class="question-mark">?</span>,
-                        <span class="kw">crate</span>::SwitchValue::Default =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}default:"</span>)<span class="question-mark">?</span>,
+                    // Body
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(case) = cases.last() {
+                        <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
+                            <span class="self">self</span>.write_stmt(sta, ctx, l2)<span class="question-mark">?</span>;
+                        }
+                    }
+                    <span class="comment">// End do-while
+                    </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}} while(false);"</span>)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Handle any forwarded continue statements.
+                    </span><span class="kw">use </span>back::continue_forward::ExitControlFlow;
+                    <span class="kw">let </span>op = <span class="kw">match </span><span class="self">self</span>.continue_ctx.exit_switch() {
+                        ExitControlFlow::None =&gt; <span class="prelude-val">None</span>,
+                        ExitControlFlow::Continue { variable } =&gt; <span class="prelude-val">Some</span>((<span class="string">"continue"</span>, variable)),
+                        ExitControlFlow::Break { variable } =&gt; <span class="prelude-val">Some</span>((<span class="string">"break"</span>, variable)),
+                    };
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>((control_flow, variable)) = op {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}if ({variable}) {{"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}{control_flow};"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
+                    }
+                } <span class="kw">else </span>{
+                    <span class="comment">// Start the switch
+                    </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"switch("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(selector, ctx)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{"</span>)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Write all cases
+                    </span><span class="kw">for </span>case <span class="kw">in </span>cases {
+                        <span class="kw">match </span>case.value {
+                            <span class="kw">crate</span>::SwitchValue::I32(value) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}case {value}:"</span>)<span class="question-mark">?
+                            </span>}
+                            <span class="kw">crate</span>::SwitchValue::U32(value) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}case {value}u:"</span>)<span class="question-mark">?
+                            </span>}
+                            <span class="kw">crate</span>::SwitchValue::Default =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{l2}default:"</span>)<span class="question-mark">?</span>,
+                        }
+
+                        <span class="kw">let </span>write_block_braces = !(case.fall_through &amp;&amp; case.body.is_empty());
+                        <span class="kw">if </span>write_block_braces {
+                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
+                        } <span class="kw">else </span>{
+                            <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+                        }
+
+                        <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
+                            <span class="self">self</span>.write_stmt(sta, ctx, l2.next())<span class="question-mark">?</span>;
+                        }
+
+                        <span class="kw">if </span>!case.fall_through
+                            &amp;&amp; case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator())
+                        {
+                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{}break;"</span>, l2.next())<span class="question-mark">?</span>;
+                        }
+
+                        <span class="kw">if </span>write_block_braces {
+                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}}}"</span>)<span class="question-mark">?</span>;
+                        }
                     }
 
-                    <span class="kw">let </span>write_block_braces = !(case.fall_through &amp;&amp; case.body.is_empty());
-                    <span class="kw">if </span>write_block_braces {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
-                    }
-
-                    <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
-                        <span class="self">self</span>.write_stmt(sta, ctx, l2.next())<span class="question-mark">?</span>;
-                    }
-
-                    <span class="kw">if </span>!case.fall_through &amp;&amp; case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator()) {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{}break;"</span>, l2.next())<span class="question-mark">?</span>;
-                    }
-
-                    <span class="kw">if </span>write_block_braces {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}}}"</span>)<span class="question-mark">?</span>;
-                    }
-                }
-
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?
-            </span>}
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?
+                </span>}
+            }
             <span class="comment">// Loops in naga IR are based on wgsl loops, glsl can emulate the behaviour by using a
             // while true loop and appending the continuing block to the body resulting on:
             // ```
@@ -6927,6 +7051,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="kw-2">ref </span>continuing,
                 break_if,
             } =&gt; {
+                <span class="self">self</span>.continue_ctx.enter_loop();
                 <span class="kw">if </span>!continuing.is_empty() || break_if.is_some() {
                     <span class="kw">let </span>gate_name = <span class="self">self</span>.namer.call(<span class="string">"loop_init"</span>);
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}bool {gate_name} = true;"</span>)<span class="question-mark">?</span>;
@@ -6952,8 +7077,9 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="kw">for </span>sta <span class="kw">in </span>body {
                     <span class="self">self</span>.write_stmt(sta, ctx, level.next())<span class="question-mark">?</span>;
                 }
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?
-            </span>}
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.continue_ctx.exit_loop();
+            }
             <span class="comment">// Break, continue and return as written as in C
             // `break;`
             </span>Statement::Break =&gt; {
@@ -6962,9 +7088,15 @@ to output a [`Module`](crate::Module) into glsl
             </span>}
             <span class="comment">// `continue;`
             </span>Statement::Continue =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"continue;"</span>)<span class="question-mark">?
-            </span>}
+                <span class="comment">// Sometimes we must render a `Continue` statement as a `break`.
+                // See the docs for the `back::continue_forward` module.
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(variable) = <span class="self">self</span>.continue_ctx.continue_encountered() {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{variable} = true;"</span>,)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}break;"</span>)<span class="question-mark">?
+                </span>} <span class="kw">else </span>{
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}continue;"</span>)<span class="question-mark">?
+                </span>}
+            }
             <span class="comment">// `return expr;`, `expr` is optional
             </span>Statement::Return { value } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;

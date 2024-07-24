@@ -155,6 +155,15 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
 <span class="kw">use </span>wgt::{Backends, Features, Limits};
 
@@ -168,7 +177,7 @@
 }
 
 <span class="doccomment">/// Initialize a wgpu instance with the options from the environment.
-</span><span class="kw">pub fn </span>initialize_instance() -&gt; Instance {
+</span><span class="kw">pub fn </span>initialize_instance(force_fxc: bool) -&gt; Instance {
     <span class="comment">// We ignore `WGPU_BACKEND` for now, merely using test filtering to only run a single backend's tests.
     //
     // We can potentially work support back into the test runner in the future, but as the adapters are matched up
@@ -184,7 +193,13 @@
     } <span class="kw">else </span>{
         Backends::all()
     };
-    <span class="kw">let </span>dx12_shader_compiler = wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default();
+    <span class="comment">// Some tests need to be able to force demote to FXC, to specifically test workarounds for FXC
+    // behavior.
+    </span><span class="kw">let </span>dx12_shader_compiler = <span class="kw">if </span>force_fxc {
+        wgpu::Dx12Compiler::Fxc
+    } <span class="kw">else </span>{
+        wgpu::util::dx12_shader_compiler_from_env().unwrap_or_default()
+    };
     <span class="kw">let </span>gles_minor_version = wgpu::util::gles_minor_version_from_env().unwrap_or_default();
     Instance::new(wgpu::InstanceDescriptor {
         backends,
@@ -195,8 +210,11 @@
 }
 
 <span class="doccomment">/// Initialize a wgpu adapter, taking the `n`th adapter from the instance.
-</span><span class="kw">pub async fn </span>initialize_adapter(adapter_index: usize) -&gt; (Instance, Adapter, <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;) {
-    <span class="kw">let </span>instance = initialize_instance();
+</span><span class="kw">pub async fn </span>initialize_adapter(
+    adapter_index: usize,
+    force_fxc: bool,
+) -&gt; (Instance, Adapter, <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;) {
+    <span class="kw">let </span>instance = initialize_instance(force_fxc);
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">let </span>surface: <span class="prelude-ty">Option</span>&lt;wgpu::Surface&gt;;
     <span class="kw">let </span>surface_guard: <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;;

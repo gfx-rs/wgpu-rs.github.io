@@ -3687,6 +3687,69 @@
 <a href="#3686" id="3686">3686</a>
 <a href="#3687" id="3687">3687</a>
 <a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
+<a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
+<a href="#3710" id="3710">3710</a>
+<a href="#3711" id="3711">3711</a>
+<a href="#3712" id="3712">3712</a>
+<a href="#3713" id="3713">3713</a>
+<a href="#3714" id="3714">3714</a>
+<a href="#3715" id="3715">3715</a>
+<a href="#3716" id="3716">3716</a>
+<a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
+<a href="#3721" id="3721">3721</a>
+<a href="#3722" id="3722">3722</a>
+<a href="#3723" id="3723">3723</a>
+<a href="#3724" id="3724">3724</a>
+<a href="#3725" id="3725">3725</a>
+<a href="#3726" id="3726">3726</a>
+<a href="#3727" id="3727">3727</a>
+<a href="#3728" id="3728">3728</a>
+<a href="#3729" id="3729">3729</a>
+<a href="#3730" id="3730">3730</a>
+<a href="#3731" id="3731">3731</a>
+<a href="#3732" id="3732">3732</a>
+<a href="#3733" id="3733">3733</a>
+<a href="#3734" id="3734">3734</a>
+<a href="#3735" id="3735">3735</a>
+<a href="#3736" id="3736">3736</a>
+<a href="#3737" id="3737">3737</a>
+<a href="#3738" id="3738">3738</a>
+<a href="#3739" id="3739">3739</a>
+<a href="#3740" id="3740">3740</a>
+<a href="#3741" id="3741">3741</a>
+<a href="#3742" id="3742">3742</a>
+<a href="#3743" id="3743">3743</a>
+<a href="#3744" id="3744">3744</a>
+<a href="#3745" id="3745">3745</a>
+<a href="#3746" id="3746">3746</a>
+<a href="#3747" id="3747">3747</a>
+<a href="#3748" id="3748">3748</a>
+<a href="#3749" id="3749">3749</a>
+<a href="#3750" id="3750">3750</a>
+<a href="#3751" id="3751">3751</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -3793,6 +3856,7 @@
             entry_point_io: Vec::new(),
             named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
             wrapped: <span class="kw">super</span>::Wrapped::default(),
+            continue_ctx: back::continue_forward::ContinueCtx::default(),
             temp_access_chain: Vec::new(),
             need_bake_expressions: Default::default(),
         }
@@ -3811,6 +3875,7 @@
         <span class="self">self</span>.entry_point_io.clear();
         <span class="self">self</span>.named_expressions.clear();
         <span class="self">self</span>.wrapped.clear();
+        <span class="self">self</span>.continue_ctx.clear();
         <span class="self">self</span>.need_bake_expressions.clear();
     }
 
@@ -5128,6 +5193,151 @@
         <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)
     }
 
+    <span class="doccomment">/// Helper method used to write switches
+    </span><span class="kw">fn </span>write_switch(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx&lt;<span class="lifetime">'_</span>&gt;,
+        level: back::Level,
+        selector: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        cases: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::SwitchCase],
+    ) -&gt; BackendResult {
+        <span class="comment">// Write all cases
+        </span><span class="kw">let </span>indent_level_1 = level.next();
+        <span class="kw">let </span>indent_level_2 = indent_level_1.next();
+
+        <span class="comment">// See docs of `back::continue_forward` module.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(variable) = <span class="self">self</span>.continue_ctx.enter_switch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.namer) {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}bool {variable} = false;"</span>,)<span class="question-mark">?</span>;
+        };
+
+        <span class="comment">// Check if there is only one body, by seeing if all except the last case are fall through
+        // with empty bodies. FXC doesn't handle these switches correctly, so
+        // we generate a `do {} while(false);` loop instead. There must be a default case, so there
+        // is no need to check if one of the cases would have matched.
+        </span><span class="kw">let </span>one_body = cases
+            .iter()
+            .rev()
+            .skip(<span class="number">1</span>)
+            .all(|case| case.fall_through &amp;&amp; case.body.is_empty());
+        <span class="kw">if </span>one_body {
+            <span class="comment">// Start the do-while
+            </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}do {{"</span>)<span class="question-mark">?</span>;
+            <span class="comment">// Note: Expressions have no side-effects so we don't need to emit selector expression.
+
+            // Body
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(case) = cases.last() {
+                <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
+                    <span class="self">self</span>.write_stmt(module, sta, func_ctx, indent_level_1)<span class="question-mark">?</span>;
+                }
+            }
+            <span class="comment">// End do-while
+            </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}} while(false);"</span>)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="comment">// Start the switch
+            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"switch("</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_expr(module, selector, func_ctx)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{"</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">for </span>(i, case) <span class="kw">in </span>cases.iter().enumerate() {
+                <span class="kw">match </span>case.value {
+                    <span class="kw">crate</span>::SwitchValue::I32(value) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}case {value}:"</span>)<span class="question-mark">?
+                    </span>}
+                    <span class="kw">crate</span>::SwitchValue::U32(value) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}case {value}u:"</span>)<span class="question-mark">?
+                    </span>}
+                    <span class="kw">crate</span>::SwitchValue::Default =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}default:"</span>)<span class="question-mark">?</span>,
+                }
+
+                <span class="comment">// The new block is not only stylistic, it plays a role here:
+                // We might end up having to write the same case body
+                // multiple times due to FXC not supporting fallthrough.
+                // Therefore, some `Expression`s written by `Statement::Emit`
+                // will end up having the same name (`_expr&lt;handle_index&gt;`).
+                // So we need to put each case in its own scope.
+                </span><span class="kw">let </span>write_block_braces = !(case.fall_through &amp;&amp; case.body.is_empty());
+                <span class="kw">if </span>write_block_braces {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+                }
+
+                <span class="comment">// Although FXC does support a series of case clauses before
+                // a block[^yes], it does not support fallthrough from a
+                // non-empty case block to the next[^no]. If this case has a
+                // non-empty body with a fallthrough, emulate that by
+                // duplicating the bodies of all the cases it would fall
+                // into as extensions of this case's own body. This makes
+                // the HLSL output potentially quadratic in the size of the
+                // Naga IR.
+                //
+                // [^yes]: ```hlsl
+                // case 1:
+                // case 2: do_stuff()
+                // ```
+                // [^no]: ```hlsl
+                // case 1: do_this();
+                // case 2: do_that();
+                // ```
+                </span><span class="kw">if </span>case.fall_through &amp;&amp; !case.body.is_empty() {
+                    <span class="kw">let </span>curr_len = i + <span class="number">1</span>;
+                    <span class="kw">let </span>end_case_idx = curr_len
+                        + cases
+                            .iter()
+                            .skip(curr_len)
+                            .position(|case| !case.fall_through)
+                            .unwrap();
+                    <span class="kw">let </span>indent_level_3 = indent_level_2.next();
+                    <span class="kw">for </span>case <span class="kw">in </span><span class="kw-2">&amp;</span>cases[i..=end_case_idx] {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}{{"</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>prev_len = <span class="self">self</span>.named_expressions.len();
+                        <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
+                            <span class="self">self</span>.write_stmt(module, sta, func_ctx, indent_level_3)<span class="question-mark">?</span>;
+                        }
+                        <span class="comment">// Clear all named expressions that were previously inserted by the statements in the block
+                        </span><span class="self">self</span>.named_expressions.truncate(prev_len);
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}}}"</span>)<span class="question-mark">?</span>;
+                    }
+
+                    <span class="kw">let </span>last_case = <span class="kw-2">&amp;</span>cases[end_case_idx];
+                    <span class="kw">if </span>last_case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator()) {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}break;"</span>)<span class="question-mark">?</span>;
+                    }
+                } <span class="kw">else </span>{
+                    <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
+                        <span class="self">self</span>.write_stmt(module, sta, func_ctx, indent_level_2)<span class="question-mark">?</span>;
+                    }
+                    <span class="kw">if </span>!case.fall_through &amp;&amp; case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator()) {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}break;"</span>)<span class="question-mark">?</span>;
+                    }
+                }
+
+                <span class="kw">if </span>write_block_braces {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}}}"</span>)<span class="question-mark">?</span>;
+                }
+            }
+
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// Handle any forwarded continue statements.
+        </span><span class="kw">use </span>back::continue_forward::ExitControlFlow;
+        <span class="kw">let </span>op = <span class="kw">match </span><span class="self">self</span>.continue_ctx.exit_switch() {
+            ExitControlFlow::None =&gt; <span class="prelude-val">None</span>,
+            ExitControlFlow::Continue { variable } =&gt; <span class="prelude-val">Some</span>((<span class="string">"continue"</span>, variable)),
+            ExitControlFlow::Break { variable } =&gt; <span class="prelude-val">Some</span>((<span class="string">"break"</span>, variable)),
+        };
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((control_flow, variable)) = op {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}if ({variable}) {{"</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}{control_flow};"</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Helper method used to write statements
     ///
     /// # Notes
@@ -5571,6 +5781,7 @@
                 <span class="kw-2">ref </span>continuing,
                 break_if,
             } =&gt; {
+                <span class="self">self</span>.continue_ctx.enter_loop();
                 <span class="kw">let </span>l2 = level.next();
                 <span class="kw">if </span>!continuing.is_empty() || break_if.is_some() {
                     <span class="kw">let </span>gate_name = <span class="self">self</span>.namer.call(<span class="string">"loop_init"</span>);
@@ -5597,10 +5808,18 @@
                 <span class="kw">for </span>sta <span class="kw">in </span>body.iter() {
                     <span class="self">self</span>.write_stmt(module, sta, func_ctx, l2)<span class="question-mark">?</span>;
                 }
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?
-            </span>}
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.continue_ctx.exit_loop();
+            }
             Statement::Break =&gt; <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}break;"</span>)<span class="question-mark">?</span>,
-            Statement::Continue =&gt; <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}continue;"</span>)<span class="question-mark">?</span>,
+            Statement::Continue =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(variable) = <span class="self">self</span>.continue_ctx.continue_encountered() {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{variable} = true;"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}break;"</span>)<span class="question-mark">?
+                </span>} <span class="kw">else </span>{
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}continue;"</span>)<span class="question-mark">?
+                </span>}
+            }
             Statement::Barrier(barrier) =&gt; {
                 <span class="self">self</span>.write_barrier(barrier, level)<span class="question-mark">?</span>;
             }
@@ -5752,101 +5971,8 @@
                 selector,
                 <span class="kw-2">ref </span>cases,
             } =&gt; {
-                <span class="comment">// Start the switch
-                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"switch("</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_expr(module, selector, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") {{"</span>)<span class="question-mark">?</span>;
-
-                <span class="comment">// Write all cases
-                </span><span class="kw">let </span>indent_level_1 = level.next();
-                <span class="kw">let </span>indent_level_2 = indent_level_1.next();
-
-                <span class="kw">for </span>(i, case) <span class="kw">in </span>cases.iter().enumerate() {
-                    <span class="kw">match </span>case.value {
-                        <span class="kw">crate</span>::SwitchValue::I32(value) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}case {value}:"</span>)<span class="question-mark">?
-                        </span>}
-                        <span class="kw">crate</span>::SwitchValue::U32(value) =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}case {value}u:"</span>)<span class="question-mark">?
-                        </span>}
-                        <span class="kw">crate</span>::SwitchValue::Default =&gt; {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}default:"</span>)<span class="question-mark">?
-                        </span>}
-                    }
-
-                    <span class="comment">// The new block is not only stylistic, it plays a role here:
-                    // We might end up having to write the same case body
-                    // multiple times due to FXC not supporting fallthrough.
-                    // Therefore, some `Expression`s written by `Statement::Emit`
-                    // will end up having the same name (`_expr&lt;handle_index&gt;`).
-                    // So we need to put each case in its own scope.
-                    </span><span class="kw">let </span>write_block_braces = !(case.fall_through &amp;&amp; case.body.is_empty());
-                    <span class="kw">if </span>write_block_braces {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" {{"</span>)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
-                    }
-
-                    <span class="comment">// Although FXC does support a series of case clauses before
-                    // a block[^yes], it does not support fallthrough from a
-                    // non-empty case block to the next[^no]. If this case has a
-                    // non-empty body with a fallthrough, emulate that by
-                    // duplicating the bodies of all the cases it would fall
-                    // into as extensions of this case's own body. This makes
-                    // the HLSL output potentially quadratic in the size of the
-                    // Naga IR.
-                    //
-                    // [^yes]: ```hlsl
-                    // case 1:
-                    // case 2: do_stuff()
-                    // ```
-                    // [^no]: ```hlsl
-                    // case 1: do_this();
-                    // case 2: do_that();
-                    // ```
-                    </span><span class="kw">if </span>case.fall_through &amp;&amp; !case.body.is_empty() {
-                        <span class="kw">let </span>curr_len = i + <span class="number">1</span>;
-                        <span class="kw">let </span>end_case_idx = curr_len
-                            + cases
-                                .iter()
-                                .skip(curr_len)
-                                .position(|case| !case.fall_through)
-                                .unwrap();
-                        <span class="kw">let </span>indent_level_3 = indent_level_2.next();
-                        <span class="kw">for </span>case <span class="kw">in </span><span class="kw-2">&amp;</span>cases[i..=end_case_idx] {
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}{{"</span>)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>prev_len = <span class="self">self</span>.named_expressions.len();
-                            <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
-                                <span class="self">self</span>.write_stmt(module, sta, func_ctx, indent_level_3)<span class="question-mark">?</span>;
-                            }
-                            <span class="comment">// Clear all named expressions that were previously inserted by the statements in the block
-                            </span><span class="self">self</span>.named_expressions.truncate(prev_len);
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}}}"</span>)<span class="question-mark">?</span>;
-                        }
-
-                        <span class="kw">let </span>last_case = <span class="kw-2">&amp;</span>cases[end_case_idx];
-                        <span class="kw">if </span>last_case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator()) {
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}break;"</span>)<span class="question-mark">?</span>;
-                        }
-                    } <span class="kw">else </span>{
-                        <span class="kw">for </span>sta <span class="kw">in </span>case.body.iter() {
-                            <span class="self">self</span>.write_stmt(module, sta, func_ctx, indent_level_2)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">if </span>!case.fall_through
-                            &amp;&amp; case.body.last().map_or(<span class="bool-val">true</span>, |s| !s.is_terminator())
-                        {
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_2}break;"</span>)<span class="question-mark">?</span>;
-                        }
-                    }
-
-                    <span class="kw">if </span>write_block_braces {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{indent_level_1}}}"</span>)<span class="question-mark">?</span>;
-                    }
-                }
-
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?
-            </span>}
+                <span class="self">self</span>.write_switch(module, func_ctx, level, selector, cases)<span class="question-mark">?</span>;
+            }
             Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
