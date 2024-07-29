@@ -368,7 +368,6 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This is a player library for WebGPU traces.
 
 </span><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
@@ -528,7 +527,7 @@
                 <span class="self">self</span>.buffer_destroy::&lt;A&gt;(id).unwrap();
             }
             Action::DestroyBuffer(id) =&gt; {
-                <span class="self">self</span>.buffer_drop::&lt;A&gt;(id, <span class="bool-val">true</span>);
+                <span class="self">self</span>.buffer_drop::&lt;A&gt;(id);
             }
             Action::CreateTexture(id, desc) =&gt; {
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_texture::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
@@ -540,7 +539,7 @@
                 <span class="self">self</span>.texture_destroy::&lt;A&gt;(id).unwrap();
             }
             Action::DestroyTexture(id) =&gt; {
-                <span class="self">self</span>.texture_drop::&lt;A&gt;(id, <span class="bool-val">true</span>);
+                <span class="self">self</span>.texture_drop::&lt;A&gt;(id);
             }
             Action::CreateTextureView {
                 id,
@@ -553,7 +552,7 @@
                 }
             }
             Action::DestroyTextureView(id) =&gt; {
-                <span class="self">self</span>.texture_view_drop::&lt;A&gt;(id, <span class="bool-val">true</span>).unwrap();
+                <span class="self">self</span>.texture_view_drop::&lt;A&gt;(id).unwrap();
             }
             Action::CreateSampler(id, desc) =&gt; {
                 <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_sampler::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
@@ -701,8 +700,7 @@
                     <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(device.into_queue_id(), id, range.start, <span class="kw-2">&amp;</span>bin)
                         .unwrap();
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.device_wait_for_buffer::&lt;A&gt;(device, id).unwrap();
-                    <span class="self">self</span>.device_set_buffer_sub_data::&lt;A&gt;(device, id, range.start, <span class="kw-2">&amp;</span>bin[..size])
+                    <span class="self">self</span>.device_set_buffer_data::&lt;A&gt;(id, range.start, <span class="kw-2">&amp;</span>bin[..size])
                         .unwrap();
                 }
             }

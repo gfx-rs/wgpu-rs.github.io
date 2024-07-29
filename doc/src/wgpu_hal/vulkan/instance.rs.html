@@ -1096,6 +1096,8 @@
 <a href="#1095" id="1095">1095</a>
 <a href="#1096" id="1096">1096</a>
 <a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1978,10 +1980,6 @@
         }
     }
 
-    <span class="kw">unsafe fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: <span class="kw">super</span>::Surface) {
-        <span class="kw">unsafe </span>{ surface.functor.destroy_surface(surface.raw, <span class="prelude-val">None</span>) };
-    }
-
     <span class="kw">unsafe fn </span>enumerate_adapters(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _surface_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">super</span>::Surface&gt;,
@@ -2037,6 +2035,12 @@
         }
 
         exposed_adapters
+    }
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span><span class="kw">super</span>::Surface {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.functor.destroy_surface(<span class="self">self</span>.raw, <span class="prelude-val">None</span>) };
     }
 }
 
