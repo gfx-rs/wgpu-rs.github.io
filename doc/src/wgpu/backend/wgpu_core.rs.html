@@ -3485,15 +3485,6 @@
 <a href="#3484" id="3484">3484</a>
 <a href="#3485" id="3485">3485</a>
 <a href="#3486" id="3486">3486</a>
-<a href="#3487" id="3487">3487</a>
-<a href="#3488" id="3488">3488</a>
-<a href="#3489" id="3489">3489</a>
-<a href="#3490" id="3490">3490</a>
-<a href="#3491" id="3491">3491</a>
-<a href="#3492" id="3492">3492</a>
-<a href="#3493" id="3493">3493</a>
-<a href="#3494" id="3494">3494</a>
-<a href="#3495" id="3495">3495</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -5419,15 +5410,6 @@
         encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::RenderPassId, <span class="self">Self</span>::RenderPassData) {
-        <span class="kw">if </span>desc.color_attachments.len() &gt; wgc::MAX_COLOR_ATTACHMENTS {
-            <span class="self">self</span>.handle_error_fatal(
-                wgc::command::ColorAttachmentError::TooMany {
-                    given: desc.color_attachments.len(),
-                    limit: wgc::MAX_COLOR_ATTACHMENTS,
-                },
-                <span class="string">"CommandEncoder::begin_render_pass"</span>,
-            );
-        }
         <span class="kw">let </span>colors = desc
             .color_attachments
             .iter()
@@ -5439,7 +5421,7 @@
                         channel: map_pass_channel(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>at.ops)),
                     })
             })
-            .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { wgc::MAX_COLOR_ATTACHMENTS }&gt;&gt;();
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="kw">let </span>depth_stencil = desc.depth_stencil_attachment.as_ref().map(|dsa| {
             wgc::command::RenderPassDepthStencilAttachment {
