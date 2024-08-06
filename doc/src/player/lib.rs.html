@@ -368,6 +368,7 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This is a player library for WebGPU traces.
 
 </span><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
@@ -386,6 +387,7 @@
     <span class="kw">fn </span>process&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: wgc::id::DeviceId,
+        queue: wgc::id::QueueId,
         action: trace::Action,
         dir: <span class="kw-2">&amp;</span>Path,
         comb_manager: <span class="kw-2">&amp;mut </span>wgc::identity::IdentityManager&lt;wgc::id::markers::CommandBuffer&gt;,
@@ -501,6 +503,7 @@
     <span class="kw">fn </span>process&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: wgc::id::DeviceId,
+        queue: wgc::id::QueueId,
         action: trace::Action,
         dir: <span class="kw-2">&amp;</span>Path,
         comb_manager: <span class="kw-2">&amp;mut </span>wgc::identity::IdentityManager&lt;wgc::id::markers::CommandBuffer&gt;,
@@ -697,7 +700,7 @@
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
                 <span class="kw">let </span>size = (range.end - range.start) <span class="kw">as </span>usize;
                 <span class="kw">if </span>queued {
-                    <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(device.into_queue_id(), id, range.start, <span class="kw-2">&amp;</span>bin)
+                    <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(queue, id, range.start, <span class="kw-2">&amp;</span>bin)
                         .unwrap();
                 } <span class="kw">else </span>{
                     <span class="self">self</span>.device_set_buffer_data::&lt;A&gt;(id, range.start, <span class="kw-2">&amp;</span>bin[..size])
@@ -711,11 +714,11 @@
                 size,
             } =&gt; {
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
-                <span class="self">self</span>.queue_write_texture::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
+                <span class="self">self</span>.queue_write_texture::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
                     .unwrap();
             }
             Action::Submit(_index, <span class="kw-2">ref </span>commands) <span class="kw">if </span>commands.is_empty() =&gt; {
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>[]).unwrap();
+                <span class="self">self</span>.queue_submit::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>[]).unwrap();
             }
             Action::Submit(_index, commands) =&gt; {
                 <span class="kw">let </span>(encoder, error) = <span class="self">self</span>.device_create_command_encoder::&lt;A&gt;(
@@ -731,8 +734,7 @@
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
                 <span class="kw">let </span>cmdbuf = <span class="self">self</span>.encode_commands::&lt;A&gt;(encoder, commands);
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(device.into_queue_id(), <span class="kw-2">&amp;</span>[cmdbuf])
-                    .unwrap();
+                <span class="self">self</span>.queue_submit::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>[cmdbuf]).unwrap();
             }
         }
     }

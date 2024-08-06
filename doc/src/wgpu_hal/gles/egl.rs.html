@@ -1463,6 +1463,21 @@
 <a href="#1462" id="1462">1462</a>
 <a href="#1463" id="1463">1463</a>
 <a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
@@ -2015,26 +2030,25 @@
         <span class="kw">let </span>supports_khr_context = display_extensions.contains(<span class="string">"EGL_KHR_create_context"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>context_attributes = <span class="macro">vec!</span>[];
-        <span class="kw">if </span>supports_opengl {
-            context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
-            context_attributes.push(<span class="number">3</span>);
-            context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
-            context_attributes.push(<span class="number">3</span>);
-            <span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
-                <span class="macro">log::warn!</span>(<span class="string">"Ignoring specified GLES minor version as OpenGL is used"</span>);
-            }
-        } <span class="kw">else </span>{
-            context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
-            context_attributes.push(<span class="number">3</span>); <span class="comment">// Request GLES 3.0 or higher
-            </span><span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
-                context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
-                context_attributes.push(<span class="kw">match </span>force_gles_minor_version {
-                    wgt::Gles3MinorVersion::Automatic =&gt; <span class="macro">unreachable!</span>(),
-                    wgt::Gles3MinorVersion::Version0 =&gt; <span class="number">0</span>,
-                    wgt::Gles3MinorVersion::Version1 =&gt; <span class="number">1</span>,
-                    wgt::Gles3MinorVersion::Version2 =&gt; <span class="number">2</span>,
-                });
-            }
+        <span class="kw">let </span><span class="kw-2">mut </span>gl_context_attributes = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>gles_context_attributes = <span class="macro">vec!</span>[];
+        gl_context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
+        gl_context_attributes.push(<span class="number">3</span>);
+        gl_context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
+        gl_context_attributes.push(<span class="number">3</span>);
+        <span class="kw">if </span>supports_opengl &amp;&amp; force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+            <span class="macro">log::warn!</span>(<span class="string">"Ignoring specified GLES minor version as OpenGL is used"</span>);
+        }
+        gles_context_attributes.push(khronos_egl::CONTEXT_MAJOR_VERSION);
+        gles_context_attributes.push(<span class="number">3</span>); <span class="comment">// Request GLES 3.0 or higher
+        </span><span class="kw">if </span>force_gles_minor_version != wgt::Gles3MinorVersion::Automatic {
+            gles_context_attributes.push(khronos_egl::CONTEXT_MINOR_VERSION);
+            gles_context_attributes.push(<span class="kw">match </span>force_gles_minor_version {
+                wgt::Gles3MinorVersion::Automatic =&gt; <span class="macro">unreachable!</span>(),
+                wgt::Gles3MinorVersion::Version0 =&gt; <span class="number">0</span>,
+                wgt::Gles3MinorVersion::Version1 =&gt; <span class="number">1</span>,
+                wgt::Gles3MinorVersion::Version2 =&gt; <span class="number">2</span>,
+            });
         }
         <span class="kw">if </span>flags.contains(wgt::InstanceFlags::DEBUG) {
             <span class="kw">if </span>version &gt;= (<span class="number">1</span>, <span class="number">5</span>) {
@@ -2071,15 +2085,31 @@
             context_attributes.push(khr_context_flags);
         }
         context_attributes.push(khronos_egl::NONE);
-        <span class="kw">let </span>context = <span class="kw">match </span>egl.create_context(display, config, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>context_attributes) {
-            <span class="prelude-val">Ok</span>(context) =&gt; context,
-            <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::with_source(
-                    String::from(<span class="string">"unable to create GLES 3.x context"</span>),
-                    e,
-                ));
-            }
-        };
+
+        gl_context_attributes.extend(<span class="kw-2">&amp;</span>context_attributes);
+        gles_context_attributes.extend(<span class="kw-2">&amp;</span>context_attributes);
+
+        <span class="kw">let </span>context = <span class="kw">if </span>supports_opengl {
+            egl.create_context(display, config, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>gl_context_attributes)
+                .or_else(|<span class="kw">_</span>| {
+                    egl.bind_api(khronos_egl::OPENGL_ES_API).unwrap();
+                    egl.create_context(display, config, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>gles_context_attributes)
+                })
+                .map_err(|e| {
+                    <span class="kw">crate</span>::InstanceError::with_source(
+                        String::from(<span class="string">"unable to create OpenGL or GLES 3.x context"</span>),
+                        e,
+                    )
+                })
+        } <span class="kw">else </span>{
+            egl.create_context(display, config, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>gles_context_attributes)
+                .map_err(|e| {
+                    <span class="kw">crate</span>::InstanceError::with_source(
+                        String::from(<span class="string">"unable to create GLES 3.x context"</span>),
+                        e,
+                    )
+                })
+        }<span class="question-mark">?</span>;
 
         <span class="comment">// Testing if context can be binded without surface
         // and creating dummy pbuffer surface if not.
