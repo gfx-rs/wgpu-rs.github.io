@@ -1608,6 +1608,14 @@
 <a href="#1607" id="1607">1607</a>
 <a href="#1608" id="1608">1608</a>
 <a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
+<a href="#1617" id="1617">1617</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2146,6 +2154,7 @@
                 size: desc.size,
                 map_flags: <span class="number">0</span>,
                 data: <span class="prelude-val">Some</span>(Arc::new(Mutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize]))),
+                offset_of_current_mapping: Arc::new(Mutex::new(<span class="number">0</span>)),
             });
         }
 
@@ -2245,6 +2254,7 @@
             size: desc.size,
             map_flags,
             data,
+            offset_of_current_mapping: Arc::new(Mutex::new(<span class="number">0</span>)),
         })
     }
 
@@ -2278,6 +2288,7 @@
                     <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.get_buffer_sub_data(gl, buffer.target, <span class="number">0</span>, slice) };
                     slice.as_mut_ptr()
                 } <span class="kw">else </span>{
+                    <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap() = range.start;
                     <span class="kw">unsafe </span>{
                         gl.map_buffer_range(
                             buffer.target,
@@ -2303,6 +2314,7 @@
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
                 <span class="kw">unsafe </span>{ gl.unmap_buffer(buffer.target) };
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">None</span>) };
+                <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap() = <span class="number">0</span>;
             }
         }
     }
@@ -2311,16 +2323,20 @@
         </span>I: Iterator&lt;Item = <span class="kw">crate</span>::MemoryRange&gt;,
     {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = buffer.raw {
-            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-            <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
-            <span class="kw">for </span>range <span class="kw">in </span>ranges {
-                <span class="kw">unsafe </span>{
-                    gl.flush_mapped_buffer_range(
-                        buffer.target,
-                        range.start <span class="kw">as </span>i32,
-                        (range.end - range.start) <span class="kw">as </span>i32,
-                    )
-                };
+            <span class="kw">if </span>buffer.data.is_none() {
+                <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+                <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
+                <span class="kw">for </span>range <span class="kw">in </span>ranges {
+                    <span class="kw">let </span>offset_of_current_mapping =
+                        <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap();
+                    <span class="kw">unsafe </span>{
+                        gl.flush_mapped_buffer_range(
+                            buffer.target,
+                            (range.start - offset_of_current_mapping) <span class="kw">as </span>i32,
+                            (range.end - range.start) <span class="kw">as </span>i32,
+                        )
+                    };
+                }
             }
         }
     }
