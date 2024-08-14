@@ -2490,7 +2490,22 @@
 <a href="#2489" id="2489">2489</a>
 <a href="#2490" id="2490">2490</a>
 <a href="#2491" id="2491">2491</a>
-</pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PipelineCache};
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
+<a href="#2494" id="2494">2494</a>
+<a href="#2495" id="2495">2495</a>
+<a href="#2496" id="2496">2496</a>
+<a href="#2497" id="2497">2497</a>
+<a href="#2498" id="2498">2498</a>
+<a href="#2499" id="2499">2499</a>
+<a href="#2500" id="2500">2500</a>
+<a href="#2501" id="2501">2501</a>
+<a href="#2502" id="2502">2502</a>
+<a href="#2503" id="2503">2503</a>
+<a href="#2504" id="2504">2504</a>
+<a href="#2505" id="2505">2505</a>
+<a href="#2506" id="2506">2506</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
@@ -3201,7 +3216,7 @@
 
     <span class="kw">fn </span>compile_stage(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        stage: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="kw">super</span>::Api&gt;,
+        stage: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="kw">super</span>::ShaderModule&gt;,
         naga_stage: naga::ShaderStage,
         binding_map: <span class="kw-2">&amp;</span>naga::back::spv::BindingMap,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;CompiledStage, <span class="kw">crate</span>::PipelineError&gt; {
@@ -3707,7 +3722,7 @@
 
     <span class="kw">unsafe fn </span>create_command_encoder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Queue&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandEncoder, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>vk_info = vk::CommandPoolCreateInfo::default()
             .queue_family_index(desc.queue.family_index)
@@ -3879,7 +3894,7 @@
 
     <span class="kw">unsafe fn </span>create_pipeline_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::BindGroupLayout&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineLayout, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="comment">//Note: not bothering with on stack array here as it's low frequency
         </span><span class="kw">let </span>vk_set_layouts = desc
@@ -3945,7 +3960,13 @@
 
     <span class="kw">unsafe fn </span>create_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BindGroupDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BindGroupDescriptor&lt;
+            <span class="kw">super</span>::BindGroupLayout,
+            <span class="kw">super</span>::Buffer,
+            <span class="kw">super</span>::Sampler,
+            <span class="kw">super</span>::TextureView,
+            <span class="kw">super</span>::AccelerationStructure,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::BindGroup, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>vk_sets = <span class="kw">unsafe </span>{
             <span class="self">self</span>.desc_allocator.lock().allocate(
@@ -4211,7 +4232,11 @@
 
     <span class="kw">unsafe fn </span>create_render_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;
+            <span class="kw">super</span>::PipelineLayout,
+            <span class="kw">super</span>::ShaderModule,
+            <span class="kw">super</span>::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RenderPipeline, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>dynamic_states = [
             vk::DynamicState::VIEWPORT,
@@ -4441,6 +4466,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::RenderPipeline { raw })
     }
+
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: <span class="kw">super</span>::RenderPipeline) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_pipeline(pipeline.raw, <span class="prelude-val">None</span>) };
 
@@ -4449,7 +4475,11 @@
 
     <span class="kw">unsafe fn </span>create_compute_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;
+            <span class="kw">super</span>::PipelineLayout,
+            <span class="kw">super</span>::ShaderModule,
+            <span class="kw">super</span>::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ComputePipeline, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>compiled = <span class="self">self</span>.compile_stage(
             <span class="kw-2">&amp;</span>desc.stage,
@@ -4501,7 +4531,7 @@
     <span class="kw">unsafe fn </span>create_pipeline_cache(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;PipelineCache, <span class="kw">crate</span>::PipelineCacheError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineCache, <span class="kw">crate</span>::PipelineCacheError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>info = vk::PipelineCacheCreateInfo::default();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = desc.data {
             info = info.initial_data(data)
@@ -4510,12 +4540,12 @@
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_pipeline_cache(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }
             .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(PipelineCache { raw })
+        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineCache { raw })
     }
     <span class="kw">fn </span>pipeline_cache_validation_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">16</span>]&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.shared.pipeline_cache_validation_key)
     }
-    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, cache: PipelineCache) {
+    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, cache: <span class="kw">super</span>::PipelineCache) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_pipeline_cache(cache.raw, <span class="prelude-val">None</span>) }
     }
     <span class="kw">unsafe fn </span>create_query_set(
@@ -4646,14 +4676,14 @@
         }
     }
 
-    <span class="kw">unsafe fn </span>pipeline_cache_get_data(<span class="kw-2">&amp;</span><span class="self">self</span>, cache: <span class="kw-2">&amp;</span>PipelineCache) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">unsafe fn </span>pipeline_cache_get_data(<span class="kw-2">&amp;</span><span class="self">self</span>, cache: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineCache) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
         <span class="kw">let </span>data = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw_device().get_pipeline_cache_data(cache.raw) };
         data.ok()
     }
 
     <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
     ) -&gt; <span class="kw">crate</span>::AccelerationStructureBuildSizes {
         <span class="kw">const </span>CAPACITY: usize = <span class="number">8</span>;
 

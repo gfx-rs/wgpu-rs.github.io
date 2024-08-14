@@ -2289,6 +2289,21 @@
 <a href="#2288" id="2288">2288</a>
 <a href="#2289" id="2289">2289</a>
 <a href="#2290" id="2290">2290</a>
+<a href="#2291" id="2291">2291</a>
+<a href="#2292" id="2292">2292</a>
+<a href="#2293" id="2293">2293</a>
+<a href="#2294" id="2294">2294</a>
+<a href="#2295" id="2295">2295</a>
+<a href="#2296" id="2296">2296</a>
+<a href="#2297" id="2297">2297</a>
+<a href="#2298" id="2298">2298</a>
+<a href="#2299" id="2299">2299</a>
+<a href="#2300" id="2300">2300</a>
+<a href="#2301" id="2301">2301</a>
+<a href="#2302" id="2302">2302</a>
+<a href="#2303" id="2303">2303</a>
+<a href="#2304" id="2304">2304</a>
+<a href="#2305" id="2305">2305</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2553,6 +2568,17 @@
     </span><span class="kw">pub use </span><span class="kw">super</span>::vulkan::Api <span class="kw">as </span>Vulkan;
 }
 
+<span class="kw">mod </span>dynamic;
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>dynamic::impl_dyn_resource;
+<span class="kw">pub use </span>dynamic::{
+    DynAccelerationStructure, DynAcquiredSurfaceTexture, DynAdapter, DynBindGroup,
+    DynBindGroupLayout, DynBuffer, DynCommandBuffer, DynCommandEncoder, DynComputePipeline,
+    DynDevice, DynExposedAdapter, DynFence, DynInstance, DynOpenDevice, DynPipelineCache,
+    DynPipelineLayout, DynQuerySet, DynQueue, DynRenderPipeline, DynResource, DynSampler,
+    DynShaderModule, DynSurface, DynSurfaceTexture, DynTexture, DynTextureView,
+};
+
 <span class="kw">use </span>std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -2672,13 +2698,13 @@
 }
 
 <span class="kw">pub trait </span>Api: Clone + fmt::Debug + Sized {
-    <span class="kw">type </span>Instance: Instance&lt;A = <span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Surface: Surface&lt;A = <span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Adapter: Adapter&lt;A = <span class="self">Self</span>&gt;;
-    <span class="kw">type </span>Device: Device&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Instance: DynInstance + Instance&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Surface: DynSurface + Surface&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Adapter: DynAdapter + Adapter&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Device: DynDevice + Device&lt;A = <span class="self">Self</span>&gt;;
 
-    <span class="kw">type </span>Queue: Queue&lt;A = <span class="self">Self</span>&gt;;
-    <span class="kw">type </span>CommandEncoder: CommandEncoder&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>Queue: DynQueue + Queue&lt;A = <span class="self">Self</span>&gt;;
+    <span class="kw">type </span>CommandEncoder: DynCommandEncoder + CommandEncoder&lt;A = <span class="self">Self</span>&gt;;
 
     <span class="doccomment">/// This API's command buffer type.
     ///
@@ -2688,14 +2714,14 @@
     /// them to [`CommandEncoder::reset_all`].
     ///
     /// [`CommandEncoder`]: Api::CommandEncoder
-    </span><span class="kw">type </span>CommandBuffer: WasmNotSendSync + fmt::Debug;
+    </span><span class="kw">type </span>CommandBuffer: DynCommandBuffer;
 
-    <span class="kw">type </span>Buffer: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
-    <span class="kw">type </span>Texture: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
-    <span class="kw">type </span>SurfaceTexture: fmt::Debug + WasmNotSendSync + Borrow&lt;<span class="self">Self</span>::Texture&gt;;
-    <span class="kw">type </span>TextureView: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>Sampler: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>QuerySet: fmt::Debug + WasmNotSendSync;
+    <span class="kw">type </span>Buffer: DynBuffer;
+    <span class="kw">type </span>Texture: DynTexture;
+    <span class="kw">type </span>SurfaceTexture: DynSurfaceTexture + Borrow&lt;<span class="self">Self</span>::Texture&gt;;
+    <span class="kw">type </span>TextureView: DynTextureView;
+    <span class="kw">type </span>Sampler: DynSampler;
+    <span class="kw">type </span>QuerySet: DynQuerySet;
 
     <span class="doccomment">/// A value you can block on to wait for something to finish.
     ///
@@ -2714,17 +2740,17 @@
     /// before a lower-valued operation, then waiting for the fence to reach the
     /// lower value could return before the lower-valued operation has actually
     /// finished.
-    </span><span class="kw">type </span>Fence: fmt::Debug + WasmNotSendSync;
+    </span><span class="kw">type </span>Fence: DynFence;
 
-    <span class="kw">type </span>BindGroupLayout: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>BindGroup: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>PipelineLayout: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>ShaderModule: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>RenderPipeline: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>ComputePipeline: fmt::Debug + WasmNotSendSync;
-    <span class="kw">type </span>PipelineCache: fmt::Debug + WasmNotSendSync;
+    <span class="kw">type </span>BindGroupLayout: DynBindGroupLayout;
+    <span class="kw">type </span>BindGroup: DynBindGroup;
+    <span class="kw">type </span>PipelineLayout: DynPipelineLayout;
+    <span class="kw">type </span>ShaderModule: DynShaderModule;
+    <span class="kw">type </span>RenderPipeline: DynRenderPipeline;
+    <span class="kw">type </span>ComputePipeline: DynComputePipeline;
+    <span class="kw">type </span>PipelineCache: DynPipelineCache;
 
-    <span class="kw">type </span>AccelerationStructure: fmt::Debug + WasmNotSendSync + <span class="lifetime">'static</span>;
+    <span class="kw">type </span>AccelerationStructure: DynAccelerationStructure + <span class="lifetime">'static</span>;
 }
 
 <span class="kw">pub trait </span>Instance: Sized + WasmNotSendSync {
@@ -3070,7 +3096,7 @@
     /// The new `CommandEncoder` is in the "closed" state.
     </span><span class="kw">unsafe fn </span>create_command_encoder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>CommandEncoderDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>CommandEncoderDescriptor&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Queue&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandEncoder, DeviceError&gt;;
     <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, pool: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::CommandEncoder);
 
@@ -3082,12 +3108,20 @@
     <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, bg_layout: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroupLayout);
     <span class="kw">unsafe fn </span>create_pipeline_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>PipelineLayoutDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>PipelineLayoutDescriptor&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroupLayout&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout, DeviceError&gt;;
     <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout);
-    <span class="kw">unsafe fn </span>create_bind_group(
+
+    <span class="attr">#[allow(clippy::type_complexity)]
+    </span><span class="kw">unsafe fn </span>create_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>BindGroupDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>BindGroupDescriptor&lt;
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroupLayout,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Sampler,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::TextureView,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroup, DeviceError&gt;;
     <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, group: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::BindGroup);
 
@@ -3097,16 +3131,29 @@
         shader: ShaderInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule, ShaderError&gt;;
     <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, module: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule);
-    <span class="kw">unsafe fn </span>create_render_pipeline(
+
+    <span class="attr">#[allow(clippy::type_complexity)]
+    </span><span class="kw">unsafe fn </span>create_render_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>RenderPipelineDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>RenderPipelineDescriptor&lt;
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline, PipelineError&gt;;
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline);
-    <span class="kw">unsafe fn </span>create_compute_pipeline(
+
+    <span class="attr">#[allow(clippy::type_complexity)]
+    </span><span class="kw">unsafe fn </span>create_compute_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineLayout,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ShaderModule,
+            &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline, PipelineError&gt;;
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline);
+
     <span class="kw">unsafe fn </span>create_pipeline_cache(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
@@ -3170,7 +3217,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure, DeviceError&gt;;
     <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span>GetAccelerationStructureBuildSizesDescriptor&lt;<span class="self">Self</span>::A&gt;,
+        desc: <span class="kw-2">&amp;</span>GetAccelerationStructureBuildSizesDescriptor&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer&gt;,
     ) -&gt; AccelerationStructureBuildSizes;
     <span class="kw">unsafe fn </span>get_acceleration_structure_device_address(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -3389,11 +3436,11 @@
 
     <span class="kw">unsafe fn </span>transition_buffers&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
+        </span>T: Iterator&lt;Item = BufferBarrier&lt;<span class="lifetime">'a</span>, &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer&gt;&gt;;
 
     <span class="kw">unsafe fn </span>transition_textures&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
+        </span>T: Iterator&lt;Item = TextureBarrier&lt;<span class="lifetime">'a</span>, &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Texture&gt;&gt;;
 
     <span class="comment">// copy operations
 
@@ -3514,17 +3561,24 @@
     <span class="comment">// render passes
 
     // Begins a render pass, clears all active bindings.
-    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="self">Self</span>::A&gt;);
+    </span><span class="kw">unsafe fn </span>begin_render_pass(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet, &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::TextureView&gt;,
+    );
     <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
     <span class="kw">unsafe fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::RenderPipeline);
 
     <span class="kw">unsafe fn </span>set_index_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        binding: BufferBinding&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;,
+        binding: BufferBinding&lt;<span class="lifetime">'a</span>, &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer&gt;,
         format: wgt::IndexFormat,
     );
-    <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, binding: BufferBinding&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;);
+    <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index: u32,
+        binding: BufferBinding&lt;<span class="lifetime">'a</span>, &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer&gt;,
+    );
     <span class="kw">unsafe fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span>Rect&lt;f32&gt;, depth_range: Range&lt;f32&gt;);
     <span class="kw">unsafe fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span>Rect&lt;u32&gt;);
     <span class="kw">unsafe fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: u32);
@@ -3577,7 +3631,10 @@
     <span class="comment">// compute passes
 
     // Begins a compute pass, clears all active bindings.
-    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="self">Self</span>::A&gt;);
+    </span><span class="kw">unsafe fn </span>begin_compute_pass(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::QuerySet&gt;,
+    );
     <span class="kw">unsafe fn </span>end_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
     <span class="kw">unsafe fn </span>set_compute_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::ComputePipeline);
@@ -3602,7 +3659,13 @@
         descriptors: T,
     ) <span class="kw">where
         </span><span class="self">Self</span>::A: <span class="lifetime">'a</span>,
-        T: IntoIterator&lt;Item = BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>::A&gt;&gt;;
+        T: IntoIterator&lt;
+            Item = BuildAccelerationStructureDescriptor&lt;
+                <span class="lifetime">'a</span>,
+                &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
+                &lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
+            &gt;,
+        &gt;;
 
     <span class="kw">unsafe fn </span>place_acceleration_structure_barrier(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -4014,17 +4077,17 @@
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, B: DynBindGroupLayout + <span class="question-mark">?</span>Sized&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>flags: PipelineLayoutFlags,
-    <span class="kw">pub </span>bind_group_layouts: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::BindGroupLayout],
+    <span class="kw">pub </span>bind_group_layouts: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>B],
     <span class="kw">pub </span>push_constant_ranges: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[wgt::PushConstantRange],
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>BufferBinding&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>BufferBinding&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
     <span class="doccomment">/// The buffer being bound.
-    </span><span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer,
+    </span><span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>B,
 
     <span class="doccomment">/// The offset at which the bound region starts.
     ///
@@ -4047,10 +4110,9 @@
     </span><span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>BufferBinding&lt;<span class="lifetime">'_</span>, A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: DynBuffer + <span class="question-mark">?</span>Sized&gt; Clone <span class="kw">for </span>BufferBinding&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
+        BufferBinding {
             buffer: <span class="self">self</span>.buffer,
             offset: <span class="self">self</span>.offset,
             size: <span class="self">self</span>.size,
@@ -4059,15 +4121,14 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>TextureBinding&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>view: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::TextureView,
+</span><span class="kw">pub struct </span>TextureBinding&lt;<span class="lifetime">'a</span>, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>view: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T,
     <span class="kw">pub </span>usage: TextureUses,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>TextureBinding&lt;<span class="lifetime">'_</span>, A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; Clone <span class="kw">for </span>TextureBinding&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
+        TextureBinding {
             view: <span class="self">self</span>.view,
             usage: <span class="self">self</span>.usage,
         }
@@ -4091,20 +4152,27 @@
 ///    of the corresponding resource array, selected by the relevant
 ///    `BindGroupLayoutEntry`.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    Bgl: DynBindGroupLayout + <span class="question-mark">?</span>Sized,
+    B: DynBuffer + <span class="question-mark">?</span>Sized,
+    S: DynSampler + <span class="question-mark">?</span>Sized,
+    T: DynTextureView + <span class="question-mark">?</span>Sized,
+    A: DynAccelerationStructure + <span class="question-mark">?</span>Sized,
+&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::BindGroupLayout,
-    <span class="kw">pub </span>buffers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[BufferBinding&lt;<span class="lifetime">'a</span>, A&gt;],
-    <span class="kw">pub </span>samplers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Sampler],
-    <span class="kw">pub </span>textures: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[TextureBinding&lt;<span class="lifetime">'a</span>, A&gt;],
+    <span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Bgl,
+    <span class="kw">pub </span>buffers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[BufferBinding&lt;<span class="lifetime">'a</span>, B&gt;],
+    <span class="kw">pub </span>samplers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>S],
+    <span class="kw">pub </span>textures: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[TextureBinding&lt;<span class="lifetime">'a</span>, T&gt;],
     <span class="kw">pub </span>entries: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[BindGroupEntry],
-    <span class="kw">pub </span>acceleration_structures: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::AccelerationStructure],
+    <span class="kw">pub </span>acceleration_structures: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A],
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>CommandEncoderDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>CommandEncoderDescriptor&lt;<span class="lifetime">'a</span>, Q: DynQueue + <span class="question-mark">?</span>Sized&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="kw">pub </span>queue: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Queue,
+    <span class="kw">pub </span>queue: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Q,
 }
 
 <span class="doccomment">/// Naga shader module.
@@ -4145,9 +4213,9 @@
 
 <span class="doccomment">/// Describes a programmable pipeline stage.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ProgrammableStage&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>ProgrammableStage&lt;<span class="lifetime">'a</span>, M: DynShaderModule + <span class="question-mark">?</span>Sized&gt; {
     <span class="doccomment">/// The compiled shader module for this stage.
-    </span><span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::ShaderModule,
+    </span><span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>M,
     <span class="doccomment">/// The name of the entry point in the compiled shader. There must be a function with this name
     ///  in the shader.
     </span><span class="kw">pub </span>entry_point: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
@@ -4160,8 +4228,7 @@
     </span><span class="kw">pub </span>zero_initialize_workgroup_memory: bool,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>ProgrammableStage&lt;<span class="lifetime">'_</span>, A&gt; {
+<span class="kw">impl</span>&lt;M: DynShaderModule + <span class="question-mark">?</span>Sized&gt; Clone <span class="kw">for </span>ProgrammableStage&lt;<span class="lifetime">'_</span>, M&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             module: <span class="self">self</span>.module,
@@ -4174,14 +4241,19 @@
 
 <span class="doccomment">/// Describes a compute pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    Pl: DynPipelineLayout + <span class="question-mark">?</span>Sized,
+    M: DynShaderModule + <span class="question-mark">?</span>Sized,
+    Pc: DynPipelineCache + <span class="question-mark">?</span>Sized,
+&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineLayout,
+    </span><span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Pl,
     <span class="doccomment">/// The compiled compute stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStage&lt;<span class="lifetime">'a</span>, A&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStage&lt;<span class="lifetime">'a</span>, M&gt;,
     <span class="doccomment">/// The cache which will be used and filled when compiling this pipeline
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineCache&gt;,
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Pc&gt;,
 }
 
 <span class="kw">pub struct </span>PipelineCacheDescriptor&lt;<span class="lifetime">'a</span>&gt; {
@@ -4202,14 +4274,19 @@
 
 <span class="doccomment">/// Describes a render (graphics) pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    Pl: DynPipelineLayout + <span class="question-mark">?</span>Sized,
+    M: DynShaderModule + <span class="question-mark">?</span>Sized,
+    Pc: DynPipelineCache + <span class="question-mark">?</span>Sized,
+&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineLayout,
+    </span><span class="kw">pub </span>layout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Pl,
     <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
     </span><span class="kw">pub </span>vertex_buffers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;],
     <span class="doccomment">/// The vertex stage for this pipeline.
-    </span><span class="kw">pub </span>vertex_stage: ProgrammableStage&lt;<span class="lifetime">'a</span>, A&gt;,
+    </span><span class="kw">pub </span>vertex_stage: ProgrammableStage&lt;<span class="lifetime">'a</span>, M&gt;,
     <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.
     </span><span class="kw">pub </span>primitive: wgt::PrimitiveState,
     <span class="doccomment">/// The effect of draw calls on the depth and stencil aspects of the output target, if any.
@@ -4217,14 +4294,14 @@
     <span class="doccomment">/// The multi-sampling properties of the pipeline.
     </span><span class="kw">pub </span>multisample: wgt::MultisampleState,
     <span class="doccomment">/// The fragment stage for this pipeline.
-    </span><span class="kw">pub </span>fragment_stage: <span class="prelude-ty">Option</span>&lt;ProgrammableStage&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+    </span><span class="kw">pub </span>fragment_stage: <span class="prelude-ty">Option</span>&lt;ProgrammableStage&lt;<span class="lifetime">'a</span>, M&gt;&gt;,
     <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
     </span><span class="kw">pub </span>color_targets: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;],
     <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
     /// layers the attachments will have.
     </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
     <span class="doccomment">/// The cache which will be used and filled when compiling this pipeline
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::PipelineCache&gt;,
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Pc&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone)]
@@ -4257,14 +4334,14 @@
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>BufferBarrier&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer,
+</span><span class="kw">pub struct </span>BufferBarrier&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>B,
     <span class="kw">pub </span>usage: Range&lt;BufferUses&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>TextureBarrier&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>texture: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Texture,
+</span><span class="kw">pub struct </span>TextureBarrier&lt;<span class="lifetime">'a</span>, T: DynTexture + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>texture: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T,
     <span class="kw">pub </span>range: wgt::ImageSubresourceRange,
     <span class="kw">pub </span>usage: Range&lt;TextureUses&gt;,
 }
@@ -4307,104 +4384,53 @@
     <span class="kw">pub </span>size: CopyExtent,
 }
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Attachment&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>view: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::TextureView,
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Attachment&lt;<span class="lifetime">'a</span>, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>view: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T,
     <span class="doccomment">/// Contains either a single mutating usage as a target,
     /// or a valid combination of read-only usages.
     </span><span class="kw">pub </span>usage: TextureUses,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>Attachment&lt;<span class="lifetime">'_</span>, A&gt; {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            view: <span class="self">self</span>.view,
-            usage: <span class="self">self</span>.usage,
-        }
-    }
-}
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ColorAttachment&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>target: Attachment&lt;<span class="lifetime">'a</span>, A&gt;,
-    <span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;Attachment&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ColorAttachment&lt;<span class="lifetime">'a</span>, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>target: Attachment&lt;<span class="lifetime">'a</span>, T&gt;,
+    <span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;Attachment&lt;<span class="lifetime">'a</span>, T&gt;&gt;,
     <span class="kw">pub </span>ops: AttachmentOps,
     <span class="kw">pub </span>clear_value: wgt::Color,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>ColorAttachment&lt;<span class="lifetime">'_</span>, A&gt; {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            target: <span class="self">self</span>.target.clone(),
-            resolve_target: <span class="self">self</span>.resolve_target.clone(),
-            ops: <span class="self">self</span>.ops,
-            clear_value: <span class="self">self</span>.clear_value,
-        }
-    }
-}
-
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>DepthStencilAttachment&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>target: Attachment&lt;<span class="lifetime">'a</span>, A&gt;,
+</span><span class="kw">pub struct </span>DepthStencilAttachment&lt;<span class="lifetime">'a</span>, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>target: Attachment&lt;<span class="lifetime">'a</span>, T&gt;,
     <span class="kw">pub </span>depth_ops: AttachmentOps,
     <span class="kw">pub </span>stencil_ops: AttachmentOps,
     <span class="kw">pub </span>clear_value: (f32, u32),
 }
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>RenderPassTimestampWrites&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>query_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::QuerySet,
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>PassTimestampWrites&lt;<span class="lifetime">'a</span>, Q: DynQuerySet + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>query_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Q,
     <span class="kw">pub </span>beginning_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     <span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>RenderPassTimestampWrites&lt;<span class="lifetime">'_</span>, A&gt; {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            query_set: <span class="self">self</span>.query_set,
-            beginning_of_pass_write_index: <span class="self">self</span>.beginning_of_pass_write_index,
-            end_of_pass_write_index: <span class="self">self</span>.end_of_pass_write_index,
-        }
-    }
-}
-
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>RenderPassDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>RenderPassDescriptor&lt;<span class="lifetime">'a</span>, Q: DynQuerySet + <span class="question-mark">?</span>Sized, T: DynTextureView + <span class="question-mark">?</span>Sized&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>extent: wgt::Extent3d,
     <span class="kw">pub </span>sample_count: u32,
-    <span class="kw">pub </span>color_attachments: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;ColorAttachment&lt;<span class="lifetime">'a</span>, A&gt;&gt;],
-    <span class="kw">pub </span>depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;DepthStencilAttachment&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+    <span class="kw">pub </span>color_attachments: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;ColorAttachment&lt;<span class="lifetime">'a</span>, T&gt;&gt;],
+    <span class="kw">pub </span>depth_stencil_attachment: <span class="prelude-ty">Option</span>&lt;DepthStencilAttachment&lt;<span class="lifetime">'a</span>, T&gt;&gt;,
     <span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
-    <span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;RenderPassTimestampWrites&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
-    <span class="kw">pub </span>occlusion_query_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::QuerySet&gt;,
-}
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ComputePassTimestampWrites&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>query_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::QuerySet,
-    <span class="kw">pub </span>beginning_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-    <span class="kw">pub </span>end_of_pass_write_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-}
-
-<span class="comment">// Rust gets confused about the impl requirements for `A`
-</span><span class="kw">impl</span>&lt;A: Api&gt; Clone <span class="kw">for </span>ComputePassTimestampWrites&lt;<span class="lifetime">'_</span>, A&gt; {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            query_set: <span class="self">self</span>.query_set,
-            beginning_of_pass_write_index: <span class="self">self</span>.beginning_of_pass_write_index,
-            end_of_pass_write_index: <span class="self">self</span>.end_of_pass_write_index,
-        }
-    }
+    <span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;PassTimestampWrites&lt;<span class="lifetime">'a</span>, Q&gt;&gt;,
+    <span class="kw">pub </span>occlusion_query_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Q&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>ComputePassDescriptor&lt;<span class="lifetime">'a</span>, Q: DynQuerySet + <span class="question-mark">?</span>Sized&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+    <span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;PassTimestampWrites&lt;<span class="lifetime">'a</span>, Q&gt;&gt;,
 }
 
 <span class="doccomment">/// Stores the text of any validation errors that have occurred since
@@ -4479,13 +4505,17 @@
 <span class="doccomment">/// Updates use source_acceleration_structure if present, else the update will be performed in place.
 /// For updates, only the data is allowed to change (not the meta data or sizes).
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>entries: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, A&gt;,
+</span><span class="kw">pub struct </span>BuildAccelerationStructureDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    B: DynBuffer + <span class="question-mark">?</span>Sized,
+    A: DynAccelerationStructure + <span class="question-mark">?</span>Sized,
+&gt; {
+    <span class="kw">pub </span>entries: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, B&gt;,
     <span class="kw">pub </span>mode: AccelerationStructureBuildMode,
     <span class="kw">pub </span>flags: AccelerationStructureBuildFlags,
-    <span class="kw">pub </span>source_acceleration_structure: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::AccelerationStructure&gt;,
-    <span class="kw">pub </span>destination_acceleration_structure: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::AccelerationStructure,
-    <span class="kw">pub </span>scratch_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer,
+    <span class="kw">pub </span>source_acceleration_structure: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A&gt;,
+    <span class="kw">pub </span>destination_acceleration_structure: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A,
+    <span class="kw">pub </span>scratch_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>B,
     <span class="kw">pub </span>scratch_buffer_offset: wgt::BufferAddress,
 }
 
@@ -4495,8 +4525,8 @@
 ///   may result in reduced size requirements.
 /// - Any other change may result in a bigger or smaller size requirement.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>entries: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, A&gt;,
+</span><span class="kw">pub struct </span>GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>entries: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, B&gt;,
     <span class="kw">pub </span>flags: AccelerationStructureBuildFlags,
 }
 
@@ -4505,31 +4535,31 @@
 /// * `Triangles` - Multiple triangle meshes for a bottom level acceleration structure
 /// * `AABBs` - List of list of axis aligned bounding boxes for a bottom level acceleration structure
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    Instances(AccelerationStructureInstances&lt;<span class="lifetime">'a</span>, A&gt;),
-    Triangles(Vec&lt;AccelerationStructureTriangles&lt;<span class="lifetime">'a</span>, A&gt;&gt;),
-    AABBs(Vec&lt;AccelerationStructureAABBs&lt;<span class="lifetime">'a</span>, A&gt;&gt;),
+</span><span class="kw">pub enum </span>AccelerationStructureEntries&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    Instances(AccelerationStructureInstances&lt;<span class="lifetime">'a</span>, B&gt;),
+    Triangles(Vec&lt;AccelerationStructureTriangles&lt;<span class="lifetime">'a</span>, B&gt;&gt;),
+    AABBs(Vec&lt;AccelerationStructureAABBs&lt;<span class="lifetime">'a</span>, B&gt;&gt;),
 }
 
 <span class="doccomment">/// * `first_vertex` - offset in the vertex buffer (as number of vertices)
 /// * `indices` - optional index buffer with attributes
 /// * `transform` - optional transform
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>AccelerationStructureTriangles&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>vertex_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer&gt;,
+</span><span class="kw">pub struct </span>AccelerationStructureTriangles&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>vertex_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>B&gt;,
     <span class="kw">pub </span>vertex_format: wgt::VertexFormat,
     <span class="kw">pub </span>first_vertex: u32,
     <span class="kw">pub </span>vertex_count: u32,
     <span class="kw">pub </span>vertex_stride: wgt::BufferAddress,
-    <span class="kw">pub </span>indices: <span class="prelude-ty">Option</span>&lt;AccelerationStructureTriangleIndices&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
-    <span class="kw">pub </span>transform: <span class="prelude-ty">Option</span>&lt;AccelerationStructureTriangleTransform&lt;<span class="lifetime">'a</span>, A&gt;&gt;,
+    <span class="kw">pub </span>indices: <span class="prelude-ty">Option</span>&lt;AccelerationStructureTriangleIndices&lt;<span class="lifetime">'a</span>, B&gt;&gt;,
+    <span class="kw">pub </span>transform: <span class="prelude-ty">Option</span>&lt;AccelerationStructureTriangleTransform&lt;<span class="lifetime">'a</span>, B&gt;&gt;,
     <span class="kw">pub </span>flags: AccelerationStructureGeometryFlags,
 }
 
 <span class="doccomment">/// * `offset` - offset in bytes
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>AccelerationStructureAABBs&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer&gt;,
+</span><span class="kw">pub struct </span>AccelerationStructureAABBs&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>B&gt;,
     <span class="kw">pub </span>offset: u32,
     <span class="kw">pub </span>count: u32,
     <span class="kw">pub </span>stride: wgt::BufferAddress,
@@ -4538,25 +4568,25 @@
 
 <span class="doccomment">/// * `offset` - offset in bytes
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>AccelerationStructureInstances&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer&gt;,
+</span><span class="kw">pub struct </span>AccelerationStructureInstances&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>B&gt;,
     <span class="kw">pub </span>offset: u32,
     <span class="kw">pub </span>count: u32,
 }
 
 <span class="doccomment">/// * `offset` - offset in bytes
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>AccelerationStructureTriangleIndices&lt;<span class="lifetime">'a</span>, A: Api&gt; {
+</span><span class="kw">pub struct </span>AccelerationStructureTriangleIndices&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
     <span class="kw">pub </span>format: wgt::IndexFormat,
-    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer&gt;,
+    <span class="kw">pub </span>buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>B&gt;,
     <span class="kw">pub </span>offset: u32,
     <span class="kw">pub </span>count: u32,
 }
 
 <span class="doccomment">/// * `offset` - offset in bytes
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>AccelerationStructureTriangleTransform&lt;<span class="lifetime">'a</span>, A: Api&gt; {
-    <span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A::Buffer,
+</span><span class="kw">pub struct </span>AccelerationStructureTriangleTransform&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
+    <span class="kw">pub </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>B,
     <span class="kw">pub </span>offset: u32,
 }
 

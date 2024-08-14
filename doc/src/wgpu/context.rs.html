@@ -4096,12 +4096,6 @@
 <a href="#4095" id="4095">4095</a>
 <a href="#4096" id="4096">4096</a>
 <a href="#4097" id="4097">4097</a>
-<a href="#4098" id="4098">4098</a>
-<a href="#4099" id="4099">4099</a>
-<a href="#4100" id="4100">4100</a>
-<a href="#4101" id="4101">4101</a>
-<a href="#4102" id="4102">4102</a>
-<a href="#4103" id="4103">4103</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4282,12 +4276,8 @@
         SurfaceStatus,
         <span class="self">Self</span>::SurfaceOutputDetail,
     );
-    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span><span class="self">Self</span>::TextureId, detail: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceOutputDetail);
-    <span class="kw">fn </span>surface_texture_discard(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span><span class="self">Self</span>::TextureId,
-        detail: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceOutputDetail,
-    );
+    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceOutputDetail);
+    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceOutputDetail);
 
     <span class="kw">fn </span>device_features(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) -&gt; Features;
     <span class="kw">fn </span>device_limits(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) -&gt; Limits;
@@ -5345,8 +5335,8 @@
         SurfaceStatus,
         Box&lt;<span class="kw">dyn </span>AnyWasmNotSendSync&gt;,
     );
-    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
-    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
+    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
+    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
 
     <span class="kw">fn </span>device_features(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; Features;
     <span class="kw">fn </span>device_limits(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; Limits;
@@ -6308,14 +6298,12 @@
         )
     }
 
-    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
-        <span class="kw">let </span>texture = &lt;T::TextureId&gt;::from(<span class="kw-2">*</span>texture);
-        Context::surface_present(<span class="self">self</span>, <span class="kw-2">&amp;</span>texture, detail.downcast_ref().unwrap())
+    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
+        Context::surface_present(<span class="self">self</span>, detail.downcast_ref().unwrap())
     }
 
-    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
-        <span class="kw">let </span>texture = &lt;T::TextureId&gt;::from(<span class="kw-2">*</span>texture);
-        Context::surface_texture_discard(<span class="self">self</span>, <span class="kw-2">&amp;</span>texture, detail.downcast_ref().unwrap())
+    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
+        Context::surface_texture_discard(<span class="self">self</span>, detail.downcast_ref().unwrap())
     }
 
     <span class="kw">fn </span>device_features(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; Features {

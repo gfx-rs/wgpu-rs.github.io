@@ -1198,6 +1198,15 @@
 <a href="#1197" id="1197">1197</a>
 <a href="#1198" id="1198">1198</a>
 <a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1473,7 +1482,7 @@
 
     <span class="kw">unsafe fn </span>transition_buffers&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;&gt;,
     {
         <span class="kw">if </span>!<span class="self">self
             </span>.private_caps
@@ -1498,7 +1507,7 @@
 
     <span class="kw">unsafe fn </span>transition_textures&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Texture&gt;&gt;,
     {
         <span class="kw">if </span>!<span class="self">self
             </span>.private_caps
@@ -1694,7 +1703,10 @@
 
     <span class="comment">// render
 
-    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+    </span><span class="kw">unsafe fn </span>begin_render_pass(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::QuerySet, <span class="kw">super</span>::TextureView&gt;,
+    ) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.state.end_of_pass_timestamp.is_none());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = desc.timestamp_writes {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = t.beginning_of_pass_write_index {
@@ -2178,7 +2190,7 @@
 
     <span class="kw">unsafe fn </span>set_index_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
         format: wgt::IndexFormat,
     ) {
         <span class="self">self</span>.state.index_offset = binding.offset;
@@ -2190,7 +2202,7 @@
     <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         index: u32,
-        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
     ) {
         <span class="self">self</span>.state.dirty_vbuf_mask |= <span class="number">1 </span>&lt;&lt; index;
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">ref mut </span>vb) = <span class="self">self</span>.state.vertex_buffers[index <span class="kw">as </span>usize];
@@ -2337,7 +2349,7 @@
 
     <span class="comment">// compute
 
-    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor&lt;<span class="kw">super</span>::QuerySet&gt;) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.state.end_of_pass_timestamp.is_none());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = desc.timestamp_writes {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = t.beginning_of_pass_write_index {
@@ -2385,7 +2397,13 @@
         _descriptors: T,
     ) <span class="kw">where
         </span><span class="kw">super</span>::Api: <span class="lifetime">'a</span>,
-        T: IntoIterator&lt;Item = <span class="kw">crate</span>::BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        T: IntoIterator&lt;
+            Item = <span class="kw">crate</span>::BuildAccelerationStructureDescriptor&lt;
+                <span class="lifetime">'a</span>,
+                <span class="kw">super</span>::Buffer,
+                <span class="kw">super</span>::AccelerationStructure,
+            &gt;,
+        &gt;,
     {
         <span class="macro">unimplemented!</span>()
     }

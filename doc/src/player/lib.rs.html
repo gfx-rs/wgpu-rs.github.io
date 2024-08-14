@@ -368,7 +368,6 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This is a player library for WebGPU traces.
 
 </span><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
@@ -379,12 +378,12 @@
 <span class="kw">use </span>std::{borrow::Cow, fs, path::Path};
 
 <span class="kw">pub trait </span>GlobalPlay {
-    <span class="kw">fn </span>encode_commands&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">fn </span>encode_commands(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder: wgc::id::CommandEncoderId,
         commands: Vec&lt;trace::Command&gt;,
     ) -&gt; wgc::id::CommandBufferId;
-    <span class="kw">fn </span>process&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: wgc::id::DeviceId,
         queue: wgc::id::QueueId,
@@ -395,7 +394,7 @@
 }
 
 <span class="kw">impl </span>GlobalPlay <span class="kw">for </span>wgc::global::Global {
-    <span class="kw">fn </span>encode_commands&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">fn </span>encode_commands(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder: wgc::id::CommandEncoderId,
         commands: Vec&lt;trace::Command&gt;,
@@ -409,33 +408,33 @@
                     dst_offset,
                     size,
                 } =&gt; <span class="self">self
-                    </span>.command_encoder_copy_buffer_to_buffer::&lt;A&gt;(
+                    </span>.command_encoder_copy_buffer_to_buffer(
                         encoder, src, src_offset, dst, dst_offset, size,
                     )
                     .unwrap(),
                 trace::Command::CopyBufferToTexture { src, dst, size } =&gt; <span class="self">self
-                    </span>.command_encoder_copy_buffer_to_texture::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
+                    </span>.command_encoder_copy_buffer_to_texture(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
                     .unwrap(),
                 trace::Command::CopyTextureToBuffer { src, dst, size } =&gt; <span class="self">self
-                    </span>.command_encoder_copy_texture_to_buffer::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
+                    </span>.command_encoder_copy_texture_to_buffer(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
                     .unwrap(),
                 trace::Command::CopyTextureToTexture { src, dst, size } =&gt; <span class="self">self
-                    </span>.command_encoder_copy_texture_to_texture::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
+                    </span>.command_encoder_copy_texture_to_texture(encoder, <span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst, <span class="kw-2">&amp;</span>size)
                     .unwrap(),
                 trace::Command::ClearBuffer { dst, offset, size } =&gt; <span class="self">self
-                    </span>.command_encoder_clear_buffer::&lt;A&gt;(encoder, dst, offset, size)
+                    </span>.command_encoder_clear_buffer(encoder, dst, offset, size)
                     .unwrap(),
                 trace::Command::ClearTexture {
                     dst,
                     subresource_range,
                 } =&gt; <span class="self">self
-                    </span>.command_encoder_clear_texture::&lt;A&gt;(encoder, dst, <span class="kw-2">&amp;</span>subresource_range)
+                    </span>.command_encoder_clear_texture(encoder, dst, <span class="kw-2">&amp;</span>subresource_range)
                     .unwrap(),
                 trace::Command::WriteTimestamp {
                     query_set_id,
                     query_index,
                 } =&gt; <span class="self">self
-                    </span>.command_encoder_write_timestamp::&lt;A&gt;(encoder, query_set_id, query_index)
+                    </span>.command_encoder_write_timestamp(encoder, query_set_id, query_index)
                     .unwrap(),
                 trace::Command::ResolveQuerySet {
                     query_set_id,
@@ -444,7 +443,7 @@
                     destination,
                     destination_offset,
                 } =&gt; <span class="self">self
-                    </span>.command_encoder_resolve_query_set::&lt;A&gt;(
+                    </span>.command_encoder_resolve_query_set(
                         encoder,
                         query_set_id,
                         start_query,
@@ -454,19 +453,19 @@
                     )
                     .unwrap(),
                 trace::Command::PushDebugGroup(marker) =&gt; <span class="self">self
-                    </span>.command_encoder_push_debug_group::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>marker)
+                    </span>.command_encoder_push_debug_group(encoder, <span class="kw-2">&amp;</span>marker)
                     .unwrap(),
                 trace::Command::PopDebugGroup =&gt; {
-                    <span class="self">self</span>.command_encoder_pop_debug_group::&lt;A&gt;(encoder).unwrap()
+                    <span class="self">self</span>.command_encoder_pop_debug_group(encoder).unwrap()
                 }
                 trace::Command::InsertDebugMarker(marker) =&gt; <span class="self">self
-                    </span>.command_encoder_insert_debug_marker::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>marker)
+                    </span>.command_encoder_insert_debug_marker(encoder, <span class="kw-2">&amp;</span>marker)
                     .unwrap(),
                 trace::Command::RunComputePass {
                     base,
                     timestamp_writes,
                 } =&gt; {
-                    <span class="self">self</span>.compute_pass_end_with_unresolved_commands::&lt;A&gt;(
+                    <span class="self">self</span>.compute_pass_end_with_unresolved_commands(
                         encoder,
                         base,
                         timestamp_writes.as_ref(),
@@ -480,7 +479,7 @@
                     timestamp_writes,
                     occlusion_query_set_id,
                 } =&gt; {
-                    <span class="self">self</span>.render_pass_end_with_unresolved_commands::&lt;A&gt;(
+                    <span class="self">self</span>.render_pass_end_with_unresolved_commands(
                         encoder,
                         base,
                         <span class="kw-2">&amp;</span>target_colors,
@@ -492,15 +491,15 @@
                 }
             }
         }
-        <span class="kw">let </span>(cmd_buf, error) = <span class="self">self
-            </span>.command_encoder_finish::&lt;A&gt;(encoder, <span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor { label: <span class="prelude-val">None </span>});
+        <span class="kw">let </span>(cmd_buf, error) =
+            <span class="self">self</span>.command_encoder_finish(encoder, <span class="kw-2">&amp;</span>wgt::CommandBufferDescriptor { label: <span class="prelude-val">None </span>});
         <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
             <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
         }
         cmd_buf
     }
 
-    <span class="kw">fn </span>process&lt;A: wgc::hal_api::HalApi&gt;(
+    <span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: wgc::id::DeviceId,
         queue: wgc::id::QueueId,
@@ -521,83 +520,83 @@
                 <span class="macro">panic!</span>(<span class="string">"Unexpected Surface action: winit feature is not enabled"</span>)
             }
             Action::CreateBuffer(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_buffer::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_buffer(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::FreeBuffer(id) =&gt; {
-                <span class="self">self</span>.buffer_destroy::&lt;A&gt;(id).unwrap();
+                <span class="self">self</span>.buffer_destroy(id).unwrap();
             }
             Action::DestroyBuffer(id) =&gt; {
-                <span class="self">self</span>.buffer_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.buffer_drop(id);
             }
             Action::CreateTexture(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_texture::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_texture(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::FreeTexture(id) =&gt; {
-                <span class="self">self</span>.texture_destroy::&lt;A&gt;(id).unwrap();
+                <span class="self">self</span>.texture_destroy(id).unwrap();
             }
             Action::DestroyTexture(id) =&gt; {
-                <span class="self">self</span>.texture_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.texture_drop(id);
             }
             Action::CreateTextureView {
                 id,
                 parent_id,
                 desc,
             } =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.texture_create_view::&lt;A&gt;(parent_id, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.texture_create_view(parent_id, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyTextureView(id) =&gt; {
-                <span class="self">self</span>.texture_view_drop::&lt;A&gt;(id).unwrap();
+                <span class="self">self</span>.texture_view_drop(id).unwrap();
             }
             Action::CreateSampler(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_sampler::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_sampler(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroySampler(id) =&gt; {
-                <span class="self">self</span>.sampler_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.sampler_drop(id);
             }
             Action::GetSurfaceTexture { id, parent_id } =&gt; {
-                <span class="self">self</span>.surface_get_current_texture::&lt;A&gt;(parent_id, <span class="prelude-val">Some</span>(id))
+                <span class="self">self</span>.surface_get_current_texture(parent_id, <span class="prelude-val">Some</span>(id))
                     .unwrap()
                     .texture_id
                     .unwrap();
             }
             Action::CreateBindGroupLayout(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_bind_group_layout::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_bind_group_layout(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyBindGroupLayout(id) =&gt; {
-                <span class="self">self</span>.bind_group_layout_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.bind_group_layout_drop(id);
             }
             Action::CreatePipelineLayout(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_pipeline_layout::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_pipeline_layout(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyPipelineLayout(id) =&gt; {
-                <span class="self">self</span>.pipeline_layout_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.pipeline_layout_drop(id);
             }
             Action::CreateBindGroup(id, desc) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_bind_group::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_bind_group(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyBindGroup(id) =&gt; {
-                <span class="self">self</span>.bind_group_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.bind_group_drop(id);
             }
             Action::CreateShaderModule { id, desc, data } =&gt; {
                 <span class="macro">log::debug!</span>(<span class="string">"Creating shader from {}"</span>, data);
@@ -610,14 +609,13 @@
                 } <span class="kw">else </span>{
                     <span class="macro">panic!</span>(<span class="string">"Unknown shader {}"</span>, data);
                 };
-                <span class="kw">let </span>(<span class="kw">_</span>, error) =
-                    <span class="self">self</span>.device_create_shader_module::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, source, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_shader_module(device, <span class="kw-2">&amp;</span>desc, source, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">println!</span>(<span class="string">"shader compilation error:\n---{code}\n---\n{e}"</span>);
                 }
             }
             Action::DestroyShaderModule(id) =&gt; {
-                <span class="self">self</span>.shader_module_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.shader_module_drop(id);
             }
             Action::CreateComputePipeline {
                 id,
@@ -632,13 +630,13 @@
                             group_ids: <span class="kw-2">&amp;</span>ic.group_ids,
                         });
                 <span class="kw">let </span>(<span class="kw">_</span>, error) =
-                    <span class="self">self</span>.device_create_compute_pipeline::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id), implicit_ids);
+                    <span class="self">self</span>.device_create_compute_pipeline(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id), implicit_ids);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyComputePipeline(id) =&gt; {
-                <span class="self">self</span>.compute_pipeline_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.compute_pipeline_drop(id);
             }
             Action::CreateRenderPipeline {
                 id,
@@ -653,24 +651,24 @@
                             group_ids: <span class="kw-2">&amp;</span>ic.group_ids,
                         });
                 <span class="kw">let </span>(<span class="kw">_</span>, error) =
-                    <span class="self">self</span>.device_create_render_pipeline::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id), implicit_ids);
+                    <span class="self">self</span>.device_create_render_pipeline(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id), implicit_ids);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyRenderPipeline(id) =&gt; {
-                <span class="self">self</span>.render_pipeline_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.render_pipeline_drop(id);
             }
             Action::CreatePipelineCache { id, desc } =&gt; {
-                <span class="kw">let _ </span>= <span class="kw">unsafe </span>{ <span class="self">self</span>.device_create_pipeline_cache::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id)) };
+                <span class="kw">let _ </span>= <span class="kw">unsafe </span>{ <span class="self">self</span>.device_create_pipeline_cache(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id)) };
             }
             Action::DestroyPipelineCache(id) =&gt; {
-                <span class="self">self</span>.pipeline_cache_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.pipeline_cache_drop(id);
             }
             Action::CreateRenderBundle { id, desc, base } =&gt; {
                 <span class="kw">let </span>bundle =
                     wgc::command::RenderBundleEncoder::new(<span class="kw-2">&amp;</span>desc, device, <span class="prelude-val">Some</span>(base)).unwrap();
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.render_bundle_encoder_finish::&lt;A&gt;(
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.render_bundle_encoder_finish(
                     bundle,
                     <span class="kw-2">&amp;</span>wgt::RenderBundleDescriptor { label: desc.label },
                     <span class="prelude-val">Some</span>(id),
@@ -680,16 +678,16 @@
                 }
             }
             Action::DestroyRenderBundle(id) =&gt; {
-                <span class="self">self</span>.render_bundle_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.render_bundle_drop(id);
             }
             Action::CreateQuerySet { id, desc } =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_query_set::&lt;A&gt;(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
+                <span class="kw">let </span>(<span class="kw">_</span>, error) = <span class="self">self</span>.device_create_query_set(device, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">Some</span>(id));
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
             }
             Action::DestroyQuerySet(id) =&gt; {
-                <span class="self">self</span>.query_set_drop::&lt;A&gt;(id);
+                <span class="self">self</span>.query_set_drop(id);
             }
             Action::WriteBuffer {
                 id,
@@ -700,10 +698,10 @@
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
                 <span class="kw">let </span>size = (range.end - range.start) <span class="kw">as </span>usize;
                 <span class="kw">if </span>queued {
-                    <span class="self">self</span>.queue_write_buffer::&lt;A&gt;(queue, id, range.start, <span class="kw-2">&amp;</span>bin)
+                    <span class="self">self</span>.queue_write_buffer(queue, id, range.start, <span class="kw-2">&amp;</span>bin)
                         .unwrap();
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.device_set_buffer_data::&lt;A&gt;(id, range.start, <span class="kw-2">&amp;</span>bin[..size])
+                    <span class="self">self</span>.device_set_buffer_data(id, range.start, <span class="kw-2">&amp;</span>bin[..size])
                         .unwrap();
                 }
             }
@@ -714,14 +712,14 @@
                 size,
             } =&gt; {
                 <span class="kw">let </span>bin = std::fs::read(dir.join(data)).unwrap();
-                <span class="self">self</span>.queue_write_texture::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
+                <span class="self">self</span>.queue_write_texture(queue, <span class="kw-2">&amp;</span>to, <span class="kw-2">&amp;</span>bin, <span class="kw-2">&amp;</span>layout, <span class="kw-2">&amp;</span>size)
                     .unwrap();
             }
             Action::Submit(_index, <span class="kw-2">ref </span>commands) <span class="kw">if </span>commands.is_empty() =&gt; {
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>[]).unwrap();
+                <span class="self">self</span>.queue_submit(queue, <span class="kw-2">&amp;</span>[]).unwrap();
             }
             Action::Submit(_index, commands) =&gt; {
-                <span class="kw">let </span>(encoder, error) = <span class="self">self</span>.device_create_command_encoder::&lt;A&gt;(
+                <span class="kw">let </span>(encoder, error) = <span class="self">self</span>.device_create_command_encoder(
                     device,
                     <span class="kw-2">&amp;</span>wgt::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>},
                     <span class="prelude-val">Some</span>(
@@ -733,8 +731,8 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
                     <span class="macro">panic!</span>(<span class="string">"{e}"</span>);
                 }
-                <span class="kw">let </span>cmdbuf = <span class="self">self</span>.encode_commands::&lt;A&gt;(encoder, commands);
-                <span class="self">self</span>.queue_submit::&lt;A&gt;(queue, <span class="kw-2">&amp;</span>[cmdbuf]).unwrap();
+                <span class="kw">let </span>cmdbuf = <span class="self">self</span>.encode_commands(encoder, commands);
+                <span class="self">self</span>.queue_submit(queue, <span class="kw-2">&amp;</span>[cmdbuf]).unwrap();
             }
         }
     }

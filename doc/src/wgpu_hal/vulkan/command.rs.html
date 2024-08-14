@@ -1128,6 +1128,18 @@
 <a href="#1127" id="1127">1127</a>
 <a href="#1128" id="1128">1128</a>
 <a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -1246,7 +1258,7 @@
 
     <span class="kw">unsafe fn </span>transition_buffers&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;&gt;,
     {
         <span class="comment">//Note: this is done so that we never end up with empty stage flags
         </span><span class="kw">let </span><span class="kw-2">mut </span>src_stages = vk::PipelineStageFlags::TOP_OF_PIPE;
@@ -1286,7 +1298,7 @@
 
     <span class="kw">unsafe fn </span>transition_textures&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
     <span class="kw">where
-        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureBarrier&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Texture&gt;&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>src_stages = vk::PipelineStageFlags::empty();
         <span class="kw">let </span><span class="kw-2">mut </span>dst_stages = vk::PipelineStageFlags::empty();
@@ -1538,7 +1550,13 @@
     <span class="kw">unsafe fn </span>build_acceleration_structures&lt;<span class="lifetime">'a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, descriptor_count: u32, descriptors: T)
     <span class="kw">where
         </span><span class="kw">super</span>::Api: <span class="lifetime">'a</span>,
-        T: IntoIterator&lt;Item = <span class="kw">crate</span>::BuildAccelerationStructureDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;&gt;,
+        T: IntoIterator&lt;
+            Item = <span class="kw">crate</span>::BuildAccelerationStructureDescriptor&lt;
+                <span class="lifetime">'a</span>,
+                <span class="kw">super</span>::Buffer,
+                <span class="kw">super</span>::AccelerationStructure,
+            &gt;,
+        &gt;,
     {
         <span class="kw">const </span>CAPACITY_OUTER: usize = <span class="number">8</span>;
         <span class="kw">const </span>CAPACITY_INNER: usize = <span class="number">1</span>;
@@ -1774,7 +1792,10 @@
     }
     <span class="comment">// render
 
-    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+    </span><span class="kw">unsafe fn </span>begin_render_pass(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::QuerySet, <span class="kw">super</span>::TextureView&gt;,
+    ) {
         <span class="kw">let </span><span class="kw-2">mut </span>vk_clear_values =
             ArrayVec::&lt;vk::ClearValue, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
         <span class="kw">let </span><span class="kw-2">mut </span>vk_image_views = ArrayVec::&lt;vk::ImageView, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
@@ -2000,7 +2021,7 @@
 
     <span class="kw">unsafe fn </span>set_index_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
         format: wgt::IndexFormat,
     ) {
         <span class="kw">unsafe </span>{
@@ -2015,7 +2036,7 @@
     <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         index: u32,
-        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
     ) {
         <span class="kw">let </span>vk_buffers = [binding.buffer.raw];
         <span class="kw">let </span>vk_offsets = [binding.offset];
@@ -2197,7 +2218,10 @@
 
     <span class="comment">// compute
 
-    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor&lt;<span class="lifetime">'_</span>, <span class="kw">super</span>::Api&gt;) {
+    </span><span class="kw">unsafe fn </span>begin_compute_pass(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor&lt;<span class="lifetime">'_</span>, <span class="kw">super</span>::QuerySet&gt;,
+    ) {
         <span class="self">self</span>.bind_point = vk::PipelineBindPoint::COMPUTE;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.begin_debug_marker(label) };

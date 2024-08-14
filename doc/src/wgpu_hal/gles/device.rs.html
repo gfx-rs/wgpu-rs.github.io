@@ -1616,6 +1616,24 @@
 <a href="#1615" id="1615">1615</a>
 <a href="#1616" id="1616">1616</a>
 <a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a>
+<a href="#1622" id="1622">1622</a>
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1631,7 +1649,7 @@
 
 <span class="kw">type </span>ShaderStage&lt;<span class="lifetime">'a</span>&gt; = (
     naga::ShaderStage,
-    <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+    <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::ShaderModule&gt;,
 );
 <span class="kw">type </span>NameBindingMap = rustc_hash::FxHashMap&lt;String, (<span class="kw">super</span>::BindingRegister, u8)&gt;;
 
@@ -1823,7 +1841,7 @@
     <span class="kw">fn </span>create_shader(
         gl: <span class="kw-2">&amp;</span>glow::Context,
         naga_stage: naga::ShaderStage,
-        stage: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="kw">super</span>::Api&gt;,
+        stage: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ProgrammableStage&lt;<span class="kw">super</span>::ShaderModule&gt;,
         context: CompilationContext,
         program: glow::Program,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;glow::Shader, <span class="kw">crate</span>::PipelineError&gt; {
@@ -2727,7 +2745,7 @@
 
     <span class="kw">unsafe fn </span>create_command_encoder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoderDescriptor&lt;<span class="kw">super</span>::Queue&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandEncoder, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="self">self</span>.counters.command_encoders.add(<span class="number">1</span>);
 
@@ -2758,7 +2776,7 @@
 
     <span class="kw">unsafe fn </span>create_pipeline_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::BindGroupLayout&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineLayout, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">use </span>naga::back::glsl;
 
@@ -2850,7 +2868,13 @@
 
     <span class="kw">unsafe fn </span>create_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BindGroupDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BindGroupDescriptor&lt;
+            <span class="kw">super</span>::BindGroupLayout,
+            <span class="kw">super</span>::Buffer,
+            <span class="kw">super</span>::Sampler,
+            <span class="kw">super</span>::TextureView,
+            <span class="kw">super</span>::AccelerationStructure,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::BindGroup, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>contents = Vec::new();
 
@@ -2958,7 +2982,11 @@
 
     <span class="kw">unsafe fn </span>create_render_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPipelineDescriptor&lt;
+            <span class="kw">super</span>::PipelineLayout,
+            <span class="kw">super</span>::ShaderModule,
+            <span class="kw">super</span>::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::RenderPipeline, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
         <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
@@ -3048,7 +3076,11 @@
 
     <span class="kw">unsafe fn </span>create_compute_pipeline(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;<span class="kw">super</span>::Api&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePipelineDescriptor&lt;
+            <span class="kw">super</span>::PipelineLayout,
+            <span class="kw">super</span>::ShaderModule,
+            <span class="kw">super</span>::PipelineCache,
+        &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ComputePipeline, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
         <span class="kw">let </span><span class="kw-2">mut </span>shaders = ArrayVec::new();
@@ -3081,12 +3113,12 @@
     <span class="kw">unsafe fn </span>create_pipeline_cache(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::PipelineCacheError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineCache, <span class="kw">crate</span>::PipelineCacheError&gt; {
         <span class="comment">// Even though the cache doesn't do anything, we still return something here
         // as the least bad option
-        </span><span class="prelude-val">Ok</span>(())
+        </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineCache)
     }
-    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, (): ()) {}
+    <span class="kw">unsafe fn </span>destroy_pipeline_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw">super</span>::PipelineCache) {}
 
     <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))]
     </span><span class="kw">unsafe fn </span>create_query_set(
@@ -3207,22 +3239,26 @@
     <span class="kw">unsafe fn </span>create_acceleration_structure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::AccelerationStructureDescriptor,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::AccelerationStructure, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="macro">unimplemented!</span>()
     }
     <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Api&gt;,
+        _desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::GetAccelerationStructureBuildSizesDescriptor&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::Buffer&gt;,
     ) -&gt; <span class="kw">crate</span>::AccelerationStructureBuildSizes {
         <span class="macro">unimplemented!</span>()
     }
     <span class="kw">unsafe fn </span>get_acceleration_structure_device_address(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _acceleration_structure: <span class="kw-2">&amp;</span>(),
+        _acceleration_structure: <span class="kw-2">&amp;</span><span class="kw">super</span>::AccelerationStructure,
     ) -&gt; wgt::BufferAddress {
         <span class="macro">unimplemented!</span>()
     }
-    <span class="kw">unsafe fn </span>destroy_acceleration_structure(<span class="kw-2">&amp;</span><span class="self">self</span>, _acceleration_structure: ()) {}
+    <span class="kw">unsafe fn </span>destroy_acceleration_structure(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        _acceleration_structure: <span class="kw">super</span>::AccelerationStructure,
+    ) {
+    }
 
     <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
         <span class="self">self</span>.counters.clone()
