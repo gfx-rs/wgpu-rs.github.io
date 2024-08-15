@@ -1098,6 +1098,12 @@
 <a href="#1097" id="1097">1097</a>
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1261,7 +1267,11 @@
             <span class="macro">profiling::scope!</span>(<span class="string">"vkDeviceWaitIdle"</span>);
             <span class="comment">// We need to also wait until all presentation work is done. Because there is no way to portably wait until
             // the presentation work is done, we are forced to wait until the device is idle.
-            </span><span class="kw">let _ </span>= <span class="kw">unsafe </span>{ device.device_wait_idle() };
+            </span><span class="kw">let _ </span>= <span class="kw">unsafe </span>{
+                device
+                    .device_wait_idle()
+                    .map_err(<span class="kw">super</span>::map_host_device_oom_and_lost_err)
+            };
         };
 
         <span class="comment">// We cannot take this by value, as the function returns `self`.
@@ -2146,8 +2156,10 @@
                         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::SurfaceError::Outdated)
                     }
                     vk::Result::ERROR_SURFACE_LOST_KHR =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::SurfaceError::Lost),
-                    other =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::from(other).into()),
-                }
+                    <span class="comment">// We don't use VK_EXT_full_screen_exclusive
+                    // VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT
+                    </span>other =&gt; <span class="prelude-val">Err</span>(<span class="kw">super</span>::map_host_device_oom_and_lost_err(other).into()),
+                };
             }
         };
 

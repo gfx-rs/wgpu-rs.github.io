@@ -2505,6 +2505,70 @@
 <a href="#2504" id="2504">2504</a>
 <a href="#2505" id="2505">2505</a>
 <a href="#2506" id="2506">2506</a>
+<a href="#2507" id="2507">2507</a>
+<a href="#2508" id="2508">2508</a>
+<a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
+<a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a>
+<a href="#2527" id="2527">2527</a>
+<a href="#2528" id="2528">2528</a>
+<a href="#2529" id="2529">2529</a>
+<a href="#2530" id="2530">2530</a>
+<a href="#2531" id="2531">2531</a>
+<a href="#2532" id="2532">2532</a>
+<a href="#2533" id="2533">2533</a>
+<a href="#2534" id="2534">2534</a>
+<a href="#2535" id="2535">2535</a>
+<a href="#2536" id="2536">2536</a>
+<a href="#2537" id="2537">2537</a>
+<a href="#2538" id="2538">2538</a>
+<a href="#2539" id="2539">2539</a>
+<a href="#2540" id="2540">2540</a>
+<a href="#2541" id="2541">2541</a>
+<a href="#2542" id="2542">2542</a>
+<a href="#2543" id="2543">2543</a>
+<a href="#2544" id="2544">2544</a>
+<a href="#2545" id="2545">2545</a>
+<a href="#2546" id="2546">2546</a>
+<a href="#2547" id="2547">2547</a>
+<a href="#2548" id="2548">2548</a>
+<a href="#2549" id="2549">2549</a>
+<a href="#2550" id="2550">2550</a>
+<a href="#2551" id="2551">2551</a>
+<a href="#2552" id="2552">2552</a>
+<a href="#2553" id="2553">2553</a>
+<a href="#2554" id="2554">2554</a>
+<a href="#2555" id="2555">2555</a>
+<a href="#2556" id="2556">2556</a>
+<a href="#2557" id="2557">2557</a>
+<a href="#2558" id="2558">2558</a>
+<a href="#2559" id="2559">2559</a>
+<a href="#2560" id="2560">2560</a>
+<a href="#2561" id="2561">2561</a>
+<a href="#2562" id="2562">2562</a>
+<a href="#2563" id="2563">2563</a>
+<a href="#2564" id="2564">2564</a>
+<a href="#2565" id="2565">2565</a>
+<a href="#2566" id="2566">2566</a>
+<a href="#2567" id="2567">2567</a>
+<a href="#2568" id="2568">2568</a>
+<a href="#2569" id="2569">2569</a>
+<a href="#2570" id="2570">2570</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2685,7 +2749,11 @@
                     vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>multiview_info);
                 }
 
-                <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.create_render_pass(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+                <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+                    <span class="self">self</span>.raw
+                        .create_render_pass(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                        .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
+                </span>};
 
                 <span class="kw-2">*</span>e.insert(raw)
             }
@@ -2829,8 +2897,11 @@
             <span class="prelude-val">Err</span>(vk::Result::ERROR_OUT_OF_HOST_MEMORY) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_alloc::OutOfMemory::OutOfHostMemory)
             }
-            <span class="prelude-val">Err</span>(vk::Result::ERROR_TOO_MANY_OBJECTS) =&gt; <span class="macro">panic!</span>(<span class="string">"Too many objects"</span>),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected Vulkan error: `{err}`"</span>),
+            <span class="comment">// We don't use VK_KHR_external_memory
+            // VK_ERROR_INVALID_EXTERNAL_HANDLE
+            // We don't use VK_KHR_buffer_device_address
+            // VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR
+            </span><span class="prelude-val">Err</span>(err) =&gt; handle_unexpected(err),
         }
     }
 
@@ -2859,7 +2930,7 @@
                 <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::OutOfHostMemory)
             }
             <span class="prelude-val">Err</span>(vk::Result::ERROR_MEMORY_MAP_FAILED) =&gt; <span class="prelude-val">Err</span>(gpu_alloc::DeviceMapError::MapFailed),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">"Unexpected Vulkan error: `{err}`"</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; handle_unexpected(err),
         }
     }
 
@@ -2958,10 +3029,7 @@
             <span class="prelude-val">Err</span>(vk::Result::ERROR_FRAGMENTATION) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_descriptor::CreatePoolError::Fragmentation)
             }
-            <span class="prelude-val">Err</span>(other) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">"create_descriptor_pool: {:?}"</span>, other);
-                <span class="prelude-val">Err</span>(gpu_descriptor::CreatePoolError::OutOfHostMemory)
-            }
+            <span class="prelude-val">Err</span>(err) =&gt; handle_unexpected(err),
         }
     }
 
@@ -3002,10 +3070,7 @@
             <span class="prelude-val">Err</span>(vk::Result::ERROR_FRAGMENTED_POOL) =&gt; {
                 <span class="prelude-val">Err</span>(gpu_descriptor::DeviceAllocationError::FragmentedPool)
             }
-            <span class="prelude-val">Err</span>(other) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">"allocate_descriptor_sets: {:?}"</span>, other);
-                <span class="prelude-val">Err</span>(gpu_descriptor::DeviceAllocationError::OutOfHostMemory)
-            }
+            <span class="prelude-val">Err</span>(err) =&gt; handle_unexpected(err),
         }
     }
 
@@ -3022,7 +3087,7 @@
         };
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(()) =&gt; {}
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">log::error!</span>(<span class="string">"free_descriptor_sets: {:?}"</span>, err),
+            <span class="prelude-val">Err</span>(err) =&gt; handle_unexpected(err),
         }
     }
 }
@@ -3112,17 +3177,20 @@
             <span class="prelude-val">Ok</span>(swapchain) =&gt; swapchain,
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">match </span>error {
-                    vk::Result::ERROR_SURFACE_LOST_KHR =&gt; <span class="kw">crate</span>::SurfaceError::Lost,
+                    vk::Result::ERROR_SURFACE_LOST_KHR
+                    | vk::Result::ERROR_INITIALIZATION_FAILED =&gt; <span class="kw">crate</span>::SurfaceError::Lost,
                     vk::Result::ERROR_NATIVE_WINDOW_IN_USE_KHR =&gt; {
                         <span class="kw">crate</span>::SurfaceError::Other(<span class="string">"Native window is in use"</span>)
                     }
-                    other =&gt; <span class="kw">crate</span>::DeviceError::from(other).into(),
-                })
+                    <span class="comment">// We don't use VK_EXT_image_compression_control
+                    // VK_ERROR_COMPRESSION_EXHAUSTED_EXT
+                    </span>other =&gt; <span class="kw">super</span>::map_host_device_oom_and_lost_err(other).into(),
+                });
             }
         };
 
         <span class="kw">let </span>images =
-            <span class="kw">unsafe </span>{ functor.get_swapchain_images(raw) }.map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
+            <span class="kw">unsafe </span>{ functor.get_swapchain_images(raw) }.map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?</span>;
 
         <span class="comment">// NOTE: It's important that we define at least images.len() wait
         // semaphores, since we prospectively need to provide the call to
@@ -3209,8 +3277,16 @@
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">"vkCreateShaderModule"</span>);
-            <span class="self">self</span>.shared.raw.create_shader_module(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">?
+            <span class="self">self</span>.shared
+                .raw
+                .create_shader_module(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(map_err)<span class="question-mark">?
         </span>};
+        <span class="kw">fn </span>map_err(err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
+            <span class="comment">// We don't use VK_NV_glsl_shader
+            // VK_ERROR_INVALID_SHADER_NV
+            </span><span class="kw">super</span>::map_host_device_oom_err(err)
+        }
         <span class="prelude-val">Ok</span>(raw)
     }
 
@@ -3366,7 +3442,12 @@
             .usage(conv::map_buffer_usage(desc.usage))
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_buffer(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared
+                .raw
+                .create_buffer(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?
+        </span>};
         <span class="kw">let </span>req = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.get_buffer_memory_requirements(raw) };
 
         <span class="kw">let </span><span class="kw-2">mut </span>alloc_usage = <span class="kw">if </span>desc
@@ -3416,7 +3497,8 @@
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.shared
                 .raw
-                .bind_buffer_memory(raw, <span class="kw-2">*</span>block.memory(), block.offset())<span class="question-mark">?
+                .bind_buffer_memory(raw, <span class="kw-2">*</span>block.memory(), block.offset())
+                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
@@ -3456,13 +3538,14 @@
                 .contains(gpu_alloc::MemoryPropertyFlags::HOST_COHERENT);
             <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::BufferMapping { ptr, is_coherent })
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::OutOfMemory)
+            <span class="kw">super</span>::hal_usage_error(<span class="string">"tried to map external buffer"</span>)
         }
     }
     <span class="kw">unsafe fn </span>unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer) {
-        <span class="comment">// We can only unmap the buffer if it was already mapped successfully.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>block) = buffer.block {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>block) = buffer.block {
             <span class="kw">unsafe </span>{ block.lock().unmap(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared) };
+        } <span class="kw">else </span>{
+            <span class="kw">super</span>::hal_usage_error(<span class="string">"tried to unmap external buffer"</span>)
         }
     }
 
@@ -3548,7 +3631,17 @@
             vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>format_list_info);
         }
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_image(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared
+                .raw
+                .create_image(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(map_err)<span class="question-mark">?
+        </span>};
+        <span class="kw">fn </span>map_err(err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
+            <span class="comment">// We don't use VK_EXT_image_compression_control
+            // VK_ERROR_COMPRESSION_EXHAUSTED_EXT
+            </span><span class="kw">super</span>::map_host_device_oom_and_ioca_err(err)
+        }
         <span class="kw">let </span>req = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.get_image_memory_requirements(raw) };
 
         <span class="kw">let </span>block = <span class="kw">unsafe </span>{
@@ -3568,7 +3661,8 @@
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.shared
                 .raw
-                .bind_image_memory(raw, <span class="kw-2">*</span>block.memory(), block.offset())<span class="question-mark">?
+                .bind_image_memory(raw, <span class="kw-2">*</span>block.memory(), block.offset())
+                .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
@@ -3626,7 +3720,8 @@
             texture.usage
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_image_view(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_image_view(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+            .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
@@ -3704,7 +3799,12 @@
             vk_info = vk_info.border_color(conv::map_border_color(color));
         }
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_sampler(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared
+                .raw
+                .create_sampler(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?
+        </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
@@ -3727,7 +3827,13 @@
         <span class="kw">let </span>vk_info = vk::CommandPoolCreateInfo::default()
             .queue_family_index(desc.queue.family_index)
             .flags(vk::CommandPoolCreateFlags::TRANSIENT);
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_command_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>};
+
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared
+                .raw
+                .create_command_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
+        </span>};
 
         <span class="self">self</span>.counters.command_encoders.add(<span class="number">1</span>);
 
@@ -3866,7 +3972,8 @@
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
             <span class="self">self</span>.shared
                 .raw
-                .create_descriptor_set_layout(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">?
+                .create_descriptor_set_layout(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
         </span>};
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
@@ -3919,7 +4026,12 @@
 
         <span class="kw">let </span>raw = {
             <span class="macro">profiling::scope!</span>(<span class="string">"vkCreatePipelineLayout"</span>);
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_pipeline_layout(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">? </span>}
+            <span class="kw">unsafe </span>{
+                <span class="self">self</span>.shared
+                    .raw
+                    .create_pipeline_layout(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                    .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
+            </span>}
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
@@ -4442,7 +4554,7 @@
                 <span class="self">self</span>.shared
                     .raw
                     .create_graphics_pipelines(pipeline_cache, <span class="kw-2">&amp;</span>vk_infos, <span class="prelude-val">None</span>)
-                    .map_err(|(<span class="kw">_</span>, e)| <span class="kw">crate</span>::DeviceError::from(e))
+                    .map_err(|(<span class="kw">_</span>, e)| <span class="kw">super</span>::map_pipeline_err(e))
             }<span class="question-mark">?
         </span>};
 
@@ -4504,7 +4616,7 @@
                 <span class="self">self</span>.shared
                     .raw
                     .create_compute_pipelines(pipeline_cache, <span class="kw-2">&amp;</span>vk_infos, <span class="prelude-val">None</span>)
-                    .map_err(|(<span class="kw">_</span>, e)| <span class="kw">crate</span>::DeviceError::from(e))
+                    .map_err(|(<span class="kw">_</span>, e)| <span class="kw">super</span>::map_pipeline_err(e))
             }<span class="question-mark">?
         </span>};
 
@@ -4538,7 +4650,7 @@
         }
         <span class="macro">profiling::scope!</span>(<span class="string">"vkCreatePipelineCache"</span>);
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_pipeline_cache(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }
-            .map_err(<span class="kw">crate</span>::DeviceError::from)<span class="question-mark">?</span>;
+            .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::PipelineCache { raw })
     }
@@ -4572,7 +4684,8 @@
             .query_count(desc.count)
             .pipeline_statistics(pipeline_statistics);
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_query_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_query_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+            .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
@@ -4595,7 +4708,8 @@
             <span class="kw">let </span><span class="kw-2">mut </span>sem_type_info =
                 vk::SemaphoreTypeCreateInfo::default().semaphore_type(vk::SemaphoreType::TIMELINE);
             <span class="kw">let </span>vk_info = vk::SemaphoreCreateInfo::default().push_next(<span class="kw-2">&amp;mut </span>sem_type_info);
-            <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_semaphore(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }<span class="question-mark">?</span>;
+            <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.create_semaphore(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }
+                .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?</span>;
 
             <span class="kw">super</span>::Fence::TimelineSemaphore(raw)
         } <span class="kw">else </span>{
@@ -4839,7 +4953,11 @@
             .sharing_mode(vk::SharingMode::EXCLUSIVE);
 
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span>raw_buffer = <span class="self">self</span>.shared.raw.create_buffer(<span class="kw-2">&amp;</span>vk_buffer_info, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>raw_buffer = <span class="self">self
+                </span>.shared
+                .raw
+                .create_buffer(<span class="kw-2">&amp;</span>vk_buffer_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?</span>;
             <span class="kw">let </span>req = <span class="self">self</span>.shared.raw.get_buffer_memory_requirements(raw_buffer);
 
             <span class="kw">let </span>block = <span class="self">self</span>.mem_allocator.lock().alloc(
@@ -4854,7 +4972,8 @@
 
             <span class="self">self</span>.shared
                 .raw
-                .bind_buffer_memory(raw_buffer, <span class="kw-2">*</span>block.memory(), block.offset())<span class="question-mark">?</span>;
+                .bind_buffer_memory(raw_buffer, <span class="kw-2">*</span>block.memory(), block.offset())
+                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
                 <span class="self">self</span>.shared.set_object_name(raw_buffer, label);
@@ -4868,7 +4987,8 @@
 
             <span class="kw">let </span>raw_acceleration_structure = ray_tracing_functions
                 .acceleration_structure
-                .create_acceleration_structure(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+                .create_acceleration_structure(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                .map_err(<span class="kw">super</span>::map_host_oom_and_ioca_err)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
                 <span class="self">self</span>.shared
@@ -4921,7 +5041,7 @@
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.raw
                 .create_semaphore(<span class="kw-2">&amp;</span>vk::SemaphoreCreateInfo::default(), <span class="prelude-val">None</span>)
-                .map_err(<span class="kw">crate</span>::DeviceError::from)
+                .map_err(<span class="kw">super</span>::map_host_device_oom_err)
         }
     }
 
@@ -4951,7 +5071,7 @@
                 <span class="kw">match </span>result {
                     <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
                     <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                    <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
+                    <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(<span class="kw">super</span>::map_host_device_oom_and_lost_err(other)),
                 }
             }
             <span class="kw">super</span>::Fence::FencePool {
@@ -4967,12 +5087,14 @@
                             <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw.wait_for_fences(<span class="kw-2">&amp;</span>[raw], <span class="bool-val">true</span>, timeout_ns) } {
                                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
                                 <span class="prelude-val">Err</span>(vk::Result::TIMEOUT) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                                <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(other.into()),
+                                <span class="prelude-val">Err</span>(other) =&gt; <span class="prelude-val">Err</span>(<span class="kw">super</span>::map_host_device_oom_and_lost_err(other)),
                             }
                         }
                         <span class="prelude-val">None </span>=&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">"No signals reached value {}"</span>, wait_value);
-                            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost)
+                            <span class="kw">super</span>::hal_usage_error(<span class="macro">format!</span>(
+                                <span class="string">"no signals reached value {}"</span>,
+                                wait_value
+                            ));
                         }
                     }
                 }
@@ -4985,11 +5107,8 @@
     <span class="kw">fn </span>from(error: gpu_alloc::AllocationError) -&gt; <span class="self">Self </span>{
         <span class="kw">use </span>gpu_alloc::AllocationError <span class="kw">as </span>Ae;
         <span class="kw">match </span>error {
-            Ae::OutOfDeviceMemory | Ae::OutOfHostMemory =&gt; <span class="self">Self</span>::OutOfMemory,
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::error!</span>(<span class="string">"memory allocation: {:?}"</span>, error);
-                <span class="self">Self</span>::Lost
-            }
+            Ae::OutOfDeviceMemory | Ae::OutOfHostMemory | Ae::TooManyObjects =&gt; <span class="self">Self</span>::OutOfMemory,
+            Ae::NoCompatibleMemoryTypes =&gt; <span class="kw">super</span>::hal_usage_error(error),
         }
     }
 }
@@ -4997,18 +5116,27 @@
     <span class="kw">fn </span>from(error: gpu_alloc::MapError) -&gt; <span class="self">Self </span>{
         <span class="kw">use </span>gpu_alloc::MapError <span class="kw">as </span>Me;
         <span class="kw">match </span>error {
-            Me::OutOfDeviceMemory | Me::OutOfHostMemory =&gt; <span class="self">Self</span>::OutOfMemory,
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">log::error!</span>(<span class="string">"memory mapping: {:?}"</span>, error);
-                <span class="self">Self</span>::Lost
-            }
+            Me::OutOfDeviceMemory | Me::OutOfHostMemory | Me::MapFailed =&gt; <span class="self">Self</span>::OutOfMemory,
+            Me::NonHostVisible | Me::AlreadyMapped =&gt; <span class="kw">super</span>::hal_usage_error(error),
         }
     }
 }
 <span class="kw">impl </span>From&lt;gpu_descriptor::AllocationError&gt; <span class="kw">for </span><span class="kw">crate</span>::DeviceError {
     <span class="kw">fn </span>from(error: gpu_descriptor::AllocationError) -&gt; <span class="self">Self </span>{
-        <span class="macro">log::error!</span>(<span class="string">"descriptor allocation: {:?}"</span>, error);
-        <span class="self">Self</span>::OutOfMemory
+        <span class="kw">use </span>gpu_descriptor::AllocationError <span class="kw">as </span>Ae;
+        <span class="kw">match </span>error {
+            Ae::OutOfDeviceMemory | Ae::OutOfHostMemory | Ae::Fragmentation =&gt; <span class="self">Self</span>::OutOfMemory,
+        }
     }
+}
+
+<span class="doccomment">/// We usually map unexpected vulkan errors to the [`crate::DeviceError::Unexpected`]
+/// variant to be more robust even in cases where the driver is not
+/// complying with the spec.
+///
+/// However, we implement a few Trait methods that don't have an equivalent
+/// error variant. In those cases we use this function.
+</span><span class="kw">fn </span>handle_unexpected(err: vk::Result) -&gt; ! {
+    <span class="macro">panic!</span>(<span class="string">"Unexpected Vulkan error: `{err}`"</span>)
 }
 </code></pre></div></section></main></body></html>

@@ -1140,6 +1140,17 @@
 <a href="#1139" id="1139">1139</a>
 <a href="#1140" id="1140">1140</a>
 <a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -1204,7 +1215,12 @@
             <span class="kw">let </span>vk_info = vk::CommandBufferAllocateInfo::default()
                 .command_pool(<span class="self">self</span>.raw)
                 .command_buffer_count(ALLOCATION_GRANULARITY);
-            <span class="kw">let </span>cmd_buf_vec = <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.allocate_command_buffers(<span class="kw-2">&amp;</span>vk_info)<span class="question-mark">? </span>};
+            <span class="kw">let </span>cmd_buf_vec = <span class="kw">unsafe </span>{
+                <span class="self">self</span>.device
+                    .raw
+                    .allocate_command_buffers(<span class="kw-2">&amp;</span>vk_info)
+                    .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?
+            </span>};
             <span class="self">self</span>.free.extend(cmd_buf_vec);
         }
         <span class="kw">let </span>raw = <span class="self">self</span>.free.pop().unwrap();
@@ -1218,7 +1234,8 @@
 
         <span class="kw">let </span>vk_info = vk::CommandBufferBeginInfo::default()
             .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.begin_command_buffer(raw, <span class="kw-2">&amp;</span>vk_info) }<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.begin_command_buffer(raw, <span class="kw-2">&amp;</span>vk_info) }
+            .map_err(<span class="kw">super</span>::map_host_device_oom_err)<span class="question-mark">?</span>;
         <span class="self">self</span>.active = raw;
 
         <span class="prelude-val">Ok</span>(())
@@ -1227,7 +1244,12 @@
     <span class="kw">unsafe fn </span>end_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandBuffer, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>raw = <span class="self">self</span>.active;
         <span class="self">self</span>.active = vk::CommandBuffer::null();
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.end_command_buffer(raw) }<span class="question-mark">?</span>;
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.device.raw.end_command_buffer(raw) }.map_err(map_err)<span class="question-mark">?</span>;
+        <span class="kw">fn </span>map_err(err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
+            <span class="comment">// We don't use VK_KHR_video_encode_queue
+            // VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR
+            </span><span class="kw">super</span>::map_host_device_oom_err(err)
+        }
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::CommandBuffer { raw })
     }
 
