@@ -5963,6 +5963,8 @@
     proc::{<span class="self">self</span>, NameKey, TypeResolution},
     valid, FastHashMap, FastHashSet,
 };
+<span class="attr">#[cfg(test)]
+</span><span class="kw">use </span>std::ptr;
 <span class="kw">use </span>std::{
     fmt::{Display, Error <span class="kw">as </span>FmtError, Formatter, Write},
     iter,
@@ -7368,9 +7370,8 @@
     ) -&gt; BackendResult {
         <span class="comment">// Add to the set in order to track the stack size.
         </span><span class="attr">#[cfg(test)]
-        #[allow(trivial_casts)]
         </span><span class="self">self</span>.put_expression_stack_pointers
-            .insert(<span class="kw-2">&amp;</span>expr_handle <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>());
+            .insert(ptr::from_ref(<span class="kw-2">&amp;</span>expr_handle).cast());
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = <span class="self">self</span>.named_expressions.get(<span class="kw-2">&amp;</span>expr_handle) {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
@@ -8749,9 +8750,8 @@
     ) -&gt; BackendResult {
         <span class="comment">// Add to the set in order to track the stack size.
         </span><span class="attr">#[cfg(test)]
-        #[allow(trivial_casts)]
         </span><span class="self">self</span>.put_block_stack_pointers
-            .insert(<span class="kw-2">&amp;</span>level <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>());
+            .insert(ptr::from_ref(<span class="kw-2">&amp;</span>level).cast());
 
         <span class="kw">for </span>statement <span class="kw">in </span>statements {
             <span class="macro">log::trace!</span>(<span class="string">"statement[{}] {:?}"</span>, level.<span class="number">0</span>, statement);

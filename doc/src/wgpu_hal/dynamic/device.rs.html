@@ -523,12 +523,7 @@
 <a href="#522" id="522">522</a>
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
-</pre></div><pre class="rust"><code><span class="comment">// Box casts are needed, alternative would be a temporaries which are more verbose and not more expressive.
-</span><span class="attr">#![allow(trivial_casts)]
-
-</span><span class="kw">use crate</span>::{
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     AccelerationStructureBuildSizes, AccelerationStructureDescriptor, Api, BindGroupDescriptor,
     BindGroupLayoutDescriptor, BufferDescriptor, BufferMapping, CommandEncoderDescriptor,
     ComputePipelineDescriptor, Device, DeviceError, FenceValue,
@@ -788,7 +783,7 @@
             queue: desc.queue.expect_downcast_ref(),
         };
         <span class="kw">unsafe </span>{ D::create_command_encoder(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynCommandEncoder&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynCommandEncoder&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, encoder: Box&lt;<span class="kw">dyn </span>DynCommandEncoder&gt;) {
@@ -800,7 +795,7 @@
         desc: <span class="kw-2">&amp;</span>BindGroupLayoutDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynBindGroupLayout&gt;, DeviceError&gt; {
         <span class="kw">unsafe </span>{ D::create_bind_group_layout(<span class="self">self</span>, desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynBindGroupLayout&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynBindGroupLayout&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, bg_layout: Box&lt;<span class="kw">dyn </span>DynBindGroupLayout&gt;) {
@@ -824,7 +819,7 @@
         };
 
         <span class="kw">unsafe </span>{ D::create_pipeline_layout(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynPipelineLayout&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynPipelineLayout&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout: Box&lt;<span class="kw">dyn </span>DynPipelineLayout&gt;) {
@@ -872,7 +867,8 @@
             acceleration_structures: <span class="kw-2">&amp;</span>acceleration_structures,
         };
 
-        <span class="kw">unsafe </span>{ D::create_bind_group(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }.map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynBindGroup&gt;)
+        <span class="kw">unsafe </span>{ D::create_bind_group(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynBindGroup&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, group: Box&lt;<span class="kw">dyn </span>DynBindGroup&gt;) {
@@ -885,7 +881,7 @@
         shader: ShaderInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynShaderModule&gt;, ShaderError&gt; {
         <span class="kw">unsafe </span>{ D::create_shader_module(<span class="self">self</span>, desc, shader) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynShaderModule&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynShaderModule&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, module: Box&lt;<span class="kw">dyn </span>DynShaderModule&gt;) {
@@ -915,7 +911,7 @@
         };
 
         <span class="kw">unsafe </span>{ D::create_render_pipeline(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynRenderPipeline&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynRenderPipeline&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: Box&lt;<span class="kw">dyn </span>DynRenderPipeline&gt;) {
@@ -938,7 +934,7 @@
         };
 
         <span class="kw">unsafe </span>{ D::create_compute_pipeline(<span class="self">self</span>, <span class="kw-2">&amp;</span>desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynComputePipeline&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynComputePipeline&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline: Box&lt;<span class="kw">dyn </span>DynComputePipeline&gt;) {
@@ -950,7 +946,7 @@
         desc: <span class="kw-2">&amp;</span>PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynPipelineCache&gt;, PipelineCacheError&gt; {
         <span class="kw">unsafe </span>{ D::create_pipeline_cache(<span class="self">self</span>, desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynPipelineCache&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynPipelineCache&gt; { Box::new(b) })
     }
 
     <span class="kw">fn </span>pipeline_cache_validation_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">16</span>]&gt; {
@@ -965,7 +961,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>wgt::QuerySetDescriptor&lt;Label&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynQuerySet&gt;, DeviceError&gt; {
-        <span class="kw">unsafe </span>{ D::create_query_set(<span class="self">self</span>, desc) }.map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynQuerySet&gt;)
+        <span class="kw">unsafe </span>{ D::create_query_set(<span class="self">self</span>, desc) }.map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynQuerySet&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, query_set: Box&lt;<span class="kw">dyn </span>DynQuerySet&gt;) {
@@ -973,7 +969,7 @@
     }
 
     <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynFence&gt;, DeviceError&gt; {
-        <span class="kw">unsafe </span>{ D::create_fence(<span class="self">self</span>) }.map(|f| Box::new(f) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynFence&gt;)
+        <span class="kw">unsafe </span>{ D::create_fence(<span class="self">self</span>) }.map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynFence&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>destroy_fence(<span class="kw-2">&amp;</span><span class="self">self</span>, fence: Box&lt;<span class="kw">dyn </span>DynFence&gt;) {
@@ -1013,7 +1009,7 @@
         desc: <span class="kw-2">&amp;</span>AccelerationStructureDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>DynAccelerationStructure&gt;, DeviceError&gt; {
         <span class="kw">unsafe </span>{ D::create_acceleration_structure(<span class="self">self</span>, desc) }
-            .map(|b| Box::new(b) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>DynAccelerationStructure&gt;)
+            .map(|b| -&gt; Box&lt;<span class="kw">dyn </span>DynAccelerationStructure&gt; { Box::new(b) })
     }
 
     <span class="kw">unsafe fn </span>get_acceleration_structure_build_sizes(

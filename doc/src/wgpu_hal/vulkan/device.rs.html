@@ -2566,9 +2566,6 @@
 <a href="#2565" id="2565">2565</a>
 <a href="#2566" id="2566">2566</a>
 <a href="#2567" id="2567">2567</a>
-<a href="#2568" id="2568">2568</a>
-<a href="#2569" id="2569">2569</a>
-<a href="#2570" id="2570">2570</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4131,16 +4128,13 @@
                 <span class="comment">// we can't use the safe (yet unstable) MaybeUninit::write_slice() here because of having an iterator to write
 
                 </span><span class="kw">let </span>init = {
-                    <span class="attr">#[allow(trivial_casts)]
-                    </span><span class="comment">// SAFETY: The loop above has initialized exactly as many items as to_init is
+                    <span class="comment">// SAFETY: The loop above has initialized exactly as many items as to_init is
                     // long, so it is safe to cast away the MaybeUninit&lt;T&gt; wrapper into T.
 
                     // Additional safety docs from unstable slice_assume_init_mut
                     // SAFETY: similar to safety notes for `slice_get_ref`, but we have a
                     // mutable reference which is also guaranteed to be valid for writes.
-                    </span><span class="kw">unsafe </span>{
-                        <span class="kw-2">&amp;mut *</span>(ptr::from_mut::&lt;[MaybeUninit&lt;T&gt;]&gt;(to_init) <span class="kw">as </span><span class="kw-2">*mut </span>[T])
-                    }
+                    </span><span class="kw">unsafe </span>{ std::mem::transmute::&lt;<span class="kw-2">&amp;mut </span>[MaybeUninit&lt;T&gt;], <span class="kw-2">&amp;mut </span>[T]&gt;(to_init) }
                 };
                 (<span class="self">Self </span>{ remainder }, init)
             }
