@@ -61,10 +61,17 @@
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>std::{error::Error, sync::Arc};
 
 <span class="kw">use </span>thiserror::Error;
+
+<span class="attr">#[cfg(send_sync)]
+</span><span class="kw">pub type </span>ContextErrorSource = Box&lt;<span class="kw">dyn </span>Error + Send + Sync + <span class="lifetime">'static</span>&gt;;
+<span class="attr">#[cfg(not(send_sync))]
+</span><span class="kw">pub type </span>ContextErrorSource = Box&lt;<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>&gt;;
 
 <span class="attr">#[derive(Debug, Error)]
 #[error(
@@ -76,10 +83,7 @@
 </span><span class="kw">pub struct </span>ContextError {
     <span class="kw">pub </span>fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     <span class="attr">#[source]
-    #[cfg(send_sync)]
-    </span><span class="kw">pub </span>source: Box&lt;<span class="kw">dyn </span>Error + Send + Sync + <span class="lifetime">'static</span>&gt;,
-    <span class="attr">#[cfg(not(send_sync))]
-    </span><span class="kw">pub </span>source: Box&lt;<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>&gt;,
+    </span><span class="kw">pub </span>source: ContextErrorSource,
     <span class="kw">pub </span>label: String,
 }
 

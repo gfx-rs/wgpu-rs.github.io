@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ContextError","MultiError"]};
+window.SIDEBAR_ITEMS = {"struct":["ContextError","MultiError"],"type":["ContextErrorSource"]};

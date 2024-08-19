@@ -3497,6 +3497,23 @@
 <a href="#3496" id="3496">3496</a>
 <a href="#3497" id="3497">3497</a>
 <a href="#3498" id="3498">3498</a>
+<a href="#3499" id="3499">3499</a>
+<a href="#3500" id="3500">3500</a>
+<a href="#3501" id="3501">3501</a>
+<a href="#3502" id="3502">3502</a>
+<a href="#3503" id="3503">3503</a>
+<a href="#3504" id="3504">3504</a>
+<a href="#3505" id="3505">3505</a>
+<a href="#3506" id="3506">3506</a>
+<a href="#3507" id="3507">3507</a>
+<a href="#3508" id="3508">3508</a>
+<a href="#3509" id="3509">3509</a>
+<a href="#3510" id="3510">3510</a>
+<a href="#3511" id="3511">3511</a>
+<a href="#3512" id="3512">3512</a>
+<a href="#3513" id="3513">3513</a>
+<a href="#3514" id="3514">3514</a>
+<a href="#3515" id="3515">3515</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3523,6 +3540,7 @@
     slice,
     sync::Arc,
 };
+<span class="kw">use </span>wgc::error::ContextErrorSource;
 <span class="kw">use </span>wgc::{
     command::bundle_ffi::<span class="kw-2">*</span>, device::DeviceLostClosure, id::CommandEncoderId, id::TextureViewId,
     pipeline::CreateShaderModuleError,
@@ -3766,16 +3784,18 @@
         <span class="self">self</span>.<span class="number">0</span>.generate_report()
     }
 
-    <span class="kw">fn </span>handle_error(
+    <span class="attr">#[cold]
+    #[inline(never)]
+    </span><span class="kw">fn </span>handle_error_inner(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
+        source: ContextErrorSource,
         label: Label&lt;<span class="lifetime">'_</span>&gt;,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
         <span class="kw">let </span>error = wgc::error::ContextError {
             fn_ident,
-            source: Box::new(source),
+            source,
             label: label.unwrap_or_default().to_string(),
         };
         <span class="kw">let </span><span class="kw-2">mut </span>sink = sink_mutex.lock();
@@ -3798,16 +3818,29 @@
         });
     }
 
-    <span class="kw">fn </span>handle_error_nolabel(
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>handle_error(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
+        source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
+        label: Label&lt;<span class="lifetime">'_</span>&gt;,
+        fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+    ) {
+        <span class="self">self</span>.handle_error_inner(sink_mutex, Box::new(source), label, fn_ident)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>handle_error_nolabel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
         source: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="self">self</span>.handle_error(sink_mutex, source, <span class="prelude-val">None</span>, fn_ident)
+        <span class="self">self</span>.handle_error_inner(sink_mutex, Box::new(source), <span class="prelude-val">None</span>, fn_ident)
     }
 
     <span class="attr">#[track_caller]
+    #[cold]
     </span><span class="kw">fn </span>handle_error_fatal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cause: <span class="kw">impl </span>Error + WasmNotSendSync + <span class="lifetime">'static</span>,
@@ -3816,7 +3849,8 @@
         <span class="macro">panic!</span>(<span class="string">"Error in {operation}: {f}"</span>, f = <span class="self">self</span>.format_error(<span class="kw-2">&amp;</span>cause));
     }
 
-    <span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Error + <span class="lifetime">'static</span>)) -&gt; String {
+    <span class="attr">#[inline(never)]
+    </span><span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Error + <span class="lifetime">'static</span>)) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
         <span class="kw">let </span><span class="kw-2">mut </span>level = <span class="number">1</span>;
 
