@@ -7505,6 +7505,16 @@
 <a href="#7504" id="7504">7504</a>
 <a href="#7505" id="7505">7505</a>
 <a href="#7506" id="7506">7506</a>
+<a href="#7507" id="7507">7507</a>
+<a href="#7508" id="7508">7508</a>
+<a href="#7509" id="7509">7509</a>
+<a href="#7510" id="7510">7510</a>
+<a href="#7511" id="7511">7511</a>
+<a href="#7512" id="7512">7512</a>
+<a href="#7513" id="7513">7513</a>
+<a href="#7514" id="7514">7514</a>
+<a href="#7515" id="7515">7515</a>
+<a href="#7516" id="7516">7516</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -14350,8 +14360,12 @@
 </span><span class="kw">pub enum </span>ExternalImageSource {
     <span class="doccomment">/// Copy from a previously-decoded image bitmap.
     </span>ImageBitmap(web_sys::ImageBitmap),
+    <span class="doccomment">/// Copy from an image element.
+    </span>HTMLImageElement(web_sys::HtmlImageElement),
     <span class="doccomment">/// Copy from a current frame of a video element.
     </span>HTMLVideoElement(web_sys::HtmlVideoElement),
+    <span class="doccomment">/// Copy from an image.
+    </span>ImageData(web_sys::ImageData),
     <span class="doccomment">/// Copy from a on-screen canvas.
     </span>HTMLCanvasElement(web_sys::HtmlCanvasElement),
     <span class="doccomment">/// Copy from a off-screen canvas.
@@ -14366,7 +14380,9 @@
     </span><span class="kw">pub fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="kw">match </span><span class="self">self </span>{
             ExternalImageSource::ImageBitmap(b) =&gt; b.width(),
+            ExternalImageSource::HTMLImageElement(i) =&gt; i.width(),
             ExternalImageSource::HTMLVideoElement(v) =&gt; v.video_width(),
+            ExternalImageSource::ImageData(i) =&gt; i.width(),
             ExternalImageSource::HTMLCanvasElement(c) =&gt; c.width(),
             ExternalImageSource::OffscreenCanvas(c) =&gt; c.width(),
         }
@@ -14376,7 +14392,9 @@
     </span><span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="kw">match </span><span class="self">self </span>{
             ExternalImageSource::ImageBitmap(b) =&gt; b.height(),
+            ExternalImageSource::HTMLImageElement(i) =&gt; i.height(),
             ExternalImageSource::HTMLVideoElement(v) =&gt; v.video_height(),
+            ExternalImageSource::ImageData(i) =&gt; i.height(),
             ExternalImageSource::HTMLCanvasElement(c) =&gt; c.height(),
             ExternalImageSource::OffscreenCanvas(c) =&gt; c.height(),
         }
@@ -14390,7 +14408,9 @@
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::ImageBitmap(b) =&gt; b,
+            <span class="self">Self</span>::HTMLImageElement(i) =&gt; i,
             <span class="self">Self</span>::HTMLVideoElement(v) =&gt; v,
+            <span class="self">Self</span>::ImageData(i) =&gt; i,
             <span class="self">Self</span>::HTMLCanvasElement(c) =&gt; c,
             <span class="self">Self</span>::OffscreenCanvas(c) =&gt; c,
         }
