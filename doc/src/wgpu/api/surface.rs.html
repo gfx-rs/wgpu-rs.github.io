@@ -424,6 +424,9 @@
 <a href="#423" id="423">423</a>
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, sync::Arc, thread};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -758,15 +761,18 @@
     ///
     /// # Safety
     ///
-    /// - visual must be a valid IDCompositionVisual to create a surface upon.
+    /// - visual must be a valid `IDCompositionVisual` to create a surface upon.  Its refcount will be incremented internally and kept live as long as the resulting [`Surface`] is live.
     </span><span class="attr">#[cfg(dx12)]
     </span>CompositionVisual(<span class="kw-2">*mut </span>std::ffi::c_void),
 
-    <span class="doccomment">/// Surface from DX12 `SurfaceHandle`.
+    <span class="doccomment">/// Surface from DX12 `DirectComposition` handle.
+    ///
+    /// &lt;https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgifactorymedia-createswapchainforcompositionsurfacehandle&gt;
     ///
     /// # Safety
     ///
-    /// - surface_handle must be a valid SurfaceHandle to create a surface upon.
+    /// - surface_handle must be a valid `DirectComposition` handle to create a surface upon.   Its lifetime **will not** be internally managed: this handle **should not** be freed before
+    ///   the resulting [`Surface`] is destroyed.
     </span><span class="attr">#[cfg(dx12)]
     </span>SurfaceHandle(<span class="kw-2">*mut </span>std::ffi::c_void),
 
@@ -774,7 +780,7 @@
     ///
     /// # Safety
     ///
-    /// - visual must be a valid SwapChainPanel to create a surface upon.
+    /// - visual must be a valid SwapChainPanel to create a surface upon.  Its refcount will be incremented internally and kept live as long as the resulting [`Surface`] is live.
     </span><span class="attr">#[cfg(dx12)]
     </span>SwapChainPanel(<span class="kw-2">*mut </span>std::ffi::c_void),
 }

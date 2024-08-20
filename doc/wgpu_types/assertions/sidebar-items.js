@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["StrictAssertUnwrapExt"]};
+window.SIDEBAR_ITEMS = {};
