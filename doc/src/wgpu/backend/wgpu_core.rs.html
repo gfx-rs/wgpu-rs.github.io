@@ -3514,12 +3514,25 @@
 <a href="#3513" id="3513">3513</a>
 <a href="#3514" id="3514">3514</a>
 <a href="#3515" id="3515">3515</a>
+<a href="#3516" id="3516">3516</a>
+<a href="#3517" id="3517">3517</a>
+<a href="#3518" id="3518">3518</a>
+<a href="#3519" id="3519">3519</a>
+<a href="#3520" id="3520">3520</a>
+<a href="#3521" id="3521">3521</a>
+<a href="#3522" id="3522">3522</a>
+<a href="#3523" id="3523">3523</a>
+<a href="#3524" id="3524">3524</a>
+<a href="#3525" id="3525">3525</a>
+<a href="#3526" id="3526">3526</a>
+<a href="#3527" id="3527">3527</a>
+<a href="#3528" id="3528">3528</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
     BufferDescriptor, CommandEncoderDescriptor, CompilationInfo, CompilationMessage,
     CompilationMessageType, ComputePassDescriptor, ComputePipelineDescriptor,
-    DownlevelCapabilities, Features, Label, Limits, LoadOp, MapMode, Operations,
+    DownlevelCapabilities, ErrorSource, Features, Label, Limits, LoadOp, MapMode, Operations,
     PipelineCacheDescriptor, PipelineLayoutDescriptor, RenderBundleEncoderDescriptor,
     RenderPipelineDescriptor, SamplerDescriptor, ShaderModuleDescriptor,
     ShaderModuleDescriptorSpirV, ShaderSource, StoreOp, SurfaceStatus, SurfaceTargetUnsafe,
@@ -3785,6 +3798,7 @@
     }
 
     <span class="attr">#[cold]
+    #[track_caller]
     #[inline(never)]
     </span><span class="kw">fn </span>handle_error_inner(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -3793,32 +3807,36 @@
         label: Label&lt;<span class="lifetime">'_</span>&gt;,
         fn_ident: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) {
-        <span class="kw">let </span>error = wgc::error::ContextError {
+        <span class="kw">let </span>source_error: ErrorSource = Box::new(wgc::error::ContextError {
             fn_ident,
             source,
             label: label.unwrap_or_default().to_string(),
-        };
-        <span class="kw">let </span><span class="kw-2">mut </span>sink = sink_mutex.lock();
-        <span class="kw">let </span><span class="kw-2">mut </span>source_opt: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>error);
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(source) = source_opt {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) =
-                source.downcast_ref::&lt;wgc::device::DeviceError&gt;()
-            {
-                <span class="kw">return </span>sink.handle_error(<span class="kw">crate</span>::Error::OutOfMemory {
-                    source: Box::new(error),
-                });
-            }
-            source_opt = source.source();
-        }
-
-        <span class="comment">// Otherwise, it is a validation error
-        </span>sink.handle_error(<span class="kw">crate</span>::Error::Validation {
-            description: <span class="self">self</span>.format_error(<span class="kw-2">&amp;</span>error),
-            source: Box::new(error),
         });
+        <span class="kw">let </span><span class="kw-2">mut </span>sink = sink_mutex.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>source_opt: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)&gt; = <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>source_error);
+        <span class="kw">let </span>error = <span class="kw">loop </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(source) = source_opt {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) =
+                    source.downcast_ref::&lt;wgc::device::DeviceError&gt;()
+                {
+                    <span class="kw">break </span><span class="kw">crate</span>::Error::OutOfMemory {
+                        source: source_error,
+                    };
+                }
+                source_opt = source.source();
+            } <span class="kw">else </span>{
+                <span class="comment">// Otherwise, it is a validation error
+                </span><span class="kw">break </span><span class="kw">crate</span>::Error::Validation {
+                    description: <span class="self">self</span>.format_error(<span class="kw-2">&amp;*</span>source_error),
+                    source: source_error,
+                };
+            }
+        };
+        sink.handle_error(error);
     }
 
     <span class="attr">#[inline]
+    #[track_caller]
     </span><span class="kw">fn </span>handle_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
@@ -3830,6 +3848,7 @@
     }
 
     <span class="attr">#[inline]
+    #[track_caller]
     </span><span class="kw">fn </span>handle_error_nolabel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
@@ -3850,7 +3869,7 @@
     }
 
     <span class="attr">#[inline(never)]
-    </span><span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Error + <span class="lifetime">'static</span>)) -&gt; String {
+    </span><span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
         <span class="kw">let </span><span class="kw-2">mut </span>level = <span class="number">1</span>;
 
@@ -5015,7 +5034,7 @@
         handler: Box&lt;<span class="kw">dyn </span>UncapturedErrorHandler&gt;,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>error_sink = device_data.error_sink.lock();
-        error_sink.uncaptured_handler = handler;
+        error_sink.uncaptured_handler = <span class="prelude-val">Some</span>(handler);
     }
     <span class="kw">fn </span>device_push_error_scope(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -6903,18 +6922,19 @@
 
 <span class="kw">struct </span>ErrorSinkRaw {
     scopes: Vec&lt;ErrorScope&gt;,
-    uncaptured_handler: Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::UncapturedErrorHandler&gt;,
+    uncaptured_handler: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::UncapturedErrorHandler&gt;&gt;,
 }
 
 <span class="kw">impl </span>ErrorSinkRaw {
     <span class="kw">fn </span>new() -&gt; ErrorSinkRaw {
         ErrorSinkRaw {
             scopes: Vec::new(),
-            uncaptured_handler: Box::from(default_error_handler),
+            uncaptured_handler: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">fn </span>handle_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, err: <span class="kw">crate</span>::Error) {
+    <span class="attr">#[track_caller]
+    </span><span class="kw">fn </span>handle_error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, err: <span class="kw">crate</span>::Error) {
         <span class="kw">let </span>filter = <span class="kw">match </span>err {
             <span class="kw">crate</span>::Error::OutOfMemory { .. } =&gt; <span class="kw">crate</span>::ErrorFilter::OutOfMemory,
             <span class="kw">crate</span>::Error::Validation { .. } =&gt; <span class="kw">crate</span>::ErrorFilter::Validation,
@@ -6932,7 +6952,12 @@
                 }
             }
             <span class="prelude-val">None </span>=&gt; {
-                (<span class="self">self</span>.uncaptured_handler)(err);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(custom_handler) = <span class="self">self</span>.uncaptured_handler.as_ref() {
+                    (custom_handler)(err);
+                } <span class="kw">else </span>{
+                    <span class="comment">// direct call preserves #[track_caller] where dyn can't
+                    </span>default_error_handler(err);
+                }
             }
         }
     }
@@ -6944,7 +6969,8 @@
     }
 }
 
-<span class="kw">fn </span>default_error_handler(err: <span class="kw">crate</span>::Error) {
+<span class="attr">#[track_caller]
+</span><span class="kw">fn </span>default_error_handler(err: <span class="kw">crate</span>::Error) {
     <span class="macro">log::error!</span>(<span class="string">"Handling wgpu errors as fatal by default"</span>);
     <span class="macro">panic!</span>(<span class="string">"wgpu error: {err}\n"</span>);
 }
