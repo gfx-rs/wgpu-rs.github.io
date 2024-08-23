@@ -1207,9 +1207,15 @@
 <a href="#1206" id="1206">1206</a>
 <a href="#1207" id="1207">1207</a>
 <a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>std::{mem, ops::Range};
+<span class="kw">use </span>std::{
+    mem::{<span class="self">self</span>, size_of, size_of_val},
+    ops::Range,
+};
 
 <span class="attr">#[derive(Clone, Copy, Debug, Default)]
 </span><span class="kw">struct </span>TextureSlotDesc {
@@ -1291,7 +1297,7 @@
 
     <span class="kw">fn </span>add_push_constant_data(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[u32]) -&gt; Range&lt;u32&gt; {
         <span class="kw">let </span>data_raw =
-            <span class="kw">unsafe </span>{ std::slice::from_raw_parts(data.as_ptr().cast(), mem::size_of_val(data)) };
+            <span class="kw">unsafe </span>{ std::slice::from_raw_parts(data.as_ptr().cast(), size_of_val(data)) };
         <span class="kw">let </span>start = <span class="self">self</span>.data_bytes.len();
         <span class="macro">assert!</span>(start &lt; u32::MAX <span class="kw">as </span>usize);
         <span class="self">self</span>.data_bytes.extend_from_slice(data_raw);
@@ -2292,7 +2298,7 @@
         <span class="self">self</span>.prepare_draw(<span class="number">0</span>);
         <span class="kw">for </span>draw <span class="kw">in </span><span class="number">0</span>..draw_count <span class="kw">as </span>wgt::BufferAddress {
             <span class="kw">let </span>indirect_offset =
-                offset + draw * mem::size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
+                offset + draw * size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
             <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
             </span><span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndirect {
                 topology: <span class="self">self</span>.state.topology,
@@ -2314,8 +2320,8 @@
             wgt::IndexFormat::Uint32 =&gt; glow::UNSIGNED_INT,
         };
         <span class="kw">for </span>draw <span class="kw">in </span><span class="number">0</span>..draw_count <span class="kw">as </span>wgt::BufferAddress {
-            <span class="kw">let </span>indirect_offset = offset
-                + draw * mem::size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
+            <span class="kw">let </span>indirect_offset =
+                offset + draw * size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
             <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
             </span><span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndexedIndirect {
                 topology: <span class="self">self</span>.state.topology,
