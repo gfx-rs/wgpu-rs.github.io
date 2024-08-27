@@ -69,20 +69,8 @@
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::ObjectId;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a compute pipeline.
@@ -94,38 +82,28 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ComputePipeline {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(ComputePipeline: Send, Sync);
 
-<span class="kw">impl </span>ComputePipeline {
-    <span class="doccomment">/// Returns a globally-unique identifier for this `ComputePipeline`.
-    ///
-    /// Calling this method multiple times on the same object will always return the same value.
-    /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id::new(<span class="self">self</span>.id)
-    }
+<span class="macro">super::impl_partialeq_eq_hash!</span>(ComputePipeline);
 
+<span class="kw">impl </span>ComputePipeline {
     <span class="doccomment">/// Get an object representing the bind group layout at a given index.
     </span><span class="kw">pub fn </span>get_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, index: u32) -&gt; BindGroupLayout {
         <span class="kw">let </span>context = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context);
-        <span class="kw">let </span>(id, data) = <span class="self">self</span>.context.compute_pipeline_get_bind_group_layout(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_ref(),
-            index,
-        );
-        BindGroupLayout { context, id, data }
+        <span class="kw">let </span>data = <span class="self">self
+            </span>.context
+            .compute_pipeline_get_bind_group_layout(<span class="self">self</span>.data.as_ref(), index);
+        BindGroupLayout { context, data }
     }
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>ComputePipeline {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context
-                .compute_pipeline_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+            <span class="self">self</span>.context.compute_pipeline_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }

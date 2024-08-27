@@ -766,64 +766,13 @@
 <a href="#765" id="765">765</a>
 <a href="#766" id="766">766</a>
 <a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, ops::Range, sync::Arc, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, ObjectId};
+<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderPassInner {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
 }
@@ -831,8 +780,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>RenderPassInner {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context
-                .render_pass_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>.id, <span class="self">self</span>.data.as_mut());
+            <span class="self">self</span>.context.render_pass_end(<span class="self">self</span>.data.as_mut());
         }
     }
 }
@@ -902,10 +850,8 @@
     ) {
         DynContext::render_pass_set_bind_group(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             index,
-            <span class="kw-2">&amp;</span>bind_group.id,
             bind_group.data.as_ref(),
             offsets,
         )
@@ -917,9 +863,7 @@
     </span><span class="kw">pub fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span>RenderPipeline) {
         DynContext::render_pass_set_pipeline(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>pipeline.id,
             pipeline.data.as_ref(),
         )
     }
@@ -932,7 +876,6 @@
     </span><span class="kw">pub fn </span>set_blend_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: Color) {
         DynContext::render_pass_set_blend_constant(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             color,
         )
@@ -945,9 +888,7 @@
     </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;, index_format: IndexFormat) {
         DynContext::render_pass_set_index_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.id,
             buffer_slice.buffer.data.as_ref(),
             index_format,
             buffer_slice.offset,
@@ -968,10 +909,8 @@
     </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;) {
         DynContext::render_pass_set_vertex_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             slot,
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.id,
             buffer_slice.buffer.data.as_ref(),
             buffer_slice.offset,
             buffer_slice.size,
@@ -990,7 +929,6 @@
     </span><span class="kw">pub fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: u32, y: u32, width: u32, height: u32) {
         DynContext::render_pass_set_scissor_rect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             x,
             y,
@@ -1008,7 +946,6 @@
     </span><span class="kw">pub fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: f32, y: f32, w: f32, h: f32, min_depth: f32, max_depth: f32) {
         DynContext::render_pass_set_viewport(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             x,
             y,
@@ -1026,7 +963,6 @@
     </span><span class="kw">pub fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reference: u32) {
         DynContext::render_pass_set_stencil_reference(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             reference,
         );
@@ -1036,7 +972,6 @@
     </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::render_pass_insert_debug_marker(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             label,
         );
@@ -1046,7 +981,6 @@
     </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
         DynContext::render_pass_push_debug_group(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             label,
         );
@@ -1054,11 +988,7 @@
 
     <span class="doccomment">/// Stops command recording and creates debug group.
     </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        DynContext::render_pass_pop_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
-            <span class="self">self</span>.inner.data.as_mut(),
-        );
+        DynContext::render_pass_pop_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context, <span class="self">self</span>.inner.data.as_mut());
     }
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
@@ -1085,7 +1015,6 @@
     </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
         DynContext::render_pass_draw(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             vertices,
             instances,
@@ -1119,7 +1048,6 @@
     </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
         DynContext::render_pass_draw_indexed(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             indices,
             base_vertex,
@@ -1143,9 +1071,7 @@
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span>Buffer, indirect_offset: BufferAddress) {
         DynContext::render_pass_draw_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
         );
@@ -1172,9 +1098,7 @@
     ) {
         DynContext::render_pass_draw_indexed_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
         );
@@ -1189,13 +1113,10 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         render_bundles: I,
     ) {
-        <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles
-            .into_iter()
-            .map(|rb| (<span class="kw-2">&amp;</span>rb.id, rb.data.as_ref()));
+        <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles.into_iter().map(|rb| rb.data.as_ref());
 
         DynContext::render_pass_execute_bundles(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             <span class="kw-2">&amp;mut </span>render_bundles,
         )
@@ -1222,9 +1143,7 @@
     ) {
         DynContext::render_pass_multi_draw_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
             count,
@@ -1250,9 +1169,7 @@
     ) {
         DynContext::render_pass_multi_draw_indexed_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
             count,
@@ -1294,12 +1211,9 @@
     ) {
         DynContext::render_pass_multi_draw_indirect_count(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
-            <span class="kw-2">&amp;</span>count_buffer.id,
             count_buffer.data.as_ref(),
             count_offset,
             max_count,
@@ -1341,12 +1255,9 @@
     ) {
         DynContext::render_pass_multi_draw_indexed_indirect_count(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>indirect_buffer.id,
             indirect_buffer.data.as_ref(),
             indirect_offset,
-            <span class="kw-2">&amp;</span>count_buffer.id,
             count_buffer.data.as_ref(),
             count_offset,
             max_count,
@@ -1399,7 +1310,6 @@
     </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
         DynContext::render_pass_set_push_constants(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             stages,
             offset,
@@ -1420,9 +1330,7 @@
     </span><span class="kw">pub fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::render_pass_write_timestamp(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
         )
@@ -1435,7 +1343,6 @@
     </span><span class="kw">pub fn </span>begin_occlusion_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_index: u32) {
         DynContext::render_pass_begin_occlusion_query(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
             query_index,
         );
@@ -1444,11 +1351,7 @@
     <span class="doccomment">/// End the occlusion query on this render pass. It can be started with
     /// `begin_occlusion_query`. Occlusion queries may not be nested.
     </span><span class="kw">pub fn </span>end_occlusion_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        DynContext::render_pass_end_occlusion_query(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
-            <span class="self">self</span>.inner.data.as_mut(),
-        );
+        DynContext::render_pass_end_occlusion_query(<span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context, <span class="self">self</span>.inner.data.as_mut());
     }
 }
 
@@ -1459,9 +1362,7 @@
     </span><span class="kw">pub fn </span>begin_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::render_pass_begin_pipeline_statistics_query(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
-            <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
         );
@@ -1472,7 +1373,6 @@
     </span><span class="kw">pub fn </span>end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::render_pass_end_pipeline_statistics_query(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.id,
             <span class="self">self</span>.inner.data.as_mut(),
         );
     }

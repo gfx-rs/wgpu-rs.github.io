@@ -281,31 +281,13 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ops::{Deref, DerefMut},
     sync::Arc,
     thread,
 };
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, ObjectId, QueueWriteBuffer};
+<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, QueueWriteBuffer};
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a command queue on a device.
@@ -318,7 +300,6 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Queue {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
@@ -327,7 +308,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Queue {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+            <span class="self">self</span>.context.queue_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }
@@ -388,9 +369,7 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         DynContext::queue_write_staging_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.queue.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.queue.id,
             <span class="self">self</span>.queue.data.as_ref(),
-            <span class="kw-2">&amp;</span><span class="self">self</span>.buffer.id,
             <span class="self">self</span>.buffer.data.as_ref(),
             <span class="self">self</span>.offset,
             <span class="kw-2">&amp;*</span><span class="self">self</span>.inner,
@@ -422,9 +401,7 @@
     </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
         DynContext::queue_write_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;</span>buffer.id,
             buffer.data.as_ref(),
             offset,
             data,
@@ -469,19 +446,13 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
         DynContext::queue_validate_write_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;</span>buffer.id,
             buffer.data.as_ref(),
             offset,
             size,
         )<span class="question-mark">?</span>;
-        <span class="kw">let </span>staging_buffer = DynContext::queue_create_staging_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_ref(),
-            size,
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>staging_buffer =
+            DynContext::queue_create_staging_buffer(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), size)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(QueueWriteBufferView {
             queue: <span class="self">self</span>,
             buffer,
@@ -523,7 +494,6 @@
     ) {
         DynContext::queue_write_texture(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
             texture,
             data,
@@ -542,7 +512,6 @@
     ) {
         DynContext::queue_copy_external_image_to_texture(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
             source,
             dest,
@@ -557,14 +526,10 @@
     ) -&gt; SubmissionIndex {
         <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers
             .into_iter()
-            .map(|<span class="kw-2">mut </span>comb| (comb.id.take().unwrap(), comb.data.take().unwrap()));
+            .map(|<span class="kw-2">mut </span>comb| comb.data.take().unwrap());
 
-        <span class="kw">let </span>data = DynContext::queue_submit(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;mut </span>command_buffers,
-        );
+        <span class="kw">let </span>data =
+            DynContext::queue_submit(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), <span class="kw-2">&amp;mut </span>command_buffers);
 
         SubmissionIndex(data)
     }
@@ -576,7 +541,7 @@
     /// Timestamp values are represented in nanosecond values on WebGPU, see `&lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;`
     /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
     </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
-        DynContext::queue_get_timestamp_period(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
+        DynContext::queue_get_timestamp_period(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref())
     }
 
     <span class="doccomment">/// Registers a callback when the previous call to submit finishes running on the gpu. This callback
@@ -593,7 +558,6 @@
     </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
         DynContext::queue_on_submitted_work_done(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
             Box::new(callback),
         )

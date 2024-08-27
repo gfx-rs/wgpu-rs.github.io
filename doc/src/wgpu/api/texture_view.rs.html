@@ -88,18 +88,8 @@
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
 <a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::ObjectId;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a texture view.
@@ -111,21 +101,14 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>TextureView {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(TextureView: Send, Sync);
 
-<span class="kw">impl </span>TextureView {
-    <span class="doccomment">/// Returns a globally-unique identifier for this `TextureView`.
-    ///
-    /// Calling this method multiple times on the same object will always return the same value.
-    /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id::new(<span class="self">self</span>.id)
-    }
+<span class="macro">super::impl_partialeq_eq_hash!</span>(TextureView);
 
+<span class="kw">impl </span>TextureView {
     <span class="doccomment">/// Returns the inner hal TextureView using a callback. The hal texture will be `None` if the
     /// backend type argument does not match with this wgpu Texture
     ///
@@ -137,17 +120,16 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture_view_callback: F,
     ) -&gt; R {
-        <span class="kw">use </span>wgc::id::TextureViewId;
-
-        <span class="kw">let </span>texture_view_id = TextureViewId::from(<span class="self">self</span>.id);
-
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
             </span>.context
             .as_any()
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
         {
             <span class="kw">unsafe </span>{
-                ctx.texture_view_as_hal::&lt;A, F, R&gt;(texture_view_id, hal_texture_view_callback)
+                ctx.texture_view_as_hal::&lt;A, F, R&gt;(
+                    <span class="kw">crate</span>::context::downcast_ref(<span class="kw-2">&amp;</span><span class="self">self</span>.data),
+                    hal_texture_view_callback,
+                )
             }
         } <span class="kw">else </span>{
             hal_texture_view_callback(<span class="prelude-val">None</span>)
@@ -158,7 +140,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>TextureView {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.texture_view_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+            <span class="self">self</span>.context.texture_view_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }

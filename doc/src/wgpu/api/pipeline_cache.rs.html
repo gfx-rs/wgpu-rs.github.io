@@ -93,13 +93,8 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::ObjectId;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a pipeline cache, which is used to accelerate
@@ -167,7 +162,6 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PipelineCache {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
 }
 
@@ -182,16 +176,14 @@
     ///
     /// This function is unique to the Rust API of `wgpu`.
     </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
-        <span class="self">self</span>.context
-            .pipeline_cache_get_data(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
+        <span class="self">self</span>.context.pipeline_cache_get_data(<span class="self">self</span>.data.as_ref())
     }
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>PipelineCache {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context
-                .pipeline_cache_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+            <span class="self">self</span>.context.pipeline_cache_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }

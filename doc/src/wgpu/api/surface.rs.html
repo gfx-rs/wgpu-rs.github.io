@@ -405,34 +405,12 @@
 <a href="#404" id="404">404</a>
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, sync::Arc, thread};
 
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, ObjectId};
+<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Describes a [`Surface`].
@@ -461,9 +439,6 @@
     /// would become invalid when the window is dropped.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) _handle_source: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
 
-    <span class="doccomment">/// Wgpu-core surface id.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
-
     <span class="doccomment">/// Additional surface data returned by [`DynContext::instance_create_surface`].
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) surface_data: Box&lt;Data&gt;,
 
@@ -477,23 +452,13 @@
 }
 
 <span class="kw">impl </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="doccomment">/// Returns a globally-unique identifier for this `Surface`.
-    ///
-    /// Calling this method multiple times on the same object will always return the same value.
-    /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;Surface&lt;<span class="lifetime">'_</span>&gt;&gt; {
-        Id::new(<span class="self">self</span>.id)
-    }
-
     <span class="doccomment">/// Returns the capabilities of the surface when used with the given adapter.
     ///
     /// Returns specified values (see [`SurfaceCapabilities`]) if surface is incompatible with the adapter.
     </span><span class="kw">pub fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>Adapter) -&gt; SurfaceCapabilities {
         DynContext::surface_get_capabilities(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.surface_data.as_ref(),
-            <span class="kw-2">&amp;</span>adapter.id,
             adapter.data.as_ref(),
         )
     }
@@ -530,9 +495,7 @@
     </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration) {
         DynContext::surface_configure(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.surface_data.as_ref(),
-            <span class="kw-2">&amp;</span>device.id,
             device.data.as_ref(),
             config,
         );
@@ -550,11 +513,8 @@
     /// If a SurfaceTexture referencing this surface is alive when the swapchain is recreated,
     /// recreating the swapchain will panic.
     </span><span class="kw">pub fn </span>get_current_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceTexture, SurfaceError&gt; {
-        <span class="kw">let </span>(texture_id, texture_data, status, detail) = DynContext::surface_get_current_texture(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
-            <span class="self">self</span>.surface_data.as_ref(),
-        );
+        <span class="kw">let </span>(texture_data, status, detail) =
+            DynContext::surface_get_current_texture(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.surface_data.as_ref());
 
         <span class="kw">let </span>suboptimal = <span class="kw">match </span>status {
             SurfaceStatus::Good =&gt; <span class="bool-val">false</span>,
@@ -584,12 +544,10 @@
             view_formats: <span class="kw-2">&amp;</span>[],
         };
 
-        texture_id
-            .zip(texture_data)
-            .map(|(id, data)| SurfaceTexture {
+        texture_data
+            .map(|data| SurfaceTexture {
                 texture: Texture {
                     context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-                    id,
                     data,
                     owned: <span class="bool-val">false</span>,
                     descriptor,
@@ -617,7 +575,7 @@
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
             .map(|ctx| <span class="kw">unsafe </span>{
                 ctx.surface_as_hal::&lt;A, F, R&gt;(
-                    <span class="self">self</span>.surface_data.downcast_ref().unwrap(),
+                    <span class="kw">crate</span>::context::downcast_ref(<span class="kw-2">&amp;</span><span class="self">self</span>.surface_data),
                     hal_surface_callback,
                 )
             })
@@ -638,7 +596,6 @@
                     <span class="string">"None"
                 </span>},
             )
-            .field(<span class="string">"id"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.id)
             .field(<span class="string">"data"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.surface_data)
             .field(<span class="string">"config"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
             .finish()
@@ -651,8 +608,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context
-                .surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.surface_data.as_ref())
+            <span class="self">self</span>.context.surface_drop(<span class="self">self</span>.surface_data.as_ref())
         }
     }
 }

@@ -717,18 +717,6 @@
 <a href="#716" id="716">716</a>
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
-<a href="#719" id="719">719</a>
-<a href="#720" id="720">720</a>
-<a href="#721" id="721">721</a>
-<a href="#722" id="722">722</a>
-<a href="#723" id="723">723</a>
-<a href="#724" id="724">724</a>
-<a href="#725" id="725">725</a>
-<a href="#726" id="726">726</a>
-<a href="#727" id="727">727</a>
-<a href="#728" id="728">728</a>
-<a href="#729" id="729">729</a>
-<a href="#730" id="730">730</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     error, fmt,
     ops::{Bound, Deref, DerefMut, Range, RangeBounds},
@@ -738,7 +726,7 @@
 
 <span class="kw">use </span>parking_lot::Mutex;
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, ObjectId};
+<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a GPU-accessible buffer.
@@ -904,7 +892,6 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Buffer {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: ObjectId,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) map_context: Mutex&lt;MapContext&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
@@ -914,15 +901,9 @@
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Buffer: Send, Sync);
 
-<span class="kw">impl </span>Buffer {
-    <span class="doccomment">/// Returns a globally-unique identifier for this `Buffer`.
-    ///
-    /// Calling this method multiple times on the same object will always return the same value.
-    /// The returned value is guaranteed to be different for all resources created from the same `Instance`.
-    </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;<span class="self">Self</span>&gt; {
-        Id::new(<span class="self">self</span>.id)
-    }
+<span class="macro">super::impl_partialeq_eq_hash!</span>(Buffer);
 
+<span class="kw">impl </span>Buffer {
     <span class="doccomment">/// Return the binding view of the entire buffer.
     </span><span class="kw">pub fn </span>as_entire_binding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BindingResource&lt;<span class="lifetime">'_</span>&gt; {
         BindingResource::Buffer(<span class="self">self</span>.as_entire_buffer_binding())
@@ -948,14 +929,17 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_buffer_callback: F,
     ) -&gt; R {
-        <span class="kw">let </span>id = <span class="self">self</span>.id;
-
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
             </span>.context
             .as_any()
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
         {
-            <span class="kw">unsafe </span>{ ctx.buffer_as_hal::&lt;A, F, R&gt;(id.into(), hal_buffer_callback) }
+            <span class="kw">unsafe </span>{
+                ctx.buffer_as_hal::&lt;A, F, R&gt;(
+                    <span class="kw">crate</span>::context::downcast_ref(<span class="kw-2">&amp;</span><span class="self">self</span>.data),
+                    hal_buffer_callback,
+                )
+            }
         } <span class="kw">else </span>{
             hal_buffer_callback(<span class="prelude-val">None</span>)
         }
@@ -987,12 +971,12 @@
     <span class="doccomment">/// Flushes any pending write operations and unmaps the buffer from host memory.
     </span><span class="kw">pub fn </span>unmap(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.map_context.lock().reset();
-        DynContext::buffer_unmap(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+        DynContext::buffer_unmap(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref());
     }
 
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        DynContext::buffer_destroy(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+        DynContext::buffer_destroy(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref());
     }
 
     <span class="doccomment">/// Returns the length of the buffer allocation in bytes.
@@ -1074,12 +1058,7 @@
         callback: <span class="kw">impl </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + WasmNotSend + <span class="lifetime">'static</span>,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>mc = <span class="self">self</span>.buffer.map_context.lock();
-        <span class="macro">assert_eq!</span>(
-            mc.initial_range,
-            <span class="number">0</span>..<span class="number">0</span>,
-            <span class="string">"Buffer {:?} is already mapped"</span>,
-            <span class="self">self</span>.buffer.id
-        );
+        <span class="macro">assert_eq!</span>(mc.initial_range, <span class="number">0</span>..<span class="number">0</span>, <span class="string">"Buffer is already mapped"</span>);
         <span class="kw">let </span>end = <span class="kw">match </span><span class="self">self</span>.size {
             <span class="prelude-val">Some</span>(s) =&gt; <span class="self">self</span>.offset + s.get(),
             <span class="prelude-val">None </span>=&gt; mc.total_size,
@@ -1088,7 +1067,6 @@
 
         DynContext::buffer_map_async(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.buffer.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.buffer.id,
             <span class="self">self</span>.buffer.data.as_ref(),
             mode,
             <span class="self">self</span>.offset..end,
@@ -1114,7 +1092,6 @@
         <span class="kw">let </span>end = <span class="self">self</span>.buffer.map_context.lock().add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
         <span class="kw">let </span>data = DynContext::buffer_get_mapped_range(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.buffer.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.buffer.id,
             <span class="self">self</span>.buffer.data.as_ref(),
             <span class="self">self</span>.offset..end,
         );
@@ -1160,7 +1137,6 @@
         <span class="kw">let </span>end = <span class="self">self</span>.buffer.map_context.lock().add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
         <span class="kw">let </span>data = DynContext::buffer_get_mapped_range(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.buffer.context,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.buffer.id,
             <span class="self">self</span>.buffer.data.as_ref(),
             <span class="self">self</span>.offset..end,
         );
@@ -1411,7 +1387,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Buffer {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.buffer_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref());
+            <span class="self">self</span>.context.buffer_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }

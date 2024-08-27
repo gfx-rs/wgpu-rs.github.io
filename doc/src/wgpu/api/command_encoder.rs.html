@@ -341,49 +341,9 @@
 <a href="#340" id="340">340</a>
 <a href="#341" id="341">341</a>
 <a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, ops::Range, sync::Arc, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, ObjectId};
+<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Encodes a series of GPU operations.
@@ -398,7 +358,6 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>CommandEncoder {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) id: <span class="prelude-ty">Option</span>&lt;ObjectId&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
@@ -407,9 +366,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>CommandEncoder {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.id.take() {
-                <span class="self">self</span>.context.command_encoder_drop(<span class="kw-2">&amp;</span>id, <span class="self">self</span>.data.as_ref());
-            }
+            <span class="self">self</span>.context.command_encoder_drop(<span class="self">self</span>.data.as_ref());
         }
     }
 }
@@ -454,14 +411,9 @@
 <span class="kw">impl </span>CommandEncoder {
     <span class="doccomment">/// Finishes recording and returns a [`CommandBuffer`] that can be submitted for execution.
     </span><span class="kw">pub fn </span>finish(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; CommandBuffer {
-        <span class="kw">let </span>(id, data) = DynContext::command_encoder_finish(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.take().unwrap(),
-            <span class="self">self</span>.data.as_mut(),
-        );
+        <span class="kw">let </span>data = DynContext::command_encoder_finish(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_mut());
         CommandBuffer {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            id: <span class="prelude-val">Some</span>(id),
             data: <span class="prelude-val">Some</span>(data),
         }
     }
@@ -480,16 +432,10 @@
         <span class="kw-2">&amp;</span><span class="lifetime">'encoder </span><span class="kw-2">mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>RenderPassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; RenderPass&lt;<span class="lifetime">'encoder</span>&gt; {
-        <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-        <span class="kw">let </span>(id, data) = DynContext::command_encoder_begin_render_pass(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            id,
-            <span class="self">self</span>.data.as_ref(),
-            desc,
-        );
+        <span class="kw">let </span>data =
+            DynContext::command_encoder_begin_render_pass(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), desc);
         RenderPass {
             inner: RenderPassInner {
-                id,
                 data,
                 context: <span class="self">self</span>.context.clone(),
             },
@@ -511,16 +457,13 @@
         <span class="kw-2">&amp;</span><span class="lifetime">'encoder </span><span class="kw-2">mut </span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>ComputePassDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; ComputePass&lt;<span class="lifetime">'encoder</span>&gt; {
-        <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-        <span class="kw">let </span>(id, data) = DynContext::command_encoder_begin_compute_pass(
+        <span class="kw">let </span>data = DynContext::command_encoder_begin_compute_pass(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            id,
             <span class="self">self</span>.data.as_ref(),
             desc,
         );
         ComputePass {
             inner: ComputePassInner {
-                id,
                 data,
                 context: <span class="self">self</span>.context.clone(),
             },
@@ -545,12 +488,9 @@
     ) {
         DynContext::command_encoder_copy_buffer_to_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;</span>source.id,
             source.data.as_ref(),
             source_offset,
-            <span class="kw-2">&amp;</span>destination.id,
             destination.data.as_ref(),
             destination_offset,
             copy_size,
@@ -566,7 +506,6 @@
     ) {
         DynContext::command_encoder_copy_buffer_to_texture(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
             source,
             destination,
@@ -583,7 +522,6 @@
     ) {
         DynContext::command_encoder_copy_texture_to_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
             source,
             destination,
@@ -606,7 +544,6 @@
     ) {
         DynContext::command_encoder_copy_texture_to_texture(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
             source,
             destination,
@@ -630,9 +567,8 @@
     </span><span class="kw">pub fn </span>clear_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Texture, subresource_range: <span class="kw-2">&amp;</span>ImageSubresourceRange) {
         DynContext::command_encoder_clear_texture(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
-            texture,
+            texture.data.as_ref(),
             subresource_range,
         );
     }
@@ -651,9 +587,8 @@
     ) {
         DynContext::command_encoder_clear_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
-            buffer,
+            buffer.data.as_ref(),
             offset,
             size,
         );
@@ -661,25 +596,17 @@
 
     <span class="doccomment">/// Inserts debug marker.
     </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-        DynContext::command_encoder_insert_debug_marker(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            id,
-            <span class="self">self</span>.data.as_ref(),
-            label,
-        );
+        DynContext::command_encoder_insert_debug_marker(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), label);
     }
 
     <span class="doccomment">/// Start record commands and group it into debug marker group.
     </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-        DynContext::command_encoder_push_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, id, <span class="self">self</span>.data.as_ref(), label);
+        DynContext::command_encoder_push_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), label);
     }
 
     <span class="doccomment">/// Stops command recording and creates debug group.
     </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span>id = <span class="self">self</span>.id.as_ref().unwrap();
-        DynContext::command_encoder_pop_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, id, <span class="self">self</span>.data.as_ref());
+        DynContext::command_encoder_pop_debug_group(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref());
     }
 
     <span class="doccomment">/// Resolves a query set, writing the results into the supplied destination buffer.
@@ -695,13 +622,10 @@
     ) {
         DynContext::command_encoder_resolve_query_set(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_ref(),
-            <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_range.start,
             query_range.end - query_range.start,
-            <span class="kw-2">&amp;</span>destination.id,
             destination.data.as_ref(),
             destination_offset,
         )
@@ -724,14 +648,12 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         hal_command_encoder_callback: F,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;R&gt; {
-        <span class="kw">use </span>wgc::id::CommandEncoderId;
-
         <span class="self">self</span>.context
             .as_any()
             .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
             .map(|ctx| <span class="kw">unsafe </span>{
                 ctx.command_encoder_as_hal_mut::&lt;A, F, R&gt;(
-                    CommandEncoderId::from(<span class="self">self</span>.id.unwrap()),
+                    <span class="kw">crate</span>::context::downcast_ref(<span class="kw-2">&amp;</span><span class="self">self</span>.data),
                     hal_command_encoder_callback,
                 )
             })
@@ -755,9 +677,7 @@
     </span><span class="kw">pub fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, query_set: <span class="kw-2">&amp;</span>QuerySet, query_index: u32) {
         DynContext::command_encoder_write_timestamp(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.id.as_ref().unwrap(),
             <span class="self">self</span>.data.as_mut(),
-            <span class="kw-2">&amp;</span>query_set.id,
             query_set.data.as_ref(),
             query_index,
         )
