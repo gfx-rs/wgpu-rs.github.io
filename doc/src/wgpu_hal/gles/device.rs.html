@@ -1632,8 +1632,6 @@
 <a href="#1631" id="1631">1631</a>
 <a href="#1632" id="1632">1632</a>
 <a href="#1633" id="1633">1633</a>
-<a href="#1634" id="1634">1634</a>
-<a href="#1635" id="1635">1635</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1746,22 +1744,21 @@
     ///
     /// - `name` must be created respecting `desc`
     /// - `name` must be a texture
-    /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the texture. If `drop_guard` is
-    ///   [`Some`], the texture must be valid until the drop implementation
-    ///   of the drop guard is called.
+    /// - If `drop_callback` is [`None`], wgpu-hal will take ownership of the texture. If
+    ///   `drop_callback` is [`Some`], the texture must be valid until the callback is called.
     </span><span class="attr">#[cfg(any(native, Emscripten))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: std::num::NonZeroU32,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
-        drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+        drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
     ) -&gt; <span class="kw">super</span>::Texture {
         <span class="kw">super</span>::Texture {
             inner: <span class="kw">super</span>::TextureInner::Texture {
                 raw: glow::NativeTexture(name),
                 target: <span class="kw">super</span>::Texture::get_info_from_desc(desc),
             },
-            drop_guard,
+            drop_guard: <span class="kw">crate</span>::DropGuard::from_option(drop_callback),
             mip_level_count: desc.mip_level_count,
             array_layer_count: desc.array_layer_count(),
             format: desc.format,
@@ -1774,21 +1771,20 @@
     ///
     /// - `name` must be created respecting `desc`
     /// - `name` must be a renderbuffer
-    /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the renderbuffer. If `drop_guard` is
-    ///   [`Some`], the renderbuffer must be valid until the drop implementation
-    ///   of the drop guard is called.
+    /// - If `drop_callback` is [`None`], wgpu-hal will take ownership of the renderbuffer. If
+    ///   `drop_callback` is [`Some`], the renderbuffer must be valid until the callback is called.
     </span><span class="attr">#[cfg(any(native, Emscripten))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw_renderbuffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: std::num::NonZeroU32,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
-        drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+        drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
     ) -&gt; <span class="kw">super</span>::Texture {
         <span class="kw">super</span>::Texture {
             inner: <span class="kw">super</span>::TextureInner::Renderbuffer {
                 raw: glow::NativeRenderbuffer(name),
             },
-            drop_guard,
+            drop_guard: <span class="kw">crate</span>::DropGuard::from_option(drop_callback),
             mip_level_count: desc.mip_level_count,
             array_layer_count: desc.array_layer_count(),
             format: desc.format,

@@ -2390,6 +2390,10 @@
 <a href="#2389" id="2389">2389</a>
 <a href="#2390" id="2390">2390</a>
 <a href="#2391" id="2391">2391</a>
+<a href="#2392" id="2392">2392</a>
+<a href="#2393" id="2393">2393</a>
+<a href="#2394" id="2394">2394</a>
+<a href="#2395" id="2395">2395</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -3995,11 +3999,13 @@
     /// - `raw_device` must be created from this adapter.
     /// - `raw_device` must be created using `family_index`, `enabled_extensions` and `physical_device_features()`
     /// - `enabled_extensions` must be a superset of `required_device_extensions()`.
+    /// - If `drop_callback` is [`None`], wgpu-hal will take ownership of `raw_device`. If
+    ///   `drop_callback` is [`Some`], `raw_device` must be valid until the callback is called.
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">pub unsafe fn </span>device_from_raw(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         raw_device: ash::Device,
-        handle_is_owned: bool,
+        drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
         enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr],
         features: wgt::Features,
         memory_hints: <span class="kw-2">&amp;</span>wgt::MemoryHints,
@@ -4214,12 +4220,14 @@
             <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
         ];
 
+        <span class="kw">let </span>drop_guard = <span class="kw">crate</span>::DropGuard::from_option(drop_callback);
+
         <span class="kw">let </span>shared = Arc::new(<span class="kw">super</span>::DeviceShared {
             raw: raw_device,
             family_index,
             queue_index,
             raw_queue,
-            handle_is_owned,
+            drop_guard,
             instance: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.instance),
             physical_device: <span class="self">self</span>.raw,
             enabled_extensions: enabled_extensions.into(),
@@ -4407,7 +4415,7 @@
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.device_from_raw(
                 raw_device,
-                <span class="bool-val">true</span>,
+                <span class="prelude-val">None</span>,
                 <span class="kw-2">&amp;</span>enabled_extensions,
                 features,
                 memory_hints,

@@ -2306,6 +2306,33 @@
 <a href="#2305" id="2305">2305</a>
 <a href="#2306" id="2306">2306</a>
 <a href="#2307" id="2307">2307</a>
+<a href="#2308" id="2308">2308</a>
+<a href="#2309" id="2309">2309</a>
+<a href="#2310" id="2310">2310</a>
+<a href="#2311" id="2311">2311</a>
+<a href="#2312" id="2312">2312</a>
+<a href="#2313" id="2313">2313</a>
+<a href="#2314" id="2314">2314</a>
+<a href="#2315" id="2315">2315</a>
+<a href="#2316" id="2316">2316</a>
+<a href="#2317" id="2317">2317</a>
+<a href="#2318" id="2318">2318</a>
+<a href="#2319" id="2319">2319</a>
+<a href="#2320" id="2320">2320</a>
+<a href="#2321" id="2321">2321</a>
+<a href="#2322" id="2322">2322</a>
+<a href="#2323" id="2323">2323</a>
+<a href="#2324" id="2324">2324</a>
+<a href="#2325" id="2325">2325</a>
+<a href="#2326" id="2326">2326</a>
+<a href="#2327" id="2327">2327</a>
+<a href="#2328" id="2328">2328</a>
+<a href="#2329" id="2329">2329</a>
+<a href="#2330" id="2330">2330</a>
+<a href="#2331" id="2331">2331</a>
+<a href="#2332" id="2332">2332</a>
+<a href="#2333" id="2333">2333</a>
+<a href="#2334" id="2334">2334</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2611,8 +2638,35 @@
 <span class="kw">pub type </span>FenceValue = u64;
 <span class="kw">pub type </span>AtomicFenceValue = std::sync::atomic::AtomicU64;
 
-<span class="doccomment">/// Drop guard to signal wgpu-hal is no longer using an externally created object.
-</span><span class="kw">pub type </span>DropGuard = Box&lt;<span class="kw">dyn </span>std::any::Any + Send + Sync&gt;;
+<span class="doccomment">/// A callback to signal that wgpu is no longer using a resource.
+</span><span class="attr">#[cfg(any(gles, vulkan))]
+</span><span class="kw">pub type </span>DropCallback = Box&lt;<span class="kw">dyn </span>FnMut() + Send + Sync + <span class="lifetime">'static</span>&gt;;
+
+<span class="attr">#[cfg(any(gles, vulkan))]
+</span><span class="kw">pub struct </span>DropGuard {
+    callback: DropCallback,
+}
+
+<span class="attr">#[cfg(all(any(gles, vulkan), any(native, Emscripten)))]
+</span><span class="kw">impl </span>DropGuard {
+    <span class="kw">fn </span>from_option(callback: <span class="prelude-ty">Option</span>&lt;DropCallback&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        callback.map(|callback| <span class="self">Self </span>{ callback })
+    }
+}
+
+<span class="attr">#[cfg(any(gles, vulkan))]
+</span><span class="kw">impl </span>Drop <span class="kw">for </span>DropGuard {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        (<span class="self">self</span>.callback)();
+    }
+}
+
+<span class="attr">#[cfg(any(gles, vulkan))]
+</span><span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>DropGuard {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"DropGuard"</span>).finish()
+    }
+}
 
 <span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Error)]
 </span><span class="kw">pub enum </span>DeviceError {

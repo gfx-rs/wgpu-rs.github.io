@@ -1104,6 +1104,10 @@
 <a href="#1103" id="1103">1103</a>
 <a href="#1104" id="1104">1104</a>
 <a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1416,6 +1420,8 @@
     /// - `extensions` must be a superset of `desired_extensions()` and must be created from the
     ///   same entry, `instance_api_version`` and flags.
     /// - `android_sdk_version` is ignored and can be `0` for all platforms besides Android
+    /// - If `drop_callback` is [`None`], wgpu-hal will take ownership of `raw_instance`. If
+    ///   `drop_callback` is [`Some`], `raw_instance` must be valid until the callback is called.
     ///
     /// If `debug_utils_user_data` is `Some`, then the validation layer is
     /// available, so create a [`vk::DebugUtilsMessengerEXT`].
@@ -1429,7 +1435,7 @@
         extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
         flags: wgt::InstanceFlags,
         has_nv_optimus: bool,
-        drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+        drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="macro">log::debug!</span>(<span class="string">"Instance version: 0x{:x}"</span>, instance_api_version);
 
@@ -1469,6 +1475,8 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>};
+
+        <span class="kw">let </span>drop_guard = <span class="kw">crate</span>::DropGuard::from_option(drop_callback);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             shared: Arc::new(<span class="kw">super</span>::InstanceShared {
@@ -1661,7 +1669,7 @@
                     .destroy_debug_utils_messenger(du.messenger, <span class="prelude-val">None</span>);
                 du
             });
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(_drop_guard) = <span class="self">self</span>.drop_guard.take() {
+            <span class="kw">if </span><span class="self">self</span>.drop_guard.is_none() {
                 <span class="self">self</span>.raw.destroy_instance(<span class="prelude-val">None</span>);
             }
         }
@@ -1935,8 +1943,8 @@
                 extensions,
                 desc.flags,
                 has_nv_optimus,
-                <span class="prelude-val">Some</span>(Box::new(())), <span class="comment">// `Some` signals that wgpu-hal is in charge of destroying vk_instance
-            </span>)
+                <span class="prelude-val">None</span>,
+            )
         }
     }
 
