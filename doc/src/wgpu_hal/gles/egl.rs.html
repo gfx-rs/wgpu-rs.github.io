@@ -1477,11 +1477,47 @@
 <a href="#1476" id="1476">1476</a>
 <a href="#1477" id="1477">1477</a>
 <a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>once_cell::sync::Lazy;
-<span class="kw">use </span>parking_lot::{Mutex, MutexGuard, RwLock};
+<span class="kw">use </span>parking_lot::{MappedMutexGuard, Mutex, MutexGuard, RwLock};
 
-<span class="kw">use </span>std::{collections::HashMap, ffi, os::raw, ptr, rc::Rc, sync::Arc, time::Duration};
+<span class="kw">use </span>std::{
+    collections::HashMap, ffi, mem::ManuallyDrop, os::raw, ptr, rc::Rc, sync::Arc, time::Duration,
+};
 
 <span class="doccomment">/// The amount of time to wait while trying to obtain a lock to the adapter context
 </span><span class="kw">const </span>CONTEXT_LOCK_TIMEOUT_SECS: u64 = <span class="number">1</span>;
@@ -1774,6 +1810,7 @@
             .make_current(<span class="self">self</span>.display, <span class="self">self</span>.pbuffer, <span class="self">self</span>.pbuffer, <span class="prelude-val">Some</span>(<span class="self">self</span>.raw))
             .unwrap();
     }
+
     <span class="kw">fn </span>unmake_current(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.instance
             .make_current(<span class="self">self</span>.display, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
@@ -1784,7 +1821,7 @@
 <span class="doccomment">/// A wrapper around a [`glow::Context`] and the required EGL context that uses locking to guarantee
 /// exclusive access when shared with multiple threads.
 </span><span class="kw">pub struct </span>AdapterContext {
-    glow: Mutex&lt;glow::Context&gt;,
+    glow: Mutex&lt;ManuallyDrop&lt;glow::Context&gt;&gt;,
     egl: <span class="prelude-ty">Option</span>&lt;EglContext&gt;,
 }
 
@@ -1825,6 +1862,31 @@
     }
 }
 
+<span class="kw">impl </span>Drop <span class="kw">for </span>AdapterContext {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">struct </span>CurrentGuard&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>EglContext);
+        <span class="kw">impl </span>Drop <span class="kw">for </span>CurrentGuard&lt;<span class="lifetime">'_</span>&gt; {
+            <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+                <span class="self">self</span>.<span class="number">0</span>.unmake_current();
+            }
+        }
+
+        <span class="comment">// Context must be current when dropped. See safety docs on
+        // `glow::HasContext`.
+        //
+        // NOTE: This is only set to `None` by `Adapter::new_external` which
+        // requires the context to be current when anything that may be holding
+        // the `Arc&lt;AdapterShared&gt;` is dropped.
+        </span><span class="kw">let </span>_guard = <span class="self">self</span>.egl.as_ref().map(|egl| {
+            egl.make_current();
+            CurrentGuard(egl)
+        });
+        <span class="kw">let </span>glow = <span class="self">self</span>.glow.get_mut();
+        <span class="comment">// SAFETY: Field not used after this.
+        </span><span class="kw">unsafe </span>{ ManuallyDrop::drop(glow) };
+    }
+}
+
 <span class="kw">struct </span>EglContextLock&lt;<span class="lifetime">'a</span>&gt; {
     instance: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;EglInstance&gt;,
     display: khronos_egl::Display,
@@ -1832,7 +1894,7 @@
 
 <span class="doccomment">/// A guard containing a lock to an [`AdapterContext`]
 </span><span class="kw">pub struct </span>AdapterContextLock&lt;<span class="lifetime">'a</span>&gt; {
-    glow: MutexGuard&lt;<span class="lifetime">'a</span>, glow::Context&gt;,
+    glow: MutexGuard&lt;<span class="lifetime">'a</span>, ManuallyDrop&lt;glow::Context&gt;&gt;,
     egl: <span class="prelude-ty">Option</span>&lt;EglContextLock&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
@@ -1866,10 +1928,12 @@
     ///
     /// &gt; **Note:** Calling this function **will** still lock the [`glow::Context`] which adds an
     /// &gt; extra safe-guard against accidental concurrent access to the context.
-    </span><span class="kw">pub unsafe fn </span>get_without_egl_lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MutexGuard&lt;glow::Context&gt; {
-        <span class="self">self</span>.glow
+    </span><span class="kw">pub unsafe fn </span>get_without_egl_lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MappedMutexGuard&lt;glow::Context&gt; {
+        <span class="kw">let </span>guard = <span class="self">self
+            </span>.glow
             .try_lock_for(Duration::from_secs(CONTEXT_LOCK_TIMEOUT_SECS))
-            .expect(<span class="string">"Could not lock adapter context. This is most-likely a deadlock."</span>)
+            .expect(<span class="string">"Could not lock adapter context. This is most-likely a deadlock."</span>);
+        MutexGuard::map(guard, |glow| <span class="kw-2">&amp;mut **</span>glow)
     }
 
     <span class="doccomment">/// Obtain a lock to the EGL context and get handle to the [`glow::Context`] that can be used to
@@ -2531,6 +2595,8 @@
             <span class="kw">unsafe </span>{ gl.debug_message_callback(<span class="kw">super</span>::gl_debug_message_callback) };
         }
 
+        <span class="comment">// Avoid accidental drop when the context is not current.
+        </span><span class="kw">let </span>gl = ManuallyDrop::new(gl);
         inner.egl.unmake_current();
 
         <span class="kw">unsafe </span>{
@@ -2552,13 +2618,15 @@
     /// - The underlying OpenGL ES context must be current.
     /// - The underlying OpenGL ES context must be current when interfacing with any objects returned by
     ///   wgpu-hal from this adapter.
+    /// - The underlying OpenGL ES context must be current when dropping this adapter and when
+    ///   dropping any objects returned from this adapter.
     </span><span class="kw">pub unsafe fn </span>new_external(
         fun: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">*const </span>ffi::c_void,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ExposedAdapter&lt;<span class="kw">super</span>::Api&gt;&gt; {
         <span class="kw">let </span>context = <span class="kw">unsafe </span>{ glow::Context::from_loader_function(fun) };
         <span class="kw">unsafe </span>{
             <span class="self">Self</span>::expose(AdapterContext {
-                glow: Mutex::new(context),
+                glow: Mutex::new(ManuallyDrop::new(context)),
                 egl: <span class="prelude-val">None</span>,
             })
         }
