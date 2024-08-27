@@ -502,9 +502,17 @@
 <a href="#501" id="501">501</a>
 <a href="#502" id="502">502</a>
 <a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! WGSL's automatic conversions for abstract types.
 
-</span><span class="kw">use crate</span>::{Handle, Span};
+</span><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{
+    AutoConversionError, AutoConversionLeafScalarError, ConcretizationFailedError,
+};
+<span class="kw">use crate</span>::{Handle, Span};
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; <span class="kw">super</span>::ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
     <span class="doccomment">/// Try to use WGSL's automatic conversions to convert `expr` to `goal_ty`.
@@ -543,15 +551,17 @@
                 <span class="prelude-val">Some</span>(scalars) =&gt; scalars,
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx();
-                    <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx);
-                    <span class="kw">let </span>dest_type = goal_ty.to_wgsl(gctx);
+                    <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx).into();
+                    <span class="kw">let </span>dest_type = goal_ty.to_wgsl(gctx).into();
 
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">super</span>::Error::AutoConversion {
-                        dest_span: goal_span,
-                        dest_type,
-                        source_span: expr_span,
-                        source_type,
-                    });
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">super</span>::Error::AutoConversion(Box::new(
+                        AutoConversionError {
+                            dest_span: goal_span,
+                            dest_type,
+                            source_span: expr_span,
+                            source_type,
+                        },
+                    )));
                 }
             };
 
@@ -583,13 +593,13 @@
 
         <span class="kw">let </span>make_error = || {
             <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx();
-            <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx);
-            <span class="kw">super</span>::Error::AutoConversionLeafScalar {
+            <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx).into();
+            <span class="kw">super</span>::Error::AutoConversionLeafScalar(Box::new(AutoConversionLeafScalarError {
                 dest_span: goal_span,
-                dest_scalar: goal_scalar.to_wgsl(),
+                dest_scalar: goal_scalar.to_wgsl().into(),
                 source_span: expr_span,
                 source_type,
-            }
+            }))
         };
 
         <span class="kw">let </span>expr_scalar = <span class="kw">match </span>expr_inner.scalar() {
@@ -620,7 +630,7 @@
         <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Array { .. } = <span class="kw-2">*</span>expr_inner {
             <span class="self">self</span>.as_const_evaluator()
                 .cast_array(expr, goal_scalar, expr_span)
-                .map_err(|err| <span class="kw">super</span>::Error::ConstantEvaluatorError(err, expr_span))
+                .map_err(|err| <span class="kw">super</span>::Error::ConstantEvaluatorError(err.into(), expr_span))
         } <span class="kw">else </span>{
             <span class="kw">let </span>cast = <span class="kw">crate</span>::Expression::As {
                 expr,
@@ -758,12 +768,12 @@
                         // it has one. Also, avoid holding the borrow of `inner`
                         // across the call to `cast_array`.
                         </span><span class="kw">let </span>expr_type = <span class="kw-2">&amp;</span><span class="self">self</span>.typifier()[expr];
-                        <span class="kw">super</span>::Error::ConcretizationFailed {
+                        <span class="kw">super</span>::Error::ConcretizationFailed(Box::new(ConcretizationFailedError {
                             expr_span,
-                            expr_type: expr_type.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx()),
-                            scalar: concretized.to_wgsl(),
+                            expr_type: expr_type.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx()).into(),
+                            scalar: concretized.to_wgsl().into(),
                             inner: err,
-                        }
+                        }))
                     })<span class="question-mark">?</span>;
             }
         }
