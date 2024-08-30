@@ -2435,6 +2435,28 @@
 <a href="#2434" id="2434">2434</a>
 <a href="#2435" id="2435">2435</a>
 <a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -4119,6 +4141,28 @@
 
                         <span class="kw">let </span>handle = ctx.declare_local(name)<span class="question-mark">?</span>;
                         ast::StatementKind::LocalDecl(ast::LocalDecl::Let(ast::Let {
+                            name,
+                            ty: given_ty,
+                            init: expr_id,
+                            handle,
+                        }))
+                    }
+                    <span class="string">"const" </span>=&gt; {
+                        <span class="kw">let _ </span>= lexer.next();
+                        <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
+
+                        <span class="kw">let </span>given_ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
+                            <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
+                            <span class="prelude-val">Some</span>(ty)
+                        } <span class="kw">else </span>{
+                            <span class="prelude-val">None
+                        </span>};
+                        lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>expr_id = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
+                        lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
+
+                        <span class="kw">let </span>handle = ctx.declare_local(name)<span class="question-mark">?</span>;
+                        ast::StatementKind::LocalDecl(ast::LocalDecl::Const(ast::LocalConst {
                             name,
                             ty: given_ty,
                             init: expr_id,

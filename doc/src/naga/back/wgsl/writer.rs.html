@@ -2112,10 +2112,18 @@
 <a href="#2111" id="2111">2111</a>
 <a href="#2112" id="2112">2112</a>
 <a href="#2113" id="2113">2113</a>
+<a href="#2114" id="2114">2114</a>
+<a href="#2115" id="2115">2115</a>
+<a href="#2116" id="2116">2116</a>
+<a href="#2117" id="2117">2117</a>
+<a href="#2118" id="2118">2118</a>
+<a href="#2119" id="2119">2119</a>
+<a href="#2120" id="2120">2120</a>
+<a href="#2121" id="2121">2121</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
-    proc::{<span class="self">self</span>, NameKey},
+    proc::{<span class="self">self</span>, ExpressionKindTracker, NameKey},
     valid, Handle, Module, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>std::fmt::Write;
@@ -2280,6 +2288,7 @@
                 info: fun_info,
                 expressions: <span class="kw-2">&amp;</span>function.expressions,
                 named_expressions: <span class="kw-2">&amp;</span>function.named_expressions,
+                expr_kind_tracker: ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>function.expressions),
             };
 
             <span class="comment">// Write the function
@@ -2307,6 +2316,7 @@
                 info: info.get_entry_point(index),
                 expressions: <span class="kw-2">&amp;</span>ep.function.expressions,
                 named_expressions: <span class="kw-2">&amp;</span>ep.function.named_expressions,
+                expr_kind_tracker: ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>ep.function.expressions),
             };
             <span class="self">self</span>.write_function(module, <span class="kw-2">&amp;</span>ep.function, <span class="kw-2">&amp;</span>func_ctx)<span class="question-mark">?</span>;
 
@@ -3229,8 +3239,14 @@
         func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx,
         name: <span class="kw-2">&amp;</span>str,
     ) -&gt; BackendResult {
+        <span class="comment">// Some functions are marked as const, but are not yet implemented as constant expression
+        </span><span class="kw">let </span>quantifier = <span class="kw">if </span>func_ctx.expr_kind_tracker.is_impl_const(handle) {
+            <span class="string">"const"
+        </span>} <span class="kw">else </span>{
+            <span class="string">"let"
+        </span>};
         <span class="comment">// Write variable name
-        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"let {name}"</span>)<span class="question-mark">?</span>;
+        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{quantifier} {name}"</span>)<span class="question-mark">?</span>;
         <span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::EXPLICIT_TYPES) {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">": "</span>)<span class="question-mark">?</span>;
             <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>func_ctx.info[handle].ty;

@@ -2902,6 +2902,61 @@
 <a href="#2901" id="2901">2901</a>
 <a href="#2902" id="2902">2902</a>
 <a href="#2903" id="2903">2903</a>
+<a href="#2904" id="2904">2904</a>
+<a href="#2905" id="2905">2905</a>
+<a href="#2906" id="2906">2906</a>
+<a href="#2907" id="2907">2907</a>
+<a href="#2908" id="2908">2908</a>
+<a href="#2909" id="2909">2909</a>
+<a href="#2910" id="2910">2910</a>
+<a href="#2911" id="2911">2911</a>
+<a href="#2912" id="2912">2912</a>
+<a href="#2913" id="2913">2913</a>
+<a href="#2914" id="2914">2914</a>
+<a href="#2915" id="2915">2915</a>
+<a href="#2916" id="2916">2916</a>
+<a href="#2917" id="2917">2917</a>
+<a href="#2918" id="2918">2918</a>
+<a href="#2919" id="2919">2919</a>
+<a href="#2920" id="2920">2920</a>
+<a href="#2921" id="2921">2921</a>
+<a href="#2922" id="2922">2922</a>
+<a href="#2923" id="2923">2923</a>
+<a href="#2924" id="2924">2924</a>
+<a href="#2925" id="2925">2925</a>
+<a href="#2926" id="2926">2926</a>
+<a href="#2927" id="2927">2927</a>
+<a href="#2928" id="2928">2928</a>
+<a href="#2929" id="2929">2929</a>
+<a href="#2930" id="2930">2930</a>
+<a href="#2931" id="2931">2931</a>
+<a href="#2932" id="2932">2932</a>
+<a href="#2933" id="2933">2933</a>
+<a href="#2934" id="2934">2934</a>
+<a href="#2935" id="2935">2935</a>
+<a href="#2936" id="2936">2936</a>
+<a href="#2937" id="2937">2937</a>
+<a href="#2938" id="2938">2938</a>
+<a href="#2939" id="2939">2939</a>
+<a href="#2940" id="2940">2940</a>
+<a href="#2941" id="2941">2941</a>
+<a href="#2942" id="2942">2942</a>
+<a href="#2943" id="2943">2943</a>
+<a href="#2944" id="2944">2944</a>
+<a href="#2945" id="2945">2945</a>
+<a href="#2946" id="2946">2946</a>
+<a href="#2947" id="2947">2947</a>
+<a href="#2948" id="2948">2948</a>
+<a href="#2949" id="2949">2949</a>
+<a href="#2950" id="2950">2950</a>
+<a href="#2951" id="2951">2951</a>
+<a href="#2952" id="2952">2952</a>
+<a href="#2953" id="2953">2953</a>
+<a href="#2954" id="2954">2954</a>
+<a href="#2955" id="2955">2955</a>
+<a href="#2956" id="2956">2956</a>
+<a href="#2957" id="2957">2957</a>
+<a href="#2958" id="2958">2958</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3221,7 +3276,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">enum </span>WgslRestrictions&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// - const-expressions will be evaluated and inserted in the arena
-    </span>Const,
+    </span>Const(<span class="prelude-ty">Option</span>&lt;FunctionLocalData&lt;<span class="lifetime">'a</span>&gt;&gt;),
     <span class="doccomment">/// - const-expressions will be evaluated and inserted in the arena
     /// - override-expressions will be inserted in the arena
     </span>Override,
@@ -3251,6 +3306,8 @@
 
 <span class="attr">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 </span><span class="kw">pub enum </span>ExpressionKind {
+    <span class="doccomment">/// If const is also implemented as const
+    </span>ImplConst,
     Const,
     Override,
     Runtime,
@@ -3276,14 +3333,23 @@
     <span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Handle&lt;Expression&gt;, expr_type: ExpressionKind) {
         <span class="self">self</span>.inner.insert(value, expr_type);
     }
+
     <span class="kw">pub fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, h: Handle&lt;Expression&gt;) -&gt; bool {
-        <span class="macro">matches!</span>(<span class="self">self</span>.type_of(h), ExpressionKind::Const)
+        <span class="macro">matches!</span>(
+            <span class="self">self</span>.type_of(h),
+            ExpressionKind::Const | ExpressionKind::ImplConst
+        )
+    }
+
+    <span class="doccomment">/// Returns `true` if naga can also evaluate expression as const
+    </span><span class="kw">pub fn </span>is_impl_const(<span class="kw-2">&amp;</span><span class="self">self</span>, h: Handle&lt;Expression&gt;) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>.type_of(h), ExpressionKind::ImplConst)
     }
 
     <span class="kw">pub fn </span>is_const_or_override(<span class="kw-2">&amp;</span><span class="self">self</span>, h: Handle&lt;Expression&gt;) -&gt; bool {
         <span class="macro">matches!</span>(
             <span class="self">self</span>.type_of(h),
-            ExpressionKind::Const | ExpressionKind::Override
+            ExpressionKind::Const | ExpressionKind::Override | ExpressionKind::ImplConst
         )
     }
 
@@ -3304,13 +3370,14 @@
     }
 
     <span class="kw">fn </span>type_of_with_expr(<span class="kw-2">&amp;</span><span class="self">self</span>, expr: <span class="kw-2">&amp;</span>Expression) -&gt; ExpressionKind {
+        <span class="kw">use </span><span class="kw">crate</span>::MathFunction <span class="kw">as </span>Mf;
         <span class="kw">match </span><span class="kw-2">*</span>expr {
             Expression::Literal(<span class="kw">_</span>) | Expression::ZeroValue(<span class="kw">_</span>) | Expression::Constant(<span class="kw">_</span>) =&gt; {
-                ExpressionKind::Const
+                ExpressionKind::ImplConst
             }
             Expression::Override(<span class="kw">_</span>) =&gt; ExpressionKind::Override,
             Expression::Compose { <span class="kw-2">ref </span>components, .. } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>expr_type = ExpressionKind::Const;
+                <span class="kw">let </span><span class="kw-2">mut </span>expr_type = ExpressionKind::ImplConst;
                 <span class="kw">for </span>component <span class="kw">in </span>components {
                     expr_type = expr_type.max(<span class="self">self</span>.type_of(<span class="kw-2">*</span>component))
                 }
@@ -3321,13 +3388,16 @@
             Expression::Access { base, index } =&gt; <span class="self">self</span>.type_of(base).max(<span class="self">self</span>.type_of(index)),
             Expression::Swizzle { vector, .. } =&gt; <span class="self">self</span>.type_of(vector),
             Expression::Unary { expr, .. } =&gt; <span class="self">self</span>.type_of(expr),
-            Expression::Binary { left, right, .. } =&gt; <span class="self">self</span>.type_of(left).max(<span class="self">self</span>.type_of(right)),
+            Expression::Binary { left, right, .. } =&gt; <span class="self">self
+                </span>.type_of(left)
+                .max(<span class="self">self</span>.type_of(right))
+                .max(ExpressionKind::Const),
             Expression::Math {
+                fun,
                 arg,
                 arg1,
                 arg2,
                 arg3,
-                ..
             } =&gt; <span class="self">self
                 </span>.type_of(arg)
                 .max(
@@ -3341,8 +3411,34 @@
                 .max(
                     arg3.map(|arg| <span class="self">self</span>.type_of(arg))
                         .unwrap_or(ExpressionKind::Const),
+                )
+                .max(
+                    <span class="kw">if </span><span class="macro">matches!</span>(
+                        fun,
+                        Mf::Dot
+                            | Mf::Outer
+                            | Mf::Cross
+                            | Mf::Distance
+                            | Mf::Length
+                            | Mf::Normalize
+                            | Mf::FaceForward
+                            | Mf::Reflect
+                            | Mf::Refract
+                            | Mf::Ldexp
+                            | Mf::Modf
+                            | Mf::Mix
+                            | Mf::Frexp
+                    ) {
+                        ExpressionKind::Const
+                    } <span class="kw">else </span>{
+                        ExpressionKind::ImplConst
+                    },
                 ),
-            Expression::As { expr, .. } =&gt; <span class="self">self</span>.type_of(expr),
+            Expression::As { convert, expr, .. } =&gt; <span class="self">self</span>.type_of(expr).max(<span class="kw">if </span>convert.is_some() {
+                ExpressionKind::ImplConst
+            } <span class="kw">else </span>{
+                ExpressionKind::Const
+            }),
             Expression::Select {
                 condition,
                 accept,
@@ -3350,7 +3446,8 @@
             } =&gt; <span class="self">self
                 </span>.type_of(condition)
                 .max(<span class="self">self</span>.type_of(accept))
-                .max(<span class="self">self</span>.type_of(reject)),
+                .max(<span class="self">self</span>.type_of(reject))
+                .max(ExpressionKind::Const),
             Expression::Relational { argument, .. } =&gt; <span class="self">self</span>.type_of(argument),
             Expression::ArrayLength(expr) =&gt; <span class="self">self</span>.type_of(expr),
             <span class="kw">_ </span>=&gt; ExpressionKind::Runtime,
@@ -3460,7 +3557,7 @@
             Behavior::Wgsl(<span class="kw">if </span>in_override_ctx {
                 WgslRestrictions::Override
             } <span class="kw">else </span>{
-                WgslRestrictions::Const
+                WgslRestrictions::Const(<span class="prelude-val">None</span>)
             }),
             module,
             global_expression_kind_tracker,
@@ -3507,13 +3604,19 @@
         local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
         emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
         block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
+        is_const: bool,
     ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>local_data = FunctionLocalData {
+            global_expressions: <span class="kw-2">&amp;</span>module.global_expressions,
+            emitter,
+            block,
+        };
         <span class="self">Self </span>{
-            behavior: Behavior::Wgsl(WgslRestrictions::Runtime(FunctionLocalData {
-                global_expressions: <span class="kw-2">&amp;</span>module.global_expressions,
-                emitter,
-                block,
-            })),
+            behavior: Behavior::Wgsl(<span class="kw">if </span>is_const {
+                WgslRestrictions::Const(<span class="prelude-val">Some</span>(local_data))
+            } <span class="kw">else </span>{
+                WgslRestrictions::Runtime(local_data)
+            }),
             types: <span class="kw-2">&amp;mut </span>module.types,
             constants: <span class="kw-2">&amp;</span>module.constants,
             overrides: <span class="kw-2">&amp;</span>module.overrides,
@@ -3622,6 +3725,7 @@
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expression_kind_tracker.type_of_with_expr(<span class="kw-2">&amp;</span>expr) {
+            ExpressionKind::ImplConst =&gt; <span class="self">self</span>.try_eval_and_append_impl(<span class="kw-2">&amp;</span>expr, span),
             ExpressionKind::Const =&gt; {
                 <span class="kw">let </span>eval_result = <span class="self">self</span>.try_eval_and_append_impl(<span class="kw-2">&amp;</span>expr, span);
                 <span class="comment">// We should be able to evaluate `Const` expressions at this
@@ -3644,7 +3748,7 @@
                 Behavior::Wgsl(WgslRestrictions::Override | WgslRestrictions::Runtime(<span class="kw">_</span>)) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="self">self</span>.append_expr(expr, span, ExpressionKind::Override))
                 }
-                Behavior::Wgsl(WgslRestrictions::Const) =&gt; {
+                Behavior::Wgsl(WgslRestrictions::Const(<span class="kw">_</span>)) =&gt; {
                     <span class="prelude-val">Err</span>(ConstantEvaluatorError::OverrideExpr)
                 }
                 Behavior::Glsl(<span class="kw">_</span>) =&gt; {
@@ -3665,14 +3769,17 @@
     </span><span class="kw">const fn </span>is_global_arena(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="macro">matches!</span>(
             <span class="self">self</span>.behavior,
-            Behavior::Wgsl(WgslRestrictions::Const | WgslRestrictions::Override)
+            Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>) | WgslRestrictions::Override)
                 | Behavior::Glsl(GlslRestrictions::Const)
         )
     }
 
     <span class="kw">const fn </span>function_local_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>FunctionLocalData&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.behavior {
-            Behavior::Wgsl(WgslRestrictions::Runtime(<span class="kw-2">ref </span>function_local_data))
+            Behavior::Wgsl(
+                WgslRestrictions::Runtime(<span class="kw-2">ref </span>function_local_data)
+                | WgslRestrictions::Const(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>function_local_data)),
+            )
             | Behavior::Glsl(GlslRestrictions::Runtime(<span class="kw-2">ref </span>function_local_data)) =&gt; {
                 <span class="prelude-val">Some</span>(function_local_data)
             }
@@ -4961,7 +5068,10 @@
         expr_type: ExpressionKind,
     ) -&gt; Handle&lt;Expression&gt; {
         <span class="kw">let </span>h = <span class="kw">match </span><span class="self">self</span>.behavior {
-            Behavior::Wgsl(WgslRestrictions::Runtime(<span class="kw-2">ref mut </span>function_local_data))
+            Behavior::Wgsl(
+                WgslRestrictions::Runtime(<span class="kw-2">ref mut </span>function_local_data)
+                | WgslRestrictions::Const(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>function_local_data)),
+            )
             | Behavior::Glsl(GlslRestrictions::Runtime(<span class="kw-2">ref mut </span>function_local_data)) =&gt; {
                 <span class="kw">let </span>is_running = function_local_data.emitter.is_running();
                 <span class="kw">let </span>needs_pre_emit = expr.needs_pre_emit();
@@ -5384,7 +5494,7 @@
 
         <span class="kw">let </span>expression_kind_tracker = <span class="kw-2">&amp;mut </span>ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>global_expressions);
         <span class="kw">let </span><span class="kw-2">mut </span>solver = ConstantEvaluator {
-            behavior: Behavior::Wgsl(WgslRestrictions::Const),
+            behavior: Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>)),
             types: <span class="kw-2">&amp;mut </span>types,
             constants: <span class="kw-2">&amp;</span>constants,
             overrides: <span class="kw-2">&amp;</span>overrides,
@@ -5470,7 +5580,7 @@
 
         <span class="kw">let </span>expression_kind_tracker = <span class="kw-2">&amp;mut </span>ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>global_expressions);
         <span class="kw">let </span><span class="kw-2">mut </span>solver = ConstantEvaluator {
-            behavior: Behavior::Wgsl(WgslRestrictions::Const),
+            behavior: Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>)),
             types: <span class="kw-2">&amp;mut </span>types,
             constants: <span class="kw-2">&amp;</span>constants,
             overrides: <span class="kw-2">&amp;</span>overrides,
@@ -5588,7 +5698,7 @@
 
         <span class="kw">let </span>expression_kind_tracker = <span class="kw-2">&amp;mut </span>ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>global_expressions);
         <span class="kw">let </span><span class="kw-2">mut </span>solver = ConstantEvaluator {
-            behavior: Behavior::Wgsl(WgslRestrictions::Const),
+            behavior: Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>)),
             types: <span class="kw-2">&amp;mut </span>types,
             constants: <span class="kw-2">&amp;</span>constants,
             overrides: <span class="kw-2">&amp;</span>overrides,
@@ -5681,7 +5791,7 @@
 
         <span class="kw">let </span>expression_kind_tracker = <span class="kw-2">&amp;mut </span>ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>global_expressions);
         <span class="kw">let </span><span class="kw-2">mut </span>solver = ConstantEvaluator {
-            behavior: Behavior::Wgsl(WgslRestrictions::Const),
+            behavior: Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>)),
             types: <span class="kw-2">&amp;mut </span>types,
             constants: <span class="kw-2">&amp;</span>constants,
             overrides: <span class="kw-2">&amp;</span>overrides,
@@ -5763,7 +5873,7 @@
 
         <span class="kw">let </span>expression_kind_tracker = <span class="kw-2">&amp;mut </span>ExpressionKindTracker::from_arena(<span class="kw-2">&amp;</span>global_expressions);
         <span class="kw">let </span><span class="kw-2">mut </span>solver = ConstantEvaluator {
-            behavior: Behavior::Wgsl(WgslRestrictions::Const),
+            behavior: Behavior::Wgsl(WgslRestrictions::Const(<span class="prelude-val">None</span>)),
             types: <span class="kw-2">&amp;mut </span>types,
             constants: <span class="kw-2">&amp;</span>constants,
             overrides: <span class="kw-2">&amp;</span>overrides,
