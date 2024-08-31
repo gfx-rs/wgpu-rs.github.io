@@ -2957,6 +2957,13 @@
 <a href="#2956" id="2956">2956</a>
 <a href="#2957" id="2957">2957</a>
 <a href="#2958" id="2958">2958</a>
+<a href="#2959" id="2959">2959</a>
+<a href="#2960" id="2960">2960</a>
+<a href="#2961" id="2961">2961</a>
+<a href="#2962" id="2962">2962</a>
+<a href="#2963" id="2963">2963</a>
+<a href="#2964" id="2964">2964</a>
+<a href="#2965" id="2965">2965</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4790,9 +4797,13 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidBinaryOpArgs),
                         }),
                         (Literal::I32(a), Literal::U32(b)) =&gt; Literal::I32(<span class="kw">match </span>op {
-                            BinaryOperator::ShiftLeft =&gt; a
-                                .checked_shl(b)
-                                .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?</span>,
+                            BinaryOperator::ShiftLeft =&gt; {
+                                <span class="kw">if </span>(<span class="kw">if </span>a.is_negative() { !a } <span class="kw">else </span>{ a }).leading_zeros() &lt;= b {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::Overflow(<span class="string">"&lt;&lt;"</span>.to_string()));
+                                }
+                                a.checked_shl(b)
+                                    .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?
+                            </span>}
                             BinaryOperator::ShiftRight =&gt; a
                                 .checked_shr(b)
                                 .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?</span>,
@@ -4818,8 +4829,11 @@
                             BinaryOperator::ExclusiveOr =&gt; a ^ b,
                             BinaryOperator::InclusiveOr =&gt; a | b,
                             BinaryOperator::ShiftLeft =&gt; a
-                                .checked_shl(b)
-                                .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?</span>,
+                                .checked_mul(
+                                    <span class="number">1u32</span>.checked_shl(b)
+                                        .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?</span>,
+                                )
+                                .ok_or(ConstantEvaluatorError::Overflow(<span class="string">"&lt;&lt;"</span>.to_string()))<span class="question-mark">?</span>,
                             BinaryOperator::ShiftRight =&gt; a
                                 .checked_shr(b)
                                 .ok_or(ConstantEvaluatorError::ShiftedMoreThan32Bits)<span class="question-mark">?</span>,
