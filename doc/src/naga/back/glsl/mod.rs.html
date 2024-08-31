@@ -4859,6 +4859,10 @@
 <a href="#4858" id="4858">4858</a>
 <a href="#4859" id="4859">4859</a>
 <a href="#4860" id="4860">4860</a>
+<a href="#4861" id="4861">4861</a>
+<a href="#4862" id="4862">4862</a>
+<a href="#4863" id="4863">4863</a>
+<a href="#4864" id="4864">4864</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -5359,6 +5363,9 @@ to output a [`Module`](crate::Module) into glsl
     </span>Custom(String),
     <span class="attr">#[error(<span class="string">"overrides should not be present at this stage"</span>)]
     </span>Override,
+    <span class="doccomment">/// [`crate::Sampling::First`] is unsupported.
+    </span><span class="attr">#[error(<span class="string">"`{:?}` sampling is unsupported"</span>, <span class="kw">crate</span>::Sampling::First)]
+    </span>FirstSamplingNotSupported,
 }
 
 <span class="doccomment">/// Binary operation with a different logic on the GLSL side.
@@ -6395,7 +6402,7 @@ to output a [`Module`](crate::Module) into glsl
         // here, regardless of the version.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(sampling) = sampling {
             <span class="kw">if </span>emit_interpolation_and_auxiliary {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(qualifier) = glsl_sampling(sampling) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(qualifier) = glsl_sampling(sampling)<span class="question-mark">? </span>{
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{qualifier} "</span>)<span class="question-mark">?</span>;
                 }
             }
@@ -9632,14 +9639,15 @@ to output a [`Module`](crate::Module) into glsl
 }
 
 <span class="doccomment">/// Return the GLSL auxiliary qualifier for the given sampling value.
-</span><span class="kw">const fn </span>glsl_sampling(sampling: <span class="kw">crate</span>::Sampling) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+</span><span class="kw">const fn </span>glsl_sampling(sampling: <span class="kw">crate</span>::Sampling) -&gt; BackendResult&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::Sampling <span class="kw">as </span>S;
 
-    <span class="kw">match </span>sampling {
-        S::Center =&gt; <span class="prelude-val">None</span>,
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>sampling {
+        S::First =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FirstSamplingNotSupported),
+        S::Center | S::Either =&gt; <span class="prelude-val">None</span>,
         S::Centroid =&gt; <span class="prelude-val">Some</span>(<span class="string">"centroid"</span>),
         S::Sample =&gt; <span class="prelude-val">Some</span>(<span class="string">"sample"</span>),
-    }
+    })
 }
 
 <span class="doccomment">/// Helper function that returns the glsl dimension string of [`ImageDimension`](crate::ImageDimension)

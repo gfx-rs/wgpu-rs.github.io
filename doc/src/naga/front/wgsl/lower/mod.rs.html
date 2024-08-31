@@ -3094,6 +3094,12 @@
 <a href="#3093" id="3093">3093</a>
 <a href="#3094" id="3094">3094</a>
 <a href="#3095" id="3095">3095</a>
+<a href="#3096" id="3096">3096</a>
+<a href="#3097" id="3097">3097</a>
+<a href="#3098" id="3098">3098</a>
+<a href="#3099" id="3099">3099</a>
+<a href="#3100" id="3100">3100</a>
+<a href="#3101" id="3101">3101</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4003,7 +4009,13 @@
             <span class="kw-2">*</span>comp = <span class="self">Self</span>::letter_component(ch).ok_or(Error::BadAccessor(name_span))<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(Components::Swizzle { size, pattern })
+        <span class="kw">if </span>name.chars().all(|c| <span class="macro">matches!</span>(c, <span class="string">'x' </span>| <span class="string">'y' </span>| <span class="string">'z' </span>| <span class="string">'w'</span>))
+            || name.chars().all(|c| <span class="macro">matches!</span>(c, <span class="string">'r' </span>| <span class="string">'g' </span>| <span class="string">'b' </span>| <span class="string">'a'</span>))
+        {
+            <span class="prelude-val">Ok</span>(Components::Swizzle { size, pattern })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(Error::BadAccessor(name_span))
+        }
     }
 }
 

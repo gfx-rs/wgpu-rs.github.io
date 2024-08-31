@@ -745,6 +745,36 @@
 <a href="#744" id="744">744</a>
 <a href="#745" id="745">745</a>
 <a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     analyzer::{FunctionInfo, GlobalUse},
     Capabilities, Disalignment, FunctionError, ModuleInfo,
@@ -797,6 +827,11 @@
     </span>NotIOShareableType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(<span class="string">"Interpolation is not valid"</span>)]
     </span>InvalidInterpolation,
+    <span class="attr">#[error(<span class="string">"Cannot combine {interpolation:?} interpolation with the {sampling:?} sample type"</span>)]
+    </span>InvalidInterpolationSamplingCombination {
+        interpolation: <span class="kw">crate</span>::Interpolation,
+        sampling: <span class="kw">crate</span>::Sampling,
+    },
     <span class="attr">#[error(<span class="string">"Interpolation must be specified on vertex shader outputs and fragment shader inputs"</span>)]
     </span>MissingInterpolation,
     <span class="attr">#[error(<span class="string">"Built-in {0:?} is not available at this stage"</span>)]
@@ -1083,6 +1118,31 @@
                 } <span class="kw">else if </span>!<span class="self">self</span>.location_mask.insert(location <span class="kw">as </span>usize) {
                     <span class="kw">if </span><span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::BINDINGS) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::BindingCollision { location });
+                    }
+                }
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation) = interpolation {
+                    <span class="kw">let </span>invalid_sampling = <span class="kw">match </span>(interpolation, sampling) {
+                        (<span class="kw">_</span>, <span class="prelude-val">None</span>)
+                        | (
+                            <span class="kw">crate</span>::Interpolation::Perspective | <span class="kw">crate</span>::Interpolation::Linear,
+                            <span class="prelude-val">Some</span>(
+                                <span class="kw">crate</span>::Sampling::Center
+                                | <span class="kw">crate</span>::Sampling::Centroid
+                                | <span class="kw">crate</span>::Sampling::Sample,
+                            ),
+                        )
+                        | (
+                            <span class="kw">crate</span>::Interpolation::Flat,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Sampling::First | <span class="kw">crate</span>::Sampling::Either),
+                        ) =&gt; <span class="prelude-val">None</span>,
+                        (<span class="kw">_</span>, <span class="prelude-val">Some</span>(invalid_sampling)) =&gt; <span class="prelude-val">Some</span>(invalid_sampling),
+                    };
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(sampling) = invalid_sampling {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidInterpolationSamplingCombination {
+                            interpolation,
+                            sampling,
+                        });
                     }
                 }
 
