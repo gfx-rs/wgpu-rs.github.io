@@ -193,6 +193,15 @@
 <a href="#192" id="192">192</a>
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::ast;
 <span class="kw">use crate</span>::{FastHashMap, Handle, Span};
@@ -215,13 +224,16 @@
         // While doing so, reject conflicting definitions.
         </span><span class="kw">let </span><span class="kw-2">mut </span>globals = FastHashMap::with_capacity_and_hasher(tu.decls.len(), Default::default());
         <span class="kw">for </span>(handle, decl) <span class="kw">in </span>tu.decls.iter() {
-            <span class="kw">let </span>ident = decl_ident(decl);
-            <span class="kw">let </span>name = ident.name;
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = globals.insert(name, handle) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Redefinition {
-                    previous: decl_ident(<span class="kw-2">&amp;</span>tu.decls[old]).span,
-                    current: ident.span,
-                });
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(ident) = decl_ident(decl) {
+                <span class="kw">let </span>name = ident.name;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = globals.insert(name, handle) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Redefinition {
+                        previous: decl_ident(<span class="kw-2">&amp;</span>tu.decls[old])
+                            .expect(<span class="string">"decl should have ident for redefinition"</span>)
+                            .span,
+                        current: ident.span,
+                    });
+                }
             }
         }
 
@@ -325,7 +337,7 @@
                     </span><span class="kw">return if </span>dep_id == id {
                         <span class="comment">// A declaration refers to itself directly.
                         </span><span class="prelude-val">Err</span>(Error::RecursiveDeclaration {
-                            ident: decl_ident(decl).span,
+                            ident: decl_ident(decl).expect(<span class="string">"decl should have ident"</span>).span,
                             usage: dep.usage,
                         })
                     } <span class="kw">else </span>{
@@ -341,14 +353,19 @@
                             .unwrap_or(<span class="number">0</span>);
 
                         <span class="prelude-val">Err</span>(Error::CyclicDeclaration {
-                            ident: decl_ident(<span class="kw-2">&amp;</span><span class="self">self</span>.module.decls[dep_id]).span,
+                            ident: decl_ident(<span class="kw-2">&amp;</span><span class="self">self</span>.module.decls[dep_id])
+                                .expect(<span class="string">"decl should have ident"</span>)
+                                .span,
                             path: <span class="self">self</span>.path[start_at..]
                                 .iter()
                                 .map(|curr_dep| {
                                     <span class="kw">let </span>curr_id = curr_dep.decl;
                                     <span class="kw">let </span>curr_decl = <span class="kw-2">&amp;</span><span class="self">self</span>.module.decls[curr_id];
 
-                                    (decl_ident(curr_decl).span, curr_dep.usage)
+                                    (
+                                        decl_ident(curr_decl).expect(<span class="string">"decl should have ident"</span>).span,
+                                        curr_dep.usage,
+                                    )
                                 })
                                 .collect(),
                         })
@@ -377,14 +394,15 @@
     }
 }
 
-<span class="kw">const fn </span>decl_ident&lt;<span class="lifetime">'a</span>&gt;(decl: <span class="kw-2">&amp;</span>ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;) -&gt; ast::Ident&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">const fn </span>decl_ident&lt;<span class="lifetime">'a</span>&gt;(decl: <span class="kw-2">&amp;</span>ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;ast::Ident&lt;<span class="lifetime">'a</span>&gt;&gt; {
     <span class="kw">match </span>decl.kind {
-        ast::GlobalDeclKind::Fn(<span class="kw-2">ref </span>f) =&gt; f.name,
-        ast::GlobalDeclKind::Var(<span class="kw-2">ref </span>v) =&gt; v.name,
-        ast::GlobalDeclKind::Const(<span class="kw-2">ref </span>c) =&gt; c.name,
-        ast::GlobalDeclKind::Override(<span class="kw-2">ref </span>o) =&gt; o.name,
-        ast::GlobalDeclKind::Struct(<span class="kw-2">ref </span>s) =&gt; s.name,
-        ast::GlobalDeclKind::Type(<span class="kw-2">ref </span>t) =&gt; t.name,
+        ast::GlobalDeclKind::Fn(<span class="kw-2">ref </span>f) =&gt; <span class="prelude-val">Some</span>(f.name),
+        ast::GlobalDeclKind::Var(<span class="kw-2">ref </span>v) =&gt; <span class="prelude-val">Some</span>(v.name),
+        ast::GlobalDeclKind::Const(<span class="kw-2">ref </span>c) =&gt; <span class="prelude-val">Some</span>(c.name),
+        ast::GlobalDeclKind::Override(<span class="kw-2">ref </span>o) =&gt; <span class="prelude-val">Some</span>(o.name),
+        ast::GlobalDeclKind::Struct(<span class="kw-2">ref </span>s) =&gt; <span class="prelude-val">Some</span>(s.name),
+        ast::GlobalDeclKind::Type(<span class="kw-2">ref </span>t) =&gt; <span class="prelude-val">Some</span>(t.name),
+        ast::GlobalDeclKind::ConstAssert(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
     }
 }
 </code></pre></div></section></main></body></html>
