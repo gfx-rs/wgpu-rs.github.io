@@ -3118,6 +3118,21 @@
 <a href="#3117" id="3117">3117</a>
 <a href="#3118" id="3118">3118</a>
 <a href="#3119" id="3119">3119</a>
+<a href="#3120" id="3120">3120</a>
+<a href="#3121" id="3121">3121</a>
+<a href="#3122" id="3122">3122</a>
+<a href="#3123" id="3123">3123</a>
+<a href="#3124" id="3124">3124</a>
+<a href="#3125" id="3125">3125</a>
+<a href="#3126" id="3126">3126</a>
+<a href="#3127" id="3127">3127</a>
+<a href="#3128" id="3128">3128</a>
+<a href="#3129" id="3129">3129</a>
+<a href="#3130" id="3130">3130</a>
+<a href="#3131" id="3131">3131</a>
+<a href="#3132" id="3132">3132</a>
+<a href="#3133" id="3133">3133</a>
+<a href="#3134" id="3134">3134</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4154,16 +4169,21 @@
                     ctx.globals.insert(f.name.name, lowered_decl);
                 }
                 ast::GlobalDeclKind::Var(<span class="kw-2">ref </span>v) =&gt; {
-                    <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(v.ty, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>explicit_ty =
+                        v.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx))
+                            .transpose()<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>init;
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(init_ast) = v.init {
-                        <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_override();
-                        <span class="kw">let </span>lowered = <span class="self">self</span>.expression_for_abstract(init_ast, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(ty);
-                        <span class="kw">let </span>converted = ectx
-                            .try_automatic_conversions(lowered, <span class="kw-2">&amp;</span>ty_res, v.name.span)
-                            .map_err(|error| <span class="kw">match </span>error {
+                    <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_override();
+
+                    <span class="kw">let </span>ty;
+                    <span class="kw">let </span>initializer;
+                    <span class="kw">match </span>(v.init, explicit_ty) {
+                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
+                            <span class="kw">let </span>init = <span class="self">self</span>.expression_for_abstract(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
+                            <span class="kw">let </span>init = ectx
+                                .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, v.name.span)
+                                .map_err(|error| <span class="kw">match </span>error {
                                 Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
                                     name: v.name.span,
                                     expected: e.dest_type,
@@ -4171,9 +4191,19 @@
                                 },
                                 other =&gt; other,
                             })<span class="question-mark">?</span>;
-                        init = <span class="prelude-val">Some</span>(converted);
-                    } <span class="kw">else </span>{
-                        init = <span class="prelude-val">None</span>;
+                            ty = explicit_ty;
+                            initializer = <span class="prelude-val">Some</span>(init);
+                        }
+                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">None</span>) =&gt; {
+                            <span class="kw">let </span>concretized = <span class="self">self</span>.expression(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+                            ty = ectx.register_type(concretized)<span class="question-mark">?</span>;
+                            initializer = <span class="prelude-val">Some</span>(concretized);
+                        }
+                        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
+                            ty = explicit_ty;
+                            initializer = <span class="prelude-val">None</span>;
+                        }
+                        (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(v.name.span)),
                     }
 
                     <span class="kw">let </span>binding = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) = v.binding {
@@ -4191,7 +4221,7 @@
                             space: v.space,
                             binding,
                             ty,
-                            init,
+                            init: initializer,
                         },
                         span,
                     );
