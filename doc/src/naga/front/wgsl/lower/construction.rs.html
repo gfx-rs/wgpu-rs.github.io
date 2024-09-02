@@ -615,6 +615,20 @@
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
 <a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::ast;
@@ -1195,8 +1209,13 @@
                 Constructor::Type(ty)
             }
             ast::ConstructorType::PartialVector { size } =&gt; Constructor::PartialVector { size },
-            ast::ConstructorType::Vector { size, scalar } =&gt; {
-                <span class="kw">let </span>ty = ctx.ensure_type_exists(scalar.to_inner_vector(size));
+            ast::ConstructorType::Vector { size, ty, ty_span } =&gt; {
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_global())<span class="question-mark">?</span>;
+                <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                };
+                <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Vector { size, scalar });
                 Constructor::Type(ty)
             }
             ast::ConstructorType::PartialMatrix { columns, rows } =&gt; {
@@ -1205,13 +1224,22 @@
             ast::ConstructorType::Matrix {
                 rows,
                 columns,
-                width,
+                ty,
+                ty_span,
             } =&gt; {
-                <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
-                    columns,
-                    rows,
-                    scalar: <span class="kw">crate</span>::Scalar::float(width),
-                });
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_global())<span class="question-mark">?</span>;
+                <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                };
+                <span class="kw">let </span>ty = <span class="kw">match </span>scalar.kind {
+                    <span class="kw">crate</span>::ScalarKind::Float =&gt; ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
+                        columns,
+                        rows,
+                        scalar,
+                    }),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(ty_span, scalar)),
+                };
                 Constructor::Type(ty)
             }
             ast::ConstructorType::PartialArray =&gt; Constructor::PartialArray,

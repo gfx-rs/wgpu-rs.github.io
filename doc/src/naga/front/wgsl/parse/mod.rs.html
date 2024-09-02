@@ -2457,6 +2457,33 @@
 <a href="#2456" id="2456">2456</a>
 <a href="#2457" id="2457">2457</a>
 <a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a>
+<a href="#2470" id="2470">2470</a>
+<a href="#2471" id="2471">2471</a>
+<a href="#2472" id="2472">2472</a>
+<a href="#2473" id="2473">2473</a>
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
+<a href="#2478" id="2478">2478</a>
+<a href="#2479" id="2479">2479</a>
+<a href="#2480" id="2480">2480</a>
+<a href="#2481" id="2481">2481</a>
+<a href="#2482" id="2482">2482</a>
+<a href="#2483" id="2483">2483</a>
+<a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -2569,6 +2596,11 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(handle)
         }
+    }
+
+    <span class="kw">fn </span>new_scalar(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scalar: Scalar) -&gt; Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.types
+            .append(ast::Type::Scalar(scalar), Span::UNDEFINED)
     }
 }
 
@@ -2769,25 +2801,22 @@
             <span class="string">"vec2i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
-                    scalar: Scalar {
-                        kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                        width: <span class="number">4</span>,
-                    },
+                    ty: ctx.new_scalar(Scalar::I32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec2u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
-                    scalar: Scalar {
-                        kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                        width: <span class="number">4</span>,
-                    },
+                    ty: ctx.new_scalar(Scalar::U32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec2f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
-                    scalar: Scalar::F32,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec3" </span>=&gt; ast::ConstructorType::PartialVector {
@@ -2796,19 +2825,22 @@
             <span class="string">"vec3i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
-                    scalar: Scalar::I32,
+                    ty: ctx.new_scalar(Scalar::I32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec3u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
-                    scalar: Scalar::U32,
+                    ty: ctx.new_scalar(Scalar::U32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec3f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
-                    scalar: Scalar::F32,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec4" </span>=&gt; ast::ConstructorType::PartialVector {
@@ -2817,19 +2849,22 @@
             <span class="string">"vec4i" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
-                    scalar: Scalar::I32,
+                    ty: ctx.new_scalar(Scalar::I32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec4u" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
-                    scalar: Scalar::U32,
+                    ty: ctx.new_scalar(Scalar::U32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"vec4f" </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
-                    scalar: Scalar::F32,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat2x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2840,7 +2875,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat2x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2851,7 +2887,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat2x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2862,7 +2899,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Bi,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat3x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2873,7 +2911,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat3x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2884,7 +2923,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat3x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2895,7 +2935,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Tri,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat4x2" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2906,7 +2947,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Bi,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat4x3" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2917,7 +2959,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Tri,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"mat4x4" </span>=&gt; ast::ConstructorType::PartialMatrix {
@@ -2928,7 +2971,8 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
                     columns: <span class="kw">crate</span>::VectorSize::Quad,
                     rows: <span class="kw">crate</span>::VectorSize::Quad,
-                    width: <span class="number">4</span>,
+                    ty: ctx.new_scalar(Scalar::F32),
+                    ty_span: Span::UNDEFINED,
                 }))
             }
             <span class="string">"array" </span>=&gt; ast::ConstructorType::PartialArray,
@@ -2961,19 +3005,17 @@
         <span class="comment">// parse component type if present
         </span><span class="kw">match </span>(lexer.peek().<span class="number">0</span>, partial) {
             (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialVector { size }) =&gt; {
-                <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector { size, scalar }))
+                <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Vector { size, ty, ty_span }))
             }
             (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialMatrix { columns, rows }) =&gt; {
-                <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
-                <span class="kw">match </span>scalar.kind {
-                    <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
-                        columns,
-                        rows,
-                        width: scalar.width,
-                    })),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(span, scalar)),
-                }
+                <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Matrix {
+                    columns,
+                    rows,
+                    ty,
+                    ty_span,
+                }))
             }
             (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialArray) =&gt; {
                 lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
@@ -3029,11 +3071,7 @@
         <span class="kw">let </span>expr = <span class="kw">match </span>name {
             <span class="comment">// bitcast looks like a function call, but it's an operator and must be handled differently.
             </span><span class="string">"bitcast" </span>=&gt; {
-                lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>start = lexer.start_byte_offset();
-                <span class="kw">let </span>to = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>span = lexer.span_from(start);
-                lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(to, span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
 
                 lexer.open_arguments()<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
@@ -3517,21 +3555,34 @@
         <span class="prelude-val">Ok</span>(members)
     }
 
-    <span class="kw">fn </span>matrix_scalar_type&lt;<span class="lifetime">'a</span>&gt;(
+    <span class="doccomment">/// Parses `&lt;T&gt;`, returning T and span of T
+    </span><span class="kw">fn </span>singular_generic&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>start = lexer.start_byte_offset();
+        <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>span = lexer.span_from(start);
+        lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((ty, span))
+    }
+
+    <span class="kw">fn </span>matrix_with_type&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         columns: <span class="kw">crate</span>::VectorSize,
         rows: <span class="kw">crate</span>::VectorSize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
-        <span class="kw">let </span>(scalar, span) = lexer.next_scalar_generic_with_span()<span class="question-mark">?</span>;
-        <span class="kw">match </span>scalar.kind {
-            <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="prelude-val">Ok</span>(ast::Type::Matrix {
-                columns,
-                rows,
-                width: scalar.width,
-            }),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(span, scalar)),
-        }
+        <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(ast::Type::Matrix {
+            columns,
+            rows,
+            ty,
+            ty_span,
+        })
     }
 
     <span class="kw">fn </span>type_decl_impl&lt;<span class="lifetime">'a</span>&gt;(
@@ -3546,151 +3597,154 @@
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">match </span>word {
             <span class="string">"vec2" </span>=&gt; {
-                <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
+                <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Bi,
-                    scalar,
+                    ty,
+                    ty_span,
                 }
             }
             <span class="string">"vec2i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::I32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec2u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::U32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec2f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
-                scalar: Scalar::F32,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec3" </span>=&gt; {
-                <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
+                <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Tri,
-                    scalar,
+                    ty,
+                    ty_span,
                 }
             }
             <span class="string">"vec3i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::I32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec3u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::U32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec3f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
-                scalar: Scalar::F32,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec4" </span>=&gt; {
-                <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;
+                <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
                 ast::Type::Vector {
                     size: <span class="kw">crate</span>::VectorSize::Quad,
-                    scalar,
+                    ty,
+                    ty_span,
                 }
             }
             <span class="string">"vec4i" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::I32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec4u" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
-                scalar: Scalar {
-                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                    width: <span class="number">4</span>,
-                },
+                ty: ctx.new_scalar(Scalar::U32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"vec4f" </span>=&gt; ast::Type::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
-                scalar: Scalar::F32,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat2x2" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
             <span class="string">"mat2x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat2x3" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
             <span class="string">"mat2x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat2x4" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Bi, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
             <span class="string">"mat2x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Bi,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat3x2" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
             <span class="string">"mat3x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat3x3" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
             <span class="string">"mat3x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat3x4" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Tri, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
             <span class="string">"mat3x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Tri,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat4x2" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Bi)<span class="question-mark">?
             </span>}
             <span class="string">"mat4x2f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Bi,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat4x3" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Tri)<span class="question-mark">?
             </span>}
             <span class="string">"mat4x3f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Tri,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"mat4x4" </span>=&gt; {
-                <span class="self">self</span>.matrix_scalar_type(lexer, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
+                <span class="self">self</span>.matrix_with_type(lexer, ctx, <span class="kw">crate</span>::VectorSize::Quad, <span class="kw">crate</span>::VectorSize::Quad)<span class="question-mark">?
             </span>}
             <span class="string">"mat4x4f" </span>=&gt; ast::Type::Matrix {
                 columns: <span class="kw">crate</span>::VectorSize::Quad,
                 rows: <span class="kw">crate</span>::VectorSize::Quad,
-                width: <span class="number">4</span>,
+                ty: ctx.new_scalar(Scalar::F32),
+                ty_span: Span::UNDEFINED,
             },
             <span class="string">"atomic" </span>=&gt; {
                 <span class="kw">let </span>scalar = lexer.next_scalar_generic()<span class="question-mark">?</span>;

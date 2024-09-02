@@ -3100,6 +3100,24 @@
 <a href="#3099" id="3099">3099</a>
 <a href="#3100" id="3100">3100</a>
 <a href="#3101" id="3101">3101</a>
+<a href="#3102" id="3102">3102</a>
+<a href="#3103" id="3103">3103</a>
+<a href="#3104" id="3104">3104</a>
+<a href="#3105" id="3105">3105</a>
+<a href="#3106" id="3106">3106</a>
+<a href="#3107" id="3107">3107</a>
+<a href="#3108" id="3108">3108</a>
+<a href="#3109" id="3109">3109</a>
+<a href="#3110" id="3110">3110</a>
+<a href="#3111" id="3111">3111</a>
+<a href="#3112" id="3112">3112</a>
+<a href="#3113" id="3113">3113</a>
+<a href="#3114" id="3114">3114</a>
+<a href="#3115" id="3115">3115</a>
+<a href="#3116" id="3116">3116</a>
+<a href="#3117" id="3117">3117</a>
+<a href="#3118" id="3118">3118</a>
+<a href="#3119" id="3119">3119</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -6067,16 +6085,34 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span>ctx.types[handle] {
             ast::Type::Scalar(scalar) =&gt; scalar.to_inner_scalar(),
-            ast::Type::Vector { size, scalar } =&gt; scalar.to_inner_vector(size),
+            ast::Type::Vector { size, ty, ty_span } =&gt; {
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                };
+                <span class="kw">crate</span>::TypeInner::Vector { size, scalar }
+            }
             ast::Type::Matrix {
                 rows,
                 columns,
-                width,
-            } =&gt; <span class="kw">crate</span>::TypeInner::Matrix {
-                columns,
-                rows,
-                scalar: <span class="kw">crate</span>::Scalar::float(width),
-            },
+                ty,
+                ty_span,
+            } =&gt; {
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                };
+                <span class="kw">match </span>scalar.kind {
+                    <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="kw">crate</span>::TypeInner::Matrix {
+                        columns,
+                        rows,
+                        scalar,
+                    },
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(ty_span, scalar)),
+                }
+            }
             ast::Type::Atomic(scalar) =&gt; scalar.to_inner_atomic(),
             ast::Type::Pointer { base, space } =&gt; {
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
