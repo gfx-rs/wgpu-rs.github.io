@@ -2394,6 +2394,41 @@
 <a href="#2393" id="2393">2393</a>
 <a href="#2394" id="2394">2394</a>
 <a href="#2395" id="2395">2395</a>
+<a href="#2396" id="2396">2396</a>
+<a href="#2397" id="2397">2397</a>
+<a href="#2398" id="2398">2398</a>
+<a href="#2399" id="2399">2399</a>
+<a href="#2400" id="2400">2400</a>
+<a href="#2401" id="2401">2401</a>
+<a href="#2402" id="2402">2402</a>
+<a href="#2403" id="2403">2403</a>
+<a href="#2404" id="2404">2404</a>
+<a href="#2405" id="2405">2405</a>
+<a href="#2406" id="2406">2406</a>
+<a href="#2407" id="2407">2407</a>
+<a href="#2408" id="2408">2408</a>
+<a href="#2409" id="2409">2409</a>
+<a href="#2410" id="2410">2410</a>
+<a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -2738,10 +2773,7 @@
                 <span class="prelude-val">None
             </span>},
             robustness2: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>ext::robustness2::NAME) {
-                <span class="comment">// Note: enabling `robust_buffer_access2` isn't requires, strictly speaking
-                // since we can enable `robust_buffer_access` all the time. But it improves
-                // program portability, so we opt into it if they are supported.
-                </span><span class="prelude-val">Some</span>(
+                <span class="prelude-val">Some</span>(
                     vk::PhysicalDeviceRobustness2FeaturesEXT::default()
                         .robust_buffer_access2(private_caps.robust_buffer_access2)
                         .robust_image_access2(private_caps.robust_image_access2),
@@ -3238,6 +3270,10 @@
     /// `VK_EXT_subgroup_size_control` extension, promoted to Vulkan 1.3.
     </span>subgroup_size_control: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceSubgroupSizeControlProperties&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
+    <span class="doccomment">/// Additional `vk::PhysicalDevice` properties from the
+    /// `VK_EXT_robustness2` extension.
+    </span>robustness2: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceRobustness2PropertiesEXT&lt;<span class="lifetime">'static</span>&gt;&gt;,
+
     <span class="doccomment">/// The device API version.
     ///
     /// Which is the version of Vulkan supported for device-level functionality.
@@ -3493,13 +3529,38 @@
         }
     }
 
-    <span class="kw">fn </span>to_hal_alignments(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Alignments {
+    <span class="doccomment">/// Return a `wgpu_hal::Alignments` structure describing this adapter.
+    ///
+    /// The `using_robustness2` argument says how this adapter will implement
+    /// `wgpu_hal`'s guarantee that shaders can only read the [accessible
+    /// region][ar] of bindgroup's buffer bindings:
+    ///
+    /// - If this adapter will depend on `VK_EXT_robustness2`'s
+    ///   `robustBufferAccess2` feature to apply bounds checks to shader buffer
+    ///   access, `using_robustness2` must be `true`.
+    ///
+    /// - Otherwise, this adapter must use Naga to inject bounds checks on
+    ///   buffer accesses, and `using_robustness2` must be `false`.
+    ///
+    /// [ar]: ../../struct.BufferBinding.html#accessible-region
+    </span><span class="kw">fn </span>to_hal_alignments(<span class="kw-2">&amp;</span><span class="self">self</span>, using_robustness2: bool) -&gt; <span class="kw">crate</span>::Alignments {
         <span class="kw">let </span>limits = <span class="kw-2">&amp;</span><span class="self">self</span>.properties.limits;
         <span class="kw">crate</span>::Alignments {
             buffer_copy_offset: wgt::BufferSize::new(limits.optimal_buffer_copy_offset_alignment)
                 .unwrap(),
             buffer_copy_pitch: wgt::BufferSize::new(limits.optimal_buffer_copy_row_pitch_alignment)
                 .unwrap(),
+            uniform_bounds_check_alignment: {
+                <span class="kw">let </span>alignment = <span class="kw">if </span>using_robustness2 {
+                    <span class="self">self</span>.robustness2
+                        .unwrap() <span class="comment">// if we're using it, we should have its properties
+                        </span>.robust_uniform_buffer_access_size_alignment
+                } <span class="kw">else </span>{
+                    <span class="comment">// If the `robustness2` properties are unavailable, then `robustness2` is not available either Naga-injected bounds checks are precise.
+                    </span><span class="number">1
+                </span>};
+                wgt::BufferSize::new(alignment).unwrap()
+            },
         }
     }
 }
@@ -3529,6 +3590,7 @@
                 <span class="kw">let </span>supports_subgroup_size_control = capabilities.device_api_version
                     &gt;= vk::API_VERSION_1_3
                     || capabilities.supports_extension(ext::subgroup_size_control::NAME);
+                <span class="kw">let </span>supports_robustness2 = capabilities.supports_extension(ext::robustness2::NAME);
 
                 <span class="kw">let </span>supports_acceleration_structure =
                     capabilities.supports_extension(khr::acceleration_structure::NAME);
@@ -3576,6 +3638,13 @@
                     properties2 = properties2.push_next(next);
                 }
 
+                <span class="kw">if </span>supports_robustness2 {
+                    <span class="kw">let </span>next = capabilities
+                        .robustness2
+                        .insert(vk::PhysicalDeviceRobustness2PropertiesEXT::default());
+                    properties2 = properties2.push_next(next);
+                }
+
                 <span class="kw">unsafe </span>{
                     get_device_properties.get_physical_device_properties2(phd, <span class="kw-2">&amp;mut </span>properties2)
                 };
@@ -3587,6 +3656,7 @@
                     capabilities
                         .supported_extensions
                         .retain(|<span class="kw-2">&amp;</span>x| x.extension_name_as_c_str() != <span class="prelude-val">Ok</span>(ext::robustness2::NAME));
+                    capabilities.robustness2 = <span class="prelude-val">None</span>;
                 }
             };
             capabilities
@@ -3903,7 +3973,7 @@
         };
         <span class="kw">let </span>capabilities = <span class="kw">crate</span>::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),
-            alignments: phd_capabilities.to_hal_alignments(),
+            alignments: phd_capabilities.to_hal_alignments(private_caps.robust_buffer_access2),
             downlevel: wgt::DownlevelCapabilities {
                 flags: downlevel_flags,
                 limits: wgt::DownlevelLimits {},
@@ -4175,7 +4245,7 @@
                 capabilities: <span class="prelude-val">Some</span>(capabilities.iter().cloned().collect()),
                 bounds_check_policies: naga::proc::BoundsCheckPolicies {
                     index: naga::proc::BoundsCheckPolicy::Restrict,
-                    buffer: <span class="kw">if </span><span class="self">self</span>.private_caps.robust_buffer_access {
+                    buffer: <span class="kw">if </span><span class="self">self</span>.private_caps.robust_buffer_access2 {
                         naga::proc::BoundsCheckPolicy::Unchecked
                     } <span class="kw">else </span>{
                         naga::proc::BoundsCheckPolicy::Restrict

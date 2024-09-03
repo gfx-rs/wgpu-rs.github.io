@@ -3664,6 +3664,13 @@
 <a href="#3663" id="3663">3663</a>
 <a href="#3664" id="3664">3664</a>
 <a href="#3665" id="3665">3665</a>
+<a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3705,7 +3712,9 @@
 
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension};
+<span class="kw">use </span>wgt::{
+    math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension,
+};
 
 <span class="kw">use </span>std::{
     borrow::Cow,
@@ -5295,7 +5304,7 @@
 
     <span class="doccomment">/// Generate information about late-validated buffer bindings for pipelines.
     </span><span class="comment">//TODO: should this be combined with `get_introspection_bind_group_layouts` in some way?
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>make_late_sized_buffer_groups(
+    </span><span class="kw">fn </span>make_late_sized_buffer_groups(
         shader_binding_sizes: <span class="kw-2">&amp;</span>FastHashMap&lt;naga::ResourceBinding, wgt::BufferSize&gt;,
         layout: <span class="kw-2">&amp;</span>binding_model::PipelineLayout,
     ) -&gt; ArrayVec&lt;pipeline::LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }&gt; {
@@ -5547,8 +5556,8 @@
         <span class="prelude-val">Ok</span>(bgl)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer_binding&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+    <span class="kw">fn </span>create_buffer_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         bb: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>binding_model::ResolvedBufferBinding,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
@@ -5556,7 +5565,6 @@
         dynamic_binding_info: <span class="kw-2">&amp;mut </span>Vec&lt;binding_model::BindGroupDynamicBindingData&gt;,
         late_buffer_binding_sizes: <span class="kw-2">&amp;mut </span>FastHashMap&lt;u32, wgt::BufferSize&gt;,
         used: <span class="kw-2">&amp;mut </span>BindGroupStates,
-        limits: <span class="kw-2">&amp;</span>wgt::Limits,
         snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;hal::BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">dyn </span>hal::DynBuffer&gt;, binding_model::CreateBindGroupError&gt;
     {
@@ -5581,7 +5589,7 @@
             wgt::BufferBindingType::Uniform =&gt; (
                 wgt::BufferUsages::UNIFORM,
                 hal::BufferUses::UNIFORM,
-                limits.max_uniform_buffer_binding_size,
+                <span class="self">self</span>.limits.max_uniform_buffer_binding_size,
             ),
             wgt::BufferBindingType::Storage { read_only } =&gt; (
                 wgt::BufferUsages::STORAGE,
@@ -5590,12 +5598,12 @@
                 } <span class="kw">else </span>{
                     hal::BufferUses::STORAGE_READ_WRITE
                 },
-                limits.max_storage_buffer_binding_size,
+                <span class="self">self</span>.limits.max_storage_buffer_binding_size,
             ),
         };
 
         <span class="kw">let </span>(align, align_limit_name) =
-            binding_model::buffer_binding_type_alignment(limits, binding_ty);
+            binding_model::buffer_binding_type_alignment(<span class="kw-2">&amp;</span><span class="self">self</span>.limits, binding_ty);
         <span class="kw">if </span>bb.offset % align <span class="kw">as </span>u64 != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnalignedBufferOffset(
                 bb.offset,
@@ -5671,10 +5679,21 @@
             late_buffer_binding_sizes.insert(binding, late_size);
         }
 
-        <span class="macro">assert_eq!</span>(bb.offset % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
+        <span class="comment">// This was checked against the device's alignment requirements above,
+        // which should always be a multiple of `COPY_BUFFER_ALIGNMENT`.
+        </span><span class="macro">assert_eq!</span>(bb.offset % wgt::COPY_BUFFER_ALIGNMENT, <span class="number">0</span>);
+
+        <span class="comment">// `wgpu_hal` only restricts shader access to bound buffer regions with
+        // a certain resolution. For the sake of lazy initialization, round up
+        // the size of the bound range to reflect how much of the buffer is
+        // actually going to be visible to the shader.
+        </span><span class="kw">let </span>bounds_check_alignment =
+            binding_model::buffer_binding_type_bounds_check_alignment(<span class="kw-2">&amp;</span><span class="self">self</span>.alignments, binding_ty);
+        <span class="kw">let </span>visible_size = align_to(bind_size, bounds_check_alignment);
+
         used_buffer_ranges.extend(buffer.initialization_status.read().create_action(
             buffer,
-            bb.offset..bb.offset + bind_size,
+            bb.offset..bb.offset + visible_size,
             MemoryInitKind::NeedsInitializedMemory,
         ));
 
@@ -5686,7 +5705,7 @@
     }
 
     <span class="kw">fn </span>create_sampler_binding&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         used: <span class="kw-2">&amp;mut </span>BindGroupStates,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
@@ -5734,8 +5753,8 @@
         <span class="prelude-val">Ok</span>(sampler.raw())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_texture_binding&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+    <span class="kw">fn </span>create_texture_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
         view: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;TextureView&gt;,
@@ -5833,7 +5852,6 @@
                         <span class="kw-2">&amp;mut </span>dynamic_binding_info,
                         <span class="kw-2">&amp;mut </span>late_buffer_binding_sizes,
                         <span class="kw-2">&amp;mut </span>used,
-                        <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
                         <span class="kw-2">&amp;</span>snatch_guard,
                     )<span class="question-mark">?</span>;
 
@@ -5855,7 +5873,6 @@
                             <span class="kw-2">&amp;mut </span>dynamic_binding_info,
                             <span class="kw-2">&amp;mut </span>late_buffer_binding_sizes,
                             <span class="kw-2">&amp;mut </span>used,
-                            <span class="kw-2">&amp;</span><span class="self">self</span>.limits,
                             <span class="kw-2">&amp;</span>snatch_guard,
                         )<span class="question-mark">?</span>;
                         hal_buffers.push(bb);
@@ -5991,7 +6008,7 @@
         <span class="prelude-val">Ok</span>(bind_group)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_array_binding(
+    <span class="kw">fn </span>check_array_binding(
         features: wgt::Features,
         count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
         num_bindings: usize,
@@ -6024,8 +6041,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>texture_use_parameters(
-        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+    <span class="kw">fn </span>texture_use_parameters(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
         view: <span class="kw-2">&amp;</span>TextureView,
@@ -7115,10 +7132,7 @@
         <span class="prelude-val">Ok</span>(cache)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_texture_format_features(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        format: TextureFormat,
-    ) -&gt; wgt::TextureFormatFeatures {
+    <span class="kw">fn </span>get_texture_format_features(<span class="kw-2">&amp;</span><span class="self">self</span>, format: TextureFormat) -&gt; wgt::TextureFormatFeatures {
         <span class="comment">// Variant of adapter.get_texture_format_features that takes device features into account
         </span><span class="kw">use </span>wgt::TextureFormatFeatureFlags <span class="kw">as </span>tfsc;
         <span class="kw">let </span><span class="kw-2">mut </span>format_features = <span class="self">self</span>.adapter.get_texture_format_features(format);
@@ -7132,7 +7146,7 @@
         format_features
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>describe_format_features(
+    <span class="kw">fn </span>describe_format_features(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         format: TextureFormat,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::TextureFormatFeatures, MissingFeatures&gt; {

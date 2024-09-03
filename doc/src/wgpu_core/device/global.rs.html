@@ -2473,6 +2473,9 @@
 <a href="#2472" id="2472">2472</a>
 <a href="#2473" id="2473">2473</a>
 <a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3270,14 +3273,14 @@
                 <span class="prelude-val">Err</span>(..) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>binding_model::CreateBindGroupError::InvalidLayout,
             };
 
-            <span class="kw">fn </span>map_entry&lt;<span class="lifetime">'a</span>&gt;(
+            <span class="kw">fn </span>resolve_entry&lt;<span class="lifetime">'a</span>&gt;(
                 e: <span class="kw-2">&amp;</span>BindGroupEntry&lt;<span class="lifetime">'a</span>&gt;,
                 buffer_storage: <span class="kw-2">&amp;</span>Storage&lt;resource::Buffer&gt;,
                 sampler_storage: <span class="kw-2">&amp;</span>Storage&lt;resource::Sampler&gt;,
                 texture_view_storage: <span class="kw-2">&amp;</span>Storage&lt;resource::TextureView&gt;,
             ) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>&gt;, binding_model::CreateBindGroupError&gt;
             {
-                <span class="kw">let </span>map_buffer = |bb: <span class="kw-2">&amp;</span>BufferBinding| {
+                <span class="kw">let </span>resolve_buffer = |bb: <span class="kw-2">&amp;</span>BufferBinding| {
                     buffer_storage
                         .get_owned(bb.buffer_id)
                         .map(|buffer| ResolvedBufferBinding {
@@ -3289,42 +3292,45 @@
                             binding_model::CreateBindGroupError::InvalidBufferId(bb.buffer_id)
                         })
                 };
-                <span class="kw">let </span>map_sampler = |id: <span class="kw-2">&amp;</span>id::SamplerId| {
+                <span class="kw">let </span>resolve_sampler = |id: <span class="kw-2">&amp;</span>id::SamplerId| {
                     sampler_storage
                         .get_owned(<span class="kw-2">*</span>id)
                         .map_err(|<span class="kw">_</span>| binding_model::CreateBindGroupError::InvalidSamplerId(<span class="kw-2">*</span>id))
                 };
-                <span class="kw">let </span>map_view = |id: <span class="kw-2">&amp;</span>id::TextureViewId| {
+                <span class="kw">let </span>resolve_view = |id: <span class="kw-2">&amp;</span>id::TextureViewId| {
                     texture_view_storage
                         .get_owned(<span class="kw-2">*</span>id)
                         .map_err(|<span class="kw">_</span>| binding_model::CreateBindGroupError::InvalidTextureViewId(<span class="kw-2">*</span>id))
                 };
                 <span class="kw">let </span>resource = <span class="kw">match </span>e.resource {
                     BindingResource::Buffer(<span class="kw-2">ref </span>buffer) =&gt; {
-                        ResolvedBindingResource::Buffer(map_buffer(buffer)<span class="question-mark">?</span>)
+                        ResolvedBindingResource::Buffer(resolve_buffer(buffer)<span class="question-mark">?</span>)
                     }
                     BindingResource::BufferArray(<span class="kw-2">ref </span>buffers) =&gt; {
                         <span class="kw">let </span>buffers = buffers
                             .iter()
-                            .map(map_buffer)
+                            .map(resolve_buffer)
                             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
                         ResolvedBindingResource::BufferArray(Cow::Owned(buffers))
                     }
                     BindingResource::Sampler(<span class="kw-2">ref </span>sampler) =&gt; {
-                        ResolvedBindingResource::Sampler(map_sampler(sampler)<span class="question-mark">?</span>)
+                        ResolvedBindingResource::Sampler(resolve_sampler(sampler)<span class="question-mark">?</span>)
                     }
                     BindingResource::SamplerArray(<span class="kw-2">ref </span>samplers) =&gt; {
                         <span class="kw">let </span>samplers = samplers
                             .iter()
-                            .map(map_sampler)
+                            .map(resolve_sampler)
                             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
                         ResolvedBindingResource::SamplerArray(Cow::Owned(samplers))
                     }
                     BindingResource::TextureView(<span class="kw-2">ref </span>view) =&gt; {
-                        ResolvedBindingResource::TextureView(map_view(view)<span class="question-mark">?</span>)
+                        ResolvedBindingResource::TextureView(resolve_view(view)<span class="question-mark">?</span>)
                     }
                     BindingResource::TextureViewArray(<span class="kw-2">ref </span>views) =&gt; {
-                        <span class="kw">let </span>views = views.iter().map(map_view).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                        <span class="kw">let </span>views = views
+                            .iter()
+                            .map(resolve_view)
+                            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
                         ResolvedBindingResource::TextureViewArray(Cow::Owned(views))
                     }
                 };
@@ -3340,7 +3346,7 @@
                 <span class="kw">let </span>sampler_guard = hub.samplers.read();
                 desc.entries
                     .iter()
-                    .map(|e| map_entry(e, <span class="kw-2">&amp;</span>buffer_guard, <span class="kw-2">&amp;</span>sampler_guard, <span class="kw-2">&amp;</span>texture_view_guard))
+                    .map(|e| resolve_entry(e, <span class="kw-2">&amp;</span>buffer_guard, <span class="kw-2">&amp;</span>sampler_guard, <span class="kw-2">&amp;</span>texture_view_guard))
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()
             };
             <span class="kw">let </span>entries = <span class="kw">match </span>entries {
