@@ -535,9 +535,8 @@
 <a href="#534" id="534">534</a>
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
-<a href="#537" id="537">537</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
-<span class="kw">use </span>std::{borrow::Cow, f32::consts, mem};
+<span class="kw">use </span>std::{borrow::Cow, f32::consts, mem::size_of};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="kw">const </span>TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
@@ -592,8 +591,7 @@
 <span class="kw">type </span>PipelineStatisticsQueries = [u64; MIP_PASS_COUNT <span class="kw">as </span>usize];
 
 <span class="kw">fn </span>pipeline_statistics_offset() -&gt; wgpu::BufferAddress {
-    (mem::size_of::&lt;TimestampQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress)
-        .max(wgpu::QUERY_RESOLVE_BUFFER_ALIGNMENT)
+    (size_of::&lt;TimestampQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress).max(wgpu::QUERY_RESOLVE_BUFFER_ALIGNMENT)
 }
 
 <span class="kw">struct </span>Example {
@@ -901,7 +899,7 @@
             <span class="comment">// This databuffer has to store all of the query results, 2 * passes timestamp queries
             // and 1 * passes statistics queries. Each query returns a u64 value.
             </span><span class="kw">let </span>buffer_size = pipeline_statistics_offset()
-                + mem::size_of::&lt;PipelineStatisticsQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+                + size_of::&lt;PipelineStatisticsQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress;
             <span class="kw">let </span>data_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
                 label: <span class="prelude-val">Some</span>(<span class="string">"query buffer"</span>),
                 size: buffer_size,
@@ -958,7 +956,7 @@
             <span class="comment">// This is guaranteed to be ready.
             </span><span class="kw">let </span>timestamp_view = query_sets
                 .mapping_buffer
-                .slice(..mem::size_of::&lt;TimestampQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress)
+                .slice(..size_of::&lt;TimestampQueries&gt;() <span class="kw">as </span>wgpu::BufferAddress)
                 .get_mapped_range();
             <span class="kw">let </span>pipeline_stats_view = query_sets
                 .mapping_buffer

@@ -217,7 +217,11 @@
 <a href="#216" id="216">216</a>
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
-</pre></div><pre class="rust"><code><span class="kw">const </span>ARR_SIZE: usize = <span class="number">128</span>;
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of_val;
+
+<span class="kw">const </span>ARR_SIZE: usize = <span class="number">128</span>;
 
 <span class="kw">struct </span>ExecuteResults {
     patient_workgroup_results: Vec&lt;u32&gt;,
@@ -280,13 +284,13 @@
 
     <span class="kw">let </span>storage_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
         label: <span class="prelude-val">None</span>,
-        size: std::mem::size_of_val(local_patient_workgroup_results.as_slice()) <span class="kw">as </span>u64,
+        size: size_of_val(local_patient_workgroup_results.as_slice()) <span class="kw">as </span>u64,
         usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
         mapped_at_creation: <span class="bool-val">false</span>,
     });
     <span class="kw">let </span>output_staging_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
         label: <span class="prelude-val">None</span>,
-        size: std::mem::size_of_val(local_patient_workgroup_results.as_slice()) <span class="kw">as </span>u64,
+        size: size_of_val(local_patient_workgroup_results.as_slice()) <span class="kw">as </span>u64,
         usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
         mapped_at_creation: <span class="bool-val">false</span>,
     });
@@ -401,7 +405,7 @@
         <span class="number">0</span>,
         staging_buffer,
         <span class="number">0</span>,
-        std::mem::size_of_val(output) <span class="kw">as </span>u64,
+        size_of_val(output) <span class="kw">as </span>u64,
     );
     queue.submit(<span class="prelude-val">Some</span>(command_encoder.finish()));
     <span class="kw">let </span>buffer_slice = staging_buffer.slice(..);

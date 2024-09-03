@@ -861,8 +861,7 @@
 <a href="#860" id="860">860</a>
 <a href="#861" id="861">861</a>
 <a href="#862" id="862">862</a>
-<a href="#863" id="863">863</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, f32::consts, iter, mem, ops::Range, sync::Arc};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, f32::consts, iter, mem::size_of, ops::Range, sync::Arc};
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>wgpu::util::{align_to, DeviceExt};
@@ -1083,7 +1082,7 @@
             &amp;&amp; device.limits().max_storage_buffers_per_shader_stage &gt; <span class="number">0</span>;
 
         <span class="comment">// Create the vertex and index buffers
-        </span><span class="kw">let </span>vertex_size = mem::size_of::&lt;Vertex&gt;();
+        </span><span class="kw">let </span>vertex_size = size_of::&lt;Vertex&gt;();
         <span class="kw">let </span>(cube_vertex_data, cube_index_data) = create_cube();
         <span class="kw">let </span>cube_vertex_buf = Arc::new(device.create_buffer_init(
             <span class="kw-2">&amp;</span>wgpu::util::BufferInitDescriptor {
@@ -1147,7 +1146,7 @@
             },
         ];
 
-        <span class="kw">let </span>entity_uniform_size = mem::size_of::&lt;EntityUniforms&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>entity_uniform_size = size_of::&lt;EntityUniforms&gt;() <span class="kw">as </span>wgpu::BufferAddress;
         <span class="kw">let </span>num_entities = <span class="number">1 </span>+ cube_descs.len() <span class="kw">as </span>wgpu::BufferAddress;
         <span class="comment">// Make the `uniform_alignment` &gt;= `entity_uniform_size` and aligned to `min_uniform_buffer_offset_alignment`.
         </span><span class="kw">let </span>uniform_alignment = {
@@ -1291,8 +1290,7 @@
                 target_view: shadow_target_views[<span class="number">1</span>].take().unwrap(),
             },
         ];
-        <span class="kw">let </span>light_uniform_size =
-            (<span class="self">Self</span>::MAX_LIGHTS * mem::size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>light_uniform_size = (<span class="self">Self</span>::MAX_LIGHTS * size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress;
         <span class="kw">let </span>light_storage_buf = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">None</span>,
             size: light_uniform_size,
@@ -1318,7 +1316,7 @@
         });
 
         <span class="kw">let </span>shadow_pass = {
-            <span class="kw">let </span>uniform_size = mem::size_of::&lt;GlobalUniforms&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+            <span class="kw">let </span>uniform_size = size_of::&lt;GlobalUniforms&gt;() <span class="kw">as </span>wgpu::BufferAddress;
             <span class="comment">// Create pipeline layout
             </span><span class="kw">let </span>bind_group_layout =
                 device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
@@ -1412,7 +1410,7 @@
                                 ty: wgpu::BufferBindingType::Uniform,
                                 has_dynamic_offset: <span class="bool-val">false</span>,
                                 min_binding_size: wgpu::BufferSize::new(
-                                    mem::size_of::&lt;GlobalUniforms&gt;() <span class="kw">as _</span>,
+                                    size_of::&lt;GlobalUniforms&gt;() <span class="kw">as _</span>,
                                 ),
                             },
                             count: <span class="prelude-val">None</span>,
@@ -1601,7 +1599,7 @@
             <span class="kw">for </span>(i, light) <span class="kw">in </span><span class="self">self</span>.lights.iter().enumerate() {
                 queue.write_buffer(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.light_storage_buf,
-                    (i * mem::size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress,
+                    (i * size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress,
                     bytemuck::bytes_of(<span class="kw-2">&amp;</span>light.to_raw()),
                 );
             }
@@ -1621,7 +1619,7 @@
             // let's just copy it over to the shadow uniform buffer.
             </span>encoder.copy_buffer_to_buffer(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.light_storage_buf,
-                (i * mem::size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress,
+                (i * size_of::&lt;LightRaw&gt;()) <span class="kw">as </span>wgpu::BufferAddress,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.shadow_pass.uniform_buf,
                 <span class="number">0</span>,
                 <span class="number">64</span>,

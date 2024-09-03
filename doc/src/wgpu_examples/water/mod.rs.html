@@ -851,7 +851,7 @@
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::Vec3;
 <span class="kw">use </span>nanorand::{Rng, WyRand};
-<span class="kw">use </span>std::{borrow::Cow, f32::consts, iter, mem};
+<span class="kw">use </span>std::{borrow::Cow, f32::consts, iter, mem::size_of};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="doccomment">///
@@ -1121,12 +1121,12 @@
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     ) -&gt; <span class="self">Self </span>{
         <span class="comment">// Size of one water vertex
-        </span><span class="kw">let </span>water_vertex_size = mem::size_of::&lt;point_gen::WaterVertexAttributes&gt;();
+        </span><span class="kw">let </span>water_vertex_size = size_of::&lt;point_gen::WaterVertexAttributes&gt;();
 
         <span class="kw">let </span>water_vertices = point_gen::HexWaterMesh::generate(SIZE).generate_points();
 
         <span class="comment">// Size of one terrain vertex
-        </span><span class="kw">let </span>terrain_vertex_size = mem::size_of::&lt;point_gen::TerrainVertexAttributes&gt;();
+        </span><span class="kw">let </span>terrain_vertex_size = size_of::&lt;point_gen::TerrainVertexAttributes&gt;();
 
         <span class="comment">// Noise generation
         </span><span class="kw">let </span>terrain_noise = noise::OpenSimplex::default();
@@ -1207,7 +1207,7 @@
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: <span class="bool-val">false</span>,
                             min_binding_size: wgpu::BufferSize::new(
-                                mem::size_of::&lt;WaterUniforms&gt;() <span class="kw">as _</span>,
+                                size_of::&lt;WaterUniforms&gt;() <span class="kw">as _</span>,
                             ),
                         },
                         count: <span class="prelude-val">None</span>,
@@ -1263,8 +1263,8 @@
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: <span class="bool-val">false</span>,
                             min_binding_size: wgpu::BufferSize::new(
-                                mem::size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _</span>,
-                            ),
+                                size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _
+                            </span>),
                         },
                         count: <span class="prelude-val">None</span>,
                     },
@@ -1288,21 +1288,21 @@
 
         <span class="kw">let </span>water_uniform_buf = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">"Water Uniforms"</span>),
-            size: mem::size_of::&lt;WaterUniforms&gt;() <span class="kw">as _</span>,
+            size: size_of::&lt;WaterUniforms&gt;() <span class="kw">as _</span>,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
         });
 
         <span class="kw">let </span>terrain_normal_uniform_buf = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">"Normal Terrain Uniforms"</span>),
-            size: mem::size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _</span>,
+            size: size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _</span>,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
         });
 
         <span class="kw">let </span>terrain_flipped_uniform_buf = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">"Flipped Terrain Uniforms"</span>),
-            size: mem::size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _</span>,
+            size: size_of::&lt;TerrainUniforms&gt;() <span class="kw">as _</span>,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
         });
@@ -1560,7 +1560,7 @@
         </span><span class="kw">let </span>(water_sin, water_cos) = ((<span class="self">self</span>.current_frame <span class="kw">as </span>f32) / <span class="number">600.0</span>).sin_cos();
         queue.write_buffer(
             <span class="kw-2">&amp;</span><span class="self">self</span>.water_uniform_buf,
-            mem::size_of::&lt;[f32; <span class="number">16</span>]&gt;() <span class="kw">as </span>wgpu::BufferAddress * <span class="number">2</span>,
+            size_of::&lt;[f32; <span class="number">16</span>]&gt;() <span class="kw">as </span>wgpu::BufferAddress * <span class="number">2</span>,
             bytemuck::cast_slice(<span class="kw-2">&amp;</span>[water_sin, water_cos]),
         );
 

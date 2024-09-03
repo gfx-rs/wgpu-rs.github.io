@@ -531,6 +531,8 @@
 <a href="#530" id="530">530</a>
 <a href="#531" id="531">531</a>
 <a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Sample demonstrating different kinds of gpu timestamp queries.
 //!
 //! Timestamp queries are typically used to profile how long certain operations take on the GPU.
@@ -550,7 +552,9 @@
 //! The period, i.e. the unit of time, of the timestamps in wgpu is undetermined and needs to be queried with `wgpu::Queue::get_timestamp_period`
 //! in order to get comparable results.
 
-</span><span class="kw">use </span>wgpu::util::DeviceExt;
+</span><span class="kw">use </span>std::mem::size_of;
+
+<span class="kw">use </span>wgpu::util::DeviceExt;
 
 <span class="kw">struct </span>Queries {
     set: wgpu::QuerySet,
@@ -656,13 +660,13 @@
             }),
             resolve_buffer: device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
                 label: <span class="prelude-val">Some</span>(<span class="string">"query resolve buffer"</span>),
-                size: std::mem::size_of::&lt;u64&gt;() <span class="kw">as </span>u64 * num_queries,
+                size: size_of::&lt;u64&gt;() <span class="kw">as </span>u64 * num_queries,
                 usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::QUERY_RESOLVE,
                 mapped_at_creation: <span class="bool-val">false</span>,
             }),
             destination_buffer: device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
                 label: <span class="prelude-val">Some</span>(<span class="string">"query dest buffer"</span>),
-                size: std::mem::size_of::&lt;u64&gt;() <span class="kw">as </span>u64 * num_queries,
+                size: size_of::&lt;u64&gt;() <span class="kw">as </span>u64 * num_queries,
                 usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
                 mapped_at_creation: <span class="bool-val">false</span>,
             }),
@@ -697,7 +701,7 @@
         <span class="kw">let </span>timestamps = {
             <span class="kw">let </span>timestamp_view = <span class="self">self
                 </span>.destination_buffer
-                .slice(..(std::mem::size_of::&lt;u64&gt;() <span class="kw">as </span>wgpu::BufferAddress * <span class="self">self</span>.num_queries))
+                .slice(..(size_of::&lt;u64&gt;() <span class="kw">as </span>wgpu::BufferAddress * <span class="self">self</span>.num_queries))
                 .get_mapped_range();
             bytemuck::cast_slice(<span class="kw-2">&amp;</span>timestamp_view).to_vec()
         };
