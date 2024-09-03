@@ -1656,7 +1656,7 @@
         <span class="kw">match </span><span class="self">self</span>.display {
             DisplayRef::X11(ptr) =&gt; <span class="kw">unsafe </span>{
                 <span class="kw">let </span>func: libloading::Symbol&lt;XCloseDisplayFun&gt; =
-                    <span class="self">self</span>.library.get(<span class="string">b"XCloseDisplay"</span>).unwrap();
+                    <span class="self">self</span>.library.get(<span class="string">b"XCloseDisplay\0"</span>).unwrap();
                 func(ptr.as_ptr());
             },
             DisplayRef::Wayland =&gt; {}
@@ -1668,7 +1668,7 @@
     <span class="macro">log::debug!</span>(<span class="string">"Loading X11 library to get the current display"</span>);
     <span class="kw">unsafe </span>{
         <span class="kw">let </span>library = find_library(<span class="kw-2">&amp;</span>[<span class="string">"libX11.so.6"</span>, <span class="string">"libX11.so"</span>])<span class="question-mark">?</span>;
-        <span class="kw">let </span>func: libloading::Symbol&lt;XOpenDisplayFun&gt; = library.get(<span class="string">b"XOpenDisplay"</span>).unwrap();
+        <span class="kw">let </span>func: libloading::Symbol&lt;XOpenDisplayFun&gt; = library.get(<span class="string">b"XOpenDisplay\0"</span>).unwrap();
         <span class="kw">let </span>result = func(ptr::null());
         ptr::NonNull::new(result).map(|ptr| DisplayOwner {
             display: DisplayRef::X11(ptr),
@@ -1695,9 +1695,9 @@
     <span class="kw">let </span>library = <span class="kw">unsafe </span>{
         <span class="kw">let </span>client_library = find_library(<span class="kw-2">&amp;</span>[<span class="string">"libwayland-client.so.0"</span>, <span class="string">"libwayland-client.so"</span>])<span class="question-mark">?</span>;
         <span class="kw">let </span>wl_display_connect: libloading::Symbol&lt;WlDisplayConnectFun&gt; =
-            client_library.get(<span class="string">b"wl_display_connect"</span>).unwrap();
+            client_library.get(<span class="string">b"wl_display_connect\0"</span>).unwrap();
         <span class="kw">let </span>wl_display_disconnect: libloading::Symbol&lt;WlDisplayDisconnectFun&gt; =
-            client_library.get(<span class="string">b"wl_display_disconnect"</span>).unwrap();
+            client_library.get(<span class="string">b"wl_display_disconnect\0"</span>).unwrap();
         <span class="kw">let </span>display = ptr::NonNull::new(wl_display_connect(ptr::null()))<span class="question-mark">?</span>;
         wl_display_disconnect(display.as_ptr());
         find_library(<span class="kw-2">&amp;</span>[<span class="string">"libwayland-egl.so.1"</span>, <span class="string">"libwayland-egl.so"</span>])<span class="question-mark">?
@@ -2807,7 +2807,7 @@
                     (WindowKind::Wayland, Rwh::Wayland(handle)) =&gt; {
                         <span class="kw">let </span>library = <span class="kw-2">&amp;</span><span class="self">self</span>.wsi.display_owner.as_ref().unwrap().library;
                         <span class="kw">let </span>wl_egl_window_create: libloading::Symbol&lt;WlEglWindowCreateFun&gt; =
-                            <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_create"</span>) }.unwrap();
+                            <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_create\0"</span>) }.unwrap();
                         <span class="kw">let </span>window =
                             <span class="kw">unsafe </span>{ wl_egl_window_create(handle.surface.as_ptr(), <span class="number">640</span>, <span class="number">480</span>) }
                                 .cast();
@@ -2916,7 +2916,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = wl_window {
             <span class="kw">let </span>library = <span class="kw-2">&amp;</span><span class="self">self</span>.wsi.display_owner.as_ref().unwrap().library;
             <span class="kw">let </span>wl_egl_window_resize: libloading::Symbol&lt;WlEglWindowResizeFun&gt; =
-                <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_resize"</span>) }.unwrap();
+                <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_resize\0"</span>) }.unwrap();
             <span class="kw">unsafe </span>{
                 wl_egl_window_resize(
                     window,
@@ -2988,7 +2988,7 @@
                     .expect(<span class="string">"unsupported window"</span>)
                     .library;
                 <span class="kw">let </span>wl_egl_window_destroy: libloading::Symbol&lt;WlEglWindowDestroyFun&gt; =
-                    <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_destroy"</span>) }.unwrap();
+                    <span class="kw">unsafe </span>{ library.get(<span class="string">b"wl_egl_window_destroy\0"</span>) }.unwrap();
                 <span class="kw">unsafe </span>{ wl_egl_window_destroy(window) };
             }
         }
