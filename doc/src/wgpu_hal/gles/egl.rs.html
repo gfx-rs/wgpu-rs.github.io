@@ -1511,6 +1511,8 @@
 <a href="#1510" id="1510">1510</a>
 <a href="#1511" id="1511">1511</a>
 <a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{MappedMutexGuard, Mutex, MutexGuard, RwLock};
@@ -1892,7 +1894,7 @@
     display: khronos_egl::Display,
 }
 
-<span class="doccomment">/// A guard containing a lock to an [`AdapterContext`]
+<span class="doccomment">/// A guard containing a lock to an [`AdapterContext`], while the GL context is kept current.
 </span><span class="kw">pub struct </span>AdapterContextLock&lt;<span class="lifetime">'a</span>&gt; {
     glow: MutexGuard&lt;<span class="lifetime">'a</span>, ManuallyDrop&lt;glow::Context&gt;&gt;,
     egl: <span class="prelude-ty">Option</span>&lt;EglContextLock&lt;<span class="lifetime">'a</span>&gt;&gt;,
@@ -2595,7 +2597,9 @@
             <span class="kw">unsafe </span>{ gl.debug_message_callback(<span class="kw">super</span>::gl_debug_message_callback) };
         }
 
-        <span class="comment">// Avoid accidental drop when the context is not current.
+        <span class="comment">// Wrap in ManuallyDrop to make it easier to "current" the GL context before dropping this
+        // GLOW context, which could also happen if a panic occurs after we uncurrent the context
+        // below but before AdapterContext is constructed.
         </span><span class="kw">let </span>gl = ManuallyDrop::new(gl);
         inner.egl.unmake_current();
 
