@@ -537,6 +537,28 @@
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hub::Hub,
@@ -875,19 +897,41 @@
 
     </span><span class="kw">let </span>mapped = <span class="kw">unsafe </span>{ std::slice::from_raw_parts_mut(mapping.ptr.as_ptr(), size <span class="kw">as </span>usize) };
 
-    <span class="kw">for </span>uninitialized <span class="kw">in </span>buffer
-        .initialization_status
-        .write()
-        .drain(offset..(size + offset))
+    <span class="comment">// We can't call flush_mapped_ranges in this case, so we can't drain the uninitialized ranges either
+    </span><span class="kw">if </span>!mapping.is_coherent
+        &amp;&amp; kind == HostMap::Read
+        &amp;&amp; !buffer.usage.contains(wgt::BufferUsages::MAP_WRITE)
     {
-        <span class="comment">// The mapping's pointer is already offset, however we track the
-        // uninitialized range relative to the buffer's start.
-        </span><span class="kw">let </span>fill_range =
-            (uninitialized.start - offset) <span class="kw">as </span>usize..(uninitialized.end - offset) <span class="kw">as </span>usize;
-        mapped[fill_range].fill(<span class="number">0</span>);
+        <span class="kw">for </span>uninitialized <span class="kw">in </span>buffer
+            .initialization_status
+            .write()
+            .uninitialized(offset..(size + offset))
+        {
+            <span class="comment">// The mapping's pointer is already offset, however we track the
+            // uninitialized range relative to the buffer's start.
+            </span><span class="kw">let </span>fill_range =
+                (uninitialized.start - offset) <span class="kw">as </span>usize..(uninitialized.end - offset) <span class="kw">as </span>usize;
+            mapped[fill_range].fill(<span class="number">0</span>);
+        }
+    } <span class="kw">else </span>{
+        <span class="kw">for </span>uninitialized <span class="kw">in </span>buffer
+            .initialization_status
+            .write()
+            .drain(offset..(size + offset))
+        {
+            <span class="comment">// The mapping's pointer is already offset, however we track the
+            // uninitialized range relative to the buffer's start.
+            </span><span class="kw">let </span>fill_range =
+                (uninitialized.start - offset) <span class="kw">as </span>usize..(uninitialized.end - offset) <span class="kw">as </span>usize;
+            mapped[fill_range].fill(<span class="number">0</span>);
 
-        <span class="kw">if </span>!mapping.is_coherent &amp;&amp; kind == HostMap::Read {
-            <span class="kw">unsafe </span>{ raw.flush_mapped_ranges(raw_buffer, <span class="kw-2">&amp;</span>[uninitialized]) };
+            <span class="comment">// NOTE: This is only possible when MAPPABLE_PRIMARY_BUFFERS is enabled.
+            </span><span class="kw">if </span>!mapping.is_coherent
+                &amp;&amp; kind == HostMap::Read
+                &amp;&amp; buffer.usage.contains(wgt::BufferUsages::MAP_WRITE)
+            {
+                <span class="kw">unsafe </span>{ raw.flush_mapped_ranges(raw_buffer, <span class="kw-2">&amp;</span>[uninitialized]) };
+            }
         }
     }
 
