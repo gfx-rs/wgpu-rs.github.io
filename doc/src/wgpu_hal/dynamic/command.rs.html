@@ -648,6 +648,12 @@
 <a href="#647" id="647">647</a>
 <a href="#648" id="648">648</a>
 <a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use crate</span>::{
@@ -711,7 +717,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         layout: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynPipelineLayout,
         index: u32,
-        group: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynBindGroup,
+        group: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>DynBindGroup&gt;,
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     );
 
@@ -932,9 +938,15 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         layout: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynPipelineLayout,
         index: u32,
-        group: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynBindGroup,
+        group: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>DynBindGroup&gt;,
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
+        <span class="kw">if </span>group.is_none() {
+            <span class="comment">// TODO: Handle group None correctly.
+            </span><span class="kw">return</span>;
+        }
+        <span class="kw">let </span>group = group.unwrap();
+
         <span class="kw">let </span>layout = layout.expect_downcast_ref();
         <span class="kw">let </span>group = group.expect_downcast_ref();
         <span class="kw">unsafe </span>{ C::set_bind_group(<span class="self">self</span>, layout, index, group, dynamic_offsets) };

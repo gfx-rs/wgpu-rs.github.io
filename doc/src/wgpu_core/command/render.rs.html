@@ -3369,6 +3369,22 @@
 <a href="#3368" id="3368">3368</a>
 <a href="#3369" id="3369">3369</a>
 <a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4006,8 +4022,8 @@
     </span>SurfaceTextureDropped,
     <span class="attr">#[error(<span class="string">"Not enough memory left for render pass"</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">"The bind group at index {0:?} is invalid"</span>)]
-    </span>InvalidBindGroup(u32),
+    <span class="attr">#[error(<span class="string">"BindGroupId {0:?} is invalid"</span>)]
+    </span>InvalidBindGroupId(id::BindGroupId),
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only depth"</span>)]
     </span>InvalidDepthOps,
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only stencil"</span>)]
@@ -5305,12 +5321,16 @@
     dynamic_offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     index: u32,
     num_dynamic_offsets: usize,
-    bind_group: Arc&lt;BindGroup&gt;,
+    bind_group: <span class="prelude-ty">Option</span>&lt;Arc&lt;BindGroup&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassErrorInner&gt; {
-    <span class="macro">api_log!</span>(
-        <span class="string">"RenderPass::set_bind_group {index} {}"</span>,
-        bind_group.error_ident()
-    );
+    <span class="kw">if </span>bind_group.is_none() {
+        <span class="macro">api_log!</span>(<span class="string">"RenderPass::set_bind_group {index} None"</span>);
+    } <span class="kw">else </span>{
+        <span class="macro">api_log!</span>(
+            <span class="string">"RenderPass::set_bind_group {index} {}"</span>,
+            bind_group.as_ref().unwrap().error_ident()
+        );
+    }
 
     <span class="kw">let </span>max_bind_groups = state.device.limits.max_bind_groups;
     <span class="kw">if </span>index &gt;= max_bind_groups {
@@ -5328,6 +5348,12 @@
     );
     state.dynamic_offset_count += num_dynamic_offsets;
 
+    <span class="kw">if </span>bind_group.is_none() {
+        <span class="comment">// TODO: Handle bind_group None.
+        </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
+    }
+
+    <span class="kw">let </span>bind_group = bind_group.unwrap();
     <span class="kw">let </span>bind_group = state.tracker.bind_groups.insert_single(bind_group);
 
     bind_group.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
@@ -5370,7 +5396,7 @@
                     state.raw_encoder.set_bind_group(
                         pipeline_layout,
                         index + i <span class="kw">as </span>u32,
-                        raw_bg,
+                        <span class="prelude-val">Some</span>(raw_bg),
                         <span class="kw-2">&amp;</span>e.dynamic_offsets,
                     );
                 }
@@ -5444,7 +5470,7 @@
                         state.raw_encoder.set_bind_group(
                             pipeline.layout.raw(),
                             start_index <span class="kw">as </span>u32 + i <span class="kw">as </span>u32,
-                            raw_bg,
+                            <span class="prelude-val">Some</span>(raw_bg),
                             <span class="kw-2">&amp;</span>e.dynamic_offsets,
                         );
                     }
@@ -6159,7 +6185,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>RenderPass,
         index: u32,
-        bind_group_id: id::BindGroupId,
+        bind_group_id: <span class="prelude-ty">Option</span>&lt;id::BindGroupId&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
         <span class="kw">let </span>scope = PassErrorScope::SetBindGroup;
@@ -6179,12 +6205,18 @@
             </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>bind_group = hub
-            .bind_groups
-            .get(bind_group_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBindGroup(index))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>bind_group = <span class="prelude-val">None</span>;
+        <span class="kw">if </span>bind_group_id.is_some() {
+            <span class="kw">let </span>bind_group_id = bind_group_id.unwrap();
+
+            <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
+            <span class="kw">let </span>bg = hub
+                .bind_groups
+                .get(bind_group_id)
+                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBindGroupId(bind_group_id))
+                .map_pass_err(scope)<span class="question-mark">?</span>;
+            bind_group = <span class="prelude-val">Some</span>(bg);
+        }
 
         base.commands.push(ArcRenderCommand::SetBindGroup {
             index,

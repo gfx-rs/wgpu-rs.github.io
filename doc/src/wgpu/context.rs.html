@@ -2720,12 +2720,6 @@
 <a href="#2719" id="2719">2719</a>
 <a href="#2720" id="2720">2720</a>
 <a href="#2721" id="2721">2721</a>
-<a href="#2722" id="2722">2722</a>
-<a href="#2723" id="2723">2723</a>
-<a href="#2724" id="2724">2724</a>
-<a href="#2725" id="2725">2725</a>
-<a href="#2726" id="2726">2726</a>
-<a href="#2727" id="2727">2727</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -3169,7 +3163,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="kw">fn </span>compute_pass_set_push_constants(
@@ -3222,7 +3216,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderBundleEncoderData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="attr">#[allow(clippy::too_many_arguments)]
@@ -3285,7 +3279,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="attr">#[allow(clippy::too_many_arguments)]
@@ -3840,7 +3834,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="kw">fn </span>compute_pass_set_push_constants(
@@ -3883,7 +3877,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="attr">#[allow(clippy::too_many_arguments)]
@@ -3942,7 +3936,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     );
     <span class="attr">#[allow(clippy::too_many_arguments)]
@@ -4889,12 +4883,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
         <span class="kw">let </span>pass_data = downcast_mut::&lt;T::ComputePassData&gt;(pass_data);
-        <span class="kw">let </span>bind_group_data = downcast_ref(bind_group_data);
-        Context::compute_pass_set_bind_group(<span class="self">self</span>, pass_data, index, bind_group_data, offsets)
+        <span class="kw">let </span>bg = bind_group_data.map(downcast_ref);
+        Context::compute_pass_set_bind_group(<span class="self">self</span>, pass_data, index, bg, offsets)
     }
 
     <span class="kw">fn </span>compute_pass_set_push_constants(
@@ -5000,18 +4994,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
         <span class="kw">let </span>encoder_data = downcast_mut::&lt;T::RenderBundleEncoderData&gt;(encoder_data);
-        <span class="kw">let </span>bind_group_data = downcast_ref(bind_group_data);
-        Context::render_bundle_encoder_set_bind_group(
-            <span class="self">self</span>,
-            encoder_data,
-            index,
-            bind_group_data,
-            offsets,
-        )
+        <span class="kw">let </span>bg = bind_group_data.map(downcast_ref);
+        Context::render_bundle_encoder_set_bind_group(<span class="self">self</span>, encoder_data, index, bg, offsets)
     }
 
     <span class="kw">fn </span>render_bundle_encoder_set_index_buffer(
@@ -5134,12 +5122,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::Data&gt;,
         offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
     ) {
         <span class="kw">let </span>pass_data = downcast_mut::&lt;T::RenderPassData&gt;(pass_data);
-        <span class="kw">let </span>bind_group_data = downcast_ref(bind_group_data);
-        Context::render_pass_set_bind_group(<span class="self">self</span>, pass_data, index, bind_group_data, offsets)
+        <span class="kw">let </span>bg = bind_group_data.map(downcast_ref);
+        Context::render_pass_set_bind_group(<span class="self">self</span>, pass_data, index, bg, offsets)
     }
 
     <span class="kw">fn </span>render_pass_set_index_buffer(

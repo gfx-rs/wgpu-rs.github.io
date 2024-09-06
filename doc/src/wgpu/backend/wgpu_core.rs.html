@@ -3189,6 +3189,7 @@
 <a href="#3188" id="3188">3188</a>
 <a href="#3189" id="3189">3189</a>
 <a href="#3190" id="3190">3190</a>
+<a href="#3191" id="3191">3191</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::downcast_ref, AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor,
     BindingResource, BufferBinding, BufferDescriptor, CommandEncoderDescriptor, CompilationInfo,
@@ -5359,15 +5360,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::ComputePassData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.compute_pass_set_bind_group(
-            <span class="kw-2">&amp;mut </span>pass_data.pass,
-            index,
-            <span class="kw-2">*</span>bind_group_data,
-            offsets,
-        ) {
+        <span class="kw">let </span>bg = bind_group_data.cloned();
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
+            <span class="self">self</span>.<span class="number">0
+                </span>.compute_pass_set_bind_group(<span class="kw-2">&amp;mut </span>pass_data.pass, index, bg, offsets)
+        {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
                 cause,
@@ -5555,14 +5555,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderBundleEncoderData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
+        <span class="kw">let </span>bg = bind_group_data.cloned();
         <span class="kw">unsafe </span>{
             wgpu_render_bundle_set_bind_group(
                 encoder_data,
                 index,
-                <span class="kw-2">*</span>bind_group_data,
+                bg,
                 offsets.as_ptr(),
                 offsets.len(),
             )
@@ -5685,12 +5686,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
         index: u32,
-        bind_group_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData,
+        bind_group_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::BindGroupData&gt;,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
+        <span class="kw">let </span>bg = bind_group_data.cloned();
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) =
             <span class="self">self</span>.<span class="number">0
-                </span>.render_pass_set_bind_group(<span class="kw-2">&amp;mut </span>pass_data.pass, index, <span class="kw-2">*</span>bind_group_data, offsets)
+                </span>.render_pass_set_bind_group(<span class="kw-2">&amp;mut </span>pass_data.pass, index, bg, offsets)
         {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>pass_data.error_sink,
