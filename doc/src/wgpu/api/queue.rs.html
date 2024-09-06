@@ -281,6 +281,9 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ops::{Deref, DerefMut},
     sync::Arc,
@@ -320,7 +323,10 @@
 /// This type is unique to the Rust API of `wgpu`.
 /// There is no analogue in the WebGPU specification.
 </span><span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>SubmissionIndex(<span class="kw">pub</span>(<span class="kw">crate</span>) Arc&lt;<span class="kw">crate</span>::Data&gt;);
+</span><span class="kw">pub struct </span>SubmissionIndex {
+    <span class="attr">#[cfg_attr(not(native), allow(dead_code))]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Arc&lt;<span class="kw">crate</span>::Data&gt;,
+}
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(SubmissionIndex: Send, Sync);
 
@@ -531,7 +537,7 @@
         <span class="kw">let </span>data =
             DynContext::queue_submit(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), <span class="kw-2">&amp;mut </span>command_buffers);
 
-        SubmissionIndex(data)
+        SubmissionIndex { data }
     }
 
     <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
