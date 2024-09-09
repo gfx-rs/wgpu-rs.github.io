@@ -1215,6 +1215,8 @@
 <a href="#1214" id="1214">1214</a>
 <a href="#1215" id="1215">1215</a>
 <a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1650,10 +1652,10 @@
         <span class="comment">// We automatically keep extending command buffers over time, and because
         // we want to insert a command buffer _before_ what we're about to record,
         // we need to make sure to close the previous one.
-        </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        </span>encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
         <span class="comment">// will be reset to true if recording is done without errors
         </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
-        <span class="kw">let </span>raw_encoder = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw_encoder = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
             binder: Binder::new(),
@@ -1834,12 +1836,12 @@
         } = state;
 
         <span class="comment">// Stop the current command buffer.
-        </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        </span>encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="comment">// Create a new command buffer, which we will insert _before_ the body of the compute pass.
         //
         // Use that buffer to insert barriers and clear discarded images.
-        </span><span class="kw">let </span>transit = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>transit = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
         fixup_discarded_surfaces(
             pending_discard_init_fixups.into_iter(),
             transit,
@@ -1854,7 +1856,9 @@
             <span class="kw-2">&amp;</span>snatch_guard,
         );
         <span class="comment">// Close the command buffer, and swap it with the previous.
-        </span>encoder.close_and_swap().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        </span>encoder
+            .close_and_swap(<span class="kw-2">&amp;</span>cmd_buf.device)
+            .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

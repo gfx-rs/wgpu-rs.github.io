@@ -1838,6 +1838,8 @@
 <a href="#1837" id="1837">1837</a>
 <a href="#1838" id="1838">1838</a>
 <a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2672,8 +2674,10 @@
             memory_flags: hal::MemoryFlags::TRANSIENT,
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
-        <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(raw.as_ref(), <span class="number">0</span>..size.get()) }<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc) }
+            .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+        <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(raw.as_ref(), <span class="number">0</span>..size.get()) }
+            .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>staging_buffer = StagingBuffer {
             raw,
@@ -3198,7 +3202,7 @@
             <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
             <span class="kw">let </span>cmd_buf_raw = cmd_buf_data
                 .encoder
-                .open()
+                .open(<span class="kw-2">&amp;</span>cmd_buf.device)
                 .ok()
                 .and_then(|encoder| encoder.as_any_mut().downcast_mut());
             hal_command_encoder_callback(cmd_buf_raw)

@@ -384,6 +384,8 @@
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -577,7 +579,7 @@ extract it from the hub.
                         .raw()
                         .create_texture_view(ast.texture.as_ref().borrow(), <span class="kw-2">&amp;</span>clear_view_desc)
                 }
-                .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
                 <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
                 <span class="kw">let </span>present = presentation.as_mut().unwrap();
@@ -624,7 +626,7 @@ extract it from the hub.
                 <span class="kw">match </span>err {
                     hal::SurfaceError::Lost =&gt; Status::Lost,
                     hal::SurfaceError::Device(err) =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::from(err).into());
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(device.handle_hal_error(err).into());
                     }
                     hal::SurfaceError::Outdated =&gt; Status::Outdated,
                     hal::SurfaceError::Other(msg) =&gt; {
@@ -701,7 +703,9 @@ extract it from the hub.
             <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(Status::Good),
             <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">match </span>err {
                 hal::SurfaceError::Lost =&gt; <span class="prelude-val">Ok</span>(Status::Lost),
-                hal::SurfaceError::Device(err) =&gt; <span class="prelude-val">Err</span>(SurfaceError::from(DeviceError::from(err))),
+                hal::SurfaceError::Device(err) =&gt; {
+                    <span class="prelude-val">Err</span>(SurfaceError::from(device.handle_hal_error(err)))
+                }
                 hal::SurfaceError::Outdated =&gt; <span class="prelude-val">Ok</span>(Status::Outdated),
                 hal::SurfaceError::Other(msg) =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"acquire error: {}"</span>, msg);

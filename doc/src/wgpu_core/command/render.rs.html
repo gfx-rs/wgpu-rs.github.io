@@ -3385,6 +3385,10 @@
 <a href="#3384" id="3384">3384</a>
 <a href="#3385" id="3385">3385</a>
 <a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4975,10 +4979,12 @@
             <span class="comment">// We automatically keep extending command buffers over time, and because
             // we want to insert a command buffer _before_ what we're about to record,
             // we need to make sure to close the previous one.
-            </span>encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            </span>encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
             <span class="comment">// We will reset this to `Recording` if we succeed, acts as a fail-safe.
             </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
-            encoder.open_pass(hal_label).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            encoder
+                .open_pass(hal_label, <span class="kw-2">&amp;</span>cmd_buf.device)
+                .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>info = RenderPassInfo::start(
                 device,
@@ -5281,7 +5287,7 @@
                 .finish(state.raw_encoder, state.snatch_guard)
                 .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-            encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
             (trackers, pending_discard_init_fixups)
         };
 
@@ -5293,7 +5299,7 @@
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
 
         {
-            <span class="kw">let </span>transit = encoder.open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span>transit = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             fixup_discarded_surfaces(
                 pending_discard_init_fixups.into_iter(),
@@ -5309,7 +5315,9 @@
         }
 
         <span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
-        encoder.close_and_swap().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        encoder
+            .close_and_swap(<span class="kw-2">&amp;</span>cmd_buf.device)
+            .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

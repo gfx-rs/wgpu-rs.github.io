@@ -2474,8 +2474,6 @@
 <a href="#2473" id="2473">2473</a>
 <a href="#2474" id="2474">2474</a>
 <a href="#2475" id="2475">2475</a>
-<a href="#2476" id="2476">2476</a>
-<a href="#2477" id="2477">2477</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2748,20 +2746,26 @@
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">let </span>raw_buf = buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-        <span class="kw">unsafe </span>{
-            <span class="kw">let </span>mapping = device
+
+        <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{
+            device
                 .raw()
                 .map_buffer(raw_buf, offset..offset + data.len() <span class="kw">as </span>u64)
-                .map_err(DeviceError::from)<span class="question-mark">?</span>;
-            std::ptr::copy_nonoverlapping(data.as_ptr(), mapping.ptr.as_ptr(), data.len());
-            <span class="kw">if </span>!mapping.is_coherent {
-                <span class="attr">#[allow(clippy::single_range_in_vec_init)]
-                </span>device
-                    .raw()
-                    .flush_mapped_ranges(raw_buf, <span class="kw-2">&amp;</span>[offset..offset + data.len() <span class="kw">as </span>u64]);
-            }
-            device.raw().unmap_buffer(raw_buf);
         }
+        .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+
+        <span class="kw">unsafe </span>{ std::ptr::copy_nonoverlapping(data.as_ptr(), mapping.ptr.as_ptr(), data.len()) };
+
+        <span class="kw">if </span>!mapping.is_coherent {
+            <span class="attr">#[allow(clippy::single_range_in_vec_init)]
+            </span><span class="kw">unsafe </span>{
+                device
+                    .raw()
+                    .flush_mapped_ranges(raw_buf, <span class="kw-2">&amp;</span>[offset..offset + data.len() <span class="kw">as </span>u64])
+            };
+        }
+
+        <span class="kw">unsafe </span>{ device.raw().unmap_buffer(raw_buf) };
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -4484,7 +4488,9 @@
                             hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; {
                                 E::InvalidSurface
                             }
-                            hal::SurfaceError::Device(error) =&gt; E::Device(error.into()),
+                            hal::SurfaceError::Device(error) =&gt; {
+                                E::Device(device.handle_hal_error(error))
+                            }
                             hal::SurfaceError::Other(message) =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">"surface configuration failed: {}"</span>, message);
                                 E::InvalidSurface
@@ -4763,17 +4769,7 @@
             // check for empty queues and a DeviceLostClosure. At that time,
             // the DeviceLostClosure will be called with "destroyed" as the
             // reason.
-            </span>device.valid.store(<span class="bool-val">false</span>, Ordering::Relaxed);
-        }
-    }
-
-    <span class="kw">pub fn </span>device_mark_lost(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId, message: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">api_log!</span>(<span class="string">"Device::mark_lost {device_id:?}"</span>);
-
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(device_id) {
-            device.lose(message);
+            </span>device.valid.store(<span class="bool-val">false</span>, Ordering::Release);
         }
     }
 

@@ -3671,10 +3671,6 @@
 <a href="#3670" id="3670">3670</a>
 <a href="#3671" id="3671">3671</a>
 <a href="#3672" id="3672">3672</a>
-<a href="#3673" id="3673">3673</a>
-<a href="#3674" id="3674">3674</a>
-<a href="#3675" id="3675">3675</a>
-<a href="#3676" id="3676">3676</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3904,31 +3900,29 @@
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
         instance_flags: wgt::InstanceFlags,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CreateDeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DeviceError&gt; {
         <span class="attr">#[cfg(not(feature = <span class="string">"trace"</span>))]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = trace_path {
             <span class="macro">log::error!</span>(<span class="string">"Feature 'trace' is not enabled"</span>);
         }
-        <span class="kw">let </span>fence =
-            <span class="kw">unsafe </span>{ raw_device.create_fence() }.map_err(|<span class="kw">_</span>| CreateDeviceError::OutOfMemory)<span class="question-mark">?</span>;
+        <span class="kw">let </span>fence = <span class="kw">unsafe </span>{ raw_device.create_fence() }.map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>command_allocator = command::CommandAllocator::new();
         <span class="kw">let </span>pending_encoder = command_allocator
             .acquire_encoder(raw_device.as_ref(), raw_queue)
-            .map_err(|<span class="kw">_</span>| CreateDeviceError::OutOfMemory)<span class="question-mark">?</span>;
+            .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = PendingWrites::new(pending_encoder);
 
         <span class="comment">// Create zeroed buffer used for texture clears.
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{
-            raw_device
-                .create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
-                    label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) zero init buffer"</span>), instance_flags),
-                    size: ZERO_BUFFER_SIZE,
-                    usage: hal::BufferUses::COPY_SRC | hal::BufferUses::COPY_DST,
-                    memory_flags: hal::MemoryFlags::empty(),
-                })
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+            raw_device.create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
+                label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) zero init buffer"</span>), instance_flags),
+                size: ZERO_BUFFER_SIZE,
+                usage: hal::BufferUses::COPY_SRC | hal::BufferUses::COPY_DST,
+                memory_flags: hal::MemoryFlags::empty(),
+            })
+        }
+        .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
         pending_writes.activate();
         <span class="kw">unsafe </span>{
             pending_writes
@@ -4014,6 +4008,18 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(DeviceError::Invalid(<span class="self">self</span>.error_ident()))
         }
+    }
+
+    <span class="kw">pub fn </span>handle_hal_error(<span class="kw-2">&amp;</span><span class="self">self</span>, error: hal::DeviceError) -&gt; DeviceError {
+        <span class="kw">match </span>error {
+            hal::DeviceError::OutOfMemory =&gt; {}
+            hal::DeviceError::Lost
+            | hal::DeviceError::ResourceCreationFailed
+            | hal::DeviceError::Unexpected =&gt; {
+                <span class="self">self</span>.lose(<span class="kw-2">&amp;</span>error.to_string());
+            }
+        }
+        DeviceError::from_hal(error)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_queue(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: Box&lt;<span class="kw">dyn </span>hal::DynQueue&gt;) {
@@ -4118,11 +4124,8 @@
             wgt::Maintain::Wait =&gt; <span class="self">self
                 </span>.last_successful_submission_index
                 .load(Ordering::Acquire),
-            wgt::Maintain::Poll =&gt; <span class="kw">unsafe </span>{
-                <span class="self">self</span>.raw()
-                    .get_fence_value(fence.as_ref())
-                    .map_err(DeviceError::from)<span class="question-mark">?
-            </span>},
+            wgt::Maintain::Poll =&gt; <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) }
+                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>,
         };
 
         <span class="comment">// If necessary, wait for that submission to complete.
@@ -4130,8 +4133,8 @@
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.raw()
                     .wait(fence.as_ref(), submission_index, CLEANUP_WAIT_MS)
-                    .map_err(DeviceError::from)<span class="question-mark">?
-            </span>};
+            }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
         }
         <span class="macro">log::trace!</span>(<span class="string">"Device::maintain: waiting for submission index {submission_index}"</span>);
 
@@ -4265,7 +4268,8 @@
             usage,
             memory_flags: hal::MemoryFlags::empty(),
         };
-        <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }.map_err(DeviceError::from)<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer =
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }.map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>buffer = Buffer {
             raw: Snatchable::new(buffer),
@@ -4612,11 +4616,8 @@
             view_formats: hal_view_formats,
         };
 
-        <span class="kw">let </span>raw_texture = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_texture(<span class="kw-2">&amp;</span>hal_desc)
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw_texture = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_texture(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>clear_mode = <span class="kw">if </span>hal_usage
             .intersects(hal::TextureUses::DEPTH_STENCIL_WRITE | hal::TextureUses::COLOR_TARGET)
@@ -4659,7 +4660,7 @@
                                 <span class="kw">unsafe </span>{
                                     <span class="self">self</span>.raw().create_texture_view(raw_texture.as_ref(), <span class="kw-2">&amp;</span>desc)
                                 }
-                                .map_err(DeviceError::from)<span class="question-mark">?</span>,
+                                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>,
                             ));
                         };
                     }
@@ -4965,11 +4966,8 @@
             range: resolved_range,
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_texture_view(texture_raw, <span class="kw-2">&amp;</span>hal_desc)
-                .map_err(|<span class="kw">_</span>| resource::CreateTextureViewError::OutOfMemory)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_texture_view(texture_raw, <span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>selector = TextureSelector {
             mips: desc.range.base_mip_level..mip_level_end,
@@ -5100,11 +5098,8 @@
             border_color: desc.border_color,
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_sampler(<span class="kw-2">&amp;</span>hal_desc)
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_sampler(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>sampler = Sampler {
             raw: ManuallyDrop::new(raw),
@@ -5228,7 +5223,7 @@
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">match </span>error {
                     hal::ShaderError::Device(error) =&gt; {
-                        pipeline::CreateShaderModuleError::Device(error.into())
+                        pipeline::CreateShaderModuleError::Device(<span class="self">self</span>.handle_hal_error(error))
                     }
                     hal::ShaderError::Compilation(<span class="kw-2">ref </span>msg) =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">"Shader error: {}"</span>, msg);
@@ -5269,7 +5264,7 @@
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">match </span>error {
                     hal::ShaderError::Device(error) =&gt; {
-                        pipeline::CreateShaderModuleError::Device(error.into())
+                        pipeline::CreateShaderModuleError::Device(<span class="self">self</span>.handle_hal_error(error))
                     }
                     hal::ShaderError::Compilation(<span class="kw-2">ref </span>msg) =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">"Shader error: {}"</span>, msg);
@@ -5301,7 +5296,8 @@
 
         <span class="kw">let </span>encoder = <span class="self">self
             </span>.command_allocator
-            .acquire_encoder(<span class="self">self</span>.raw(), queue.raw())<span class="question-mark">?</span>;
+            .acquire_encoder(<span class="self">self</span>.raw(), queue.raw())
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>command_buffer = command::CommandBuffer::new(encoder, <span class="self">self</span>, label);
 
@@ -5533,11 +5529,9 @@
             flags: bgl_flags,
             entries: <span class="kw-2">&amp;</span>hal_bindings,
         };
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_bind_group_layout(<span class="kw-2">&amp;</span>hal_desc)
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_bind_group_layout(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>count_validator = binding_model::BindingTypeMaxCountValidator::default();
         <span class="kw">for </span>entry <span class="kw">in </span>entry_map.values() {
@@ -5967,11 +5961,8 @@
             textures: <span class="kw-2">&amp;</span>hal_textures,
             acceleration_structures: <span class="kw-2">&amp;</span>[],
         };
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_bind_group(<span class="kw-2">&amp;</span>hal_desc)
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_bind_group(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="comment">// collect in the order of BGL iteration
         </span><span class="kw">let </span>late_buffer_binding_sizes = layout
@@ -6265,11 +6256,8 @@
             push_constant_ranges: desc.push_constant_ranges.as_ref(),
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw()
-                .create_pipeline_layout(<span class="kw-2">&amp;</span>hal_desc)
-                .map_err(DeviceError::from)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_pipeline_layout(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         drop(raw_bind_group_layouts);
 
@@ -6423,7 +6411,7 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_compute_pipeline(<span class="kw-2">&amp;</span>pipeline_desc) }.map_err(
                 |err| <span class="kw">match </span>err {
                     hal::PipelineError::Device(error) =&gt; {
-                        pipeline::CreateComputePipelineError::Device(error.into())
+                        pipeline::CreateComputePipelineError::Device(<span class="self">self</span>.handle_hal_error(error))
                     }
                     hal::PipelineError::Linkage(_stages, msg) =&gt; {
                         pipeline::CreateComputePipelineError::Internal(msg)
@@ -7003,7 +6991,7 @@
             <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_render_pipeline(<span class="kw-2">&amp;</span>pipeline_desc) }.map_err(
                 |err| <span class="kw">match </span>err {
                     hal::PipelineError::Device(error) =&gt; {
-                        pipeline::CreateRenderPipelineError::Device(error.into())
+                        pipeline::CreateRenderPipelineError::Device(<span class="self">self</span>.handle_hal_error(error))
                     }
                     hal::PipelineError::Linkage(stage, msg) =&gt; {
                         pipeline::CreateRenderPipelineError::Internal { stage, error: msg }
@@ -7126,7 +7114,9 @@
         };
         <span class="kw">let </span>raw = <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw().create_pipeline_cache(<span class="kw-2">&amp;</span>cache_desc) } {
             <span class="prelude-val">Ok</span>(raw) =&gt; raw,
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e.into()),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>e {
+                hal::PipelineCacheError::Device(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.handle_hal_error(e).into()),
+            },
         };
         <span class="kw">let </span>cache = pipeline::PipelineCache {
             device: <span class="self">self</span>.clone(),
@@ -7183,9 +7173,11 @@
         submission_index: <span class="kw">crate</span>::SubmissionIndex,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">let </span>fence = <span class="self">self</span>.fence.read();
-        <span class="kw">let </span>last_done_index = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref())<span class="question-mark">? </span>};
+        <span class="kw">let </span>last_done_index = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
         <span class="kw">if </span>last_done_index &lt; submission_index {
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().wait(fence.as_ref(), submission_index, !<span class="number">0</span>)<span class="question-mark">? </span>};
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().wait(fence.as_ref(), submission_index, !<span class="number">0</span>) }
+                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
             drop(fence);
             <span class="kw">let </span>closures = <span class="self">self
                 </span>.lock_life()
@@ -7244,7 +7236,7 @@
         <span class="prelude-val">Ok</span>(query_set)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">fn </span>lose(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>str) {
         <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
 
         // Mark the device explicitly as invalid. This is checked in various

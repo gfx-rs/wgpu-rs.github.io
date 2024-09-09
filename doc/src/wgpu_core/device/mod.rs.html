@@ -559,6 +559,9 @@
 <a href="#558" id="558">558</a>
 <a href="#559" id="559">559</a>
 <a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hub::Hub,
@@ -869,7 +872,7 @@
     <span class="kw">let </span>raw_buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
     <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{
         raw.map_buffer(raw_buffer, offset..offset + size)
-            .map_err(DeviceError::from)<span class="question-mark">?
+            .map_err(|e| buffer.device.handle_hal_error(e))<span class="question-mark">?
     </span>};
 
     <span class="kw">if </span>!mapping.is_coherent &amp;&amp; kind == HostMap::Read {
@@ -981,13 +984,16 @@
     </span>DeviceMismatch(<span class="attr">#[from] </span>Box&lt;DeviceMismatch&gt;),
 }
 
-<span class="kw">impl </span>From&lt;hal::DeviceError&gt; <span class="kw">for </span>DeviceError {
-    <span class="kw">fn </span>from(error: hal::DeviceError) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>DeviceError {
+    <span class="doccomment">/// Only use this function in contexts where there is no `Device`.
+    ///
+    /// Use [`Device::handle_hal_error`] otherwise.
+    </span><span class="kw">pub fn </span>from_hal(error: hal::DeviceError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>error {
-            hal::DeviceError::Lost =&gt; DeviceError::Lost,
-            hal::DeviceError::OutOfMemory =&gt; DeviceError::OutOfMemory,
-            hal::DeviceError::ResourceCreationFailed =&gt; DeviceError::ResourceCreationFailed,
-            hal::DeviceError::Unexpected =&gt; DeviceError::Lost,
+            hal::DeviceError::Lost =&gt; <span class="self">Self</span>::Lost,
+            hal::DeviceError::OutOfMemory =&gt; <span class="self">Self</span>::OutOfMemory,
+            hal::DeviceError::ResourceCreationFailed =&gt; <span class="self">Self</span>::ResourceCreationFailed,
+            hal::DeviceError::Unexpected =&gt; <span class="self">Self</span>::Lost,
         }
     }
 }

@@ -1394,9 +1394,6 @@
 <a href="#1393" id="1393">1393</a>
 <a href="#1394" id="1394">1394</a>
 <a href="#1395" id="1395">1395</a>
-<a href="#1396" id="1396">1396</a>
-<a href="#1397" id="1397">1397</a>
-<a href="#1398" id="1398">1398</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1668,17 +1665,20 @@
     <span class="kw">fn </span>pre_submit(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         command_allocator: <span class="kw-2">&amp;</span>CommandAllocator,
-        device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice,
-        queue: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynQueue,
+        device: <span class="kw-2">&amp;</span>Device,
+        queue: <span class="kw-2">&amp;</span>Queue,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;EncoderInFlight&gt;, DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_recording {
             <span class="kw">let </span>pending_buffers = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_buffers);
             <span class="kw">let </span>pending_textures = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_textures);
 
-            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding()<span class="question-mark">? </span>};
+            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding() }
+                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
             <span class="self">self</span>.is_recording = <span class="bool-val">false</span>;
 
-            <span class="kw">let </span>new_encoder = command_allocator.acquire_encoder(device, queue)<span class="question-mark">?</span>;
+            <span class="kw">let </span>new_encoder = command_allocator
+                .acquire_encoder(device.raw(), queue.raw())
+                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
             <span class="kw">let </span>encoder = EncoderInFlight {
                 raw: mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.command_encoder, new_encoder),
@@ -2593,14 +2593,12 @@
 
                         <span class="comment">// execute resource transitions
                         </span><span class="kw">unsafe </span>{
-                            baked
-                                .encoder
-                                .begin_encoding(hal_label(
-                                    <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Transit"</span>),
-                                    device.instance_flags,
-                                ))
-                                .map_err(DeviceError::from)<span class="question-mark">?
-                        </span>};
+                            baked.encoder.begin_encoding(hal_label(
+                                <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Transit"</span>),
+                                device.instance_flags,
+                            ))
+                        }
+                        .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
                         <span class="comment">//Note: locking the trackers has to be done after the storages
                         </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
@@ -2623,14 +2621,12 @@
                         // but here we have a command encoder by hand, so it's easier to use it.
                         </span><span class="kw">if </span>!used_surface_textures.is_empty() {
                             <span class="kw">unsafe </span>{
-                                baked
-                                    .encoder
-                                    .begin_encoding(hal_label(
-                                        <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Present"</span>),
-                                        device.instance_flags,
-                                    ))
-                                    .map_err(DeviceError::from)<span class="question-mark">?
-                            </span>};
+                                baked.encoder.begin_encoding(hal_label(
+                                    <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Present"</span>),
+                                    device.instance_flags,
+                                ))
+                            }
+                            .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
                             <span class="kw">let </span>texture_barriers = trackers
                                 .textures
                                 .set_from_usage_scope_and_drain_transitions(
@@ -2698,7 +2694,7 @@
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_execution) =
-                pending_writes.pre_submit(<span class="kw-2">&amp;</span>device.command_allocator, device.raw(), queue.raw())<span class="question-mark">?
+                pending_writes.pre_submit(<span class="kw-2">&amp;</span>device.command_allocator, device, <span class="kw-2">&amp;</span>queue)<span class="question-mark">?
             </span>{
                 active_executions.insert(<span class="number">0</span>, pending_execution);
             }
@@ -2723,15 +2719,13 @@
                 }
 
                 <span class="kw">unsafe </span>{
-                    queue
-                        .raw()
-                        .submit(
-                            <span class="kw-2">&amp;</span>hal_command_buffers,
-                            <span class="kw-2">&amp;</span>submit_surface_textures,
-                            (fence.as_mut(), submit_index),
-                        )
-                        .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                    queue.raw().submit(
+                        <span class="kw-2">&amp;</span>hal_command_buffers,
+                        <span class="kw-2">&amp;</span>submit_surface_textures,
+                        (fence.as_mut(), submit_index),
+                    )
                 }
+                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
                 <span class="comment">// Advance the successful submission index.
                 </span>device

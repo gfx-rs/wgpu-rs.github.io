@@ -920,6 +920,12 @@
 <a href="#919" id="919">919</a>
 <a href="#920" id="920">920</a>
 <a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -1094,10 +1100,10 @@
     /// [l]: CommandEncoder::list
     /// [`transition_buffers`]: hal::CommandEncoder::transition_buffers
     /// [`transition_textures`]: hal::CommandEncoder::transition_textures
-    </span><span class="kw">fn </span>close_and_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+    </span><span class="kw">fn </span>close_and_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
-            <span class="kw">let </span>new = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding()<span class="question-mark">? </span>};
+            <span class="kw">let </span>new = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding() }.map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
             <span class="self">self</span>.list.insert(<span class="self">self</span>.list.len() - <span class="number">1</span>, new);
         }
 
@@ -1114,10 +1120,11 @@
     /// On return, the underlying hal encoder is closed.
     ///
     /// [l]: CommandEncoder::list
-    </span><span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+    </span><span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
-            <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding()<span class="question-mark">? </span>};
+            <span class="kw">let </span>cmd_buf =
+                <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.end_encoding() }.map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
             <span class="self">self</span>.list.push(cmd_buf);
         }
 
@@ -1137,11 +1144,15 @@
     <span class="doccomment">/// Begin recording a new command buffer, if we haven't already.
     ///
     /// The underlying hal encoder is put in the "recording" state.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder, DeviceError&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span>Device,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder, DeviceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_open {
             <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
             <span class="kw">let </span>hal_label = <span class="self">self</span>.hal_label.as_deref();
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label)<span class="question-mark">? </span>};
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label) }
+                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.raw.as_mut())
@@ -1151,9 +1162,9 @@
     /// its own label.
     ///
     /// The underlying hal encoder is put in the "recording" state.
-    </span><span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hal_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
+    </span><span class="kw">fn </span>open_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hal_label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="self">self</span>.is_open = <span class="bool-val">true</span>;
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label)<span class="question-mark">? </span>};
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.begin_encoding(hal_label) }.map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1198,8 +1209,9 @@
 <span class="kw">impl </span>CommandBufferMutable {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open_encoder_and_tracker(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span>Device,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder, <span class="kw-2">&amp;mut </span>Tracker), DeviceError&gt; {
-        <span class="kw">let </span>encoder = <span class="self">self</span>.encoder.open()<span class="question-mark">?</span>;
+        <span class="kw">let </span>encoder = <span class="self">self</span>.encoder.open(device)<span class="question-mark">?</span>;
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span><span class="self">self</span>.trackers;
 
         <span class="prelude-val">Ok</span>((encoder, tracker))
@@ -1543,7 +1555,7 @@
                 <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
                 <span class="kw">match </span>cmd_buf_data.status {
                     CommandEncoderStatus::Recording =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.encoder.close() {
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device) {
                             <span class="prelude-val">Some</span>(e.into())
                         } <span class="kw">else </span>{
                             cmd_buf_data.status = CommandEncoderStatus::Finished;
@@ -1593,7 +1605,7 @@
             list.push(TraceCommand::PushDebugGroup(label.to_string()));
         }
 
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
         <span class="kw">if </span>!<span class="self">self
             </span>.instance
             .flags
@@ -1635,7 +1647,7 @@
             .flags
             .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS)
         {
-            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
+            <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
             <span class="kw">unsafe </span>{
                 cmd_buf_raw.insert_debug_marker(label);
             }
@@ -1666,7 +1678,7 @@
             list.push(TraceCommand::PopDebugGroup);
         }
 
-        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
         <span class="kw">if </span>!<span class="self">self
             </span>.instance
             .flags
