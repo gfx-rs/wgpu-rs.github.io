@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AdapterInputs","CreateSurfaceError","GetSurfaceSupportError","IsSurfaceSupportedError","RequestAdapterError","RequestDeviceError"],"fn":["parse_backends_from_comma_list"],"struct":["Adapter","FailedLimit","Instance","InvalidAdapter","Surface"],"type":["RequestAdapterOptions"]};
+window.SIDEBAR_ITEMS = {"enum":["AdapterInputs","CreateSurfaceError","GetSurfaceSupportError","RequestAdapterError","RequestDeviceError"],"fn":["parse_backends_from_comma_list"],"struct":["Adapter","FailedLimit","Instance","Surface"],"type":["RequestAdapterOptions"]};

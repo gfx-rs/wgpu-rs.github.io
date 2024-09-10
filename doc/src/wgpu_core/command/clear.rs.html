@@ -489,26 +489,6 @@
 <a href="#488" id="488">488</a>
 <a href="#489" id="489">489</a>
 <a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
-<a href="#494" id="494">494</a>
-<a href="#495" id="495">495</a>
-<a href="#496" id="496">496</a>
-<a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
-<a href="#506" id="506">506</a>
-<a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -522,8 +502,8 @@
     id::{BufferId, CommandEncoderId, TextureId},
     init_tracker::{MemoryInitKind, TextureInitRange},
     resource::{
-        DestroyedResourceError, Labeled, MissingBufferUsageError, ParentDevice, ResourceErrorIdent,
-        Texture, TextureClearMode,
+        DestroyedResourceError, InvalidResourceError, Labeled, MissingBufferUsageError,
+        ParentDevice, ResourceErrorIdent, Texture, TextureClearMode,
     },
     snatch::SnatchGuard,
     track::{TextureSelector, TextureTrackerSetSingle},
@@ -538,10 +518,6 @@
 </span><span class="kw">pub enum </span>ClearError {
     <span class="attr">#[error(<span class="string">"To use clear_texture the CLEAR_TEXTURE feature needs to be enabled"</span>)]
     </span>MissingClearTextureFeature,
-    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
-    </span>InvalidBufferId(BufferId),
-    <span class="attr">#[error(<span class="string">"TextureId {0:?} is invalid"</span>)]
-    </span>InvalidTextureId(TextureId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"{0} can not be cleared"</span>)]
@@ -586,6 +562,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>CommandEncoderError(<span class="attr">#[from] </span>CommandEncoderError),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="kw">impl </span>Global {
@@ -601,27 +579,18 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+        <span class="kw">let </span>cmd_buf = hub
             .command_buffers
-            .get(command_encoder_id.into_command_buffer_id())
-        {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
-        };
-        cmd_buf.check_recording()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+            .get(command_encoder_id.into_command_buffer_id());
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
+        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(TraceCommand::ClearBuffer { dst, offset, size });
         }
 
-        <span class="kw">let </span>dst_buffer = hub
-            .buffers
-            .get(dst)
-            .map_err(|<span class="kw">_</span>| ClearError::InvalidBufferId(dst))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_buffer = hub.buffers.get(dst).get()<span class="question-mark">?</span>;
 
         dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
@@ -693,17 +662,11 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+        <span class="kw">let </span>cmd_buf = hub
             .command_buffers
-            .get(command_encoder_id.into_command_buffer_id())
-        {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
-        };
-        cmd_buf.check_recording()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+            .get(command_encoder_id.into_command_buffer_id());
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
+        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -717,10 +680,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::MissingClearTextureFeature);
         }
 
-        <span class="kw">let </span>dst_texture = hub
-            .textures
-            .get(dst)
-            .map_err(|<span class="kw">_</span>| ClearError::InvalidTextureId(dst))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_texture = hub.textures.get(dst).get()<span class="question-mark">?</span>;
 
         dst_texture.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 

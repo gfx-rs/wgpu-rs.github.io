@@ -120,6 +120,15 @@
 <a href="#119" id="119">119</a>
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Plain, uninstrumented wrappers around [`parking_lot`] lock types.
 //!
 //! These definitions are used when no particular lock instrumentation
@@ -149,6 +158,15 @@
 
     <span class="kw">pub fn </span>lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MutexGuard&lt;T&gt; {
         MutexGuard(<span class="self">self</span>.<span class="number">0</span>.lock())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">pub fn </span>try_map&lt;U: <span class="question-mark">?</span>Sized, F&gt;(s: <span class="self">Self</span>, f: F) -&gt; <span class="prelude-ty">Result</span>&lt;parking_lot::MappedMutexGuard&lt;<span class="lifetime">'a</span>, U&gt;, ()&gt;
+    <span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>U&gt;,
+    {
+        parking_lot::MutexGuard::try_map(s.<span class="number">0</span>, f).map_err(|<span class="kw">_</span>| ())
     }
 }
 

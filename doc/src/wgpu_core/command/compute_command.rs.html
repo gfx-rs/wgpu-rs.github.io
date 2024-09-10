@@ -330,7 +330,7 @@
         hub: <span class="kw-2">&amp;</span><span class="kw">crate</span>::hub::Hub,
         commands: <span class="kw-2">&amp;</span>[ComputeCommand],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ArcComputeCommand&gt;, <span class="kw">super</span>::ComputePassError&gt; {
-        <span class="kw">use super</span>::{ComputePassError, ComputePassErrorInner, PassErrorScope};
+        <span class="kw">use super</span>::{ComputePassError, PassErrorScope};
 
         <span class="kw">let </span>buffers_guard = hub.buffers.read();
         <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
@@ -355,10 +355,10 @@
                         }
 
                         <span class="kw">let </span>bind_group_id = bind_group_id.unwrap();
-                        <span class="kw">let </span>bg = bind_group_guard.get_owned(bind_group_id).map_err(|<span class="kw">_</span>| {
+                        <span class="kw">let </span>bg = bind_group_guard.get(bind_group_id).get().map_err(|e| {
                             ComputePassError {
                                 scope: PassErrorScope::SetBindGroup,
-                                inner: ComputePassErrorInner::InvalidBindGroupId(bind_group_id),
+                                inner: e.into(),
                             }
                         })<span class="question-mark">?</span>;
 
@@ -368,13 +368,13 @@
                             bind_group: <span class="prelude-val">Some</span>(bg),
                         }
                     }
-
                     ComputeCommand::SetPipeline(pipeline_id) =&gt; ArcComputeCommand::SetPipeline(
                         pipelines_guard
-                            .get_owned(pipeline_id)
-                            .map_err(|<span class="kw">_</span>| ComputePassError {
+                            .get(pipeline_id)
+                            .get()
+                            .map_err(|e| ComputePassError {
                                 scope: PassErrorScope::SetPipelineCompute,
-                                inner: ComputePassErrorInner::InvalidPipelineId(pipeline_id),
+                                inner: e.into(),
                             })<span class="question-mark">?</span>,
                     ),
 
@@ -392,10 +392,10 @@
 
                     ComputeCommand::DispatchIndirect { buffer_id, offset } =&gt; {
                         ArcComputeCommand::DispatchIndirect {
-                            buffer: buffers_guard.get_owned(buffer_id).map_err(|<span class="kw">_</span>| {
+                            buffer: buffers_guard.get(buffer_id).get().map_err(|e| {
                                 ComputePassError {
                                     scope: PassErrorScope::Dispatch { indirect: <span class="bool-val">true </span>},
-                                    inner: ComputePassErrorInner::InvalidBufferId(buffer_id),
+                                    inner: e.into(),
                                 }
                             })<span class="question-mark">?</span>,
                             offset,
@@ -416,10 +416,10 @@
                         query_set_id,
                         query_index,
                     } =&gt; ArcComputeCommand::WriteTimestamp {
-                        query_set: query_set_guard.get_owned(query_set_id).map_err(|<span class="kw">_</span>| {
+                        query_set: query_set_guard.get(query_set_id).get().map_err(|e| {
                             ComputePassError {
                                 scope: PassErrorScope::WriteTimestamp,
-                                inner: ComputePassErrorInner::InvalidQuerySet(query_set_id),
+                                inner: e.into(),
                             }
                         })<span class="question-mark">?</span>,
                         query_index,
@@ -429,10 +429,10 @@
                         query_set_id,
                         query_index,
                     } =&gt; ArcComputeCommand::BeginPipelineStatisticsQuery {
-                        query_set: query_set_guard.get_owned(query_set_id).map_err(|<span class="kw">_</span>| {
+                        query_set: query_set_guard.get(query_set_id).get().map_err(|e| {
                             ComputePassError {
                                 scope: PassErrorScope::BeginPipelineStatisticsQuery,
-                                inner: ComputePassErrorInner::InvalidQuerySet(query_set_id),
+                                inner: e.into(),
                             }
                         })<span class="question-mark">?</span>,
                         query_index,

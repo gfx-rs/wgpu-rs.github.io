@@ -1840,6 +1840,35 @@
 <a href="#1839" id="1839">1839</a>
 <a href="#1840" id="1840">1840</a>
 <a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2147,7 +2176,7 @@
                 <span class="kw">let </span>status = <span class="kw">match </span>result {
                     <span class="prelude-val">Ok</span>(()) =&gt; BufferMapAsyncStatus::Success,
                     <span class="prelude-val">Err</span>(BufferAccessError::Device(<span class="kw">_</span>)) =&gt; BufferMapAsyncStatus::ContextLost,
-                    <span class="prelude-val">Err</span>(BufferAccessError::InvalidBufferId(<span class="kw">_</span>))
+                    <span class="prelude-val">Err</span>(BufferAccessError::InvalidResource(<span class="kw">_</span>))
                     | <span class="prelude-val">Err</span>(BufferAccessError::DestroyedResource(<span class="kw">_</span>)) =&gt; BufferMapAsyncStatus::Invalid,
                     <span class="prelude-val">Err</span>(BufferAccessError::AlreadyMapped) =&gt; BufferMapAsyncStatus::AlreadyMapped,
                     <span class="prelude-val">Err</span>(BufferAccessError::MapAlreadyPending) =&gt; {
@@ -2166,7 +2195,9 @@
                     | <span class="prelude-val">Err</span>(BufferAccessError::NegativeRange { .. }) =&gt; {
                         BufferMapAsyncStatus::InvalidRange
                     }
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; BufferMapAsyncStatus::Error,
+                    <span class="prelude-val">Err</span>(BufferAccessError::Failed)
+                    | <span class="prelude-val">Err</span>(BufferAccessError::NotMapped)
+                    | <span class="prelude-val">Err</span>(BufferAccessError::MapAborted) =&gt; BufferMapAsyncStatus::Error,
                 };
 
                 (inner.callback)(status, inner.user_data);
@@ -2189,8 +2220,6 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Buffer map failed"</span>)]
     </span>Failed,
-    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
-    </span>InvalidBufferId(BufferId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"Buffer is already mapped"</span>)]
@@ -2228,6 +2257,8 @@
     },
     <span class="attr">#[error(<span class="string">"Buffer map aborted"</span>)]
     </span>MapAborted,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -2251,6 +2282,45 @@
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 #[error(<span class="string">"{0} has been destroyed"</span>)]
 </span><span class="kw">pub struct </span>DestroyedResourceError(<span class="kw">pub </span>ResourceErrorIdent);
+
+<span class="attr">#[derive(Clone, Debug, Error)]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
+#[error(<span class="string">"{0} is invalid"</span>)]
+</span><span class="kw">pub struct </span>InvalidResourceError(<span class="kw">pub </span>ResourceErrorIdent);
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Fallible&lt;T: ParentDevice&gt; {
+    Valid(Arc&lt;T&gt;),
+    Invalid(Arc&lt;String&gt;),
+}
+
+<span class="kw">impl</span>&lt;T: ParentDevice&gt; Fallible&lt;T&gt; {
+    <span class="kw">pub fn </span>get(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;T&gt;, InvalidResourceError&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            Fallible::Valid(v) =&gt; <span class="prelude-val">Ok</span>(v),
+            Fallible::Invalid(label) =&gt; <span class="prelude-val">Err</span>(InvalidResourceError(ResourceErrorIdent {
+                r#type: Cow::Borrowed(T::TYPE),
+                label: (<span class="kw-2">*</span>label).clone(),
+            })),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T: ParentDevice&gt; Clone <span class="kw">for </span>Fallible&lt;T&gt; {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Valid(v) =&gt; <span class="self">Self</span>::Valid(v.clone()),
+            <span class="self">Self</span>::Invalid(l) =&gt; <span class="self">Self</span>::Invalid(l.clone()),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T: ParentDevice&gt; ResourceType <span class="kw">for </span>Fallible&lt;T&gt; {
+    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = T::TYPE;
+}
+
+<span class="kw">impl</span>&lt;T: ParentDevice + <span class="kw">crate</span>::storage::StorageItem&gt; <span class="kw">crate</span>::storage::StorageItem <span class="kw">for </span>Fallible&lt;T&gt; {
+    <span class="kw">type </span>Marker = T::Marker;
+}
 
 <span class="kw">pub type </span>BufferAccessResult = <span class="prelude-ty">Result</span>&lt;(), BufferAccessError&gt;;
 
@@ -3044,7 +3114,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(buffer) = hub.buffers.get(id) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(buffer) = hub.buffers.get(id).get() {
             <span class="kw">let </span>snatch_guard = buffer.device.snatchable_lock.read();
             <span class="kw">let </span>hal_buffer = buffer
                 .raw(<span class="kw-2">&amp;</span>snatch_guard)
@@ -3067,7 +3137,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = hub.textures.get(id) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = hub.textures.get(id).get() {
             <span class="kw">let </span>snatch_guard = texture.device.snatchable_lock.read();
             <span class="kw">let </span>hal_texture = texture.raw(<span class="kw-2">&amp;</span>snatch_guard);
             <span class="kw">let </span>hal_texture = hal_texture
@@ -3091,7 +3161,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture_view) = hub.texture_views.get(id) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture_view) = hub.texture_views.get(id).get() {
             <span class="kw">let </span>snatch_guard = texture_view.device.snatchable_lock.read();
             <span class="kw">let </span>hal_texture_view = texture_view.raw(<span class="kw-2">&amp;</span>snatch_guard);
             <span class="kw">let </span>hal_texture_view = hal_texture_view
@@ -3114,11 +3184,8 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Adapter::as_hal"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>adapter = hub.adapters.get(id).ok();
-        <span class="kw">let </span>hal_adapter = adapter
-            .as_ref()
-            .map(|adapter| <span class="kw-2">&amp;</span>adapter.raw.adapter)
-            .and_then(|adapter| adapter.as_any().downcast_ref());
+        <span class="kw">let </span>adapter = hub.adapters.get(id);
+        <span class="kw">let </span>hal_adapter = adapter.raw.adapter.as_any().downcast_ref();
 
         hal_adapter_callback(hal_adapter)
     }
@@ -3133,12 +3200,8 @@
     ) -&gt; R {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::as_hal"</span>);
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>device = hub.devices.get(id).ok();
-        <span class="kw">let </span>hal_device = device
-            .as_ref()
-            .map(|device| device.raw())
-            .and_then(|device| device.as_any().downcast_ref());
+        <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(id);
+        <span class="kw">let </span>hal_device = device.raw().as_any().downcast_ref();
 
         hal_device_callback(hal_device)
     }
@@ -3153,14 +3216,9 @@
     ) -&gt; R {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::fence_as_hal"</span>);
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = hub.devices.get(id) {
-            <span class="kw">let </span>fence = device.fence.read();
-            hal_fence_callback(fence.as_any().downcast_ref())
-        } <span class="kw">else </span>{
-            hal_fence_callback(<span class="prelude-val">None</span>)
-        }
+        <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(id);
+        <span class="kw">let </span>fence = device.fence.read();
+        hal_fence_callback(fence.as_any().downcast_ref())
     }
 
     <span class="doccomment">/// # Safety
@@ -3172,10 +3230,9 @@
     ) -&gt; R {
         <span class="macro">profiling::scope!</span>(<span class="string">"Surface::as_hal"</span>);
 
-        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(id).ok();
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(id);
         <span class="kw">let </span>hal_surface = surface
-            .as_ref()
-            .and_then(|surface| surface.raw(A::VARIANT))
+            .raw(A::VARIANT)
             .and_then(|surface| surface.as_any().downcast_ref());
 
         hal_surface_callback(hal_surface)
@@ -3197,9 +3254,10 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(cmd_buf) = hub.command_buffers.get(id.into_command_buffer_id()) {
-            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+        <span class="kw">let </span>cmd_buf = hub.command_buffers.get(id.into_command_buffer_id());
+        <span class="kw">let </span>cmd_buf_data = cmd_buf.try_get();
+
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>cmd_buf_data) = cmd_buf_data {
             <span class="kw">let </span>cmd_buf_raw = cmd_buf_data
                 .encoder
                 .open(<span class="kw-2">&amp;</span>cmd_buf.device)
@@ -3460,8 +3518,6 @@
 </span><span class="kw">pub enum </span>CreateTextureViewError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"TextureId {0:?} is invalid"</span>)]
-    </span>InvalidTextureId(TextureId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"Not enough memory left to create texture view"</span>)]
@@ -3504,6 +3560,8 @@
         texture: wgt::TextureFormat,
         view: wgt::TextureFormat,
     },
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -3676,9 +3734,9 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>DestroyError {
-    <span class="attr">#[error(<span class="string">"Resource is invalid"</span>)]
-    </span>Invalid,
     <span class="attr">#[error(<span class="string">"Resource is already destroyed"</span>)]
     </span>AlreadyDestroyed,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 </code></pre></div></section></main></body></html>

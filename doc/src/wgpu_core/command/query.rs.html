@@ -461,33 +461,6 @@
 <a href="#460" id="460">460</a>
 <a href="#461" id="461">461</a>
 <a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a>
-<a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
-<a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
-<a href="#468" id="468">468</a>
-<a href="#469" id="469">469</a>
-<a href="#470" id="470">470</a>
-<a href="#471" id="471">471</a>
-<a href="#472" id="472">472</a>
-<a href="#473" id="473">473</a>
-<a href="#474" id="474">474</a>
-<a href="#475" id="475">475</a>
-<a href="#476" id="476">476</a>
-<a href="#477" id="477">477</a>
-<a href="#478" id="478">478</a>
-<a href="#479" id="479">479</a>
-<a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a>
-<a href="#483" id="483">483</a>
-<a href="#484" id="484">484</a>
-<a href="#485" id="485">485</a>
-<a href="#486" id="486">486</a>
-<a href="#487" id="487">487</a>
-<a href="#488" id="488">488</a>
-<a href="#489" id="489">489</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -497,7 +470,8 @@
     id,
     init_tracker::MemoryInitKind,
     resource::{
-        DestroyedResourceError, MissingBufferUsageError, ParentDevice, QuerySet, Trackable,
+        DestroyedResourceError, InvalidResourceError, MissingBufferUsageError, ParentDevice,
+        QuerySet, Trackable,
     },
     track::{StatelessTracker, TrackerIndex},
     FastHashMap,
@@ -590,12 +564,10 @@
     </span>Use(<span class="attr">#[from] </span>QueryUseError),
     <span class="attr">#[error(<span class="string">"Error encountered while trying to resolve a query"</span>)]
     </span>Resolve(<span class="attr">#[from] </span>ResolveError),
-    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
-    </span>InvalidBufferId(id::BufferId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
-    <span class="attr">#[error(<span class="string">"QuerySetId {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidQuerySetId(id::QuerySetId),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="doccomment">/// Error encountered while trying to use queries
@@ -809,21 +781,15 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+        <span class="kw">let </span>cmd_buf = hub
             .command_buffers
-            .get(command_encoder_id.into_command_buffer_id())
-        {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
-        };
-        cmd_buf.check_recording()<span class="question-mark">?</span>;
+            .get(command_encoder_id.into_command_buffer_id());
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
+        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
 
         cmd_buf
             .device
             .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -833,19 +799,13 @@
             });
         }
 
-        <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
-        <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
+        <span class="kw">let </span>raw_encoder = cmd_buf_data.encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>raw_encoder = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>query_set = hub
-            .query_sets
-            .get(query_set_id)
-            .map_err(|<span class="kw">_</span>| QueryError::InvalidQuerySetId(query_set_id))<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
+        <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id).get()<span class="question-mark">?</span>;
 
         query_set.validate_and_write_timestamp(raw_encoder, query_index, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+
+        cmd_buf_data.trackers.query_sets.insert_single(query_set);
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -861,17 +821,11 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub
+        <span class="kw">let </span>cmd_buf = hub
             .command_buffers
-            .get(command_encoder_id.into_command_buffer_id())
-        {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid.into()),
-        };
-        cmd_buf.check_recording()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+            .get(command_encoder_id.into_command_buffer_id());
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
+        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -884,32 +838,20 @@
             });
         }
 
-        <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
-        <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
-        <span class="kw">let </span>buffer_memory_init_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions;
-        <span class="kw">let </span>raw_encoder = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
-
         <span class="kw">if </span>destination_offset % wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Resolve(ResolveError::BufferOffsetAlignment));
         }
 
-        <span class="kw">let </span>query_set = hub
-            .query_sets
-            .get(query_set_id)
-            .map_err(|<span class="kw">_</span>| QueryError::InvalidQuerySetId(query_set_id))<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>query_set = tracker.query_sets.insert_single(query_set);
+        <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id).get()<span class="question-mark">?</span>;
 
         query_set.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>dst_buffer = hub
-            .buffers
-            .get(destination)
-            .map_err(|<span class="kw">_</span>| QueryError::InvalidBufferId(destination))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst_buffer = hub.buffers.get(destination).get()<span class="question-mark">?</span>;
 
         dst_buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>dst_pending = tracker
+        <span class="kw">let </span>dst_pending = cmd_buf_data
+            .trackers
             .buffers
             .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
 
@@ -955,14 +897,16 @@
         }
 
         <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/3993): Need to track initialization state.
-        </span>buffer_memory_init_actions.extend(dst_buffer.initialization_status.read().create_action(
-            <span class="kw-2">&amp;</span>dst_buffer,
-            buffer_start_offset..buffer_end_offset,
-            MemoryInitKind::ImplicitlyInitialized,
-        ));
+        </span>cmd_buf_data.buffer_memory_init_actions.extend(
+            dst_buffer.initialization_status.read().create_action(
+                <span class="kw-2">&amp;</span>dst_buffer,
+                buffer_start_offset..buffer_end_offset,
+                MemoryInitKind::ImplicitlyInitialized,
+            ),
+        );
 
         <span class="kw">let </span>raw_dst_buffer = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-
+        <span class="kw">let </span>raw_encoder = cmd_buf_data.encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device)<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{
             raw_encoder.transition_buffers(dst_barrier.as_slice());
             raw_encoder.copy_query_results(
@@ -973,6 +917,8 @@
                 wgt::BufferSize::new_unchecked(stride <span class="kw">as </span>u64),
             );
         }
+
+        cmd_buf_data.trackers.query_sets.insert_single(query_set);
 
         <span class="prelude-val">Ok</span>(())
     }

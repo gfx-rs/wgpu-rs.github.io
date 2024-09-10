@@ -3321,80 +3321,13 @@
 <a href="#3320" id="3320">3320</a>
 <a href="#3321" id="3321">3321</a>
 <a href="#3322" id="3322">3322</a>
-<a href="#3323" id="3323">3323</a>
-<a href="#3324" id="3324">3324</a>
-<a href="#3325" id="3325">3325</a>
-<a href="#3326" id="3326">3326</a>
-<a href="#3327" id="3327">3327</a>
-<a href="#3328" id="3328">3328</a>
-<a href="#3329" id="3329">3329</a>
-<a href="#3330" id="3330">3330</a>
-<a href="#3331" id="3331">3331</a>
-<a href="#3332" id="3332">3332</a>
-<a href="#3333" id="3333">3333</a>
-<a href="#3334" id="3334">3334</a>
-<a href="#3335" id="3335">3335</a>
-<a href="#3336" id="3336">3336</a>
-<a href="#3337" id="3337">3337</a>
-<a href="#3338" id="3338">3338</a>
-<a href="#3339" id="3339">3339</a>
-<a href="#3340" id="3340">3340</a>
-<a href="#3341" id="3341">3341</a>
-<a href="#3342" id="3342">3342</a>
-<a href="#3343" id="3343">3343</a>
-<a href="#3344" id="3344">3344</a>
-<a href="#3345" id="3345">3345</a>
-<a href="#3346" id="3346">3346</a>
-<a href="#3347" id="3347">3347</a>
-<a href="#3348" id="3348">3348</a>
-<a href="#3349" id="3349">3349</a>
-<a href="#3350" id="3350">3350</a>
-<a href="#3351" id="3351">3351</a>
-<a href="#3352" id="3352">3352</a>
-<a href="#3353" id="3353">3353</a>
-<a href="#3354" id="3354">3354</a>
-<a href="#3355" id="3355">3355</a>
-<a href="#3356" id="3356">3356</a>
-<a href="#3357" id="3357">3357</a>
-<a href="#3358" id="3358">3358</a>
-<a href="#3359" id="3359">3359</a>
-<a href="#3360" id="3360">3360</a>
-<a href="#3361" id="3361">3361</a>
-<a href="#3362" id="3362">3362</a>
-<a href="#3363" id="3363">3363</a>
-<a href="#3364" id="3364">3364</a>
-<a href="#3365" id="3365">3365</a>
-<a href="#3366" id="3366">3366</a>
-<a href="#3367" id="3367">3367</a>
-<a href="#3368" id="3368">3368</a>
-<a href="#3369" id="3369">3369</a>
-<a href="#3370" id="3370">3370</a>
-<a href="#3371" id="3371">3371</a>
-<a href="#3372" id="3372">3372</a>
-<a href="#3373" id="3373">3373</a>
-<a href="#3374" id="3374">3374</a>
-<a href="#3375" id="3375">3375</a>
-<a href="#3376" id="3376">3376</a>
-<a href="#3377" id="3377">3377</a>
-<a href="#3378" id="3378">3378</a>
-<a href="#3379" id="3379">3379</a>
-<a href="#3380" id="3380">3380</a>
-<a href="#3381" id="3381">3381</a>
-<a href="#3382" id="3382">3382</a>
-<a href="#3383" id="3383">3383</a>
-<a href="#3384" id="3384">3384</a>
-<a href="#3385" id="3385">3385</a>
-<a href="#3386" id="3386">3386</a>
-<a href="#3387" id="3387">3387</a>
-<a href="#3388" id="3388">3388</a>
-<a href="#3389" id="3389">3389</a>
-<a href="#3390" id="3390">3390</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
 };
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::RenderPipeline;
+<span class="kw">use </span><span class="kw">crate</span>::resource::InvalidResourceError;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
     api_log,
@@ -3973,14 +3906,6 @@
     </span>InvalidParentEncoder,
     <span class="attr">#[error(<span class="string">"The format of the depth-stencil attachment ({0:?}) is not a depth-stencil format"</span>)]
     </span>InvalidDepthStencilAttachmentFormat(wgt::TextureFormat),
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidBuffer(id::BufferId),
-    <span class="attr">#[error(<span class="string">"Render pipeline {0:?} is invalid"</span>)]
-    </span>InvalidPipeline(id::RenderPipelineId),
-    <span class="attr">#[error(<span class="string">"QuerySet {0:?} is invalid"</span>)]
-    </span>InvalidQuerySet(id::QuerySetId),
-    <span class="attr">#[error(<span class="string">"Render bundle {0:?} is invalid"</span>)]
-    </span>InvalidRenderBundle(id::RenderBundleId),
     <span class="attr">#[error(<span class="string">"The format of the {location} ({format:?}) is not resolvable"</span>)]
     </span>UnsupportedResolveTargetFormat {
         location: AttachmentErrorLocation,
@@ -4026,8 +3951,6 @@
     </span>SurfaceTextureDropped,
     <span class="attr">#[error(<span class="string">"Not enough memory left for render pass"</span>)]
     </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">"BindGroupId {0:?} is invalid"</span>)]
-    </span>InvalidBindGroupId(id::BindGroupId),
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only depth"</span>)]
     </span>InvalidDepthOps,
     <span class="attr">#[error(<span class="string">"Unable to clear non-present/read-only stencil"</span>)]
@@ -4096,6 +4019,8 @@
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"The compute pass has already been ended and no further commands can be recorded"</span>)]
     </span>PassEnded,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="kw">impl </span>From&lt;MissingBufferUsageError&gt; <span class="kw">for </span>RenderPassErrorInner {
@@ -4753,14 +4678,10 @@
                     channel,
                 }) = color_attachment
                 {
-                    <span class="kw">let </span>view = texture_views
-                        .get_owned(<span class="kw-2">*</span>view_id)
-                        .map_err(|<span class="kw">_</span>| CommandEncoderError::InvalidAttachmentId(<span class="kw-2">*</span>view_id))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>view = texture_views.get(<span class="kw-2">*</span>view_id).get()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>resolve_target = <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_target_id) = resolve_target {
-                        <span class="kw">let </span>rt_arc = texture_views.get_owned(<span class="kw-2">*</span>resolve_target_id).map_err(|<span class="kw">_</span>| {
-                            CommandEncoderError::InvalidResolveTargetId(<span class="kw-2">*</span>resolve_target_id)
-                        })<span class="question-mark">?</span>;
+                        <span class="kw">let </span>rt_arc = texture_views.get(<span class="kw-2">*</span>resolve_target_id).get()<span class="question-mark">?</span>;
 
                         <span class="prelude-val">Some</span>(rt_arc)
                     } <span class="kw">else </span>{
@@ -4781,13 +4702,7 @@
 
             arc_desc.depth_stencil_attachment =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(depth_stencil_attachment) = desc.depth_stencil_attachment {
-                    <span class="kw">let </span>view = texture_views
-                        .get_owned(depth_stencil_attachment.view)
-                        .map_err(|<span class="kw">_</span>| {
-                            CommandEncoderError::InvalidDepthStencilAttachmentId(
-                                depth_stencil_attachment.view,
-                            )
-                        })<span class="question-mark">?</span>;
+                    <span class="kw">let </span>view = texture_views.get(depth_stencil_attachment.view).get()<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(ArcRenderPassDepthStencilAttachment {
                         view,
@@ -4799,9 +4714,7 @@
                 </span>};
 
             arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
-                <span class="kw">let </span>query_set = query_sets.get_owned(tw.query_set).map_err(|<span class="kw">_</span>| {
-                    CommandEncoderError::InvalidTimestampWritesQuerySetId(tw.query_set)
-                })<span class="question-mark">?</span>;
+                <span class="kw">let </span>query_set = query_sets.get(tw.query_set).get()<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                     query_set,
@@ -4814,9 +4727,7 @@
 
             arc_desc.occlusion_query_set =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(occlusion_query_set) = desc.occlusion_query_set {
-                    <span class="kw">let </span>query_set = query_sets.get_owned(occlusion_query_set).map_err(|<span class="kw">_</span>| {
-                        CommandEncoderError::InvalidOcclusionQuerySetId(occlusion_query_set)
-                    })<span class="question-mark">?</span>;
+                    <span class="kw">let </span>query_set = query_sets.get(occlusion_query_set).get()<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(query_set)
                 } <span class="kw">else </span>{
@@ -4837,12 +4748,13 @@
 
         <span class="kw">let </span>make_err = |e, arc_desc| (RenderPass::new(<span class="prelude-val">None</span>, arc_desc), <span class="prelude-val">Some</span>(e));
 
-        <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
-            <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>make_err(CommandEncoderError::Invalid, arc_desc),
-        };
+        <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
 
-        <span class="kw">match </span>cmd_buf.lock_encoder() {
+        <span class="kw">match </span>cmd_buf
+            .try_get()
+            .map_err(|e| e.into())
+            .and_then(|<span class="kw-2">mut </span>cmd_buf_data| cmd_buf_data.lock_encoder())
+        {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
             <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
         };
@@ -4852,7 +4764,9 @@
         (RenderPass::new(<span class="prelude-val">Some</span>(cmd_buf), arc_desc), err)
     }
 
-    <span class="attr">#[doc(hidden)]
+    <span class="doccomment">/// Note that this differs from [`Self::render_pass_end`], it will
+    /// create a new pass, replay the commands and end the pass.
+    </span><span class="attr">#[doc(hidden)]
     #[cfg(any(feature = <span class="string">"serde"</span>, feature = <span class="string">"replay"</span>))]
     </span><span class="kw">pub fn </span>render_pass_end_with_unresolved_commands(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4867,15 +4781,11 @@
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span>{
-            <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-            <span class="kw">let </span>cmd_buf = <span class="kw">match </span>hub.command_buffers.get(encoder_id.into_command_buffer_id()) {
-                <span class="prelude-val">Ok</span>(cmd_buf) =&gt; cmd_buf,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::Invalid).map_pass_err(pass_scope)<span class="question-mark">?</span>,
-            };
-
-            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+            <span class="kw">let </span>cmd_buf = <span class="self">self
+                </span>.hub
+                .command_buffers
+                .get(encoder_id.into_command_buffer_id());
+            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
                 list.push(<span class="kw">crate</span>::device::trace::Command::RunRenderPass {
@@ -4919,28 +4829,25 @@
             });
         };
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
         render_pass.base = <span class="prelude-val">Some</span>(BasePass {
             label,
-            commands: <span class="kw">super</span>::RenderCommand::resolve_render_command_ids(hub, <span class="kw-2">&amp;</span>commands)<span class="question-mark">?</span>,
+            commands: <span class="kw">super</span>::RenderCommand::resolve_render_command_ids(<span class="kw-2">&amp;</span><span class="self">self</span>.hub, <span class="kw-2">&amp;</span>commands)<span class="question-mark">?</span>,
             dynamic_offsets,
             string_data,
             push_constant_data,
         });
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = encoder_error {
-            <span class="prelude-val">Err</span>(RenderPassError {
-                scope: pass_scope,
-                inner: err.into(),
-            })
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.render_pass_end(<span class="kw-2">&amp;mut </span>render_pass)
-        }
+        <span class="self">self</span>.render_pass_end(<span class="kw-2">&amp;mut </span>render_pass)
     }
 
-    <span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>render_pass_end(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>RenderPass) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
+    <span class="kw">pub fn </span>render_pass_end(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>RenderPass) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
         <span class="kw">let </span>pass_scope = PassErrorScope::Pass;
+
+        <span class="kw">let </span>cmd_buf = pass
+            .parent
+            .as_ref()
+            .ok_or(RenderPassErrorInner::InvalidParentEncoder)
+            .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>base = pass
             .base
@@ -4953,20 +4860,16 @@
             base.label.as_deref().unwrap_or(<span class="string">""</span>)
         );
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(cmd_buf) = pass.parent.as_ref() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::InvalidParentEncoder).map_pass_err(pass_scope);
-        };
-        cmd_buf.unlock_encoder().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>hal_label = hal_label(base.label.as_deref(), <span class="self">self</span>.instance.flags);
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        cmd_buf_data.unlock_encoder().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">let </span>snatch_guard = <span class="kw-2">&amp;</span>device.snatchable_lock.read();
 
-        <span class="kw">let </span>(scope, pending_discard_init_fixups) = {
-            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+        <span class="kw">let </span>hal_label = hal_label(base.label.as_deref(), device.instance_flags);
 
+        <span class="kw">let </span>(scope, pending_discard_init_fixups) = {
             device.check_is_valid().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
@@ -5290,9 +5193,6 @@
             encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
             (trackers, pending_discard_init_fixups)
         };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
-        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
         <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
         <span class="kw">let </span>status = <span class="kw-2">&amp;mut </span>cmd_buf_data.status;
@@ -6165,11 +6065,7 @@
         buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;, RenderPassError&gt; {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>buffer = hub
-            .buffers
-            .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = hub.buffers.get(buffer_id).get().map_pass_err(scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(buffer)
     }
@@ -6180,11 +6076,7 @@
         query_set_id: id::Id&lt;id::markers::QuerySet&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;QuerySet&gt;, RenderPassError&gt; {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>query_set = hub
-            .query_sets
-            .get(query_set_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidQuerySet(query_set_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>query_set = hub.query_sets.get(query_set_id).get().map_pass_err(scope)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(query_set)
     }
@@ -6221,7 +6113,7 @@
             <span class="kw">let </span>bg = hub
                 .bind_groups
                 .get(bind_group_id)
-                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBindGroupId(bind_group_id))
+                .get()
                 .map_pass_err(scope)<span class="question-mark">?</span>;
             bind_group = <span class="prelude-val">Some</span>(bg);
         }
@@ -6254,7 +6146,7 @@
         <span class="kw">let </span>pipeline = hub
             .render_pipelines
             .get(pipeline_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidPipeline(pipeline_id))
+            .get()
             .map_pass_err(scope)<span class="question-mark">?</span>;
 
         base.commands.push(ArcRenderCommand::SetPipeline(pipeline));
@@ -6565,23 +6457,11 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        <span class="comment">// Don't use resolve_render_pass_buffer_id here, because we don't want to take the read-lock twice.
-        </span><span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>buffers = hub.buffers.read();
-        <span class="kw">let </span>buffer = buffers
-            .get_owned(buffer_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
-        <span class="kw">let </span>count_buffer = buffers
-            .get_owned(count_buffer_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(count_buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
-
         base.commands
             .push(ArcRenderCommand::MultiDrawIndirectCount {
-                buffer,
+                buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
                 offset,
-                count_buffer,
+                count_buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, count_buffer_id)<span class="question-mark">?</span>,
                 count_buffer_offset,
                 max_count,
                 indexed: <span class="bool-val">false</span>,
@@ -6605,24 +6485,11 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        <span class="comment">// Don't use resolve_render_pass_buffer_id here, because we don't want to take the read-lock twice.
-        </span><span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>buffers = hub.buffers.read();
-        <span class="kw">let </span>buffer = buffers
-            .get_owned(buffer_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>count_buffer = buffers
-            .get_owned(count_buffer_id)
-            .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidBuffer(count_buffer_id))
-            .map_pass_err(scope)<span class="question-mark">?</span>;
-
         base.commands
             .push(ArcRenderCommand::MultiDrawIndirectCount {
-                buffer,
+                buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
                 offset,
-                count_buffer,
+                count_buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, count_buffer_id)<span class="question-mark">?</span>,
                 count_buffer_offset,
                 max_count,
                 indexed: <span class="bool-val">true</span>,
@@ -6766,10 +6633,7 @@
         <span class="kw">let </span>bundles = hub.render_bundles.read();
 
         <span class="kw">for </span><span class="kw-2">&amp;</span>bundle_id <span class="kw">in </span>render_bundle_ids {
-            <span class="kw">let </span>bundle = bundles
-                .get_owned(bundle_id)
-                .map_err(|<span class="kw">_</span>| RenderPassErrorInner::InvalidRenderBundle(bundle_id))
-                .map_pass_err(scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span>bundle = bundles.get(bundle_id).get().map_pass_err(scope)<span class="question-mark">?</span>;
 
             base.commands.push(ArcRenderCommand::ExecuteBundle(bundle));
         }

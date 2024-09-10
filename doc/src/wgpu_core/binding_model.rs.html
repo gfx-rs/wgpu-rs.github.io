@@ -1012,12 +1012,6 @@
 <a href="#1011" id="1011">1011</a>
 <a href="#1012" id="1012">1012</a>
 <a href="#1013" id="1013">1013</a>
-<a href="#1014" id="1014">1014</a>
-<a href="#1015" id="1015">1015</a>
-<a href="#1016" id="1016">1016</a>
-<a href="#1017" id="1017">1017</a>
-<a href="#1018" id="1018">1018</a>
-<a href="#1019" id="1019">1019</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
@@ -1026,8 +1020,8 @@
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     pipeline::{ComputePipeline, RenderPipeline},
     resource::{
-        Buffer, DestroyedResourceError, Labeled, MissingBufferUsageError, MissingTextureUsageError,
-        ResourceErrorIdent, Sampler, TextureView, TrackingData,
+        Buffer, DestroyedResourceError, InvalidResourceError, Labeled, MissingBufferUsageError,
+        MissingTextureUsageError, ResourceErrorIdent, Sampler, TextureView, TrackingData,
     },
     resource_log,
     snatch::{SnatchGuard, Snatchable},
@@ -1099,14 +1093,6 @@
 </span><span class="kw">pub enum </span>CreateBindGroupError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Bind group layout is invalid"</span>)]
-    </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">"BufferId {0:?} is invalid"</span>)]
-    </span>InvalidBufferId(BufferId),
-    <span class="attr">#[error(<span class="string">"TextureViewId {0:?} is invalid"</span>)]
-    </span>InvalidTextureViewId(TextureViewId),
-    <span class="attr">#[error(<span class="string">"SamplerId {0:?} is invalid"</span>)]
-    </span>InvalidSamplerId(SamplerId),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(
@@ -1208,6 +1194,8 @@
     </span>StorageReadNotSupported(wgt::TextureFormat),
     <span class="attr">#[error(transparent)]
     </span>ResourceUsageCompatibility(<span class="attr">#[from] </span>ResourceUsageCompatibilityError),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1565,8 +1553,6 @@
 </span><span class="kw">pub enum </span>CreatePipelineLayoutError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"BindGroupLayoutId {0:?} is invalid"</span>)]
-    </span>InvalidBindGroupLayoutId(BindGroupLayoutId),
     <span class="attr">#[error(
         <span class="string">"Push constant at index {index} has range bound {bound} not aligned to {}"</span>,
         wgt::PUSH_CONSTANT_ALIGNMENT
@@ -1590,6 +1576,8 @@
     </span>TooManyBindings(BindingTypeMaxCountError),
     <span class="attr">#[error(<span class="string">"Bind group layout count {actual} exceeds device bind group limit {max}"</span>)]
     </span>TooManyGroups { actual: usize, max: usize },
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -2023,10 +2011,10 @@
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>GetBindGroupLayoutError {
-    <span class="attr">#[error(<span class="string">"Pipeline is invalid"</span>)]
-    </span>InvalidPipeline,
     <span class="attr">#[error(<span class="string">"Invalid group index {0}"</span>)]
     </span>InvalidGroupIndex(u32),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error, Eq, PartialEq)]

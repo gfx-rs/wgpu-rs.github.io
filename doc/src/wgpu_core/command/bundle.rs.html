@@ -1787,11 +1787,6 @@
 <a href="#1786" id="1786">1786</a>
 <a href="#1787" id="1787">1787</a>
 <a href="#1788" id="1788">1788</a>
-<a href="#1789" id="1789">1789</a>
-<a href="#1790" id="1790">1790</a>
-<a href="#1791" id="1791">1791</a>
-<a href="#1792" id="1792">1792</a>
-<a href="#1793" id="1793">1793</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
@@ -1886,7 +1881,10 @@ index format changes.
     id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
     pipeline::{PipelineFlags, RenderPipeline, VertexStep},
-    resource::{Buffer, DestroyedResourceError, Labeled, ParentDevice, TrackingData},
+    resource::{
+        Buffer, DestroyedResourceError, Fallible, InvalidResourceError, Labeled, ParentDevice,
+        TrackingData,
+    },
     resource_log,
     snatch::SnatchGuard,
     track::RenderBundleScope,
@@ -2372,7 +2370,7 @@ index format changes.
 
 <span class="kw">fn </span>set_bind_group(
     state: <span class="kw-2">&amp;mut </span>State,
-    bind_group_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="kw">crate</span>::storage::Storage&lt;BindGroup&gt;&gt;,
+    bind_group_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;BindGroup&gt;&gt;,
     dynamic_offsets: <span class="kw-2">&amp;</span>[u32],
     index: u32,
     num_dynamic_offsets: usize,
@@ -2385,9 +2383,7 @@ index format changes.
 
     <span class="kw">let </span>bind_group_id = bind_group_id.unwrap();
 
-    <span class="kw">let </span>bind_group = bind_group_guard
-        .get_owned(bind_group_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBindGroupId(bind_group_id))<span class="question-mark">?</span>;
+    <span class="kw">let </span>bind_group = bind_group_guard.get(bind_group_id).get()<span class="question-mark">?</span>;
 
     bind_group.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
 
@@ -2424,15 +2420,13 @@ index format changes.
 
 <span class="kw">fn </span>set_pipeline(
     state: <span class="kw-2">&amp;mut </span>State,
-    pipeline_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="kw">crate</span>::storage::Storage&lt;RenderPipeline&gt;&gt;,
+    pipeline_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;RenderPipeline&gt;&gt;,
     context: <span class="kw-2">&amp;</span>RenderPassContext,
     is_depth_read_only: bool,
     is_stencil_read_only: bool,
     pipeline_id: id::Id&lt;id::markers::RenderPipeline&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
-    <span class="kw">let </span>pipeline = pipeline_guard
-        .get_owned(pipeline_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidPipelineId(pipeline_id))<span class="question-mark">?</span>;
+    <span class="kw">let </span>pipeline = pipeline_guard.get(pipeline_id).get()<span class="question-mark">?</span>;
 
     pipeline.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
 
@@ -2467,15 +2461,13 @@ index format changes.
 
 <span class="kw">fn </span>set_index_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
-    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="kw">crate</span>::storage::Storage&lt;Buffer&gt;&gt;,
+    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;Buffer&gt;&gt;,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     index_format: wgt::IndexFormat,
     offset: u64,
     size: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU64&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
-    <span class="kw">let </span>buffer = buffer_guard
-        .get_owned(buffer_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+    <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
     state
         .trackers
@@ -2502,7 +2494,7 @@ index format changes.
 
 <span class="kw">fn </span>set_vertex_buffer(
     state: <span class="kw-2">&amp;mut </span>State,
-    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="kw">crate</span>::storage::Storage&lt;Buffer&gt;&gt;,
+    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;Buffer&gt;&gt;,
     slot: u32,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     offset: u64,
@@ -2517,9 +2509,7 @@ index format changes.
         .into());
     }
 
-    <span class="kw">let </span>buffer = buffer_guard
-        .get_owned(buffer_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+    <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
     state
         .trackers
@@ -2646,7 +2636,7 @@ index format changes.
 <span class="kw">fn </span>multi_draw_indirect(
     state: <span class="kw-2">&amp;mut </span>State,
     dynamic_offsets: <span class="kw-2">&amp;</span>[u32],
-    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::lock::RwLockReadGuard&lt;<span class="kw">crate</span>::storage::Storage&lt;Buffer&gt;&gt;,
+    buffer_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::storage::Storage&lt;Fallible&lt;Buffer&gt;&gt;,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     offset: u64,
     indexed: bool,
@@ -2658,9 +2648,7 @@ index format changes.
     <span class="kw">let </span>pipeline = state.pipeline()<span class="question-mark">?</span>;
     <span class="kw">let </span>used_bind_groups = pipeline.used_bind_groups;
 
-    <span class="kw">let </span>buffer = buffer_guard
-        .get_owned(buffer_id)
-        .map_err(|<span class="kw">_</span>| RenderCommandError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+    <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
     state
         .trackers
@@ -3332,6 +3320,8 @@ index format changes.
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
     <span class="attr">#[error(transparent)]
     </span>Bind(<span class="attr">#[from] </span>BindError),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="kw">impl</span>&lt;T&gt; From&lt;T&gt; <span class="kw">for </span>RenderBundleErrorInner

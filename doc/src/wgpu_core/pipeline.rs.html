@@ -611,17 +611,13 @@
 <a href="#610" id="610">610</a>
 <a href="#611" id="611">611</a>
 <a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
 </pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::pipeline_cache::PipelineCacheValidationError;
 <span class="kw">use crate</span>::{
     binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError, PipelineLayout},
     command::ColorAttachmentError,
     device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures, RenderPassContext},
     id::{PipelineCacheId, PipelineLayoutId, ShaderModuleId},
-    resource::{Labeled, TrackingData},
+    resource::{InvalidResourceError, Labeled, TrackingData},
     resource_log, validation, Label,
 };
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -839,10 +835,6 @@
 </span><span class="kw">pub enum </span>CreateComputePipelineError {
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
-    </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">"Cache is invalid"</span>)]
-    </span>InvalidCache,
     <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
     <span class="attr">#[error(<span class="string">"Error matching shader requirements against the pipeline"</span>)]
@@ -853,6 +845,8 @@
     </span>PipelineConstants(String),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Debug)]
@@ -1084,10 +1078,6 @@
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
-    <span class="attr">#[error(<span class="string">"Pipeline layout is invalid"</span>)]
-    </span>InvalidLayout,
-    <span class="attr">#[error(<span class="string">"Pipeline cache is invalid"</span>)]
-    </span>InvalidCache,
     <span class="attr">#[error(<span class="string">"Unable to derive an implicit layout"</span>)]
     </span>Implicit(<span class="attr">#[from] </span>ImplicitLayoutError),
     <span class="attr">#[error(<span class="string">"Color state [{0}] is invalid"</span>)]
@@ -1157,6 +1147,8 @@
         <span class="string">"but no render target for the pipeline was specified."
     </span>))]
     </span>NoTargetSpecified,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="macro">bitflags::bitflags! </span>{

@@ -378,10 +378,10 @@ flagged as errors as well.
     instance::{Adapter, Surface},
     pipeline::{ComputePipeline, PipelineCache, RenderPipeline, ShaderModule},
     registry::{Registry, RegistryReport},
-    resource::{Buffer, QuerySet, Sampler, StagingBuffer, Texture, TextureView},
+    resource::{Buffer, Fallible, QuerySet, Sampler, StagingBuffer, Texture, TextureView},
     storage::{Element, Storage},
 };
-<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::{fmt::Debug, sync::Arc};
 
 <span class="attr">#[derive(Debug, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>HubReport {
@@ -433,24 +433,24 @@ flagged as errors as well.
 ///
 /// [`A::hub(global)`]: HalApi::hub
 </span><span class="kw">pub struct </span>Hub {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) adapters: Registry&lt;Adapter&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) devices: Registry&lt;Device&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) queues: Registry&lt;Queue&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) pipeline_layouts: Registry&lt;PipelineLayout&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) shader_modules: Registry&lt;ShaderModule&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: Registry&lt;BindGroupLayout&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Registry&lt;BindGroup&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) command_buffers: Registry&lt;CommandBuffer&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) render_bundles: Registry&lt;RenderBundle&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) render_pipelines: Registry&lt;RenderPipeline&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) compute_pipelines: Registry&lt;ComputePipeline&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) pipeline_caches: Registry&lt;PipelineCache&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) query_sets: Registry&lt;QuerySet&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) buffers: Registry&lt;Buffer&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) adapters: Registry&lt;Arc&lt;Adapter&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) devices: Registry&lt;Arc&lt;Device&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) queues: Registry&lt;Arc&lt;Queue&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pipeline_layouts: Registry&lt;Fallible&lt;PipelineLayout&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) shader_modules: Registry&lt;Fallible&lt;ShaderModule&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: Registry&lt;Fallible&lt;BindGroupLayout&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Registry&lt;Fallible&lt;BindGroup&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) command_buffers: Registry&lt;Arc&lt;CommandBuffer&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) render_bundles: Registry&lt;Fallible&lt;RenderBundle&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) render_pipelines: Registry&lt;Fallible&lt;RenderPipeline&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) compute_pipelines: Registry&lt;Fallible&lt;ComputePipeline&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pipeline_caches: Registry&lt;Fallible&lt;PipelineCache&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) query_sets: Registry&lt;Fallible&lt;QuerySet&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) buffers: Registry&lt;Fallible&lt;Buffer&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) staging_buffers: Registry&lt;StagingBuffer&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) textures: Registry&lt;Texture&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) texture_views: Registry&lt;TextureView&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) samplers: Registry&lt;Sampler&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) textures: Registry&lt;Fallible&lt;Texture&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) texture_views: Registry&lt;Fallible&lt;TextureView&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) samplers: Registry&lt;Fallible&lt;Sampler&gt;&gt;,
 }
 
 <span class="kw">impl </span>Hub {
@@ -477,7 +477,7 @@ flagged as errors as well.
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_guard: <span class="kw-2">&amp;</span>Storage&lt;Surface&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_guard: <span class="kw-2">&amp;</span>Storage&lt;Arc&lt;Surface&gt;&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>devices = <span class="self">self</span>.devices.write();
         <span class="kw">for </span>element <span class="kw">in </span>devices.map.iter() {
             <span class="kw">if let </span>Element::Occupied(<span class="kw-2">ref </span>device, <span class="kw">_</span>) = <span class="kw-2">*</span>element {

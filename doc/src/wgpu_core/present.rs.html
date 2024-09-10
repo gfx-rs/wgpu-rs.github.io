@@ -377,15 +377,6 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -510,10 +501,7 @@ extract it from the hub.
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>surface = <span class="self">self
-            </span>.surfaces
-            .get(surface_id)
-            .map_err(|<span class="kw">_</span>| SurfaceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
 
         <span class="kw">let </span>(device, config) = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>present) = <span class="kw-2">*</span>surface.presentation.lock() {
             present.device.check_is_valid()<span class="question-mark">?</span>;
@@ -567,7 +555,7 @@ extract it from the hub.
                 <span class="kw">let </span>clear_view_desc = hal::TextureViewDescriptor {
                     label: hal_label(
                         <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) clear surface texture view"</span>),
-                        <span class="self">self</span>.instance.flags,
+                        device.instance_flags,
                     ),
                     format: config.format,
                     dimension: wgt::TextureViewDimension::D2,
@@ -606,7 +594,7 @@ extract it from the hub.
                     .textures
                     .insert_single(<span class="kw-2">&amp;</span>texture, hal::TextureUses::UNINITIALIZED);
 
-                <span class="kw">let </span>id = fid.assign(texture);
+                <span class="kw">let </span>id = fid.assign(resource::Fallible::Valid(texture));
 
                 <span class="kw">if </span>present.acquired_texture.is_some() {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::AlreadyAcquired);
@@ -645,10 +633,7 @@ extract it from the hub.
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>surface = <span class="self">self
-            </span>.surfaces
-            .get(surface_id)
-            .map_err(|<span class="kw">_</span>| SurfaceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
 
         <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
         <span class="kw">let </span>present = <span class="kw">match </span>presentation.as_mut() {
@@ -674,8 +659,8 @@ extract it from the hub.
 
             <span class="comment">// The texture ID got added to the device tracker by `submit()`,
             // and now we are moving it away.
-            </span><span class="kw">let </span>texture = hub.textures.unregister(texture_id);
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
+            </span><span class="kw">let </span>texture = hub.textures.remove(texture_id).get();
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = texture {
                 device
                     .trackers
                     .lock()
@@ -720,10 +705,7 @@ extract it from the hub.
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>surface = <span class="self">self
-            </span>.surfaces
-            .get(surface_id)
-            .map_err(|<span class="kw">_</span>| SurfaceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
         <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
         <span class="kw">let </span>present = <span class="kw">match </span>presentation.as_mut() {
             <span class="prelude-val">Some</span>(present) =&gt; present,
@@ -747,9 +729,9 @@ extract it from the hub.
 
             <span class="comment">// The texture ID got added to the device tracker by `submit()`,
             // and now we are moving it away.
-            </span><span class="kw">let </span>texture = hub.textures.unregister(texture_id);
+            </span><span class="kw">let </span>texture = hub.textures.remove(texture_id).get();
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = texture {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = texture {
                 device
                     .trackers
                     .lock()

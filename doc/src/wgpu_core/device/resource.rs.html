@@ -3661,16 +3661,6 @@
 <a href="#3660" id="3660">3660</a>
 <a href="#3661" id="3661">3661</a>
 <a href="#3662" id="3662">3662</a>
-<a href="#3663" id="3663">3663</a>
-<a href="#3664" id="3664">3664</a>
-<a href="#3665" id="3665">3665</a>
-<a href="#3666" id="3666">3666</a>
-<a href="#3667" id="3667">3667</a>
-<a href="#3668" id="3668">3668</a>
-<a href="#3669" id="3669">3669</a>
-<a href="#3670" id="3670">3670</a>
-<a href="#3671" id="3671">3671</a>
-<a href="#3672" id="3672">3672</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3694,7 +3684,7 @@
     pipeline,
     pool::ResourcePool,
     resource::{
-        <span class="self">self</span>, Buffer, Labeled, ParentDevice, QuerySet, Sampler, StagingBuffer, Texture,
+        <span class="self">self</span>, Buffer, Fallible, Labeled, ParentDevice, QuerySet, Sampler, StagingBuffer, Texture,
         TextureView, TextureViewNotRenderableReason, TrackingData,
     },
     resource_log,
@@ -4367,11 +4357,11 @@
         <span class="prelude-val">Ok</span>(texture)
     }
 
-    <span class="kw">pub fn </span>create_buffer_from_hal(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer_from_hal(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         hal_buffer: Box&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
-    ) -&gt; Arc&lt;Buffer&gt; {
+    ) -&gt; Fallible&lt;Buffer&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().add_raw_buffer(<span class="kw-2">&amp;*</span>hal_buffer) };
 
         <span class="kw">let </span>buffer = Buffer {
@@ -4396,7 +4386,7 @@
             .buffers
             .insert_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::empty());
 
-        buffer
+        Fallible::Valid(buffer)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_texture(
@@ -7303,16 +7293,6 @@
 }
 
 <span class="kw">impl </span>Device {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy_command_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>cmd_buf: command::CommandBuffer) {
-        <span class="kw">let </span><span class="kw-2">mut </span>baked = cmd_buf.extract_baked_commands();
-        <span class="kw">unsafe </span>{
-            baked.encoder.reset_all(baked.list);
-        }
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.raw().destroy_command_encoder(baked.encoder);
-        }
-    }
-
     <span class="doccomment">/// Wait for idle and remove resources that we can, before we die.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_to_die(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.pending_writes.lock().deactivate();

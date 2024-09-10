@@ -164,27 +164,13 @@
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{mem::size_of, sync::Arc};
 
 <span class="kw">use crate</span>::{
     id::Id,
     identity::IdentityManager,
     lock::{rank, RwLock, RwLockReadGuard, RwLockWriteGuard},
-    storage::{Element, InvalidId, Storage, StorageItem},
+    storage::{Element, Storage, StorageItem},
 };
 
 <span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
@@ -192,7 +178,6 @@
     <span class="kw">pub </span>num_allocated: usize,
     <span class="kw">pub </span>num_kept_from_user: usize,
     <span class="kw">pub </span>num_released_from_user: usize,
-    <span class="kw">pub </span>num_error: usize,
     <span class="kw">pub </span>element_size: usize,
 }
 
@@ -236,26 +221,16 @@
 }
 
 <span class="kw">impl</span>&lt;T: StorageItem&gt; FutureId&lt;<span class="lifetime">'_</span>, T&gt; {
-    <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
-        <span class="self">self</span>.id
-    }
-
-    <span class="kw">pub fn </span>into_id(<span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
+    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
         <span class="self">self</span>.id
     }
 
     <span class="doccomment">/// Assign a new resource to this ID.
     ///
     /// Registers it with the registry.
-    </span><span class="kw">pub fn </span>assign(<span class="self">self</span>, value: Arc&lt;T&gt;) -&gt; Id&lt;T::Marker&gt; {
+    </span><span class="kw">pub fn </span>assign(<span class="self">self</span>, value: T) -&gt; Id&lt;T::Marker&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.data.write();
         data.insert(<span class="self">self</span>.id, value);
-        <span class="self">self</span>.id
-    }
-
-    <span class="kw">pub fn </span>assign_error(<span class="self">self</span>) -&gt; Id&lt;T::Marker&gt; {
-        <span class="self">self</span>.data.write().insert_error(<span class="self">self</span>.id);
         <span class="self">self</span>.id
     }
 }
@@ -278,9 +253,6 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;T&gt;, InvalidId&gt; {
-        <span class="self">self</span>.read().get_owned(id)
-    }
     <span class="attr">#[track_caller]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>read&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">'a</span>, Storage&lt;T&gt;&gt; {
         <span class="self">self</span>.storage.read()
@@ -289,12 +261,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">'a</span>, Storage&lt;T&gt;&gt; {
         <span class="self">self</span>.storage.write()
     }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>force_replace_with_error(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
-        storage.remove(id);
-        storage.insert_error(id);
-    }
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unregister(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
         <span class="kw">let </span>value = <span class="self">self</span>.storage.write().remove(id);
         <span class="comment">// This needs to happen *after* removing it from the storage, to maintain the
         // invariant that `self.identity` only contains ids which are actually available
@@ -315,10 +282,15 @@
             <span class="kw">match </span><span class="kw-2">*</span>element {
                 Element::Occupied(..) =&gt; report.num_kept_from_user += <span class="number">1</span>,
                 Element::Vacant =&gt; report.num_released_from_user += <span class="number">1</span>,
-                Element::Error(<span class="kw">_</span>) =&gt; report.num_error += <span class="number">1</span>,
             }
         }
         report
+    }
+}
+
+<span class="kw">impl</span>&lt;T: StorageItem + Clone&gt; Registry&lt;T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
+        <span class="self">self</span>.read().get(id)
     }
 }
 
@@ -350,7 +322,7 @@
                         <span class="kw">let </span>value = Arc::new(TestData);
                         <span class="kw">let </span>new_id = registry.prepare(wgt::Backend::Empty, <span class="prelude-val">None</span>);
                         <span class="kw">let </span>id = new_id.assign(value);
-                        registry.unregister(id);
+                        registry.remove(id);
                     }
                 });
             }

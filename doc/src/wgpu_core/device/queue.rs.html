@@ -1365,42 +1365,14 @@
 <a href="#1364" id="1364">1364</a>
 <a href="#1365" id="1365">1365</a>
 <a href="#1366" id="1366">1366</a>
-<a href="#1367" id="1367">1367</a>
-<a href="#1368" id="1368">1368</a>
-<a href="#1369" id="1369">1369</a>
-<a href="#1370" id="1370">1370</a>
-<a href="#1371" id="1371">1371</a>
-<a href="#1372" id="1372">1372</a>
-<a href="#1373" id="1373">1373</a>
-<a href="#1374" id="1374">1374</a>
-<a href="#1375" id="1375">1375</a>
-<a href="#1376" id="1376">1376</a>
-<a href="#1377" id="1377">1377</a>
-<a href="#1378" id="1378">1378</a>
-<a href="#1379" id="1379">1379</a>
-<a href="#1380" id="1380">1380</a>
-<a href="#1381" id="1381">1381</a>
-<a href="#1382" id="1382">1382</a>
-<a href="#1383" id="1383">1383</a>
-<a href="#1384" id="1384">1384</a>
-<a href="#1385" id="1385">1385</a>
-<a href="#1386" id="1386">1386</a>
-<a href="#1387" id="1387">1387</a>
-<a href="#1388" id="1388">1388</a>
-<a href="#1389" id="1389">1389</a>
-<a href="#1390" id="1390">1390</a>
-<a href="#1391" id="1391">1391</a>
-<a href="#1392" id="1392">1392</a>
-<a href="#1393" id="1393">1393</a>
-<a href="#1394" id="1394">1394</a>
-<a href="#1395" id="1395">1395</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
     api_log,
     command::{
         extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
-        ClearError, CommandAllocator, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
+        ClearError, CommandAllocator, CommandBuffer, CommandEncoderError, CopySide,
+        ImageCopyTexture, TransferError,
     },
     conv,
     device::{DeviceError, WaitIdleError},
@@ -1412,8 +1384,8 @@
     lock::RwLockWriteGuard,
     resource::{
         Buffer, BufferAccessError, BufferMapState, DestroyedBuffer, DestroyedResourceError,
-        DestroyedTexture, FlushedStagingBuffer, Labeled, ParentDevice, ResourceErrorIdent,
-        StagingBuffer, Texture, TextureInner, Trackable,
+        DestroyedTexture, FlushedStagingBuffer, InvalidResourceError, Labeled, ParentDevice,
+        ResourceErrorIdent, StagingBuffer, Texture, TextureInner, Trackable,
     },
     resource_log,
     track::{<span class="self">self</span>, Tracker, TrackerIndex},
@@ -1718,14 +1690,8 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[error(<span class="string">"Queue is invalid"</span>)]
-</span><span class="kw">pub struct </span>InvalidQueue;
-
-<span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueWriteError {
-    <span class="attr">#[error(<span class="string">"QueueId is invalid"</span>)]
-    </span>InvalidQueueId,
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -1734,13 +1700,13 @@
     </span>MemoryInitFailure(<span class="attr">#[from] </span>ClearError),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>QueueSubmitError {
-    <span class="attr">#[error(<span class="string">"QueueId is invalid"</span>)]
-    </span>InvalidQueueId,
     <span class="attr">#[error(transparent)]
     </span>Queue(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
@@ -1755,6 +1721,10 @@
     </span>SurfaceUnconfigured,
     <span class="attr">#[error(<span class="string">"GPU got stuck :("</span>)]
     </span>StuckGpu,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
+    <span class="attr">#[error(transparent)]
+    </span>CommandEncoder(<span class="attr">#[from] </span>CommandEncoderError),
 }
 
 <span class="comment">//TODO: move out common parts of write_xxx.
@@ -1772,15 +1742,9 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>buffer = hub
-            .buffers
-            .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = hub.buffers.get(buffer_id).get()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>queue = hub
-            .queues
-            .get(queue_id)
-            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
@@ -1840,10 +1804,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::create_staging_buffer"</span>);
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>queue = hub
-            .queues
-            .get(queue_id)
-            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
@@ -1851,7 +1812,7 @@
         <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ staging_buffer.ptr() };
 
         <span class="kw">let </span>fid = hub.staging_buffers.prepare(queue_id.backend(), id_in);
-        <span class="kw">let </span>id = fid.assign(Arc::new(staging_buffer));
+        <span class="kw">let </span>id = fid.assign(staging_buffer);
         <span class="macro">resource_log!</span>(<span class="string">"Queue::create_staging_buffer {id:?}"</span>);
 
         <span class="prelude-val">Ok</span>((id, ptr))
@@ -1867,18 +1828,11 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_staging_buffer"</span>);
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>queue = hub
-            .queues
-            .get(queue_id)
-            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
-        <span class="kw">let </span>staging_buffer = hub
-            .staging_buffers
-            .unregister(staging_buffer_id)
-            .and_then(Arc::into_inner)
-            .ok_or_else(|| QueueWriteError::Transfer(TransferError::InvalidBufferId(buffer_id)))<span class="question-mark">?</span>;
+        <span class="kw">let </span>staging_buffer = hub.staging_buffers.remove(staging_buffer_id);
 
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
 
@@ -1911,10 +1865,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::validate_write_buffer"</span>);
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>buffer = hub
-            .buffers
-            .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = hub.buffers.get(buffer_id).get()<span class="question-mark">?</span>;
 
         <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>buffer, buffer_offset, buffer_size)<span class="question-mark">?</span>;
 
@@ -1957,10 +1908,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>dst = hub
-            .buffers
-            .get(buffer_id)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidBufferId(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst = hub.buffers.get(buffer_id).get()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>transition = {
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
@@ -2017,10 +1965,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>queue = hub
-            .queues
-            .get(queue_id)
-            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
@@ -2040,10 +1985,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let </span>dst = hub
-            .textures
-            .get(destination.texture)
-            .map_err(|<span class="kw">_</span>| TransferError::InvalidTextureId(destination.texture))<span class="question-mark">?</span>;
+        <span class="kw">let </span>dst = hub.textures.get(destination.texture).get()<span class="question-mark">?</span>;
 
         dst.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
 
@@ -2133,12 +2075,6 @@
         }
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
-
-        <span class="comment">// Re-get `dst` immutably here, so that the mutable borrow of the
-        // `texture_guard.get` above ends in time for the `clear_texture`
-        // call above. Since we've held `texture_guard` the whole time, we know
-        // the texture hasn't gone away in the mean time, so we can unwrap.
-        </span><span class="kw">let </span>dst = hub.textures.get(destination.texture).unwrap();
 
         <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
@@ -2258,10 +2194,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>queue = hub
-            .queues
-            .get(queue_id)
-            .map_err(|<span class="kw">_</span>| QueueWriteError::InvalidQueueId)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
@@ -2289,7 +2222,7 @@
         <span class="kw">let </span>src_width = source.source.width();
         <span class="kw">let </span>src_height = source.source.height();
 
-        <span class="kw">let </span>dst = hub.textures.get(destination.texture).unwrap();
+        <span class="kw">let </span>dst = hub.textures.get(destination.texture).get()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>!conv::is_valid_external_image_copy_dst_texture_format(dst.desc.format) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -2468,10 +2401,7 @@
         <span class="kw">let </span>(submit_index, callbacks) = {
             <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-            <span class="kw">let </span>queue = hub
-                .queues
-                .get(queue_id)
-                .map_err(|<span class="kw">_</span>| QueueSubmitError::InvalidQueueId)<span class="question-mark">?</span>;
+            <span class="kw">let </span>queue = hub.queues.get(queue_id);
 
             <span class="kw">let </span>device = <span class="kw-2">&amp;</span>queue.device;
 
@@ -2492,104 +2422,68 @@
             </span><span class="kw">let </span><span class="kw-2">mut </span>submit_surface_textures_owned = FastHashMap::default();
 
             {
-                <span class="kw">let </span><span class="kw-2">mut </span>command_buffer_guard = hub.command_buffers.write();
+                <span class="kw">let </span>command_buffer_guard = hub.command_buffers.read();
 
                 <span class="kw">if </span>!command_buffer_ids.is_empty() {
                     <span class="macro">profiling::scope!</span>(<span class="string">"prepare"</span>);
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>first_error = <span class="prelude-val">None</span>;
 
                     <span class="comment">//TODO: if multiple command buffers are submitted, we can re-use the last
                     // native command buffer of the previous chain instead of always creating
                     // a temporary one, since the chains are not finished.
 
                     // finish all the command buffers first
-                    </span><span class="kw">for </span><span class="kw-2">&amp;</span>cmb_id <span class="kw">in </span>command_buffer_ids {
+                    </span><span class="kw">for </span>command_buffer_id <span class="kw">in </span>command_buffer_ids {
                         <span class="macro">profiling::scope!</span>(<span class="string">"process command buffer"</span>);
 
                         <span class="comment">// we reset the used surface textures every time we use
                         // it, so make sure to set_size on it.
                         </span>used_surface_textures.set_size(device.tracker_indices.textures.size());
 
-                        <span class="attr">#[allow(unused_mut)]
-                        </span><span class="kw">let </span><span class="kw-2">mut </span>cmdbuf = <span class="kw">match </span>command_buffer_guard.replace_with_error(cmb_id) {
-                            <span class="prelude-val">Ok</span>(cmdbuf) =&gt; cmdbuf,
-                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
-                        };
+                        <span class="kw">let </span>command_buffer = command_buffer_guard.get(<span class="kw-2">*</span>command_buffer_id);
+
+                        <span class="comment">// Note that we are required to invalidate all command buffers in both the success and failure paths.
+                        // This is why we `continue` and don't early return via `?`.
+                        </span><span class="attr">#[allow(unused_mut)]
+                        </span><span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = command_buffer.try_take();
 
                         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-                            trace.add(Action::Submit(
-                                submit_index,
-                                cmdbuf
-                                    .data
-                                    .lock()
-                                    .as_mut()
-                                    .unwrap()
-                                    .commands
-                                    .take()
-                                    .unwrap(),
-                            ));
+                            <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="kw-2">ref mut </span>cmd_buf_data) = cmd_buf_data {
+                                trace.add(Action::Submit(
+                                    submit_index,
+                                    cmd_buf_data.commands.take().unwrap(),
+                                ));
+                            }
                         }
 
-                        cmdbuf.same_device_as(queue.as_ref())<span class="question-mark">?</span>;
+                        <span class="kw">let </span><span class="kw-2">mut </span>baked = <span class="kw">match </span>cmd_buf_data {
+                            <span class="prelude-val">Ok</span>(cmd_buf_data) =&gt; {
+                                <span class="kw">let </span>res = validate_command_buffer(
+                                    <span class="kw-2">&amp;</span>command_buffer,
+                                    <span class="kw-2">&amp;</span>queue,
+                                    <span class="kw-2">&amp;</span>cmd_buf_data,
+                                    <span class="kw-2">&amp;</span>snatch_guard,
+                                    <span class="kw-2">&amp;mut </span>submit_surface_textures_owned,
+                                    <span class="kw-2">&amp;mut </span>used_surface_textures,
+                                );
+                                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = res {
+                                    first_error.get_or_insert(err);
+                                    cmd_buf_data.destroy(<span class="kw-2">&amp;</span>command_buffer.device);
+                                    <span class="kw">continue</span>;
+                                }
+                                cmd_buf_data.into_baked_commands()
+                            }
+                            <span class="prelude-val">Err</span>(err) =&gt; {
+                                first_error.get_or_insert(err.into());
+                                <span class="kw">continue</span>;
+                            }
+                        };
 
-                        <span class="kw">if </span>!cmdbuf.is_finished() {
-                            <span class="kw">let </span>cmdbuf = Arc::into_inner(cmdbuf).expect(
-                                <span class="string">"Command buffer cannot be destroyed because is still in use"</span>,
-                            );
-                            device.destroy_command_buffer(cmdbuf);
+                        <span class="kw">if </span>first_error.is_some() {
                             <span class="kw">continue</span>;
                         }
-
-                        {
-                            <span class="macro">profiling::scope!</span>(<span class="string">"check resource state"</span>);
-
-                            <span class="kw">let </span>cmd_buf_data = cmdbuf.data.lock();
-                            <span class="kw">let </span>cmd_buf_trackers = <span class="kw-2">&amp;</span>cmd_buf_data.as_ref().unwrap().trackers;
-
-                            <span class="comment">// update submission IDs
-                            </span>{
-                                <span class="macro">profiling::scope!</span>(<span class="string">"buffers"</span>);
-                                <span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
-                                    buffer.check_destroyed(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-
-                                    <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
-                                        BufferMapState::Idle =&gt; (),
-                                        <span class="kw">_ </span>=&gt; {
-                                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(
-                                                buffer.error_ident(),
-                                            ))
-                                        }
-                                    }
-                                }
-                            }
-                            {
-                                <span class="macro">profiling::scope!</span>(<span class="string">"textures"</span>);
-                                <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_trackers.textures.used_resources() {
-                                    <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.try_inner(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">? </span>{
-                                        TextureInner::Native { .. } =&gt; <span class="bool-val">false</span>,
-                                        TextureInner::Surface { .. } =&gt; {
-                                            <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq.
-                                            </span>submit_surface_textures_owned
-                                                .insert(Arc::as_ptr(<span class="kw-2">&amp;</span>texture), texture.clone());
-
-                                            <span class="bool-val">true
-                                        </span>}
-                                    };
-                                    <span class="kw">if </span>should_extend {
-                                        <span class="kw">unsafe </span>{
-                                            used_surface_textures
-                                                .merge_single(
-                                                    <span class="kw-2">&amp;</span>texture,
-                                                    <span class="prelude-val">None</span>,
-                                                    hal::TextureUses::PRESENT,
-                                                )
-                                                .unwrap();
-                                        };
-                                    }
-                                }
-                            }
-                        }
-                        <span class="kw">let </span><span class="kw-2">mut </span>baked = cmdbuf.from_arc_into_baked();
 
                         <span class="comment">// execute resource transitions
                         </span><span class="kw">unsafe </span>{
@@ -2650,6 +2544,10 @@
                             pending_buffers: FastHashMap::default(),
                             pending_textures: FastHashMap::default(),
                         });
+                    }
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(first_error) = first_error {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(first_error);
                     }
                 }
             }
@@ -2765,28 +2663,72 @@
         <span class="prelude-val">Ok</span>(submit_index)
     }
 
-    <span class="kw">pub fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue_id: QueueId) -&gt; <span class="prelude-ty">Result</span>&lt;f32, InvalidQueue&gt; {
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">match </span>hub.queues.get(queue_id) {
-            <span class="prelude-val">Ok</span>(queue) =&gt; <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ queue.raw().get_timestamp_period() }),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(InvalidQueue),
-        }
+    <span class="kw">pub fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue_id: QueueId) -&gt; f32 {
+        <span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
+        <span class="kw">unsafe </span>{ queue.raw().get_timestamp_period() }
     }
 
     <span class="kw">pub fn </span>queue_on_submitted_work_done(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
         closure: SubmittedWorkDoneClosure,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidQueue&gt; {
+    ) {
         <span class="macro">api_log!</span>(<span class="string">"Queue::on_submitted_work_done {queue_id:?}"</span>);
 
         <span class="comment">//TODO: flush pending writes
-        </span><span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">match </span>hub.queues.get(queue_id) {
-            <span class="prelude-val">Ok</span>(queue) =&gt; queue.device.lock_life().add_work_done_closure(closure),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidQueue),
-        }
-        <span class="prelude-val">Ok</span>(())
+        </span><span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
+        queue.device.lock_life().add_work_done_closure(closure);
     }
+}
+
+<span class="kw">fn </span>validate_command_buffer(
+    command_buffer: <span class="kw-2">&amp;</span>CommandBuffer,
+    queue: <span class="kw-2">&amp;</span>Queue,
+    cmd_buf_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::command::CommandBufferMutable,
+    snatch_guard: <span class="kw-2">&amp;</span><span class="kw">crate</span>::snatch::SnatchGuard&lt;<span class="lifetime">'_</span>&gt;,
+    submit_surface_textures_owned: <span class="kw-2">&amp;mut </span>FastHashMap&lt;<span class="kw-2">*const </span>Texture, Arc&lt;Texture&gt;&gt;,
+    used_surface_textures: <span class="kw-2">&amp;mut </span>track::TextureUsageScope,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueSubmitError&gt; {
+    command_buffer.same_device_as(queue)<span class="question-mark">?</span>;
+    cmd_buf_data.check_finished()<span class="question-mark">?</span>;
+
+    {
+        <span class="macro">profiling::scope!</span>(<span class="string">"check resource state"</span>);
+
+        {
+            <span class="macro">profiling::scope!</span>(<span class="string">"buffers"</span>);
+            <span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_data.trackers.buffers.used_resources() {
+                buffer.check_destroyed(snatch_guard)<span class="question-mark">?</span>;
+
+                <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
+                    BufferMapState::Idle =&gt; (),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(buffer.error_ident())),
+                }
+            }
+        }
+        {
+            <span class="macro">profiling::scope!</span>(<span class="string">"textures"</span>);
+            <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_data.trackers.textures.used_resources() {
+                <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.try_inner(snatch_guard)<span class="question-mark">? </span>{
+                    TextureInner::Native { .. } =&gt; <span class="bool-val">false</span>,
+                    TextureInner::Surface { .. } =&gt; {
+                        <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq.
+                        </span>submit_surface_textures_owned
+                            .insert(Arc::as_ptr(<span class="kw-2">&amp;</span>texture), texture.clone());
+
+                        <span class="bool-val">true
+                    </span>}
+                };
+                <span class="kw">if </span>should_extend {
+                    <span class="kw">unsafe </span>{
+                        used_surface_textures
+                            .merge_single(<span class="kw-2">&amp;</span>texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
+                            .unwrap();
+                    };
+                }
+            }
+        }
+    }
+    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>
