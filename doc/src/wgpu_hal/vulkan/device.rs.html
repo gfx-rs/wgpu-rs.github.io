@@ -2577,6 +2577,13 @@
 <a href="#2576" id="2576">2576</a>
 <a href="#2577" id="2577">2577</a>
 <a href="#2578" id="2578">2578</a>
+<a href="#2579" id="2579">2579</a>
+<a href="#2580" id="2580">2580</a>
+<a href="#2581" id="2581">2581</a>
+<a href="#2582" id="2582">2582</a>
+<a href="#2583" id="2583">2583</a>
+<a href="#2584" id="2584">2584</a>
+<a href="#2585" id="2585">2585</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2594,7 +2601,14 @@
 };
 
 <span class="kw">impl </span><span class="kw">super</span>::DeviceShared {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>set_object_name(<span class="kw-2">&amp;</span><span class="self">self</span>, object: <span class="kw">impl </span>vk::Handle, name: <span class="kw-2">&amp;</span>str) {
+    <span class="doccomment">/// Set the name of `object` to `name`.
+    ///
+    /// If `name` contains an interior null byte, then the name set will be truncated to that byte.
+    ///
+    /// # Safety
+    ///
+    /// It must be valid to set `object`'s debug name
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>set_object_name(<span class="kw-2">&amp;</span><span class="self">self</span>, object: <span class="kw">impl </span>vk::Handle, name: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span><span class="prelude-val">Some</span>(extension) = <span class="self">self</span>.extension_fns.debug_utils.as_ref() <span class="kw">else </span>{
             <span class="kw">return</span>;
         };
@@ -2623,7 +2637,7 @@
             <span class="kw-2">&amp;</span>buffer_vec
         };
 
-        <span class="kw">let </span>name = <span class="kw">unsafe </span>{ CStr::from_bytes_with_nul_unchecked(name_bytes) };
+        <span class="kw">let </span>name = CStr::from_bytes_until_nul(name_bytes).expect(<span class="string">"We have added a null byte"</span>);
 
         <span class="kw">let </span>_result = <span class="kw">unsafe </span>{
             extension.set_debug_utils_object_name(
