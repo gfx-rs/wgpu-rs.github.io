@@ -141,11 +141,7 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>wgt::Backend;
-
-<span class="kw">use crate</span>::{
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     id::{Id, Marker},
     lock::{rank, Mutex},
     Epoch, Index,
@@ -197,7 +193,7 @@
     ///
     /// The backend is incorporated into the id, so that ids allocated with
     /// different `backend` values are always distinct.
-    </span><span class="kw">pub fn </span>alloc&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, backend: Backend) -&gt; Id&lt;T&gt; {
+    </span><span class="kw">pub fn </span>alloc&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Id&lt;T&gt; {
         <span class="macro">assert!</span>(
             <span class="self">self</span>.id_source != IdSource::External,
             <span class="string">"Mix of internally allocated and externally provided IDs"
@@ -206,12 +202,12 @@
 
         <span class="self">self</span>.count += <span class="number">1</span>;
         <span class="kw">match </span><span class="self">self</span>.free.pop() {
-            <span class="prelude-val">Some</span>((index, epoch)) =&gt; Id::zip(index, epoch + <span class="number">1</span>, backend),
+            <span class="prelude-val">Some</span>((index, epoch)) =&gt; Id::zip(index, epoch + <span class="number">1</span>),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>index = <span class="self">self</span>.next_index;
                 <span class="self">self</span>.next_index += <span class="number">1</span>;
                 <span class="kw">let </span>epoch = <span class="number">1</span>;
-                Id::zip(index, epoch, backend)
+                Id::zip(index, epoch)
             }
         }
     }
@@ -230,7 +226,7 @@
     <span class="doccomment">/// Free `id`. It will never be returned from `alloc` again.
     </span><span class="kw">pub fn </span>release&lt;T: Marker&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T&gt;) {
         <span class="kw">if let </span>IdSource::Allocated = <span class="self">self</span>.id_source {
-            <span class="kw">let </span>(index, epoch, _backend) = id.unzip();
+            <span class="kw">let </span>(index, epoch) = id.unzip();
             <span class="self">self</span>.free.push((index, epoch));
         }
         <span class="self">self</span>.count -= <span class="number">1</span>;
@@ -248,8 +244,8 @@
 }
 
 <span class="kw">impl</span>&lt;T: Marker&gt; IdentityManager&lt;T&gt; {
-    <span class="kw">pub fn </span>process(<span class="kw-2">&amp;</span><span class="self">self</span>, backend: Backend) -&gt; Id&lt;T&gt; {
-        <span class="self">self</span>.values.lock().alloc(backend)
+    <span class="kw">pub fn </span>process(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Id&lt;T&gt; {
+        <span class="self">self</span>.values.lock().alloc()
     }
     <span class="kw">pub fn </span>mark_as_used(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T&gt;) -&gt; Id&lt;T&gt; {
         <span class="self">self</span>.values.lock().mark_as_used(id)
@@ -280,11 +276,11 @@
 </span><span class="kw">fn </span>test_epoch_end_of_life() {
     <span class="kw">use </span><span class="kw">crate</span>::id;
     <span class="kw">let </span>man = IdentityManager::&lt;id::markers::Buffer&gt;::new();
-    <span class="kw">let </span>id1 = man.process(Backend::Empty);
-    <span class="macro">assert_eq!</span>(id1.unzip(), (<span class="number">0</span>, <span class="number">1</span>, Backend::Empty));
+    <span class="kw">let </span>id1 = man.process();
+    <span class="macro">assert_eq!</span>(id1.unzip(), (<span class="number">0</span>, <span class="number">1</span>));
     man.free(id1);
-    <span class="kw">let </span>id2 = man.process(Backend::Empty);
+    <span class="kw">let </span>id2 = man.process();
     <span class="comment">// confirm that the epoch 1 is no longer re-used
-    </span><span class="macro">assert_eq!</span>(id2.unzip(), (<span class="number">0</span>, <span class="number">2</span>, Backend::Empty));
+    </span><span class="macro">assert_eq!</span>(id2.unzip(), (<span class="number">0</span>, <span class="number">2</span>));
 }
 </code></pre></div></section></main></body></html>

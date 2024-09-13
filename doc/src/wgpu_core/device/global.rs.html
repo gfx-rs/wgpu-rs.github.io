@@ -2279,34 +2279,6 @@
 <a href="#2278" id="2278">2278</a>
 <a href="#2279" id="2279">2279</a>
 <a href="#2280" id="2280">2280</a>
-<a href="#2281" id="2281">2281</a>
-<a href="#2282" id="2282">2282</a>
-<a href="#2283" id="2283">2283</a>
-<a href="#2284" id="2284">2284</a>
-<a href="#2285" id="2285">2285</a>
-<a href="#2286" id="2286">2286</a>
-<a href="#2287" id="2287">2287</a>
-<a href="#2288" id="2288">2288</a>
-<a href="#2289" id="2289">2289</a>
-<a href="#2290" id="2290">2290</a>
-<a href="#2291" id="2291">2291</a>
-<a href="#2292" id="2292">2292</a>
-<a href="#2293" id="2293">2293</a>
-<a href="#2294" id="2294">2294</a>
-<a href="#2295" id="2295">2295</a>
-<a href="#2296" id="2296">2296</a>
-<a href="#2297" id="2297">2297</a>
-<a href="#2298" id="2298">2298</a>
-<a href="#2299" id="2299">2299</a>
-<a href="#2300" id="2300">2300</a>
-<a href="#2301" id="2301">2301</a>
-<a href="#2302" id="2302">2302</a>
-<a href="#2303" id="2303">2303</a>
-<a href="#2304" id="2304">2304</a>
-<a href="#2305" id="2305">2305</a>
-<a href="#2306" id="2306">2306</a>
-<a href="#2307" id="2307">2307</a>
-<a href="#2308" id="2308">2308</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2413,7 +2385,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.buffers.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.buffers.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -2484,21 +2456,19 @@
     /// [`wgpu_types::BufferUsages`]: wgt::BufferUsages
     </span><span class="kw">pub fn </span>create_buffer_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        backend: wgt::Backend,
         id_in: <span class="prelude-ty">Option</span>&lt;id::BufferId&gt;,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
     ) {
-        <span class="kw">let </span>fid = <span class="self">self</span>.hub.buffers.prepare(backend, id_in);
+        <span class="kw">let </span>fid = <span class="self">self</span>.hub.buffers.prepare(id_in);
         fid.assign(Fallible::Invalid(Arc::new(desc.label.to_string())));
     }
 
     <span class="kw">pub fn </span>create_render_bundle_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        backend: wgt::Backend,
         id_in: <span class="prelude-ty">Option</span>&lt;id::RenderBundleId&gt;,
         desc: <span class="kw-2">&amp;</span>command::RenderBundleDescriptor,
     ) {
-        <span class="kw">let </span>fid = <span class="self">self</span>.hub.render_bundles.prepare(backend, id_in);
+        <span class="kw">let </span>fid = <span class="self">self</span>.hub.render_bundles.prepare(id_in);
         fid.assign(Fallible::Invalid(Arc::new(desc.label.to_string())));
     }
 
@@ -2507,11 +2477,10 @@
     /// See `create_buffer_error` for more context and explanation.
     </span><span class="kw">pub fn </span>create_texture_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        backend: wgt::Backend,
         id_in: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
     ) {
-        <span class="kw">let </span>fid = <span class="self">self</span>.hub.textures.prepare(backend, id_in);
+        <span class="kw">let </span>fid = <span class="self">self</span>.hub.textures.prepare(id_in);
         fid.assign(Fallible::Invalid(Arc::new(desc.label.to_string())));
     }
 
@@ -2620,7 +2589,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.textures.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -2663,7 +2632,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.textures.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.textures.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -2707,7 +2676,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_buffer"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.buffers.prepare(A::VARIANT, id_in);
+        <span class="kw">let </span>fid = hub.buffers.prepare(id_in);
 
         <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
@@ -2767,7 +2736,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.texture_views.prepare(texture_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.texture_views.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>texture = <span class="kw">match </span>hub.textures.get(texture_id).get() {
@@ -2831,7 +2800,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_sampler"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.samplers.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.samplers.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -2884,7 +2853,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group_layout"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -2956,7 +2925,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_pipeline_layout"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.pipeline_layouts.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.pipeline_layouts.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -3024,7 +2993,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_bind_group"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.bind_groups.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.bind_groups.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -3186,7 +3155,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.shader_modules.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.shader_modules.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -3258,7 +3227,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.shader_modules.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.shader_modules.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -3315,10 +3284,9 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_command_encoder"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.command_buffers.prepare(
-            device_id.backend(),
-            id_in.map(|id| id.into_command_buffer_id()),
-        );
+        <span class="kw">let </span>fid = hub
+            .command_buffers
+            .prepare(id_in.map(|id| id.into_command_buffer_id()));
 
         <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
@@ -3381,9 +3349,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub
-            .render_bundles
-            .prepare(bundle_encoder.parent().backend(), id_in);
+        <span class="kw">let </span>fid = hub.render_bundles.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(bundle_encoder.parent());
@@ -3442,7 +3408,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_query_set"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-        <span class="kw">let </span>fid = hub.query_sets.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.query_sets.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
@@ -3503,7 +3469,7 @@
         <span class="kw">let </span>missing_implicit_pipeline_ids =
             desc.layout.is_none() &amp;&amp; id_in.is_some() &amp;&amp; implicit_pipeline_ids.is_none();
 
-        <span class="kw">let </span>fid = hub.render_pipelines.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.render_pipelines.prepare(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
@@ -3687,7 +3653,7 @@
     ) {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(pipeline_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>pipeline = <span class="kw">match </span>hub.render_pipelines.get(pipeline_id).get() {
@@ -3740,7 +3706,7 @@
         <span class="kw">let </span>missing_implicit_pipeline_ids =
             desc.layout.is_none() &amp;&amp; id_in.is_some() &amp;&amp; implicit_pipeline_ids.is_none();
 
-        <span class="kw">let </span>fid = hub.compute_pipelines.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.compute_pipelines.prepare(id_in);
         <span class="kw">let </span>implicit_context = implicit_pipeline_ids.map(|ipi| ipi.prepare(hub));
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
@@ -3871,7 +3837,7 @@
     ) {
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(pipeline_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
 
         <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>pipeline = <span class="kw">match </span>hub.compute_pipelines.get(pipeline_id).get() {
@@ -3925,7 +3891,7 @@
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>fid = hub.pipeline_caches.prepare(device_id.backend(), id_in);
+        <span class="kw">let </span>fid = hub.pipeline_caches.prepare(id_in);
         <span class="kw">let </span>error: pipeline::CreatePipelineCacheError = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
@@ -4190,7 +4156,7 @@
                 //
                 // https://github.com/gfx-rs/wgpu/issues/4105
 
-                </span><span class="kw">let </span>surface_raw = surface.raw(device_id.backend()).unwrap();
+                </span><span class="kw">let </span>surface_raw = surface.raw(device.backend()).unwrap();
                 <span class="kw">match unsafe </span>{ surface_raw.configure(device.raw(), <span class="kw-2">&amp;</span>hal_config) } {
                     <span class="prelude-val">Ok</span>(()) =&gt; (),
                     <span class="prelude-val">Err</span>(error) =&gt; {
@@ -4272,7 +4238,6 @@
     /// submissions still in flight.
     </span><span class="kw">fn </span>poll_all_devices_of_api(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        backend: wgt::Backend,
         force_wait: bool,
         closures: <span class="kw-2">&amp;mut </span>UserClosures,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
@@ -4283,7 +4248,7 @@
         {
             <span class="kw">let </span>device_guard = hub.devices.read();
 
-            <span class="kw">for </span>(_id, device) <span class="kw">in </span>device_guard.iter(backend) {
+            <span class="kw">for </span>(_id, device) <span class="kw">in </span>device_guard.iter() {
                 <span class="kw">let </span>maintain = <span class="kw">if </span>force_wait {
                     wgt::Maintain::Wait
                 } <span class="kw">else </span>{
@@ -4313,28 +4278,7 @@
     </span><span class="kw">pub fn </span>poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
         <span class="macro">api_log!</span>(<span class="string">"poll_all_devices"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>closures = UserClosures::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>all_queue_empty = <span class="bool-val">true</span>;
-
-        <span class="attr">#[cfg(vulkan)]
-        </span>{
-            all_queue_empty &amp;=
-                <span class="self">self</span>.poll_all_devices_of_api(wgt::Backend::Vulkan, force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
-        }
-        <span class="attr">#[cfg(metal)]
-        </span>{
-            all_queue_empty &amp;=
-                <span class="self">self</span>.poll_all_devices_of_api(wgt::Backend::Metal, force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
-        }
-        <span class="attr">#[cfg(dx12)]
-        </span>{
-            all_queue_empty &amp;=
-                <span class="self">self</span>.poll_all_devices_of_api(wgt::Backend::Dx12, force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
-        }
-        <span class="attr">#[cfg(gles)]
-        </span>{
-            all_queue_empty &amp;=
-                <span class="self">self</span>.poll_all_devices_of_api(wgt::Backend::Gl, force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
-        }
+        <span class="kw">let </span>all_queue_empty = <span class="self">self</span>.poll_all_devices_of_api(force_wait, <span class="kw-2">&amp;mut </span>closures)<span class="question-mark">?</span>;
 
         closures.fire();
 

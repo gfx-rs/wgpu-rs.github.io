@@ -160,10 +160,6 @@
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
 <a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{mem::size_of, sync::Arc};
 
 <span class="kw">use crate</span>::{
@@ -236,18 +232,14 @@
 }
 
 <span class="kw">impl</span>&lt;T: StorageItem&gt; Registry&lt;T&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        backend: wgt::Backend,
-        id_in: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;,
-    ) -&gt; FutureId&lt;T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: <span class="prelude-ty">Option</span>&lt;Id&lt;T::Marker&gt;&gt;) -&gt; FutureId&lt;T&gt; {
         FutureId {
             id: <span class="kw">match </span>id_in {
                 <span class="prelude-val">Some</span>(id_in) =&gt; {
                     <span class="self">self</span>.identity.mark_as_used(id_in);
                     id_in
                 }
-                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.identity.process(backend),
+                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.identity.process(),
             },
             data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,
         }
@@ -320,7 +312,7 @@
                 s.spawn(|| {
                     <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">1000 </span>{
                         <span class="kw">let </span>value = Arc::new(TestData);
-                        <span class="kw">let </span>new_id = registry.prepare(wgt::Backend::Empty, <span class="prelude-val">None</span>);
+                        <span class="kw">let </span>new_id = registry.prepare(<span class="prelude-val">None</span>);
                         <span class="kw">let </span>id = new_id.assign(value);
                         registry.remove(id);
                     }

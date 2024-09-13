@@ -140,11 +140,7 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
-
-<span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use </span><span class="kw">crate</span>::id::{Id, Marker};
 <span class="kw">use </span><span class="kw">crate</span>::resource::ResourceType;
@@ -219,7 +215,7 @@
     </span>T: StorageItem,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;, value: T) {
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
+        <span class="kw">let </span>(index, epoch) = id.unzip();
         <span class="kw">let </span>index = index <span class="kw">as </span>usize;
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.map.len() {
             <span class="self">self</span>.map.resize_with(index + <span class="number">1</span>, || Element::Vacant);
@@ -238,7 +234,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
+        <span class="kw">let </span>(index, epoch) = id.unzip();
         <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Vacant) {
             Element::Occupied(value, storage_epoch) =&gt; {
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
@@ -248,13 +244,13 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>, backend: Backend) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (Id&lt;T::Marker&gt;, <span class="kw-2">&amp;</span>T)&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (Id&lt;T::Marker&gt;, <span class="kw-2">&amp;</span>T)&gt; {
         <span class="self">self</span>.map
             .iter()
             .enumerate()
             .filter_map(<span class="kw">move </span>|(index, x)| <span class="kw">match </span><span class="kw-2">*</span>x {
                 Element::Occupied(<span class="kw-2">ref </span>value, storage_epoch) =&gt; {
-                    <span class="prelude-val">Some</span>((Id::zip(index <span class="kw">as </span>Index, storage_epoch, backend), value))
+                    <span class="prelude-val">Some</span>((Id::zip(index <span class="kw">as </span>Index, storage_epoch), value))
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             })
@@ -272,7 +268,7 @@
     <span class="doccomment">/// Get an owned reference to an item.
     /// Panics if there is an epoch mismatch, the entry is empty or in error.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
-        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
+        <span class="kw">let </span>(index, epoch) = id.unzip();
         <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) =&gt; (v.clone(), epoch),
             <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) =&gt; <span class="macro">panic!</span>(<span class="string">"{}[{:?}] does not exist"</span>, <span class="self">self</span>.kind, id),
