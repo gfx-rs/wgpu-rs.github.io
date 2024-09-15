@@ -7552,6 +7552,7 @@
 <a href="#7551" id="7551">7551</a>
 <a href="#7552" id="7552">7552</a>
 <a href="#7553" id="7553">7553</a>
+<a href="#7554" id="7554">7554</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -8122,7 +8123,7 @@
         /// may also create uniform arrays of storage textures.
         ///
         /// ex.
-        /// - `var textures: array&lt;texture_storage_2d&lt;f32, write&gt;, 10&gt;` (WGSL)
+        /// - `var textures: array&lt;texture_storage_2d&lt;r32float, write&gt;, 10&gt;` (WGSL)
         /// - `uniform image2D textures[10]` (GLSL)
         ///
         /// This capability allows them to exist and to be indexed by dynamically uniform
@@ -9513,12 +9514,13 @@
 
 <span class="doccomment">/// Alpha blend factor.
 ///
-/// Alpha blending is very complicated: see the OpenGL or Vulkan spec for more information.
-///
 /// Corresponds to [WebGPU `GPUBlendFactor`](
-/// https://gpuweb.github.io/gpuweb/#enumdef-gpublendfactor).
-/// Values using S1 requires [`Features::DUAL_SOURCE_BLENDING`] and can only be
-/// used with the first render target.
+/// https://gpuweb.github.io/gpuweb/#enumdef-gpublendfactor). Values using `Src1`
+/// require [`Features::DUAL_SOURCE_BLENDING`] and can only be used with the first
+/// render target.
+///
+/// For further details on how the blend factors are applied, see the analogous
+/// functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Blending#Blending_Parameters&gt;.
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -9578,10 +9580,11 @@
 
 <span class="doccomment">/// Alpha blend operation.
 ///
-/// Alpha blending is very complicated: see the OpenGL or Vulkan spec for more information.
-///
 /// Corresponds to [WebGPU `GPUBlendOperation`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gpublendoperation).
+///
+/// For further details on how the blend operations are applied, see
+/// the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Blending#Blend_Equations&gt;.
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Default, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -9655,8 +9658,6 @@
 
 <span class="doccomment">/// Describe the blend state of a render pipeline,
 /// within [`ColorTargetState`].
-///
-/// See the OpenGL or Vulkan spec for more information.
 ///
 /// Corresponds to [WebGPU `GPUBlendState`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpublendstate).
@@ -14097,7 +14098,7 @@
     /// Example WGSL syntax:
     /// ```rust,ignore
     /// @group(0) @binding(0)
-    /// var my_storage_image: texture_storage_2d&lt;f32, write&gt;;
+    /// var my_storage_image: texture_storage_2d&lt;r32float, write&gt;;
     /// ```
     ///
     /// Example GLSL syntax:
@@ -14114,7 +14115,7 @@
     /// Example WGSL syntax:
     /// ```rust,ignore
     /// @group(0) @binding(0)
-    /// var my_storage_image: texture_storage_2d&lt;f32, read&gt;;
+    /// var my_storage_image: texture_storage_2d&lt;r32float, read&gt;;
     /// ```
     ///
     /// Example GLSL syntax:
@@ -14131,7 +14132,7 @@
     /// Example WGSL syntax:
     /// ```rust,ignore
     /// @group(0) @binding(0)
-    /// var my_storage_image: texture_storage_2d&lt;f32, read_write&gt;;
+    /// var my_storage_image: texture_storage_2d&lt;r32float, read_write&gt;;
     /// ```
     ///
     /// Example GLSL syntax:
@@ -14255,8 +14256,8 @@
         <span class="doccomment">/// Dimension of the texture view that is going to be sampled.
         </span>view_dimension: TextureViewDimension,
         <span class="doccomment">/// True if the texture has a sample count greater than 1. If this is true,
-        /// the texture must be read from shaders with `texture1DMS`, `texture2DMS`, or `texture3DMS`,
-        /// depending on `dimension`.
+        /// the texture must be declared as `texture_multisampled_2d` or
+        /// `texture_depth_multisampled_2d` in the shader, and read using `textureLoad`.
         </span>multisampled: bool,
     },
     <span class="doccomment">/// A storage texture.
@@ -14264,15 +14265,16 @@
     /// Example WGSL syntax:
     /// ```rust,ignore
     /// @group(0) @binding(0)
-    /// var my_storage_image: texture_storage_2d&lt;f32, write&gt;;
+    /// var my_storage_image: texture_storage_2d&lt;r32float, write&gt;;
     /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(set=0, binding=0, r32f) writeonly uniform image2D myStorageImage;
     /// ```
-    /// Note that the texture format must be specified in the shader as well.
-    /// A list of valid formats can be found in the specification here: &lt;https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.html#layout-qualifiers&gt;
+    /// Note that the texture format must be specified in the shader, along with the
+    /// access mode. For WGSL, the format must be one of the enumerants in the list
+    /// of [storage texel formats](https://gpuweb.github.io/gpuweb/wgsl/#storage-texel-formats).
     ///
     /// Corresponds to [WebGPU `GPUStorageTextureBindingLayout`](
     /// https://gpuweb.github.io/gpuweb/#dictdef-gpustoragetexturebindinglayout).
