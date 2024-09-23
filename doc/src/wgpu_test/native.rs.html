@@ -109,6 +109,17 @@
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
 <a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="doccomment">//! Infrastructure for the native, `cargo-nextest` based harness.
 //!
@@ -130,15 +141,16 @@
 }
 
 <span class="kw">impl </span>NativeTest {
-    <span class="kw">fn </span>from_configuration(
+    <span class="doccomment">/// Adapter index is only used for naming the test, the adapters are matched based on the adapter info.
+    </span><span class="kw">fn </span>from_configuration(
         config: GpuTestConfiguration,
-        adapter: <span class="kw-2">&amp;</span>AdapterReport,
+        adapter_report: AdapterReport,
         adapter_index: usize,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>backend = adapter.info.backend;
-        <span class="kw">let </span>device_name = <span class="kw-2">&amp;</span>adapter.info.name;
+        <span class="kw">let </span>backend = adapter_report.info.backend;
+        <span class="kw">let </span>device_name = <span class="kw-2">&amp;</span>adapter_report.info.name;
 
-        <span class="kw">let </span>test_info = TestInfo::from_configuration(<span class="kw-2">&amp;</span>config, adapter);
+        <span class="kw">let </span>test_info = TestInfo::from_configuration(<span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>adapter_report);
 
         <span class="kw">let </span>full_name = <span class="macro">format!</span>(
             <span class="string">"[{running_msg}] [{backend:?}/{device_name}/{adapter_index}] {base_name}"</span>,
@@ -161,10 +173,12 @@
 
                 <span class="kw">let </span>env_value = <span class="kw">if </span>metal_validation { <span class="string">"1" </span>} <span class="kw">else </span>{ <span class="string">"0" </span>};
                 std::env::set_var(<span class="string">"MTL_DEBUG_LAYER"</span>, env_value);
-                <span class="comment">// Metal Shader Validation is entirely broken in the paravirtualized CI environment.
-                // std::env::set_var("MTL_SHADER_VALIDATION", env_value);
+                <span class="kw">if </span>std::env::var(<span class="string">"GITHUB_ACTIONS"</span>).as_deref() != <span class="prelude-val">Ok</span>(<span class="string">"true"</span>) {
+                    <span class="comment">// Metal Shader Validation is entirely broken in the paravirtualized CI environment.
+                    </span>std::env::set_var(<span class="string">"MTL_SHADER_VALIDATION"</span>, env_value);
+                }
 
-                </span>execute_test(config, <span class="prelude-val">Some</span>(test_info), adapter_index).<span class="kw">await</span>;
+                execute_test(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>adapter_report), config, <span class="prelude-val">Some</span>(test_info)).<span class="kw">await</span>;
             }),
         }
     }
@@ -194,16 +208,24 @@
         <span class="kw-2">&amp;</span>std::fs::read_to_string(<span class="macro">format!</span>(<span class="string">"{}/../.gpuconfig"</span>, <span class="macro">env!</span>(<span class="string">"CARGO_MANIFEST_DIR"</span>)))
             .context(<span class="string">"Failed to read .gpuconfig, did you run the tests via `cargo xtask test`?"</span>)<span class="question-mark">?
     </span>};
-    <span class="kw">let </span>report = GpuReport::from_json(config_text).context(<span class="string">"Could not parse .gpuconfig JSON"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>report =
+        GpuReport::from_json(config_text).context(<span class="string">"Could not parse .gpuconfig JSON"</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// Filter out the adapters that are not part of WGPU_BACKEND.
+    </span><span class="kw">let </span>wgpu_backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
+    report
+        .devices
+        .retain(|report| wgpu_backends.contains(wgpu::Backends::from(report.info.backend)));
 
     <span class="kw">let </span><span class="kw-2">mut </span>test_guard = TEST_LIST.lock();
-    execute_native(test_guard.drain(..).flat_map(|test| {
+    <span class="comment">// Iterate through all the tests. Creating a test per adapter.
+    </span>execute_native(test_guard.drain(..).flat_map(|test| {
         report
             .devices
             .iter()
             .enumerate()
-            .map(<span class="kw">move </span>|(adapter_index, adapter)| {
-                NativeTest::from_configuration(test.clone(), adapter, adapter_index)
+            .map(<span class="kw">move </span>|(adapter_index, adapter_report)| {
+                NativeTest::from_configuration(test.clone(), adapter_report.clone(), adapter_index)
             })
     }));
 

@@ -152,14 +152,14 @@
     <span class="kw">pub </span>queue: Queue,
 }
 
-<span class="doccomment">/// Execute the given test configuration with the given adapter index.
+<span class="doccomment">/// Execute the given test configuration with the given adapter report.
 ///
 /// If test_info is specified, will use the information whether to skip the test.
 /// If it is not, we'll create the test info from the adapter itself.
 </span><span class="kw">pub async fn </span>execute_test(
+    adapter_report: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>AdapterReport&gt;,
     config: GpuTestConfiguration,
     test_info: <span class="prelude-ty">Option</span>&lt;TestInfo&gt;,
-    adapter_index: usize,
 ) {
     <span class="comment">// If we get information externally, skip based on that information before we do anything.
     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(TestInfo { skip: <span class="bool-val">true</span>, .. }) = test_info {
@@ -171,7 +171,7 @@
     <span class="kw">let </span>_test_guard = isolation::OneTestPerProcessGuard::new();
 
     <span class="kw">let </span>(instance, adapter, _surface_guard) =
-        initialize_adapter(adapter_index, config.params.force_fxc).<span class="kw">await</span>;
+        initialize_adapter(adapter_report, config.params.force_fxc).<span class="kw">await</span>;
 
     <span class="kw">let </span>adapter_info = adapter.get_info();
     <span class="kw">let </span>adapter_downlevel_capabilities = adapter.get_downlevel_capabilities();

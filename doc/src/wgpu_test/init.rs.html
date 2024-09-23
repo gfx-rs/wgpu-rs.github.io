@@ -164,8 +164,27 @@
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
 <span class="kw">use </span>wgt::{Backends, Features, Limits};
+
+<span class="kw">use </span><span class="kw">crate</span>::report::AdapterReport;
 
 <span class="doccomment">/// Initialize the logger for the test runner.
 </span><span class="kw">pub fn </span>init_logger() {
@@ -177,7 +196,7 @@
 }
 
 <span class="doccomment">/// Initialize a wgpu instance with the options from the environment.
-</span><span class="kw">pub fn </span>initialize_instance(force_fxc: bool) -&gt; Instance {
+</span><span class="kw">pub fn </span>initialize_instance(backends: wgpu::Backends, force_fxc: bool) -&gt; Instance {
     <span class="comment">// We ignore `WGPU_BACKEND` for now, merely using test filtering to only run a single backend's tests.
     //
     // We can potentially work support back into the test runner in the future, but as the adapters are matched up
@@ -189,9 +208,9 @@
     // To "disable" webgpu regardless, we do this by removing the webgpu backend whenever we see
     // the webgl feature.
     </span><span class="kw">let </span>backends = <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"webgl"</span>) {
-        Backends::all() - Backends::BROWSER_WEBGPU
+        backends - wgpu::Backends::BROWSER_WEBGPU
     } <span class="kw">else </span>{
-        Backends::all()
+        backends
     };
     <span class="comment">// Some tests need to be able to force demote to FXC, to specifically test workarounds for FXC
     // behavior.
@@ -209,12 +228,16 @@
     })
 }
 
-<span class="doccomment">/// Initialize a wgpu adapter, taking the `n`th adapter from the instance.
+<span class="doccomment">/// Initialize a wgpu adapter, using the given adapter report to match the adapter.
 </span><span class="kw">pub async fn </span>initialize_adapter(
-    adapter_index: usize,
+    adapter_report: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>AdapterReport&gt;,
     force_fxc: bool,
 ) -&gt; (Instance, Adapter, <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;) {
-    <span class="kw">let </span>instance = initialize_instance(force_fxc);
+    <span class="kw">let </span>backends = adapter_report
+        .map(|report| Backends::from(report.info.backend))
+        .unwrap_or_default();
+
+    <span class="kw">let </span>instance = initialize_instance(backends, force_fxc);
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">let </span>surface: <span class="prelude-ty">Option</span>&lt;wgpu::Surface&gt;;
     <span class="kw">let </span>surface_guard: <span class="prelude-ty">Option</span>&lt;SurfaceGuard&gt;;
@@ -248,13 +271,24 @@
 
     <span class="macro">cfg_if::cfg_if! </span>{
         <span class="kw">if </span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))] </span>{
-            <span class="kw">let </span>adapter_iter = instance.enumerate_adapters(wgpu::Backends::all());
-            <span class="kw">let </span>adapter_count = adapter_iter.len();
+            <span class="kw">let </span>adapter_iter = instance.enumerate_adapters(backends);
             <span class="kw">let </span>adapter = adapter_iter.into_iter()
-                .nth(adapter_index)
-                .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Tried to get index {adapter_index} adapter, but adapter list was only {adapter_count} long. Is .gpuconfig out of date?"</span>));
+                <span class="comment">// If we have a report, we only want to match the adapter with the same info.
+                //
+                // If we don't have a report, we just take the first adapter.
+                </span>.find(|adapter| <span class="kw">if let </span><span class="prelude-val">Some</span>(adapter_report) = adapter_report {
+                    adapter.get_info() == adapter_report.info
+                } <span class="kw">else </span>{
+                    <span class="bool-val">true
+                </span>});
+            <span class="kw">let </span><span class="prelude-val">Some</span>(adapter) = adapter <span class="kw">else </span>{
+                <span class="macro">panic!</span>(
+                    <span class="string">"Could not find adapter with info {:#?} in {:#?}"</span>,
+                    adapter_report.map(|r| <span class="kw-2">&amp;</span>r.info),
+                    instance.enumerate_adapters(backends).into_iter().map(|a| a.get_info()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                );
+            };
         } <span class="kw">else </span>{
-            <span class="macro">assert_eq!</span>(adapter_index, <span class="number">0</span>);
             <span class="kw">let </span>adapter = instance.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
                 compatible_surface: surface.as_ref(),
                 ..Default::default()
