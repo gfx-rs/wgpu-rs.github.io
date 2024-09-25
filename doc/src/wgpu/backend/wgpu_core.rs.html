@@ -3171,6 +3171,9 @@
 <a href="#3170" id="3170">3170</a>
 <a href="#3171" id="3171">3171</a>
 <a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a>
+<a href="#3174" id="3174">3174</a>
+<a href="#3175" id="3175">3175</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::downcast_ref, AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor,
     BindingResource, BufferBinding, BufferDescriptor, CommandEncoderDescriptor, CompilationInfo,
@@ -5247,7 +5250,10 @@
 
         <span class="kw">let </span>index = <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.queue_submit(queue_data.id, <span class="kw-2">&amp;</span>temp_command_buffers) {
             <span class="prelude-val">Ok</span>(index) =&gt; index,
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">"Queue::submit"</span>),
+            <span class="prelude-val">Err</span>((index, err)) =&gt; {
+                <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>queue_data.error_sink, err, <span class="string">"Queue::submit"</span>);
+                index
+            }
         };
 
         <span class="kw">for </span>cmdbuf <span class="kw">in </span><span class="kw-2">&amp;</span>temp_command_buffers {

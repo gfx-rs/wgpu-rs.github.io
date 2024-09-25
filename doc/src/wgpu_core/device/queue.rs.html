@@ -1365,6 +1365,35 @@
 <a href="#1364" id="1364">1364</a>
 <a href="#1365" id="1365">1365</a>
 <a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2394,11 +2423,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
         command_buffer_ids: <span class="kw-2">&amp;</span>[id::CommandBufferId],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SubmissionIndex, QueueSubmitError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SubmissionIndex, (SubmissionIndex, QueueSubmitError)&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::submit"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Queue::submit {queue_id:?}"</span>);
 
-        <span class="kw">let </span>(submit_index, callbacks) = {
+        <span class="kw">let </span>submit_index;
+
+        <span class="kw">let </span>res = <span class="lifetime">'error</span>: {
             <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
             <span class="kw">let </span>queue = hub.queues.get(queue_id);
@@ -2409,7 +2440,7 @@
 
             <span class="comment">// Fence lock must be acquired after the snatch lock everywhere to avoid deadlocks.
             </span><span class="kw">let </span><span class="kw-2">mut </span>fence = device.fence.write();
-            <span class="kw">let </span>submit_index = device
+            submit_index = device
                 .active_submission_index
                 .fetch_add(<span class="number">1</span>, Ordering::SeqCst)
                 + <span class="number">1</span>;
@@ -2486,18 +2517,29 @@
                         }
 
                         <span class="comment">// execute resource transitions
-                        </span><span class="kw">unsafe </span>{
+                        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{
                             baked.encoder.begin_encoding(hal_label(
                                 <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Transit"</span>),
                                 device.instance_flags,
                             ))
                         }
-                        .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+                        .map_err(|e| device.handle_hal_error(e))
+                        {
+                            <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+                        }
 
                         <span class="comment">//Note: locking the trackers has to be done after the storages
                         </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-                        baked.initialize_buffer_memory(<span class="kw-2">&amp;mut </span>trackers, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
-                        baked.initialize_texture_memory(<span class="kw-2">&amp;mut </span>trackers, device, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = baked.initialize_buffer_memory(<span class="kw-2">&amp;mut </span>trackers, <span class="kw-2">&amp;</span>snatch_guard)
+                        {
+                            <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+                        }
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) =
+                            baked.initialize_texture_memory(<span class="kw-2">&amp;mut </span>trackers, device, <span class="kw-2">&amp;</span>snatch_guard)
+                        {
+                            <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+                        }
+
                         <span class="comment">//Note: stateless trackers are not merged:
                         // device already knows these resources exist.
                         </span>CommandBuffer::insert_barriers_from_device_tracker(
@@ -2514,13 +2556,16 @@
                         // Note: we could technically do it after all of the command buffers,
                         // but here we have a command encoder by hand, so it's easier to use it.
                         </span><span class="kw">if </span>!used_surface_textures.is_empty() {
-                            <span class="kw">unsafe </span>{
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{
                                 baked.encoder.begin_encoding(hal_label(
                                     <span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Present"</span>),
                                     device.instance_flags,
                                 ))
                             }
-                            .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+                            .map_err(|e| device.handle_hal_error(e))
+                            {
+                                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+                            }
                             <span class="kw">let </span>texture_barriers = trackers
                                 .textures
                                 .set_from_usage_scope_and_drain_transitions(
@@ -2547,7 +2592,7 @@
                     }
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(first_error) = first_error {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(first_error);
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(first_error);
                     }
                 }
             }
@@ -2557,9 +2602,9 @@
             {
                 used_surface_textures.set_size(hub.textures.read().len());
                 <span class="kw">for </span>texture <span class="kw">in </span>pending_writes.dst_textures.values() {
-                    <span class="kw">match </span>texture.try_inner(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">? </span>{
-                        TextureInner::Native { .. } =&gt; {}
-                        TextureInner::Surface { .. } =&gt; {
+                    <span class="kw">match </span>texture.try_inner(<span class="kw-2">&amp;</span>snatch_guard) {
+                        <span class="prelude-val">Ok</span>(TextureInner::Native { .. }) =&gt; {}
+                        <span class="prelude-val">Ok</span>(TextureInner::Surface { .. }) =&gt; {
                             <span class="comment">// Compare the Arcs by pointer as Textures don't implement Eq
                             </span>submit_surface_textures_owned
                                 .insert(Arc::as_ptr(texture), texture.clone());
@@ -2570,6 +2615,7 @@
                                     .unwrap()
                             };
                         }
+                        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into()),
                     }
                 }
 
@@ -2591,10 +2637,12 @@
                 }
             }
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_execution) =
-                pending_writes.pre_submit(<span class="kw-2">&amp;</span>device.command_allocator, device, <span class="kw-2">&amp;</span>queue)<span class="question-mark">?
-            </span>{
-                active_executions.insert(<span class="number">0</span>, pending_execution);
+            <span class="kw">match </span>pending_writes.pre_submit(<span class="kw-2">&amp;</span>device.command_allocator, device, <span class="kw-2">&amp;</span>queue) {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(pending_execution)) =&gt; {
+                    active_executions.insert(<span class="number">0</span>, pending_execution);
+                }
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {}
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into()),
             }
 
             <span class="kw">let </span>hal_command_buffers = active_executions
@@ -2616,14 +2664,17 @@
                     submit_surface_textures.push(raw);
                 }
 
-                <span class="kw">unsafe </span>{
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{
                     queue.raw().submit(
                         <span class="kw-2">&amp;</span>hal_command_buffers,
                         <span class="kw-2">&amp;</span>submit_surface_textures,
                         (fence.as_mut(), submit_index),
                     )
                 }
-                .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
+                .map_err(|e| device.handle_hal_error(e))
+                {
+                    <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+                }
 
                 <span class="comment">// Advance the successful submission index.
                 </span>device
@@ -2647,12 +2698,19 @@
             <span class="kw">let </span>(closures, <span class="kw">_</span>) =
                 <span class="kw">match </span>device.maintain(fence_guard, wgt::Maintain::Poll, snatch_guard) {
                     <span class="prelude-val">Ok</span>(closures) =&gt; closures,
-                    <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err)),
-                    <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),
+                    <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; {
+                        <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err))
+                    }
+                    <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),
                     <span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(..)) =&gt; <span class="macro">unreachable!</span>(),
                 };
 
-            (submit_index, closures)
+            <span class="prelude-val">Ok</span>(closures)
+        };
+
+        <span class="kw">let </span>callbacks = <span class="kw">match </span>res {
+            <span class="prelude-val">Ok</span>(ok) =&gt; ok,
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>((submit_index, e)),
         };
 
         <span class="comment">// the closures should execute with nothing locked!
