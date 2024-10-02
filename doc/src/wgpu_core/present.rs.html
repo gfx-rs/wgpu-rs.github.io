@@ -377,6 +377,12 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -667,8 +673,11 @@ extract it from the hub.
                     .textures
                     .remove(texture.tracker_index());
                 <span class="kw">let </span>suf = surface.raw(device.backend()).unwrap();
-                <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
-                <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {
+                <span class="kw">match </span>texture
+                    .inner
+                    .snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write())
+                    .unwrap()
+                {
                     resource::TextureInner::Surface { raw, parent_id } =&gt; {
                         <span class="kw">if </span>surface_id != parent_id {
                             <span class="macro">log::error!</span>(<span class="string">"Presented frame is from a different surface"</span>);
@@ -738,8 +747,11 @@ extract it from the hub.
                     .textures
                     .remove(texture.tracker_index());
                 <span class="kw">let </span>suf = surface.raw(device.backend());
-                <span class="kw">let </span>exclusive_snatch_guard = device.snatchable_lock.write();
-                <span class="kw">match </span>texture.inner.snatch(exclusive_snatch_guard).unwrap() {
+                <span class="kw">match </span>texture
+                    .inner
+                    .snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write())
+                    .unwrap()
+                {
                     resource::TextureInner::Surface { raw, parent_id } =&gt; {
                         <span class="kw">if </span>surface_id == parent_id {
                             <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw) };

@@ -3321,6 +3321,16 @@
 <a href="#3320" id="3320">3320</a>
 <a href="#3321" id="3321">3321</a>
 <a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -3961,6 +3971,8 @@
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(transparent)]
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
+    <span class="attr">#[error(<span class="string">"Indirect buffer offset {0:?} is not a multiple of 4"</span>)]
+    </span>UnalignedIndirectBufferOffset(BufferAddress),
     <span class="attr">#[error(<span class="string">"Indirect draw uses bytes {offset}..{end_offset} {} which overruns indirect buffer of size {buffer_size}"</span>,
         count.map_or_else(String::new, |v| <span class="macro">format!</span>(<span class="string">"(using count {v})"</span>)))]
     </span>IndirectBufferOverrun {
@@ -5773,6 +5785,10 @@
 
     <span class="kw">let </span>actual_count = count.map_or(<span class="number">1</span>, |c| c.get());
 
+    <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::UnalignedIndirectBufferOffset(offset));
+    }
+
     <span class="kw">let </span>end_offset = offset + stride <span class="kw">as </span>u64 * actual_count <span class="kw">as </span>u64;
     <span class="kw">if </span>end_offset &gt; indirect_buffer.size {
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::IndirectBufferOverrun {
@@ -5856,6 +5872,10 @@
 
     count_buffer.check_usage(BufferUsages::INDIRECT)<span class="question-mark">?</span>;
     <span class="kw">let </span>count_raw = count_buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::UnalignedIndirectBufferOffset(offset));
+    }
 
     <span class="kw">let </span>end_offset = offset + stride * max_count <span class="kw">as </span>u64;
     <span class="kw">if </span>end_offset &gt; indirect_buffer.size {

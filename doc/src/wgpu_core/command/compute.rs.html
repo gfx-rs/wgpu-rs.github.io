@@ -1189,6 +1189,10 @@
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
 <a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1327,6 +1331,8 @@
     </span>BindGroupIndexOutOfRange { index: u32, max: u32 },
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+    <span class="attr">#[error(<span class="string">"Indirect buffer offset {0:?} is not a multiple of 4"</span>)]
+    </span>UnalignedIndirectBufferOffset(BufferAddress),
     <span class="attr">#[error(<span class="string">"Indirect buffer uses bytes {offset}..{end_offset} which overruns indirect buffer of size {buffer_size}"</span>)]
     </span>IndirectBufferOverrun {
         offset: u64,
@@ -1686,9 +1692,7 @@
             state.raw_encoder.begin_compute_pass(<span class="kw-2">&amp;</span>hal_desc);
         }
 
-        <span class="comment">// TODO: We should be draining the commands here, avoiding extra copies in the process.
-        //       (A command encoder can't be executed twice!)
-        </span><span class="kw">for </span>command <span class="kw">in </span>base.commands {
+        <span class="kw">for </span>command <span class="kw">in </span>base.commands {
             <span class="kw">match </span>command {
                 ArcComputeCommand::SetBindGroup {
                     index,
@@ -1971,7 +1975,7 @@
         .binder
         .pipeline_layout
         .as_ref()
-        <span class="comment">//TODO: don't error here, lazily update the push constants
+        <span class="comment">// TODO: don't error here, lazily update the push constants using `state.push_constants`
         </span>.ok_or(ComputePassErrorInner::Dispatch(
             DispatchError::MissingPipeline,
         ))<span class="question-mark">?</span>;
@@ -2037,6 +2041,10 @@
         .buffers
         .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::INDIRECT)<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::UnalignedIndirectBufferOffset(offset));
+    }
 
     <span class="kw">let </span>end_offset = offset + size_of::&lt;wgt::DispatchIndirectArgs&gt;() <span class="kw">as </span>u64;
     <span class="kw">if </span>end_offset &gt; buffer.size {

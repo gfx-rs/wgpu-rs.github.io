@@ -3651,14 +3651,6 @@
 <a href="#3650" id="3650">3650</a>
 <a href="#3651" id="3651">3651</a>
 <a href="#3652" id="3652">3652</a>
-<a href="#3653" id="3653">3653</a>
-<a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a>
-<a href="#3656" id="3656">3656</a>
-<a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a>
-<a href="#3660" id="3660">3660</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3699,7 +3691,6 @@
 <span class="kw">use </span>once_cell::sync::OnceCell;
 
 <span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{
     math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension,
 };
@@ -3846,14 +3837,6 @@
             raw.exit(queue);
         }
     }
-}
-
-<span class="attr">#[derive(Clone, Debug, Error)]
-</span><span class="kw">pub enum </span>CreateDeviceError {
-    <span class="attr">#[error(<span class="string">"Not enough memory left to create device"</span>)]
-    </span>OutOfMemory,
-    <span class="attr">#[error(<span class="string">"Failed to create internal buffer for initializing textures"</span>)]
-    </span>FailedToCreateZeroBuffer(<span class="attr">#[from] </span>DeviceError),
 }
 
 <span class="kw">impl </span>Device {
@@ -4033,7 +4016,7 @@
                     <span class="kw">let </span><span class="prelude-val">Some</span>(view) = view.upgrade() <span class="kw">else </span>{
                         <span class="kw">continue</span>;
                     };
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(<span class="self">self</span>.snatchable_lock.write()) <span class="kw">else </span>{
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write()) <span class="kw">else </span>{
                         <span class="kw">continue</span>;
                     };
 
@@ -4047,7 +4030,8 @@
                     <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.upgrade() <span class="kw">else </span>{
                         <span class="kw">continue</span>;
                     };
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_bind_group) = bind_group.raw.snatch(<span class="self">self</span>.snatchable_lock.write())
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_bind_group) =
+                        bind_group.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write())
                     <span class="kw">else </span>{
                         <span class="kw">continue</span>;
                     };
