@@ -2697,6 +2697,32 @@
 <a href="#2696" id="2696">2696</a>
 <a href="#2697" id="2697">2697</a>
 <a href="#2698" id="2698">2698</a>
+<a href="#2699" id="2699">2699</a>
+<a href="#2700" id="2700">2700</a>
+<a href="#2701" id="2701">2701</a>
+<a href="#2702" id="2702">2702</a>
+<a href="#2703" id="2703">2703</a>
+<a href="#2704" id="2704">2704</a>
+<a href="#2705" id="2705">2705</a>
+<a href="#2706" id="2706">2706</a>
+<a href="#2707" id="2707">2707</a>
+<a href="#2708" id="2708">2708</a>
+<a href="#2709" id="2709">2709</a>
+<a href="#2710" id="2710">2710</a>
+<a href="#2711" id="2711">2711</a>
+<a href="#2712" id="2712">2712</a>
+<a href="#2713" id="2713">2713</a>
+<a href="#2714" id="2714">2714</a>
+<a href="#2715" id="2715">2715</a>
+<a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
+<a href="#2722" id="2722">2722</a>
+<a href="#2723" id="2723">2723</a>
+<a href="#2724" id="2724">2724</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3042,14 +3068,40 @@ Implementations for `BlockContext` methods.
 
                         load_id
                     }
-                    <span class="kw-2">ref </span>other =&gt; {
+                    <span class="kw">crate</span>::TypeInner::Array {
+                        base: ty_element, ..
+                    } =&gt; {
+                        <span class="kw">let </span>index_id = <span class="self">self</span>.cached[index];
+                        <span class="kw">let </span>base_id = <span class="self">self</span>.cached[base];
+                        <span class="kw">let </span>base_ty = <span class="kw">match </span><span class="self">self</span>.fun_info[base].ty {
+                            TypeResolution::Handle(handle) =&gt; handle,
+                            TypeResolution::Value(<span class="kw">_</span>) =&gt; {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(
+                                    <span class="string">"Array types should always be in the arena"</span>,
+                                ))
+                            }
+                        };
+                        <span class="kw">let </span>(id, variable) = <span class="self">self</span>.writer.promote_access_expression_to_variable(
+                            <span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types,
+                            result_type_id,
+                            base_id,
+                            base_ty,
+                            index_id,
+                            ty_element,
+                            block,
+                        )<span class="question-mark">?</span>;
+                        <span class="self">self</span>.function.internal_variables.push(variable);
+                        id
+                    }
+                    <span class="comment">// wgpu#4337: Support `crate::TypeInner::Matrix`
+                    </span><span class="kw-2">ref </span>other =&gt; {
                         <span class="macro">log::error!</span>(
                             <span class="string">"Unable to access base {:?} of type {:?}"</span>,
                             <span class="self">self</span>.ir_function.expressions[base],
                             other
                         );
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(
-                            <span class="string">"only vectors may be dynamically indexed by value"</span>,
+                            <span class="string">"only vectors and arrays may be dynamically indexed by value"</span>,
                         ));
                     }
                 }
