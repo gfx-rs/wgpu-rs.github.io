@@ -2126,29 +2126,6 @@
 <a href="#2125" id="2125">2125</a>
 <a href="#2126" id="2126">2126</a>
 <a href="#2127" id="2127">2127</a>
-<a href="#2128" id="2128">2128</a>
-<a href="#2129" id="2129">2129</a>
-<a href="#2130" id="2130">2130</a>
-<a href="#2131" id="2131">2131</a>
-<a href="#2132" id="2132">2132</a>
-<a href="#2133" id="2133">2133</a>
-<a href="#2134" id="2134">2134</a>
-<a href="#2135" id="2135">2135</a>
-<a href="#2136" id="2136">2136</a>
-<a href="#2137" id="2137">2137</a>
-<a href="#2138" id="2138">2138</a>
-<a href="#2139" id="2139">2139</a>
-<a href="#2140" id="2140">2140</a>
-<a href="#2141" id="2141">2141</a>
-<a href="#2142" id="2142">2142</a>
-<a href="#2143" id="2143">2143</a>
-<a href="#2144" id="2144">2144</a>
-<a href="#2145" id="2145">2145</a>
-<a href="#2146" id="2146">2146</a>
-<a href="#2147" id="2147">2147</a>
-<a href="#2148" id="2148">2148</a>
-<a href="#2149" id="2149">2149</a>
-<a href="#2150" id="2150">2150</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -2292,7 +2269,6 @@
     <span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>promote_access_expression_to_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ir_types: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
         result_type_id: Word,
         container_id: Word,
         container_ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
@@ -2300,8 +2276,7 @@
         element_ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         block: <span class="kw-2">&amp;mut </span>Block,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Word, LocalVariable), Error&gt; {
-        <span class="kw">let </span>pointer_type_id =
-            <span class="self">self</span>.get_pointer_id(ir_types, container_ty, spirv::StorageClass::Function)<span class="question-mark">?</span>;
+        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(container_ty, spirv::StorageClass::Function);
 
         <span class="kw">let </span>variable = {
             <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
@@ -2321,7 +2296,7 @@
 
         <span class="kw">let </span>element_pointer_id = <span class="self">self</span>.id_gen.next();
         <span class="kw">let </span>element_pointer_type_id =
-            <span class="self">self</span>.get_pointer_id(ir_types, element_ty, spirv::StorageClass::Function)<span class="question-mark">?</span>;
+            <span class="self">self</span>.get_pointer_id(element_ty, spirv::StorageClass::Function);
         block.body.push(Instruction::access_chain(
             element_pointer_type_id,
             element_pointer_id,
@@ -2418,27 +2393,13 @@
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_pointer_id(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        arena: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
         handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         class: spirv::StorageClass,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
-        <span class="kw">let </span>ty_id = <span class="self">self</span>.get_type_id(LookupType::Handle(handle));
-        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Pointer { .. } = arena[handle].inner {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(ty_id);
-        }
-        <span class="kw">let </span>lookup_type = LookupType::Local(LocalType::Pointer {
+    ) -&gt; Word {
+        <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Pointer {
             base: handle,
             class,
-        });
-        <span class="prelude-val">Ok</span>(<span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>id) = <span class="self">self</span>.lookup_type.get(<span class="kw-2">&amp;</span>lookup_type) {
-            id
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-            <span class="kw">let </span>instruction = Instruction::type_pointer(id, class, ty_id);
-            instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
-            <span class="self">self</span>.lookup_type.insert(lookup_type, id);
-            id
-        })
+        }))
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
@@ -2520,11 +2481,7 @@
             <span class="kw">let </span>class = spirv::StorageClass::Input;
             <span class="kw">let </span>handle_ty = ir_module.types[argument.ty].inner.is_handle();
             <span class="kw">let </span>argument_type_id = <span class="kw">match </span>handle_ty {
-                <span class="bool-val">true </span>=&gt; <span class="self">self</span>.get_pointer_id(
-                    <span class="kw-2">&amp;</span>ir_module.types,
-                    argument.ty,
-                    spirv::StorageClass::UniformConstant,
-                )<span class="question-mark">?</span>,
+                <span class="bool-val">true </span>=&gt; <span class="self">self</span>.get_pointer_id(argument.ty, spirv::StorageClass::UniformConstant),
                 <span class="bool-val">false </span>=&gt; <span class="self">self</span>.get_type_id(LookupType::Handle(argument.ty)),
             };
 
@@ -2755,8 +2712,7 @@
                         gv.handle_id = id;
                     } <span class="kw">else if </span>global_needs_wrapper(ir_module, var) {
                         <span class="kw">let </span>class = map_storage_class(var.space);
-                        <span class="kw">let </span>pointer_type_id =
-                            <span class="self">self</span>.get_pointer_id(<span class="kw-2">&amp;</span>ir_module.types, var.ty, class)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(var.ty, class);
                         <span class="kw">let </span>index_id = <span class="self">self</span>.get_index_constant(<span class="number">0</span>);
                         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
                         prelude.body.push(Instruction::access_chain(
@@ -2815,11 +2771,9 @@
             }
 
             <span class="kw">let </span>init_word = variable.init.map(|constant| context.cached[constant]);
-            <span class="kw">let </span>pointer_type_id = context.writer.get_pointer_id(
-                <span class="kw-2">&amp;</span>ir_module.types,
-                variable.ty,
-                spirv::StorageClass::Function,
-            )<span class="question-mark">?</span>;
+            <span class="kw">let </span>pointer_type_id = context
+                .writer
+                .get_pointer_id(variable.ty, spirv::StorageClass::Function);
             <span class="kw">let </span>instruction = Instruction::variable(
                 pointer_type_id,
                 id,
@@ -3619,7 +3573,7 @@
         binding: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(<span class="kw-2">&amp;</span>ir_module.types, ty, class)<span class="question-mark">?</span>;
+        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(ty, class);
         Instruction::variable(pointer_type_id, id, class, <span class="prelude-val">None</span>)
             .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
 
@@ -3952,8 +3906,8 @@
             <span class="kw">if </span>substitute_inner_type_lookup.is_some() {
                 inner_type_id
             } <span class="kw">else </span>{
-                <span class="self">self</span>.get_pointer_id(<span class="kw-2">&amp;</span>ir_module.types, global_variable.ty, class)<span class="question-mark">?
-            </span>}
+                <span class="self">self</span>.get_pointer_id(global_variable.ty, class)
+            }
         };
 
         <span class="kw">let </span>init_word = <span class="kw">match </span>(global_variable.space, <span class="self">self</span>.zero_initialize_workgroup_memory) {
