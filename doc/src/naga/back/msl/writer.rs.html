@@ -6092,6 +6092,36 @@
 <a href="#6091" id="6091">6091</a>
 <a href="#6092" id="6092">6092</a>
 <a href="#6093" id="6093">6093</a>
+<a href="#6094" id="6094">6094</a>
+<a href="#6095" id="6095">6095</a>
+<a href="#6096" id="6096">6096</a>
+<a href="#6097" id="6097">6097</a>
+<a href="#6098" id="6098">6098</a>
+<a href="#6099" id="6099">6099</a>
+<a href="#6100" id="6100">6100</a>
+<a href="#6101" id="6101">6101</a>
+<a href="#6102" id="6102">6102</a>
+<a href="#6103" id="6103">6103</a>
+<a href="#6104" id="6104">6104</a>
+<a href="#6105" id="6105">6105</a>
+<a href="#6106" id="6106">6106</a>
+<a href="#6107" id="6107">6107</a>
+<a href="#6108" id="6108">6108</a>
+<a href="#6109" id="6109">6109</a>
+<a href="#6110" id="6110">6110</a>
+<a href="#6111" id="6111">6111</a>
+<a href="#6112" id="6112">6112</a>
+<a href="#6113" id="6113">6113</a>
+<a href="#6114" id="6114">6114</a>
+<a href="#6115" id="6115">6115</a>
+<a href="#6116" id="6116">6116</a>
+<a href="#6117" id="6117">6117</a>
+<a href="#6118" id="6118">6118</a>
+<a href="#6119" id="6119">6119</a>
+<a href="#6120" id="6120">6120</a>
+<a href="#6121" id="6121">6121</a>
+<a href="#6122" id="6122">6122</a>
+<a href="#6123" id="6123">6123</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -6127,6 +6157,7 @@
 <span class="kw">const </span>RAY_QUERY_FIELD_READY: <span class="kw-2">&amp;</span>str = <span class="string">"ready"</span>;
 <span class="kw">const </span>RAY_QUERY_FUN_MAP_INTERSECTION: <span class="kw-2">&amp;</span>str = <span class="string">"_map_intersection_type"</span>;
 
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ATOMIC_COMP_EXCH_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_atomic_compare_exchange_weak_explicit"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MODF_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_modf"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>FREXP_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_frexp"</span>;
 
@@ -7370,42 +7401,6 @@
             size = size,
             stride = stride,
         )<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>put_atomic_operation(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        pointer: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        key: <span class="kw-2">&amp;</span>str,
-        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        context: <span class="kw-2">&amp;</span>ExpressionContext,
-    ) -&gt; BackendResult {
-        <span class="comment">// If the pointer we're passing to the atomic operation needs to be conditional
-        // for `ReadZeroSkipWrite`, the condition needs to *surround* the atomic op, and
-        // the pointer operand should be unchecked.
-        </span><span class="kw">let </span>policy = context.choose_bounds_check_policy(pointer);
-        <span class="kw">let </span>checked = policy == index::BoundsCheckPolicy::ReadZeroSkipWrite
-            &amp;&amp; <span class="self">self</span>.put_bounds_checks(pointer, context, back::Level(<span class="number">0</span>), <span class="string">""</span>)<span class="question-mark">?</span>;
-
-        <span class="comment">// If requested and successfully put bounds checks, continue the ternary expression.
-        </span><span class="kw">if </span>checked {
-            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" ? "</span>)<span class="question-mark">?</span>;
-        }
-
-        <span class="macro">write!</span>(
-            <span class="self">self</span>.out,
-            <span class="string">"{NAMESPACE}::atomic_{key}_explicit({ATOMIC_REFERENCE}"
-        </span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.put_access_chain(pointer, policy, context)<span class="question-mark">?</span>;
-        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.put_expression(value, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {NAMESPACE}::memory_order_relaxed)"</span>)<span class="question-mark">?</span>;
-
-        <span class="comment">// Finish the ternary expression.
-        </span><span class="kw">if </span>checked {
-            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : DefaultConstructible()"</span>)<span class="question-mark">?</span>;
-        }
-
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -9276,24 +9271,65 @@
                     value,
                     result,
                 } =&gt; {
+                    <span class="kw">let </span>context = <span class="kw-2">&amp;</span>context.expression;
+
                     <span class="comment">// This backend supports `SHADER_INT64_ATOMIC_MIN_MAX` but not
                     // `SHADER_INT64_ATOMIC_ALL_OPS`, so we can assume that if `result` is
                     // `Some`, we are not operating on a 64-bit value, and that if we are
                     // operating on a 64-bit value, `result` is `None`.
                     </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>fun_str = <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                    <span class="kw">let </span>fun_key = <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
                         <span class="kw">let </span>res_name = Baked(result).to_string();
-                        <span class="self">self</span>.start_baking_expression(result, <span class="kw-2">&amp;</span>context.expression, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.start_baking_expression(result, context, <span class="kw-2">&amp;</span>res_name)<span class="question-mark">?</span>;
                         <span class="self">self</span>.named_expressions.insert(result, res_name);
-                        fun.to_msl()<span class="question-mark">?
-                    </span>} <span class="kw">else if </span>context.expression.resolve_type(value).scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
+                        fun.to_msl()
+                    } <span class="kw">else if </span>context.resolve_type(value).scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
                         fun.to_msl_64_bit()<span class="question-mark">?
                     </span>} <span class="kw">else </span>{
-                        fun.to_msl()<span class="question-mark">?
-                    </span>};
+                        fun.to_msl()
+                    };
 
-                    <span class="self">self</span>.put_atomic_operation(pointer, fun_str, value, <span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;
-                    <span class="comment">// done
+                    <span class="comment">// If the pointer we're passing to the atomic operation needs to be conditional
+                    // for `ReadZeroSkipWrite`, the condition needs to *surround* the atomic op, and
+                    // the pointer operand should be unchecked.
+                    </span><span class="kw">let </span>policy = context.choose_bounds_check_policy(pointer);
+                    <span class="kw">let </span>checked = policy == index::BoundsCheckPolicy::ReadZeroSkipWrite
+                        &amp;&amp; <span class="self">self</span>.put_bounds_checks(pointer, context, back::Level(<span class="number">0</span>), <span class="string">""</span>)<span class="question-mark">?</span>;
+
+                    <span class="comment">// If requested and successfully put bounds checks, continue the ternary expression.
+                    </span><span class="kw">if </span>checked {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" ? "</span>)<span class="question-mark">?</span>;
+                    }
+
+                    <span class="comment">// Put the atomic function invocation.
+                    </span><span class="kw">match </span><span class="kw-2">*</span>fun {
+                        <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } =&gt; {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{ATOMIC_COMP_EXCH_FUNCTION}({ATOMIC_REFERENCE}"</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_access_chain(pointer, policy, context)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(cmp, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(value, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="macro">write!</span>(
+                                <span class="self">self</span>.out,
+                                <span class="string">"{NAMESPACE}::atomic_{fun_key}_explicit({ATOMIC_REFERENCE}"
+                            </span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_access_chain(pointer, policy, context)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.put_expression(value, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {NAMESPACE}::memory_order_relaxed)"</span>)<span class="question-mark">?</span>;
+                        }
+                    }
+
+                    <span class="comment">// Finish the ternary expression.
+                    </span><span class="kw">if </span>checked {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : DefaultConstructible()"</span>)<span class="question-mark">?</span>;
+                    }
+
+                    <span class="comment">// Done
                     </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
@@ -9921,7 +9957,33 @@
 }}"
                     </span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw-2">&amp;</span><span class="kw">crate</span>::PredeclaredType::AtomicCompareExchangeWeakResult { .. } =&gt; {}
+                <span class="kw-2">&amp;</span><span class="kw">crate</span>::PredeclaredType::AtomicCompareExchangeWeakResult(scalar) =&gt; {
+                    <span class="kw">let </span>arg_type_name = scalar.to_msl_name();
+                    <span class="kw">let </span>called_func_name = <span class="string">"atomic_compare_exchange_weak_explicit"</span>;
+                    <span class="kw">let </span>defined_func_name = ATOMIC_COMP_EXCH_FUNCTION;
+                    <span class="kw">let </span>struct_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(<span class="kw-2">*</span>struct_ty)];
+
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+
+                    <span class="kw">for </span>address_space_name <span class="kw">in </span>[<span class="string">"device"</span>, <span class="string">"threadgroup"</span>] {
+                        <span class="macro">writeln!</span>(
+                            <span class="self">self</span>.out,
+                            <span class="string">"\
+template &lt;typename A&gt;
+{struct_name} {defined_func_name}(
+    {address_space_name} A *atomic_ptr,
+    {arg_type_name} cmp,
+    {arg_type_name} v
+) {{
+    bool swapped = {NAMESPACE}::{called_func_name}(
+        atomic_ptr, &amp;cmp, v,
+        metal::memory_order_relaxed, metal::memory_order_relaxed
+    );
+    return {struct_name}{{cmp, swapped}};
+}}"
+                        </span>)<span class="question-mark">?</span>;
+                    }
+                }
             }
         }
 
@@ -12159,8 +12221,8 @@
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
-    <span class="kw">fn </span>to_msl(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
+    <span class="kw">const fn </span>to_msl(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Add =&gt; <span class="string">"fetch_add"</span>,
             <span class="self">Self</span>::Subtract =&gt; <span class="string">"fetch_sub"</span>,
             <span class="self">Self</span>::And =&gt; <span class="string">"fetch_and"</span>,
@@ -12169,10 +12231,8 @@
             <span class="self">Self</span>::Min =&gt; <span class="string">"fetch_min"</span>,
             <span class="self">Self</span>::Max =&gt; <span class="string">"fetch_max"</span>,
             <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">None </span>} =&gt; <span class="string">"exchange"</span>,
-            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
-                <span class="string">"atomic CompareExchange"</span>.to_string(),
-            ))<span class="question-mark">?</span>,
-        })
+            <span class="self">Self</span>::Exchange { compare: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; ATOMIC_COMP_EXCH_FUNCTION,
+        }
     }
 
     <span class="kw">fn </span>to_msl_64_bit(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
