@@ -2824,25 +2824,6 @@
 <a href="#2823" id="2823">2823</a>
 <a href="#2824" id="2824">2824</a>
 <a href="#2825" id="2825">2825</a>
-<a href="#2826" id="2826">2826</a>
-<a href="#2827" id="2827">2827</a>
-<a href="#2828" id="2828">2828</a>
-<a href="#2829" id="2829">2829</a>
-<a href="#2830" id="2830">2830</a>
-<a href="#2831" id="2831">2831</a>
-<a href="#2832" id="2832">2832</a>
-<a href="#2833" id="2833">2833</a>
-<a href="#2834" id="2834">2834</a>
-<a href="#2835" id="2835">2835</a>
-<a href="#2836" id="2836">2836</a>
-<a href="#2837" id="2837">2837</a>
-<a href="#2838" id="2838">2838</a>
-<a href="#2839" id="2839">2839</a>
-<a href="#2840" id="2840">2840</a>
-<a href="#2841" id="2841">2841</a>
-<a href="#2842" id="2842">2842</a>
-<a href="#2843" id="2843">2843</a>
-<a href="#2844" id="2844">2844</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -3057,32 +3038,6 @@ Implementations for `BlockContext` methods.
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'w</span>&gt; BlockContext&lt;<span class="lifetime">'w</span>&gt; {
-    <span class="doccomment">/// Decide whether to put off emitting instructions for `expr_handle`.
-    ///
-    /// We would like to gather together chains of `Access` and `AccessIndex`
-    /// Naga expressions into a single `OpAccessChain` SPIR-V instruction. To do
-    /// this, we don't generate instructions for these exprs when we first
-    /// encounter them. Their ids in `self.writer.cached.ids` are left as zero. Then,
-    /// once we encounter a `Load` or `Store` expression that actually needs the
-    /// chain's value, we call `write_expression_pointer` to handle the whole
-    /// thing in one fell swoop.
-    </span><span class="kw">fn </span>is_intermediate(<span class="kw-2">&amp;</span><span class="self">self</span>, expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
-        <span class="kw">match </span><span class="self">self</span>.ir_function.expressions[expr_handle] {
-            <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; {
-                <span class="self">self</span>.ir_module.global_variables[handle].space != <span class="kw">crate</span>::AddressSpace::Handle
-            }
-            <span class="kw">crate</span>::Expression::LocalVariable(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
-            <span class="kw">crate</span>::Expression::FunctionArgument(index) =&gt; {
-                <span class="kw">let </span>arg = <span class="kw-2">&amp;</span><span class="self">self</span>.ir_function.arguments[index <span class="kw">as </span>usize];
-                <span class="self">self</span>.ir_module.types[arg.ty].inner.pointer_space().is_some()
-            }
-
-            <span class="comment">// The chain rule: if this `Access...`'s `base` operand was
-            // previously omitted, then omit this one, too.
-            </span><span class="kw">_ </span>=&gt; <span class="self">self</span>.cached.ids[expr_handle] == <span class="number">0</span>,
-        }
-    }
-
     <span class="doccomment">/// Cache an expression for a value.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>cache_expression_value(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -3153,18 +3108,22 @@ Implementations for `BlockContext` methods.
                     id
                 }
             }
-            <span class="kw">crate</span>::Expression::Access { base, index: <span class="kw">_ </span>} <span class="kw">if </span><span class="self">self</span>.is_intermediate(base) =&gt; {
-                <span class="comment">// See `is_intermediate`; we'll handle this later in
-                // `write_expression_pointer`.
-                </span><span class="number">0
-            </span>}
             <span class="kw">crate</span>::Expression::Access { base, index } =&gt; {
                 <span class="kw">let </span>base_ty_inner = <span class="self">self</span>.fun_info[base].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
                 <span class="kw">match </span><span class="kw-2">*</span>base_ty_inner {
+                    <span class="kw">crate</span>::TypeInner::Pointer { .. } | <span class="kw">crate</span>::TypeInner::ValuePointer { .. } =&gt; {
+                        <span class="comment">// When we have a chain of `Access` and `AccessIndex` expressions
+                        // operating on pointers, we want to generate a single
+                        // `OpAccessChain` instruction for the whole chain. Put off
+                        // generating any code for this until we find the `Expression`
+                        // that actually dereferences the pointer.
+                        </span><span class="number">0
+                    </span>}
                     <span class="kw">crate</span>::TypeInner::Vector { .. } =&gt; {
                         <span class="self">self</span>.write_vector_access(expr_handle, base, index, block)<span class="question-mark">?
                     </span>}
-                    <span class="comment">// Only binding arrays in the Handle address space will take this path (due to `is_intermediate`)
+                    <span class="comment">// Only binding arrays in the `Handle` address space will take this
+                    // path, since we handled the `Pointer` case above.
                     </span><span class="kw">crate</span>::TypeInner::BindingArray {
                         base: binding_type, ..
                     } =&gt; {
@@ -3249,13 +3208,16 @@ Implementations for `BlockContext` methods.
                     }
                 }
             }
-            <span class="kw">crate</span>::Expression::AccessIndex { base, index: <span class="kw">_ </span>} <span class="kw">if </span><span class="self">self</span>.is_intermediate(base) =&gt; {
-                <span class="comment">// See `is_intermediate`; we'll handle this later in
-                // `write_expression_pointer`.
-                </span><span class="number">0
-            </span>}
             <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; {
                 <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.fun_info[base].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types) {
+                    <span class="kw">crate</span>::TypeInner::Pointer { .. } | <span class="kw">crate</span>::TypeInner::ValuePointer { .. } =&gt; {
+                        <span class="comment">// When we have a chain of `Access` and `AccessIndex` expressions
+                        // operating on pointers, we want to generate a single
+                        // `OpAccessChain` instruction for the whole chain. Put off
+                        // generating any code for this until we find the `Expression`
+                        // that actually dereferences the pointer.
+                        </span><span class="number">0
+                    </span>}
                     <span class="kw">crate</span>::TypeInner::Vector { .. }
                     | <span class="kw">crate</span>::TypeInner::Matrix { .. }
                     | <span class="kw">crate</span>::TypeInner::Array { .. }
