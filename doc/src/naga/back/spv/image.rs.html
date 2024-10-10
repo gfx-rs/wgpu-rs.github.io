@@ -1190,13 +1190,14 @@
 <a href="#1189" id="1189">1189</a>
 <a href="#1190" id="1190">1190</a>
 <a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generating SPIR-V for image operations.
 */
 
 </span><span class="kw">use super</span>::{
     selection::{MergeTuple, Selection},
-    Block, BlockContext, Error, IdGenerator, Instruction, LocalType, LookupType,
+    Block, BlockContext, Error, IdGenerator, Instruction, LocalType, LookupType, NumericType,
 };
 <span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
 <span class="kw">use </span>spirv::Word;
@@ -1318,11 +1319,10 @@ Generating SPIR-V for image operations.
         // the right SPIR-V type for the access instruction here.
         </span><span class="kw">let </span>type_id = <span class="kw">match </span>image_class {
             <span class="kw">crate</span>::ImageClass::Depth { .. } =&gt; {
-                ctx.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Quad),
+                ctx.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                    size: <span class="kw">crate</span>::VectorSize::Quad,
                     scalar: <span class="kw">crate</span>::Scalar::F32,
-                    pointer_space: <span class="prelude-val">None</span>,
-                }))
+                })))
             }
             <span class="kw">_ </span>=&gt; result_type_id,
         };
@@ -1484,15 +1484,15 @@ Generating SPIR-V for image operations.
         <span class="comment">// Find the component type of `coordinates`, and figure out the size the
         // combined coordinate vector will have.
         </span><span class="kw">let </span>(component_scalar, size) = <span class="kw">match </span><span class="kw-2">*</span>inner_ty {
-            Ti::Scalar(scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. }) =&gt; (scalar, <span class="prelude-val">Some</span>(Vs::Bi)),
+            Ti::Scalar(scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. }) =&gt; (scalar, Vs::Bi),
             Ti::Vector {
                 scalar: scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. },
                 size: Vs::Bi,
-            } =&gt; (scalar, <span class="prelude-val">Some</span>(Vs::Tri)),
+            } =&gt; (scalar, Vs::Tri),
             Ti::Vector {
                 scalar: scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. },
                 size: Vs::Tri,
-            } =&gt; (scalar, <span class="prelude-val">Some</span>(Vs::Quad)),
+            } =&gt; (scalar, Vs::Quad),
             Ti::Vector { size: Vs::Quad, .. } =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"extending vec4 coordinate"</span>));
             }
@@ -1532,11 +1532,9 @@ Generating SPIR-V for image operations.
             }
         };
         <span class="kw">let </span>reconciled_array_index_id = <span class="kw">if let </span><span class="prelude-val">Some</span>(cast) = cast {
-            <span class="kw">let </span>component_ty_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                vector_size: <span class="prelude-val">None</span>,
-                scalar: component_scalar,
-                pointer_space: <span class="prelude-val">None</span>,
-            }));
+            <span class="kw">let </span>component_ty_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                NumericType::Scalar(component_scalar),
+            )));
             <span class="kw">let </span>reconciled_id = <span class="self">self</span>.gen_id();
             block.body.push(Instruction::unary(
                 cast,
@@ -1550,11 +1548,11 @@ Generating SPIR-V for image operations.
         };
 
         <span class="comment">// Find the SPIR-V type for the combined coordinates/index vector.
-        </span><span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: size,
-            scalar: component_scalar,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        </span><span class="kw">let </span>type_id =
+            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                size,
+                scalar: component_scalar,
+            })));
 
         <span class="comment">// Schmear the coordinates and index together.
         </span><span class="kw">let </span>value_id = <span class="self">self</span>.gen_id();
@@ -1566,7 +1564,7 @@ Generating SPIR-V for image operations.
         <span class="prelude-val">Ok</span>(ImageCoordinates {
             value_id,
             type_id,
-            size,
+            size: <span class="prelude-val">Some</span>(size),
         })
     }
 
@@ -1721,11 +1719,9 @@ Generating SPIR-V for image operations.
             <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery],
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::I32,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
+        )));
 
         <span class="comment">// If `level` is `Some`, clamp it to fall within bounds. This must
         // happen first, because we'll use it to query the image size for
@@ -1808,11 +1804,9 @@ Generating SPIR-V for image operations.
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bool_type_id = <span class="self">self</span>.writer.get_bool_type_id();
-        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::I32,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
+        )));
 
         <span class="kw">let </span>null_id = access.out_of_bounds_value(<span class="self">self</span>);
 
@@ -1875,11 +1869,15 @@ Generating SPIR-V for image operations.
         );
 
         <span class="comment">// Compare the coordinates against the bounds.
-        </span><span class="kw">let </span>coords_bool_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: coordinates.size,
-            scalar: <span class="kw">crate</span>::Scalar::BOOL,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        </span><span class="kw">let </span>coords_numeric_type = <span class="kw">match </span>coordinates.size {
+            <span class="prelude-val">Some</span>(size) =&gt; NumericType::Vector {
+                size,
+                scalar: <span class="kw">crate</span>::Scalar::BOOL,
+            },
+            <span class="prelude-val">None </span>=&gt; NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL),
+        };
+        <span class="kw">let </span>coords_bool_type_id =
+            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(coords_numeric_type)));
         <span class="kw">let </span>coords_conds_id = <span class="self">self</span>.gen_id();
         selection.block().body.push(Instruction::binary(
             spirv::Op::ULessThan,
@@ -2030,11 +2028,10 @@ Generating SPIR-V for image operations.
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
         <span class="kw">let </span>sample_result_type_id = <span class="kw">if </span>needs_sub_access {
-            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                vector_size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Quad),
+            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                size: <span class="kw">crate</span>::VectorSize::Quad,
                 scalar: <span class="kw">crate</span>::Scalar::F32,
-                pointer_space: <span class="prelude-val">None</span>,
-            }))
+            })))
         } <span class="kw">else </span>{
             result_type_id
         };
@@ -2230,11 +2227,16 @@ Generating SPIR-V for image operations.
                     <span class="number">4 </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Quad),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 };
-                <span class="kw">let </span>extended_size_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size,
-                    scalar: <span class="kw">crate</span>::Scalar::U32,
-                    pointer_space: <span class="prelude-val">None</span>,
-                }));
+                <span class="kw">let </span>vector_numeric_type = <span class="kw">match </span>vector_size {
+                    <span class="prelude-val">Some</span>(size) =&gt; NumericType::Vector {
+                        size,
+                        scalar: <span class="kw">crate</span>::Scalar::U32,
+                    },
+                    <span class="prelude-val">None </span>=&gt; NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
+                };
+
+                <span class="kw">let </span>extended_size_type_id =
+                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(vector_numeric_type)));
 
                 <span class="kw">let </span>(query_op, level_id) = <span class="kw">match </span>class {
                     Ic::Sampled { multi: <span class="bool-val">true</span>, .. }
@@ -2300,11 +2302,11 @@ Generating SPIR-V for image operations.
                     Id::D2 | Id::Cube =&gt; <span class="kw">crate</span>::VectorSize::Tri,
                     Id::D3 =&gt; <span class="kw">crate</span>::VectorSize::Quad,
                 };
-                <span class="kw">let </span>extended_size_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: <span class="prelude-val">Some</span>(vec_size),
-                    scalar: <span class="kw">crate</span>::Scalar::U32,
-                    pointer_space: <span class="prelude-val">None</span>,
-                }));
+                <span class="kw">let </span>extended_size_type_id =
+                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                        size: vec_size,
+                        scalar: <span class="kw">crate</span>::Scalar::U32,
+                    })));
                 <span class="kw">let </span>id_extended = <span class="self">self</span>.gen_id();
                 <span class="kw">let </span><span class="kw-2">mut </span>inst = Instruction::image_query(
                     spirv::Op::ImageQuerySizeLod,

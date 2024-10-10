@@ -2149,56 +2149,13 @@
 <a href="#2148" id="2148">2148</a>
 <a href="#2149" id="2149">2149</a>
 <a href="#2150" id="2150">2150</a>
-<a href="#2151" id="2151">2151</a>
-<a href="#2152" id="2152">2152</a>
-<a href="#2153" id="2153">2153</a>
-<a href="#2154" id="2154">2154</a>
-<a href="#2155" id="2155">2155</a>
-<a href="#2156" id="2156">2156</a>
-<a href="#2157" id="2157">2157</a>
-<a href="#2158" id="2158">2158</a>
-<a href="#2159" id="2159">2159</a>
-<a href="#2160" id="2160">2160</a>
-<a href="#2161" id="2161">2161</a>
-<a href="#2162" id="2162">2162</a>
-<a href="#2163" id="2163">2163</a>
-<a href="#2164" id="2164">2164</a>
-<a href="#2165" id="2165">2165</a>
-<a href="#2166" id="2166">2166</a>
-<a href="#2167" id="2167">2167</a>
-<a href="#2168" id="2168">2168</a>
-<a href="#2169" id="2169">2169</a>
-<a href="#2170" id="2170">2170</a>
-<a href="#2171" id="2171">2171</a>
-<a href="#2172" id="2172">2172</a>
-<a href="#2173" id="2173">2173</a>
-<a href="#2174" id="2174">2174</a>
-<a href="#2175" id="2175">2175</a>
-<a href="#2176" id="2176">2176</a>
-<a href="#2177" id="2177">2177</a>
-<a href="#2178" id="2178">2178</a>
-<a href="#2179" id="2179">2179</a>
-<a href="#2180" id="2180">2180</a>
-<a href="#2181" id="2181">2181</a>
-<a href="#2182" id="2182">2182</a>
-<a href="#2183" id="2183">2183</a>
-<a href="#2184" id="2184">2184</a>
-<a href="#2185" id="2185">2185</a>
-<a href="#2186" id="2186">2186</a>
-<a href="#2187" id="2187">2187</a>
-<a href="#2188" id="2188">2188</a>
-<a href="#2189" id="2189">2189</a>
-<a href="#2190" id="2190">2190</a>
-<a href="#2191" id="2191">2191</a>
-<a href="#2192" id="2192">2192</a>
-<a href="#2193" id="2193">2193</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
-    make_local, Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo,
-    EntryPointContext, Error, Function, FunctionArgument, GlobalVariable, IdGenerator, Instruction,
-    LocalType, LocalVariable, LogicalLayout, LookupFunctionType, LookupType, Options,
-    PhysicalLayout, PipelineOptions, ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
+    Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo, EntryPointContext, Error,
+    Function, FunctionArgument, GlobalVariable, IdGenerator, Instruction, LocalType, LocalVariable,
+    LogicalLayout, LookupFunctionType, LookupType, NumericType, Options, PhysicalLayout,
+    PipelineOptions, ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
 };
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleVec, UniqueArena},
@@ -2448,7 +2405,9 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_expression_lookup_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tr: <span class="kw-2">&amp;</span>TypeResolution) -&gt; LookupType {
         <span class="kw">match </span><span class="kw-2">*</span>tr {
             TypeResolution::Handle(ty_handle) =&gt; LookupType::Handle(ty_handle),
-            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; LookupType::Local(make_local(inner).unwrap()),
+            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
+                LookupType::Local(LocalType::from_inner(inner).unwrap())
+            }
         }
     }
 
@@ -2483,83 +2442,52 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::U32,
-            pointer_space: <span class="prelude-val">None</span>,
-        };
+        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_float_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::F32,
-            pointer_space: <span class="prelude-val">None</span>,
-        };
+        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32));
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint3_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Value {
-            vector_size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Tri),
+        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+            size: <span class="kw">crate</span>::VectorSize::Tri,
             scalar: <span class="kw">crate</span>::Scalar::U32,
-            pointer_space: <span class="prelude-val">None</span>,
-        };
+        });
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_float_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
-        <span class="kw">let </span>lookup_type = LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::F32,
-            pointer_space: <span class="prelude-val">Some</span>(class),
-        });
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>id) = <span class="self">self</span>.lookup_type.get(<span class="kw-2">&amp;</span>lookup_type) {
-            id
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-            <span class="kw">let </span>ty_id = <span class="self">self</span>.get_float_type_id();
-            <span class="kw">let </span>instruction = Instruction::type_pointer(id, class, ty_id);
-            instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
-            <span class="self">self</span>.lookup_type.insert(lookup_type, id);
-            id
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint3_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
-        <span class="kw">let </span>lookup_type = LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Tri),
-            scalar: <span class="kw">crate</span>::Scalar::U32,
-            pointer_space: <span class="prelude-val">Some</span>(class),
-        });
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>id) = <span class="self">self</span>.lookup_type.get(<span class="kw-2">&amp;</span>lookup_type) {
-            id
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-            <span class="kw">let </span>ty_id = <span class="self">self</span>.get_uint3_type_id();
-            <span class="kw">let </span>instruction = Instruction::type_pointer(id, class, ty_id);
-            instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
-            <span class="self">self</span>.lookup_type.insert(lookup_type, id);
-            id
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::BOOL,
-            pointer_space: <span class="prelude-val">None</span>,
+        <span class="kw">let </span>local_type = LocalType::LocalPointer {
+            base: NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
+            class,
         };
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool3_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Value {
-            vector_size: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::VectorSize::Tri),
-            scalar: <span class="kw">crate</span>::Scalar::BOOL,
-            pointer_space: <span class="prelude-val">None</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint3_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
+        <span class="kw">let </span>local_type = LocalType::LocalPointer {
+            base: NumericType::Vector {
+                size: <span class="kw">crate</span>::VectorSize::Tri,
+                scalar: <span class="kw">crate</span>::Scalar::U32,
+            },
+            class,
         };
+        <span class="self">self</span>.get_type_id(local_type.into())
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL));
+        <span class="self">self</span>.get_type_id(local_type.into())
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool3_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+            size: <span class="kw">crate</span>::VectorSize::Tri,
+            scalar: <span class="kw">crate</span>::Scalar::BOOL,
+        });
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
@@ -3127,62 +3055,50 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>write_numeric_type_declaration_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word, numeric: NumericType) {
+        <span class="kw">let </span>instruction =
+            <span class="kw">match </span>numeric {
+                NumericType::Scalar(scalar) =&gt; <span class="self">self</span>.make_scalar(id, scalar),
+                NumericType::Vector { size, scalar } =&gt; {
+                    <span class="kw">let </span>scalar_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                        NumericType::Scalar(scalar),
+                    )));
+                    Instruction::type_vector(id, scalar_id, size)
+                }
+                NumericType::Matrix {
+                    columns,
+                    rows,
+                    scalar,
+                } =&gt; {
+                    <span class="kw">let </span>column_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                        NumericType::Vector { size: rows, scalar },
+                    )));
+                    Instruction::type_matrix(id, column_id, columns)
+                }
+            };
+
+        instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
+    }
+
     <span class="kw">fn </span>write_type_declaration_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word, local_ty: LocalType) {
         <span class="kw">let </span>instruction = <span class="kw">match </span>local_ty {
-            LocalType::Value {
-                vector_size: <span class="prelude-val">None</span>,
-                scalar,
-                pointer_space: <span class="prelude-val">None</span>,
-            } =&gt; <span class="self">self</span>.make_scalar(id, scalar),
-            LocalType::Value {
-                vector_size: <span class="prelude-val">Some</span>(size),
-                scalar,
-                pointer_space: <span class="prelude-val">None</span>,
-            } =&gt; {
-                <span class="kw">let </span>scalar_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: <span class="prelude-val">None</span>,
-                    scalar,
-                    pointer_space: <span class="prelude-val">None</span>,
-                }));
-                Instruction::type_vector(id, scalar_id, size)
+            LocalType::Numeric(numeric) =&gt; {
+                <span class="self">self</span>.write_numeric_type_declaration_local(id, numeric);
+                <span class="kw">return</span>;
             }
-            LocalType::Matrix {
-                columns,
-                rows,
-                width,
-            } =&gt; {
-                <span class="kw">let </span>vector_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: <span class="prelude-val">Some</span>(rows),
-                    scalar: <span class="kw">crate</span>::Scalar::float(width),
-                    pointer_space: <span class="prelude-val">None</span>,
-                }));
-                Instruction::type_matrix(id, vector_id, columns)
+            LocalType::LocalPointer { base, class } =&gt; {
+                <span class="kw">let </span>base_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(base)));
+                Instruction::type_pointer(id, class, base_id)
             }
             LocalType::Pointer { base, class } =&gt; {
                 <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
                 Instruction::type_pointer(id, class, type_id)
             }
-            LocalType::Value {
-                vector_size,
-                scalar,
-                pointer_space: <span class="prelude-val">Some</span>(class),
-            } =&gt; {
-                <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size,
-                    scalar,
-                    pointer_space: <span class="prelude-val">None</span>,
-                }));
-                Instruction::type_pointer(id, class, type_id)
-            }
             LocalType::Image(image) =&gt; {
-                <span class="kw">let </span>local_type = LocalType::Value {
-                    vector_size: <span class="prelude-val">None</span>,
-                    scalar: <span class="kw">crate</span>::Scalar {
-                        kind: image.sampled_type,
-                        width: <span class="number">4</span>,
-                    },
-                    pointer_space: <span class="prelude-val">None</span>,
-                };
+                <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar {
+                    kind: image.sampled_type,
+                    width: <span class="number">4</span>,
+                }));
                 <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(local_type));
                 Instruction::type_image(id, type_id, image.dim, image.flags, image.image_format)
             }
@@ -3219,7 +3135,7 @@
         // because some types which map to the same LocalType have different
         // capability requirements. See https://github.com/gfx-rs/wgpu/issues/5569
         </span><span class="self">self</span>.request_type_capabilities(<span class="kw-2">&amp;</span>ty.inner)<span class="question-mark">?</span>;
-        <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(local) = make_local(<span class="kw-2">&amp;</span>ty.inner) {
+        <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(local) = LocalType::from_inner(<span class="kw-2">&amp;</span>ty.inner) {
             <span class="comment">// This type can be represented as a `LocalType`, so check if we've
             // already written an instruction for it. If not, do so now, with
             // `write_type_declaration_local`.
@@ -3416,11 +3332,9 @@
                 <span class="self">self</span>.debugs.push(Instruction::name(id, name));
             }
         }
-        <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: value.scalar(),
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Scalar(
+            value.scalar(),
+        ))));
         <span class="kw">let </span>instruction = <span class="kw">match </span><span class="kw-2">*</span>value {
             <span class="kw">crate</span>::Literal::F64(value) =&gt; {
                 <span class="kw">let </span>bits = value.to_bits();

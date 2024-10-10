@@ -841,6 +841,18 @@
 <a href="#840" id="840">840</a>
 <a href="#841" id="841">841</a>
 <a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -1074,6 +1086,21 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     }
 }
 
+<span class="doccomment">/// A numeric type, for use in [`LocalType`].
+</span><span class="attr">#[derive(Debug, PartialEq, Hash, Eq, Copy, Clone)]
+</span><span class="kw">enum </span>NumericType {
+    Scalar(<span class="kw">crate</span>::Scalar),
+    Vector {
+        size: <span class="kw">crate</span>::VectorSize,
+        scalar: <span class="kw">crate</span>::Scalar,
+    },
+    Matrix {
+        columns: <span class="kw">crate</span>::VectorSize,
+        rows: <span class="kw">crate</span>::VectorSize,
+        scalar: <span class="kw">crate</span>::Scalar,
+    },
+}
+
 <span class="doccomment">/// A SPIR-V type constructed during code generation.
 ///
 /// This is the variant of [`LookupType`] used to represent types that might not
@@ -1089,9 +1116,9 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 /// never synthesizes new struct types, so `LocalType` has nothing for that.
 ///
 /// Each `LocalType` variant should be handled identically to its analogous
-/// `TypeInner` variant. You can use the [`make_local`] function to help with
-/// this, by converting everything possible to a `LocalType` before inspecting
-/// it.
+/// `TypeInner` variant. You can use the [`LocalType::from_inner`] function to
+/// help with this, by converting everything possible to a `LocalType` before
+/// inspecting it.
 ///
 /// ## `LocalType` equality and SPIR-V `OpType` uniqueness
 ///
@@ -1119,19 +1146,11 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 /// [`TypeInner`]: crate::TypeInner
 </span><span class="attr">#[derive(Debug, PartialEq, Hash, Eq, Copy, Clone)]
 </span><span class="kw">enum </span>LocalType {
-    <span class="doccomment">/// A scalar, vector, or pointer to one of those.
-    </span>Value {
-        <span class="doccomment">/// If `None`, this represents a scalar type. If `Some`, this represents
-        /// a vector type of the given size.
-        </span>vector_size: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::VectorSize&gt;,
-        scalar: <span class="kw">crate</span>::Scalar,
-        pointer_space: <span class="prelude-ty">Option</span>&lt;spirv::StorageClass&gt;,
-    },
-    <span class="doccomment">/// A matrix of floating-point values.
-    </span>Matrix {
-        columns: <span class="kw">crate</span>::VectorSize,
-        rows: <span class="kw">crate</span>::VectorSize,
-        width: <span class="kw">crate</span>::Bytes,
+    <span class="doccomment">/// A numeric type.
+    </span>Numeric(NumericType),
+    LocalPointer {
+        base: NumericType,
+        class: spirv::StorageClass,
     },
     Pointer {
         base: Handle&lt;<span class="kw">crate</span>::Type&gt;,
@@ -1200,52 +1219,57 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     return_type_id: Word,
 }
 
-<span class="kw">fn </span>make_local(inner: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner) -&gt; <span class="prelude-ty">Option</span>&lt;LocalType&gt; {
-    <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="kw-2">*</span>inner {
-        <span class="kw">crate</span>::TypeInner::Scalar(scalar) | <span class="kw">crate</span>::TypeInner::Atomic(scalar) =&gt; LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar,
-            pointer_space: <span class="prelude-val">None</span>,
-        },
-        <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; LocalType::Value {
-            vector_size: <span class="prelude-val">Some</span>(size),
-            scalar,
-            pointer_space: <span class="prelude-val">None</span>,
-        },
-        <span class="kw">crate</span>::TypeInner::Matrix {
-            columns,
-            rows,
-            scalar,
-        } =&gt; LocalType::Matrix {
-            columns,
-            rows,
-            width: scalar.width,
-        },
-        <span class="kw">crate</span>::TypeInner::Pointer { base, space } =&gt; LocalType::Pointer {
-            base,
-            class: helpers::map_storage_class(space),
-        },
-        <span class="kw">crate</span>::TypeInner::ValuePointer {
-            size,
-            scalar,
-            space,
-        } =&gt; LocalType::Value {
-            vector_size: size,
-            scalar,
-            pointer_space: <span class="prelude-val">Some</span>(helpers::map_storage_class(space)),
-        },
-        <span class="kw">crate</span>::TypeInner::Image {
-            dim,
-            arrayed,
-            class,
-        } =&gt; LocalType::Image(LocalImageType::from_inner(dim, arrayed, class)),
-        <span class="kw">crate</span>::TypeInner::Sampler { comparison: <span class="kw">_ </span>} =&gt; LocalType::Sampler,
-        <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; LocalType::AccelerationStructure,
-        <span class="kw">crate</span>::TypeInner::RayQuery =&gt; LocalType::RayQuery,
-        <span class="kw">crate</span>::TypeInner::Array { .. }
-        | <span class="kw">crate</span>::TypeInner::Struct { .. }
-        | <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-    })
+<span class="kw">impl </span>LocalType {
+    <span class="kw">fn </span>from_inner(inner: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="kw-2">*</span>inner {
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar) | <span class="kw">crate</span>::TypeInner::Atomic(scalar) =&gt; {
+                LocalType::Numeric(NumericType::Scalar(scalar))
+            }
+            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
+                LocalType::Numeric(NumericType::Vector { size, scalar })
+            }
+            <span class="kw">crate</span>::TypeInner::Matrix {
+                columns,
+                rows,
+                scalar,
+            } =&gt; LocalType::Numeric(NumericType::Matrix {
+                columns,
+                rows,
+                scalar,
+            }),
+            <span class="kw">crate</span>::TypeInner::Pointer { base, space } =&gt; LocalType::Pointer {
+                base,
+                class: helpers::map_storage_class(space),
+            },
+            <span class="kw">crate</span>::TypeInner::ValuePointer {
+                size: <span class="prelude-val">Some</span>(size),
+                scalar,
+                space,
+            } =&gt; LocalType::LocalPointer {
+                base: NumericType::Vector { size, scalar },
+                class: helpers::map_storage_class(space),
+            },
+            <span class="kw">crate</span>::TypeInner::ValuePointer {
+                size: <span class="prelude-val">None</span>,
+                scalar,
+                space,
+            } =&gt; LocalType::LocalPointer {
+                base: NumericType::Scalar(scalar),
+                class: helpers::map_storage_class(space),
+            },
+            <span class="kw">crate</span>::TypeInner::Image {
+                dim,
+                arrayed,
+                class,
+            } =&gt; LocalType::Image(LocalImageType::from_inner(dim, arrayed, class)),
+            <span class="kw">crate</span>::TypeInner::Sampler { comparison: <span class="kw">_ </span>} =&gt; LocalType::Sampler,
+            <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; LocalType::AccelerationStructure,
+            <span class="kw">crate</span>::TypeInner::RayQuery =&gt; LocalType::RayQuery,
+            <span class="kw">crate</span>::TypeInner::Array { .. }
+            | <span class="kw">crate</span>::TypeInner::Struct { .. }
+            | <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        })
+    }
 }
 
 <span class="attr">#[derive(Debug)]

@@ -2844,64 +2844,13 @@
 <a href="#2843" id="2843">2843</a>
 <a href="#2844" id="2844">2844</a>
 <a href="#2845" id="2845">2845</a>
-<a href="#2846" id="2846">2846</a>
-<a href="#2847" id="2847">2847</a>
-<a href="#2848" id="2848">2848</a>
-<a href="#2849" id="2849">2849</a>
-<a href="#2850" id="2850">2850</a>
-<a href="#2851" id="2851">2851</a>
-<a href="#2852" id="2852">2852</a>
-<a href="#2853" id="2853">2853</a>
-<a href="#2854" id="2854">2854</a>
-<a href="#2855" id="2855">2855</a>
-<a href="#2856" id="2856">2856</a>
-<a href="#2857" id="2857">2857</a>
-<a href="#2858" id="2858">2858</a>
-<a href="#2859" id="2859">2859</a>
-<a href="#2860" id="2860">2860</a>
-<a href="#2861" id="2861">2861</a>
-<a href="#2862" id="2862">2862</a>
-<a href="#2863" id="2863">2863</a>
-<a href="#2864" id="2864">2864</a>
-<a href="#2865" id="2865">2865</a>
-<a href="#2866" id="2866">2866</a>
-<a href="#2867" id="2867">2867</a>
-<a href="#2868" id="2868">2868</a>
-<a href="#2869" id="2869">2869</a>
-<a href="#2870" id="2870">2870</a>
-<a href="#2871" id="2871">2871</a>
-<a href="#2872" id="2872">2872</a>
-<a href="#2873" id="2873">2873</a>
-<a href="#2874" id="2874">2874</a>
-<a href="#2875" id="2875">2875</a>
-<a href="#2876" id="2876">2876</a>
-<a href="#2877" id="2877">2877</a>
-<a href="#2878" id="2878">2878</a>
-<a href="#2879" id="2879">2879</a>
-<a href="#2880" id="2880">2880</a>
-<a href="#2881" id="2881">2881</a>
-<a href="#2882" id="2882">2882</a>
-<a href="#2883" id="2883">2883</a>
-<a href="#2884" id="2884">2884</a>
-<a href="#2885" id="2885">2885</a>
-<a href="#2886" id="2886">2886</a>
-<a href="#2887" id="2887">2887</a>
-<a href="#2888" id="2888">2888</a>
-<a href="#2889" id="2889">2889</a>
-<a href="#2890" id="2890">2890</a>
-<a href="#2891" id="2891">2891</a>
-<a href="#2892" id="2892">2892</a>
-<a href="#2893" id="2893">2893</a>
-<a href="#2894" id="2894">2894</a>
-<a href="#2895" id="2895">2895</a>
-<a href="#2896" id="2896">2896</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
 </span><span class="kw">use super</span>::{
-    helpers, index::BoundsCheckResult, make_local, selection::Selection, Block, BlockContext,
-    Dimension, Error, Instruction, LocalType, LookupType, ResultMember, Writer, WriterFlags,
+    helpers, index::BoundsCheckResult, selection::Selection, Block, BlockContext, Dimension, Error,
+    Instruction, LocalType, LookupType, NumericType, ResultMember, Writer, WriterFlags,
 };
 <span class="kw">use crate</span>::{arena::Handle, proc::TypeResolution, Statement};
 <span class="kw">use </span>spirv::Word;
@@ -3002,10 +2951,9 @@ Implementations for `BlockContext` methods.
         position_id: Word,
         body: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">let </span>float_ptr_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::F32,
-            pointer_space: <span class="prelude-val">Some</span>(spirv::StorageClass::Output),
+        <span class="kw">let </span>float_ptr_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::LocalPointer {
+            base: NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
+            class: spirv::StorageClass::Output,
         }));
         <span class="kw">let </span>index_y_id = <span class="self">self</span>.get_index_constant(<span class="number">1</span>);
         <span class="kw">let </span>access_id = <span class="self">self</span>.id_gen.next();
@@ -3016,11 +2964,9 @@ Implementations for `BlockContext` methods.
             <span class="kw-2">&amp;</span>[index_y_id],
         ));
 
-        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::F32,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+            NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
+        )));
         <span class="kw">let </span>load_id = <span class="self">self</span>.id_gen.next();
         body.push(Instruction::load(float_type_id, load_id, access_id, <span class="prelude-val">None</span>));
 
@@ -3042,11 +2988,9 @@ Implementations for `BlockContext` methods.
         frag_depth_id: Word,
         body: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">None</span>,
-            scalar: <span class="kw">crate</span>::Scalar::F32,
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+            NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
+        )));
         <span class="kw">let </span>zero_scalar_id = <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::F32(<span class="number">0.0</span>));
         <span class="kw">let </span>one_scalar_id = <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::F32(<span class="number">1.0</span>));
 
@@ -3727,12 +3671,8 @@ Implementations for `BlockContext` methods.
                         <span class="kw">let </span><span class="kw-2">mut </span>arg2_id = <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">1</span>, scalar)<span class="question-mark">?</span>;
 
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = maybe_size {
-                            <span class="kw">let </span>ty = LocalType::Value {
-                                vector_size: <span class="prelude-val">Some</span>(size),
-                                scalar,
-                                pointer_space: <span class="prelude-val">None</span>,
-                            }
-                            .into();
+                            <span class="kw">let </span>ty =
+                                LocalType::Numeric(NumericType::Vector { size, scalar }).into();
 
                             <span class="self">self</span>.temp_list.clear();
                             <span class="self">self</span>.temp_list.resize(size <span class="kw">as _</span>, arg1_id);
@@ -3847,12 +3787,9 @@ Implementations for `BlockContext` methods.
                                 <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Vector { size, .. },
                                 <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(scalar),
                             ) =&gt; {
-                                <span class="kw">let </span>selector_type_id =
-                                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                                        vector_size: <span class="prelude-val">Some</span>(size),
-                                        scalar,
-                                        pointer_space: <span class="prelude-val">None</span>,
-                                    }));
+                                <span class="kw">let </span>selector_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
+                                    LocalType::Numeric(NumericType::Vector { size, scalar }),
+                                ));
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(size <span class="kw">as </span>usize, arg2_id);
 
@@ -3895,12 +3832,8 @@ Implementations for `BlockContext` methods.
                     Mf::CountTrailingZeros =&gt; {
                         <span class="kw">let </span>uint_id = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
-                                <span class="kw">let </span>ty = LocalType::Value {
-                                    vector_size: <span class="prelude-val">Some</span>(size),
-                                    scalar,
-                                    pointer_space: <span class="prelude-val">None</span>,
-                                }
-                                .into();
+                                <span class="kw">let </span>ty =
+                                    LocalType::Numeric(NumericType::Vector { size, scalar }).into();
 
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(
@@ -3937,12 +3870,8 @@ Implementations for `BlockContext` methods.
                     Mf::CountLeadingZeros =&gt; {
                         <span class="kw">let </span>(int_type_id, int_id, width) = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
-                                <span class="kw">let </span>ty = LocalType::Value {
-                                    vector_size: <span class="prelude-val">Some</span>(size),
-                                    scalar,
-                                    pointer_space: <span class="prelude-val">None</span>,
-                                }
-                                .into();
+                                <span class="kw">let </span>ty =
+                                    LocalType::Numeric(NumericType::Vector { size, scalar }).into();
 
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(
@@ -3958,11 +3887,9 @@ Implementations for `BlockContext` methods.
                                 )
                             }
                             <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (
-                                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                                    vector_size: <span class="prelude-val">None</span>,
-                                    scalar,
-                                    pointer_space: <span class="prelude-val">None</span>,
-                                })),
+                                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                                    NumericType::Scalar(scalar),
+                                ))),
                                 <span class="self">self</span>.writer
                                     .get_constant_scalar_with(scalar.width * <span class="number">8 </span>- <span class="number">1</span>, scalar)<span class="question-mark">?</span>,
                                 scalar.width,
@@ -4027,14 +3954,9 @@ Implementations for `BlockContext` methods.
                             </span>.writer
                             .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(bit_width <span class="kw">as </span>u32));
 
-                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
-                                kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                                width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
+                        )));
 
                         <span class="comment">// o = min(offset, w)
                         </span><span class="kw">let </span>offset_id = <span class="self">self</span>.gen_id();
@@ -4083,14 +4005,9 @@ Implementations for `BlockContext` methods.
                             </span>.writer
                             .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(bit_width <span class="kw">as </span>u32));
 
-                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
-                                kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                                width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
+                        )));
 
                         <span class="comment">// o = min(offset, w)
                         </span><span class="kw">let </span>offset_id = <span class="self">self</span>.gen_id();
@@ -4156,23 +4073,16 @@ Implementations for `BlockContext` methods.
                             Mf::Pack4xU8 =&gt; (<span class="kw">crate</span>::ScalarKind::Uint, <span class="bool-val">false</span>),
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
-                        <span class="kw">let </span>uint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
-                                kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                                width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                        <span class="kw">let </span>uint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
+                        )));
 
-                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
+                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar {
                                 kind: int_type,
                                 width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                            }),
+                        )));
 
                         <span class="kw">let </span><span class="kw-2">mut </span>last_instruction = Instruction::new(spirv::Op::Nop);
 
@@ -4249,24 +4159,17 @@ Implementations for `BlockContext` methods.
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
 
-                        <span class="kw">let </span>sint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
-                                kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                                width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                        <span class="kw">let </span>sint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
+                        )));
 
                         <span class="kw">let </span>eight = <span class="self">self</span>.writer.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(<span class="number">8</span>));
-                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">None</span>,
-                            scalar: <span class="kw">crate</span>::Scalar {
+                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                            NumericType::Scalar(<span class="kw">crate</span>::Scalar {
                                 kind: int_type,
                                 width: <span class="number">4</span>,
-                            },
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                            }),
+                        )));
                         block
                             .body
                             .reserve(usize::from(VEC_LENGTH) * <span class="number">2 </span>+ usize::from(is_signed));
@@ -4430,11 +4333,10 @@ Implementations for `BlockContext` methods.
                                 <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, src_scalar)<span class="question-mark">?</span>;
                             <span class="kw">let </span>zero_id = <span class="kw">match </span>src_size {
                                 <span class="prelude-val">Some</span>(size) =&gt; {
-                                    <span class="kw">let </span>ty = LocalType::Value {
-                                        vector_size: <span class="prelude-val">Some</span>(size),
+                                    <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
+                                        size,
                                         scalar: src_scalar,
-                                        pointer_space: <span class="prelude-val">None</span>,
-                                    }
+                                    })
                                     .into();
 
                                     <span class="self">self</span>.temp_list.clear();
@@ -4459,11 +4361,10 @@ Implementations for `BlockContext` methods.
                                 <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">1</span>, dst_scalar)<span class="question-mark">?</span>;
                             <span class="kw">let </span>(accept_id, reject_id) = <span class="kw">match </span>src_size {
                                 <span class="prelude-val">Some</span>(size) =&gt; {
-                                    <span class="kw">let </span>ty = LocalType::Value {
-                                        vector_size: <span class="prelude-val">Some</span>(size),
+                                    <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
+                                        size,
                                         scalar: dst_scalar,
-                                        pointer_space: <span class="prelude-val">None</span>,
-                                    }
+                                    })
                                     .into();
 
                                     <span class="self">self</span>.temp_list.clear();
@@ -4601,12 +4502,12 @@ Implementations for `BlockContext` methods.
                     <span class="self">self</span>.temp_list.clear();
                     <span class="self">self</span>.temp_list.resize(size <span class="kw">as </span>usize, condition_id);
 
-                    <span class="kw">let </span>bool_vector_type_id =
-                        <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                            vector_size: <span class="prelude-val">Some</span>(size),
+                    <span class="kw">let </span>bool_vector_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
+                        LocalType::Numeric(NumericType::Vector {
+                            size,
                             scalar: condition_scalar,
-                            pointer_space: <span class="prelude-val">None</span>,
-                        }));
+                        }),
+                    ));
 
                     <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                     block.body.push(Instruction::composite_construct(
@@ -4706,7 +4607,9 @@ Implementations for `BlockContext` methods.
                 </span><span class="prelude-val">Some</span>(ty) =&gt; ty,
                 <span class="prelude-val">None </span>=&gt; LookupType::Handle(ty_handle),
             },
-            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; LookupType::Local(make_local(inner).unwrap()),
+            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
+                LookupType::Local(LocalType::from_inner(inner).unwrap())
+            }
         };
         <span class="kw">let </span>result_type_id = <span class="self">self</span>.get_type_id(result_lookup_ty);
 
@@ -4926,11 +4829,11 @@ Implementations for `BlockContext` methods.
     ) {
         <span class="self">self</span>.temp_list.clear();
 
-        <span class="kw">let </span>vector_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-            vector_size: <span class="prelude-val">Some</span>(rows),
-            scalar: <span class="kw">crate</span>::Scalar::float(width),
-            pointer_space: <span class="prelude-val">None</span>,
-        }));
+        <span class="kw">let </span>vector_type_id =
+            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                size: rows,
+                scalar: <span class="kw">crate</span>::Scalar::float(width),
+            })));
 
         <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u32 {
             <span class="kw">let </span>column_id_left = <span class="self">self</span>.gen_id();
@@ -5632,20 +5535,15 @@ Implementations for `BlockContext` methods.
                         <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } =&gt; {
                             <span class="kw">let </span>scalar_type_id = <span class="kw">match </span><span class="kw-2">*</span>value_inner {
                                 <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
-                                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                                        vector_size: <span class="prelude-val">None</span>,
-                                        scalar,
-                                        pointer_space: <span class="prelude-val">None</span>,
-                                    }))
+                                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
+                                        NumericType::Scalar(scalar),
+                                    )))
                                 }
                                 <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                             };
-                            <span class="kw">let </span>bool_type_id =
-                                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Value {
-                                    vector_size: <span class="prelude-val">None</span>,
-                                    scalar: <span class="kw">crate</span>::Scalar::BOOL,
-                                    pointer_space: <span class="prelude-val">None</span>,
-                                }));
+                            <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
+                                LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL)),
+                            ));
 
                             <span class="kw">let </span>cas_result_id = <span class="self">self</span>.gen_id();
                             <span class="kw">let </span>equality_result_id = <span class="self">self</span>.gen_id();
