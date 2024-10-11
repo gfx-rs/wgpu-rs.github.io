@@ -2121,7 +2121,33 @@
 <a href="#2120" id="2120">2120</a>
 <a href="#2121" id="2121">2121</a>
 <a href="#2122" id="2122">2122</a>
+<a href="#2123" id="2123">2123</a>
+<a href="#2124" id="2124">2124</a>
+<a href="#2125" id="2125">2125</a>
+<a href="#2126" id="2126">2126</a>
+<a href="#2127" id="2127">2127</a>
+<a href="#2128" id="2128">2128</a>
+<a href="#2129" id="2129">2129</a>
+<a href="#2130" id="2130">2130</a>
+<a href="#2131" id="2131">2131</a>
+<a href="#2132" id="2132">2132</a>
+<a href="#2133" id="2133">2133</a>
+<a href="#2134" id="2134">2134</a>
+<a href="#2135" id="2135">2135</a>
+<a href="#2136" id="2136">2136</a>
+<a href="#2137" id="2137">2137</a>
+<a href="#2138" id="2138">2138</a>
+<a href="#2139" id="2139">2139</a>
+<a href="#2140" id="2140">2140</a>
+<a href="#2141" id="2141">2141</a>
+<a href="#2142" id="2142">2142</a>
+<a href="#2143" id="2143">2143</a>
+<a href="#2144" id="2144">2144</a>
+<a href="#2145" id="2145">2145</a>
+<a href="#2146" id="2146">2146</a>
+<a href="#2147" id="2147">2147</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
+<span class="kw">use </span><span class="kw">crate</span>::back::wgsl::polyfill::InversePolyfill;
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, ExpressionKindTracker, NameKey},
@@ -2191,6 +2217,7 @@
     namer: proc::Namer,
     named_expressions: <span class="kw">crate</span>::NamedExpressions,
     ep_results: Vec&lt;(ShaderStage, Handle&lt;<span class="kw">crate</span>::Type&gt;)&gt;,
+    required_polyfills: <span class="kw">crate</span>::FastIndexSet&lt;InversePolyfill&gt;,
 }
 
 <span class="kw">impl</span>&lt;W: Write&gt; Writer&lt;W&gt; {
@@ -2202,6 +2229,7 @@
             namer: proc::Namer::default(),
             named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
             ep_results: <span class="macro">vec!</span>[],
+            required_polyfills: <span class="kw">crate</span>::FastIndexSet::default(),
         }
     }
 
@@ -2213,11 +2241,12 @@
             <span class="comment">// an identifier must not start with two underscore
             </span><span class="kw-2">&amp;</span>[],
             <span class="kw-2">&amp;</span>[],
-            <span class="kw-2">&amp;</span>[<span class="string">"__"</span>],
+            <span class="kw-2">&amp;</span>[<span class="string">"__"</span>, <span class="string">"_naga"</span>],
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.names,
         );
         <span class="self">self</span>.named_expressions.clear();
         <span class="self">self</span>.ep_results.clear();
+        <span class="self">self</span>.required_polyfills.clear();
     }
 
     <span class="kw">fn </span>is_builtin_wgsl_struct(<span class="kw-2">&amp;</span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; bool {
@@ -2324,6 +2353,13 @@
             <span class="kw">if </span>index &lt; module.entry_points.len() - <span class="number">1 </span>{
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
             }
+        }
+
+        <span class="comment">// Write any polyfills that were required.
+        </span><span class="kw">for </span>polyfill <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.required_polyfills {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, polyfill.source)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -3776,6 +3812,7 @@
 
                 <span class="kw">enum </span>Function {
                     Regular(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
+                    InversePolyfill(InversePolyfill),
                 }
 
                 <span class="kw">let </span>function = <span class="kw">match </span>fun {
@@ -3859,9 +3896,16 @@
                     Mf::Unpack2x16float =&gt; Function::Regular(<span class="string">"unpack2x16float"</span>),
                     Mf::Unpack4xI8 =&gt; Function::Regular(<span class="string">"unpack4xI8"</span>),
                     Mf::Unpack4xU8 =&gt; Function::Regular(<span class="string">"unpack4xU8"</span>),
-                    Mf::Inverse | Mf::Outer =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedMathFunction(fun));
+                    Mf::Inverse =&gt; {
+                        <span class="kw">let </span>typ = func_ctx.resolve_type(arg, <span class="kw-2">&amp;</span>module.types);
+
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(overload) = InversePolyfill::find_overload(typ) <span class="kw">else </span>{
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedMathFunction(fun));
+                        };
+
+                        Function::InversePolyfill(overload)
                     }
+                    Mf::Outer =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedMathFunction(fun)),
                 };
 
                 <span class="kw">match </span>function {
@@ -3874,6 +3918,12 @@
                         }
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?
                     </span>}
+                    Function::InversePolyfill(inverse) =&gt; {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, inverse.fun_name)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.required_polyfills.insert(inverse);
+                    }
                 }
             }
 
