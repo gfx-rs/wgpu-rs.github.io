@@ -3649,8 +3649,6 @@
 <a href="#3648" id="3648">3648</a>
 <a href="#3649" id="3649">3649</a>
 <a href="#3650" id="3650">3650</a>
-<a href="#3651" id="3651">3651</a>
-<a href="#3652" id="3652">3652</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3688,8 +3686,6 @@
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>once_cell::sync::OnceCell;
-
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>wgt::{
     math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension,
@@ -3701,7 +3697,7 @@
     num::NonZeroU32,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Arc, Weak,
+        Arc, OnceLock, Weak,
     },
 };
 
@@ -3733,8 +3729,8 @@
 </span><span class="kw">pub struct </span>Device {
     raw: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynDevice&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) adapter: Arc&lt;Adapter&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) queue: OnceCell&lt;Weak&lt;Queue&gt;&gt;,
-    queue_to_drop: OnceCell&lt;Box&lt;<span class="kw">dyn </span>hal::DynQueue&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) queue: OnceLock&lt;Weak&lt;Queue&gt;&gt;,
+    queue_to_drop: OnceLock&lt;Box&lt;<span class="kw">dyn </span>hal::DynQueue&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) zero_buffer: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;&gt;,
     <span class="doccomment">/// The `label` from the descriptor used to create the resource.
     </span>label: String,
@@ -3919,8 +3915,8 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             raw: ManuallyDrop::new(raw_device),
             adapter: adapter.clone(),
-            queue: OnceCell::new(),
-            queue_to_drop: OnceCell::new(),
+            queue: OnceLock::new(),
+            queue_to_drop: OnceLock::new(),
             zero_buffer: ManuallyDrop::new(zero_buffer),
             label: desc.label.to_string(),
             command_allocator,
@@ -5518,7 +5514,7 @@
             device: <span class="self">self</span>.clone(),
             entries: entry_map,
             origin,
-            exclusive_pipeline: OnceCell::new(),
+            exclusive_pipeline: OnceLock::new(),
             binding_count_validator: count_validator,
             label: label.to_string(),
         };
