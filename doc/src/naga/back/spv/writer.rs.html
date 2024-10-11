@@ -2107,25 +2107,6 @@
 <a href="#2106" id="2106">2106</a>
 <a href="#2107" id="2107">2107</a>
 <a href="#2108" id="2108">2108</a>
-<a href="#2109" id="2109">2109</a>
-<a href="#2110" id="2110">2110</a>
-<a href="#2111" id="2111">2111</a>
-<a href="#2112" id="2112">2112</a>
-<a href="#2113" id="2113">2113</a>
-<a href="#2114" id="2114">2114</a>
-<a href="#2115" id="2115">2115</a>
-<a href="#2116" id="2116">2116</a>
-<a href="#2117" id="2117">2117</a>
-<a href="#2118" id="2118">2118</a>
-<a href="#2119" id="2119">2119</a>
-<a href="#2120" id="2120">2120</a>
-<a href="#2121" id="2121">2121</a>
-<a href="#2122" id="2122">2122</a>
-<a href="#2123" id="2123">2123</a>
-<a href="#2124" id="2124">2124</a>
-<a href="#2125" id="2125">2125</a>
-<a href="#2126" id="2126">2126</a>
-<a href="#2127" id="2127">2127</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -2160,7 +2141,7 @@
                 <span class="kw">for </span>local_var <span class="kw">in </span><span class="self">self</span>.variables.values() {
                     local_var.instruction.to_words(sink);
                 }
-                <span class="kw">for </span>internal_var <span class="kw">in </span><span class="self">self</span>.internal_variables.iter() {
+                <span class="kw">for </span>internal_var <span class="kw">in </span><span class="self">self</span>.spilled_composites.values() {
                     internal_var.instruction.to_words(sink);
                 }
             }
@@ -2266,54 +2247,6 @@
         <span class="self">self</span>.capabilities_used.insert(spirv::Capability::Shader);
     }
 
-    <span class="attr">#[allow(clippy::too_many_arguments)]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>promote_access_expression_to_variable(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        result_type_id: Word,
-        container_id: Word,
-        container_ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
-        index_id: Word,
-        element_ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
-        block: <span class="kw-2">&amp;mut </span>Block,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Word, LocalVariable), Error&gt; {
-        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(container_ty, spirv::StorageClass::Function);
-
-        <span class="kw">let </span>variable = {
-            <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-            LocalVariable {
-                id,
-                instruction: Instruction::variable(
-                    pointer_type_id,
-                    id,
-                    spirv::StorageClass::Function,
-                    <span class="prelude-val">None</span>,
-                ),
-            }
-        };
-        block
-            .body
-            .push(Instruction::store(variable.id, container_id, <span class="prelude-val">None</span>));
-
-        <span class="kw">let </span>element_pointer_id = <span class="self">self</span>.id_gen.next();
-        <span class="kw">let </span>element_pointer_type_id =
-            <span class="self">self</span>.get_pointer_id(element_ty, spirv::StorageClass::Function);
-        block.body.push(Instruction::access_chain(
-            element_pointer_type_id,
-            element_pointer_id,
-            variable.id,
-            <span class="kw-2">&amp;</span>[index_id],
-        ));
-        <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-        block.body.push(Instruction::load(
-            result_type_id,
-            id,
-            element_pointer_id,
-            <span class="prelude-val">None</span>,
-        ));
-
-        <span class="prelude-val">Ok</span>((id, variable))
-    }
-
     <span class="doccomment">/// Indicate that the code requires any one of the listed capabilities.
     ///
     /// If nothing in `capabilities` appears in the available capabilities
@@ -2402,6 +2335,24 @@
         }))
     }
 
+    <span class="doccomment">/// Return a SPIR-V type for a pointer to `resolution`.
+    ///
+    /// The given `resolution` must be one that we can represent
+    /// either as a `LocalType::Pointer` or `LocalType::LocalPointer`.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_resolution_pointer_id(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        resolution: <span class="kw-2">&amp;</span>TypeResolution,
+        class: spirv::StorageClass,
+    ) -&gt; Word {
+        <span class="kw">match </span><span class="kw-2">*</span>resolution {
+            TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.get_pointer_id(handle, class),
+            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
+                <span class="kw">let </span>base = NumericType::from_inner(inner).unwrap();
+                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::LocalPointer { base, class }))
+            }
+        }
+    }
+
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
         <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
         <span class="self">self</span>.get_type_id(local_type.into())
@@ -2465,6 +2416,7 @@
         <span class="kw-2">mut </span>interface: <span class="prelude-ty">Option</span>&lt;FunctionInterface&gt;,
         debug_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;DebugInfoInner&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
+        <span class="macro">log::trace!</span>(<span class="string">"Generating code for {:?}"</span>, ir_function.name);
         <span class="kw">let </span><span class="kw-2">mut </span>function = Function::default();
 
         <span class="kw">let </span>prelude_id = <span class="self">self</span>.id_gen.next();
@@ -2792,10 +2744,20 @@
                 .insert(handle, LocalVariable { id, instruction });
         }
 
-        <span class="comment">// cache local variable expressions
-        </span><span class="kw">for </span>(handle, expr) <span class="kw">in </span>ir_function.expressions.iter() {
-            <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span>expr, <span class="kw">crate</span>::Expression::LocalVariable(<span class="kw">_</span>)) {
-                context.cache_expression_value(handle, <span class="kw-2">&amp;mut </span>prelude)<span class="question-mark">?</span>;
+        <span class="kw">for </span>(handle, expr) <span class="kw">in </span>ir_function.expressions.iter() {
+            <span class="kw">match </span><span class="kw-2">*</span>expr {
+                <span class="kw">crate</span>::Expression::LocalVariable(<span class="kw">_</span>) =&gt; {
+                    <span class="comment">// Cache the `OpVariable` instruction we generated above as
+                    // the value of this expression.
+                    </span>context.cache_expression_value(handle, <span class="kw-2">&amp;mut </span>prelude)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::Expression::Access { base, .. }
+                | <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; {
+                    <span class="comment">// Count references to `base` by `Access` and `AccessIndex`
+                    // instructions. See `access_uses` for details.
+                    </span><span class="kw-2">*</span>context.function.access_uses.entry(base).or_insert(<span class="number">0</span>) += <span class="number">1</span>;
+                }
+                <span class="kw">_ </span>=&gt; {}
             }
         }
 
