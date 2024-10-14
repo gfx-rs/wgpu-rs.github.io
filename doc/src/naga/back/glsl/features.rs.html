@@ -596,17 +596,6 @@
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
 <a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
 <span class="kw">use crate</span>::{
     back::glsl::{Options, WriterFlags},
@@ -1166,49 +1155,38 @@
     }
 
     <span class="kw">fn </span>varying_required_features(<span class="kw-2">&amp;mut </span><span class="self">self</span>, binding: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Binding&gt;, ty: Handle&lt;Type&gt;) {
-        <span class="kw">match </span><span class="self">self</span>.module.types[ty].inner {
-            TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
-                <span class="kw">for </span>member <span class="kw">in </span>members {
-                    <span class="self">self</span>.varying_required_features(member.binding.as_ref(), member.ty);
-                }
+        <span class="kw">if let </span>TypeInner::Struct { <span class="kw-2">ref </span>members, .. } = <span class="self">self</span>.module.types[ty].inner {
+            <span class="kw">for </span>member <span class="kw">in </span>members {
+                <span class="self">self</span>.varying_required_features(member.binding.as_ref(), member.ty);
             }
-            <span class="kw">_ </span>=&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = binding {
-                    <span class="kw">match </span><span class="kw-2">*</span>binding {
-                        Binding::BuiltIn(built_in) =&gt; <span class="kw">match </span>built_in {
-                            <span class="kw">crate</span>::BuiltIn::ClipDistance =&gt; {
-                                <span class="self">self</span>.features.request(Features::CLIP_DISTANCE)
-                            }
-                            <span class="kw">crate</span>::BuiltIn::CullDistance =&gt; {
-                                <span class="self">self</span>.features.request(Features::CULL_DISTANCE)
-                            }
-                            <span class="kw">crate</span>::BuiltIn::SampleIndex =&gt; {
-                                <span class="self">self</span>.features.request(Features::SAMPLE_VARIABLES)
-                            }
-                            <span class="kw">crate</span>::BuiltIn::ViewIndex =&gt; {
-                                <span class="self">self</span>.features.request(Features::MULTI_VIEW)
-                            }
-                            <span class="kw">crate</span>::BuiltIn::InstanceIndex | <span class="kw">crate</span>::BuiltIn::DrawID =&gt; {
-                                <span class="self">self</span>.features.request(Features::INSTANCE_INDEX)
-                            }
-                            <span class="kw">_ </span>=&gt; {}
-                        },
-                        Binding::Location {
-                            location: <span class="kw">_</span>,
-                            interpolation,
-                            sampling,
-                            second_blend_source,
-                        } =&gt; {
-                            <span class="kw">if </span>interpolation == <span class="prelude-val">Some</span>(Interpolation::Linear) {
-                                <span class="self">self</span>.features.request(Features::NOPERSPECTIVE_QUALIFIER);
-                            }
-                            <span class="kw">if </span>sampling == <span class="prelude-val">Some</span>(Sampling::Sample) {
-                                <span class="self">self</span>.features.request(Features::SAMPLE_QUALIFIER);
-                            }
-                            <span class="kw">if </span>second_blend_source {
-                                <span class="self">self</span>.features.request(Features::DUAL_SOURCE_BLENDING);
-                            }
-                        }
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(binding) = binding {
+            <span class="kw">match </span><span class="kw-2">*</span>binding {
+                Binding::BuiltIn(built_in) =&gt; <span class="kw">match </span>built_in {
+                    <span class="kw">crate</span>::BuiltIn::ClipDistance =&gt; <span class="self">self</span>.features.request(Features::CLIP_DISTANCE),
+                    <span class="kw">crate</span>::BuiltIn::CullDistance =&gt; <span class="self">self</span>.features.request(Features::CULL_DISTANCE),
+                    <span class="kw">crate</span>::BuiltIn::SampleIndex =&gt; {
+                        <span class="self">self</span>.features.request(Features::SAMPLE_VARIABLES)
+                    }
+                    <span class="kw">crate</span>::BuiltIn::ViewIndex =&gt; <span class="self">self</span>.features.request(Features::MULTI_VIEW),
+                    <span class="kw">crate</span>::BuiltIn::InstanceIndex | <span class="kw">crate</span>::BuiltIn::DrawID =&gt; {
+                        <span class="self">self</span>.features.request(Features::INSTANCE_INDEX)
+                    }
+                    <span class="kw">_ </span>=&gt; {}
+                },
+                Binding::Location {
+                    location: <span class="kw">_</span>,
+                    interpolation,
+                    sampling,
+                    second_blend_source,
+                } =&gt; {
+                    <span class="kw">if </span>interpolation == <span class="prelude-val">Some</span>(Interpolation::Linear) {
+                        <span class="self">self</span>.features.request(Features::NOPERSPECTIVE_QUALIFIER);
+                    }
+                    <span class="kw">if </span>sampling == <span class="prelude-val">Some</span>(Sampling::Sample) {
+                        <span class="self">self</span>.features.request(Features::SAMPLE_QUALIFIER);
+                    }
+                    <span class="kw">if </span>second_blend_source {
+                        <span class="self">self</span>.features.request(Features::DUAL_SOURCE_BLENDING);
                     }
                 }
             }
