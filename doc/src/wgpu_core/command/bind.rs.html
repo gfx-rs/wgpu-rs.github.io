@@ -508,6 +508,18 @@
 <a href="#507" id="507">507</a>
 <a href="#508" id="508">508</a>
 <a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -710,13 +722,17 @@
                 entries: (<span class="number">0</span>..hal::MAX_BIND_GROUPS).map(|<span class="kw">_</span>| Entry::empty()).collect(),
             }
         }
-        <span class="kw">fn </span>make_range(<span class="kw-2">&amp;</span><span class="self">self</span>, start_index: usize) -&gt; Range&lt;usize&gt; {
+
+        <span class="kw">pub fn </span>num_valid_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
             <span class="comment">// find first incompatible entry
-            </span><span class="kw">let </span>end = <span class="self">self
-                </span>.entries
+            </span><span class="self">self</span>.entries
                 .iter()
                 .position(|e| e.is_incompatible())
-                .unwrap_or(<span class="self">self</span>.entries.len());
+                .unwrap_or(<span class="self">self</span>.entries.len())
+        }
+
+        <span class="kw">fn </span>make_range(<span class="kw-2">&amp;</span><span class="self">self</span>, start_index: usize) -&gt; Range&lt;usize&gt; {
+            <span class="kw">let </span>end = <span class="self">self</span>.num_valid_entries();
             start_index..end.max(start_index)
         }
 
@@ -914,6 +930,14 @@
         <span class="self">self</span>.manager
             .list_active()
             .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap())
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_valid&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (usize, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>EntryPayload)&gt; + <span class="lifetime">'_ </span>{
+        <span class="self">self</span>.payloads
+            .iter()
+            .take(<span class="self">self</span>.manager.num_valid_entries())
+            .enumerate()
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>check_compatibility&lt;T: Labeled&gt;(
