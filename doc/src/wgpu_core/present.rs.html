@@ -368,21 +368,6 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -403,7 +388,8 @@ extract it from the hub.
     device::{Device, DeviceError, MissingDownlevelFlags, WaitIdleError},
     global::Global,
     hal_label, id,
-    resource::{<span class="self">self</span>, Trackable},
+    instance::Surface,
+    resource,
 };
 
 <span class="kw">use </span>thiserror::Error;
@@ -415,7 +401,7 @@ extract it from the hub.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Presentation {
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) config: wgt::SurfaceConfiguration&lt;Vec&lt;wgt::TextureFormat&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) acquired_texture: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) acquired_texture: <span class="prelude-ty">Option</span>&lt;Arc&lt;resource::Texture&gt;&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -429,6 +415,8 @@ extract it from the hub.
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(<span class="string">"Surface image is already acquired"</span>)]
     </span>AlreadyAcquired,
+    <span class="attr">#[error(<span class="string">"Texture has been destroyed"</span>)]
+    </span>TextureDestroyed,
     <span class="attr">#[error(<span class="string">"Acquired frame is still referenced"</span>)]
     </span>StillReferenced,
 }
@@ -490,6 +478,12 @@ extract it from the hub.
     }
 }
 
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ResolvedSurfaceOutput {
+    <span class="kw">pub </span>status: Status,
+    <span class="kw">pub </span>texture: <span class="prelude-ty">Option</span>&lt;Arc&lt;resource::Texture&gt;&gt;,
+}
+
 <span class="attr">#[repr(C)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>SurfaceOutput {
@@ -497,39 +491,21 @@ extract it from the hub.
     <span class="kw">pub </span>texture_id: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
 }
 
-<span class="kw">impl </span>Global {
-    <span class="kw">pub fn </span>surface_get_current_texture(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_id: id::SurfaceId,
-        texture_id_in: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceOutput, SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::get_next_texture"</span>);
+<span class="kw">impl </span>Surface {
+    <span class="kw">pub fn </span>get_current_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedSurfaceOutput, SurfaceError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Surface::get_current_texture"</span>);
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
-
-        <span class="kw">let </span>(device, config) = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>present) = <span class="kw-2">*</span>surface.presentation.lock() {
+        <span class="kw">let </span>(device, config) = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>present) = <span class="kw-2">*</span><span class="self">self</span>.presentation.lock() {
             present.device.check_is_valid()<span class="question-mark">?</span>;
             (present.device.clone(), present.config.clone())
         } <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::NotConfigured);
         };
 
-        <span class="kw">let </span>fid = hub.textures.prepare(texture_id_in);
-
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            trace.add(Action::GetSurfaceTexture {
-                id: fid.id(),
-                parent_id: surface_id,
-            });
-        }
-
         <span class="kw">let </span>fence = device.fence.read();
 
-        <span class="kw">let </span>suf = surface.raw(device.backend()).unwrap();
-        <span class="kw">let </span>(texture_id, status) = <span class="kw">match unsafe </span>{
+        <span class="kw">let </span>suf = <span class="self">self</span>.raw(device.backend()).unwrap();
+        <span class="kw">let </span>(texture, status) = <span class="kw">match unsafe </span>{
             suf.acquire_texture(
                 <span class="prelude-val">Some</span>(std::time::Duration::from_millis(FRAME_TIMEOUT_MS <span class="kw">as </span>u64)),
                 fence.as_ref(),
@@ -575,14 +551,11 @@ extract it from the hub.
                 }
                 .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
+                <span class="kw">let </span><span class="kw-2">mut </span>presentation = <span class="self">self</span>.presentation.lock();
                 <span class="kw">let </span>present = presentation.as_mut().unwrap();
                 <span class="kw">let </span>texture = resource::Texture::new(
                     <span class="kw-2">&amp;</span>device,
-                    resource::TextureInner::Surface {
-                        raw: ast.texture,
-                        parent_id: surface_id,
-                    },
+                    resource::TextureInner::Surface { raw: ast.texture },
                     hal_usage,
                     <span class="kw-2">&amp;</span>texture_desc,
                     format_features,
@@ -600,19 +573,17 @@ extract it from the hub.
                     .textures
                     .insert_single(<span class="kw-2">&amp;</span>texture, hal::TextureUses::UNINITIALIZED);
 
-                <span class="kw">let </span>id = fid.assign(resource::Fallible::Valid(texture));
-
                 <span class="kw">if </span>present.acquired_texture.is_some() {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::AlreadyAcquired);
                 }
-                present.acquired_texture = <span class="prelude-val">Some</span>(id);
+                present.acquired_texture = <span class="prelude-val">Some</span>(texture.clone());
 
                 <span class="kw">let </span>status = <span class="kw">if </span>ast.suboptimal {
                     Status::Suboptimal
                 } <span class="kw">else </span>{
                     Status::Good
                 };
-                (<span class="prelude-val">Some</span>(id), status)
+                (<span class="prelude-val">Some</span>(texture), status)
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; (<span class="prelude-val">None</span>, Status::Timeout),
             <span class="prelude-val">Err</span>(err) =&gt; (
@@ -631,17 +602,13 @@ extract it from the hub.
             ),
         };
 
-        <span class="prelude-val">Ok</span>(SurfaceOutput { status, texture_id })
+        <span class="prelude-val">Ok</span>(ResolvedSurfaceOutput { status, texture })
     }
 
-    <span class="kw">pub fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::present"</span>);
+    <span class="kw">pub fn </span>present(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Surface::present"</span>);
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>presentation = <span class="self">self</span>.presentation.lock();
         <span class="kw">let </span>present = <span class="kw">match </span>presentation.as_mut() {
             <span class="prelude-val">Some</span>(present) =&gt; present,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::NotConfigured),
@@ -649,48 +616,22 @@ extract it from the hub.
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>present.device;
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            trace.add(Action::Present(surface_id));
-        }
-
         device.check_is_valid()<span class="question-mark">?</span>;
         <span class="kw">let </span>queue = device.get_queue().unwrap();
 
-        <span class="kw">let </span>result = {
-            <span class="kw">let </span>texture_id = present
-                .acquired_texture
-                .take()
-                .ok_or(SurfaceError::AlreadyAcquired)<span class="question-mark">?</span>;
+        <span class="kw">let </span>texture = present
+            .acquired_texture
+            .take()
+            .ok_or(SurfaceError::AlreadyAcquired)<span class="question-mark">?</span>;
 
-            <span class="comment">// The texture ID got added to the device tracker by `submit()`,
-            // and now we are moving it away.
-            </span><span class="kw">let </span>texture = hub.textures.remove(texture_id).get();
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = texture {
-                device
-                    .trackers
-                    .lock()
-                    .textures
-                    .remove(texture.tracker_index());
-                <span class="kw">let </span>suf = surface.raw(device.backend()).unwrap();
-                <span class="kw">match </span>texture
-                    .inner
-                    .snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write())
-                    .unwrap()
-                {
-                    resource::TextureInner::Surface { raw, parent_id } =&gt; {
-                        <span class="kw">if </span>surface_id != parent_id {
-                            <span class="macro">log::error!</span>(<span class="string">"Presented frame is from a different surface"</span>);
-                            <span class="prelude-val">Err</span>(hal::SurfaceError::Lost)
-                        } <span class="kw">else </span>{
-                            <span class="kw">unsafe </span>{ queue.raw().present(suf, raw) }
-                        }
-                    }
-                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-                }
-            } <span class="kw">else </span>{
-                <span class="prelude-val">Err</span>(hal::SurfaceError::Outdated) <span class="comment">//TODO?
-            </span>}
+        <span class="kw">let </span>result = <span class="kw">match </span>texture.inner.snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write()) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::TextureDestroyed),
+            <span class="prelude-val">Some</span>(resource::TextureInner::Surface { raw }) =&gt; {
+                <span class="kw">let </span>raw_surface = <span class="self">self</span>.raw(device.backend()).unwrap();
+                <span class="kw">let </span>raw_queue = queue.raw();
+                <span class="kw">unsafe </span>{ raw_queue.present(raw_surface, raw) }
+            }
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
 
         <span class="kw">match </span>result {
@@ -709,13 +650,10 @@ extract it from the hub.
         }
     }
 
-    <span class="kw">pub fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">"SwapChain::discard"</span>);
+    <span class="kw">pub fn </span>discard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Surface::discard"</span>);
 
-        <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
-
-        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
-        <span class="kw">let </span><span class="kw-2">mut </span>presentation = surface.presentation.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>presentation = <span class="self">self</span>.presentation.lock();
         <span class="kw">let </span>present = <span class="kw">match </span>presentation.as_mut() {
             <span class="prelude-val">Some</span>(present) =&gt; present,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::NotConfigured),
@@ -723,48 +661,80 @@ extract it from the hub.
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>present.device;
 
-        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-            trace.add(Action::DiscardSurfaceTexture(surface_id));
-        }
-
         device.check_is_valid()<span class="question-mark">?</span>;
 
-        {
-            <span class="kw">let </span>texture_id = present
-                .acquired_texture
-                .take()
-                .ok_or(SurfaceError::AlreadyAcquired)<span class="question-mark">?</span>;
+        <span class="kw">let </span>texture = present
+            .acquired_texture
+            .take()
+            .ok_or(SurfaceError::AlreadyAcquired)<span class="question-mark">?</span>;
 
-            <span class="comment">// The texture ID got added to the device tracker by `submit()`,
-            // and now we are moving it away.
-            </span><span class="kw">let </span>texture = hub.textures.remove(texture_id).get();
-
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(texture) = texture {
-                device
-                    .trackers
-                    .lock()
-                    .textures
-                    .remove(texture.tracker_index());
-                <span class="kw">let </span>suf = surface.raw(device.backend());
-                <span class="kw">match </span>texture
-                    .inner
-                    .snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write())
-                    .unwrap()
-                {
-                    resource::TextureInner::Surface { raw, parent_id } =&gt; {
-                        <span class="kw">if </span>surface_id == parent_id {
-                            <span class="kw">unsafe </span>{ suf.unwrap().discard_texture(raw) };
-                        } <span class="kw">else </span>{
-                            <span class="macro">log::warn!</span>(<span class="string">"Surface texture is outdated"</span>);
-                        }
-                    }
-                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-                }
+        <span class="kw">match </span>texture.inner.snatch(<span class="kw-2">&amp;mut </span>device.snatchable_lock.write()) {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(SurfaceError::TextureDestroyed),
+            <span class="prelude-val">Some</span>(resource::TextureInner::Surface { raw }) =&gt; {
+                <span class="kw">let </span>raw_surface = <span class="self">self</span>.raw(device.backend()).unwrap();
+                <span class="kw">unsafe </span>{ raw_surface.discard_texture(raw) };
             }
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl </span>Global {
+    <span class="kw">pub fn </span>surface_get_current_texture(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface_id: id::SurfaceId,
+        texture_id_in: <span class="prelude-ty">Option</span>&lt;id::TextureId&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceOutput, SurfaceError&gt; {
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
+
+        <span class="kw">let </span>fid = <span class="self">self</span>.hub.textures.prepare(texture_id_in);
+
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
+                trace.add(Action::GetSurfaceTexture {
+                    id: fid.id(),
+                    parent_id: surface_id,
+                });
+            }
+        }
+
+        <span class="kw">let </span>output = surface.get_current_texture()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = output.status;
+        <span class="kw">let </span>texture_id = output
+            .texture
+            .map(|texture| fid.assign(resource::Fallible::Valid(texture)));
+
+        <span class="prelude-val">Ok</span>(SurfaceOutput { status, texture_id })
+    }
+
+    <span class="kw">pub fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;Status, SurfaceError&gt; {
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
+
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
+                trace.add(Action::Present(surface_id));
+            }
+        }
+
+        surface.present()
+    }
+
+    <span class="kw">pub fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, surface_id: id::SurfaceId) -&gt; <span class="prelude-ty">Result</span>&lt;(), SurfaceError&gt; {
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.get(surface_id);
+
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().as_ref() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>present.device.trace.lock() {
+                trace.add(Action::DiscardSurfaceTexture(surface_id));
+            }
+        }
+
+        surface.discard()
     }
 }
 </code></pre></div></section></main></body></html>

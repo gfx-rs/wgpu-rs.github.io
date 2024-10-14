@@ -102,13 +102,6 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use crate</span>::{
@@ -135,9 +128,10 @@
 }
 
 <span class="kw">pub struct </span>Global {
-    <span class="kw">pub </span>instance: Instance,
     <span class="kw">pub</span>(<span class="kw">crate</span>) surfaces: Registry&lt;Arc&lt;Surface&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hub: Hub,
+    <span class="comment">// the instance must be dropped last
+    </span><span class="kw">pub </span>instance: Instance,
 }
 
 <span class="kw">impl </span>Global {
@@ -172,13 +166,7 @@
     ///
     /// - The raw instance handle returned must not be manually destroyed.
     </span><span class="kw">pub unsafe fn </span>instance_as_hal&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
-        <span class="self">self</span>.instance.raw(A::VARIANT).map(|instance| {
-            instance
-                .as_any()
-                .downcast_ref()
-                <span class="comment">// This should be impossible. It would mean that backend instance and enum type are mismatching.
-                </span>.expect(<span class="string">"Stored instance is not of the correct type"</span>)
-        })
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.as_hal::&lt;A&gt;() }
     }
 
     <span class="doccomment">/// # Safety
@@ -205,12 +193,10 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::drop"</span>);
         <span class="macro">resource_log!</span>(<span class="string">"Global::drop"</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>surfaces_locked = <span class="self">self</span>.surfaces.write();
 
-        <span class="comment">// destroy hub before the instance gets dropped
-        </span><span class="self">self</span>.hub.clear(<span class="kw-2">&amp;</span>surfaces_locked);
-
-        surfaces_locked.map.clear();
+        <span class="kw">for </span>(<span class="kw">_</span>, device) <span class="kw">in </span><span class="self">self</span>.hub.devices.read().iter() {
+            device.prepare_to_die();
+        }
     }
 }
 

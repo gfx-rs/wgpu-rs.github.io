@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ConfigureSurfaceError","SurfaceError"],"struct":["SurfaceOutput"]};
+window.SIDEBAR_ITEMS = {"enum":["ConfigureSurfaceError","SurfaceError"],"struct":["ResolvedSurfaceOutput","SurfaceOutput"]};

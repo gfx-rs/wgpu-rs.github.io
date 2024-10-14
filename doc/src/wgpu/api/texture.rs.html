@@ -152,7 +152,6 @@
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
 
 <span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
@@ -167,7 +166,6 @@
 </span><span class="kw">pub struct </span>Texture {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) owned: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) descriptor: TextureDescriptor&lt;<span class="lifetime">'static</span>&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
@@ -293,7 +291,7 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Texture {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span><span class="self">self</span>.owned &amp;&amp; !thread::panicking() {
+        <span class="kw">if </span>!thread::panicking() {
             <span class="self">self</span>.context.texture_drop(<span class="self">self</span>.data.as_ref());
         }
     }

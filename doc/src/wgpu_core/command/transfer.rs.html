@@ -1153,8 +1153,6 @@
 <a href="#1152" id="1152">1152</a>
 <a href="#1153" id="1153">1153</a>
 <a href="#1154" id="1154">1154</a>
-<a href="#1155" id="1155">1155</a>
-<a href="#1156" id="1156">1156</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1204,8 +1202,6 @@
     </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
     <span class="attr">#[error(transparent)]
     </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
-    <span class="attr">#[error(<span class="string">"Destination texture is missing the `RENDER_ATTACHMENT` usage flag"</span>)]
-    </span>MissingRenderAttachmentUsageFlag(TextureId),
     <span class="attr">#[error(<span class="string">"Copy of {start_offset}..{end_offset} would end up overrunning the bounds of the {side:?} buffer of size {buffer_size}"</span>)]
     </span>BufferOverrun {
         start_offset: BufferAddress,
@@ -1229,7 +1225,7 @@
     <span class="attr">#[error(<span class="string">"Unable to select texture mip level {level} out of {total}"</span>)]
     </span>InvalidTextureMipLevel { level: u32, total: u32 },
     <span class="attr">#[error(<span class="string">"Texture dimension must be 2D when copying from an external texture"</span>)]
-    </span>InvalidDimensionExternal(TextureId),
+    </span>InvalidDimensionExternal,
     <span class="attr">#[error(<span class="string">"Buffer offset {0} is not aligned to block size or `COPY_BUFFER_ALIGNMENT`"</span>)]
     </span>UnalignedBufferOffset(BufferAddress),
     <span class="attr">#[error(<span class="string">"Copy size {0} does not respect `COPY_BUFFER_ALIGNMENT`"</span>)]
@@ -1313,8 +1309,8 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_texture_selector(
-    copy_texture: <span class="kw-2">&amp;</span>ImageCopyTexture,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract_texture_selector&lt;T&gt;(
+    copy_texture: <span class="kw-2">&amp;</span>wgt::ImageCopyTexture&lt;T&gt;,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
     texture: <span class="kw-2">&amp;</span>Texture,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(TextureSelector, hal::TextureCopyBase), TransferError&gt; {
@@ -1471,8 +1467,8 @@
 /// Returns the HAL copy extent and the layer count.
 ///
 /// [vtcr]: https://gpuweb.github.io/gpuweb/#validating-texture-copy-range
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_texture_copy_range(
-    texture_copy_view: <span class="kw-2">&amp;</span>ImageCopyTexture,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_texture_copy_range&lt;T&gt;(
+    texture_copy_view: <span class="kw-2">&amp;</span>wgt::ImageCopyTexture&lt;T&gt;,
     desc: <span class="kw-2">&amp;</span>wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
     texture_side: CopySide,
     copy_size: <span class="kw-2">&amp;</span>Extent3d,
