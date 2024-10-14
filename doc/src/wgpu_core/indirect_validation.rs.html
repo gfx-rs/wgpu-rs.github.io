@@ -377,7 +377,24 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of;
+<span class="kw">use </span>std::num::NonZeroU64;
+
+<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
     device::DeviceError,
@@ -436,7 +453,7 @@
         <span class="kw">let </span>src = <span class="macro">format!</span>(
             <span class="string">"
             @group(0) @binding(0)
-            var&lt;storage, read_write&gt; dst: array&lt;u32, 3&gt;;
+            var&lt;storage, read_write&gt; dst: array&lt;u32, 6&gt;;
             @group(1) @binding(0)
             var&lt;storage, read&gt; src: array&lt;u32&gt;;
             struct OffsetPc {{
@@ -453,13 +470,24 @@
                     src.y &gt; max_compute_workgroups_per_dimension ||
                     src.z &gt; max_compute_workgroups_per_dimension
                 ) {{
-                    dst = array(0u, 0u, 0u);
+                    dst = array(0u, 0u, 0u, 0u, 0u, 0u);
                 }} else {{
-                    dst = array(src.x, src.y, src.z);
+                    dst = array(src.x, src.y, src.z, src.x, src.y, src.z);
                 }}
             }}
         "
         </span>);
+
+        <span class="comment">// SAFETY: The value we are passing to `new_unchecked` is not zero, so this is safe.
+        </span><span class="kw">const </span>SRC_BUFFER_SIZE: NonZeroU64 =
+            <span class="kw">unsafe </span>{ NonZeroU64::new_unchecked(size_of::&lt;u32&gt;() <span class="kw">as </span>u64 * <span class="number">3</span>) };
+
+        <span class="comment">// SAFETY: The value we are passing to `new_unchecked` is not zero, so this is safe.
+        </span><span class="kw">const </span>DST_BUFFER_SIZE: NonZeroU64 = <span class="kw">unsafe </span>{
+            NonZeroU64::new_unchecked(
+                SRC_BUFFER_SIZE.get() * <span class="number">2</span>, <span class="comment">// From above: `dst: array&lt;u32, 6&gt;`
+            </span>)
+        };
 
         <span class="kw">let </span>module = naga::front::wgsl::parse_str(<span class="kw-2">&amp;</span>src).map_err(|inner| {
             CreateShaderModuleError::Parsing(naga::error::ShaderError {
@@ -512,7 +540,7 @@
                 ty: wgt::BindingType::Buffer {
                     ty: wgt::BufferBindingType::Storage { read_only: <span class="bool-val">false </span>},
                     has_dynamic_offset: <span class="bool-val">false</span>,
-                    min_binding_size: <span class="prelude-val">Some</span>(std::num::NonZeroU64::new(<span class="number">4 </span>* <span class="number">3</span>).unwrap()),
+                    min_binding_size: <span class="prelude-val">Some</span>(DST_BUFFER_SIZE),
                 },
                 count: <span class="prelude-val">None</span>,
             }],
@@ -532,7 +560,7 @@
                 ty: wgt::BindingType::Buffer {
                     ty: wgt::BufferBindingType::Storage { read_only: <span class="bool-val">true </span>},
                     has_dynamic_offset: <span class="bool-val">true</span>,
-                    min_binding_size: <span class="prelude-val">Some</span>(std::num::NonZeroU64::new(<span class="number">4 </span>* <span class="number">3</span>).unwrap()),
+                    min_binding_size: <span class="prelude-val">Some</span>(SRC_BUFFER_SIZE),
                 },
                 count: <span class="prelude-val">None</span>,
             }],
@@ -590,7 +618,7 @@
 
         <span class="kw">let </span>dst_buffer_desc = hal::BufferDescriptor {
             label: <span class="prelude-val">None</span>,
-            size: <span class="number">4 </span>* <span class="number">3</span>,
+            size: DST_BUFFER_SIZE.get(),
             usage: hal::BufferUses::INDIRECT | hal::BufferUses::STORAGE_READ_WRITE,
             memory_flags: hal::MemoryFlags::empty(),
         };
@@ -608,7 +636,7 @@
             buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding {
                 buffer: dst_buffer.as_ref(),
                 offset: <span class="number">0</span>,
-                size: <span class="prelude-val">Some</span>(std::num::NonZeroU64::new(<span class="number">4 </span>* <span class="number">3</span>).unwrap()),
+                size: <span class="prelude-val">Some</span>(DST_BUFFER_SIZE),
             }],
             samplers: <span class="kw-2">&amp;</span>[],
             textures: <span class="kw-2">&amp;</span>[],
@@ -650,7 +678,7 @@
             buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding {
                 buffer,
                 offset: <span class="number">0</span>,
-                size: <span class="prelude-val">Some</span>(std::num::NonZeroU64::new(binding_size).unwrap()),
+                size: <span class="prelude-val">Some</span>(NonZeroU64::new(binding_size).unwrap()),
             }],
             samplers: <span class="kw-2">&amp;</span>[],
             textures: <span class="kw-2">&amp;</span>[],
