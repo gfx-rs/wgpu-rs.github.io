@@ -391,6 +391,11 @@
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
 <a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU64;
 
@@ -659,14 +664,18 @@
         })
     }
 
-    <span class="kw">pub fn </span>create_src_bind_group(
+    <span class="doccomment">/// `Ok(None)` will only be returned if `buffer_size` is `0`.
+    </span><span class="kw">pub fn </span>create_src_bind_group(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice,
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
         buffer_size: u64,
         buffer: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynBuffer,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;, DeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;&gt;, DeviceError&gt; {
         <span class="kw">let </span>binding_size = calculate_src_buffer_binding_size(buffer_size, limits);
+        <span class="kw">let </span><span class="prelude-val">Some</span>(binding_size) = NonZeroU64::new(binding_size) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
         <span class="kw">let </span>hal_desc = hal::BindGroupDescriptor {
             label: <span class="prelude-val">None</span>,
             layout: <span class="self">self</span>.src_bind_group_layout.as_ref(),
@@ -678,7 +687,7 @@
             buffers: <span class="kw-2">&amp;</span>[hal::BufferBinding {
                 buffer,
                 offset: <span class="number">0</span>,
-                size: <span class="prelude-val">Some</span>(NonZeroU64::new(binding_size).unwrap()),
+                size: <span class="prelude-val">Some</span>(binding_size),
             }],
             samplers: <span class="kw-2">&amp;</span>[],
             textures: <span class="kw-2">&amp;</span>[],
@@ -687,6 +696,7 @@
         <span class="kw">unsafe </span>{
             device
                 .create_bind_group(<span class="kw-2">&amp;</span>hal_desc)
+                .map(<span class="prelude-val">Some</span>)
                 .map_err(DeviceError::from_hal)
         }
     }
