@@ -1895,7 +1895,6 @@
 <a href="#1894" id="1894">1894</a>
 <a href="#1895" id="1895">1895</a>
 <a href="#1896" id="1896">1896</a>
-<a href="#1897" id="1897">1897</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1912,6 +1911,7 @@
     resource_log,
     snatch::{SnatchGuard, Snatchable},
     track::{SharedTrackerIndexAllocator, TextureSelector, TrackerIndex},
+    weak_vec::WeakVec,
     Label, LabelHelpers,
 };
 
@@ -1924,7 +1924,7 @@
     mem::{<span class="self">self</span>, ManuallyDrop},
     ops::Range,
     ptr::NonNull,
-    sync::{Arc, Weak},
+    sync::Arc,
 };
 
 <span class="doccomment">/// Information about the wgpu-core resource.
@@ -2372,7 +2372,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) map_state: Mutex&lt;BufferMapState&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;WeakVec&lt;BindGroup&gt;&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) raw_indirect_validation_bind_group: Snatchable&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;&gt;,
 }
@@ -2722,7 +2722,7 @@
     raw: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;&gt;,
     device: Arc&lt;Device&gt;,
     label: String,
-    bind_groups: Vec&lt;Weak&lt;BindGroup&gt;&gt;,
+    bind_groups: WeakVec&lt;BindGroup&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
     </span>raw_indirect_validation_bind_group: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynBindGroup&gt;&gt;,
 }
@@ -2736,9 +2736,9 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>DestroyedBuffer {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>deferred = <span class="self">self</span>.device.deferred_destroy.lock();
-        <span class="kw">for </span>bind_group <span class="kw">in </span><span class="self">self</span>.bind_groups.drain(..) {
-            deferred.push(DeferredDestroy::BindGroup(bind_group));
-        }
+        deferred.push(DeferredDestroy::BindGroups(mem::take(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.bind_groups,
+        )));
         drop(deferred);
 
         <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
@@ -2958,8 +2958,8 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) clear_mode: TextureClearMode,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;Vec&lt;Weak&lt;TextureView&gt;&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;Vec&lt;Weak&lt;BindGroup&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) views: Mutex&lt;WeakVec&lt;TextureView&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;WeakVec&lt;BindGroup&gt;&gt;,
 }
 
 <span class="kw">impl </span>Texture {
@@ -2993,8 +2993,8 @@
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(device.tracker_indices.textures.clone()),
             clear_mode,
-            views: Mutex::new(rank::TEXTURE_VIEWS, Vec::new()),
-            bind_groups: Mutex::new(rank::TEXTURE_BIND_GROUPS, Vec::new()),
+            views: Mutex::new(rank::TEXTURE_VIEWS, WeakVec::new()),
+            bind_groups: Mutex::new(rank::TEXTURE_BIND_GROUPS, WeakVec::new()),
         }
     }
     <span class="doccomment">/// Checks that the given texture usage contains the required texture usage,
@@ -3328,8 +3328,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>DestroyedTexture {
     raw: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynTexture&gt;&gt;,
-    views: Vec&lt;Weak&lt;TextureView&gt;&gt;,
-    bind_groups: Vec&lt;Weak&lt;BindGroup&gt;&gt;,
+    views: WeakVec&lt;TextureView&gt;,
+    bind_groups: WeakVec&lt;BindGroup&gt;,
     device: Arc&lt;Device&gt;,
     label: String,
 }
@@ -3345,12 +3345,10 @@
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span><span class="self">self</span>.device;
 
         <span class="kw">let </span><span class="kw-2">mut </span>deferred = device.deferred_destroy.lock();
-        <span class="kw">for </span>view <span class="kw">in </span><span class="self">self</span>.views.drain(..) {
-            deferred.push(DeferredDestroy::TextureView(view));
-        }
-        <span class="kw">for </span>bind_group <span class="kw">in </span><span class="self">self</span>.bind_groups.drain(..) {
-            deferred.push(DeferredDestroy::BindGroup(bind_group));
-        }
+        deferred.push(DeferredDestroy::TextureViews(mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.views)));
+        deferred.push(DeferredDestroy::BindGroups(mem::take(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.bind_groups,
+        )));
         drop(deferred);
 
         <span class="macro">resource_log!</span>(<span class="string">"Destroy raw Texture (destroyed) {:?}"</span>, <span class="self">self</span>.label());

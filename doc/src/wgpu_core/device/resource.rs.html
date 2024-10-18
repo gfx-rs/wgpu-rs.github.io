@@ -3720,11 +3720,6 @@
 <a href="#3719" id="3719">3719</a>
 <a href="#3720" id="3720">3720</a>
 <a href="#3721" id="3721">3721</a>
-<a href="#3722" id="3722">3722</a>
-<a href="#3723" id="3723">3723</a>
-<a href="#3724" id="3724">3724</a>
-<a href="#3725" id="3725">3725</a>
-<a href="#3726" id="3726">3726</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3758,6 +3753,7 @@
         UsageScopePool,
     },
     validation::{<span class="self">self</span>, validate_color_attachment_bytes_per_sample},
+    weak_vec::WeakVec,
     FastHashMap, LabelHelpers, PreHashedKey, PreHashedMap,
 };
 
@@ -3769,7 +3765,7 @@
 
 <span class="kw">use </span>std::{
     borrow::Cow,
-    mem::ManuallyDrop,
+    mem::{<span class="self">self</span>, ManuallyDrop},
     num::NonZeroU32,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -3877,8 +3873,8 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DeferredDestroy {
-    TextureView(Weak&lt;TextureView&gt;),
-    BindGroup(Weak&lt;BindGroup&gt;),
+    TextureViews(WeakVec&lt;TextureView&gt;),
+    BindGroups(WeakVec&lt;BindGroup&gt;),
 }
 
 <span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>Device {
@@ -4111,36 +4107,42 @@
     /// implementation of a reference-counted structure).
     /// The snatch lock must not be held while this function is called.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>deferred_resource_destruction(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(item) = <span class="self">self</span>.deferred_destroy.lock().pop() {
+        <span class="kw">let </span>deferred_destroy = mem::take(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.deferred_destroy.lock());
+        <span class="kw">for </span>item <span class="kw">in </span>deferred_destroy {
             <span class="kw">match </span>item {
-                DeferredDestroy::TextureView(view) =&gt; {
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(view) = view.upgrade() <span class="kw">else </span>{
-                        <span class="kw">continue</span>;
-                    };
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write()) <span class="kw">else </span>{
-                        <span class="kw">continue</span>;
-                    };
+                DeferredDestroy::TextureViews(views) =&gt; {
+                    <span class="kw">for </span>view <span class="kw">in </span>views {
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(view) = view.upgrade() <span class="kw">else </span>{
+                            <span class="kw">continue</span>;
+                        };
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(raw_view) = view.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write())
+                        <span class="kw">else </span>{
+                            <span class="kw">continue</span>;
+                        };
 
-                    <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, view.error_ident());
+                        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, view.error_ident());
 
-                    <span class="kw">unsafe </span>{
-                        <span class="self">self</span>.raw().destroy_texture_view(raw_view);
+                        <span class="kw">unsafe </span>{
+                            <span class="self">self</span>.raw().destroy_texture_view(raw_view);
+                        }
                     }
                 }
-                DeferredDestroy::BindGroup(bind_group) =&gt; {
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.upgrade() <span class="kw">else </span>{
-                        <span class="kw">continue</span>;
-                    };
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(raw_bind_group) =
-                        bind_group.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write())
-                    <span class="kw">else </span>{
-                        <span class="kw">continue</span>;
-                    };
+                DeferredDestroy::BindGroups(bind_groups) =&gt; {
+                    <span class="kw">for </span>bind_group <span class="kw">in </span>bind_groups {
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group) = bind_group.upgrade() <span class="kw">else </span>{
+                            <span class="kw">continue</span>;
+                        };
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(raw_bind_group) =
+                            bind_group.raw.snatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>.snatchable_lock.write())
+                        <span class="kw">else </span>{
+                            <span class="kw">continue</span>;
+                        };
 
-                    <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, bind_group.error_ident());
+                        <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, bind_group.error_ident());
 
-                    <span class="kw">unsafe </span>{
-                        <span class="self">self</span>.raw().destroy_bind_group(raw_bind_group);
+                        <span class="kw">unsafe </span>{
+                            <span class="self">self</span>.raw().destroy_bind_group(raw_bind_group);
+                        }
                     }
                 }
             }
@@ -4365,7 +4367,7 @@
             map_state: Mutex::new(rank::BUFFER_MAP_STATE, resource::BufferMapState::Idle),
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.buffers.clone()),
-            bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, Vec::new()),
+            bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, WeakVec::new()),
             <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
             </span>raw_indirect_validation_bind_group,
         };
@@ -4480,7 +4482,7 @@
             map_state: Mutex::new(rank::BUFFER_MAP_STATE, resource::BufferMapState::Idle),
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.buffers.clone()),
-            bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, Vec::new()),
+            bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, WeakVec::new()),
             <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
             </span>raw_indirect_validation_bind_group,
         };
@@ -5113,10 +5115,6 @@
 
         {
             <span class="kw">let </span><span class="kw-2">mut </span>views = texture.views.lock();
-
-            <span class="comment">// Remove stale weak references
-            </span>views.retain(|view| view.strong_count() &gt; <span class="number">0</span>);
-
             views.push(Arc::downgrade(<span class="kw-2">&amp;</span>view));
         }
 
@@ -6106,18 +6104,10 @@
         <span class="kw">let </span>weak_ref = Arc::downgrade(<span class="kw-2">&amp;</span>bind_group);
         <span class="kw">for </span>range <span class="kw">in </span><span class="kw-2">&amp;</span>bind_group.used_texture_ranges {
             <span class="kw">let </span><span class="kw-2">mut </span>bind_groups = range.texture.bind_groups.lock();
-
-            <span class="comment">// Remove stale weak references
-            </span>bind_groups.retain(|bg| bg.strong_count() &gt; <span class="number">0</span>);
-
             bind_groups.push(weak_ref.clone());
         }
         <span class="kw">for </span>range <span class="kw">in </span><span class="kw-2">&amp;</span>bind_group.used_buffer_ranges {
             <span class="kw">let </span><span class="kw-2">mut </span>bind_groups = range.buffer.bind_groups.lock();
-
-            <span class="comment">// Remove stale weak references
-            </span>bind_groups.retain(|bg| bg.strong_count() &gt; <span class="number">0</span>);
-
             bind_groups.push(weak_ref.clone());
         }
 
