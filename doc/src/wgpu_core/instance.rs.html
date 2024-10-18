@@ -972,6 +972,8 @@
 <a href="#971" id="971">971</a>
 <a href="#972" id="972">972</a>
 <a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{borrow::Cow, collections::HashMap};
 
@@ -1267,12 +1269,14 @@
         <span class="macro">api_log!</span>(<span class="string">"Instance::enumerate_adapters"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>adapters = Vec::new();
-        <span class="kw">for </span>(<span class="kw">_</span>, instance) <span class="kw">in </span><span class="self">self
+        <span class="kw">for </span>(_backend, instance) <span class="kw">in </span><span class="self">self
             </span>.instance_per_backend
             .iter()
             .filter(|(backend, <span class="kw">_</span>)| backends.contains(Backends::from(<span class="kw-2">*</span>backend)))
         {
-            <span class="macro">profiling::scope!</span>(<span class="string">"enumerating"</span>, <span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, backend));
+            <span class="comment">// NOTE: We might be using `profiling` without any features. The empty backend of this
+            // macro emits no code, so unused code linting changes depending on the backend.
+            </span><span class="macro">profiling::scope!</span>(<span class="string">"enumerating"</span>, <span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">"{:?}"</span>, _backend));
 
             <span class="kw">let </span>hal_adapters = <span class="kw">unsafe </span>{ instance.enumerate_adapters(<span class="prelude-val">None</span>) };
             <span class="kw">for </span>raw <span class="kw">in </span>hal_adapters {
