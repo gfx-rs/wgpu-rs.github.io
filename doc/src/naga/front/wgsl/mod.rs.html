@@ -59,6 +59,24 @@
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
 <a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 
@@ -118,5 +136,23 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 /// &lt;/div&gt;
 </span><span class="kw">pub fn </span>parse_str(source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Module, ParseError&gt; {
     Frontend::new().parse(source)
+}
+
+<span class="attr">#[cfg(test)]
+#[track_caller]
+</span><span class="kw">pub fn </span>assert_parse_err(input: <span class="kw-2">&amp;</span>str, snapshot: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">let </span>output = parse_str(input)
+        .expect_err(<span class="string">"expected parser error"</span>)
+        .emit_to_string(input);
+    <span class="kw">if </span>output != snapshot {
+        <span class="kw">for </span>diff <span class="kw">in </span>diff::lines(snapshot, <span class="kw-2">&amp;</span>output) {
+            <span class="kw">match </span>diff {
+                diff::Result::Left(l) =&gt; <span class="macro">println!</span>(<span class="string">"-{l}"</span>),
+                diff::Result::Both(l, <span class="kw">_</span>) =&gt; <span class="macro">println!</span>(<span class="string">" {l}"</span>),
+                diff::Result::Right(r) =&gt; <span class="macro">println!</span>(<span class="string">"+{r}"</span>),
+            }
+        }
+        <span class="macro">panic!</span>(<span class="string">"Error snapshot failed"</span>);
+    }
 }
 </code></pre></div></section></main></body></html>

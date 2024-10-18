@@ -738,6 +738,21 @@
 <a href="#737" id="737">737</a>
 <a href="#738" id="738">738</a>
 <a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
@@ -1090,27 +1105,42 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.next() {
-            (Token::Word(<span class="string">"_"</span>), span) =&gt; <span class="prelude-val">Err</span>(Error::InvalidIdentifierUnderscore(span)),
-            (Token::Word(word), span) <span class="kw">if </span>word.starts_with(<span class="string">"__"</span>) =&gt; {
-                <span class="prelude-val">Err</span>(Error::ReservedIdentifierPrefix(span))
-            }
-            (Token::Word(word), span) =&gt; <span class="prelude-val">Ok</span>((word, span)),
+            (Token::Word(word), span) =&gt; <span class="self">Self</span>::word_as_ident_with_span(word, span),
             other =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::Identifier)),
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>peek_ident_with_span(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.peek() {
+            (Token::Word(word), span) =&gt; <span class="self">Self</span>::word_as_ident_with_span(word, span),
+            other =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::Identifier)),
+        }
+    }
+
+    <span class="kw">fn </span>word_as_ident_with_span(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">match </span>word {
+            <span class="string">"_" </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidIdentifierUnderscore(span)),
+            word <span class="kw">if </span>word.starts_with(<span class="string">"__"</span>) =&gt; <span class="prelude-val">Err</span>(Error::ReservedIdentifierPrefix(span)),
+            word =&gt; <span class="prelude-val">Ok</span>((word, span)),
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ast::Ident&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
-        <span class="kw">let </span>ident = <span class="self">self
-            </span>.next_ident_with_span()
-            .map(|(name, span)| <span class="kw">super</span>::ast::Ident { name, span })<span class="question-mark">?</span>;
+        <span class="self">self</span>.next_ident_with_span()
+            .and_then(|(word, span)| <span class="self">Self</span>::word_as_ident(word, span))
+            .map(|(name, span)| <span class="kw">super</span>::ast::Ident { name, span })
+    }
 
-        <span class="kw">if </span><span class="kw">crate</span>::keywords::wgsl::RESERVED.contains(<span class="kw-2">&amp;</span>ident.name) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ReservedKeyword(ident.span));
+    <span class="kw">fn </span>word_as_ident(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw">if </span><span class="kw">crate</span>::keywords::wgsl::RESERVED.contains(<span class="kw-2">&amp;</span>word) {
+            <span class="prelude-val">Err</span>(Error::ReservedKeyword(span))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>((word, span))
         }
-
-        <span class="prelude-val">Ok</span>(ident)
     }
 
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
