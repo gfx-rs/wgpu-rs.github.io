@@ -1120,6 +1120,16 @@
 <a href="#1119" id="1119">1119</a>
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
@@ -1242,7 +1252,7 @@ we don't bother with that combination.
 
 <span class="kw">use </span>naga::FastHashMap;
 <span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>std::sync::atomic::{AtomicU32, AtomicU8};
+<span class="kw">use </span>std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 <span class="kw">use </span>std::{fmt, ops::Range, sync::Arc};
 
 <span class="attr">#[derive(Clone, Debug)]
@@ -1840,7 +1850,7 @@ we don't bother with that combination.
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Fence {
-    last_completed: <span class="kw">crate</span>::FenceValue,
+    last_completed: <span class="kw">crate</span>::AtomicFenceValue,
     pending: Vec&lt;(<span class="kw">crate</span>::FenceValue, glow::Fence)&gt;,
 }
 
@@ -1865,13 +1875,24 @@ we don't bother with that combination.
 
 <span class="kw">impl </span>Fence {
     <span class="kw">fn </span>get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) -&gt; <span class="kw">crate</span>::FenceValue {
-        <span class="kw">let </span><span class="kw-2">mut </span>max_value = <span class="self">self</span>.last_completed;
+        <span class="kw">let </span><span class="kw-2">mut </span>max_value = <span class="self">self</span>.last_completed.load(Ordering::Relaxed);
         <span class="kw">for </span><span class="kw-2">&amp;</span>(value, sync) <span class="kw">in </span><span class="self">self</span>.pending.iter() {
+            <span class="kw">if </span>value &lt;= max_value {
+                <span class="comment">// We already know this was good, no need to check again
+                </span><span class="kw">continue</span>;
+            }
             <span class="kw">let </span>status = <span class="kw">unsafe </span>{ gl.get_sync_status(sync) };
             <span class="kw">if </span>status == glow::SIGNALED {
                 max_value = value;
+            } <span class="kw">else </span>{
+                <span class="comment">// Anything after the first unsignalled is guaranteed to also be unsignalled
+                </span><span class="kw">break</span>;
             }
         }
+
+        <span class="comment">// Track the latest value, to save ourselves some querying later
+        </span><span class="self">self</span>.last_completed.fetch_max(max_value, Ordering::Relaxed);
+
         max_value
     }
 
@@ -1885,7 +1906,6 @@ we don't bother with that combination.
             }
         }
         <span class="self">self</span>.pending.retain(|<span class="kw-2">&amp;</span>(value, <span class="kw">_</span>)| value &gt; latest);
-        <span class="self">self</span>.last_completed = latest;
     }
 }
 

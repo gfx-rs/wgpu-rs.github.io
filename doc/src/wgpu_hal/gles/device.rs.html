@@ -1640,6 +1640,13 @@
 <a href="#1639" id="1639">1639</a>
 <a href="#1640" id="1640">1640</a>
 <a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1650,6 +1657,7 @@
     sync::{Arc, Mutex},
 };
 
+<span class="kw">use </span><span class="kw">crate</span>::AtomicFenceValue;
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 
@@ -3176,7 +3184,7 @@
     <span class="kw">unsafe fn </span>create_fence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Fence, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="self">self</span>.counters.fences.add(<span class="number">1</span>);
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Fence {
-            last_completed: <span class="number">0</span>,
+            last_completed: AtomicFenceValue::new(<span class="number">0</span>),
             pending: Vec::new(),
         })
     }
@@ -3202,7 +3210,7 @@
         wait_value: <span class="kw">crate</span>::FenceValue,
         timeout_ms: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">if </span>fence.last_completed &lt; wait_value {
+        <span class="kw">if </span>fence.last_completed.load(Ordering::Relaxed) &lt; wait_value {
             <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
             <span class="kw">let </span>timeout_ns = <span class="kw">if </span><span class="macro">cfg!</span>(any(webgl, Emscripten)) {
                 <span class="number">0
@@ -3214,19 +3222,25 @@
                 .iter()
                 .find(|&amp;&amp;(value, <span class="kw">_</span>)| value &gt;= wait_value)
             {
-                <span class="kw">return match unsafe </span>{
+                <span class="kw">let </span>signalled = <span class="kw">match unsafe </span>{
                     gl.client_wait_sync(sync, glow::SYNC_FLUSH_COMMANDS_BIT, timeout_ns <span class="kw">as </span>i32)
                 } {
                     <span class="comment">// for some reason firefox returns WAIT_FAILED, to investigate
                     </span><span class="attr">#[cfg(any(webgl, Emscripten))]
                     </span>glow::WAIT_FAILED =&gt; {
                         <span class="macro">log::warn!</span>(<span class="string">"wait failed!"</span>);
-                        <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-                    }
-                    glow::TIMEOUT_EXPIRED =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                    glow::CONDITION_SATISFIED | glow::ALREADY_SIGNALED =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost),
+                        <span class="bool-val">false
+                    </span>}
+                    glow::TIMEOUT_EXPIRED =&gt; <span class="bool-val">false</span>,
+                    glow::CONDITION_SATISFIED | glow::ALREADY_SIGNALED =&gt; <span class="bool-val">true</span>,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::Lost),
                 };
+                <span class="kw">if </span>signalled {
+                    fence
+                        .last_completed
+                        .fetch_max(wait_value, Ordering::Relaxed);
+                }
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(signalled);
             }
         }
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
