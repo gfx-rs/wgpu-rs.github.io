@@ -167,24 +167,17 @@
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
 <a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! WGSL directives. The focal point of this API is [`DirectiveKind`].
 //!
 //! See also &lt;https://www.w3.org/TR/WGSL/#directives&gt;.
 
-/// A parsed sentinel word indicating the type of directive to be parsed next.
+</span><span class="kw">pub mod </span>enable_extension;
+
+<span class="doccomment">/// A parsed sentinel word indicating the type of directive to be parsed next.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>DirectiveKind {
+    <span class="doccomment">/// An [`enable_extension`].
+    </span>Enable,
     Unimplemented(UnimplementedDirectiveKind),
 }
 
@@ -197,7 +190,7 @@
     </span><span class="kw">pub fn </span>from_ident(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">match </span>s {
             <span class="self">Self</span>::DIAGNOSTIC =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Diagnostic),
-            <span class="self">Self</span>::ENABLE =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Enable),
+            <span class="self">Self</span>::ENABLE =&gt; <span class="self">Self</span>::Enable,
             <span class="self">Self</span>::REQUIRES =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Requires),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         })
@@ -206,9 +199,9 @@
     <span class="doccomment">/// Maps this [`DirectiveKind`] into the sentinel word associated with it in WGSL.
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Enable =&gt; <span class="self">Self</span>::ENABLE,
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
                 UnimplementedDirectiveKind::Diagnostic =&gt; <span class="self">Self</span>::DIAGNOSTIC,
-                UnimplementedDirectiveKind::Enable =&gt; <span class="self">Self</span>::ENABLE,
                 UnimplementedDirectiveKind::Requires =&gt; <span class="self">Self</span>::REQUIRES,
             },
         }
@@ -227,7 +220,6 @@
 #[cfg_attr(test, derive(strum::EnumIter))]
 </span><span class="kw">pub enum </span>UnimplementedDirectiveKind {
     Diagnostic,
-    Enable,
     Requires,
 }
 
@@ -236,7 +228,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Diagnostic =&gt; <span class="number">5320</span>,
             <span class="self">Self</span>::Requires =&gt; <span class="number">6350</span>,
-            <span class="self">Self</span>::Enable =&gt; <span class="number">5476</span>,
         }
     }
 }
@@ -265,19 +256,6 @@ error: `diagnostic` is not yet implemented
   │ ^^^^^^^^^^ this global directive is standard, but not yet implemented
   │
   = note: Let Naga maintainers know that you ran into this at &lt;https://github.com/gfx-rs/wgpu/issues/5320&gt;, so they can prioritize it!
-
-"</span>;
-                }
-                UnimplementedDirectiveKind::Enable =&gt; {
-                    shader = <span class="string">"enable f16;"</span>;
-                    expected_msg = <span class="string">"\
-error: `enable` is not yet implemented
-  ┌─ wgsl:1:1
-  │
-1 │ enable f16;
-  │ ^^^^^^ this global directive is standard, but not yet implemented
-  │
-  = note: Let Naga maintainers know that you ran into this at &lt;https://github.com/gfx-rs/wgpu/issues/5476&gt;, so they can prioritize it!
 
 "</span>;
                 }
@@ -319,7 +297,7 @@ error: expected global declaration, but found a global directive
 
 "</span>;
                 }
-                DirectiveKind::Unimplemented(UnimplementedDirectiveKind::Enable) =&gt; {
+                DirectiveKind::Enable =&gt; {
                     directive = <span class="string">"enable f16"</span>;
                     expected_msg = <span class="string">"\
 error: expected global declaration, but found a global directive
