@@ -435,9 +435,6 @@
 <a href="#434" id="434">434</a>
 <a href="#435" id="435">435</a>
 <a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Definitions for index bounds checking.
 */
@@ -690,7 +687,7 @@ Definitions for index bounds checking.
                             base,
                             GuardedIndex::Expression(index),
                             module,
-                            function,
+                            <span class="kw-2">&amp;</span>function.expressions,
                             info,
                         )
                         .is_some()
@@ -751,7 +748,7 @@ Definitions for index bounds checking.
     base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
     <span class="kw-2">mut </span>index: GuardedIndex,
     module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-    function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Function,
+    expressions: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     info: <span class="kw-2">&amp;</span>valid::FunctionInfo,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;IndexableLength&gt; {
     <span class="kw">let </span>base_inner = info[base].ty.inner_with(<span class="kw-2">&amp;</span>module.types);
@@ -759,7 +756,7 @@ Definitions for index bounds checking.
     // length constants, but `access_needs_check` is only used by back ends, so
     // validation should have caught those problems.
     </span><span class="kw">let </span>length = base_inner.indexable_length(module).unwrap();
-    index.try_resolve_to_constant(function, module);
+    index.try_resolve_to_constant(expressions, module);
     <span class="kw">if let </span>(<span class="kw-2">&amp;</span>GuardedIndex::Known(index), <span class="kw-2">&amp;</span>IndexableLength::Known(length)) = (<span class="kw-2">&amp;</span>index, <span class="kw-2">&amp;</span>length) {
         <span class="kw">if </span>index &lt; length {
             <span class="comment">// Index is statically known to be in bounds, no check needed.
@@ -776,23 +773,20 @@ Definitions for index bounds checking.
     /// Return values that are already `Known` unchanged.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_resolve_to_constant(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Function,
+        expressions: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
     ) {
         <span class="kw">if let </span>GuardedIndex::Expression(expr) = <span class="kw-2">*</span><span class="self">self </span>{
-            <span class="kw-2">*</span><span class="self">self </span>= GuardedIndex::from_expression(expr, function, module);
+            <span class="kw-2">*</span><span class="self">self </span>= GuardedIndex::from_expression(expr, expressions, module);
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_expression(
         expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        function: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Function,
+        expressions: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span>module
-            .to_ctx()
-            .eval_expr_to_u32_from(expr, <span class="kw-2">&amp;</span>function.expressions)
-        {
+        <span class="kw">match </span>module.to_ctx().eval_expr_to_u32_from(expr, expressions) {
             <span class="prelude-val">Ok</span>(value) =&gt; <span class="self">Self</span>::Known(value),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="self">Self</span>::Expression(expr),
         }

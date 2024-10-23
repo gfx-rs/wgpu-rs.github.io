@@ -3752,6 +3752,48 @@
 <a href="#3751" id="3751">3751</a>
 <a href="#3752" id="3752">3752</a>
 <a href="#3753" id="3753">3753</a>
+<a href="#3754" id="3754">3754</a>
+<a href="#3755" id="3755">3755</a>
+<a href="#3756" id="3756">3756</a>
+<a href="#3757" id="3757">3757</a>
+<a href="#3758" id="3758">3758</a>
+<a href="#3759" id="3759">3759</a>
+<a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a>
+<a href="#3762" id="3762">3762</a>
+<a href="#3763" id="3763">3763</a>
+<a href="#3764" id="3764">3764</a>
+<a href="#3765" id="3765">3765</a>
+<a href="#3766" id="3766">3766</a>
+<a href="#3767" id="3767">3767</a>
+<a href="#3768" id="3768">3768</a>
+<a href="#3769" id="3769">3769</a>
+<a href="#3770" id="3770">3770</a>
+<a href="#3771" id="3771">3771</a>
+<a href="#3772" id="3772">3772</a>
+<a href="#3773" id="3773">3773</a>
+<a href="#3774" id="3774">3774</a>
+<a href="#3775" id="3775">3775</a>
+<a href="#3776" id="3776">3776</a>
+<a href="#3777" id="3777">3777</a>
+<a href="#3778" id="3778">3778</a>
+<a href="#3779" id="3779">3779</a>
+<a href="#3780" id="3780">3780</a>
+<a href="#3781" id="3781">3781</a>
+<a href="#3782" id="3782">3782</a>
+<a href="#3783" id="3783">3783</a>
+<a href="#3784" id="3784">3784</a>
+<a href="#3785" id="3785">3785</a>
+<a href="#3786" id="3786">3786</a>
+<a href="#3787" id="3787">3787</a>
+<a href="#3788" id="3788">3788</a>
+<a href="#3789" id="3789">3789</a>
+<a href="#3790" id="3790">3790</a>
+<a href="#3791" id="3791">3791</a>
+<a href="#3792" id="3792">3792</a>
+<a href="#3793" id="3793">3793</a>
+<a href="#3794" id="3794">3794</a>
+<a href="#3795" id="3795">3795</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -3762,7 +3804,7 @@
 };
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
-    proc::{<span class="self">self</span>, ExpressionKindTracker, NameKey},
+    proc::{<span class="self">self</span>, index, ExpressionKindTracker, NameKey},
     valid, Handle, Module, Scalar, ScalarKind, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>std::{fmt, mem};
@@ -6341,24 +6383,66 @@
 
                     <span class="kw">let </span>resolved = func_ctx.resolve_type(base, <span class="kw-2">&amp;</span>module.types);
 
-                    <span class="kw">let </span>non_uniform_qualifier = <span class="kw">match </span><span class="kw-2">*</span>resolved {
+                    <span class="kw">let </span>(indexing_binding_array, non_uniform_qualifier) = <span class="kw">match </span><span class="kw-2">*</span>resolved {
                         TypeInner::BindingArray { .. } =&gt; {
                             <span class="kw">let </span>uniformity = <span class="kw-2">&amp;</span>func_ctx.info[index].uniformity;
 
-                            uniformity.non_uniform_result.is_some()
+                            (<span class="bool-val">true</span>, uniformity.non_uniform_result.is_some())
                         }
-                        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                        <span class="kw">_ </span>=&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
                     };
 
                     <span class="self">self</span>.write_expr(module, base, func_ctx)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"["</span>)<span class="question-mark">?</span>;
-                    <span class="kw">if </span>non_uniform_qualifier {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"NonUniformResourceIndex("</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
-                    <span class="kw">if </span>non_uniform_qualifier {
+
+                    <span class="kw">let </span>needs_bound_check = <span class="self">self</span>.options.restrict_indexing
+                        &amp;&amp; !indexing_binding_array
+                        &amp;&amp; <span class="kw">match </span>resolved.pointer_space() {
+                            <span class="prelude-val">Some</span>(
+                                <span class="kw">crate</span>::AddressSpace::Function
+                                | <span class="kw">crate</span>::AddressSpace::Private
+                                | <span class="kw">crate</span>::AddressSpace::WorkGroup
+                                | <span class="kw">crate</span>::AddressSpace::PushConstant,
+                            )
+                            | <span class="prelude-val">None </span>=&gt; <span class="bool-val">true</span>,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::AddressSpace::Uniform) =&gt; <span class="bool-val">false</span>, <span class="comment">// TODO: needs checks for dynamic uniform buffers, see https://github.com/gfx-rs/wgpu/issues/4483
+                            </span><span class="prelude-val">Some</span>(
+                                <span class="kw">crate</span>::AddressSpace::Handle | <span class="kw">crate</span>::AddressSpace::Storage { .. },
+                            ) =&gt; <span class="macro">unreachable!</span>(),
+                        };
+                    <span class="comment">// Decide whether this index needs to be clamped to fall within range.
+                    </span><span class="kw">let </span>restriction_needed = <span class="kw">if </span>needs_bound_check {
+                        index::access_needs_check(
+                            base,
+                            index::GuardedIndex::Expression(index),
+                            module,
+                            func_ctx.expressions,
+                            func_ctx.info,
+                        )
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>};
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = restriction_needed {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(uint("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"), "</span>)<span class="question-mark">?</span>;
+                        <span class="kw">match </span>limit {
+                            index::IndexableLength::Known(limit) =&gt; {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}u"</span>, limit - <span class="number">1</span>)<span class="question-mark">?</span>;
+                            }
+                            index::IndexableLength::Dynamic =&gt; <span class="macro">unreachable!</span>(),
+                        }
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="kw">if </span>non_uniform_qualifier {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"NonUniformResourceIndex("</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="self">self</span>.write_expr(module, index, func_ctx)<span class="question-mark">?</span>;
+                        <span class="kw">if </span>non_uniform_qualifier {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                        }
                     }
+
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
                 }
             }
