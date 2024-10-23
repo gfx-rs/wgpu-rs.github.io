@@ -4864,6 +4864,10 @@
 <a href="#4863" id="4863">4863</a>
 <a href="#4864" id="4864">4864</a>
 <a href="#4865" id="4865">4865</a>
+<a href="#4866" id="4866">4866</a>
+<a href="#4867" id="4867">4867</a>
+<a href="#4868" id="4868">4868</a>
+<a href="#4869" id="4869">4869</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -5961,12 +5965,16 @@ to output a [`Module`](crate::Module) into glsl
         // - Array - used if it's an image array
         // - Shadow - used if it's a depth image
         </span><span class="kw">use </span><span class="kw">crate</span>::ImageClass <span class="kw">as </span>Ic;
-
-        <span class="kw">let </span>(base, kind, ms, comparison) = <span class="kw">match </span>class {
-            Ic::Sampled { kind, multi: <span class="bool-val">true </span>} =&gt; (<span class="string">"sampler"</span>, kind, <span class="string">"MS"</span>, <span class="string">""</span>),
-            Ic::Sampled { kind, multi: <span class="bool-val">false </span>} =&gt; (<span class="string">"sampler"</span>, kind, <span class="string">""</span>, <span class="string">""</span>),
-            Ic::Depth { multi: <span class="bool-val">true </span>} =&gt; (<span class="string">"sampler"</span>, <span class="kw">crate</span>::ScalarKind::Float, <span class="string">"MS"</span>, <span class="string">""</span>),
-            Ic::Depth { multi: <span class="bool-val">false </span>} =&gt; (<span class="string">"sampler"</span>, <span class="kw">crate</span>::ScalarKind::Float, <span class="string">""</span>, <span class="string">"Shadow"</span>),
+        <span class="kw">use </span><span class="kw">crate</span>::Scalar <span class="kw">as </span>S;
+        <span class="kw">let </span>float = S {
+            kind: <span class="kw">crate</span>::ScalarKind::Float,
+            width: <span class="number">4</span>,
+        };
+        <span class="kw">let </span>(base, scalar, ms, comparison) = <span class="kw">match </span>class {
+            Ic::Sampled { kind, multi: <span class="bool-val">true </span>} =&gt; (<span class="string">"sampler"</span>, S { kind, width: <span class="number">4 </span>}, <span class="string">"MS"</span>, <span class="string">""</span>),
+            Ic::Sampled { kind, multi: <span class="bool-val">false </span>} =&gt; (<span class="string">"sampler"</span>, S { kind, width: <span class="number">4 </span>}, <span class="string">""</span>, <span class="string">""</span>),
+            Ic::Depth { multi: <span class="bool-val">true </span>} =&gt; (<span class="string">"sampler"</span>, float, <span class="string">"MS"</span>, <span class="string">""</span>),
+            Ic::Depth { multi: <span class="bool-val">false </span>} =&gt; (<span class="string">"sampler"</span>, float, <span class="string">""</span>, <span class="string">"Shadow"</span>),
             Ic::Storage { format, .. } =&gt; (<span class="string">"image"</span>, format.into(), <span class="string">""</span>, <span class="string">""</span>),
         };
 
@@ -5980,7 +5988,7 @@ to output a [`Module`](crate::Module) into glsl
             <span class="self">self</span>.out,
             <span class="string">"{}{}{}{}{}{}{}"</span>,
             precision,
-            glsl_scalar(<span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>})<span class="question-mark">?</span>.prefix,
+            glsl_scalar(scalar)<span class="question-mark">?</span>.prefix,
             base,
             glsl_dimension(dim),
             ms,

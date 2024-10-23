@@ -6131,6 +6131,11 @@
 <a href="#6130" id="6130">6130</a>
 <a href="#6131" id="6131">6131</a>
 <a href="#6132" id="6132">6132</a>
+<a href="#6133" id="6133">6133</a>
+<a href="#6134" id="6134">6134</a>
+<a href="#6135" id="6135">6135</a>
+<a href="#6136" id="6136">6136</a>
+<a href="#6137" id="6137">6137</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -6348,14 +6353,15 @@
                     <span class="kw">crate</span>::ImageDimension::D3 =&gt; <span class="string">"3d"</span>,
                     <span class="kw">crate</span>::ImageDimension::Cube =&gt; <span class="string">"cube"</span>,
                 };
-                <span class="kw">let </span>(texture_str, msaa_str, kind, access) = <span class="kw">match </span>class {
+                <span class="kw">let </span>(texture_str, msaa_str, scalar, access) = <span class="kw">match </span>class {
                     <span class="kw">crate</span>::ImageClass::Sampled { kind, multi } =&gt; {
                         <span class="kw">let </span>(msaa_str, access) = <span class="kw">if </span>multi {
                             (<span class="string">"_ms"</span>, <span class="string">"read"</span>)
                         } <span class="kw">else </span>{
                             (<span class="string">""</span>, <span class="string">"sample"</span>)
                         };
-                        (<span class="string">"texture"</span>, msaa_str, kind, access)
+                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>};
+                        (<span class="string">"texture"</span>, msaa_str, scalar, access)
                     }
                     <span class="kw">crate</span>::ImageClass::Depth { multi } =&gt; {
                         <span class="kw">let </span>(msaa_str, access) = <span class="kw">if </span>multi {
@@ -6363,7 +6369,11 @@
                         } <span class="kw">else </span>{
                             (<span class="string">""</span>, <span class="string">"sample"</span>)
                         };
-                        (<span class="string">"depth"</span>, msaa_str, <span class="kw">crate</span>::ScalarKind::Float, access)
+                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
+                            kind: <span class="kw">crate</span>::ScalarKind::Float,
+                            width: <span class="number">4</span>,
+                        };
+                        (<span class="string">"depth"</span>, msaa_str, scalar, access)
                     }
                     <span class="kw">crate</span>::ImageClass::Storage { format, .. } =&gt; {
                         <span class="kw">let </span>access = <span class="kw">if </span><span class="self">self
@@ -6387,7 +6397,7 @@
                         (<span class="string">"texture"</span>, <span class="string">""</span>, format.into(), access)
                     }
                 };
-                <span class="kw">let </span>base_name = <span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>}.to_msl_name();
+                <span class="kw">let </span>base_name = scalar.to_msl_name();
                 <span class="kw">let </span>array_str = <span class="kw">if </span>arrayed { <span class="string">"_array" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
                 <span class="macro">write!</span>(
                     out,
