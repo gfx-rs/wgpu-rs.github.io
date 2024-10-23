@@ -2598,10 +2598,29 @@
 <a href="#2597" id="2597">2597</a>
 <a href="#2598" id="2598">2598</a>
 <a href="#2599" id="2599">2599</a>
+<a href="#2600" id="2600">2600</a>
+<a href="#2601" id="2601">2601</a>
+<a href="#2602" id="2602">2602</a>
+<a href="#2603" id="2603">2603</a>
+<a href="#2604" id="2604">2604</a>
+<a href="#2605" id="2605">2605</a>
+<a href="#2606" id="2606">2606</a>
+<a href="#2607" id="2607">2607</a>
+<a href="#2608" id="2608">2608</a>
+<a href="#2609" id="2609">2609</a>
+<a href="#2610" id="2610">2610</a>
+<a href="#2611" id="2611">2611</a>
+<a href="#2612" id="2612">2612</a>
+<a href="#2613" id="2613">2613</a>
+<a href="#2614" id="2614">2614</a>
+<a href="#2615" id="2615">2615</a>
+<a href="#2616" id="2616">2616</a>
+<a href="#2617" id="2617">2617</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
     EnableExtension, EnableExtensions, UnimplementedEnableExtension,
 };
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::language_extension::LanguageExtension;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::DirectiveKind;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -5142,6 +5161,23 @@
                             };
                             enable_extensions.add(extension);
                             <span class="prelude-val">Ok</span>(())
+                        })<span class="question-mark">?</span>;
+                    }
+                    DirectiveKind::Requires =&gt; {
+                        <span class="self">self</span>.directive_ident_list(<span class="kw-2">&amp;mut </span>lexer, |ident, span| {
+                            <span class="kw">match </span>LanguageExtension::from_ident(ident) {
+                                <span class="prelude-val">Some</span>(LanguageExtension::Implemented(_kind)) =&gt; {
+                                    <span class="comment">// NOTE: No further validation is needed for an extension, so
+                                    // just throw parsed information away. If we ever want to apply
+                                    // what we've parsed to diagnostics, maybe we'll want to refer
+                                    // to enabled extensions later?
+                                    </span><span class="prelude-val">Ok</span>(())
+                                }
+                                <span class="prelude-val">Some</span>(LanguageExtension::Unimplemented(kind)) =&gt; {
+                                    <span class="prelude-val">Err</span>(Error::LanguageExtensionNotYetImplemented { kind, span })
+                                }
+                                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownLanguageExtension(span, ident)),
+                            }
                         })<span class="question-mark">?</span>;
                     }
                     DirectiveKind::Unimplemented(kind) =&gt; {

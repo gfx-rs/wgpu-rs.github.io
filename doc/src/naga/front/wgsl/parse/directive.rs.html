@@ -155,29 +155,20 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! WGSL directives. The focal point of this API is [`DirectiveKind`].
 //!
 //! See also &lt;https://www.w3.org/TR/WGSL/#directives&gt;.
 
 </span><span class="kw">pub mod </span>enable_extension;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>language_extension;
 
 <span class="doccomment">/// A parsed sentinel word indicating the type of directive to be parsed next.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DirectiveKind {
     <span class="doccomment">/// An [`enable_extension`].
     </span>Enable,
+    <span class="doccomment">/// A language extension.
+    </span>Requires,
     Unimplemented(UnimplementedDirectiveKind),
 }
 
@@ -191,7 +182,7 @@
         <span class="prelude-val">Some</span>(<span class="kw">match </span>s {
             <span class="self">Self</span>::DIAGNOSTIC =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Diagnostic),
             <span class="self">Self</span>::ENABLE =&gt; <span class="self">Self</span>::Enable,
-            <span class="self">Self</span>::REQUIRES =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Requires),
+            <span class="self">Self</span>::REQUIRES =&gt; <span class="self">Self</span>::Requires,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         })
     }
@@ -200,9 +191,9 @@
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Enable =&gt; <span class="self">Self</span>::ENABLE,
+            <span class="self">Self</span>::Requires =&gt; <span class="self">Self</span>::REQUIRES,
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
                 UnimplementedDirectiveKind::Diagnostic =&gt; <span class="self">Self</span>::DIAGNOSTIC,
-                UnimplementedDirectiveKind::Requires =&gt; <span class="self">Self</span>::REQUIRES,
             },
         }
     }
@@ -220,14 +211,12 @@
 #[cfg_attr(test, derive(strum::EnumIter))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UnimplementedDirectiveKind {
     Diagnostic,
-    Requires,
 }
 
 <span class="kw">impl </span>UnimplementedDirectiveKind {
     <span class="kw">pub const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Diagnostic =&gt; <span class="number">5320</span>,
-            <span class="self">Self</span>::Requires =&gt; <span class="number">6350</span>,
         }
     }
 }
@@ -256,19 +245,6 @@ error: `diagnostic` is not yet implemented
   │ ^^^^^^^^^^ this global directive is standard, but not yet implemented
   │
   = note: Let Naga maintainers know that you ran into this at &lt;https://github.com/gfx-rs/wgpu/issues/5320&gt;, so they can prioritize it!
-
-"</span>;
-                }
-                UnimplementedDirectiveKind::Requires =&gt; {
-                    shader = <span class="string">"requires readonly_and_readwrite_storage_textures"</span>;
-                    expected_msg = <span class="string">"\
-error: `requires` is not yet implemented
-  ┌─ wgsl:1:1
-  │
-1 │ requires readonly_and_readwrite_storage_textures
-  │ ^^^^^^^^ this global directive is standard, but not yet implemented
-  │
-  = note: Let Naga maintainers know that you ran into this at &lt;https://github.com/gfx-rs/wgpu/issues/6350&gt;, so they can prioritize it!
 
 "</span>;
                 }
@@ -310,7 +286,7 @@ error: expected global declaration, but found a global directive
 
 "</span>;
                 }
-                DirectiveKind::Unimplemented(UnimplementedDirectiveKind::Requires) =&gt; {
+                DirectiveKind::Requires =&gt; {
                     directive = <span class="string">"requires readonly_and_readwrite_storage_textures"</span>;
                     expected_msg = <span class="string">"\
 error: expected global declaration, but found a global directive
