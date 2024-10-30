@@ -155,6 +155,7 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! WGSL directives. The focal point of this API is [`DirectiveKind`].
 //!
 //! See also &lt;https://www.w3.org/TR/WGSL/#directives&gt;.
@@ -165,6 +166,8 @@
 <span class="doccomment">/// A parsed sentinel word indicating the type of directive to be parsed next.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DirectiveKind {
+    <span class="doccomment">/// A [`crate::diagnostic_filter`].
+    </span>Diagnostic,
     <span class="doccomment">/// An [`enable_extension`].
     </span>Enable,
     <span class="doccomment">/// A [`language_extension`].
@@ -180,7 +183,7 @@
     <span class="doccomment">/// Convert from a sentinel word in WGSL into its associated [`DirectiveKind`], if possible.
     </span><span class="kw">pub fn </span>from_ident(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">match </span>s {
-            <span class="self">Self</span>::DIAGNOSTIC =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedDirectiveKind::Diagnostic),
+            <span class="self">Self</span>::DIAGNOSTIC =&gt; <span class="self">Self</span>::Diagnostic,
             <span class="self">Self</span>::ENABLE =&gt; <span class="self">Self</span>::Enable,
             <span class="self">Self</span>::REQUIRES =&gt; <span class="self">Self</span>::Requires,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
@@ -190,11 +193,10 @@
     <span class="doccomment">/// Maps this [`DirectiveKind`] into the sentinel word associated with it in WGSL.
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Diagnostic =&gt; <span class="self">Self</span>::DIAGNOSTIC,
             <span class="self">Self</span>::Enable =&gt; <span class="self">Self</span>::ENABLE,
             <span class="self">Self</span>::Requires =&gt; <span class="self">Self</span>::REQUIRES,
-            <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
-                UnimplementedDirectiveKind::Diagnostic =&gt; <span class="self">Self</span>::DIAGNOSTIC,
-            },
+            <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {},
         }
     }
 
@@ -202,22 +204,34 @@
     </span><span class="kw">fn </span>iter() -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="self">Self</span>&gt; {
         <span class="kw">use </span>strum::IntoEnumIterator;
 
-        UnimplementedDirectiveKind::iter().map(<span class="self">Self</span>::Unimplemented)
+        [<span class="self">Self</span>::Diagnostic, <span class="self">Self</span>::Enable, <span class="self">Self</span>::Requires]
+            .into_iter()
+            .chain(UnimplementedDirectiveKind::iter().map(<span class="self">Self</span>::Unimplemented))
     }
 }
 
 <span class="doccomment">/// A [`DirectiveKind`] that is not yet implemented. See [`DirectiveKind::Unimplemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(test, derive(strum::EnumIter))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UnimplementedDirectiveKind {
-    Diagnostic,
-}
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UnimplementedDirectiveKind {}
 
 <span class="kw">impl </span>UnimplementedDirectiveKind {
     <span class="kw">pub const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Diagnostic =&gt; <span class="number">5320</span>,
-        }
+        <span class="kw">match </span><span class="self">self </span>{}
+    }
+}
+
+<span class="kw">impl </span><span class="kw">crate</span>::diagnostic_filter::Severity {
+    <span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>report_wgsl_parse_diag&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="self">self</span>,
+        err: <span class="kw">crate</span>::front::wgsl::error::Error&lt;<span class="lifetime">'a</span>&gt;,
+        source: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::front::wgsl::error::Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="self">self</span>.report_diag(err, |e, level| {
+            <span class="kw">let </span>e = e.as_parse_error(source);
+            <span class="macro">log::log!</span>(level, <span class="string">"{}"</span>, e.emit_to_string(source));
+        })
     }
 }
 
@@ -230,25 +244,12 @@
     <span class="kw">use super</span>::{DirectiveKind, UnimplementedDirectiveKind};
 
     <span class="attr">#[test]
+    #[allow(clippy::never_loop, unreachable_code, unused_variables)]
     </span><span class="kw">fn </span>unimplemented_directives() {
         <span class="kw">for </span>unsupported_shader <span class="kw">in </span>UnimplementedDirectiveKind::iter() {
             <span class="kw">let </span>shader;
             <span class="kw">let </span>expected_msg;
-            <span class="kw">match </span>unsupported_shader {
-                UnimplementedDirectiveKind::Diagnostic =&gt; {
-                    shader = <span class="string">"diagnostic(off,derivative_uniformity);"</span>;
-                    expected_msg = <span class="string">"\
-error: the `diagnostic` directive is not yet implemented
-  ┌─ wgsl:1:1
-  │
-1 │ diagnostic(off,derivative_uniformity);
-  │ ^^^^^^^^^^ this global directive is standard, but not yet implemented
-  │
-  = note: Let Naga maintainers know that you ran into this at &lt;https://github.com/gfx-rs/wgpu/issues/5320&gt;, so they can prioritize it!
-
-"</span>;
-                }
-            };
+            <span class="kw">match </span>unsupported_shader {};
 
             assert_parse_err(shader, expected_msg);
         }
@@ -260,7 +261,7 @@ error: the `diagnostic` directive is not yet implemented
             <span class="kw">let </span>directive;
             <span class="kw">let </span>expected_msg;
             <span class="kw">match </span>unsupported_shader {
-                DirectiveKind::Unimplemented(UnimplementedDirectiveKind::Diagnostic) =&gt; {
+                DirectiveKind::Diagnostic =&gt; {
                     directive = <span class="string">"diagnostic(off,derivative_uniformity)"</span>;
                     expected_msg = <span class="string">"\
 error: expected global declaration, but found a global directive
@@ -299,6 +300,7 @@ error: expected global declaration, but found a global directive
 
 "</span>;
                 }
+                DirectiveKind::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {},
             }
 
             <span class="kw">let </span>shader = <span class="macro">format!</span>(
