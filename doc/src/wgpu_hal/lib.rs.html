@@ -2518,6 +2518,10 @@
 <a href="#2517" id="2517">2517</a>
 <a href="#2518" id="2518">2518</a>
 <a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
@@ -2825,24 +2829,28 @@
 
 <span class="doccomment">/// A callback to signal that wgpu is no longer using a resource.
 </span><span class="attr">#[cfg(any(gles, vulkan))]
-</span><span class="kw">pub type </span>DropCallback = Box&lt;<span class="kw">dyn </span>FnMut() + Send + Sync + <span class="lifetime">'static</span>&gt;;
+</span><span class="kw">pub type </span>DropCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + Send + Sync + <span class="lifetime">'static</span>&gt;;
 
 <span class="attr">#[cfg(any(gles, vulkan))]
 </span><span class="kw">pub struct </span>DropGuard {
-    callback: DropCallback,
+    callback: <span class="prelude-ty">Option</span>&lt;DropCallback&gt;,
 }
 
 <span class="attr">#[cfg(all(any(gles, vulkan), any(native, Emscripten)))]
 </span><span class="kw">impl </span>DropGuard {
     <span class="kw">fn </span>from_option(callback: <span class="prelude-ty">Option</span>&lt;DropCallback&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-        callback.map(|callback| <span class="self">Self </span>{ callback })
+        callback.map(|callback| <span class="self">Self </span>{
+            callback: <span class="prelude-val">Some</span>(callback),
+        })
     }
 }
 
 <span class="attr">#[cfg(any(gles, vulkan))]
 </span><span class="kw">impl </span>Drop <span class="kw">for </span>DropGuard {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        (<span class="self">self</span>.callback)();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cb) = <span class="self">self</span>.callback.take() {
+            (cb)();
+        }
     }
 }
 
