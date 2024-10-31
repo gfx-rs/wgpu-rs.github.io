@@ -2676,9 +2676,6 @@
 <a href="#2675" id="2675">2675</a>
 <a href="#2676" id="2676">2676</a>
 <a href="#2677" id="2677">2677</a>
-<a href="#2678" id="2678">2678</a>
-<a href="#2679" id="2679">2679</a>
-<a href="#2680" id="2680">2680</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{<span class="self">self</span>, DiagnosticFilter, FilterableTriggeringRule};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
@@ -5206,7 +5203,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>enable_extensions = EnableExtensions::empty();
 
         <span class="comment">// Parse directives.
-        </span><span class="kw">while let </span><span class="prelude-val">Ok</span>((ident, span)) = lexer.peek_ident_with_span() {
+        </span><span class="kw">while let </span><span class="prelude-val">Ok</span>((ident, _directive_ident_span)) = lexer.peek_ident_with_span() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(kind) = DirectiveKind::from_ident(ident) {
                 <span class="self">self</span>.push_rule_span(Rule::Directive, <span class="kw-2">&amp;mut </span>lexer);
                 <span class="kw">let _ </span>= lexer.next_ident_with_span().unwrap();
@@ -5254,9 +5251,6 @@
                                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownLanguageExtension(span, ident)),
                             }
                         })<span class="question-mark">?</span>;
-                    }
-                    DirectiveKind::Unimplemented(kind) =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DirectiveNotYetImplemented { kind, span })
                     }
                 }
                 <span class="self">self</span>.pop_rule_span(<span class="kw-2">&amp;</span>lexer);
