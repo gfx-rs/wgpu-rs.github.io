@@ -3016,7 +3016,7 @@ Implementations for `BlockContext` methods.
 /// types are simply the direct SPIR-V analog of the Naga IR's. But in some
 /// cases, the Naga IR and SPIR-V types need to diverge.
 ///
-/// This enum specifies how [`BlockContext::write_expression_pointer`] should
+/// This enum specifies how [`BlockContext::write_access_chain`] should
 /// choose a SPIR-V result type for the `OpAccessChain` it generates, based on
 /// the type of the given Naga IR [`Expression`] it's generating code for.
 ///
@@ -3060,7 +3060,7 @@ Implementations for `BlockContext` methods.
 
 <span class="doccomment">/// The results of emitting code for a left-hand-side expression.
 ///
-/// On success, `write_expression_pointer` returns one of these.
+/// On success, `write_access_chain` returns one of these.
 </span><span class="kw">enum </span>ExpressionPointer {
     <span class="doccomment">/// The pointer to the expression's value is available, as the value of the
     /// expression with the given id.
@@ -3399,7 +3399,7 @@ Implementations for `BlockContext` methods.
                     } =&gt; {
                         <span class="comment">// Only binding arrays in the `Handle` address space will take
                         // this path, since we handled the `Pointer` case above.
-                        </span><span class="kw">let </span>result_id = <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(
+                        </span><span class="kw">let </span>result_id = <span class="kw">match </span><span class="self">self</span>.write_access_chain(
                             expr_handle,
                             block,
                             AccessTypeAdjustment::IntroducePointer(
@@ -3490,7 +3490,7 @@ Implementations for `BlockContext` methods.
                     } =&gt; {
                         <span class="comment">// Only binding arrays in the `Handle` address space will take
                         // this path, since we handled the `Pointer` case above.
-                        </span><span class="kw">let </span>result_id = <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(
+                        </span><span class="kw">let </span>result_id = <span class="kw">match </span><span class="self">self</span>.write_access_chain(
                             expr_handle,
                             block,
                             AccessTypeAdjustment::IntroducePointer(
@@ -4743,7 +4743,7 @@ Implementations for `BlockContext` methods.
     ///
     /// On success, the return value is an [`ExpressionPointer`] value; see the
     /// documentation for that type.
-    </span><span class="kw">fn </span>write_expression_pointer(
+    </span><span class="kw">fn </span>write_access_chain(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         <span class="kw-2">mut </span>expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         block: <span class="kw-2">&amp;mut </span>Block,
@@ -4974,7 +4974,7 @@ Implementations for `BlockContext` methods.
         access_type_adjustment: AccessTypeAdjustment,
         result_type_id: Word,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
-        <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(pointer, block, access_type_adjustment)<span class="question-mark">? </span>{
+        <span class="kw">match </span><span class="self">self</span>.write_access_chain(pointer, block, access_type_adjustment)<span class="question-mark">? </span>{
             ExpressionPointer::Ready { pointer_id } =&gt; {
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                 <span class="kw">let </span>atomic_space =
@@ -5595,7 +5595,7 @@ Implementations for `BlockContext` methods.
                 }
                 Statement::Store { pointer, value } =&gt; {
                     <span class="kw">let </span>value_id = <span class="self">self</span>.cached[value];
-                    <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(
+                    <span class="kw">match </span><span class="self">self</span>.write_access_chain(
                         pointer,
                         <span class="kw-2">&amp;mut </span>block,
                         AccessTypeAdjustment::None,
@@ -5695,7 +5695,7 @@ Implementations for `BlockContext` methods.
                         <span class="self">self</span>.cached[result] = id;
                     }
 
-                    <span class="kw">let </span>pointer_id = <span class="kw">match </span><span class="self">self</span>.write_expression_pointer(
+                    <span class="kw">let </span>pointer_id = <span class="kw">match </span><span class="self">self</span>.write_access_chain(
                         pointer,
                         <span class="kw-2">&amp;mut </span>block,
                         AccessTypeAdjustment::None,
@@ -5867,7 +5867,7 @@ Implementations for `BlockContext` methods.
                         .write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, <span class="kw-2">&amp;mut </span>block);
                     <span class="kw">let </span>result_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[result].ty);
                     <span class="comment">// Embed the body of
-                    </span><span class="kw">match </span><span class="self">self</span>.write_expression_pointer(
+                    </span><span class="kw">match </span><span class="self">self</span>.write_access_chain(
                         pointer,
                         <span class="kw-2">&amp;mut </span>block,
                         AccessTypeAdjustment::None,
