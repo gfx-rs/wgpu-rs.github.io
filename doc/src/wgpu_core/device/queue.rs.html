@@ -1459,6 +1459,13 @@
 <a href="#1458" id="1458">1458</a>
 <a href="#1459" id="1459">1459</a>
 <a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2717,10 +2724,13 @@
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_timestamp_period() }
     }
 
-    <span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, closure: SubmittedWorkDoneClosure) {
+    <span class="kw">pub fn </span>on_submitted_work_done(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        closure: SubmittedWorkDoneClosure,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
         <span class="macro">api_log!</span>(<span class="string">"Queue::on_submitted_work_done"</span>);
         <span class="comment">//TODO: flush pending writes
-        </span><span class="self">self</span>.device.lock_life().add_work_done_closure(closure);
+        </span><span class="self">self</span>.device.lock_life().add_work_done_closure(closure)
     }
 }
 
@@ -2863,10 +2873,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
         closure: SubmittedWorkDoneClosure,
-    ) {
-        <span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
-        queue.on_submitted_work_done(closure);
-    }
+    ) -&gt; SubmissionIndex {
+        <span class="macro">api_log!</span>(<span class="string">"Queue::on_submitted_work_done {queue_id:?}"</span>);
+
+        <span class="comment">//TODO: flush pending writes
+        </span><span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
+        <span class="kw">let </span>result = queue.on_submitted_work_done(closure);
+        result.unwrap_or(<span class="number">0</span>) <span class="comment">// '0' means no wait is necessary
+    </span>}
 }
 
 <span class="kw">fn </span>validate_command_buffer(

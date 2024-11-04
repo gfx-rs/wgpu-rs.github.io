@@ -2273,12 +2273,6 @@
 <a href="#2272" id="2272">2272</a>
 <a href="#2273" id="2273">2273</a>
 <a href="#2274" id="2274">2274</a>
-<a href="#2275" id="2275">2275</a>
-<a href="#2276" id="2276">2276</a>
-<a href="#2277" id="2277">2277</a>
-<a href="#2278" id="2278">2278</a>
-<a href="#2279" id="2279">2279</a>
-<a href="#2280" id="2280">2280</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4428,33 +4422,27 @@
         offset: BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
         op: BufferMapOperation,
-    ) -&gt; BufferAccessResult {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::SubmissionIndex, BufferAccessError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Buffer::map_async"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Buffer::map_async {buffer_id:?} offset {offset:?} size {size:?} op: {op:?}"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
-        <span class="kw">let </span>op_and_err = <span class="lifetime">'error</span>: {
-            <span class="kw">let </span>buffer = <span class="kw">match </span>hub.buffers.get(buffer_id).get() {
-                <span class="prelude-val">Ok</span>(buffer) =&gt; buffer,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>((op, e.into())),
-            };
-
-            buffer.map_async(offset, size, op).err()
+        <span class="kw">let </span>map_result = <span class="kw">match </span>hub.buffers.get(buffer_id).get() {
+            <span class="prelude-val">Ok</span>(buffer) =&gt; buffer.map_async(offset, size, op),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>((op, e.into())),
         };
 
-        <span class="comment">// User callbacks must not be called while holding `buffer.map_async`'s locks, so we
-        // defer the error callback if it needs to be called immediately (typically when running
-        // into errors).
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>operation, err)) = op_and_err {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
-                callback.call(<span class="prelude-val">Err</span>(err.clone()));
+        <span class="kw">match </span>map_result {
+            <span class="prelude-val">Ok</span>(submission_index) =&gt; <span class="prelude-val">Ok</span>(submission_index),
+            <span class="prelude-val">Err</span>((<span class="kw-2">mut </span>operation, err)) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
+                    callback.call(<span class="prelude-val">Err</span>(err.clone()));
+                }
+                <span class="macro">log::error!</span>(<span class="string">"Buffer::map_async error: {err}"</span>);
+                <span class="prelude-val">Err</span>(err)
             }
-            <span class="macro">log::error!</span>(<span class="string">"Buffer::map_async error: {err}"</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(err);
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>buffer_get_mapped_range(

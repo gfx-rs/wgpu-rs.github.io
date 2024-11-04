@@ -397,26 +397,6 @@
 <a href="#396" id="396">396</a>
 <a href="#397" id="397">397</a>
 <a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         queue::{EncoderInFlight, SubmittedWorkDoneClosure, TempResource},
@@ -545,35 +525,20 @@
 /// -   Each buffer's `ResourceInfo::submission_index` records the index of the
 ///     most recent queue submission that uses that buffer.
 ///
-/// -   Calling `Global::buffer_map_async` adds the buffer to
-///     `self.mapped`, and changes `Buffer::map_state` to prevent it
-///     from being used in any new submissions.
-///
 /// -   When the device is polled, the following `LifetimeTracker` methods decide
 ///     what should happen next:
 ///
-///     1)  `triage_mapped` drains `self.mapped`, checking the submission index
-///         of each buffer against the queue submissions that have finished
-///         execution. Buffers used by submissions still in flight go in
-///         `self.active[index].mapped`, and the rest go into
-///         `self.ready_to_map`.
-///
-///     2)  `triage_submissions` moves entries in `self.active[i]` for completed
+///     1)  `triage_submissions` moves entries in `self.active[i]` for completed
 ///         submissions to `self.ready_to_map`.  At this point, both
 ///         `self.active` and `self.ready_to_map` are up to date with the given
 ///         submission index.
 ///
-///     3)  `handle_mapping` drains `self.ready_to_map` and actually maps the
+///     2)  `handle_mapping` drains `self.ready_to_map` and actually maps the
 ///         buffers, collecting a list of notification closures to call.
 ///
 /// Only calling `Global::buffer_map_async` clones a new `Arc` for the
 /// buffer. This new `Arc` is only dropped by `handle_mapping`.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>LifetimeTracker {
-    <span class="doccomment">/// Buffers for which a call to [`Buffer::map_async`] has succeeded, but
-    /// which haven't been examined by `triage_mapped` yet to decide when they
-    /// can be mapped.
-    </span>mapped: Vec&lt;Arc&lt;Buffer&gt;&gt;,
-
     <span class="doccomment">/// Resources used by queue submissions still in flight. One entry per
     /// submission, with older submissions appearing before younger.
     ///
@@ -601,7 +566,6 @@
 <span class="kw">impl </span>LifetimeTracker {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            mapped: Vec::new(),
             active: Vec::new(),
             ready_to_map: Vec::new(),
             work_done_closures: SmallVec::new(),
@@ -630,8 +594,21 @@
         });
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>map(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Arc&lt;Buffer&gt;) {
-        <span class="self">self</span>.mapped.push(value.clone());
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>map(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Arc&lt;Buffer&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
+        <span class="comment">// Determine which buffers are ready to map, and which must wait for the GPU.
+        </span><span class="kw">let </span>submission = <span class="self">self
+            </span>.active
+            .iter_mut()
+            .rev()
+            .find(|a| a.contains_buffer(buffer));
+
+        <span class="kw">let </span>maybe_submission_index = submission.as_ref().map(|s| s.index);
+
+        submission
+            .map_or(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ready_to_map, |a| <span class="kw-2">&amp;mut </span>a.mapped)
+            .push(buffer.clone());
+
+        maybe_submission_index
     }
 
     <span class="doccomment">/// Returns the submission index of the most recent submission that uses the
@@ -723,38 +700,21 @@
         }
     }
 
-    <span class="kw">pub fn </span>add_work_done_closure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, closure: SubmittedWorkDoneClosure) {
+    <span class="kw">pub fn </span>add_work_done_closure(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        closure: SubmittedWorkDoneClosure,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;SubmissionIndex&gt; {
         <span class="kw">match </span><span class="self">self</span>.active.last_mut() {
             <span class="prelude-val">Some</span>(active) =&gt; {
                 active.work_done_closures.push(closure);
+                <span class="prelude-val">Some</span>(active.index)
             }
             <span class="comment">// We must defer the closure until all previously occurring map_async closures
             // have fired. This is required by the spec.
             </span><span class="prelude-val">None </span>=&gt; {
                 <span class="self">self</span>.work_done_closures.push(closure);
-            }
-        }
-    }
-
-    <span class="doccomment">/// Determine which buffers are ready to map, and which must wait for the
-    /// GPU.
-    ///
-    /// See the documentation for [`LifetimeTracker`] for details.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>triage_mapped(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span><span class="self">self</span>.mapped.is_empty() {
-            <span class="kw">return</span>;
-        }
-
-        <span class="kw">for </span>buffer <span class="kw">in </span><span class="self">self</span>.mapped.drain(..) {
-            <span class="kw">let </span>submission = <span class="self">self
-                </span>.active
-                .iter_mut()
-                .rev()
-                .find(|a| a.contains_buffer(<span class="kw-2">&amp;</span>buffer));
-
-            submission
-                .map_or(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ready_to_map, |a| <span class="kw-2">&amp;mut </span>a.mapped)
-                .push(buffer);
+                <span class="prelude-val">None
+            </span>}
         }
     }
 

@@ -1912,7 +1912,7 @@
     snatch::{SnatchGuard, Snatchable},
     track::{SharedTrackerIndexAllocator, TextureSelector, TrackerIndex},
     weak_vec::WeakVec,
-    Label, LabelHelpers,
+    Label, LabelHelpers, SubmissionIndex,
 };
 
 <span class="kw">use </span>smallvec::SmallVec;
@@ -2201,7 +2201,7 @@
             <span class="comment">// SAFETY: the contract of the call to from_c says that this unsafe is sound.
             </span>BufferMapCallbackInner::C { inner } =&gt; <span class="kw">unsafe </span>{
                 <span class="kw">let </span>status = <span class="kw">match </span>result {
-                    <span class="prelude-val">Ok</span>(()) =&gt; BufferMapAsyncStatus::Success,
+                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; BufferMapAsyncStatus::Success,
                     <span class="prelude-val">Err</span>(BufferAccessError::Device(<span class="kw">_</span>)) =&gt; BufferMapAsyncStatus::ContextLost,
                     <span class="prelude-val">Err</span>(BufferAccessError::InvalidResource(<span class="kw">_</span>))
                     | <span class="prelude-val">Err</span>(BufferAccessError::DestroyedResource(<span class="kw">_</span>)) =&gt; BufferMapAsyncStatus::Invalid,
@@ -2443,7 +2443,7 @@
         offset: wgt::BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;wgt::BufferAddress&gt;,
         op: BufferMapOperation,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), (BufferMapOperation, BufferAccessError)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SubmissionIndex, (BufferMapOperation, BufferAccessError)&gt; {
         <span class="kw">let </span>range_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
             size
         } <span class="kw">else if </span>offset &gt; <span class="self">self</span>.size {
@@ -2530,9 +2530,9 @@
             .buffers
             .set_single(<span class="self">self</span>, internal_use);
 
-        device.lock_life().map(<span class="self">self</span>);
+        <span class="kw">let </span>submit_index = device.lock_life().map(<span class="self">self</span>).unwrap_or(<span class="number">0</span>); <span class="comment">// '0' means no wait is necessary
 
-        <span class="prelude-val">Ok</span>(())
+        </span><span class="prelude-val">Ok</span>(submit_index)
     }
 
     <span class="comment">// Note: This must not be called while holding a lock.
