@@ -3331,6 +3331,13 @@
 <a href="#3330" id="3330">3330</a>
 <a href="#3331" id="3331">3331</a>
 <a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4691,9 +4698,11 @@
                 }) = color_attachment
                 {
                     <span class="kw">let </span>view = texture_views.get(<span class="kw-2">*</span>view_id).get()<span class="question-mark">?</span>;
+                    view.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>resolve_target = <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_target_id) = resolve_target {
                         <span class="kw">let </span>rt_arc = texture_views.get(<span class="kw-2">*</span>resolve_target_id).get()<span class="question-mark">?</span>;
+                        rt_arc.same_device(device)<span class="question-mark">?</span>;
 
                         <span class="prelude-val">Some</span>(rt_arc)
                     } <span class="kw">else </span>{
@@ -4715,6 +4724,7 @@
             arc_desc.depth_stencil_attachment =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(depth_stencil_attachment) = desc.depth_stencil_attachment {
                     <span class="kw">let </span>view = texture_views.get(depth_stencil_attachment.view).get()<span class="question-mark">?</span>;
+                    view.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(ArcRenderPassDepthStencilAttachment {
                         view,
@@ -4727,6 +4737,9 @@
 
             arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
                 <span class="kw">let </span>query_set = query_sets.get(tw.query_set).get()<span class="question-mark">?</span>;
+                query_set.same_device(device)<span class="question-mark">?</span>;
+
+                device.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
                     query_set,
@@ -4740,6 +4753,7 @@
             arc_desc.occlusion_query_set =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(occlusion_query_set) = desc.occlusion_query_set {
                     <span class="kw">let </span>query_set = query_sets.get(occlusion_query_set).get()<span class="question-mark">?</span>;
+                    query_set.same_device(device)<span class="question-mark">?</span>;
 
                     <span class="prelude-val">Some</span>(query_set)
                 } <span class="kw">else </span>{
