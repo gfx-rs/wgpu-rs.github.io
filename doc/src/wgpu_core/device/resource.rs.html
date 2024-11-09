@@ -3718,6 +3718,7 @@
 <a href="#3717" id="3717">3717</a>
 <a href="#3718" id="3718">3718</a>
 <a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -7325,7 +7326,8 @@
 
         <span class="kw">let </span>hal_desc = desc.map_label(|label| label.to_hal(<span class="self">self</span>.instance_flags));
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_query_set(<span class="kw-2">&amp;</span>hal_desc).unwrap() };
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_query_set(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>query_set = QuerySet {
             raw: ManuallyDrop::new(raw),
