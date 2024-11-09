@@ -656,6 +656,18 @@
 <a href="#655" id="655">655</a>
 <a href="#656" id="656">656</a>
 <a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
@@ -756,6 +768,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 </span><span class="kw">mod </span>buffer;
 <span class="kw">mod </span>metadata;
 <span class="kw">mod </span>range;
+<span class="kw">mod </span>ray_tracing;
 <span class="kw">mod </span>stateless;
 <span class="kw">mod </span>texture;
 
@@ -770,6 +783,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">use </span>std::{fmt, ops, sync::Arc};
 <span class="kw">use </span>thiserror::Error;
 
+<span class="kw">use </span><span class="kw">crate</span>::track::ray_tracing::AccelerationStructureTracker;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>buffer::{
     BufferBindGroupState, BufferTracker, BufferUsageScope, DeviceBufferTracker,
 };
@@ -882,6 +896,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="kw">pub </span>render_pipelines: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="kw">pub </span>bundles: Arc&lt;SharedTrackerIndexAllocator&gt;,
     <span class="kw">pub </span>query_sets: Arc&lt;SharedTrackerIndexAllocator&gt;,
+    <span class="kw">pub </span>blas_s: Arc&lt;SharedTrackerIndexAllocator&gt;,
+    <span class="kw">pub </span>tlas_s: Arc&lt;SharedTrackerIndexAllocator&gt;,
 }
 
 <span class="kw">impl </span>TrackerIndexAllocators {
@@ -896,6 +912,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
             render_pipelines: Arc::new(SharedTrackerIndexAllocator::new()),
             bundles: Arc::new(SharedTrackerIndexAllocator::new()),
             query_sets: Arc::new(SharedTrackerIndexAllocator::new()),
+            blas_s: Arc::new(SharedTrackerIndexAllocator::new()),
+            tlas_s: Arc::new(SharedTrackerIndexAllocator::new()),
         }
     }
 }
@@ -1078,6 +1096,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="kw">pub </span>buffers: BufferBindGroupState,
     <span class="kw">pub </span>views: TextureViewBindGroupState,
     <span class="kw">pub </span>samplers: StatelessTracker&lt;resource::Sampler&gt;,
+    <span class="kw">pub </span>acceleration_structures: StatelessTracker&lt;resource::Tlas&gt;,
 }
 
 <span class="kw">impl </span>BindGroupStates {
@@ -1086,6 +1105,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
             buffers: BufferBindGroupState::new(),
             views: TextureViewBindGroupState::new(),
             samplers: StatelessTracker::new(),
+            acceleration_structures: StatelessTracker::new(),
         }
     }
 
@@ -1098,7 +1118,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         <span class="comment">// Views are stateless, however, `TextureViewBindGroupState`
         // is special as it will be merged with other texture trackers.
         </span><span class="self">self</span>.views.optimize();
-        <span class="comment">// Samplers are stateless and don't need to be optimized
+        <span class="comment">// Samplers and Tlas's are stateless and don't need to be optimized
         // since the tracker is never merged with any other tracker.
     </span>}
 }
@@ -1252,6 +1272,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Tracker {
     <span class="kw">pub </span>buffers: BufferTracker,
     <span class="kw">pub </span>textures: TextureTracker,
+    <span class="kw">pub </span>blas_s: AccelerationStructureTracker&lt;resource::Blas&gt;,
+    <span class="kw">pub </span>tlas_s: AccelerationStructureTracker&lt;resource::Tlas&gt;,
     <span class="kw">pub </span>views: StatelessTracker&lt;resource::TextureView&gt;,
     <span class="kw">pub </span>bind_groups: StatelessTracker&lt;binding_model::BindGroup&gt;,
     <span class="kw">pub </span>compute_pipelines: StatelessTracker&lt;pipeline::ComputePipeline&gt;,
@@ -1265,6 +1287,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         <span class="self">Self </span>{
             buffers: BufferTracker::new(),
             textures: TextureTracker::new(),
+            blas_s: AccelerationStructureTracker::new(),
+            tlas_s: AccelerationStructureTracker::new(),
             views: StatelessTracker::new(),
             bind_groups: StatelessTracker::new(),
             compute_pipelines: StatelessTracker::new(),

@@ -3719,6 +3719,48 @@
 <a href="#3718" id="3718">3718</a>
 <a href="#3719" id="3719">3719</a>
 <a href="#3720" id="3720">3720</a>
+<a href="#3721" id="3721">3721</a>
+<a href="#3722" id="3722">3722</a>
+<a href="#3723" id="3723">3723</a>
+<a href="#3724" id="3724">3724</a>
+<a href="#3725" id="3725">3725</a>
+<a href="#3726" id="3726">3726</a>
+<a href="#3727" id="3727">3727</a>
+<a href="#3728" id="3728">3728</a>
+<a href="#3729" id="3729">3729</a>
+<a href="#3730" id="3730">3730</a>
+<a href="#3731" id="3731">3731</a>
+<a href="#3732" id="3732">3732</a>
+<a href="#3733" id="3733">3733</a>
+<a href="#3734" id="3734">3734</a>
+<a href="#3735" id="3735">3735</a>
+<a href="#3736" id="3736">3736</a>
+<a href="#3737" id="3737">3737</a>
+<a href="#3738" id="3738">3738</a>
+<a href="#3739" id="3739">3739</a>
+<a href="#3740" id="3740">3740</a>
+<a href="#3741" id="3741">3741</a>
+<a href="#3742" id="3742">3742</a>
+<a href="#3743" id="3743">3743</a>
+<a href="#3744" id="3744">3744</a>
+<a href="#3745" id="3745">3745</a>
+<a href="#3746" id="3746">3746</a>
+<a href="#3747" id="3747">3747</a>
+<a href="#3748" id="3748">3748</a>
+<a href="#3749" id="3749">3749</a>
+<a href="#3750" id="3750">3750</a>
+<a href="#3751" id="3751">3751</a>
+<a href="#3752" id="3752">3752</a>
+<a href="#3753" id="3753">3753</a>
+<a href="#3754" id="3754">3754</a>
+<a href="#3755" id="3755">3755</a>
+<a href="#3756" id="3756">3756</a>
+<a href="#3757" id="3757">3757</a>
+<a href="#3758" id="3758">3758</a>
+<a href="#3759" id="3759">3759</a>
+<a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a>
+<a href="#3762" id="3762">3762</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3762,6 +3804,7 @@
     math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension,
 };
 
+<span class="kw">use </span><span class="kw">crate</span>::resource::{AccelerationStructure, DestroyedResourceError, Tlas};
 <span class="kw">use </span>std::{
     borrow::Cow,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -3866,6 +3909,7 @@
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) usage_scopes: UsageScopePool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) last_acceleration_structure_build_command_index: AtomicU64,
 
     <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) indirect_validation: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::indirect_validation::IndirectValidation&gt;,
@@ -4055,6 +4099,8 @@
             ),
             deferred_destroy: Mutex::new(rank::DEVICE_DEFERRED_DESTROY, Vec::new()),
             usage_scopes: Mutex::new(rank::DEVICE_USAGE_SCOPES, Default::default()),
+            <span class="comment">// By starting at one, we can put the result in a NonZeroU64.
+            </span>last_acceleration_structure_build_command_index: AtomicU64::new(<span class="number">1</span>),
             <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
             </span>indirect_validation,
         })
@@ -5582,7 +5628,7 @@
                         },
                     )
                 }
-                Bt::AccelerationStructure =&gt; <span class="macro">todo!</span>(),
+                Bt::AccelerationStructure =&gt; (<span class="prelude-val">None</span>, WritableStorage::No),
             };
 
             <span class="comment">// Validate the count parameter
@@ -5909,6 +5955,36 @@
         })
     }
 
+    <span class="kw">fn </span>create_tlas_binding&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        used: <span class="kw-2">&amp;mut </span>BindGroupStates,
+        binding: u32,
+        decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
+        tlas: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;Tlas&gt;,
+        snatch_guard: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>hal::DynAccelerationStructure, binding_model::CreateBindGroupError&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::binding_model::CreateBindGroupError <span class="kw">as </span>Error;
+
+        used.acceleration_structures.insert_single(tlas.clone());
+
+        tlas.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">match </span>decl.ty {
+            wgt::BindingType::AccelerationStructure =&gt; (),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongBindingType {
+                    binding,
+                    actual: decl.ty,
+                    expected: <span class="string">"Tlas"</span>,
+                });
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(tlas
+            .raw(snatch_guard)
+            .ok_or(DestroyedResourceError(tlas.error_ident()))<span class="question-mark">?</span>)
+    }
+
     <span class="comment">// This function expects the provided bind group layout to be resolved
     // (not passing a duplicate) beforehand.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_bind_group(
@@ -5948,6 +6024,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hal_buffers = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>hal_samplers = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>hal_textures = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>hal_tlas_s = Vec::new();
         <span class="kw">let </span>snatch_guard = <span class="self">self</span>.snatchable_lock.read();
         <span class="kw">for </span>entry <span class="kw">in </span>desc.entries.iter() {
             <span class="kw">let </span>binding = entry.binding;
@@ -6047,6 +6124,13 @@
 
                     (res_index, num_bindings)
                 }
+                Br::AccelerationStructure(<span class="kw-2">ref </span>tlas) =&gt; {
+                    <span class="kw">let </span>tlas =
+                        <span class="self">self</span>.create_tlas_binding(<span class="kw-2">&amp;mut </span>used, binding, decl, tlas, <span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>res_index = hal_tlas_s.len();
+                    hal_tlas_s.push(tlas);
+                    (res_index, <span class="number">1</span>)
+                }
             };
 
             hal_entries.push(hal::BindGroupEntry {
@@ -6071,7 +6155,7 @@
             buffers: <span class="kw-2">&amp;</span>hal_buffers,
             samplers: <span class="kw-2">&amp;</span>hal_samplers,
             textures: <span class="kw-2">&amp;</span>hal_textures,
-            acceleration_structures: <span class="kw-2">&amp;</span>[],
+            acceleration_structures: <span class="kw-2">&amp;</span>hal_tlas_s,
         };
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_bind_group(<span class="kw-2">&amp;</span>hal_desc) }
             .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;

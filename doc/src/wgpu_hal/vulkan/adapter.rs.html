@@ -2437,6 +2437,14 @@
 <a href="#2436" id="2436">2436</a>
 <a href="#2437" id="2437">2437</a>
 <a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -2516,17 +2524,17 @@
     <span class="doccomment">/// Features provided by `VK_KHR_buffer_device_address`, promoted to Vulkan 1.2.
     ///
     /// We only use this feature for
-    /// [`Features::RAY_TRACING_ACCELERATION_STRUCTURE`], which requires
+    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`], which requires
     /// `VK_KHR_acceleration_structure`, which depends on
     /// `VK_KHR_buffer_device_address`, so [`Instance::expose_adapter`] only
     /// bothers to check if `VK_KHR_acceleration_structure` is available,
     /// leaving this `None`.
     ///
     /// However, we do populate this when creating a device if
-    /// [`Features::RAY_TRACING_ACCELERATION_STRUCTURE`] is requested.
+    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`] is requested.
     ///
     /// [`Instance::expose_adapter`]: super::Instance::expose_adapter
-    /// [`Features::RAY_TRACING_ACCELERATION_STRUCTURE`]: wgt::Features::RAY_TRACING_ACCELERATION_STRUCTURE
+    /// [`Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE`]: wgt::Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE
     </span>buffer_device_address: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceBufferDeviceAddressFeaturesKHR&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
     <span class="doccomment">/// Features provided by `VK_KHR_ray_query`,
@@ -3161,13 +3169,16 @@
         features.set(F::DEPTH32FLOAT_STENCIL8, texture_d32_s8);
 
         features.set(
-            F::RAY_TRACING_ACCELERATION_STRUCTURE,
+            F::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE,
             caps.supports_extension(khr::deferred_host_operations::NAME)
                 &amp;&amp; caps.supports_extension(khr::acceleration_structure::NAME)
                 &amp;&amp; caps.supports_extension(khr::buffer_device_address::NAME),
         );
 
-        features.set(F::RAY_QUERY, caps.supports_extension(khr::ray_query::NAME));
+        features.set(
+            F::EXPERIMENTAL_RAY_QUERY,
+            caps.supports_extension(khr::ray_query::NAME),
+        );
 
         <span class="kw">let </span>rg11b10ufloat_renderable = supports_format(
             instance,
@@ -3422,14 +3433,16 @@
         }
 
         <span class="comment">// Require `VK_KHR_deferred_host_operations`, `VK_KHR_acceleration_structure` and `VK_KHR_buffer_device_address` if the feature `RAY_TRACING` was requested
-        </span><span class="kw">if </span>requested_features.contains(wgt::Features::RAY_TRACING_ACCELERATION_STRUCTURE) {
+        </span><span class="kw">if </span>requested_features
+            .contains(wgt::Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)
+        {
             extensions.push(khr::deferred_host_operations::NAME);
             extensions.push(khr::acceleration_structure::NAME);
             extensions.push(khr::buffer_device_address::NAME);
         }
 
         <span class="comment">// Require `VK_KHR_ray_query` if the associated feature was requested
-        </span><span class="kw">if </span>requested_features.contains(wgt::Features::RAY_QUERY) {
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::EXPERIMENTAL_RAY_QUERY) {
             extensions.push(khr::ray_query::NAME);
         }
 
@@ -4218,7 +4231,7 @@
                 capabilities.push(spv::Capability::StorageImageWriteWithoutFormat);
             }
 
-            <span class="kw">if </span>features.contains(wgt::Features::RAY_QUERY) {
+            <span class="kw">if </span>features.contains(wgt::Features::EXPERIMENTAL_RAY_QUERY) {
                 capabilities.push(spv::Capability::RayQueryKHR);
             }
 
@@ -4249,6 +4262,9 @@
                 // But this requires cloning the `spv::Options` struct, which has heap allocations.
                 </span><span class="bool-val">true</span>, <span class="comment">// could check `super::Workarounds::SEPARATE_ENTRY_POINTS`
             </span>);
+            <span class="kw">if </span>features.contains(wgt::Features::EXPERIMENTAL_RAY_QUERY) {
+                capabilities.push(spv::Capability::RayQueryKHR);
+            }
             spv::Options {
                 lang_version: <span class="kw">if </span>features
                     .intersects(wgt::Features::SUBGROUP | wgt::Features::SUBGROUP_VERTEX)

@@ -1007,11 +1007,17 @@
 <a href="#1006" id="1006">1006</a>
 <a href="#1007" id="1007">1007</a>
 <a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
-    id::{BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
+    id::{BindGroupLayoutId, BufferId, SamplerId, TextureViewId, TlasId},
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
     pipeline::{ComputePipeline, RenderPipeline},
     resource::{
@@ -1038,6 +1044,7 @@
     sync::{Arc, OnceLock, Weak},
 };
 
+<span class="kw">use </span><span class="kw">crate</span>::resource::Tlas;
 <span class="kw">use </span>thiserror::Error;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1311,6 +1318,7 @@
     storage_buffers: PerStageBindingTypeCounter,
     storage_textures: PerStageBindingTypeCounter,
     uniform_buffers: PerStageBindingTypeCounter,
+    acceleration_structures: PerStageBindingTypeCounter,
 }
 
 <span class="kw">impl </span>BindingTypeMaxCountValidator {
@@ -1346,7 +1354,9 @@
             wgt::BindingType::StorageTexture { .. } =&gt; {
                 <span class="self">self</span>.storage_textures.add(binding.visibility, count);
             }
-            wgt::BindingType::AccelerationStructure =&gt; <span class="macro">todo!</span>(),
+            wgt::BindingType::AccelerationStructure =&gt; {
+                <span class="self">self</span>.acceleration_structures.add(binding.visibility, count);
+            }
         }
     }
 
@@ -1790,6 +1800,7 @@
     SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [SamplerId]&gt;),
     TextureView(TextureViewId),
     TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [TextureViewId]&gt;),
+    AccelerationStructure(TlasId),
 }
 
 <span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`
@@ -1802,6 +1813,7 @@
     SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;Sampler&gt;]&gt;),
     TextureView(Arc&lt;TextureView&gt;),
     TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;TextureView&gt;]&gt;),
+    AccelerationStructure(Arc&lt;Tlas&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]

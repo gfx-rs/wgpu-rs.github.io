@@ -1466,6 +1466,53 @@
 <a href="#1465" id="1465">1465</a>
 <a href="#1466" id="1466">1466</a>
 <a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1495,6 +1542,8 @@
 
 <span class="kw">use </span>smallvec::SmallVec;
 
+<span class="kw">use </span><span class="kw">crate</span>::resource::{Blas, DestroyedAccelerationStructure, Tlas};
+<span class="kw">use </span><span class="kw">crate</span>::scratch::ScratchBuffer;
 <span class="kw">use </span>std::{
     iter,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -1611,8 +1660,10 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>TempResource {
     StagingBuffer(FlushedStagingBuffer),
+    ScratchBuffer(ScratchBuffer),
     DestroyedBuffer(DestroyedBuffer),
     DestroyedTexture(DestroyedTexture),
+    DestroyedAccelerationStructure(DestroyedAccelerationStructure),
 }
 
 <span class="doccomment">/// A series of raw [`CommandBuffer`]s that have been submitted to a
@@ -1629,6 +1680,10 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&gt;&gt;,
     <span class="doccomment">/// These are the textures that have been tracked by `PendingWrites`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&gt;&gt;,
+    <span class="doccomment">/// These are the BLASes that have been tracked by `PendingWrites`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_blas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Blas&gt;&gt;,
+    <span class="doccomment">/// These are the TLASes that have been tracked by `PendingWrites`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_tlas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Tlas&gt;&gt;,
 }
 
 <span class="kw">impl </span>EncoderInFlight {
@@ -1645,6 +1700,8 @@
             drop(<span class="self">self</span>.trackers);
             drop(<span class="self">self</span>.pending_buffers);
             drop(<span class="self">self</span>.pending_textures);
+            drop(<span class="self">self</span>.pending_blas_s);
+            drop(<span class="self">self</span>.pending_tlas_s);
         }
         <span class="self">self</span>.raw
     }
@@ -1684,6 +1741,8 @@
     temp_resources: Vec&lt;TempResource&gt;,
     dst_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&gt;&gt;,
     dst_textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&gt;&gt;,
+    dst_blas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Blas&gt;&gt;,
+    dst_tlas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Tlas&gt;&gt;,
 }
 
 <span class="kw">impl </span>PendingWrites {
@@ -1694,6 +1753,8 @@
             temp_resources: Vec::new(),
             dst_buffers: FastHashMap::default(),
             dst_textures: FastHashMap::default(),
+            dst_blas_s: FastHashMap::default(),
+            dst_tlas_s: FastHashMap::default(),
         }
     }
 
@@ -1726,6 +1787,22 @@
         <span class="self">self</span>.dst_textures.contains_key(<span class="kw-2">&amp;</span>texture.tracker_index())
     }
 
+    <span class="kw">pub fn </span>insert_blas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Arc&lt;Blas&gt;) {
+        <span class="self">self</span>.dst_blas_s.insert(blas.tracker_index(), blas.clone());
+    }
+
+    <span class="kw">pub fn </span>insert_tlas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tlas: <span class="kw-2">&amp;</span>Arc&lt;Tlas&gt;) {
+        <span class="self">self</span>.dst_tlas_s.insert(tlas.tracker_index(), tlas.clone());
+    }
+
+    <span class="kw">pub fn </span>contains_blas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Arc&lt;Blas&gt;) -&gt; bool {
+        <span class="self">self</span>.dst_blas_s.contains_key(<span class="kw-2">&amp;</span>blas.tracker_index())
+    }
+
+    <span class="kw">pub fn </span>contains_tlas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tlas: <span class="kw-2">&amp;</span>Arc&lt;Tlas&gt;) -&gt; bool {
+        <span class="self">self</span>.dst_tlas_s.contains_key(<span class="kw-2">&amp;</span>tlas.tracker_index())
+    }
+
     <span class="kw">pub fn </span>consume_temp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: TempResource) {
         <span class="self">self</span>.temp_resources.push(resource);
     }
@@ -1744,6 +1821,8 @@
         <span class="kw">if </span><span class="self">self</span>.is_recording {
             <span class="kw">let </span>pending_buffers = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_buffers);
             <span class="kw">let </span>pending_textures = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_textures);
+            <span class="kw">let </span>pending_blas_s = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_blas_s);
+            <span class="kw">let </span>pending_tlas_s = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_tlas_s);
 
             <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding() }
                 .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
@@ -1759,6 +1838,8 @@
                 trackers: Tracker::new(),
                 pending_buffers,
                 pending_textures,
+                pending_blas_s,
+                pending_tlas_s,
             };
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(encoder))
         } <span class="kw">else </span>{
@@ -1826,6 +1907,10 @@
     </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
     <span class="attr">#[error(transparent)]
     </span>CommandEncoder(<span class="attr">#[from] </span>CommandEncoderError),
+    <span class="attr">#[error(transparent)]
+    </span>ValidateBlasActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateBlasActionsError),
+    <span class="attr">#[error(transparent)]
+    </span>ValidateTlasActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateTlasActionsError),
 }
 
 <span class="comment">//TODO: move out common parts of write_xxx.
@@ -2585,6 +2670,8 @@
                             trackers: baked.trackers,
                             pending_buffers: FastHashMap::default(),
                             pending_textures: FastHashMap::default(),
+                            pending_blas_s: FastHashMap::default(),
+                            pending_tlas_s: FastHashMap::default(),
                         });
                     }
 
@@ -2929,6 +3016,13 @@
                     };
                 }
             }
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.validate_blas_actions() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
+        }
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.validate_tlas_actions(snatch_guard) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
         }
     }
     <span class="prelude-val">Ok</span>(())

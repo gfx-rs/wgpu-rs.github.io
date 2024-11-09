@@ -1342,6 +1342,19 @@
 <a href="#1341" id="1341">1341</a>
 <a href="#1342" id="1342">1342</a>
 <a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1372,10 +1385,10 @@
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
 
+<span class="kw">use super</span>::{bind::BinderError, memory_init::CommandBufferTextureMemoryActions};
+<span class="kw">use </span><span class="kw">crate</span>::ray_tracing::TlasAction;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{fmt, mem::size_of, str};
-
-<span class="kw">use super</span>::{bind::BinderError, memory_init::CommandBufferTextureMemoryActions};
 
 <span class="kw">pub struct </span>ComputePass {
     <span class="doccomment">/// All pass data &amp; records is stored here.
@@ -1554,6 +1567,7 @@
     tracker: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Tracker,
     buffer_memory_init_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;BufferInitTrackerAction&gt;,
     texture_memory_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>CommandBufferTextureMemoryActions,
+    tlas_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;TlasAction&gt;,
 
     temp_offsets: Vec&lt;u32&gt;,
     dynamic_offset_count: usize,
@@ -1794,6 +1808,7 @@
             tracker: <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
             buffer_memory_init_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions,
             texture_memory_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions,
+            tlas_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.tlas_actions,
 
             temp_offsets: Vec::new(),
             dynamic_offset_count: <span class="number">0</span>,
@@ -2038,6 +2053,17 @@
             .pending_discard_init_fixups
             .extend(state.texture_memory_actions.register_init_action(action));
     }
+
+    <span class="kw">let </span>used_resource = bind_group
+        .used
+        .acceleration_structures
+        .into_iter()
+        .map(|tlas| TlasAction {
+            tlas: tlas.clone(),
+            kind: <span class="kw">crate</span>::ray_tracing::TlasActionKind::Use,
+        });
+
+    state.tlas_actions.extend(used_resource);
 
     <span class="kw">let </span>pipeline_layout = state.binder.pipeline_layout.clone();
     <span class="kw">let </span>entries = state
