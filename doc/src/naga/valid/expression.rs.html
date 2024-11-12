@@ -1832,6 +1832,21 @@
 <a href="#1831" id="1831">1831</a>
 <a href="#1832" id="1832">1832</a>
 <a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
+<a href="#1836" id="1836">1836</a>
+<a href="#1837" id="1837">1837</a>
+<a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 
@@ -1873,12 +1888,21 @@
     </span>IndexableLength(<span class="attr">#[from] </span>IndexableLengthError),
     <span class="attr">#[error(<span class="string">"Operation {0:?} can't work with {1:?}"</span>)]
     </span>InvalidUnaryOperandType(<span class="kw">crate</span>::UnaryOperator, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">"Operation {0:?} can't work with {1:?} and {2:?}"</span>)]
-    </span>InvalidBinaryOperandTypes(
-        <span class="kw">crate</span>::BinaryOperator,
-        Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ),
+    <span class="attr">#[error(
+        <span class="string">"Operation {:?} can't work with {:?} (of type {:?}) and {:?} (of type {:?})"</span>,
+        op,
+        lhs_expr,
+        lhs_type,
+        rhs_expr,
+        rhs_type
+    )]
+    </span>InvalidBinaryOperandTypes {
+        op: <span class="kw">crate</span>::BinaryOperator,
+        lhs_expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        lhs_type: <span class="kw">crate</span>::TypeInner,
+        rhs_expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        rhs_type: <span class="kw">crate</span>::TypeInner,
+    },
     <span class="attr">#[error(<span class="string">"Selecting is not possible"</span>)]
     </span>InvalidSelectTypes,
     <span class="attr">#[error(<span class="string">"Relational argument {0:?} is not a boolean vector"</span>)]
@@ -2681,7 +2705,13 @@
                         function.expressions[right],
                         right_inner
                     );
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBinaryOperandTypes(op, left, right));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBinaryOperandTypes {
+                        op,
+                        lhs_expr: left,
+                        lhs_type: left_inner.clone(),
+                        rhs_expr: right,
+                        rhs_type: right_inner.clone(),
+                    });
                 }
                 ShaderStages::all()
             }
