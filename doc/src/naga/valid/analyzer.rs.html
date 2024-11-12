@@ -1375,6 +1375,81 @@
 <a href="#1374" id="1374">1374</a>
 <a href="#1375" id="1375">1375</a>
 <a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
+<a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
@@ -1383,6 +1458,7 @@
 //! - expression reference counts
 
 </span><span class="kw">use super</span>::{ExpressionError, FunctionError, ModuleInfo, ShaderStages, ValidationFlags};
+<span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{DiagnosticFilterNode, FilterableTriggeringRule};
 <span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, WithSpan};
 <span class="kw">use crate</span>::{
     arena::{Arena, Handle},
@@ -1392,10 +1468,6 @@
 
 <span class="kw">pub type </span>NonUniformResult = <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;;
 
-<span class="comment">// Remove this once we update our uniformity analysis and
-// add support for the `derivative_uniformity` diagnostic
-</span><span class="kw">const </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE: bool = <span class="bool-val">true</span>;
-
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Kinds of expressions that require uniform control flow.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
@@ -1403,8 +1475,8 @@
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     </span><span class="kw">pub struct </span>UniformityRequirements: u8 {
         <span class="kw">const </span>WORK_GROUP_BARRIER = <span class="number">0x1</span>;
-        <span class="kw">const </span>DERIVATIVE = <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE { <span class="number">0 </span>} <span class="kw">else </span>{ <span class="number">0x2 </span>};
-        <span class="kw">const </span>IMPLICIT_LEVEL = <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE { <span class="number">0 </span>} <span class="kw">else </span>{ <span class="number">0x4 </span>};
+        <span class="kw">const </span>DERIVATIVE = <span class="number">0x2</span>;
+        <span class="kw">const </span>IMPLICIT_LEVEL = <span class="number">0x4</span>;
     }
 }
 
@@ -1666,6 +1738,13 @@
 
     <span class="doccomment">/// Indicates that the function is using dual source blending.
     </span><span class="kw">pub </span>dual_source_blending: bool,
+
+    <span class="doccomment">/// The leaf of all module-wide diagnostic filter rules tree parsed from directives in this
+    /// module.
+    ///
+    /// See [`DiagnosticFilterNode`] for details on how the tree is represented and used in
+    /// validation.
+    </span>diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
 }
 
 <span class="kw">impl </span>FunctionInfo {
@@ -2203,6 +2282,7 @@
         other_functions: <span class="kw-2">&amp;</span>[FunctionInfo],
         <span class="kw-2">mut </span>disruptor: <span class="prelude-ty">Option</span>&lt;UniformityDisruptor&gt;,
         expression_arena: <span class="kw-2">&amp;</span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+        diagnostic_filter_arena: <span class="kw-2">&amp;</span>Arena&lt;DiagnosticFilterNode&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;FunctionUniformity, WithSpan&lt;FunctionError&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::Statement <span class="kw">as </span>S;
 
@@ -2219,8 +2299,21 @@
                             &amp;&amp; !req.is_empty()
                         {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = disruptor {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::NonUniformControlFlow(req, expr, cause)
-                                    .with_span_handle(expr, expression_arena));
+                                <span class="kw">let </span>severity = DiagnosticFilterNode::search(
+                                    <span class="self">self</span>.diagnostic_filter_leaf,
+                                    diagnostic_filter_arena,
+                                    FilterableTriggeringRule::DerivativeUniformity,
+                                );
+                                severity.report_diag(
+                                    FunctionError::NonUniformControlFlow(req, expr, cause)
+                                        .with_span_handle(expr, expression_arena),
+                                    <span class="comment">// TODO: Yes, this isn't contextualized with source, because
+                                    // the user is supposed to render what would normally be an
+                                    // error here. Once we actually support warning-level
+                                    // diagnostic items, then we won't need this non-compliant hack:
+                                    // &lt;https://github.com/gfx-rs/wgpu/issues/6458&gt;
+                                    </span>|e, level| <span class="macro">log::log!</span>(level, <span class="string">"{e}"</span>),
+                                )<span class="question-mark">?</span>;
                             }
                         }
                         requirements |= req;
@@ -2278,9 +2371,13 @@
                         exit: ExitFlags::empty(),
                     }
                 }
-                S::Block(<span class="kw-2">ref </span>b) =&gt; {
-                    <span class="self">self</span>.process_block(b, other_functions, disruptor, expression_arena)<span class="question-mark">?
-                </span>}
+                S::Block(<span class="kw-2">ref </span>b) =&gt; <span class="self">self</span>.process_block(
+                    b,
+                    other_functions,
+                    disruptor,
+                    expression_arena,
+                    diagnostic_filter_arena,
+                )<span class="question-mark">?</span>,
                 S::If {
                     condition,
                     <span class="kw-2">ref </span>accept,
@@ -2294,12 +2391,14 @@
                         other_functions,
                         branch_disruptor,
                         expression_arena,
+                        diagnostic_filter_arena,
                     )<span class="question-mark">?</span>;
                     <span class="kw">let </span>reject_uniformity = <span class="self">self</span>.process_block(
                         reject,
                         other_functions,
                         branch_disruptor,
                         expression_arena,
+                        diagnostic_filter_arena,
                     )<span class="question-mark">?</span>;
                     accept_uniformity | reject_uniformity
                 }
@@ -2318,6 +2417,7 @@
                             other_functions,
                             case_disruptor,
                             expression_arena,
+                            diagnostic_filter_arena,
                         )<span class="question-mark">?</span>;
                         case_disruptor = <span class="kw">if </span>case.fall_through {
                             case_disruptor.or(case_uniformity.exit_disruptor())
@@ -2333,14 +2433,20 @@
                     <span class="kw-2">ref </span>continuing,
                     break_if,
                 } =&gt; {
-                    <span class="kw">let </span>body_uniformity =
-                        <span class="self">self</span>.process_block(body, other_functions, disruptor, expression_arena)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>body_uniformity = <span class="self">self</span>.process_block(
+                        body,
+                        other_functions,
+                        disruptor,
+                        expression_arena,
+                        diagnostic_filter_arena,
+                    )<span class="question-mark">?</span>;
                     <span class="kw">let </span>continuing_disruptor = disruptor.or(body_uniformity.exit_disruptor());
                     <span class="kw">let </span>continuing_uniformity = <span class="self">self</span>.process_block(
                         continuing,
                         other_functions,
                         continuing_disruptor,
                         expression_arena,
+                        diagnostic_filter_arena,
                     )<span class="question-mark">?</span>;
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = break_if {
                         <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(expr);
@@ -2494,6 +2600,7 @@
             expressions: <span class="macro">vec!</span>[ExpressionInfo::new(); fun.expressions.len()].into_boxed_slice(),
             sampling: <span class="kw">crate</span>::FastHashSet::default(),
             dual_source_blending: <span class="bool-val">false</span>,
+            diagnostic_filter_leaf: module.diagnostic_filter_leaf,
         };
         <span class="kw">let </span>resolve_context =
             ResolveContext::with_locals(module, <span class="kw-2">&amp;</span>fun.local_variables, <span class="kw-2">&amp;</span>fun.arguments);
@@ -2517,7 +2624,13 @@
             }
         }
 
-        <span class="kw">let </span>uniformity = info.process_block(<span class="kw-2">&amp;</span>fun.body, <span class="kw-2">&amp;</span><span class="self">self</span>.functions, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>fun.expressions)<span class="question-mark">?</span>;
+        <span class="kw">let </span>uniformity = info.process_block(
+            <span class="kw-2">&amp;</span>fun.body,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.functions,
+            <span class="prelude-val">None</span>,
+            <span class="kw-2">&amp;</span>fun.expressions,
+            <span class="kw-2">&amp;</span>module.diagnostic_filters,
+        )<span class="question-mark">?</span>;
         info.uniformity = uniformity.result;
         info.may_kill = uniformity.exit.contains(ExitFlags::MAY_KILL);
 
@@ -2607,6 +2720,7 @@
         expressions: <span class="macro">vec!</span>[ExpressionInfo::new(); expressions.len()].into_boxed_slice(),
         sampling: <span class="kw">crate</span>::FastHashSet::default(),
         dual_source_blending: <span class="bool-val">false</span>,
+        diagnostic_filter_leaf: <span class="prelude-val">None</span>,
     };
     <span class="kw">let </span>resolve_context = ResolveContext {
         constants: <span class="kw-2">&amp;</span>Arena::new(),
@@ -2653,7 +2767,8 @@
             <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit1, stmt_if_uniform].into(),
             <span class="kw-2">&amp;</span>[],
             <span class="prelude-val">None</span>,
-            <span class="kw-2">&amp;</span>expressions
+            <span class="kw-2">&amp;</span>expressions,
+            <span class="kw-2">&amp;</span>Arena::new(),
         ),
         <span class="prelude-val">Ok</span>(FunctionUniformity {
             result: Uniformity {
@@ -2681,25 +2796,58 @@
     };
     {
         <span class="kw">let </span>block_info = info.process_block(
+            <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit2.clone(), stmt_if_non_uniform.clone()].into(),
+            <span class="kw-2">&amp;</span>[],
+            <span class="prelude-val">None</span>,
+            <span class="kw-2">&amp;</span>expressions,
+            <span class="kw-2">&amp;</span>Arena::new(),
+        );
+        <span class="macro">assert_eq!</span>(
+            block_info,
+            <span class="prelude-val">Err</span>(FunctionError::NonUniformControlFlow(
+                UniformityRequirements::DERIVATIVE,
+                derivative_expr,
+                UniformityDisruptor::Expression(non_uniform_global_expr)
+            )
+            .with_span()),
+        );
+        <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">1</span>);
+
+        <span class="comment">// Test that the same thing passes when we disable the `derivative_uniformity`
+        </span><span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = Arena::new();
+        <span class="kw">let </span>diagnostic_filter_leaf = diagnostic_filters.append(
+            DiagnosticFilterNode {
+                inner: <span class="kw">crate</span>::diagnostic_filter::DiagnosticFilter {
+                    new_severity: <span class="kw">crate</span>::diagnostic_filter::Severity::Off,
+                    triggering_rule: FilterableTriggeringRule::DerivativeUniformity,
+                },
+                parent: <span class="prelude-val">None</span>,
+            },
+            <span class="kw">crate</span>::Span::default(),
+        );
+        <span class="kw">let </span><span class="kw-2">mut </span>info = FunctionInfo {
+            diagnostic_filter_leaf: <span class="prelude-val">Some</span>(diagnostic_filter_leaf),
+            ..info.clone()
+        };
+
+        <span class="kw">let </span>block_info = info.process_block(
             <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit2, stmt_if_non_uniform].into(),
             <span class="kw-2">&amp;</span>[],
             <span class="prelude-val">None</span>,
             <span class="kw-2">&amp;</span>expressions,
+            <span class="kw-2">&amp;</span>diagnostic_filters,
         );
-        <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE {
-            <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">2</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">assert_eq!</span>(
-                block_info,
-                <span class="prelude-val">Err</span>(FunctionError::NonUniformControlFlow(
-                    UniformityRequirements::DERIVATIVE,
-                    derivative_expr,
-                    UniformityDisruptor::Expression(non_uniform_global_expr)
-                )
-                .with_span()),
-            );
-            <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">1</span>);
-        }
+        <span class="macro">assert_eq!</span>(
+            block_info,
+            <span class="prelude-val">Ok</span>(FunctionUniformity {
+                result: Uniformity {
+                    non_uniform_result: <span class="prelude-val">None</span>,
+                    requirements: UniformityRequirements::DERIVATIVE,
+                },
+                exit: ExitFlags::empty()
+            }),
+        );
+        <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">2</span>);
     }
     <span class="macro">assert_eq!</span>(info[non_uniform_global], GlobalUse::READ);
 
@@ -2712,7 +2860,8 @@
             <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit3, stmt_return_non_uniform].into(),
             <span class="kw-2">&amp;</span>[],
             <span class="prelude-val">Some</span>(UniformityDisruptor::Return),
-            <span class="kw-2">&amp;</span>expressions
+            <span class="kw-2">&amp;</span>expressions,
+            <span class="kw-2">&amp;</span>Arena::new(),
         ),
         <span class="prelude-val">Ok</span>(FunctionUniformity {
             result: Uniformity {
@@ -2739,7 +2888,8 @@
             <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit4, stmt_assign, stmt_kill, stmt_return_pointer].into(),
             <span class="kw-2">&amp;</span>[],
             <span class="prelude-val">Some</span>(UniformityDisruptor::Discard),
-            <span class="kw-2">&amp;</span>expressions
+            <span class="kw-2">&amp;</span>expressions,
+            <span class="kw-2">&amp;</span>Arena::new(),
         ),
         <span class="prelude-val">Ok</span>(FunctionUniformity {
             result: Uniformity {

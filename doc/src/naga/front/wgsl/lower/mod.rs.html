@@ -3171,6 +3171,10 @@
 <a href="#3170" id="3170">3170</a>
 <a href="#3171" id="3171">3171</a>
 <a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a>
+<a href="#3174" id="3174">3174</a>
+<a href="#3175" id="3175">3175</a>
+<a href="#3176" id="3176">3176</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4186,7 +4190,11 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         tu: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>ast::TranslationUnit&lt;<span class="lifetime">'source</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Module, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>module = <span class="kw">crate</span>::Module::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>module = <span class="kw">crate</span>::Module {
+            diagnostic_filters: tu.diagnostic_filters.clone(),
+            diagnostic_filter_leaf: tu.diagnostic_filter_leaf,
+            ..Default::default()
+        };
 
         <span class="kw">let </span><span class="kw-2">mut </span>ctx = GlobalContext {
             ast_expressions: <span class="kw-2">&amp;</span>tu.expressions,
@@ -4417,7 +4425,7 @@
             .arguments
             .iter()
             .enumerate()
-            .map(|(i, arg)| {
+            .map(|(i, arg)| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(arg.ty, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = expressions
                     .append(<span class="kw">crate</span>::Expression::FunctionArgument(i <span class="kw">as </span>u32), arg.name.span);
@@ -4436,7 +4444,7 @@
         <span class="kw">let </span>result = f
             .result
             .as_ref()
-            .map(|res| {
+            .map(|res| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(res.ty, ctx)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::FunctionResult {
                     ty,

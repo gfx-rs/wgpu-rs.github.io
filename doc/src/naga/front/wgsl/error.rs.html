@@ -1044,7 +1044,15 @@
 <a href="#1043" id="1043">1043</a>
 <a href="#1044" id="1044">1044</a>
 <a href="#1045" id="1045">1045</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::FilterableTriggeringRule;
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
     EnableExtension, UnimplementedEnableExtension,
 };
@@ -1341,10 +1349,13 @@
     DiagnosticInvalidSeverity {
         severity_control_name_span: Span,
     },
-    DiagnosticNotYetImplemented {
-        triggering_rule: FilterableTriggeringRule,
-        span: Span,
-    },
+    DiagnosticDuplicateTriggeringRule(ConflictingDiagnosticRuleError),
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; From&lt;ConflictingDiagnosticRuleError&gt; <span class="kw">for </span>Error&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>from(value: ConflictingDiagnosticRuleError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::DiagnosticDuplicateTriggeringRule(value)
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug)]
@@ -2063,24 +2074,29 @@
                 </span>)
                 .into()],
             },
-            Error::DiagnosticNotYetImplemented {
+            Error::DiagnosticDuplicateTriggeringRule(ConflictingDiagnosticRuleError {
                 triggering_rule,
-                span,
-            } =&gt; ParseError {
-                message: <span class="macro">format!</span>(
-                    <span class="string">"the `{}` diagnostic filter is not yet supported"</span>,
-                    triggering_rule.to_ident()
-                ),
-                labels: <span class="macro">vec!</span>[(span, <span class="string">""</span>.into())],
-                notes: <span class="macro">vec!</span>[<span class="macro">format!</span>(
-                    <span class="macro">concat!</span>(
-                        <span class="string">"Let Naga maintainers know that you ran into this at "</span>,
-                        <span class="string">"&lt;https://github.com/gfx-rs/wgpu/issues/{}&gt;, "</span>,
-                        <span class="string">"so they can prioritize it!"
-                    </span>),
-                    triggering_rule.tracking_issue_num()
-                )],
-            },
+                triggering_rule_spans,
+            }) =&gt; {
+                <span class="kw">let </span>[first_span, second_span] = triggering_rule_spans;
+                ParseError {
+                    message: <span class="macro">format!</span>(
+                        <span class="string">"found conflicting `diagnostic(…)` rule(s) for `{}`"</span>,
+                        triggering_rule.to_ident()
+                    ),
+                    labels: <span class="macro">vec!</span>[
+                        (first_span, <span class="string">"first rule"</span>.into()),
+                        (second_span, <span class="string">"second rule"</span>.into()),
+                    ],
+                    notes: <span class="macro">vec!</span>[<span class="macro">concat!</span>(
+                        <span class="string">"multiple `diagnostic(…)` rules with the same rule name "</span>,
+                        <span class="string">"conflict unless the severity is the same; "</span>,
+                        <span class="string">"delete the rule you don't want, or "</span>,
+                        <span class="string">"ensure that all severities with the same rule name match"
+                    </span>)
+                    .into()],
+                }
+            }
         }
     }
 }
