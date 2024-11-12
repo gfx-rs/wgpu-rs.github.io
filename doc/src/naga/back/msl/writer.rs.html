@@ -6136,6 +6136,23 @@
 <a href="#6135" id="6135">6135</a>
 <a href="#6136" id="6136">6136</a>
 <a href="#6137" id="6137">6137</a>
+<a href="#6138" id="6138">6138</a>
+<a href="#6139" id="6139">6139</a>
+<a href="#6140" id="6140">6140</a>
+<a href="#6141" id="6141">6141</a>
+<a href="#6142" id="6142">6142</a>
+<a href="#6143" id="6143">6143</a>
+<a href="#6144" id="6144">6144</a>
+<a href="#6145" id="6145">6145</a>
+<a href="#6146" id="6146">6146</a>
+<a href="#6147" id="6147">6147</a>
+<a href="#6148" id="6148">6148</a>
+<a href="#6149" id="6149">6149</a>
+<a href="#6150" id="6150">6150</a>
+<a href="#6151" id="6151">6151</a>
+<a href="#6152" id="6152">6152</a>
+<a href="#6153" id="6153">6153</a>
+<a href="#6154" id="6154">6154</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -8074,6 +8091,7 @@
                     Mf::Inverse =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedCall(<span class="macro">format!</span>(<span class="string">"{fun:?}"</span>))),
                     Mf::Transpose =&gt; <span class="string">"transpose"</span>,
                     Mf::Determinant =&gt; <span class="string">"determinant"</span>,
+                    Mf::QuantizeToF16 =&gt; <span class="string">""</span>,
                     <span class="comment">// bits
                     </span>Mf::CountTrailingZeros =&gt; <span class="string">"ctz"</span>,
                     Mf::CountLeadingZeros =&gt; <span class="string">"clz"</span>,
@@ -8281,6 +8299,22 @@
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24"</span>)<span class="question-mark">?</span>;
+                    }
+                    Mf::QuantizeToF16 =&gt; {
+                        <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(arg) {
+                            <span class="kw">crate</span>::TypeInner::Scalar { .. } =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"float(half("</span>)<span class="question-mark">?</span>,
+                            <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; <span class="macro">write!</span>(
+                                <span class="self">self</span>.out,
+                                <span class="string">"{NAMESPACE}::float{size}({NAMESPACE}::half{size}("</span>,
+                                size = back::vector_size_str(size),
+                            )<span class="question-mark">?</span>,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(
+                                <span class="string">"Correct TypeInner for QuantizeToF16 should be already validated"
+                            </span>),
+                        };
+
+                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"))"</span>)<span class="question-mark">?</span>;
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{NAMESPACE}::{fun_name}"</span>)<span class="question-mark">?</span>;
