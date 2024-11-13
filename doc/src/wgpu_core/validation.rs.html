@@ -1250,6 +1250,14 @@
 <a href="#1249" id="1249">1249</a>
 <a href="#1250" id="1250">1250</a>
 <a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, resource::InvalidResourceError, FastHashMap, FastHashSet};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
@@ -1749,7 +1757,10 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>derive_binding_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BindingType, BindingError&gt; {
+    <span class="kw">fn </span>derive_binding_type(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        is_reffed_by_sampler_in_entrypoint: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BindingType, BindingError&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.ty {
             ResourceType::Buffer { size } =&gt; BindingType::Buffer {
                 ty: <span class="kw">match </span><span class="self">self</span>.class {
@@ -1783,9 +1794,9 @@
                 <span class="kw">match </span>class {
                     naga::ImageClass::Sampled { multi, kind } =&gt; BindingType::Texture {
                         sample_type: <span class="kw">match </span>kind {
-                            naga::ScalarKind::Float =&gt; {
-                                wgt::TextureSampleType::Float { filterable: <span class="bool-val">true </span>}
-                            }
+                            naga::ScalarKind::Float =&gt; wgt::TextureSampleType::Float {
+                                filterable: is_reffed_by_sampler_in_entrypoint,
+                            },
                             naga::ScalarKind::Sint =&gt; wgt::TextureSampleType::Sint,
                             naga::ScalarKind::Uint =&gt; wgt::TextureSampleType::Uint,
                             naga::ScalarKind::AbstractInt
@@ -2261,7 +2272,12 @@
                             <span class="kw">break </span><span class="lifetime">'err </span><span class="prelude-val">Err</span>(BindingError::Missing);
                         };
 
-                        <span class="kw">let </span>ty = <span class="kw">match </span>res.derive_binding_type() {
+                        <span class="kw">let </span>ty = <span class="kw">match </span>res.derive_binding_type(
+                            entry_point
+                                .sampling_pairs
+                                .iter()
+                                .any(|<span class="kw-2">&amp;</span>(im, _samp)| im == handle),
+                        ) {
                             <span class="prelude-val">Ok</span>(ty) =&gt; ty,
                             <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">break </span><span class="lifetime">'err </span><span class="prelude-val">Err</span>(error),
                         };
