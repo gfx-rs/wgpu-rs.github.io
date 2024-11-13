@@ -1450,6 +1450,12 @@
 <a href="#1449" id="1449">1449</a>
 <a href="#1450" id="1450">1450</a>
 <a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
@@ -1468,6 +1474,8 @@
 
 <span class="kw">pub type </span>NonUniformResult = <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;;
 
+<span class="kw">const </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE: bool = <span class="bool-val">true</span>;
+
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Kinds of expressions that require uniform control flow.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
@@ -1475,8 +1483,8 @@
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     </span><span class="kw">pub struct </span>UniformityRequirements: u8 {
         <span class="kw">const </span>WORK_GROUP_BARRIER = <span class="number">0x1</span>;
-        <span class="kw">const </span>DERIVATIVE = <span class="number">0x2</span>;
-        <span class="kw">const </span>IMPLICIT_LEVEL = <span class="number">0x4</span>;
+        <span class="kw">const </span>DERIVATIVE = <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE { <span class="number">0 </span>} <span class="kw">else </span>{ <span class="number">0x2 </span>};
+        <span class="kw">const </span>IMPLICIT_LEVEL = <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE { <span class="number">0 </span>} <span class="kw">else </span>{ <span class="number">0x4 </span>};
     }
 }
 
@@ -2802,52 +2810,56 @@
             <span class="kw-2">&amp;</span>expressions,
             <span class="kw-2">&amp;</span>Arena::new(),
         );
-        <span class="macro">assert_eq!</span>(
-            block_info,
-            <span class="prelude-val">Err</span>(FunctionError::NonUniformControlFlow(
-                UniformityRequirements::DERIVATIVE,
-                derivative_expr,
-                UniformityDisruptor::Expression(non_uniform_global_expr)
-            )
-            .with_span()),
-        );
-        <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">1</span>);
+        <span class="kw">if </span>DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE {
+            <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">2</span>);
+        } <span class="kw">else </span>{
+            <span class="macro">assert_eq!</span>(
+                block_info,
+                <span class="prelude-val">Err</span>(FunctionError::NonUniformControlFlow(
+                    UniformityRequirements::DERIVATIVE,
+                    derivative_expr,
+                    UniformityDisruptor::Expression(non_uniform_global_expr)
+                )
+                .with_span()),
+            );
+            <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">1</span>);
 
-        <span class="comment">// Test that the same thing passes when we disable the `derivative_uniformity`
-        </span><span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = Arena::new();
-        <span class="kw">let </span>diagnostic_filter_leaf = diagnostic_filters.append(
-            DiagnosticFilterNode {
-                inner: <span class="kw">crate</span>::diagnostic_filter::DiagnosticFilter {
-                    new_severity: <span class="kw">crate</span>::diagnostic_filter::Severity::Off,
-                    triggering_rule: FilterableTriggeringRule::DerivativeUniformity,
+            <span class="comment">// Test that the same thing passes when we disable the `derivative_uniformity`
+            </span><span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = Arena::new();
+            <span class="kw">let </span>diagnostic_filter_leaf = diagnostic_filters.append(
+                DiagnosticFilterNode {
+                    inner: <span class="kw">crate</span>::diagnostic_filter::DiagnosticFilter {
+                        new_severity: <span class="kw">crate</span>::diagnostic_filter::Severity::Off,
+                        triggering_rule: FilterableTriggeringRule::DerivativeUniformity,
+                    },
+                    parent: <span class="prelude-val">None</span>,
                 },
-                parent: <span class="prelude-val">None</span>,
-            },
-            <span class="kw">crate</span>::Span::default(),
-        );
-        <span class="kw">let </span><span class="kw-2">mut </span>info = FunctionInfo {
-            diagnostic_filter_leaf: <span class="prelude-val">Some</span>(diagnostic_filter_leaf),
-            ..info.clone()
-        };
+                <span class="kw">crate</span>::Span::default(),
+            );
+            <span class="kw">let </span><span class="kw-2">mut </span>info = FunctionInfo {
+                diagnostic_filter_leaf: <span class="prelude-val">Some</span>(diagnostic_filter_leaf),
+                ..info.clone()
+            };
 
-        <span class="kw">let </span>block_info = info.process_block(
-            <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit2, stmt_if_non_uniform].into(),
-            <span class="kw-2">&amp;</span>[],
-            <span class="prelude-val">None</span>,
-            <span class="kw-2">&amp;</span>expressions,
-            <span class="kw-2">&amp;</span>diagnostic_filters,
-        );
-        <span class="macro">assert_eq!</span>(
-            block_info,
-            <span class="prelude-val">Ok</span>(FunctionUniformity {
-                result: Uniformity {
-                    non_uniform_result: <span class="prelude-val">None</span>,
-                    requirements: UniformityRequirements::DERIVATIVE,
-                },
-                exit: ExitFlags::empty()
-            }),
-        );
-        <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">2</span>);
+            <span class="kw">let </span>block_info = info.process_block(
+                <span class="kw-2">&amp;</span><span class="macro">vec!</span>[stmt_emit2, stmt_if_non_uniform].into(),
+                <span class="kw-2">&amp;</span>[],
+                <span class="prelude-val">None</span>,
+                <span class="kw-2">&amp;</span>expressions,
+                <span class="kw-2">&amp;</span>diagnostic_filters,
+            );
+            <span class="macro">assert_eq!</span>(
+                block_info,
+                <span class="prelude-val">Ok</span>(FunctionUniformity {
+                    result: Uniformity {
+                        non_uniform_result: <span class="prelude-val">None</span>,
+                        requirements: UniformityRequirements::DERIVATIVE,
+                    },
+                    exit: ExitFlags::empty()
+                }),
+            );
+            <span class="macro">assert_eq!</span>(info[derivative_expr].ref_count, <span class="number">2</span>);
+        }
     }
     <span class="macro">assert_eq!</span>(info[non_uniform_global], GlobalUse::READ);
 
