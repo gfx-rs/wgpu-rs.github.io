@@ -2697,6 +2697,72 @@
 <a href="#2696" id="2696">2696</a>
 <a href="#2697" id="2697">2697</a>
 <a href="#2698" id="2698">2698</a>
+<a href="#2699" id="2699">2699</a>
+<a href="#2700" id="2700">2700</a>
+<a href="#2701" id="2701">2701</a>
+<a href="#2702" id="2702">2702</a>
+<a href="#2703" id="2703">2703</a>
+<a href="#2704" id="2704">2704</a>
+<a href="#2705" id="2705">2705</a>
+<a href="#2706" id="2706">2706</a>
+<a href="#2707" id="2707">2707</a>
+<a href="#2708" id="2708">2708</a>
+<a href="#2709" id="2709">2709</a>
+<a href="#2710" id="2710">2710</a>
+<a href="#2711" id="2711">2711</a>
+<a href="#2712" id="2712">2712</a>
+<a href="#2713" id="2713">2713</a>
+<a href="#2714" id="2714">2714</a>
+<a href="#2715" id="2715">2715</a>
+<a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
+<a href="#2722" id="2722">2722</a>
+<a href="#2723" id="2723">2723</a>
+<a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
+<a href="#2728" id="2728">2728</a>
+<a href="#2729" id="2729">2729</a>
+<a href="#2730" id="2730">2730</a>
+<a href="#2731" id="2731">2731</a>
+<a href="#2732" id="2732">2732</a>
+<a href="#2733" id="2733">2733</a>
+<a href="#2734" id="2734">2734</a>
+<a href="#2735" id="2735">2735</a>
+<a href="#2736" id="2736">2736</a>
+<a href="#2737" id="2737">2737</a>
+<a href="#2738" id="2738">2738</a>
+<a href="#2739" id="2739">2739</a>
+<a href="#2740" id="2740">2740</a>
+<a href="#2741" id="2741">2741</a>
+<a href="#2742" id="2742">2742</a>
+<a href="#2743" id="2743">2743</a>
+<a href="#2744" id="2744">2744</a>
+<a href="#2745" id="2745">2745</a>
+<a href="#2746" id="2746">2746</a>
+<a href="#2747" id="2747">2747</a>
+<a href="#2748" id="2748">2748</a>
+<a href="#2749" id="2749">2749</a>
+<a href="#2750" id="2750">2750</a>
+<a href="#2751" id="2751">2751</a>
+<a href="#2752" id="2752">2752</a>
+<a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a>
+<a href="#2756" id="2756">2756</a>
+<a href="#2757" id="2757">2757</a>
+<a href="#2758" id="2758">2758</a>
+<a href="#2759" id="2759">2759</a>
+<a href="#2760" id="2760">2760</a>
+<a href="#2761" id="2761">2761</a>
+<a href="#2762" id="2762">2762</a>
+<a href="#2763" id="2763">2763</a>
+<a href="#2764" id="2764">2764</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
 };
@@ -4397,7 +4463,7 @@
                 <span class="kw">let _ </span>= lexer.next();
                 <span class="self">self</span>.pop_rule_span(lexer);
             }
-            (Token::Paren(<span class="string">'{'</span>), <span class="kw">_</span>) =&gt; {
+            (Token::Paren(<span class="string">'{'</span>) | Token::Attribute, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>(inner, span) = <span class="self">self</span>.block(lexer, ctx, brace_nesting_level)<span class="question-mark">?</span>;
                 block.stmts.push(ast::Statement {
                     kind: ast::StatementKind::Block(inner),
@@ -4858,6 +4924,32 @@
 
         ctx.local_table.push_scope();
 
+        <span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = DiagnosticFilterMap::new();
+
+        <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
+        <span class="kw">while </span>lexer.skip(Token::Attribute) {
+            <span class="kw">let </span>(name, name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
+                    <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
+                    diagnostic_filters.add(filter, span)<span class="question-mark">?</span>;
+                }
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                    name_span,
+                    ExpectedToken::DiagnosticAttribute,
+                ));
+            }
+        }
+        <span class="self">self</span>.pop_rule_span(lexer);
+
+        <span class="kw">if </span>!diagnostic_filters.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotYetImplementedAtParseSite {
+                site_name_plural: <span class="string">"compound statements"</span>,
+                spans: diagnostic_filters.spans().collect(),
+            });
+        }
+
         <span class="kw">let </span>brace_span = lexer.expect_span(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span>brace_nesting_level = <span class="self">Self</span>::increase_brace_nesting(brace_nesting_level, brace_span)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>block = ast::Block::default();
@@ -5023,36 +5115,56 @@
             types: <span class="kw-2">&amp;mut </span>out.types,
             unresolved: <span class="kw-2">&amp;mut </span>dependencies,
         };
+        <span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = DiagnosticFilterMap::new();
+        <span class="kw">let </span>ensure_no_diag_attrs =
+            |on_what_plural, filters: DiagnosticFilterMap| -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+                <span class="kw">if </span>filters.is_empty() {
+                    <span class="prelude-val">Ok</span>(())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotSupported {
+                        on_what_plural,
+                        spans: filters.spans().collect(),
+                    })
+                }
+            };
 
         <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
         <span class="kw">while </span>lexer.skip(Token::Attribute) {
-            <span class="kw">match </span>lexer.next_ident_with_span()<span class="question-mark">? </span>{
-                (<span class="string">"binding"</span>, name_span) =&gt; {
+            <span class="kw">let </span>(name, name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
+                    <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
+                    diagnostic_filters.add(filter, span)<span class="question-mark">?</span>;
+                }
+                <span class="kw">continue</span>;
+            }
+            <span class="kw">match </span>name {
+                <span class="string">"binding" </span>=&gt; {
                     lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     bind_index.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                     lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
-                (<span class="string">"group"</span>, name_span) =&gt; {
+                <span class="string">"group" </span>=&gt; {
                     lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     bind_group.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                     lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
-                (<span class="string">"id"</span>, name_span) =&gt; {
+                <span class="string">"id" </span>=&gt; {
                     lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     id.set(<span class="self">self</span>.general_expression(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                     lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
                 }
-                (<span class="string">"vertex"</span>, name_span) =&gt; {
+                <span class="string">"vertex" </span>=&gt; {
                     stage.set(ShaderStage::Vertex, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">"fragment"</span>, name_span) =&gt; {
+                <span class="string">"fragment" </span>=&gt; {
                     stage.set(ShaderStage::Fragment, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">"compute"</span>, name_span) =&gt; {
+                <span class="string">"compute" </span>=&gt; {
                     stage.set(ShaderStage::Compute, name_span)<span class="question-mark">?</span>;
                     compute_span = name_span;
                 }
-                (<span class="string">"workgroup_size"</span>, name_span) =&gt; {
+                <span class="string">"workgroup_size" </span>=&gt; {
                     lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>new_workgroup_size = [<span class="prelude-val">None</span>; <span class="number">3</span>];
                     <span class="kw">for </span>(i, size) <span class="kw">in </span>new_workgroup_size.iter_mut().enumerate() {
@@ -5070,7 +5182,7 @@
                     }
                     workgroup_size.set(new_workgroup_size, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="string">"early_depth_test"</span>, name_span) =&gt; {
+                <span class="string">"early_depth_test" </span>=&gt; {
                     <span class="kw">let </span>conservative = <span class="kw">if </span>lexer.skip(Token::Paren(<span class="string">'('</span>)) {
                         <span class="kw">let </span>(ident, ident_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
                         <span class="kw">let </span>value = conv::map_conservative_depth(ident, ident_span)<span class="question-mark">?</span>;
@@ -5081,7 +5193,7 @@
                     </span>};
                     early_depth_test.set(<span class="kw">crate</span>::EarlyDepthTest { conservative }, name_span)<span class="question-mark">?</span>;
                 }
-                (<span class="kw">_</span>, word_span) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(word_span)),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
             }
         }
 
@@ -5101,17 +5213,24 @@
         <span class="comment">// read item
         </span><span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span>kind = <span class="kw">match </span>lexer.next() {
-            (Token::Separator(<span class="string">';'</span>), <span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            (Token::Separator(<span class="string">';'</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"semicolons"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                <span class="prelude-val">None
+            </span>}
             (Token::Word(word), directive_span) <span class="kw">if </span>DirectiveKind::from_ident(word).is_some() =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DirectiveAfterFirstGlobalDecl { directive_span });
             }
             (Token::Word(<span class="string">"struct"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`struct`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>members = <span class="self">self</span>.struct_body(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Struct(ast::Struct { name, members }))
             }
             (Token::Word(<span class="string">"alias"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`alias`es"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
                 lexer.expect(Token::Operation(<span class="string">'='</span>))<span class="question-mark">?</span>;
@@ -5120,6 +5239,8 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Type(ast::TypeAlias { name, ty }))
             }
             (Token::Word(<span class="string">"const"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`const`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
@@ -5136,6 +5257,8 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Const(ast::Const { name, ty, init }))
             }
             (Token::Word(<span class="string">"override"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`override`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>ty = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">':'</span>)) {
@@ -5160,11 +5283,19 @@
                 }))
             }
             (Token::Word(<span class="string">"var"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`var`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span><span class="kw-2">mut </span>var = <span class="self">self</span>.variable_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 var.binding = binding.take();
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Var(var))
             }
             (Token::Word(<span class="string">"fn"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">if </span>!diagnostic_filters.is_empty() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotYetImplementedAtParseSite {
+                        site_name_plural: <span class="string">"functions"</span>,
+                        spans: diagnostic_filters.spans().collect(),
+                    });
+                }
                 <span class="kw">let </span>function = <span class="self">self</span>.function_decl(lexer, out, <span class="kw-2">&amp;mut </span>dependencies)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Fn(ast::Function {
                     entry_point: <span class="kw">if let </span><span class="prelude-val">Some</span>(stage) = stage.value {
@@ -5183,6 +5314,8 @@
                 }))
             }
             (Token::Word(<span class="string">"const_assert"</span>), <span class="kw">_</span>) =&gt; {
+                ensure_no_diag_attrs(<span class="string">"`const_assert`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+
                 <span class="comment">// parentheses are optional
                 </span><span class="kw">let </span>paren = lexer.skip(Token::Paren(<span class="string">'('</span>));
 
@@ -5330,11 +5463,10 @@
         lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(severity_control_name, severity_control_name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
-        <span class="kw">let </span>new_severity = diagnostic_filter::Severity::from_ident(severity_control_name).ok_or(
-            Error::DiagnosticInvalidSeverity {
+        <span class="kw">let </span>new_severity = diagnostic_filter::Severity::from_wgsl_ident(severity_control_name)
+            .ok_or(Error::DiagnosticInvalidSeverity {
                 severity_control_name_span,
-            },
-        )<span class="question-mark">?</span>;
+            })<span class="question-mark">?</span>;
 
         lexer.expect(Token::Separator(<span class="string">','</span>))<span class="question-mark">?</span>;
 
@@ -5351,7 +5483,7 @@
 
         <span class="kw">let </span>filter = diagnostic_rule_name
             .and_then(|name| {
-                FilterableTriggeringRule::from_ident(name)
+                FilterableTriggeringRule::from_wgsl_ident(name)
                     .map(<span class="prelude-val">Ok</span>)
                     .or_else(|| {
                         diagnostic_filter::Severity::Warning
