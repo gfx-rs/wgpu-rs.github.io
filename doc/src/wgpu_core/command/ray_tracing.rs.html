@@ -1284,8 +1284,17 @@
 <a href="#1283" id="1283">1283</a>
 <a href="#1284" id="1284">1284</a>
 <a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    device::queue::TempResource,
+    device::{queue::TempResource, Device},
     global::Global,
     hub::Hub,
     id::CommandEncoderId,
@@ -1306,10 +1315,7 @@
 <span class="kw">use </span>wgt::{math::align_to, BufferUsages, Features};
 
 <span class="kw">use </span><span class="kw">super</span>::CommandBufferMutable;
-<span class="kw">use </span><span class="kw">crate</span>::device::queue::PendingWrites;
 <span class="kw">use </span>hal::BufferUses;
-<span class="kw">use </span>std::mem::ManuallyDrop;
-<span class="kw">use </span>std::ops::DerefMut;
 <span class="kw">use </span>std::{
     cmp::max,
     num::NonZeroU64,
@@ -1470,7 +1476,7 @@
             build_command_index,
             <span class="kw-2">&amp;mut </span>buf_storage,
             hub,
-            device.pending_writes.lock().deref_mut(),
+            device,
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
@@ -1534,7 +1540,9 @@
                 .get()
                 .map_err(|<span class="kw">_</span>| BuildAccelerationStructureError::InvalidTlasId)<span class="question-mark">?</span>;
             cmd_buf_data.trackers.tlas_s.set_single(tlas.clone());
-            device.pending_writes.lock().insert_tlas(<span class="kw-2">&amp;</span>tlas);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+                queue.pending_writes.lock().insert_tlas(<span class="kw-2">&amp;</span>tlas);
+            }
 
             cmd_buf_data.tlas_actions.push(TlasAction {
                 tlas: tlas.clone(),
@@ -1635,10 +1643,12 @@
             }
         }
 
-        device
-            .pending_writes
-            .lock()
-            .consume_temp(TempResource::ScratchBuffer(scratch_buffer));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+            queue
+                .pending_writes
+                .lock()
+                .consume_temp(TempResource::ScratchBuffer(scratch_buffer));
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1781,7 +1791,7 @@
             build_command_index,
             <span class="kw-2">&amp;mut </span>buf_storage,
             hub,
-            device.pending_writes.lock().deref_mut(),
+            device,
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
@@ -1802,7 +1812,9 @@
                 .get(package.tlas_id)
                 .get()
                 .map_err(|<span class="kw">_</span>| BuildAccelerationStructureError::InvalidTlasId)<span class="question-mark">?</span>;
-            device.pending_writes.lock().insert_tlas(<span class="kw-2">&amp;</span>tlas);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+                queue.pending_writes.lock().insert_tlas(<span class="kw-2">&amp;</span>tlas);
+            }
             cmd_buf_data.trackers.tlas_s.set_single(tlas.clone());
 
             tlas_lock_store.push((<span class="prelude-val">Some</span>(package), tlas.clone()))
@@ -2028,17 +2040,21 @@
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(staging_buffer) = staging_buffer {
-                device
-                    .pending_writes
-                    .lock()
-                    .consume_temp(TempResource::StagingBuffer(staging_buffer));
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+                    queue
+                        .pending_writes
+                        .lock()
+                        .consume_temp(TempResource::StagingBuffer(staging_buffer));
+                }
             }
         }
 
-        device
-            .pending_writes
-            .lock()
-            .consume_temp(TempResource::ScratchBuffer(scratch_buffer));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+            queue
+                .pending_writes
+                .lock()
+                .consume_temp(TempResource::ScratchBuffer(scratch_buffer));
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2125,7 +2141,7 @@
     build_command_index: NonZeroU64,
     buf_storage: <span class="kw-2">&amp;mut </span>Vec&lt;TriangleBufferStore&lt;<span class="lifetime">'a</span>&gt;&gt;,
     hub: <span class="kw-2">&amp;</span>Hub,
-    pending_writes: <span class="kw-2">&amp;mut </span>ManuallyDrop&lt;PendingWrites&gt;,
+    device: <span class="kw-2">&amp;</span>Device,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BuildAccelerationStructureError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>temp_buffer = Vec::new();
     <span class="kw">for </span>entry <span class="kw">in </span>blas_iter {
@@ -2135,7 +2151,9 @@
             .get()
             .map_err(|<span class="kw">_</span>| BuildAccelerationStructureError::InvalidBlasId)<span class="question-mark">?</span>;
         cmd_buf_data.trackers.blas_s.set_single(blas.clone());
-        pending_writes.insert_blas(<span class="kw-2">&amp;</span>blas);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = device.get_queue() {
+            queue.pending_writes.lock().insert_blas(<span class="kw-2">&amp;</span>blas);
+        }
 
         cmd_buf_data.blas_actions.push(BlasAction {
             blas: blas.clone(),

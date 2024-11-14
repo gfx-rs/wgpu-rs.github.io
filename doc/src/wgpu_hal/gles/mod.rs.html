@@ -1130,6 +1130,22 @@
 <a href="#1129" id="1129">1129</a>
 <a href="#1130" id="1130">1130</a>
 <a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
@@ -1427,6 +1443,13 @@ we don't bother with that combination.
     counters: wgt::HalCounters,
 }
 
+<span class="kw">impl </span>Drop <span class="kw">for </span>Device {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+        <span class="kw">unsafe </span>{ gl.delete_vertex_array(<span class="self">self</span>.main_vao) };
+    }
+}
+
 <span class="kw">pub struct </span>ShaderClearProgram {
     <span class="kw">pub </span>program: glow::Program,
     <span class="kw">pub </span>color_uniform_location: glow::UniformLocation,
@@ -1446,6 +1469,15 @@ we don't bother with that combination.
     temp_query_results: Mutex&lt;Vec&lt;u64&gt;&gt;,
     draw_buffer_count: AtomicU8,
     current_index_buffer: Mutex&lt;<span class="prelude-ty">Option</span>&lt;glow::Buffer&gt;&gt;,
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>Queue {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+        <span class="kw">unsafe </span>{ gl.delete_framebuffer(<span class="self">self</span>.draw_fbo) };
+        <span class="kw">unsafe </span>{ gl.delete_framebuffer(<span class="self">self</span>.copy_fbo) };
+        <span class="kw">unsafe </span>{ gl.delete_buffer(<span class="self">self</span>.zero_buffer) };
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug)]
