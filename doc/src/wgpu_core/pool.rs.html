@@ -309,12 +309,6 @@
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
 <a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{hash_map::Entry, HashMap},
     hash::Hash,
@@ -324,16 +318,13 @@
 <span class="kw">use </span>once_cell::sync::OnceCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
-<span class="kw">use crate</span>::{PreHashedKey, PreHashedMap};
+<span class="kw">use </span><span class="kw">crate</span>::FastHashMap;
 
 <span class="kw">type </span>SlotInner&lt;V&gt; = Weak&lt;V&gt;;
 <span class="kw">type </span>ResourcePoolSlot&lt;V&gt; = Arc&lt;OnceCell&lt;SlotInner&lt;V&gt;&gt;&gt;;
 
 <span class="kw">pub struct </span>ResourcePool&lt;K, V&gt; {
-    <span class="comment">// We use a pre-hashed map as we never actually need to read the keys.
-    //
-    // This additionally allows us to not need to hash more than once on get_or_init.
-    </span>inner: Mutex&lt;PreHashedMap&lt;K, ResourcePoolSlot&lt;V&gt;&gt;&gt;,
+    inner: Mutex&lt;FastHashMap&lt;K, ResourcePoolSlot&lt;V&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;K: Clone + Eq + Hash, V&gt; ResourcePool&lt;K, V&gt; {
@@ -352,9 +343,6 @@
     <span class="kw">where
         </span>F: FnOnce(K) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;V&gt;, E&gt;,
     {
-        <span class="comment">// Hash the key outside of the lock.
-        </span><span class="kw">let </span>hashed_key = PreHashedKey::from_key(<span class="kw-2">&amp;</span>key);
-
         <span class="comment">// We can't prove at compile time that these will only ever be consumed once,
         // so we need to do the check at runtime.
         </span><span class="kw">let </span><span class="kw-2">mut </span>key = <span class="prelude-val">Some</span>(key);
@@ -363,7 +351,7 @@
         <span class="lifetime">'race</span>: <span class="kw">loop </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>map_guard = <span class="self">self</span>.inner.lock();
 
-            <span class="kw">let </span>entry = <span class="kw">match </span>map_guard.entry(hashed_key) {
+            <span class="kw">let </span>entry = <span class="kw">match </span>map_guard.entry(key.clone().unwrap()) {
                 <span class="comment">// An entry exists for this resource.
                 //
                 // We know that either:
@@ -403,9 +391,11 @@
                 </span><span class="kw">return </span><span class="prelude-val">Ok</span>(strong);
             }
 
-            <span class="comment">// The resource is in the process of being dropped, because upgrade failed. The entry still exists in the map, but it points to nothing.
+            <span class="comment">// The resource is in the process of being dropped, because upgrade failed.
+            // The entry still exists in the map, but it points to nothing.
             //
-            // We're in a race with the drop implementation of the resource, so lets just go around again. When we go around again:
+            // We're in a race with the drop implementation of the resource,
+            //  so lets just go around again. When we go around again:
             // - If the entry exists, we might need to go around a few more times.
             // - If the entry doesn't exist, we'll create a new one.
             </span><span class="kw">continue </span><span class="lifetime">'race</span>;
@@ -418,13 +408,11 @@
     ///
     /// [`BindGroupLayout`]: crate::binding_model::BindGroupLayout
     </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) {
-        <span class="kw">let </span>hashed_key = PreHashedKey::from_key(key);
-
         <span class="kw">let </span><span class="kw-2">mut </span>map_guard = <span class="self">self</span>.inner.lock();
 
         <span class="comment">// Weak::upgrade will be failing long before this code is called. All threads trying to access the resource will be spinning,
         // waiting for the entry to be removed. It is safe to remove the entry from the map.
-        </span>map_guard.remove(<span class="kw-2">&amp;</span>hashed_key);
+        </span>map_guard.remove(key);
     }
 }
 

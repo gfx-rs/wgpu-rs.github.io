@@ -3796,7 +3796,7 @@
     },
     validation::{<span class="self">self</span>, validate_color_attachment_bytes_per_sample},
     weak_vec::WeakVec,
-    FastHashMap, LabelHelpers, PreHashedKey, PreHashedMap,
+    FastHashMap, LabelHelpers,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -6476,18 +6476,18 @@
             derived_group_layouts.pop();
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>unique_bind_group_layouts = PreHashedMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>unique_bind_group_layouts = FastHashMap::default();
 
         <span class="kw">let </span>bind_group_layouts = derived_group_layouts
             .into_iter()
             .map(|<span class="kw-2">mut </span>bgl_entry_map| {
                 bgl_entry_map.sort();
-                <span class="kw">match </span>unique_bind_group_layouts.entry(PreHashedKey::from_key(<span class="kw-2">&amp;</span>bgl_entry_map)) {
+                <span class="kw">match </span>unique_bind_group_layouts.entry(bgl_entry_map) {
                     std::collections::hash_map::Entry::Occupied(v) =&gt; <span class="prelude-val">Ok</span>(Arc::clone(v.get())),
                     std::collections::hash_map::Entry::Vacant(e) =&gt; {
                         <span class="kw">match </span><span class="self">self</span>.create_bind_group_layout(
                             <span class="kw-2">&amp;</span><span class="prelude-val">None</span>,
-                            bgl_entry_map,
+                            e.key().clone(),
                             bgl::Origin::Derived,
                         ) {
                             <span class="prelude-val">Ok</span>(bgl) =&gt; {
