@@ -2356,6 +2356,23 @@
 <a href="#2355" id="2355">2355</a>
 <a href="#2356" id="2356">2356</a>
 <a href="#2357" id="2357">2357</a>
+<a href="#2358" id="2358">2358</a>
+<a href="#2359" id="2359">2359</a>
+<a href="#2360" id="2360">2360</a>
+<a href="#2361" id="2361">2361</a>
+<a href="#2362" id="2362">2362</a>
+<a href="#2363" id="2363">2363</a>
+<a href="#2364" id="2364">2364</a>
+<a href="#2365" id="2365">2365</a>
+<a href="#2366" id="2366">2366</a>
+<a href="#2367" id="2367">2367</a>
+<a href="#2368" id="2368">2368</a>
+<a href="#2369" id="2369">2369</a>
+<a href="#2370" id="2370">2370</a>
+<a href="#2371" id="2371">2371</a>
+<a href="#2372" id="2372">2372</a>
+<a href="#2373" id="2373">2373</a>
+<a href="#2374" id="2374">2374</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         BuiltinVariations, FunctionDeclaration, FunctionKind, Overload, ParameterInfo,
@@ -2820,38 +2837,55 @@
     module: <span class="kw-2">&amp;mut </span>Module,
     name: <span class="kw-2">&amp;</span>str,
 ) {
-    <span class="kw">match </span>name {
-        <span class="string">"sampler1D" </span>| <span class="string">"sampler1DArray" </span>| <span class="string">"sampler2D" </span>| <span class="string">"sampler2DArray" </span>| <span class="string">"sampler2DMS"
-        </span>| <span class="string">"sampler2DMSArray" </span>| <span class="string">"sampler3D" </span>| <span class="string">"samplerCube" </span>| <span class="string">"samplerCubeArray" </span>=&gt; {
-            declaration.overloads.push(module.add_builtin(
-                <span class="macro">vec!</span>[
-                    TypeInner::Image {
-                        dim: <span class="kw">match </span>name {
-                            <span class="string">"sampler1D" </span>| <span class="string">"sampler1DArray" </span>=&gt; Dim::D1,
-                            <span class="string">"sampler2D" </span>| <span class="string">"sampler2DArray" </span>| <span class="string">"sampler2DMS" </span>| <span class="string">"sampler2DMSArray" </span>=&gt; {
-                                Dim::D2
-                            }
-                            <span class="string">"sampler3D" </span>=&gt; Dim::D3,
-                            <span class="kw">_ </span>=&gt; Dim::Cube,
+    <span class="comment">// Some samplers (sampler1D, etc...) can be float, int, or uint
+    </span><span class="kw">let </span>anykind_sampler = <span class="kw">if </span>name.starts_with(<span class="string">"sampler"</span>) {
+        <span class="prelude-val">Some</span>((name, Sk::Float))
+    } <span class="kw">else if </span>name.starts_with(<span class="string">"usampler"</span>) {
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span>name[<span class="number">1</span>..], Sk::Uint))
+    } <span class="kw">else if </span>name.starts_with(<span class="string">"isampler"</span>) {
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span>name[<span class="number">1</span>..], Sk::Sint))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>};
+    <span class="kw">if let </span><span class="prelude-val">Some</span>((sampler, kind)) = anykind_sampler {
+        <span class="kw">match </span>sampler {
+            <span class="string">"sampler1D" </span>| <span class="string">"sampler1DArray" </span>| <span class="string">"sampler2D" </span>| <span class="string">"sampler2DArray" </span>| <span class="string">"sampler2DMS"
+            </span>| <span class="string">"sampler2DMSArray" </span>| <span class="string">"sampler3D" </span>| <span class="string">"samplerCube" </span>| <span class="string">"samplerCubeArray" </span>=&gt; {
+                declaration.overloads.push(module.add_builtin(
+                    <span class="macro">vec!</span>[
+                        TypeInner::Image {
+                            dim: <span class="kw">match </span>sampler {
+                                <span class="string">"sampler1D" </span>| <span class="string">"sampler1DArray" </span>=&gt; Dim::D1,
+                                <span class="string">"sampler2D" </span>| <span class="string">"sampler2DArray" </span>| <span class="string">"sampler2DMS"
+                                </span>| <span class="string">"sampler2DMSArray" </span>=&gt; Dim::D2,
+                                <span class="string">"sampler3D" </span>=&gt; Dim::D3,
+                                <span class="kw">_ </span>=&gt; Dim::Cube,
+                            },
+                            arrayed: <span class="macro">matches!</span>(
+                                sampler,
+                                <span class="string">"sampler1DArray"
+                                    </span>| <span class="string">"sampler2DArray"
+                                    </span>| <span class="string">"sampler2DMSArray"
+                                    </span>| <span class="string">"samplerCubeArray"
+                            </span>),
+                            class: ImageClass::Sampled {
+                                kind,
+                                multi: <span class="macro">matches!</span>(sampler, <span class="string">"sampler2DMS" </span>| <span class="string">"sampler2DMSArray"</span>),
+                            },
                         },
-                        arrayed: <span class="macro">matches!</span>(
-                            name,
-                            <span class="string">"sampler1DArray"
-                                </span>| <span class="string">"sampler2DArray"
-                                </span>| <span class="string">"sampler2DMSArray"
-                                </span>| <span class="string">"samplerCubeArray"
-                        </span>),
-                        class: ImageClass::Sampled {
-                            kind: Sk::Float,
-                            multi: <span class="macro">matches!</span>(name, <span class="string">"sampler2DMS" </span>| <span class="string">"sampler2DMSArray"</span>),
-                        },
-                    },
-                    TypeInner::Sampler { comparison: <span class="bool-val">false </span>},
-                ],
-                MacroCall::Sampler,
-            ))
+                        TypeInner::Sampler { comparison: <span class="bool-val">false </span>},
+                    ],
+                    MacroCall::Sampler,
+                ));
+                <span class="kw">return</span>;
+            }
+            <span class="kw">_ </span>=&gt; (),
         }
-        <span class="string">"sampler1DShadow"
+    }
+
+    <span class="kw">match </span>name {
+        <span class="comment">// Shadow sampler can only be of kind `Sk::Float`
+        </span><span class="string">"sampler1DShadow"
         </span>| <span class="string">"sampler1DArrayShadow"
         </span>| <span class="string">"sampler2DShadow"
         </span>| <span class="string">"sampler2DArrayShadow"
