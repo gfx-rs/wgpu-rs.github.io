@@ -2763,8 +2763,16 @@
 <a href="#2762" id="2762">2762</a>
 <a href="#2763" id="2763">2763</a>
 <a href="#2764" id="2764">2764</a>
+<a href="#2765" id="2765">2765</a>
+<a href="#2766" id="2766">2766</a>
+<a href="#2767" id="2767">2767</a>
+<a href="#2768" id="2768">2768</a>
+<a href="#2769" id="2769">2769</a>
+<a href="#2770" id="2770">2770</a>
+<a href="#2771" id="2771">2771</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
+    ShouldConflictOnFullDuplicate,
 };
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
@@ -4932,7 +4940,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
                     <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                    diagnostic_filters.add(filter, span)<span class="question-mark">?</span>;
+                    diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
@@ -4983,6 +4991,7 @@
     <span class="kw">fn </span>function_decl&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
+        diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
         out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
         dependencies: <span class="kw-2">&amp;mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">'a</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Function&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
@@ -5055,6 +5064,7 @@
             arguments,
             result,
             body,
+            diagnostic_filter_leaf,
         };
 
         <span class="comment">// done
@@ -5134,7 +5144,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
                     <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                    diagnostic_filters.add(filter, span)<span class="question-mark">?</span>;
+                    diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
                 }
                 <span class="kw">continue</span>;
             }
@@ -5290,13 +5300,13 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Var(var))
             }
             (Token::Word(<span class="string">"fn"</span>), <span class="kw">_</span>) =&gt; {
-                <span class="kw">if </span>!diagnostic_filters.is_empty() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotYetImplementedAtParseSite {
-                        site_name_plural: <span class="string">"functions"</span>,
-                        spans: diagnostic_filters.spans().collect(),
-                    });
-                }
-                <span class="kw">let </span>function = <span class="self">self</span>.function_decl(lexer, out, <span class="kw-2">&amp;mut </span>dependencies)<span class="question-mark">?</span>;
+                <span class="kw">let </span>diagnostic_filter_leaf = <span class="self">Self</span>::write_diagnostic_filters(
+                    <span class="kw-2">&amp;mut </span>out.diagnostic_filters,
+                    diagnostic_filters,
+                    out.diagnostic_filter_leaf,
+                );
+                <span class="kw">let </span>function =
+                    <span class="self">self</span>.function_decl(lexer, diagnostic_filter_leaf, out, <span class="kw-2">&amp;mut </span>dependencies)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Fn(ast::Function {
                     entry_point: <span class="kw">if let </span><span class="prelude-val">Some</span>(stage) = stage.value {
                         <span class="kw">if </span>stage == ShaderStage::Compute &amp;&amp; workgroup_size.value.is_none() {
@@ -5367,7 +5377,11 @@
                     DirectiveKind::Diagnostic =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(diagnostic_filter) = <span class="self">self</span>.diagnostic_filter(<span class="kw-2">&amp;mut </span>lexer)<span class="question-mark">? </span>{
                             <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(<span class="kw-2">&amp;</span>lexer);
-                            diagnostic_filters.add(diagnostic_filter, span)<span class="question-mark">?</span>;
+                            diagnostic_filters.add(
+                                diagnostic_filter,
+                                span,
+                                ShouldConflictOnFullDuplicate::No,
+                            )<span class="question-mark">?</span>;
                         }
                         lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                     }

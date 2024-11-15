@@ -228,6 +228,23 @@
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
 <a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! [`DiagnosticFilter`]s and supporting functionality.
 
 </span><span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
@@ -316,6 +333,18 @@
     <span class="kw">pub </span>triggering_rule: FilterableTriggeringRule,
 }
 
+<span class="doccomment">/// Determines whether [`DiagnosticFilterMap::add`] should consider full duplicates a conflict.
+///
+/// In WGSL, directive position does not consider this case a conflict, while attribute position
+/// does.
+</span><span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ShouldConflictOnFullDuplicate {
+    <span class="doccomment">/// Use this for attributes in WGSL.
+    </span>Yes,
+    <span class="doccomment">/// Use this for directives in WGSL.
+    </span>No,
+}
+
 <span class="doccomment">/// A map of diagnostic filters to their severity and first occurrence's span.
 ///
 /// Intended for front ends' first step into storing parsed [`DiagnosticFilter`]s.
@@ -334,6 +363,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         diagnostic_filter: DiagnosticFilter,
         span: Span,
+        should_conflict_on_full_duplicate: ShouldConflictOnFullDuplicate,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ConflictingDiagnosticRuleError&gt; {
         <span class="kw">use </span>indexmap::map::Entry;
 
@@ -349,7 +379,11 @@
             }
             Entry::Occupied(entry) =&gt; {
                 <span class="kw">let </span><span class="kw-2">&amp;</span>(first_severity, first_span) = entry.get();
-                <span class="kw">if </span>first_severity != new_severity {
+                <span class="kw">let </span>should_conflict_on_full_duplicate = <span class="kw">match </span>should_conflict_on_full_duplicate {
+                    ShouldConflictOnFullDuplicate::Yes =&gt; <span class="bool-val">true</span>,
+                    ShouldConflictOnFullDuplicate::No =&gt; <span class="bool-val">false</span>,
+                };
+                <span class="kw">if </span>first_severity != new_severity || should_conflict_on_full_duplicate {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ConflictingDiagnosticRuleError {
                         triggering_rule,
                         triggering_rule_spans: [first_span, span],
