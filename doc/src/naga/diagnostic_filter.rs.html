@@ -259,6 +259,17 @@
 <a href="#258" id="258">258</a>
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! [`DiagnosticFilter`]s and supporting functionality.
 
 </span><span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
@@ -315,27 +326,40 @@
 <span class="doccomment">/// A filterable triggering rule in a [`DiagnosticFilter`].
 ///
 /// &lt;https://www.w3.org/TR/WGSL/#filterable-triggering-rules&gt;
-</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+</span><span class="attr">#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
 </span><span class="kw">pub enum </span>FilterableTriggeringRule {
+    Standard(StandardFilterableTriggeringRule),
+    Unknown(Box&lt;str&gt;),
+    User(Box&lt;[Box&lt;str&gt;; <span class="number">2</span>]&gt;),
+}
+
+<span class="doccomment">/// A filterable triggering rule in a [`DiagnosticFilter`].
+///
+/// &lt;https://www.w3.org/TR/WGSL/#filterable-triggering-rules&gt;
+</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
+#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+</span><span class="kw">pub enum </span>StandardFilterableTriggeringRule {
     DerivativeUniformity,
 }
 
-<span class="kw">impl </span>FilterableTriggeringRule {
+<span class="kw">impl </span>StandardFilterableTriggeringRule {
     <span class="doccomment">/// The default severity associated with this triggering rule.
     ///
     /// See &lt;https://www.w3.org/TR/WGSL/#filterable-triggering-rules&gt; for a table of default
     /// severities.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>default_severity(<span class="self">self</span>) -&gt; Severity {
         <span class="kw">match </span><span class="self">self </span>{
-            FilterableTriggeringRule::DerivativeUniformity =&gt; Severity::Error,
+            <span class="self">Self</span>::DerivativeUniformity =&gt; Severity::Error,
         }
     }
 }
 
-<span class="doccomment">/// A filter that modifies how diagnostics are emitted for shaders.
+<span class="doccomment">/// A filtering rule that modifies how diagnostics are emitted for shaders.
 ///
 /// &lt;https://www.w3.org/TR/WGSL/#diagnostic-filter&gt;
 </span><span class="attr">#[derive(Clone, Debug)]
@@ -401,7 +425,7 @@
             triggering_rule,
         } = diagnostic_filter;
 
-        <span class="kw">match </span>diagnostic_filters.entry(triggering_rule) {
+        <span class="kw">match </span>diagnostic_filters.entry(triggering_rule.clone()) {
             Entry::Vacant(entry) =&gt; {
                 entry.insert((new_severity, span));
             }
@@ -413,7 +437,6 @@
                 };
                 <span class="kw">if </span>first_severity != new_severity || should_conflict_on_full_duplicate {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ConflictingDiagnosticRuleError {
-                        triggering_rule,
                         triggering_rule_spans: [first_span, span],
                     });
                 }
@@ -451,7 +474,6 @@
 </span><span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
 #[derive(Clone, Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConflictingDiagnosticRuleError {
-    <span class="kw">pub </span>triggering_rule: FilterableTriggeringRule,
     <span class="kw">pub </span>triggering_rule_spans: [Span; <span class="number">2</span>],
 }
 
@@ -493,24 +515,24 @@
 <span class="kw">impl </span>DiagnosticFilterNode {
     <span class="doccomment">/// Finds the most specific filter rule applicable to `triggering_rule` from the chain of
     /// diagnostic filter rules in `arena`, starting with `node`, and returns its severity. If none
-    /// is found, return the value of [`FilterableTriggeringRule::default_severity`].
+    /// is found, return the value of [`StandardFilterableTriggeringRule::default_severity`].
     ///
     /// When `triggering_rule` is not applicable to this node, its parent is consulted recursively.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>search(
         node: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="self">Self</span>&gt;&gt;,
         arena: <span class="kw-2">&amp;</span>Arena&lt;<span class="self">Self</span>&gt;,
-        triggering_rule: FilterableTriggeringRule,
+        triggering_rule: StandardFilterableTriggeringRule,
     ) -&gt; Severity {
         <span class="kw">let </span><span class="kw-2">mut </span>next = node;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(handle) = next {
             <span class="kw">let </span>node = <span class="kw-2">&amp;</span>arena[handle];
             <span class="kw">let </span><span class="kw-2">&amp;</span><span class="self">Self </span>{ <span class="kw-2">ref </span>inner, parent } = node;
             <span class="kw">let </span><span class="kw-2">&amp;</span>DiagnosticFilter {
-                triggering_rule: rule,
+                triggering_rule: <span class="kw-2">ref </span>rule,
                 new_severity,
             } = inner;
 
-            <span class="kw">if </span>rule == triggering_rule {
+            <span class="kw">if </span>rule == <span class="kw-2">&amp;</span>FilterableTriggeringRule::Standard(triggering_rule) {
                 <span class="kw">return </span>new_severity;
             }
 

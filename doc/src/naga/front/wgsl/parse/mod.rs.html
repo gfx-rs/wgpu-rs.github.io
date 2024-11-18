@@ -2757,22 +2757,9 @@
 <a href="#2756" id="2756">2756</a>
 <a href="#2757" id="2757">2757</a>
 <a href="#2758" id="2758">2758</a>
-<a href="#2759" id="2759">2759</a>
-<a href="#2760" id="2760">2760</a>
-<a href="#2761" id="2761">2761</a>
-<a href="#2762" id="2762">2762</a>
-<a href="#2763" id="2763">2763</a>
-<a href="#2764" id="2764">2764</a>
-<a href="#2765" id="2765">2765</a>
-<a href="#2766" id="2766">2766</a>
-<a href="#2767" id="2767">2767</a>
-<a href="#2768" id="2768">2768</a>
-<a href="#2769" id="2769">2769</a>
-<a href="#2770" id="2770">2770</a>
-<a href="#2771" id="2771">2771</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
-    ShouldConflictOnFullDuplicate,
+    ShouldConflictOnFullDuplicate, StandardFilterableTriggeringRule,
 };
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
@@ -4938,10 +4925,9 @@
         <span class="kw">while </span>lexer.skip(Token::Attribute) {
             <span class="kw">let </span>(name, name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
-                    <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                    diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
-                }
+                <span class="kw">let </span>filter = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">?</span>;
+                <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
+                diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
                     name_span,
@@ -5142,10 +5128,9 @@
         <span class="kw">while </span>lexer.skip(Token::Attribute) {
             <span class="kw">let </span>(name, name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(filter) = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">? </span>{
-                    <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                    diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
-                }
+                <span class="kw">let </span>filter = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">?</span>;
+                <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
+                diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
                 <span class="kw">continue</span>;
             }
             <span class="kw">match </span>name {
@@ -5375,14 +5360,13 @@
                 <span class="kw">let _ </span>= lexer.next_ident_with_span().unwrap();
                 <span class="kw">match </span>kind {
                     DirectiveKind::Diagnostic =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(diagnostic_filter) = <span class="self">self</span>.diagnostic_filter(<span class="kw-2">&amp;mut </span>lexer)<span class="question-mark">? </span>{
-                            <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(<span class="kw-2">&amp;</span>lexer);
-                            diagnostic_filters.add(
-                                diagnostic_filter,
-                                span,
-                                ShouldConflictOnFullDuplicate::No,
-                            )<span class="question-mark">?</span>;
-                        }
+                        <span class="kw">let </span>diagnostic_filter = <span class="self">self</span>.diagnostic_filter(<span class="kw-2">&amp;mut </span>lexer)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(<span class="kw-2">&amp;</span>lexer);
+                        diagnostic_filters.add(
+                            diagnostic_filter,
+                            span,
+                            ShouldConflictOnFullDuplicate::No,
+                        )<span class="question-mark">?</span>;
                         lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                     }
                     DirectiveKind::Enable =&gt; {
@@ -5470,10 +5454,7 @@
         <span class="prelude-val">Ok</span>(brace_nesting_level + <span class="number">1</span>)
     }
 
-    <span class="kw">fn </span>diagnostic_filter&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DiagnosticFilter&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>diagnostic_filter&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;DiagnosticFilter, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(severity_control_name, severity_control_name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
@@ -5485,35 +5466,28 @@
         lexer.expect(Token::Separator(<span class="string">','</span>))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(diagnostic_name_token, diagnostic_name_token_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
-        <span class="kw">let </span>diagnostic_rule_name = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">'.'</span>)) {
-            <span class="comment">// Don't try to validate these name tokens on two tokens, which is conventionally used
-            // for third-party tooling.
-            </span>lexer.next_ident_with_span()<span class="question-mark">?</span>;
-            <span class="prelude-val">None
-        </span>} <span class="kw">else </span>{
-            <span class="prelude-val">Some</span>(diagnostic_name_token)
+        <span class="kw">let </span>triggering_rule = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">'.'</span>)) {
+            <span class="kw">let </span>(ident, _span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
+            FilterableTriggeringRule::User(Box::new([diagnostic_name_token.into(), ident.into()]))
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>diagnostic_rule_name = diagnostic_name_token;
+            <span class="kw">let </span>diagnostic_rule_name_span = diagnostic_name_token_span;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(triggering_rule) =
+                StandardFilterableTriggeringRule::from_wgsl_ident(diagnostic_rule_name)
+            {
+                FilterableTriggeringRule::Standard(triggering_rule)
+            } <span class="kw">else </span>{
+                diagnostic_filter::Severity::Warning.report_wgsl_parse_diag(
+                    Error::UnknownDiagnosticRuleName(diagnostic_rule_name_span),
+                    lexer.source,
+                )<span class="question-mark">?</span>;
+                FilterableTriggeringRule::Unknown(diagnostic_rule_name.into())
+            }
         };
-        <span class="kw">let </span>diagnostic_rule_name_span = diagnostic_name_token_span;
-
-        <span class="kw">let </span>filter = diagnostic_rule_name
-            .and_then(|name| {
-                FilterableTriggeringRule::from_wgsl_ident(name)
-                    .map(<span class="prelude-val">Ok</span>)
-                    .or_else(|| {
-                        diagnostic_filter::Severity::Warning
-                            .report_wgsl_parse_diag(
-                                Error::UnknownDiagnosticRuleName(diagnostic_rule_name_span),
-                                lexer.source,
-                            )
-                            .err()
-                            .map(<span class="prelude-val">Err</span>)
-                    })
-            })
-            .transpose()<span class="question-mark">?
-            </span>.map(|triggering_rule| DiagnosticFilter {
-                new_severity,
-                triggering_rule,
-            });
+        <span class="kw">let </span>filter = DiagnosticFilter {
+            triggering_rule,
+            new_severity,
+        };
         lexer.skip(Token::Separator(<span class="string">','</span>));
         lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
 
