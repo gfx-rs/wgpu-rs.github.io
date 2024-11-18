@@ -6151,8 +6151,6 @@
 <a href="#6150" id="6150">6150</a>
 <a href="#6151" id="6151">6151</a>
 <a href="#6152" id="6152">6152</a>
-<a href="#6153" id="6153">6153</a>
-<a href="#6154" id="6154">6154</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -6538,10 +6536,10 @@
     /// padding inserted **before** them (i.e. between fields at index - 1 and index)
     </span>struct_member_pads: FastHashSet&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, u32)&gt;,
 
-    <span class="doccomment">/// Name of the loop reachability macro.
+    <span class="doccomment">/// Name of the force-bounded-loop macro.
     ///
-    /// See `emit_loop_reachable_macro` for details.
-    </span>loop_reachable_macro_name: String,
+    /// See `emit_force_bounded_loop_macro` for details.
+    </span>force_bounded_loop_macro_name: String,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::Scalar {
@@ -6837,7 +6835,7 @@
             <span class="attr">#[cfg(test)]
             </span>put_block_stack_pointers: Default::default(),
             struct_member_pads: FastHashSet::default(),
-            loop_reachable_macro_name: String::default(),
+            force_bounded_loop_macro_name: String::default(),
         }
     }
 
@@ -6848,12 +6846,13 @@
         <span class="self">self</span>.out
     }
 
-    <span class="doccomment">/// Define a macro to invoke before loops, to defeat MSL infinite loop
-    /// reasoning.
+    <span class="doccomment">/// Define a macro to invoke at the bottom of each loop body, to
+    /// defeat MSL infinite loop reasoning.
     ///
     /// If we haven't done so already, emit the definition of a preprocessor
-    /// macro to be invoked before each loop in the generated MSL, to ensure
-    /// that the MSL compiler's optimizations do not remove bounds checks.
+    /// macro to be invoked at the end of each loop body in the generated MSL,
+    /// to ensure that the MSL compiler's optimizations do not remove bounds
+    /// checks.
     ///
     /// Only the first call to this function for a given module actually causes
     /// the macro definition to be written. Subsequent loops can simply use the
@@ -6919,52 +6918,51 @@
     /// nicely, after having stolen data from elsewhere in the GPU address
     /// space.
     ///
-    /// Ideally, Naga would prevent UB entirely via some means that persuades
-    /// the MSL compiler that no loop Naga generates is infinite. One approach
-    /// would be to add inline assembly to each loop that is annotated as
-    /// potentially branching out of the loop, but which in fact generates no
-    /// instructions. Unfortunately, inline assembly is not handled correctly by
-    /// some Metal device drivers. Further experimentation hasn't produced a
-    /// satisfactory approach.
+    /// To avoid UB, Naga must persuade the MSL compiler that no loop Naga
+    /// generates is infinite. One approach would be to add inline assembly to
+    /// each loop that is annotated as potentially branching out of the loop,
+    /// but which in fact generates no instructions. Unfortunately, inline
+    /// assembly is not handled correctly by some Metal device drivers.
     ///
-    /// Instead, we accept that the MSL compiler may determine that some loops
-    /// are infinite, and focus instead on preventing the range analysis from
-    /// being affected. We transform *every* loop into something like this:
+    /// Instead, we add the following code to the bottom of every loop:
     ///
     /// ```ignore
-    /// if (volatile bool unpredictable = true; unpredictable)
-    ///     while (true) { }
+    /// if (volatile bool unpredictable = false; unpredictable)
+    ///     break;
     /// ```
     ///
-    /// Since the `volatile` qualifier prevents the compiler from assuming that
-    /// the `if` condition is true, it cannot be sure the infinite loop is
-    /// reached, and thus it cannot assume the entire structure is unreachable.
-    /// This prevents the range analysis impact described above.
+    /// Although the `if` condition will always be false in any real execution,
+    /// the `volatile` qualifier prevents the compiler from assuming this. Thus,
+    /// it must assume that the `break` might be reached, and hence that the
+    /// loop is not unbounded. This prevents the range analysis impact described
+    /// above.
     ///
     /// Unfortunately, what makes this a kludge, not a hack, is that this
     /// solution leaves the GPU executing a pointless conditional branch, at
-    /// runtime, before each loop. There's no part of the system that has a
-    /// global enough view to be sure that `unpredictable` is true, and remove
-    /// it from the code.
+    /// runtime, in every iteration of the loop. There's no part of the system
+    /// that has a global enough view to be sure that `unpredictable` is true,
+    /// and remove it from the code. Adding the branch also affects
+    /// optimization: for example, it's impossible to unroll this loop. This
+    /// transformation has been observed to significantly hurt performance.
     ///
     /// To make our output a bit more legible, we pull the condition out into a
     /// preprocessor macro defined at the top of the module.
     ///
-    /// This approach is also used by Chromium WebGPU's Dawn shader compiler, as of
-    /// &lt;https://github.com/google/dawn/commit/ffd485c685040edb1e678165dcbf0e841cfa0298&gt;.
-    </span><span class="kw">fn </span>emit_loop_reachable_macro(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; BackendResult {
-        <span class="kw">if </span>!<span class="self">self</span>.loop_reachable_macro_name.is_empty() {
+    /// This approach is also used by Chromium WebGPU's Dawn shader compiler:
+    /// &lt;https://dawn.googlesource.com/dawn/+/a37557db581c2b60fb1cd2c01abdb232927dd961/src/tint/lang/msl/writer/printer/printer.cc#222&gt;
+    </span><span class="kw">fn </span>emit_force_bounded_loop_macro(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; BackendResult {
+        <span class="kw">if </span>!<span class="self">self</span>.force_bounded_loop_macro_name.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="self">self</span>.loop_reachable_macro_name = <span class="self">self</span>.namer.call(<span class="string">"LOOP_IS_REACHABLE"</span>);
-        <span class="kw">let </span>loop_reachable_volatile_name = <span class="self">self</span>.namer.call(<span class="string">"unpredictable_jump_over_loop"</span>);
+        <span class="self">self</span>.force_bounded_loop_macro_name = <span class="self">self</span>.namer.call(<span class="string">"LOOP_IS_BOUNDED"</span>);
+        <span class="kw">let </span>loop_bounded_volatile_name = <span class="self">self</span>.namer.call(<span class="string">"unpredictable_break_from_loop"</span>);
         <span class="macro">writeln!</span>(
             <span class="self">self</span>.out,
-            <span class="string">"#define {} if (volatile bool {} = true; {})"</span>,
-            <span class="self">self</span>.loop_reachable_macro_name,
-            loop_reachable_volatile_name,
-            loop_reachable_volatile_name,
+            <span class="string">"#define {} {{ volatile bool {} = false; if ({}) break; }}"</span>,
+            <span class="self">self</span>.force_bounded_loop_macro_name,
+            loop_bounded_volatile_name,
+            loop_bounded_volatile_name,
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -9200,15 +9198,10 @@
                     <span class="kw-2">ref </span>continuing,
                     break_if,
                 } =&gt; {
-                    <span class="self">self</span>.emit_loop_reachable_macro()<span class="question-mark">?</span>;
                     <span class="kw">if </span>!continuing.is_empty() || break_if.is_some() {
                         <span class="kw">let </span>gate_name = <span class="self">self</span>.namer.call(<span class="string">"loop_init"</span>);
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}bool {gate_name} = true;"</span>)<span class="question-mark">?</span>;
-                        <span class="macro">writeln!</span>(
-                            <span class="self">self</span>.out,
-                            <span class="string">"{level}{} while(true) {{"</span>,
-                            <span class="self">self</span>.loop_reachable_macro_name,
-                        )<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>,)<span class="question-mark">?</span>;
                         <span class="kw">let </span>lif = level.next();
                         <span class="kw">let </span>lcontinuing = lif.next();
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{lif}if (!{gate_name}) {{"</span>)<span class="question-mark">?</span>;
@@ -9223,13 +9216,16 @@
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{lif}}}"</span>)<span class="question-mark">?</span>;
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{lif}{gate_name} = false;"</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="macro">writeln!</span>(
-                            <span class="self">self</span>.out,
-                            <span class="string">"{level}{} while(true) {{"</span>,
-                            <span class="self">self</span>.loop_reachable_macro_name,
-                        )<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>,)<span class="question-mark">?</span>;
                     }
                     <span class="self">self</span>.put_block(level.next(), body, context)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.emit_force_bounded_loop_macro()<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"{}{}"</span>,
+                        level.next(),
+                        <span class="self">self</span>.force_bounded_loop_macro_name
+                    )<span class="question-mark">?</span>;
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::Statement::Break =&gt; {
@@ -9708,7 +9704,7 @@
             <span class="kw-2">&amp;</span>[CLAMPED_LOD_LOAD_PREFIX],
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.names,
         );
-        <span class="self">self</span>.loop_reachable_macro_name.clear();
+        <span class="self">self</span>.force_bounded_loop_macro_name.clear();
         <span class="self">self</span>.struct_member_pads.clear();
 
         <span class="macro">writeln!</span>(
