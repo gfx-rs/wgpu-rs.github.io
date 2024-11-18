@@ -1847,6 +1847,19 @@
 <a href="#1846" id="1846">1846</a>
 <a href="#1847" id="1847">1847</a>
 <a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 
@@ -1955,7 +1968,7 @@
     </span>InvalidGatherComponent(<span class="kw">crate</span>::SwizzleComponent),
     <span class="attr">#[error(<span class="string">"Gather can't be done for image dimension {0:?}"</span>)]
     </span>InvalidGatherDimension(<span class="kw">crate</span>::ImageDimension),
-    <span class="attr">#[error(<span class="string">"Sample level (exact) type {0:?} is not a scalar float"</span>)]
+    <span class="attr">#[error(<span class="string">"Sample level (exact) type {0:?} has an invalid type"</span>)]
     </span>InvalidSampleLevelExactType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Sample level (bias) type {0:?} is not a scalar float"</span>)]
     </span>InvalidSampleLevelBiasType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
@@ -2379,11 +2392,24 @@
                     <span class="kw">crate</span>::SampleLevel::Auto =&gt; ShaderStages::FRAGMENT,
                     <span class="kw">crate</span>::SampleLevel::Zero =&gt; ShaderStages::all(),
                     <span class="kw">crate</span>::SampleLevel::Exact(expr) =&gt; {
-                        <span class="kw">match </span>resolver[expr] {
-                            Ti::Scalar(Sc {
-                                kind: Sk::Float, ..
-                            }) =&gt; {}
-                            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelExactType(expr)),
+                        <span class="kw">match </span>class {
+                            <span class="kw">crate</span>::ImageClass::Depth { .. } =&gt; <span class="kw">match </span>resolver[expr] {
+                                Ti::Scalar(Sc {
+                                    kind: Sk::Sint | Sk::Uint,
+                                    ..
+                                }) =&gt; {}
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelExactType(expr))
+                                }
+                            },
+                            <span class="kw">_ </span>=&gt; <span class="kw">match </span>resolver[expr] {
+                                Ti::Scalar(Sc {
+                                    kind: Sk::Float, ..
+                                }) =&gt; {}
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelExactType(expr))
+                                }
+                            },
                         }
                         ShaderStages::all()
                     }

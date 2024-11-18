@@ -807,6 +807,33 @@
 <a href="#806" id="806">806</a>
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Handle, UniqueArena},
     Scalar,
@@ -839,6 +866,7 @@
         <span class="kw">match </span><span class="self">self</span>.expressions[handle] {
             <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.global_arena[handle].ty),
             <span class="kw">crate</span>::Expression::FunctionArgument(i) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.arguments[i <span class="kw">as </span>usize].ty),
+            <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_image_expr_ty(base)<span class="question-mark">?</span>),
             <span class="kw-2">ref </span>other =&gt; <span class="prelude-val">Err</span>(Error::InvalidImageExpression(other.clone())),
         }
     }
@@ -1269,6 +1297,7 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
+        <span class="kw">let </span>span = <span class="self">self</span>.span_from_with_op(start);
 
         <span class="kw">let </span><span class="kw-2">mut </span>image_ops = <span class="kw">if </span>words_left != <span class="number">0 </span>{
             words_left -= <span class="number">1</span>;
@@ -1295,9 +1324,34 @@
                     <span class="kw">let </span>lod_lexp = <span class="self">self</span>.lookup_expression.lookup(lod_expr)<span class="question-mark">?</span>;
                     <span class="kw">let </span>lod_handle =
                         <span class="self">self</span>.get_expr_handle(lod_expr, lod_lexp, ctx, emitter, block, body_idx);
+
+                    <span class="kw">let </span>is_depth_image = {
+                        <span class="kw">let </span>image_lexp = <span class="self">self</span>.lookup_sampled_image.lookup(sampled_image_id)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>image_ty = ctx.get_image_expr_ty(image_lexp.image)<span class="question-mark">?</span>;
+                        <span class="macro">matches!</span>(
+                            ctx.type_arena[image_ty].inner,
+                            <span class="kw">crate</span>::TypeInner::Image {
+                                class: <span class="kw">crate</span>::ImageClass::Depth { .. },
+                                ..
+                            }
+                        )
+                    };
+
                     level = <span class="kw">if </span>options.compare {
                         <span class="macro">log::debug!</span>(<span class="string">"Assuming {:?} is zero"</span>, lod_handle);
                         <span class="kw">crate</span>::SampleLevel::Zero
+                    } <span class="kw">else if </span>is_depth_image {
+                        <span class="macro">log::debug!</span>(
+                            <span class="string">"Assuming level {:?} converts losslessly to an integer"</span>,
+                            lod_handle
+                        );
+                        <span class="kw">let </span>expr = <span class="kw">crate</span>::Expression::As {
+                            expr: lod_handle,
+                            kind: <span class="kw">crate</span>::ScalarKind::Sint,
+                            convert: <span class="prelude-val">Some</span>(<span class="number">4</span>),
+                        };
+                        <span class="kw">let </span>s32_lod_handle = ctx.expressions.append(expr, span);
+                        <span class="kw">crate</span>::SampleLevel::Exact(s32_lod_handle)
                     } <span class="kw">else </span>{
                         <span class="kw">crate</span>::SampleLevel::Exact(lod_handle)
                     };
