@@ -1293,6 +1293,9 @@
 <a href="#1292" id="1292">1292</a>
 <a href="#1293" id="1293">1293</a>
 <a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{queue::TempResource, Device},
     global::Global,
@@ -1300,7 +1303,7 @@
     id::CommandEncoderId,
     init_tracker::MemoryInitKind,
     ray_tracing::{
-        tlas_instance_into_bytes, BlasAction, BlasBuildEntry, BlasGeometries, BlasTriangleGeometry,
+        BlasAction, BlasBuildEntry, BlasGeometries, BlasTriangleGeometry,
         BuildAccelerationStructureError, TlasAction, TlasBuildEntry, TlasInstance, TlasPackage,
         TraceBlasBuildEntry, TraceBlasGeometries, TraceBlasTriangleGeometry, TraceTlasInstance,
         TraceTlasPackage, ValidateBlasActionsError, ValidateTlasActionsError,
@@ -1354,9 +1357,6 @@
     transition: <span class="prelude-ty">Option</span>&lt;PendingTransition&lt;BufferUses&gt;&gt;,
     entry: TlasBuildEntry,
 }
-
-<span class="comment">// TODO: Get this from the device (e.g. VkPhysicalDeviceAccelerationStructurePropertiesKHR.minAccelerationStructureScratchOffsetAlignment) this is currently the largest possible some devices have 0, 64, 128 (lower limits) so this could create excess allocation (Note: dx12 has 256).
-</span><span class="kw">const </span>SCRATCH_BUFFER_ALIGNMENT: u32 = <span class="number">256</span>;
 
 <span class="kw">impl </span>Global {
     <span class="comment">// Currently this function is very similar to its safe counterpart, however certain parts of it are very different,
@@ -1488,6 +1488,7 @@
             <span class="kw-2">&amp;mut </span>scratch_buffer_blas_size,
             <span class="kw-2">&amp;mut </span>blas_storage,
             hub,
+            device.alignments.ray_tracing_scratch_buffer_alignment,
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>scratch_buffer_tlas_size = <span class="number">0</span>;
@@ -1555,7 +1556,7 @@
             <span class="kw">let </span>scratch_buffer_offset = scratch_buffer_tlas_size;
             scratch_buffer_tlas_size += align_to(
                 tlas.size_info.build_scratch_size <span class="kw">as </span>u32,
-                SCRATCH_BUFFER_ALIGNMENT,
+                device.alignments.ray_tracing_scratch_buffer_alignment,
             ) <span class="kw">as </span>u64;
 
             tlas_storage.push(UnsafeTlasStore {
@@ -1803,6 +1804,7 @@
             <span class="kw-2">&amp;mut </span>scratch_buffer_blas_size,
             <span class="kw-2">&amp;mut </span>blas_storage,
             hub,
+            device.alignments.ray_tracing_scratch_buffer_alignment,
         )<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>tlas_lock_store = Vec::&lt;(<span class="prelude-ty">Option</span>&lt;TlasPackage&gt;, Arc&lt;Tlas&gt;)&gt;::new();
 
@@ -1830,7 +1832,7 @@
             <span class="kw">let </span>scratch_buffer_offset = scratch_buffer_tlas_size;
             scratch_buffer_tlas_size += align_to(
                 tlas.size_info.build_scratch_size <span class="kw">as </span>u32,
-                SCRATCH_BUFFER_ALIGNMENT,
+                device.alignments.ray_tracing_scratch_buffer_alignment,
             ) <span class="kw">as </span>u64;
 
             <span class="kw">let </span>first_byte_index = instance_buffer_staging_source.len();
@@ -1853,10 +1855,13 @@
 
                 cmd_buf_data.trackers.blas_s.set_single(blas.clone());
 
-                instance_buffer_staging_source.extend(tlas_instance_into_bytes(
-                    <span class="kw-2">&amp;</span>instance,
-                    blas.handle,
-                    device.backend(),
+                instance_buffer_staging_source.extend(device.raw().tlas_instance_to_bytes(
+                    hal::TlasInstance {
+                        transform: <span class="kw-2">*</span>instance.transform,
+                        custom_index: instance.custom_index,
+                        mask: instance.mask,
+                        blas_address: blas.handle,
+                    },
                 ));
 
                 instance_count += <span class="number">1</span>;
@@ -2308,6 +2313,7 @@
     scratch_buffer_blas_size: <span class="kw-2">&amp;mut </span>u64,
     blas_storage: <span class="kw-2">&amp;mut </span>Vec&lt;BlasStore&lt;<span class="lifetime">'a</span>&gt;&gt;,
     hub: <span class="kw-2">&amp;</span>Hub,
+    ray_tracing_scratch_buffer_alignment: u32,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BuildAccelerationStructureError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>triangle_entries =
         Vec::&lt;hal::AccelerationStructureTriangles&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;&gt;::new();
@@ -2487,7 +2493,7 @@
             <span class="kw">let </span>scratch_buffer_offset = <span class="kw-2">*</span>scratch_buffer_blas_size;
             <span class="kw-2">*</span>scratch_buffer_blas_size += align_to(
                 blas.size_info.build_scratch_size <span class="kw">as </span>u32,
-                SCRATCH_BUFFER_ALIGNMENT,
+                ray_tracing_scratch_buffer_alignment,
             ) <span class="kw">as </span>u64;
 
             blas_storage.push(BlasStore {

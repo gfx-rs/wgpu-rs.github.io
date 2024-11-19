@@ -2670,19 +2670,39 @@
 <a href="#2669" id="2669">2669</a>
 <a href="#2670" id="2670">2670</a>
 <a href="#2671" id="2671">2671</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
+<a href="#2672" id="2672">2672</a>
+<a href="#2673" id="2673">2673</a>
+<a href="#2674" id="2674">2674</a>
+<a href="#2675" id="2675">2675</a>
+<a href="#2676" id="2676">2676</a>
+<a href="#2677" id="2677">2677</a>
+<a href="#2678" id="2678">2678</a>
+<a href="#2679" id="2679">2679</a>
+<a href="#2680" id="2680">2680</a>
+<a href="#2681" id="2681">2681</a>
+<a href="#2682" id="2682">2682</a>
+<a href="#2683" id="2683">2683</a>
+<a href="#2684" id="2684">2684</a>
+<a href="#2685" id="2685">2685</a>
+<a href="#2686" id="2686">2686</a>
+<a href="#2687" id="2687">2687</a>
+<a href="#2688" id="2688">2688</a>
+<a href="#2689" id="2689">2689</a>
+</pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
 
+<span class="kw">use </span><span class="kw">crate</span>::TlasInstance;
 <span class="kw">use </span>std::{
     borrow::Cow,
     collections::{hash_map::Entry, BTreeMap},
     ffi::{CStr, CString},
+    mem,
     mem::MaybeUninit,
     num::NonZeroU32,
-    ptr,
+    ptr, slice,
     sync::Arc,
 };
 
@@ -5228,6 +5248,22 @@
             .set(<span class="self">self</span>.shared.memory_allocations_counter.read());
 
         <span class="self">self</span>.counters.clone()
+    }
+
+    <span class="kw">fn </span>tlas_instance_to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, instance: TlasInstance) -&gt; Vec&lt;u8&gt; {
+        <span class="kw">const </span>MAX_U24: u32 = (<span class="number">1u32 </span>&lt;&lt; <span class="number">24u32</span>) - <span class="number">1u32</span>;
+        <span class="kw">let </span>temp = RawTlasInstance {
+            transform: instance.transform,
+            custom_index_and_mask: (instance.custom_index &amp; MAX_U24)
+                | (u32::from(instance.mask) &lt;&lt; <span class="number">24</span>),
+            shader_binding_table_record_offset_and_flags: <span class="number">0</span>,
+            acceleration_structure_reference: instance.blas_address,
+        };
+        <span class="kw">let </span>temp: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span>temp;
+        <span class="kw">unsafe </span>{
+            slice::from_raw_parts::&lt;u8&gt;(temp.cast::&lt;u8&gt;(), mem::size_of::&lt;RawTlasInstance&gt;())
+                .to_vec()
+        }
     }
 }
 
