@@ -2104,6 +2104,7 @@
 <a href="#2103" id="2103">2103</a>
 <a href="#2104" id="2104">2104</a>
 <a href="#2105" id="2105">2105</a>
+<a href="#2106" id="2106">2106</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
@@ -3906,12 +3907,13 @@
             }
         }
 
-        <span class="comment">// Matrices and arrays of matrices both require decorations,
-        // so "see through" an array to determine if they're needed.
-        </span><span class="kw">let </span>member_array_subty_inner = <span class="kw">match </span>arena[member.ty].inner {
-            <span class="kw">crate</span>::TypeInner::Array { base, .. } =&gt; <span class="kw-2">&amp;</span>arena[base].inner,
-            <span class="kw-2">ref </span>other =&gt; other,
-        };
+        <span class="comment">// Matrices and (potentially nested) arrays of matrices both require decorations,
+        // so "see through" any arrays to determine if they're needed.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>member_array_subty_inner = <span class="kw-2">&amp;</span>arena[member.ty].inner;
+        <span class="kw">while let </span><span class="kw">crate</span>::TypeInner::Array { base, .. } = <span class="kw-2">*</span>member_array_subty_inner {
+            member_array_subty_inner = <span class="kw-2">&amp;</span>arena[base].inner;
+        }
+
         <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Matrix {
             columns: <span class="kw">_</span>,
             rows,
