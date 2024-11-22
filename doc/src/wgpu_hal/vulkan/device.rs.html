@@ -2686,8 +2686,6 @@
 <a href="#2685" id="2685">2685</a>
 <a href="#2686" id="2686">2686</a>
 <a href="#2687" id="2687">2687</a>
-<a href="#2688" id="2688">2688</a>
-<a href="#2689" id="2689">2689</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2699,8 +2697,7 @@
     borrow::Cow,
     collections::{hash_map::Entry, BTreeMap},
     ffi::{CStr, CString},
-    mem,
-    mem::MaybeUninit,
+    mem::{<span class="self">self</span>, size_of, MaybeUninit},
     num::NonZeroU32,
     ptr, slice,
     sync::Arc,
@@ -4354,7 +4351,7 @@
                     // Additional safety docs from unstable slice_assume_init_mut
                     // SAFETY: similar to safety notes for `slice_get_ref`, but we have a
                     // mutable reference which is also guaranteed to be valid for writes.
-                    </span><span class="kw">unsafe </span>{ std::mem::transmute::&lt;<span class="kw-2">&amp;mut </span>[MaybeUninit&lt;T&gt;], <span class="kw-2">&amp;mut </span>[T]&gt;(to_init) }
+                    </span><span class="kw">unsafe </span>{ mem::transmute::&lt;<span class="kw-2">&amp;mut </span>[MaybeUninit&lt;T&gt;], <span class="kw-2">&amp;mut </span>[T]&gt;(to_init) }
                 };
                 (<span class="self">Self </span>{ remainder }, init)
             }
@@ -5261,8 +5258,7 @@
         };
         <span class="kw">let </span>temp: <span class="kw-2">*const </span><span class="kw">_ </span>= <span class="kw-2">&amp;</span>temp;
         <span class="kw">unsafe </span>{
-            slice::from_raw_parts::&lt;u8&gt;(temp.cast::&lt;u8&gt;(), mem::size_of::&lt;RawTlasInstance&gt;())
-                .to_vec()
+            slice::from_raw_parts::&lt;u8&gt;(temp.cast::&lt;u8&gt;(), size_of::&lt;RawTlasInstance&gt;()).to_vec()
         }
     }
 }
