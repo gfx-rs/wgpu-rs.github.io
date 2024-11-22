@@ -3324,43 +3324,9 @@
 <a href="#3323" id="3323">3323</a>
 <a href="#3324" id="3324">3324</a>
 <a href="#3325" id="3325">3325</a>
-<a href="#3326" id="3326">3326</a>
-<a href="#3327" id="3327">3327</a>
-<a href="#3328" id="3328">3328</a>
-<a href="#3329" id="3329">3329</a>
-<a href="#3330" id="3330">3330</a>
-<a href="#3331" id="3331">3331</a>
-<a href="#3332" id="3332">3332</a>
-<a href="#3333" id="3333">3333</a>
-<a href="#3334" id="3334">3334</a>
-<a href="#3335" id="3335">3335</a>
-<a href="#3336" id="3336">3336</a>
-<a href="#3337" id="3337">3337</a>
-<a href="#3338" id="3338">3338</a>
-<a href="#3339" id="3339">3339</a>
-<a href="#3340" id="3340">3340</a>
-<a href="#3341" id="3341">3341</a>
-<a href="#3342" id="3342">3342</a>
-<a href="#3343" id="3343">3343</a>
-<a href="#3344" id="3344">3344</a>
-<a href="#3345" id="3345">3345</a>
-<a href="#3346" id="3346">3346</a>
-<a href="#3347" id="3347">3347</a>
-<a href="#3348" id="3348">3348</a>
-<a href="#3349" id="3349">3349</a>
-<a href="#3350" id="3350">3350</a>
-<a href="#3351" id="3351">3351</a>
-<a href="#3352" id="3352">3352</a>
-<a href="#3353" id="3353">3353</a>
-<a href="#3354" id="3354">3354</a>
-<a href="#3355" id="3355">3355</a>
-<a href="#3356" id="3356">3356</a>
-<a href="#3357" id="3357">3357</a>
-<a href="#3358" id="3358">3358</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
-    SimplifiedQueryType,
 };
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::RenderPipeline;
@@ -4751,42 +4717,10 @@
                     <span class="prelude-val">None
                 </span>};
 
-            arc_desc.timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = desc.timestamp_writes {
-                <span class="kw">let </span><span class="kw-2">&amp;</span>PassTimestampWrites {
-                    query_set,
-                    beginning_of_pass_write_index,
-                    end_of_pass_write_index,
-                } = tw;
-
-                <span class="kw">let </span>query_set = query_sets.get(query_set).get()<span class="question-mark">?</span>;
-
-                device.require_features(wgt::Features::TIMESTAMP_QUERY)<span class="question-mark">?</span>;
-
-                query_set.same_device(device)<span class="question-mark">?</span>;
-
-                <span class="kw">for </span>idx <span class="kw">in </span>[beginning_of_pass_write_index, end_of_pass_write_index]
-                    .into_iter()
-                    .flatten()
-                {
-                    query_set.validate_query(SimplifiedQueryType::Timestamp, idx, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                }
-
-                <span class="kw">if let </span><span class="prelude-val">Some</span>((begin, end)) =
-                    beginning_of_pass_write_index.zip(end_of_pass_write_index)
-                {
-                    <span class="kw">if </span>begin == end {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::TimestampWriteIndicesEqual { idx: begin });
-                    }
-                }
-
-                <span class="prelude-val">Some</span>(ArcPassTimestampWrites {
-                    query_set,
-                    beginning_of_pass_write_index,
-                    end_of_pass_write_index,
-                })
-            } <span class="kw">else </span>{
-                <span class="prelude-val">None
-            </span>};
+            arc_desc.timestamp_writes = desc
+                .timestamp_writes
+                .map(|tw| Global::validate_pass_timestamp_writes(device, <span class="kw-2">&amp;</span>query_sets, tw))
+                .transpose()<span class="question-mark">?</span>;
 
             arc_desc.occlusion_query_set =
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(occlusion_query_set) = desc.occlusion_query_set {
