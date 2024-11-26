@@ -3370,10 +3370,6 @@
 <a href="#3369" id="3369">3369</a>
 <a href="#3370" id="3370">3370</a>
 <a href="#3371" id="3371">3371</a>
-<a href="#3372" id="3372">3372</a>
-<a href="#3373" id="3373">3373</a>
-<a href="#3374" id="3374">3374</a>
-<a href="#3375" id="3375">3375</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::downcast_ref, AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor,
     BindingResource, BufferBinding, BufferDescriptor, CommandEncoderDescriptor, CompilationInfo,
@@ -3400,7 +3396,7 @@
     sync::Arc,
 };
 <span class="kw">use </span>wgc::error::ContextErrorSource;
-<span class="kw">use </span>wgc::{command::bundle_ffi::<span class="kw-2">*</span>, device::DeviceLostClosure, pipeline::CreateShaderModuleError};
+<span class="kw">use </span>wgc::{command::bundle_ffi::<span class="kw-2">*</span>, pipeline::CreateShaderModuleError};
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="kw">pub struct </span>ContextWgpuCore(wgc::global::Global);
@@ -4728,9 +4724,8 @@
         device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         device_lost_callback: <span class="kw">crate</span>::context::DeviceLostCallback,
     ) {
-        <span class="kw">let </span>device_lost_closure = DeviceLostClosure::from_rust(device_lost_callback);
         <span class="self">self</span>.<span class="number">0
-            </span>.device_set_device_lost_closure(device_data.id, device_lost_closure);
+            </span>.device_set_device_lost_closure(device_data.id, device_lost_callback);
     }
     <span class="kw">fn </span>device_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
         <span class="self">self</span>.<span class="number">0</span>.device_destroy(device_data.id);
@@ -4782,12 +4777,10 @@
                 MapMode::Read =&gt; wgc::device::HostMap::Read,
                 MapMode::Write =&gt; wgc::device::HostMap::Write,
             },
-            callback: <span class="prelude-val">Some</span>(wgc::resource::BufferMapCallback::from_rust(Box::new(
-                |status| {
-                    <span class="kw">let </span>res = status.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::BufferAsyncError);
-                    callback(res);
-                },
-            ))),
+            callback: <span class="prelude-val">Some</span>(Box::new(|status| {
+                <span class="kw">let </span>res = status.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::BufferAsyncError);
+                callback(res);
+            })),
         };
 
         <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.buffer_map_async(
@@ -5481,8 +5474,7 @@
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         callback: <span class="kw">crate</span>::context::SubmittedWorkDoneCallback,
     ) {
-        <span class="kw">let </span>closure = wgc::device::queue::SubmittedWorkDoneClosure::from_rust(callback);
-        <span class="self">self</span>.<span class="number">0</span>.queue_on_submitted_work_done(queue_data.id, closure);
+        <span class="self">self</span>.<span class="number">0</span>.queue_on_submitted_work_done(queue_data.id, callback);
     }
 
     <span class="kw">fn </span>device_start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {

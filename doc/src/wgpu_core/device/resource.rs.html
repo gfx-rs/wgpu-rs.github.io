@@ -3655,10 +3655,6 @@
 <a href="#3654" id="3654">3654</a>
 <a href="#3655" id="3655">3655</a>
 <a href="#3656" id="3656">3656</a>
-<a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a>
-<a href="#3660" id="3660">3660</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3809,10 +3805,6 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>Device {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
-            closure.call(DeviceLostReason::Dropped, String::from(<span class="string">"Device dropped."</span>));
-        }
 
         <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.zero_buffer anymore after this point.
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.zero_buffer) };
@@ -7265,7 +7257,7 @@
 
         <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
-            device_lost_closure.call(DeviceLostReason::Unknown, message.to_string());
+            device_lost_closure(DeviceLostReason::Unknown, message.to_string());
         }
 
         <span class="comment">// 2) Complete any outstanding mapAsync() steps.
