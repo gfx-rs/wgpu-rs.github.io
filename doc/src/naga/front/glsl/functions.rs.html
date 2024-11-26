@@ -1613,6 +1613,8 @@
 <a href="#1612" id="1612">1612</a>
 <a href="#1613" id="1613">1613</a>
 <a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::<span class="kw-2">*</span>,
     builtins::{inject_builtin, sampled_to_depth},
@@ -2400,10 +2402,10 @@
             .zip(raw_args)
             .zip(<span class="kw-2">&amp;</span>parameters)
         {
-            <span class="kw">let </span>(<span class="kw-2">mut </span>handle, meta) =
-                ctx.lower_expect_inner(stmt, <span class="self">self</span>, <span class="kw-2">*</span>expr, parameter_info.qualifier.as_pos())<span class="question-mark">?</span>;
-
             <span class="kw">if </span>parameter_info.qualifier.is_lhs() {
+                <span class="comment">// Reprocess argument in LHS position
+                </span><span class="kw">let </span>(handle, meta) = ctx.lower_expect_inner(stmt, <span class="self">self</span>, <span class="kw-2">*</span>expr, ExprPos::Lhs)<span class="question-mark">?</span>;
+
                 <span class="self">self</span>.process_lhs_argument(
                     ctx,
                     meta,
@@ -2417,6 +2419,8 @@
 
                 <span class="kw">continue</span>;
             }
+
+            <span class="kw">let </span>(<span class="kw-2">mut </span>handle, meta) = <span class="kw-2">*</span>call_argument;
 
             <span class="kw">let </span>scalar_comps = scalar_components(<span class="kw-2">&amp;</span>ctx.module.types[<span class="kw-2">*</span>parameter].inner);
 
