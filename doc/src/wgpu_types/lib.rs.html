@@ -7675,6 +7675,42 @@
 <a href="#7674" id="7674">7674</a>
 <a href="#7675" id="7675">7675</a>
 <a href="#7676" id="7676">7676</a>
+<a href="#7677" id="7677">7677</a>
+<a href="#7678" id="7678">7678</a>
+<a href="#7679" id="7679">7679</a>
+<a href="#7680" id="7680">7680</a>
+<a href="#7681" id="7681">7681</a>
+<a href="#7682" id="7682">7682</a>
+<a href="#7683" id="7683">7683</a>
+<a href="#7684" id="7684">7684</a>
+<a href="#7685" id="7685">7685</a>
+<a href="#7686" id="7686">7686</a>
+<a href="#7687" id="7687">7687</a>
+<a href="#7688" id="7688">7688</a>
+<a href="#7689" id="7689">7689</a>
+<a href="#7690" id="7690">7690</a>
+<a href="#7691" id="7691">7691</a>
+<a href="#7692" id="7692">7692</a>
+<a href="#7693" id="7693">7693</a>
+<a href="#7694" id="7694">7694</a>
+<a href="#7695" id="7695">7695</a>
+<a href="#7696" id="7696">7696</a>
+<a href="#7697" id="7697">7697</a>
+<a href="#7698" id="7698">7698</a>
+<a href="#7699" id="7699">7699</a>
+<a href="#7700" id="7700">7700</a>
+<a href="#7701" id="7701">7701</a>
+<a href="#7702" id="7702">7702</a>
+<a href="#7703" id="7703">7703</a>
+<a href="#7704" id="7704">7704</a>
+<a href="#7705" id="7705">7705</a>
+<a href="#7706" id="7706">7706</a>
+<a href="#7707" id="7707">7707</a>
+<a href="#7708" id="7708">7708</a>
+<a href="#7709" id="7709">7709</a>
+<a href="#7710" id="7710">7710</a>
+<a href="#7711" id="7711">7711</a>
+<a href="#7712" id="7712">7712</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -7754,7 +7790,7 @@
 ///
 /// This doesn't apply to [`Queue::write_texture`][Qwt].
 ///
-/// [`bytes_per_row`]: ImageDataLayout::bytes_per_row
+/// [`bytes_per_row`]: TexelCopyBufferLayout::bytes_per_row
 /// [Qwt]: ../wgpu/struct.Queue.html#method.write_texture
 </span><span class="kw">pub const </span>COPY_BYTES_PER_ROW_ALIGNMENT: u32 = <span class="number">256</span>;
 <span class="doccomment">/// An offset into the query resolve buffer has to be aligned to this.
@@ -9369,11 +9405,11 @@
 
         <span class="doccomment">/// With this feature not present, there are the following restrictions on `Queue::copy_external_image_to_texture`:
         /// - The source must not be [`web_sys::OffscreenCanvas`]
-        /// - [`ImageCopyExternalImage::origin`] must be zero.
-        /// - [`ImageCopyTextureTagged::color_space`] must be srgb.
+        /// - [`CopyExternalImageSourceInfo::origin`] must be zero.
+        /// - [`CopyExternalImageDestInfo::color_space`] must be srgb.
         /// - If the source is an [`web_sys::ImageBitmap`]:
-        ///   - [`ImageCopyExternalImage::flip_y`] must be false.
-        ///   - [`ImageCopyTextureTagged::premultiplied_alpha`] must be false.
+        ///   - [`CopyExternalImageSourceInfo::flip_y`] must be false.
+        ///   - [`CopyExternalImageDestInfo::premultiplied_alpha`] must be false.
         ///
         /// WebGL doesn't support this. WebGPU does.
         </span><span class="kw">const </span>UNRESTRICTED_EXTERNAL_TEXTURE_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
@@ -14042,12 +14078,12 @@
 /// | 256x256    | BC3    | 16              | 4 * 4 * 1        | 16 * (256 / 4) = 1024 = Some(1024)     | None                         |
 /// | 64x64x8    | BC3    | 16              | 4 * 4 * 1        | 16 * (64 / 4) = 256 = Some(256)        | 64 / 4 = 16 = Some(16)       |
 ///
-/// Corresponds to [WebGPU `GPUImageDataLayout`](
+/// Corresponds to [WebGPU `GPUTexelCopyBufferLayout`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagedatalayout).
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ImageDataLayout {
+</span><span class="kw">pub struct </span>TexelCopyBufferLayout {
     <span class="doccomment">/// Offset into the buffer that is the start of the texture. Must be a multiple of texture block size.
     /// For non-compressed textures, this is 1.
     </span><span class="kw">pub </span>offset: BufferAddress,
@@ -14080,6 +14116,13 @@
     /// Required if there are multiple images (i.e. the depth is more than one).
     </span><span class="kw">pub </span>rows_per_image: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
+
+<span class="doccomment">/// Old name for a [`TexelCopyBufferLayout`].
+</span><span class="attr">#[deprecated(
+    since = <span class="string">"24.0.0"</span>,
+    note = <span class="string">"This has been renamed to `TexelCopyBufferLayout`, and will be removed in 25.0.0."
+</span>)]
+</span><span class="kw">pub type </span>ImageDataLayout = TexelCopyBufferLayout;
 
 <span class="doccomment">/// Specific type of a buffer binding.
 ///
@@ -14486,26 +14529,33 @@
 
 <span class="doccomment">/// View of a buffer which can be used to copy to/from a texture.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyBuffer`](
+/// Corresponds to [WebGPU `GPUTexelCopyBufferInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopybuffer).
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ImageCopyBuffer&lt;B&gt; {
+</span><span class="kw">pub struct </span>TexelCopyBufferInfo&lt;B&gt; {
     <span class="doccomment">/// The buffer to be copied to/from.
     </span><span class="kw">pub </span>buffer: B,
     <span class="doccomment">/// The layout of the texture data in this buffer.
-    </span><span class="kw">pub </span>layout: ImageDataLayout,
+    </span><span class="kw">pub </span>layout: TexelCopyBufferLayout,
 }
+
+<span class="doccomment">/// Old name for a [`TexelCopyBufferInfo`].
+</span><span class="attr">#[deprecated(
+    since = <span class="string">"24.0.0"</span>,
+    note = <span class="string">"This has been renamed to `TexelCopyBufferInfo`, and will be removed in 25.0.0."
+</span>)]
+</span><span class="kw">pub type </span>ImageCopyBuffer&lt;B&gt; = TexelCopyBufferInfo&lt;B&gt;;
 
 <span class="doccomment">/// View of a texture which can be used to copy to/from a buffer/texture.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyTexture`](
+/// Corresponds to [WebGPU `GPUTexelCopyTextureInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexture).
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ImageCopyTexture&lt;T&gt; {
+</span><span class="kw">pub struct </span>TexelCopyTextureInfo&lt;T&gt; {
     <span class="doccomment">/// The texture to be copied to/from.
     </span><span class="kw">pub </span>texture: T,
     <span class="doccomment">/// The target mip level of the texture.
@@ -14520,15 +14570,15 @@
     </span><span class="kw">pub </span>aspect: TextureAspect,
 }
 
-<span class="kw">impl</span>&lt;T&gt; ImageCopyTexture&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; TexelCopyTextureInfo&lt;T&gt; {
     <span class="doccomment">/// Adds color space and premultiplied alpha information to make this
     /// descriptor tagged.
     </span><span class="kw">pub fn </span>to_tagged(
         <span class="self">self</span>,
         color_space: PredefinedColorSpace,
         premultiplied_alpha: bool,
-    ) -&gt; ImageCopyTextureTagged&lt;T&gt; {
-        ImageCopyTextureTagged {
+    ) -&gt; CopyExternalImageDestInfo&lt;T&gt; {
+        CopyExternalImageDestInfo {
             texture: <span class="self">self</span>.texture,
             mip_level: <span class="self">self</span>.mip_level,
             origin: <span class="self">self</span>.origin,
@@ -14539,13 +14589,20 @@
     }
 }
 
+<span class="doccomment">/// Old name for a [`TexelCopyTextureInfo`].
+</span><span class="attr">#[deprecated(
+    since = <span class="string">"24.0.0"</span>,
+    note = <span class="string">"This has been renamed to `TexelCopyTextureInfo`, and will be removed in 25.0.0."
+</span>)]
+</span><span class="kw">pub type </span>ImageCopyTexture&lt;T&gt; = TexelCopyTextureInfo&lt;T&gt;;
+
 <span class="doccomment">/// View of an external texture that can be used to copy to a texture.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyExternalImage`](
+/// Corresponds to [WebGPU `GPUCopyExternalImageSourceInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopyexternalimage).
 </span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 #[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ImageCopyExternalImage {
+</span><span class="kw">pub struct </span>CopyExternalImageSourceInfo {
     <span class="doccomment">/// The texture to be copied from. The copy source data is captured at the moment
     /// the copy is issued.
     </span><span class="kw">pub </span>source: ExternalImageSource,
@@ -14562,9 +14619,17 @@
     </span><span class="kw">pub </span>flip_y: bool,
 }
 
+<span class="doccomment">/// Old name for a [`CopyExternalImageSourceInfo`].
+</span><span class="attr">#[deprecated(
+    since = <span class="string">"24.0.0"</span>,
+    note = <span class="string">"This has been renamed to `CopyExternalImageSourceInfo`, and will be removed in 25.0.0."
+</span>)]
+#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+</span><span class="kw">pub type </span>ImageCopyExternalImage = CopyExternalImageSourceInfo;
+
 <span class="doccomment">/// Source of an external texture copy.
 ///
-/// Corresponds to the [implicit union type on WebGPU `GPUImageCopyExternalImage.source`](
+/// Corresponds to the [implicit union type on WebGPU `GPUCopyExternalImageSourceInfo.source`](
 /// https://gpuweb.github.io/gpuweb/#dom-gpuimagecopyexternalimage-source).
 </span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 #[derive(Clone, Debug)]
@@ -14667,11 +14732,11 @@
 <span class="doccomment">/// View of a texture which can be used to copy to a texture, including
 /// color space and alpha premultiplication information.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyTextureTagged`](
+/// Corresponds to [WebGPU `GPUCopyExternalImageDestInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexturetagged).
 </span><span class="attr">#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ImageCopyTextureTagged&lt;T&gt; {
+</span><span class="kw">pub struct </span>CopyExternalImageDestInfo&lt;T&gt; {
     <span class="doccomment">/// The texture to be copied to/from.
     </span><span class="kw">pub </span>texture: T,
     <span class="doccomment">/// The target mip level of the texture.
@@ -14686,10 +14751,10 @@
     </span><span class="kw">pub </span>premultiplied_alpha: bool,
 }
 
-<span class="kw">impl</span>&lt;T&gt; ImageCopyTextureTagged&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; CopyExternalImageDestInfo&lt;T&gt; {
     <span class="doccomment">/// Removes the colorspace information from the type.
-    </span><span class="kw">pub fn </span>to_untagged(<span class="self">self</span>) -&gt; ImageCopyTexture&lt;T&gt; {
-        ImageCopyTexture {
+    </span><span class="kw">pub fn </span>to_untagged(<span class="self">self</span>) -&gt; TexelCopyTextureInfo&lt;T&gt; {
+        TexelCopyTextureInfo {
             texture: <span class="self">self</span>.texture,
             mip_level: <span class="self">self</span>.mip_level,
             origin: <span class="self">self</span>.origin,
@@ -14697,6 +14762,13 @@
         }
     }
 }
+
+<span class="doccomment">/// Old name for a [`CopyExternalImageDestInfo`].
+</span><span class="attr">#[deprecated(
+    since = <span class="string">"24.0.0"</span>,
+    note = <span class="string">"This has been renamed to `CopyExternalImageDestInfo`, and will be removed in 25.0.0."
+</span>)]
+</span><span class="kw">pub type </span>ImageCopyTextureTagged&lt;T&gt; = CopyExternalImageDestInfo&lt;T&gt;;
 
 <span class="doccomment">/// Subresource range within an image
 </span><span class="attr">#[repr(C)]

@@ -549,23 +549,23 @@
 </span><span class="kw">pub type </span>CommandEncoderDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::CommandEncoderDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(CommandEncoderDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
-<span class="kw">pub use </span>wgt::ImageCopyBuffer <span class="kw">as </span>ImageCopyBufferBase;
+<span class="kw">pub use </span>wgt::TexelCopyBufferInfo <span class="kw">as </span>TexelCopyBufferInfoBase;
 <span class="doccomment">/// View of a buffer which can be used to copy to/from a texture.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyBuffer`](
+/// Corresponds to [WebGPU `GPUTexelCopyBufferInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopybuffer).
-</span><span class="kw">pub type </span>ImageCopyBuffer&lt;<span class="lifetime">'a</span>&gt; = ImageCopyBufferBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer&gt;;
+</span><span class="kw">pub type </span>TexelCopyBufferInfo&lt;<span class="lifetime">'a</span>&gt; = TexelCopyBufferInfoBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer&gt;;
 <span class="attr">#[cfg(send_sync)]
-</span><span class="macro">static_assertions::assert_impl_all!</span>(ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+</span><span class="macro">static_assertions::assert_impl_all!</span>(TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
-<span class="kw">pub use </span>wgt::ImageCopyTexture <span class="kw">as </span>ImageCopyTextureBase;
+<span class="kw">pub use </span>wgt::TexelCopyTextureInfo <span class="kw">as </span>TexelCopyTextureInfoBase;
 <span class="doccomment">/// View of a texture which can be used to copy to/from a buffer/texture.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyTexture`](
+/// Corresponds to [WebGPU `GPUTexelCopyTextureInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexture).
-</span><span class="kw">pub type </span>ImageCopyTexture&lt;<span class="lifetime">'a</span>&gt; = ImageCopyTextureBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;;
+</span><span class="kw">pub type </span>TexelCopyTextureInfo&lt;<span class="lifetime">'a</span>&gt; = TexelCopyTextureInfoBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;;
 <span class="attr">#[cfg(send_sync)]
-</span><span class="macro">static_assertions::assert_impl_all!</span>(ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+</span><span class="macro">static_assertions::assert_impl_all!</span>(TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
 <span class="kw">use </span><span class="kw">crate</span>::api::blas::{
     BlasBuildEntry, BlasGeometries, BlasTriangleGeometry, DynContextBlasBuildEntry,
@@ -574,16 +574,16 @@
 <span class="kw">use </span><span class="kw">crate</span>::api::tlas::{
     DynContextTlasBuildEntry, DynContextTlasPackage, TlasBuildEntry, TlasPackage,
 };
-<span class="kw">pub use </span>wgt::ImageCopyTextureTagged <span class="kw">as </span>ImageCopyTextureTaggedBase;
+<span class="kw">pub use </span>wgt::CopyExternalImageDestInfo <span class="kw">as </span>CopyExternalImageDestInfoBase;
 
 <span class="doccomment">/// View of a texture which can be used to copy to a texture, including
 /// color space and alpha premultiplication information.
 ///
-/// Corresponds to [WebGPU `GPUImageCopyTextureTagged`](
+/// Corresponds to [WebGPU `GPUCopyExternalImageDestInfo`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexturetagged).
-</span><span class="kw">pub type </span>ImageCopyTextureTagged&lt;<span class="lifetime">'a</span>&gt; = ImageCopyTextureTaggedBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;;
+</span><span class="kw">pub type </span>CopyExternalImageDestInfo&lt;<span class="lifetime">'a</span>&gt; = CopyExternalImageDestInfoBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Texture&gt;;
 <span class="attr">#[cfg(send_sync)]
-</span><span class="macro">static_assertions::assert_impl_all!</span>(ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+</span><span class="macro">static_assertions::assert_impl_all!</span>(TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
 <span class="kw">impl </span>CommandEncoder {
     <span class="doccomment">/// Finishes recording and returns a [`CommandBuffer`] that can be submitted for execution.
@@ -677,8 +677,8 @@
     <span class="doccomment">/// Copy data from a buffer to a texture.
     </span><span class="kw">pub fn </span>copy_buffer_to_texture(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        source: ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
-        destination: ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
+        source: TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: Extent3d,
     ) {
         DynContext::command_encoder_copy_buffer_to_texture(
@@ -693,8 +693,8 @@
     <span class="doccomment">/// Copy data from a texture to a buffer.
     </span><span class="kw">pub fn </span>copy_texture_to_buffer(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        source: ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
-        destination: ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
+        source: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: Extent3d,
     ) {
         DynContext::command_encoder_copy_texture_to_buffer(
@@ -715,8 +715,8 @@
     /// - Copy would overrun either texture
     </span><span class="kw">pub fn </span>copy_texture_to_texture(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        source: ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
-        destination: ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
+        source: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: Extent3d,
     ) {
         DynContext::command_encoder_copy_texture_to_texture(

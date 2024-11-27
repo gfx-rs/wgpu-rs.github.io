@@ -3370,6 +3370,8 @@
 <a href="#3369" id="3369">3369</a>
 <a href="#3370" id="3370">3370</a>
 <a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::downcast_ref, AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor,
     BindingResource, BufferBinding, BufferDescriptor, CommandEncoderDescriptor, CompilationInfo,
@@ -3735,15 +3737,17 @@
     }
 }
 
-<span class="kw">fn </span>map_buffer_copy_view(view: <span class="kw">crate</span>::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;) -&gt; wgc::command::ImageCopyBuffer {
-    wgc::command::ImageCopyBuffer {
+<span class="kw">fn </span>map_buffer_copy_view(view: <span class="kw">crate</span>::TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; wgc::command::TexelCopyBufferInfo {
+    wgc::command::TexelCopyBufferInfo {
         buffer: downcast_buffer(view.buffer).id,
         layout: view.layout,
     }
 }
 
-<span class="kw">fn </span>map_texture_copy_view(view: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;) -&gt; wgc::command::ImageCopyTexture {
-    wgc::command::ImageCopyTexture {
+<span class="kw">fn </span>map_texture_copy_view(
+    view: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; wgc::command::TexelCopyTextureInfo {
+    wgc::command::TexelCopyTextureInfo {
         texture: downcast_texture(view.texture).id,
         mip_level: view.mip_level,
         origin: view.origin,
@@ -3756,9 +3760,9 @@
     allow(unused)
 )]
 </span><span class="kw">fn </span>map_texture_tagged_copy_view(
-    view: <span class="kw">crate</span>::ImageCopyTextureTagged&lt;<span class="lifetime">'_</span>&gt;,
-) -&gt; wgc::command::ImageCopyTextureTagged {
-    wgc::command::ImageCopyTextureTagged {
+    view: <span class="kw">crate</span>::CopyExternalImageDestInfo&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; wgc::command::CopyExternalImageDestInfo {
+    wgc::command::CopyExternalImageDestInfo {
         texture: downcast_texture(view.texture).id,
         mip_level: view.mip_level,
         origin: view.origin,
@@ -5002,8 +5006,8 @@
     <span class="kw">fn </span>command_encoder_copy_buffer_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
-        source: <span class="kw">crate</span>::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
-        destination: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
+        source: <span class="kw">crate</span>::TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: wgt::Extent3d,
     ) {
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.command_encoder_copy_buffer_to_texture(
@@ -5023,8 +5027,8 @@
     <span class="kw">fn </span>command_encoder_copy_texture_to_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
-        source: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
-        destination: <span class="kw">crate</span>::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
+        source: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: <span class="kw">crate</span>::TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: wgt::Extent3d,
     ) {
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.command_encoder_copy_texture_to_buffer(
@@ -5044,8 +5048,8 @@
     <span class="kw">fn </span>command_encoder_copy_texture_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
-        source: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
-        destination: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
+        source: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
+        destination: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
         copy_size: wgt::Extent3d,
     ) {
         <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self</span>.<span class="number">0</span>.command_encoder_copy_texture_to_texture(
@@ -5401,9 +5405,9 @@
     <span class="kw">fn </span>queue_write_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
-        texture: <span class="kw">crate</span>::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt;,
+        texture: <span class="kw">crate</span>::TexelCopyTextureInfo&lt;<span class="lifetime">'_</span>&gt;,
         data: <span class="kw-2">&amp;</span>[u8],
-        data_layout: wgt::ImageDataLayout,
+        data_layout: wgt::TexelCopyBufferLayout,
         size: wgt::Extent3d,
     ) {
         <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.queue_write_texture(
@@ -5424,8 +5428,8 @@
     </span><span class="kw">fn </span>queue_copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
-        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
-        dest: <span class="kw">crate</span>::ImageCopyTextureTagged&lt;<span class="lifetime">'_</span>&gt;,
+        source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
+        dest: <span class="kw">crate</span>::CopyExternalImageDestInfo&lt;<span class="lifetime">'_</span>&gt;,
         size: wgt::Extent3d,
     ) {
         <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.queue_copy_external_image_to_texture(

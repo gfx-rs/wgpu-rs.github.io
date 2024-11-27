@@ -1621,7 +1621,7 @@
     command::{
         extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
         ClearError, CommandAllocator, CommandBuffer, CommandEncoderError, CopySide,
-        ImageCopyTexture, TransferError,
+        TexelCopyTextureInfo, TransferError,
     },
     conv,
     device::{DeviceError, WaitIdleError},
@@ -2296,9 +2296,9 @@
 
     <span class="kw">pub fn </span>write_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        destination: wgt::ImageCopyTexture&lt;Fallible&lt;Texture&gt;&gt;,
+        destination: wgt::TexelCopyTextureInfo&lt;Fallible&lt;Texture&gt;&gt;,
         data: <span class="kw-2">&amp;</span>[u8],
-        data_layout: <span class="kw-2">&amp;</span>wgt::ImageDataLayout,
+        data_layout: <span class="kw-2">&amp;</span>wgt::TexelCopyBufferLayout,
         size: <span class="kw-2">&amp;</span>wgt::Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_texture"</span>);
@@ -2310,7 +2310,7 @@
         }
 
         <span class="kw">let </span>dst = destination.texture.get()<span class="question-mark">?</span>;
-        <span class="kw">let </span>destination = wgt::ImageCopyTexture {
+        <span class="kw">let </span>destination = wgt::TexelCopyTextureInfo {
             texture: (),
             mip_level: destination.mip_level,
             origin: destination.origin,
@@ -2473,7 +2473,7 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>texture_base = dst_base.clone();
                 texture_base.array_layer += array_layer_offset;
                 hal::BufferTextureCopy {
-                    buffer_layout: wgt::ImageDataLayout {
+                    buffer_layout: wgt::TexelCopyBufferLayout {
                         offset: array_layer_offset <span class="kw">as </span>u64
                             * rows_per_image <span class="kw">as </span>u64
                             * stage_bytes_per_row <span class="kw">as </span>u64,
@@ -2517,8 +2517,8 @@
     <span class="attr">#[cfg(webgl)]
     </span><span class="kw">pub fn </span>copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
-        destination: wgt::ImageCopyTextureTagged&lt;Fallible&lt;Texture&gt;&gt;,
+        source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
+        destination: wgt::CopyExternalImageDestInfo&lt;Fallible&lt;Texture&gt;&gt;,
         size: wgt::Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::copy_external_image_to_texture"</span>);
@@ -2549,7 +2549,7 @@
 
         <span class="kw">let </span>dst = destination.texture.get()<span class="question-mark">?</span>;
         <span class="kw">let </span>premultiplied_alpha = destination.premultiplied_alpha;
-        <span class="kw">let </span>destination = wgt::ImageCopyTexture {
+        <span class="kw">let </span>destination = wgt::TexelCopyTextureInfo {
             texture: (),
             mip_level: destination.mip_level,
             origin: destination.origin,
@@ -3091,9 +3091,9 @@
     <span class="kw">pub fn </span>queue_write_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
-        destination: <span class="kw-2">&amp;</span>ImageCopyTexture,
+        destination: <span class="kw-2">&amp;</span>TexelCopyTextureInfo,
         data: <span class="kw-2">&amp;</span>[u8],
-        data_layout: <span class="kw-2">&amp;</span>wgt::ImageDataLayout,
+        data_layout: <span class="kw-2">&amp;</span>wgt::TexelCopyBufferLayout,
         size: <span class="kw-2">&amp;</span>wgt::Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
@@ -3109,7 +3109,7 @@
             });
         }
 
-        <span class="kw">let </span>destination = wgt::ImageCopyTexture {
+        <span class="kw">let </span>destination = wgt::TexelCopyTextureInfo {
             texture: <span class="self">self</span>.hub.textures.get(destination.texture),
             mip_level: destination.mip_level,
             origin: destination.origin,
@@ -3122,12 +3122,12 @@
     </span><span class="kw">pub fn </span>queue_copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue_id: QueueId,
-        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
-        destination: <span class="kw">crate</span>::command::ImageCopyTextureTagged,
+        source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
+        destination: <span class="kw">crate</span>::command::CopyExternalImageDestInfo,
         size: wgt::Extent3d,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(queue_id);
-        <span class="kw">let </span>destination = wgt::ImageCopyTextureTagged {
+        <span class="kw">let </span>destination = wgt::CopyExternalImageDestInfo {
             texture: <span class="self">self</span>.hub.textures.get(destination.texture),
             mip_level: destination.mip_level,
             origin: destination.origin,
