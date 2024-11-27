@@ -65,17 +65,6 @@
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module containing the [`WeakVec`] API.
 
 </span><span class="kw">use </span>std::sync::Weak;
@@ -84,28 +73,20 @@
 /// dropping older elements that no longer have strong references to them.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>WeakVec&lt;T&gt; {
-    inner: Vec&lt;<span class="prelude-ty">Option</span>&lt;Weak&lt;T&gt;&gt;&gt;,
-    empty_slots: Vec&lt;usize&gt;,
-    scan_slots_on_next_push: bool,
+    inner: Vec&lt;Weak&lt;T&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>WeakVec&lt;T&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             inner: Default::default(),
-            empty_slots: Default::default(),
-            scan_slots_on_next_push: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; WeakVec&lt;T&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            inner: Vec::new(),
-            empty_slots: Vec::default(),
-            scan_slots_on_next_push: <span class="bool-val">false</span>,
-        }
+        <span class="self">Self </span>{ inner: Vec::new() }
     }
 
     <span class="doccomment">/// Pushes a new element to this collection.
@@ -113,28 +94,25 @@
     /// If the inner Vec needs to be reallocated, we will first drop older elements that
     /// no longer have strong references to them.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Weak&lt;T&gt;) {
-        <span class="kw">if </span><span class="self">self</span>.scan_slots_on_next_push {
-            <span class="kw">for </span>(i, value) <span class="kw">in </span><span class="self">self</span>.inner.iter_mut().enumerate() {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(w) = value {
-                    <span class="kw">if </span>w.strong_count() == <span class="number">0 </span>{
-                        <span class="kw-2">*</span>value = <span class="prelude-val">None</span>;
-                        <span class="self">self</span>.empty_slots.push(i);
-                    }
+        <span class="kw">if </span><span class="self">self</span>.inner.len() == <span class="self">self</span>.inner.capacity() {
+            <span class="comment">// Iterating backwards has the advantage that we don't do more work than we have to.
+            </span><span class="kw">for </span>i <span class="kw">in </span>(<span class="number">0</span>..<span class="self">self</span>.inner.len()).rev() {
+                <span class="kw">if </span><span class="self">self</span>.inner[i].strong_count() == <span class="number">0 </span>{
+                    <span class="self">self</span>.inner.swap_remove(i);
                 }
             }
+
+            <span class="comment">// Make sure our capacity is twice the number of live elements.
+            // Leaving some spare capacity ensures that we won't re-scan immediately.
+            </span><span class="self">self</span>.inner.reserve_exact(<span class="self">self</span>.inner.len());
         }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = <span class="self">self</span>.empty_slots.pop() {
-            <span class="self">self</span>.inner[i] = <span class="prelude-val">Some</span>(value);
-            <span class="self">self</span>.scan_slots_on_next_push = <span class="self">self</span>.empty_slots.is_empty();
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.inner.push(<span class="prelude-val">Some</span>(value));
-            <span class="self">self</span>.scan_slots_on_next_push = <span class="self">self</span>.inner.len() == <span class="self">self</span>.inner.capacity();
-        }
+
+        <span class="self">self</span>.inner.push(value);
     }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>WeakVecIter&lt;T&gt; {
-    inner: std::iter::Flatten&lt;std::vec::IntoIter&lt;<span class="prelude-ty">Option</span>&lt;Weak&lt;T&gt;&gt;&gt;&gt;,
+    inner: std::vec::IntoIter&lt;Weak&lt;T&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Iterator <span class="kw">for </span>WeakVecIter&lt;T&gt; {
@@ -149,7 +127,7 @@
     <span class="kw">type </span>IntoIter = WeakVecIter&lt;T&gt;;
     <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
         WeakVecIter {
-            inner: <span class="self">self</span>.inner.into_iter().flatten(),
+            inner: <span class="self">self</span>.inner.into_iter(),
         }
     }
 }
