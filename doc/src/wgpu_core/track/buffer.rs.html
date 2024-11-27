@@ -769,35 +769,6 @@
 <a href="#768" id="768">768</a>
 <a href="#769" id="769">769</a>
 <a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Buffer Trackers
 //!
 //! Buffers are represented by a single state for the whole resource,
@@ -934,10 +905,7 @@
             <span class="kw">let </span>index = resource.tracker_index().as_usize();
 
             <span class="kw">unsafe </span>{
-                insert_or_merge(
-                    <span class="prelude-val">None</span>,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.state,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                <span class="self">self</span>.insert_or_merge(
                     index <span class="kw">as _</span>,
                     index,
                     BufferStateProvider::Direct { state },
@@ -970,10 +938,7 @@
             scope.tracker_assert_in_bounds(index);
 
             <span class="kw">unsafe </span>{
-                insert_or_merge(
-                    <span class="prelude-val">None</span>,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.state,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                <span class="self">self</span>.insert_or_merge(
                     index <span class="kw">as </span>u32,
                     index,
                     BufferStateProvider::Indirect {
@@ -1008,10 +973,7 @@
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
         <span class="kw">unsafe </span>{
-            insert_or_merge(
-                <span class="prelude-val">None</span>,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.state,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+            <span class="self">self</span>.insert_or_merge(
                 index <span class="kw">as _</span>,
                 index,
                 BufferStateProvider::Direct { state: new_state },
@@ -1020,6 +982,51 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Does an insertion operation if the index isn't tracked
+    /// in the current metadata, otherwise merges the given state
+    /// with the current state. If the merging would cause
+    /// a conflict, returns that usage conflict.
+    ///
+    /// # Safety
+    ///
+    /// Indexes must be valid indexes into all arrays passed in
+    /// to this function, either directly or via metadata or provider structs.
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">unsafe fn </span>insert_or_merge(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index32: u32,
+        index: usize,
+        state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+        metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
+        <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ <span class="self">self</span>.metadata.contains_unchecked(index) };
+
+        <span class="kw">if </span>!currently_owned {
+            <span class="kw">unsafe </span>{
+                insert(
+                    <span class="prelude-val">None</span>,
+                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.state,
+                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                    index,
+                    state_provider,
+                    <span class="prelude-val">None</span>,
+                    metadata_provider,
+                )
+            };
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="kw">unsafe </span>{
+            merge(
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.state,
+                index32,
+                index,
+                state_provider,
+                metadata_provider,
+            )
+        }
     }
 }
 
@@ -1110,15 +1117,11 @@
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
         <span class="kw">unsafe </span>{
-            insert_or_barrier_update(
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+            <span class="self">self</span>.insert_or_barrier_update(
                 index,
                 BufferStateProvider::Direct { state },
                 <span class="prelude-val">None</span>,
                 ResourceMetadataProvider::Direct { resource: buffer },
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
             )
         };
 
@@ -1145,10 +1148,7 @@
             <span class="self">self</span>.tracker_assert_in_bounds(index);
             tracker.tracker_assert_in_bounds(index);
             <span class="kw">unsafe </span>{
-                insert_or_barrier_update(
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                <span class="self">self</span>.insert_or_barrier_update(
                     index,
                     BufferStateProvider::Indirect {
                         state: <span class="kw-2">&amp;</span>tracker.start,
@@ -1159,7 +1159,6 @@
                     ResourceMetadataProvider::Indirect {
                         metadata: <span class="kw-2">&amp;</span>tracker.metadata,
                     },
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
                 )
             }
         }
@@ -1183,10 +1182,7 @@
             <span class="self">self</span>.tracker_assert_in_bounds(index);
             scope.tracker_assert_in_bounds(index);
             <span class="kw">unsafe </span>{
-                insert_or_barrier_update(
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                <span class="self">self</span>.insert_or_barrier_update(
                     index,
                     BufferStateProvider::Indirect {
                         state: <span class="kw-2">&amp;</span>scope.state,
@@ -1195,7 +1191,6 @@
                     ResourceMetadataProvider::Indirect {
                         metadata: <span class="kw-2">&amp;</span>scope.metadata,
                     },
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
                 )
             }
         }
@@ -1238,10 +1233,7 @@
                 <span class="kw">continue</span>;
             }
             <span class="kw">unsafe </span>{
-                insert_or_barrier_update(
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                <span class="self">self</span>.insert_or_barrier_update(
                     index,
                     BufferStateProvider::Indirect {
                         state: <span class="kw-2">&amp;</span>scope.state,
@@ -1250,12 +1242,61 @@
                     ResourceMetadataProvider::Indirect {
                         metadata: <span class="kw-2">&amp;</span>scope.metadata,
                     },
-                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
                 )
             };
 
             <span class="kw">unsafe </span>{ scope.metadata.remove(index) };
         }
+    }
+
+    <span class="doccomment">/// If the resource isn't tracked
+    /// - Inserts the given resource.
+    /// - Uses the `start_state_provider` to populate `start_states`
+    /// - Uses either `end_state_provider` or `start_state_provider`
+    ///   to populate `current_states`.
+    ///
+    /// If the resource is tracked
+    /// - Inserts barriers from the state in `current_states`
+    ///   to the state provided by `start_state_provider`.
+    /// - Updates the `current_states` with either the state from
+    ///   `end_state_provider` or `start_state_provider`.
+    ///
+    /// Any barriers are added to the barrier vector.
+    ///
+    /// # Safety
+    ///
+    /// Indexes must be valid indexes into all arrays passed in
+    /// to this function, either directly or via metadata or provider structs.
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">unsafe fn </span>insert_or_barrier_update(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index: usize,
+        start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
+        end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
+        metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&gt;&gt;,
+    ) {
+        <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ <span class="self">self</span>.metadata.contains_unchecked(index) };
+
+        <span class="kw">if </span>!currently_owned {
+            <span class="kw">unsafe </span>{
+                insert(
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start),
+                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.end,
+                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
+                    index,
+                    start_state_provider,
+                    end_state_provider,
+                    metadata_provider,
+                )
+            };
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let </span>update_state_provider =
+            end_state_provider.unwrap_or_else(|| start_state_provider.clone());
+        <span class="kw">unsafe </span>{ barrier(<span class="kw-2">&amp;mut </span><span class="self">self</span>.end, index, start_state_provider, <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp) };
+
+        <span class="kw">unsafe </span>{ update(<span class="kw-2">&amp;mut </span><span class="self">self</span>.end, index, update_state_provider) };
     }
 }
 
@@ -1408,105 +1449,6 @@
             }
         }
     }
-}
-
-<span class="doccomment">/// Does an insertion operation if the index isn't tracked
-/// in the current metadata, otherwise merges the given state
-/// with the current state. If the merging would cause
-/// a conflict, returns that usage conflict.
-///
-/// # Safety
-///
-/// Indexes must be valid indexes into all arrays passed in
-/// to this function, either directly or via metadata or provider structs.
-</span><span class="attr">#[inline(always)]
-</span><span class="kw">unsafe fn </span>insert_or_merge(
-    start_states: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[BufferUses]&gt;,
-    current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Arc&lt;Buffer&gt;&gt;,
-    index32: u32,
-    index: usize,
-    state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
-    <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
-
-    <span class="kw">if </span>!currently_owned {
-        <span class="kw">unsafe </span>{
-            insert(
-                start_states,
-                current_states,
-                resource_metadata,
-                index,
-                state_provider,
-                <span class="prelude-val">None</span>,
-                metadata_provider,
-            )
-        };
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-    }
-
-    <span class="kw">unsafe </span>{
-        merge(
-            current_states,
-            index32,
-            index,
-            state_provider,
-            metadata_provider,
-        )
-    }
-}
-
-<span class="doccomment">/// If the resource isn't tracked
-/// - Inserts the given resource.
-/// - Uses the `start_state_provider` to populate `start_states`
-/// - Uses either `end_state_provider` or `start_state_provider`
-///   to populate `current_states`.
-///
-/// If the resource is tracked
-/// - Inserts barriers from the state in `current_states`
-///   to the state provided by `start_state_provider`.
-/// - Updates the `current_states` with either the state from
-///   `end_state_provider` or `start_state_provider`.
-///
-/// Any barriers are added to the barrier vector.
-///
-/// # Safety
-///
-/// Indexes must be valid indexes into all arrays passed in
-/// to this function, either directly or via metadata or provider structs.
-</span><span class="attr">#[inline(always)]
-</span><span class="kw">unsafe fn </span>insert_or_barrier_update(
-    start_states: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[BufferUses]&gt;,
-    current_states: <span class="kw-2">&amp;mut </span>[BufferUses],
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;Arc&lt;Buffer&gt;&gt;,
-    index: usize,
-    start_state_provider: BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;,
-    end_state_provider: <span class="prelude-ty">Option</span>&lt;BufferStateProvider&lt;<span class="lifetime">'_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Buffer&gt;&gt;,
-    barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;BufferUses&gt;&gt;,
-) {
-    <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
-
-    <span class="kw">if </span>!currently_owned {
-        <span class="kw">unsafe </span>{
-            insert(
-                start_states,
-                current_states,
-                resource_metadata,
-                index,
-                start_state_provider,
-                end_state_provider,
-                metadata_provider,
-            )
-        };
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">let </span>update_state_provider = end_state_provider.unwrap_or_else(|| start_state_provider.clone());
-    <span class="kw">unsafe </span>{ barrier(current_states, index, start_state_provider, barriers) };
-
-    <span class="kw">unsafe </span>{ update(current_states, index, update_state_provider) };
 }
 
 <span class="attr">#[inline(always)]
