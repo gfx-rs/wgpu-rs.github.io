@@ -2757,6 +2757,62 @@
 <a href="#2756" id="2756">2756</a>
 <a href="#2757" id="2757">2757</a>
 <a href="#2758" id="2758">2758</a>
+<a href="#2759" id="2759">2759</a>
+<a href="#2760" id="2760">2760</a>
+<a href="#2761" id="2761">2761</a>
+<a href="#2762" id="2762">2762</a>
+<a href="#2763" id="2763">2763</a>
+<a href="#2764" id="2764">2764</a>
+<a href="#2765" id="2765">2765</a>
+<a href="#2766" id="2766">2766</a>
+<a href="#2767" id="2767">2767</a>
+<a href="#2768" id="2768">2768</a>
+<a href="#2769" id="2769">2769</a>
+<a href="#2770" id="2770">2770</a>
+<a href="#2771" id="2771">2771</a>
+<a href="#2772" id="2772">2772</a>
+<a href="#2773" id="2773">2773</a>
+<a href="#2774" id="2774">2774</a>
+<a href="#2775" id="2775">2775</a>
+<a href="#2776" id="2776">2776</a>
+<a href="#2777" id="2777">2777</a>
+<a href="#2778" id="2778">2778</a>
+<a href="#2779" id="2779">2779</a>
+<a href="#2780" id="2780">2780</a>
+<a href="#2781" id="2781">2781</a>
+<a href="#2782" id="2782">2782</a>
+<a href="#2783" id="2783">2783</a>
+<a href="#2784" id="2784">2784</a>
+<a href="#2785" id="2785">2785</a>
+<a href="#2786" id="2786">2786</a>
+<a href="#2787" id="2787">2787</a>
+<a href="#2788" id="2788">2788</a>
+<a href="#2789" id="2789">2789</a>
+<a href="#2790" id="2790">2790</a>
+<a href="#2791" id="2791">2791</a>
+<a href="#2792" id="2792">2792</a>
+<a href="#2793" id="2793">2793</a>
+<a href="#2794" id="2794">2794</a>
+<a href="#2795" id="2795">2795</a>
+<a href="#2796" id="2796">2796</a>
+<a href="#2797" id="2797">2797</a>
+<a href="#2798" id="2798">2798</a>
+<a href="#2799" id="2799">2799</a>
+<a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a>
+<a href="#2803" id="2803">2803</a>
+<a href="#2804" id="2804">2804</a>
+<a href="#2805" id="2805">2805</a>
+<a href="#2806" id="2806">2806</a>
+<a href="#2807" id="2807">2807</a>
+<a href="#2808" id="2808">2808</a>
+<a href="#2809" id="2809">2809</a>
+<a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
     ShouldConflictOnFullDuplicate, StandardFilterableTriggeringRule,
@@ -3414,6 +3470,14 @@
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::PrimaryExpr, lexer);
+        <span class="kw">const fn </span>literal_ray_flag&lt;<span class="lifetime">'b</span>&gt;(flag: <span class="kw">crate</span>::RayFlag) -&gt; ast::Expression&lt;<span class="lifetime">'b</span>&gt; {
+            ast::Expression::Literal(ast::Literal::Number(Number::U32(flag.bits())))
+        }
+        <span class="kw">const fn </span>literal_ray_intersection&lt;<span class="lifetime">'b</span>&gt;(
+            intersection: <span class="kw">crate</span>::RayQueryIntersection,
+        ) -&gt; ast::Expression&lt;<span class="lifetime">'b</span>&gt; {
+            ast::Expression::Literal(ast::Literal::Number(Number::U32(intersection <span class="kw">as </span>u32)))
+        }
 
         <span class="kw">let </span>expr = <span class="kw">match </span>lexer.peek() {
             (Token::Paren(<span class="string">'('</span>), <span class="kw">_</span>) =&gt; {
@@ -3446,15 +3510,63 @@
             }
             (Token::Word(<span class="string">"RAY_FLAG_NONE"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
-                ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">0</span>)))
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::empty())
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_FORCE_OPAQUE"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::FORCE_OPAQUE)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_FORCE_NO_OPAQUE"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::FORCE_NO_OPAQUE)
             }
             (Token::Word(<span class="string">"RAY_FLAG_TERMINATE_ON_FIRST_HIT"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
-                ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">4</span>)))
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::TERMINATE_ON_FIRST_HIT)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_SKIP_CLOSEST_HIT_SHADER"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::SKIP_CLOSEST_HIT_SHADER)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_CULL_BACK_FACING"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::CULL_BACK_FACING)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_CULL_FRONT_FACING"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::CULL_FRONT_FACING)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_CULL_OPAQUE"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::CULL_OPAQUE)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_CULL_NO_OPAQUE"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::CULL_NO_OPAQUE)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_SKIP_TRIANGLES"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::SKIP_TRIANGLES)
+            }
+            (Token::Word(<span class="string">"RAY_FLAG_SKIP_AABBS"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_flag(<span class="kw">crate</span>::RayFlag::SKIP_AABBS)
             }
             (Token::Word(<span class="string">"RAY_QUERY_INTERSECTION_NONE"</span>), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let _ </span>= lexer.next();
-                ast::Expression::Literal(ast::Literal::Number(Number::U32(<span class="number">0</span>)))
+                literal_ray_intersection(<span class="kw">crate</span>::RayQueryIntersection::None)
+            }
+            (Token::Word(<span class="string">"RAY_QUERY_INTERSECTION_TRIANGLE"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_intersection(<span class="kw">crate</span>::RayQueryIntersection::Triangle)
+            }
+            (Token::Word(<span class="string">"RAY_QUERY_INTERSECTION_GENERATED"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_intersection(<span class="kw">crate</span>::RayQueryIntersection::Generated)
+            }
+            (Token::Word(<span class="string">"RAY_QUERY_INTERSECTION_AABB"</span>), <span class="kw">_</span>) =&gt; {
+                <span class="kw">let _ </span>= lexer.next();
+                literal_ray_intersection(<span class="kw">crate</span>::RayQueryIntersection::Aabb)
             }
             (Token::Word(word), span) =&gt; {
                 <span class="kw">let </span>start = lexer.start_byte_offset();
