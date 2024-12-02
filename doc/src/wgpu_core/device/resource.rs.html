@@ -3655,6 +3655,10 @@
 <a href="#3654" id="3654">3654</a>
 <a href="#3655" id="3655">3655</a>
 <a href="#3656" id="3656">3656</a>
+<a href="#3657" id="3657">3657</a>
+<a href="#3658" id="3658">3658</a>
+<a href="#3659" id="3659">3659</a>
+<a href="#3660" id="3660">3660</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4154,7 +4158,9 @@
             <span class="self">self</span>.require_downlevel_flags(wgt::DownlevelFlags::UNRESTRICTED_INDEX_BUFFER)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span>desc.usage.is_empty() || desc.usage.contains_invalid_bits() {
+        <span class="kw">if </span>desc.usage.is_empty()
+            || desc.usage | wgt::BufferUsages::all() != wgt::BufferUsages::all()
+        {
             <span class="kw">return </span><span class="prelude-val">Err</span>(resource::CreateBufferError::InvalidUsage(desc.usage));
         }
 
@@ -4388,7 +4394,9 @@
 
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>desc.usage.is_empty() || desc.usage.contains_invalid_bits() {
+        <span class="kw">if </span>desc.usage.is_empty()
+            || desc.usage | wgt::TextureUsages::all() != wgt::TextureUsages::all()
+        {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidUsage(desc.usage));
         }
 
@@ -5460,7 +5468,7 @@
                     })<span class="question-mark">?</span>;
             }
 
-            <span class="kw">if </span>entry.visibility.contains_invalid_bits() {
+            <span class="kw">if </span>entry.visibility | wgt::ShaderStages::all() != wgt::ShaderStages::all() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
                     binding_model::CreateBindGroupLayoutError::InvalidVisibility(entry.visibility),
                 );
@@ -6625,7 +6633,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(cs) = cs.as_ref() {
                 target_specified = <span class="bool-val">true</span>;
                 <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
-                    <span class="kw">if </span>cs.write_mask.contains_invalid_bits() {
+                    <span class="kw">if </span>cs.write_mask | wgt::ColorWrites::all() != wgt::ColorWrites::all() {
                         <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidWriteMask(
                             cs.write_mask,
                         ));

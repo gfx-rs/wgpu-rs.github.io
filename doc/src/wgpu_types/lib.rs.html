@@ -7674,46 +7674,6 @@
 <a href="#7673" id="7673">7673</a>
 <a href="#7674" id="7674">7674</a>
 <a href="#7675" id="7675">7675</a>
-<a href="#7676" id="7676">7676</a>
-<a href="#7677" id="7677">7677</a>
-<a href="#7678" id="7678">7678</a>
-<a href="#7679" id="7679">7679</a>
-<a href="#7680" id="7680">7680</a>
-<a href="#7681" id="7681">7681</a>
-<a href="#7682" id="7682">7682</a>
-<a href="#7683" id="7683">7683</a>
-<a href="#7684" id="7684">7684</a>
-<a href="#7685" id="7685">7685</a>
-<a href="#7686" id="7686">7686</a>
-<a href="#7687" id="7687">7687</a>
-<a href="#7688" id="7688">7688</a>
-<a href="#7689" id="7689">7689</a>
-<a href="#7690" id="7690">7690</a>
-<a href="#7691" id="7691">7691</a>
-<a href="#7692" id="7692">7692</a>
-<a href="#7693" id="7693">7693</a>
-<a href="#7694" id="7694">7694</a>
-<a href="#7695" id="7695">7695</a>
-<a href="#7696" id="7696">7696</a>
-<a href="#7697" id="7697">7697</a>
-<a href="#7698" id="7698">7698</a>
-<a href="#7699" id="7699">7699</a>
-<a href="#7700" id="7700">7700</a>
-<a href="#7701" id="7701">7701</a>
-<a href="#7702" id="7702">7702</a>
-<a href="#7703" id="7703">7703</a>
-<a href="#7704" id="7704">7704</a>
-<a href="#7705" id="7705">7705</a>
-<a href="#7706" id="7706">7706</a>
-<a href="#7707" id="7707">7707</a>
-<a href="#7708" id="7708">7708</a>
-<a href="#7709" id="7709">7709</a>
-<a href="#7710" id="7710">7710</a>
-<a href="#7711" id="7711">7711</a>
-<a href="#7712" id="7712">7712</a>
-<a href="#7713" id="7713">7713</a>
-<a href="#7714" id="7714">7714</a>
-<a href="#7715" id="7715">7715</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -7738,47 +7698,6 @@
 <span class="kw">pub mod </span>math;
 
 <span class="kw">pub use </span>counters::<span class="kw-2">*</span>;
-
-<span class="comment">// Use this macro instead of the one provided by the bitflags_serde_shim crate
-// because the latter produces an error when deserializing bits that are not
-// specified in the bitflags, while we want deserialization to succeed and
-// and unspecified bits to lead to errors handled in wgpu-core.
-// Note that plainly deriving Serialize and Deserialized would have a similar
-// behavior to this macro (unspecified bit do not produce an error).
-</span><span class="macro">macro_rules! </span>impl_bitflags {
-    (<span class="macro-nonterminal">$name</span>:ident) =&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-        </span><span class="kw">impl </span>serde::Serialize <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
-            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
-            <span class="kw">where
-                </span>S: serde::Serializer,
-            {
-                <span class="self">self</span>.bits().serialize(serializer)
-            }
-        }
-
-        <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-        </span><span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; serde::Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
-            <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="macro-nonterminal">$name</span>, D::Error&gt;
-            <span class="kw">where
-                </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
-            {
-                <span class="kw">let </span>value = &lt;<span class="kw">_ as </span>serde::Deserialize&lt;<span class="lifetime">'de</span>&gt;&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$name::from_bits_retain</span>(value))
-            }
-        }
-
-        <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
-            <span class="doccomment">/// Returns true if the bitflags contains bits that are not part of
-            /// the bitflags definition.
-            </span><span class="attr">#[must_use]
-            </span><span class="kw">pub fn </span>contains_invalid_bits(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-                <span class="kw">let </span>all = <span class="self">Self</span>::all().bits();
-                (<span class="self">self</span>.bits() | all) != all
-            }
-        }
-    };
-}
 
 <span class="doccomment">/// Integral type used for buffer offsets.
 </span><span class="kw">pub type </span>BufferAddress = u64;
@@ -7872,6 +7791,8 @@
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Represents the backends that wgpu will use.
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>Backends: u32 {
         <span class="doccomment">/// Supported on Windows, Linux/Android, and macOS/iOS via Vulkan Portability (with the Vulkan feature enabled)
@@ -7913,8 +7834,6 @@
         <span class="self">Self</span>::all()
     }
 }
-
-<span class="macro">impl_bitflags!</span>(Backends);
 
 <span class="kw">impl </span>From&lt;Backend&gt; <span class="kw">for </span>Backends {
     <span class="kw">fn </span>from(backend: Backend) -&gt; <span class="self">Self </span>{
@@ -7965,8 +7884,9 @@
     /// Corresponds to [WebGPU `GPUFeatureName`](
     /// https://gpuweb.github.io/gpuweb/#enumdef-gpufeaturename).
     </span><span class="attr">#[repr(transparent)]
-    #[derive(Default)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+    #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>Features: u64 {
         <span class="comment">//
         // ---- Start numbering at 1 &lt;&lt; 0 ----
@@ -8697,8 +8617,6 @@
     }
 }
 
-<span class="macro">impl_bitflags!</span>(Features);
-
 <span class="kw">impl </span>Features {
     <span class="doccomment">/// Mask of all features which are part of the upstream WebGPU standard.
     </span><span class="attr">#[must_use]
@@ -9318,7 +9236,9 @@
     ///
     /// You can check whether a set of flags is compliant through the
     /// [`DownlevelCapabilities::is_webgpu_compliant()`] function.
-    </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     </span><span class="kw">pub struct </span>DownlevelFlags: u32 {
         <span class="doccomment">/// The device supports compiling and using compute shaders.
         ///
@@ -9468,8 +9388,6 @@
         </span><span class="kw">const </span>VERTEX_AND_INSTANCE_INDEX_RESPECTS_RESPECTIVE_FIRST_VALUE_IN_INDIRECT_DRAW = <span class="number">1 </span>&lt;&lt; <span class="number">23</span>;
     }
 }
-
-<span class="macro">impl_bitflags!</span>(DownlevelFlags);
 
 <span class="kw">impl </span>DownlevelFlags {
     <span class="doccomment">/// All flags that indicate if the backend is WebGPU compliant
@@ -9634,6 +9552,8 @@
     /// Corresponds to [WebGPU `GPUShaderStageFlags`](
     /// https://gpuweb.github.io/gpuweb/#typedefdef-gpushaderstageflags).
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>ShaderStages: u32 {
         <span class="doccomment">/// Binding is not visible from any shader stage.
@@ -9648,8 +9568,6 @@
         </span><span class="kw">const </span>VERTEX_FRAGMENT = <span class="self">Self</span>::VERTEX.bits() | <span class="self">Self</span>::FRAGMENT.bits();
     }
 }
-
-<span class="macro">impl_bitflags!</span>(ShaderStages);
 
 <span class="doccomment">/// Dimensions of a particular texture view.
 ///
@@ -10080,6 +9998,8 @@
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Feature flags for a texture format.
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>TextureFormatFeatureFlags: u32 {
         <span class="doccomment">/// If not present, the texture can't be sampled with a filtering sampler.
@@ -10132,8 +10052,6 @@
             .collect()
     }
 }
-
-<span class="macro">impl_bitflags!</span>(TextureFormatFeatureFlags);
 
 <span class="doccomment">/// Features supported by a given texture format
 ///
@@ -12387,6 +12305,8 @@
     /// Corresponds to [WebGPU `GPUColorWriteFlags`](
     /// https://gpuweb.github.io/gpuweb/#typedefdef-gpucolorwriteflags).
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>ColorWrites: u32 {
         <span class="doccomment">/// Enable red channel writes
@@ -12403,8 +12323,6 @@
         </span><span class="kw">const </span>ALL = <span class="self">Self</span>::RED.bits() | <span class="self">Self</span>::GREEN.bits() | <span class="self">Self</span>::BLUE.bits() | <span class="self">Self</span>::ALPHA.bits();
     }
 }
-
-<span class="macro">impl_bitflags!</span>(ColorWrites);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>ColorWrites {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -12999,6 +12917,8 @@
     /// Corresponds to [WebGPU `GPUBufferUsageFlags`](
     /// https://gpuweb.github.io/gpuweb/#typedefdef-gpubufferusageflags).
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>BufferUsages: u32 {
         <span class="doccomment">/// Allow a buffer to be mapped for reading using [`Buffer::map_async`] + [`Buffer::get_mapped_range`].
@@ -13037,8 +12957,6 @@
         </span><span class="kw">const </span>TLAS_INPUT = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
     }
 }
-
-<span class="macro">impl_bitflags!</span>(BufferUsages);
 
 <span class="doccomment">/// Describes a [`Buffer`](../wgpu/struct.Buffer.html).
 ///
@@ -13222,6 +13140,8 @@
     /// Corresponds to [WebGPU `GPUTextureUsageFlags`](
     /// https://gpuweb.github.io/gpuweb/#typedefdef-gputextureusageflags).
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>TextureUsages: u32 {
         <span class="doccomment">/// Allows a texture to be the source in a [`CommandEncoder::copy_texture_to_buffer`] or
@@ -13238,8 +13158,6 @@
         </span><span class="kw">const </span>RENDER_ATTACHMENT = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 }
-
-<span class="macro">impl_bitflags!</span>(TextureUsages);
 
 <span class="doccomment">/// Defines the capabilities of a given surface and adapter.
 </span><span class="attr">#[derive(Debug)]
@@ -14968,6 +14886,8 @@
     /// the first 8 bytes being the primitive out value, the last 8
     /// bytes being the compute shader invocation count.
     </span><span class="attr">#[repr(transparent)]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>PipelineStatisticsTypes : u8 {
         <span class="doccomment">/// Amount of times the vertex shader is ran. Accounts for
@@ -14989,8 +14909,6 @@
         </span><span class="kw">const </span>COMPUTE_SHADER_INVOCATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 }
-
-<span class="macro">impl_bitflags!</span>(PipelineStatisticsTypes);
 
 <span class="doccomment">/// Argument buffer layout for draw_indirect commands.
 </span><span class="attr">#[repr(C)]
@@ -15299,7 +15217,9 @@
 
 <span class="macro">bitflags::bitflags!</span>(
     <span class="doccomment">/// Flags for acceleration structures
-    </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>AccelerationStructureFlags: u8 {
         <span class="doccomment">/// Allow for incremental updates (no change in size), currently this is unimplemented
         /// and will build as normal (this is fine, update vs build should be unnoticeable)
@@ -15317,11 +15237,12 @@
         </span><span class="kw">const </span>LOW_MEMORY = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 );
-<span class="macro">impl_bitflags!</span>(AccelerationStructureFlags);
 
 <span class="macro">bitflags::bitflags!</span>(
     <span class="doccomment">/// Flags for acceleration structure geometries
-    </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>AccelerationStructureGeometryFlags: u8 {
         <span class="doccomment">/// Is OPAQUE (is there no alpha test) recommended as currently in naga there is no
         /// candidate intersections yet so currently BLASes without this flag will not have hits.
@@ -15336,7 +15257,6 @@
         </span><span class="kw">const </span>NO_DUPLICATE_ANY_HIT_INVOCATION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
     }
 );
-<span class="macro">impl_bitflags!</span>(AccelerationStructureGeometryFlags);
 
 <span class="doccomment">/// Alignment requirement for transform buffers used in acceleration structure builds
 </span><span class="kw">pub const </span>TRANSFORM_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
