@@ -989,6 +989,40 @@
 <a href="#988" id="988">988</a>
 <a href="#989" id="989">989</a>
 <a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
@@ -1004,6 +1038,7 @@
 <span class="kw">mod </span>timestamp_writes;
 <span class="kw">mod </span>transfer;
 
+<span class="kw">use </span>std::mem::{<span class="self">self</span>, ManuallyDrop};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::clear::clear_texture;
@@ -1038,7 +1073,6 @@
 <span class="kw">const </span>PUSH_CONSTANT_CLEAR_ARRAY: <span class="kw-2">&amp;</span>[u32] = <span class="kw-2">&amp;</span>[<span class="number">0_u32</span>; <span class="number">64</span>];
 
 <span class="doccomment">/// The current state of a [`CommandBuffer`].
-</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>CommandEncoderStatus {
     <span class="doccomment">/// Ready to record commands. An encoder's initial state.
     ///
@@ -1051,7 +1085,7 @@
     ///
     /// [`command_encoder_clear_buffer`]: Global::command_encoder_clear_buffer
     /// [`compute_pass_end`]: Global::compute_pass_end
-    </span>Recording,
+    </span>Recording(CommandBufferMutable),
 
     <span class="doccomment">/// Locked by a render or compute pass.
     ///
@@ -1059,9 +1093,9 @@
     /// and exited when the pass is ended.
     ///
     /// As long as the command encoder is locked, any command building operation on it will fail
-    /// and put the encoder into the [`CommandEncoderStatus::Error`] state.
+    /// and put the encoder into the [`Self::Error`] state.
     /// See &lt;https://www.w3.org/TR/webgpu/#encoder-state-locked&gt;
-    </span>Locked,
+    </span>Locked(CommandBufferMutable),
 
     <span class="doccomment">/// Command recording is complete, and the buffer is ready for submission.
     ///
@@ -1070,19 +1104,145 @@
     ///
     /// [`Global::queue_submit`] drops command buffers unless they are
     /// in this state.
-    </span>Finished,
+    </span>Finished(CommandBufferMutable),
 
     <span class="doccomment">/// An error occurred while recording a compute or render pass.
     ///
     /// When a `CommandEncoder` is left in this state, we have also
     /// returned an error result from the function that encountered
     /// the problem. Future attempts to use the encoder (for example,
-    /// calls to [`CommandBufferMutable::check_recording`]) will also return
-    /// errors.
-    ///
-    /// Calling [`Global::command_encoder_finish`] in this state
-    /// discards the command buffer under construction.
+    /// calls to [`Self::record`]) will also return errors.
     </span>Error,
+}
+
+<span class="kw">impl </span>CommandEncoderStatus {
+    <span class="doccomment">/// Checks that the encoder is in the [`Self::Recording`] state.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>record(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, CommandEncoderError&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(RecordingGuard { inner: <span class="self">self </span>}),
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Error;
+                <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
+            }
+            <span class="self">Self</span>::Finished(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+    </span><span class="kw">fn </span>get_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>CommandBufferMutable, CommandEncoderError&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Locked(inner) | <span class="self">Self</span>::Finished(inner) | <span class="self">Self</span>::Recording(inner) =&gt; <span class="prelude-val">Ok</span>(inner),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+
+    <span class="doccomment">/// Locks the encoder by putting it in the [`Self::Locked`] state.
+    ///
+    /// Call [`Self::unlock_encoder`] to put the [`CommandBuffer`] back into the [`Self::Recording`] state.
+    </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+            <span class="self">Self</span>::Recording(inner) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Locked(inner);
+                <span class="prelude-val">Ok</span>(())
+            }
+            <span class="self">Self</span>::Finished(inner) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+            }
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Locked),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+
+    <span class="doccomment">/// Unlocks the [`CommandBuffer`] and puts it back into the [`Self::Recording`] state.
+    ///
+    /// This function is the unlocking counterpart to [`Self::lock_encoder`].
+    ///
+    /// It is only valid to call this function if the encoder is in the [`Self::Locked`] state.
+    </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecordingGuard&lt;<span class="lifetime">'_</span>&gt;, CommandEncoderError&gt; {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+            <span class="self">Self</span>::Locked(inner) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Recording(inner);
+                <span class="prelude-val">Ok</span>(RecordingGuard { inner: <span class="self">self </span>})
+            }
+            <span class="self">Self</span>::Finished(inner) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+            }
+            <span class="self">Self</span>::Recording(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+
+    <span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
+        <span class="kw">match </span>mem::replace(<span class="self">self</span>, <span class="self">Self</span>::Error) {
+            <span class="self">Self</span>::Recording(<span class="kw-2">mut </span>inner) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = inner.encoder.close(device) {
+                    <span class="prelude-val">Err</span>(e.into())
+                } <span class="kw">else </span>{
+                    <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+                    <span class="comment">// Note: if we want to stop tracking the swapchain texture view,
+                    // this is the place to do it.
+                    </span><span class="prelude-val">Ok</span>(())
+                }
+            }
+            <span class="self">Self</span>::Finished(inner) =&gt; {
+                <span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Finished(inner);
+                <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording)
+            }
+            <span class="self">Self</span>::Locked(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Locked),
+            <span class="self">Self</span>::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
+        }
+    }
+}
+
+<span class="doccomment">/// A guard to enforce error reporting, for a [`CommandBuffer`] in the [`Recording`] state.
+///
+/// An [`RecordingGuard`] holds a mutable reference to a [`CommandEncoderStatus`] that
+/// has been verified to be in the [`Recording`] state. The [`RecordingGuard`] dereferences
+/// mutably to the [`CommandBufferMutable`] that the status holds.
+///
+/// Dropping an [`RecordingGuard`] sets the [`CommandBuffer`]'s state to
+/// [`CommandEncoderStatus::Error`]. If your use of the guard was
+/// successful, call its [`mark_successful`] method to dispose of it.
+///
+/// [`Recording`]: CommandEncoderStatus::Recording
+/// [`mark_successful`]: Self::mark_successful
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+    inner: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>CommandEncoderStatus,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>mark_successful(<span class="self">self</span>) {
+        mem::forget(<span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Drop <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw-2">*</span><span class="self">self</span>.inner = CommandEncoderStatus::Error;
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::Deref <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Target = CommandBufferMutable;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="self">self</span>.inner {
+            CommandEncoderStatus::Recording(command_buffer_mutable) =&gt; command_buffer_mutable,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::DerefMut <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+        <span class="kw">match </span><span class="self">self</span>.inner {
+            CommandEncoderStatus::Recording(command_buffer_mutable) =&gt; command_buffer_mutable,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
 }
 
 <span class="doccomment">/// A raw [`CommandEncoder`][rce], and the raw [`CommandBuffer`][rcb]s built from it.
@@ -1113,7 +1273,7 @@
     ///
     /// [`CommandEncoder`]: hal::Api::CommandEncoder
     /// [`CommandAllocator`]: crate::command::CommandAllocator
-    </span>raw: Box&lt;<span class="kw">dyn </span>hal::DynCommandEncoder&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) raw: ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynCommandEncoder&gt;&gt;,
 
     <span class="doccomment">/// All the raw command buffers for our owning [`CommandBuffer`], in
     /// submission order.
@@ -1126,7 +1286,9 @@
     ///
     /// [CE::ra]: hal::CommandEncoder::reset_all
     /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
-    </span>list: Vec&lt;Box&lt;<span class="kw">dyn </span>hal::DynCommandBuffer&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) list: Vec&lt;Box&lt;<span class="kw">dyn </span>hal::DynCommandBuffer&gt;&gt;,
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&gt;,
 
     <span class="doccomment">/// True if `raw` is in the "recording" state.
     ///
@@ -1134,9 +1296,9 @@
     /// details on the states `raw` can be in.
     ///
     /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
-    </span>is_open: bool,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) is_open: bool,
 
-    hal_label: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) hal_label: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="comment">//TODO: handle errors better
@@ -1197,16 +1359,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Discard the command buffer under construction, if any.
-    ///
-    /// The underlying hal encoder is closed, if it was recording.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>discard(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span><span class="self">self</span>.is_open {
-            <span class="self">self</span>.is_open = <span class="bool-val">false</span>;
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.discard_encoding() };
-        }
-    }
-
     <span class="doccomment">/// Begin recording a new command buffer, if we haven't already.
     ///
     /// The underlying hal encoder is put in the "recording" state.
@@ -1236,11 +1388,24 @@
     }
 }
 
+<span class="kw">impl </span>Drop <span class="kw">for </span>CommandEncoder {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.is_open {
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.discard_encoding() };
+        }
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.raw.reset_all(mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.list));
+        }
+        <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.raw anymore after this point.
+        </span><span class="kw">let </span>raw = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.raw) };
+        <span class="self">self</span>.device.command_allocator.release_encoder(raw);
+    }
+}
+
 <span class="doccomment">/// Look at the documentation for [`CommandBufferMutable`] for an explanation of
 /// the fields in this struct. This is the "built" counterpart to that type.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BakedCommands {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) encoder: Box&lt;<span class="kw">dyn </span>hal::DynCommandEncoder&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) list: Vec&lt;Box&lt;<span class="kw">dyn </span>hal::DynCommandBuffer&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) encoder: CommandEncoder,
     <span class="kw">pub</span>(<span class="kw">crate</span>) trackers: Tracker,
     buffer_memory_init_actions: Vec&lt;BufferInitTrackerAction&gt;,
     texture_memory_actions: CommandBufferTextureMemoryActions,
@@ -1253,9 +1418,6 @@
     ///
     /// [`wgpu_hal::Api::CommandBuffer`]: hal::Api::CommandBuffer
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) encoder: CommandEncoder,
-
-    <span class="doccomment">/// The current state of this command buffer's encoder.
-    </span>status: CommandEncoderStatus,
 
     <span class="doccomment">/// All the resources that the commands recorded so far have referred to.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trackers: Tracker,
@@ -1289,103 +1451,12 @@
         <span class="prelude-val">Ok</span>((encoder, tracker))
     }
 
-    <span class="kw">fn </span>lock_encoder_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lock: bool) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.status {
-            CommandEncoderStatus::Recording =&gt; {
-                <span class="kw">if </span>lock {
-                    <span class="self">self</span>.status = CommandEncoderStatus::Locked;
-                }
-                <span class="prelude-val">Ok</span>(())
-            }
-            CommandEncoderStatus::Locked =&gt; {
-                <span class="comment">// Any operation on a locked encoder is required to put it into the invalid/error state.
-                // See https://www.w3.org/TR/webgpu/#encoder-state-locked
-                </span><span class="self">self</span>.encoder.discard();
-                <span class="self">self</span>.status = CommandEncoderStatus::Error;
-                <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
-            }
-            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
-            CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-        }
-    }
-
-    <span class="doccomment">/// Checks that the encoder is in the [`CommandEncoderStatus::Recording`] state.
-    </span><span class="kw">fn </span>check_recording(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="self">self</span>.lock_encoder_impl(<span class="bool-val">false</span>)
-    }
-
-    <span class="doccomment">/// Locks the encoder by putting it in the [`CommandEncoderStatus::Locked`] state.
-    ///
-    /// Call [`CommandBufferMutable::unlock_encoder`] to put the [`CommandBuffer`] back into the [`CommandEncoderStatus::Recording`] state.
-    </span><span class="kw">fn </span>lock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="self">self</span>.lock_encoder_impl(<span class="bool-val">true</span>)
-    }
-
-    <span class="doccomment">/// Unlocks the [`CommandBuffer`] and puts it back into the [`CommandEncoderStatus::Recording`] state.
-    ///
-    /// This function is the counterpart to [`CommandBufferMutable::lock_encoder`].
-    /// It is only valid to call this function if the encoder is in the [`CommandEncoderStatus::Locked`] state.
-    </span><span class="kw">fn </span>unlock_encoder(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.status {
-            CommandEncoderStatus::Recording =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-            CommandEncoderStatus::Locked =&gt; {
-                <span class="self">self</span>.status = CommandEncoderStatus::Recording;
-                <span class="prelude-val">Ok</span>(())
-            }
-            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-            CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-        }
-    }
-
-    <span class="kw">pub fn </span>check_finished(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.status {
-            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(CommandEncoderError::Invalid),
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), CommandEncoderError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.status {
-            CommandEncoderStatus::Recording =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.encoder.close(device) {
-                    <span class="prelude-val">Err</span>(e.into())
-                } <span class="kw">else </span>{
-                    <span class="self">self</span>.status = CommandEncoderStatus::Finished;
-                    <span class="comment">// Note: if we want to stop tracking the swapchain texture view,
-                    // this is the place to do it.
-                    </span><span class="prelude-val">Ok</span>(())
-                }
-            }
-            CommandEncoderStatus::Locked =&gt; {
-                <span class="self">self</span>.encoder.discard();
-                <span class="self">self</span>.status = CommandEncoderStatus::Error;
-                <span class="prelude-val">Err</span>(CommandEncoderError::Locked)
-            }
-            CommandEncoderStatus::Finished =&gt; <span class="prelude-val">Err</span>(CommandEncoderError::NotRecording),
-            CommandEncoderStatus::Error =&gt; {
-                <span class="self">self</span>.encoder.discard();
-                <span class="prelude-val">Err</span>(CommandEncoderError::Invalid)
-            }
-        }
-    }
-
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_baked_commands(<span class="self">self</span>) -&gt; BakedCommands {
         BakedCommands {
-            encoder: <span class="self">self</span>.encoder.raw,
-            list: <span class="self">self</span>.encoder.list,
+            encoder: <span class="self">self</span>.encoder,
             trackers: <span class="self">self</span>.trackers,
             buffer_memory_init_actions: <span class="self">self</span>.buffer_memory_init_actions,
             texture_memory_actions: <span class="self">self</span>.texture_memory_actions,
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy(<span class="kw-2">mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) {
-        <span class="self">self</span>.encoder.discard();
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.encoder.raw.reset_all(<span class="self">self</span>.encoder.list);
-        }
-        <span class="kw">unsafe </span>{
-            device.raw().destroy_command_encoder(<span class="self">self</span>.encoder.raw);
         }
     }
 }
@@ -1420,15 +1491,12 @@
     /// When this is submitted, dropped, or destroyed, its contents are
     /// extracted into a [`BakedCommands`] by
     /// [`CommandBufferMutable::into_baked_commands`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Mutex&lt;<span class="prelude-ty">Option</span>&lt;CommandBufferMutable&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Mutex&lt;CommandEncoderStatus&gt;,
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>CommandBuffer {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">resource_log!</span>(<span class="string">"Drop {}"</span>, <span class="self">self</span>.error_ident());
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = <span class="self">self</span>.data.lock().take() {
-            data.destroy(<span class="kw-2">&amp;</span><span class="self">self</span>.device);
-        }
     }
 }
 
@@ -1444,14 +1512,14 @@
             label: label.to_string(),
             data: Mutex::new(
                 rank::COMMAND_BUFFER_DATA,
-                <span class="prelude-val">Some</span>(CommandBufferMutable {
+                CommandEncoderStatus::Recording(CommandBufferMutable {
                     encoder: CommandEncoder {
-                        raw: encoder,
-                        is_open: <span class="bool-val">false</span>,
+                        raw: ManuallyDrop::new(encoder),
                         list: Vec::new(),
+                        device: device.clone(),
+                        is_open: <span class="bool-val">false</span>,
                         hal_label: label.to_hal(device.instance_flags).map(str::to_owned),
                     },
-                    status: CommandEncoderStatus::Recording,
                     trackers: Tracker::new(),
                     buffer_memory_init_actions: Default::default(),
                     texture_memory_actions: Default::default(),
@@ -1474,7 +1542,7 @@
             device: device.clone(),
             support_clear_texture: device.features.contains(wgt::Features::CLEAR_TEXTURE),
             label: label.to_string(),
-            data: Mutex::new(rank::COMMAND_BUFFER_DATA, <span class="prelude-val">None</span>),
+            data: Mutex::new(rank::COMMAND_BUFFER_DATA, CommandEncoderStatus::Error),
         }
     }
 
@@ -1556,19 +1624,14 @@
 }
 
 <span class="kw">impl </span>CommandBuffer {
-    <span class="kw">pub fn </span>try_get&lt;<span class="lifetime">'a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;parking_lot::MappedMutexGuard&lt;<span class="lifetime">'a</span>, CommandBufferMutable&gt;, InvalidResourceError&gt; {
-        <span class="kw">let </span>g = <span class="self">self</span>.data.lock();
-        <span class="kw">crate</span>::lock::MutexGuard::try_map(g, |data| data.as_mut())
-            .map_err(|<span class="kw">_</span>| InvalidResourceError(<span class="self">self</span>.error_ident()))
-    }
-
-    <span class="kw">pub fn </span>try_take&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CommandBufferMutable, InvalidResourceError&gt; {
-        <span class="self">self</span>.data
-            .lock()
-            .take()
-            .ok_or_else(|| InvalidResourceError(<span class="self">self</span>.error_ident()))
+    <span class="kw">pub fn </span>take_finished&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;CommandBufferMutable, InvalidResourceError&gt; {
+        <span class="kw">let </span>status = mem::replace(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.lock(), CommandEncoderStatus::Error);
+        <span class="kw">match </span>status {
+            CommandEncoderStatus::Finished(command_buffer_mutable) =&gt; <span class="prelude-val">Ok</span>(command_buffer_mutable),
+            CommandEncoderStatus::Recording(<span class="kw">_</span>)
+            | CommandEncoderStatus::Locked(<span class="kw">_</span>)
+            | CommandEncoderStatus::Error =&gt; <span class="prelude-val">Err</span>(InvalidResourceError(<span class="self">self</span>.error_ident())),
+        }
     }
 }
 
@@ -1668,11 +1731,7 @@
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
 
-        <span class="kw">let </span>error = <span class="kw">match </span>cmd_buf
-            .try_get()
-            .map_err(|e| e.into())
-            .and_then(|<span class="kw-2">mut </span>cmd_buf_data| cmd_buf_data.finish(<span class="kw-2">&amp;</span>cmd_buf.device))
-        {
+        <span class="kw">let </span>error = <span class="kw">match </span>cmd_buf.data.lock().finish(<span class="kw-2">&amp;</span>cmd_buf.device) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Some</span>(e),
         };
@@ -1691,8 +1750,9 @@
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -1709,6 +1769,8 @@
                 cmd_buf_raw.begin_debug_marker(label);
             }
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1723,8 +1785,9 @@
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -1741,6 +1804,8 @@
                 cmd_buf_raw.insert_debug_marker(label);
             }
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1754,8 +1819,9 @@
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -1772,6 +1838,8 @@
                 cmd_buf_raw.end_debug_marker();
             }
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 

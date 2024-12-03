@@ -489,6 +489,15 @@
 <a href="#488" id="488">488</a>
 <a href="#489" id="489">489</a>
 <a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -582,8 +591,9 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -629,6 +639,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
         <span class="kw">if </span>offset == end_offset {
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring fill_buffer of size 0"</span>);
+
+            cmd_buf_data_guard.mark_successful();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -648,6 +660,8 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             cmd_buf_raw.transition_buffers(dst_barrier.as_slice());
             cmd_buf_raw.clear_buffer(dst_raw, offset..end_offset);
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -665,8 +679,9 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -734,7 +749,10 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             <span class="kw-2">&amp;</span>device.alignments,
             device.zero_buffer.as_ref(),
             <span class="kw-2">&amp;</span>snatch_guard,
-        )
+        )<span class="question-mark">?</span>;
+
+        cmd_buf_data_guard.mark_successful();
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

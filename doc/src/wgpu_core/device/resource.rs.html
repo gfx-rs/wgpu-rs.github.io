@@ -3656,9 +3656,6 @@
 <a href="#3655" id="3655">3655</a>
 <a href="#3656" id="3656">3656</a>
 <a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a>
-<a href="#3660" id="3660">3660</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3814,7 +3811,6 @@
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.zero_buffer) };
         <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.fence anymore after this point.
         </span><span class="kw">let </span>fence = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fence.write()) };
-        <span class="self">self</span>.command_allocator.dispose(<span class="self">self</span>.raw.as_ref());
         <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
         </span><span class="self">self</span>.indirect_validation
             .take()
@@ -7197,9 +7193,7 @@
                 .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
             drop(fence);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.get_queue() {
-                <span class="kw">let </span>closures = queue
-                    .lock_life()
-                    .triage_submissions(submission_index, <span class="kw-2">&amp;</span><span class="self">self</span>.command_allocator);
+                <span class="kw">let </span>closures = queue.lock_life().triage_submissions(submission_index);
                 <span class="macro">assert!</span>(
                     closures.is_empty(),
                     <span class="string">"wait_for_submit is not expected to work with closures"

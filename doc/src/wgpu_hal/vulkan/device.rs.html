@@ -2676,16 +2676,6 @@
 <a href="#2675" id="2675">2675</a>
 <a href="#2676" id="2676">2676</a>
 <a href="#2677" id="2677">2677</a>
-<a href="#2678" id="2678">2678</a>
-<a href="#2679" id="2679">2679</a>
-<a href="#2680" id="2680">2680</a>
-<a href="#2681" id="2681">2681</a>
-<a href="#2682" id="2682">2682</a>
-<a href="#2683" id="2683">2683</a>
-<a href="#2684" id="2684">2684</a>
-<a href="#2685" id="2685">2685</a>
-<a href="#2686" id="2686">2686</a>
-<a href="#2687" id="2687">2687</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4061,18 +4051,8 @@
             discarded: Vec::new(),
             rpass_debug_marker_active: <span class="bool-val">false</span>,
             end_of_pass_timer_query: <span class="prelude-val">None</span>,
+            counters: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.counters),
         })
-    }
-    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, cmd_encoder: <span class="kw">super</span>::CommandEncoder) {
-        <span class="kw">unsafe </span>{
-            <span class="comment">// `vkDestroyCommandPool` also frees any command buffers allocated
-            // from that pool, so there's no need to explicitly call
-            // `vkFreeCommandBuffers` on `cmd_encoder`'s `free` and `discarded`
-            // fields.
-            </span><span class="self">self</span>.shared.raw.destroy_command_pool(cmd_encoder.raw, <span class="prelude-val">None</span>);
-        }
-
-        <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_bind_group_layout(
@@ -5244,7 +5224,7 @@
             .memory_allocations
             .set(<span class="self">self</span>.shared.memory_allocations_counter.read());
 
-        <span class="self">self</span>.counters.clone()
+        <span class="self">self</span>.counters.as_ref().clone()
     }
 
     <span class="kw">fn </span>tlas_instance_to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, instance: TlasInstance) -&gt; Vec&lt;u8&gt; {

@@ -1433,6 +1433,30 @@
 <a href="#1432" id="1432">1432</a>
 <a href="#1433" id="1433">1433</a>
 <a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -2104,7 +2128,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     naga_options: naga::back::spv::Options&lt;<span class="lifetime">'static</span>&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"renderdoc"</span>)]
     </span>render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
-    counters: wgt::HalCounters,
+    counters: Arc&lt;wgt::HalCounters&gt;,
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Device {
@@ -2353,6 +2377,30 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="doccomment">/// If set, the end of the next render/compute pass will write a timestamp at
     /// the given pool &amp; location.
     </span>end_of_pass_timer_query: <span class="prelude-ty">Option</span>&lt;(vk::QueryPool, u32)&gt;,
+
+    counters: Arc&lt;wgt::HalCounters&gt;,
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>CommandEncoder {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// SAFETY:
+        //
+        // VUID-vkDestroyCommandPool-commandPool-00041: wgpu_hal requires that a
+        // `CommandBuffer` must live until its execution is complete, and that a
+        // `CommandBuffer` must not outlive the `CommandEncoder` that built it.
+        // Thus, we know that none of our `CommandBuffers` are in the "pending"
+        // state.
+        //
+        // The other VUIDs are pretty obvious.
+        </span><span class="kw">unsafe </span>{
+            <span class="comment">// `vkDestroyCommandPool` also frees any command buffers allocated
+            // from that pool, so there's no need to explicitly call
+            // `vkFreeCommandBuffers` on `cmd_encoder`'s `free` and `discarded`
+            // fields.
+            </span><span class="self">self</span>.device.raw.destroy_command_pool(<span class="self">self</span>.raw, <span class="prelude-val">None</span>);
+        }
+        <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
+    }
 }
 
 <span class="kw">impl </span>CommandEncoder {

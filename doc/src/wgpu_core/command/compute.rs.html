@@ -1332,14 +1332,6 @@
 <a href="#1331" id="1331">1331</a>
 <a href="#1332" id="1332">1332</a>
 <a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a>
-<a href="#1335" id="1335">1335</a>
-<a href="#1336" id="1336">1336</a>
-<a href="#1337" id="1337">1337</a>
-<a href="#1338" id="1338">1338</a>
-<a href="#1339" id="1339">1339</a>
-<a href="#1340" id="1340">1340</a>
-<a href="#1341" id="1341">1341</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1350,8 +1342,8 @@
         end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
         validate_and_begin_pipeline_statistics_query, ArcPassTimestampWrites, BasePass,
-        BindGroupStateChange, CommandBuffer, CommandEncoderError, CommandEncoderStatus, MapPassErr,
-        PassErrorScope, PassTimestampWrites, QueryUseError, StateChange,
+        BindGroupStateChange, CommandBuffer, CommandEncoderError, MapPassErr, PassErrorScope,
+        PassTimestampWrites, QueryUseError, StateChange,
     },
     device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures},
     global::Global,
@@ -1372,8 +1364,7 @@
 
 <span class="kw">use super</span>::{bind::BinderError, memory_init::CommandBufferTextureMemoryActions};
 <span class="kw">use </span><span class="kw">crate</span>::ray_tracing::TlasAction;
-<span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::{fmt, mem::size_of, str};
+<span class="kw">use </span>std::{fmt, mem::size_of, str, sync::Arc};
 
 <span class="kw">pub struct </span>ComputePass {
     <span class="doccomment">/// All pass data &amp; records is stored here.
@@ -1624,7 +1615,9 @@
     /// If creation fails, an invalid pass is returned.
     /// Any operation on an invalid pass will return an error.
     ///
-    /// If successful, puts the encoder into the [`CommandEncoderStatus::Locked`] state.
+    /// If successful, puts the encoder into the [`Locked`] state.
+    ///
+    /// [`Locked`]: crate::command::CommandEncoderStatus::Locked
     </span><span class="kw">pub fn </span>command_encoder_create_compute_pass(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder_id: id::CommandEncoderId,
@@ -1641,11 +1634,7 @@
 
         <span class="kw">let </span>cmd_buf = hub.command_buffers.get(encoder_id.into_command_buffer_id());
 
-        <span class="kw">match </span>cmd_buf
-            .try_get()
-            .map_err(|e| e.into())
-            .and_then(|<span class="kw-2">mut </span>cmd_buf_data| cmd_buf_data.lock_encoder())
-        {
+        <span class="kw">match </span>cmd_buf.data.lock().lock_encoder() {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
             <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>make_err(e, arc_desc),
         };
@@ -1682,7 +1671,8 @@
                 </span>.hub
                 .command_buffers
                 .get(encoder_id.into_command_buffer_id());
-            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+            <span class="kw">let </span>cmd_buf_data = cmd_buf_data.get_inner().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
                 list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
@@ -1750,19 +1740,16 @@
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         device.check_is_valid().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-        cmd_buf_data.unlock_encoder().map_pass_err(pass_scope)<span class="question-mark">?</span>;
-        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.unlock_encoder().map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
-        <span class="kw">let </span>status = <span class="kw-2">&amp;mut </span>cmd_buf_data.status;
 
         <span class="comment">// We automatically keep extending command buffers over time, and because
         // we want to insert a command buffer _before_ what we're about to record,
         // we need to make sure to close the previous one.
         </span>encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
-        <span class="comment">// will be reset to true if recording is done without errors
-        </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
         <span class="kw">let </span>raw_encoder = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
@@ -1932,10 +1919,6 @@
             state.raw_encoder.end_compute_pass();
         }
 
-        <span class="comment">// We've successfully recorded the compute pass, bring the
-        // command buffer out of the error state.
-        </span><span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
-
         <span class="kw">let </span>State {
             snatch_guard,
             tracker,
@@ -1968,6 +1951,7 @@
         </span>encoder
             .close_and_swap(<span class="kw-2">&amp;</span>cmd_buf.device)
             .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        cmd_buf_data_guard.mark_successful();
 
         <span class="prelude-val">Ok</span>(())
     }

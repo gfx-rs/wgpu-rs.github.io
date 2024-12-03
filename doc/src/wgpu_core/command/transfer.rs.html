@@ -1169,6 +1169,21 @@
 <a href="#1168" id="1168">1168</a>
 <a href="#1169" id="1169">1169</a>
 <a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -1720,8 +1735,9 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         device.check_is_valid()<span class="question-mark">?</span>;
@@ -1823,6 +1839,7 @@
 
         <span class="kw">if </span>size == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_buffer_to_buffer of size 0"</span>);
+            cmd_buf_data_guard.mark_successful();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -1856,6 +1873,8 @@
             cmd_buf_raw.transition_buffers(<span class="kw-2">&amp;</span>barriers);
             cmd_buf_raw.copy_buffer_to_buffer(src_raw, dst_raw, <span class="kw-2">&amp;</span>[region]);
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1878,8 +1897,9 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         device.check_is_valid()<span class="question-mark">?</span>;
@@ -1895,6 +1915,7 @@
 
         <span class="kw">if </span>copy_size.width == <span class="number">0 </span>|| copy_size.height == <span class="number">0 </span>|| copy_size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_buffer_to_texture of size 0"</span>);
+            cmd_buf_data_guard.mark_successful();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -1917,7 +1938,7 @@
         // have an easier time inserting "immediate-inits" that may be required
         // by prior discards in rare cases.
         </span>handle_dst_texture_init(
-            <span class="kw-2">&amp;mut </span>cmd_buf_data,
+            cmd_buf_data,
             device,
             destination,
             copy_size,
@@ -2009,6 +2030,8 @@
             cmd_buf_raw.transition_buffers(src_barrier.as_slice());
             cmd_buf_raw.copy_buffer_to_texture(src_raw, dst_raw, <span class="kw-2">&amp;</span>regions);
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2031,14 +2054,15 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(list) = cmd_buf_data.commands.as_mut() {
             list.push(TraceCommand::CopyTextureToBuffer {
                 src: <span class="kw-2">*</span>source,
                 dst: <span class="kw-2">*</span>destination,
@@ -2048,6 +2072,7 @@
 
         <span class="kw">if </span>copy_size.width == <span class="number">0 </span>|| copy_size.height == <span class="number">0 </span>|| copy_size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_texture_to_buffer of size 0"</span>);
+            cmd_buf_data_guard.mark_successful();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -2066,7 +2091,7 @@
         // have an easier time inserting "immediate-inits" that may be required
         // by prior discards in rare cases.
         </span>handle_src_texture_init(
-            <span class="kw-2">&amp;mut </span>cmd_buf_data,
+            cmd_buf_data,
             device,
             source,
             copy_size,
@@ -2176,6 +2201,8 @@
                 <span class="kw-2">&amp;</span>regions,
             );
         }
+
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2198,8 +2225,9 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         device.check_is_valid()<span class="question-mark">?</span>;
@@ -2217,6 +2245,7 @@
 
         <span class="kw">if </span>copy_size.width == <span class="number">0 </span>|| copy_size.height == <span class="number">0 </span>|| copy_size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring copy_texture_to_texture of size 0"</span>);
+            cmd_buf_data_guard.mark_successful();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -2263,7 +2292,7 @@
         // have an easier time inserting "immediate-inits" that may be required
         // by prior discards in rare cases.
         </span>handle_src_texture_init(
-            <span class="kw-2">&amp;mut </span>cmd_buf_data,
+            cmd_buf_data,
             device,
             source,
             copy_size,
@@ -2271,7 +2300,7 @@
             <span class="kw-2">&amp;</span>snatch_guard,
         )<span class="question-mark">?</span>;
         handle_dst_texture_init(
-            <span class="kw-2">&amp;mut </span>cmd_buf_data,
+            cmd_buf_data,
             device,
             destination,
             copy_size,
@@ -2336,6 +2365,7 @@
             );
         }
 
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 }

@@ -1644,9 +1644,6 @@
 <a href="#1643" id="1643">1643</a>
 <a href="#1644" id="1644">1644</a>
 <a href="#1645" id="1645">1645</a>
-<a href="#1646" id="1646">1646</a>
-<a href="#1647" id="1647">1647</a>
-<a href="#1648" id="1648">1648</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2765,11 +2762,8 @@
             cmd_buffer: <span class="kw">super</span>::CommandBuffer::default(),
             state: Default::default(),
             private_caps: <span class="self">self</span>.shared.private_caps,
+            counters: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.counters),
         })
-    }
-
-    <span class="kw">unsafe fn </span>destroy_command_encoder(<span class="kw-2">&amp;</span><span class="self">self</span>, _encoder: <span class="kw">super</span>::CommandEncoder) {
-        <span class="self">self</span>.counters.command_encoders.sub(<span class="number">1</span>);
     }
 
     <span class="kw">unsafe fn </span>create_bind_group_layout(
@@ -3287,7 +3281,7 @@
     }
 
     <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgt::HalCounters {
-        <span class="self">self</span>.counters.clone()
+        <span class="self">self</span>.counters.as_ref().clone()
     }
 }
 

@@ -462,6 +462,10 @@
 <a href="#461" id="461">461</a>
 <a href="#462" id="462">462</a>
 <a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
@@ -785,8 +789,9 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         cmd_buf
             .device
@@ -808,6 +813,7 @@
 
         cmd_buf_data.trackers.query_sets.insert_single(query_set);
 
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -825,8 +831,9 @@
         <span class="kw">let </span>cmd_buf = hub
             .command_buffers
             .get(command_encoder_id.into_command_buffer_id());
-        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.try_get()<span class="question-mark">?</span>;
-        cmd_buf_data.check_recording()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
@@ -922,6 +929,7 @@
 
         cmd_buf_data.trackers.query_sets.insert_single(query_set);
 
+        cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 }
