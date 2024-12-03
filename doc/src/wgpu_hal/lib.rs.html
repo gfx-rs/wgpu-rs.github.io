@@ -2532,6 +2532,12 @@
 <a href="#2531" id="2531">2531</a>
 <a href="#2532" id="2532">2532</a>
 <a href="#2533" id="2533">2533</a>
+<a href="#2534" id="2534">2534</a>
+<a href="#2535" id="2535">2535</a>
+<a href="#2536" id="2536">2536</a>
+<a href="#2537" id="2537">2537</a>
+<a href="#2538" id="2538">2538</a>
+<a href="#2539" id="2539">2539</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
@@ -4074,9 +4080,11 @@
         <span class="doccomment">/// Format can be sampled with a min/max reduction sampler.
         </span><span class="kw">const </span>SAMPLED_MINMAX = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
 
+        <span class="doccomment">/// Format can be used as storage with read-only access.
+        </span><span class="kw">const </span>STORAGE_READ_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
         <span class="doccomment">/// Format can be used as storage with write-only access.
-        </span><span class="kw">const </span>STORAGE_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
-        <span class="doccomment">/// Format can be used as storage with read and read/write access.
+        </span><span class="kw">const </span>STORAGE_WRITE_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Format can be used as storage with both read and write access.
         </span><span class="kw">const </span>STORAGE_READ_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
         <span class="doccomment">/// Format can be used as storage with atomics.
         </span><span class="kw">const </span>STORAGE_ATOMIC = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
@@ -4206,8 +4214,10 @@
         <span class="doccomment">/// A uniform buffer bound in a bind group.
         </span><span class="kw">const </span>UNIFORM = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
         <span class="doccomment">/// A read-only storage buffer used in a bind group.
-        </span><span class="kw">const </span>STORAGE_READ = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
-        <span class="doccomment">/// A read-write or write-only buffer used in a bind group.
+        </span><span class="kw">const </span>STORAGE_READ_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="doccomment">/// A write-only storage buffer used in a bind group.
+        </span><span class="kw">const </span>STORAGE_WRITE_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// A read-write buffer used in a bind group.
         </span><span class="kw">const </span>STORAGE_READ_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
         <span class="doccomment">/// The indirect or count buffer in a indirect draw or dispatch.
         </span><span class="kw">const </span>INDIRECT = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
@@ -4219,7 +4229,7 @@
         <span class="doccomment">/// The combination of states that a buffer may be in _at the same time_.
         </span><span class="kw">const </span>INCLUSIVE = <span class="self">Self</span>::MAP_READ.bits() | <span class="self">Self</span>::COPY_SRC.bits() |
             <span class="self">Self</span>::INDEX.bits() | <span class="self">Self</span>::VERTEX.bits() | <span class="self">Self</span>::UNIFORM.bits() |
-            <span class="self">Self</span>::STORAGE_READ.bits() | <span class="self">Self</span>::INDIRECT.bits() | <span class="self">Self</span>::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT.bits() | <span class="self">Self</span>::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT.bits();
+            <span class="self">Self</span>::STORAGE_READ_ONLY.bits() | <span class="self">Self</span>::INDIRECT.bits() | <span class="self">Self</span>::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT.bits() | <span class="self">Self</span>::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT.bits();
         <span class="doccomment">/// The combination of states that a buffer must exclusively be in.
         </span><span class="kw">const </span>EXCLUSIVE = <span class="self">Self</span>::MAP_WRITE.bits() | <span class="self">Self</span>::COPY_DST.bits() | <span class="self">Self</span>::STORAGE_READ_WRITE.bits() | <span class="self">Self</span>::ACCELERATION_STRUCTURE_SCRATCH.bits();
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.
@@ -4250,17 +4260,19 @@
         <span class="doccomment">/// Read-write depth stencil usage
         </span><span class="kw">const </span>DEPTH_STENCIL_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
         <span class="doccomment">/// Read-only storage buffer usage. Corresponds to a UAV in d3d, so is exclusive, despite being read only.
-        </span><span class="kw">const </span>STORAGE_READ = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
-        <span class="doccomment">/// Read-write or write-only storage buffer usage.
+        </span><span class="kw">const </span>STORAGE_READ_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// Write-only storage buffer usage.
+        </span><span class="kw">const </span>STORAGE_WRITE_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+        <span class="doccomment">/// Read-write storage buffer usage.
         </span><span class="kw">const </span>STORAGE_READ_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
         <span class="doccomment">/// The combination of states that a texture may be in _at the same time_.
         </span><span class="kw">const </span>INCLUSIVE = <span class="self">Self</span>::COPY_SRC.bits() | <span class="self">Self</span>::RESOURCE.bits() | <span class="self">Self</span>::DEPTH_STENCIL_READ.bits();
         <span class="doccomment">/// The combination of states that a texture must exclusively be in.
-        </span><span class="kw">const </span>EXCLUSIVE = <span class="self">Self</span>::COPY_DST.bits() | <span class="self">Self</span>::COLOR_TARGET.bits() | <span class="self">Self</span>::DEPTH_STENCIL_WRITE.bits() | <span class="self">Self</span>::STORAGE_READ.bits() | <span class="self">Self</span>::STORAGE_READ_WRITE.bits() | <span class="self">Self</span>::PRESENT.bits();
+        </span><span class="kw">const </span>EXCLUSIVE = <span class="self">Self</span>::COPY_DST.bits() | <span class="self">Self</span>::COLOR_TARGET.bits() | <span class="self">Self</span>::DEPTH_STENCIL_WRITE.bits() | <span class="self">Self</span>::STORAGE_READ_ONLY.bits() | <span class="self">Self</span>::STORAGE_READ_WRITE.bits() | <span class="self">Self</span>::PRESENT.bits();
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.
         /// If a usage is ordered, then if the texture state doesn't change between draw calls, there
         /// are no barriers needed for synchronization.
-        </span><span class="kw">const </span>ORDERED = <span class="self">Self</span>::INCLUSIVE.bits() | <span class="self">Self</span>::COLOR_TARGET.bits() | <span class="self">Self</span>::DEPTH_STENCIL_WRITE.bits() | <span class="self">Self</span>::STORAGE_READ.bits();
+        </span><span class="kw">const </span>ORDERED = <span class="self">Self</span>::INCLUSIVE.bits() | <span class="self">Self</span>::COLOR_TARGET.bits() | <span class="self">Self</span>::DEPTH_STENCIL_WRITE.bits() | <span class="self">Self</span>::STORAGE_READ_ONLY.bits();
 
         <span class="doccomment">/// Flag used by the wgpu-core texture tracker to say a texture is in different states for every sub-resource
         </span><span class="kw">const </span>COMPLEX = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
