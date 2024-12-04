@@ -187,54 +187,9 @@
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, DynContext};
-<span class="kw">use crate</span>::{Buffer, Data, Label, C};
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::dispatch;
+<span class="kw">use crate</span>::{Buffer, Label};
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::thread;
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="doccomment">/// Descriptor for the size defining attributes of a triangle geometry, for a bottom level acceleration structure.
@@ -321,22 +276,6 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DynContextTlasInstance&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blas: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) transform: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[f32; <span class="number">12</span>],
-    <span class="kw">pub</span>(<span class="kw">crate</span>) custom_index: u32,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) mask: u8,
-}
-
-<span class="doccomment">/// Context version of [TlasInstance].
-</span><span class="attr">#[allow(dead_code)]
-</span><span class="kw">pub struct </span>ContextTlasInstance&lt;<span class="lifetime">'a</span>, T: Context&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BlasData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) transform: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[f32; <span class="number">12</span>],
-    <span class="kw">pub</span>(<span class="kw">crate</span>) custom_index: u32,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) mask: u8,
-}
-
 <span class="attr">#[derive(Debug)]
 </span><span class="doccomment">/// Definition for a triangle geometry for a Bottom Level Acceleration Structure (BLAS).
 ///
@@ -380,8 +319,7 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BlasShared {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchBlas,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(BlasShared: WasmNotSendSync);
 
@@ -399,6 +337,8 @@
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(Blas: WasmNotSendSync);
 
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Blas =&gt; .shared.inner);
+
 <span class="kw">impl </span>Blas {
     <span class="doccomment">/// Raw handle to the acceleration structure, used inside raw instance buffers.
     </span><span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
@@ -406,45 +346,17 @@
     }
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        DynContext::blas_destroy(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared.context, <span class="self">self</span>.shared.data.as_ref());
+        <span class="self">self</span>.shared.inner.destroy();
     }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>BlasShared {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.blas_drop(<span class="self">self</span>.data.as_ref());
-        }
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DynContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) size: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BlasTriangleGeometrySizeDescriptor,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) index_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) transform_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) first_vertex: u32,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_stride: wgt::BufferAddress,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) index_buffer_offset: <span class="prelude-ty">Option</span>&lt;wgt::BufferAddress&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) transform_buffer_offset: <span class="prelude-ty">Option</span>&lt;wgt::BufferAddress&gt;,
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DynContextBlasGeometries&lt;<span class="lifetime">'a</span>&gt; {
-    TriangleGeometries(Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = DynContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>&gt;&gt; + <span class="lifetime">'a</span>&gt;),
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DynContextBlasBuildEntry&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) geometries: DynContextBlasGeometries&lt;<span class="lifetime">'a</span>&gt;,
 }
 
 <span class="doccomment">/// Context version of [BlasTriangleGeometry].
 </span><span class="attr">#[allow(dead_code)]
-</span><span class="kw">pub struct </span>ContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>, T: Context&gt; {
+</span><span class="kw">pub struct </span>ContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BlasTriangleGeometrySizeDescriptor,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BufferData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) index_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BufferData&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) transform_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BufferData&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBuffer,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) index_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBuffer&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) transform_buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBuffer&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) first_vertex: u32,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_stride: wgt::BufferAddress,
     <span class="kw">pub</span>(<span class="kw">crate</span>) index_buffer_offset: <span class="prelude-ty">Option</span>&lt;wgt::BufferAddress&gt;,
@@ -452,15 +364,15 @@
 }
 
 <span class="doccomment">/// Context version of [BlasGeometries].
-</span><span class="kw">pub enum </span>ContextBlasGeometries&lt;<span class="lifetime">'a</span>, T: Context&gt; {
+</span><span class="kw">pub enum </span>ContextBlasGeometries&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Triangle geometries.
-    </span>TriangleGeometries(Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = ContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>, T&gt;&gt; + <span class="lifetime">'a</span>&gt;),
+    </span>TriangleGeometries(Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = ContextBlasTriangleGeometry&lt;<span class="lifetime">'a</span>&gt;&gt; + <span class="lifetime">'a</span>&gt;),
 }
 
 <span class="doccomment">/// Context version see [BlasBuildEntry].
 </span><span class="attr">#[allow(dead_code)]
-</span><span class="kw">pub struct </span>ContextBlasBuildEntry&lt;<span class="lifetime">'a</span>, T: Context&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BlasData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) geometries: ContextBlasGeometries&lt;<span class="lifetime">'a</span>, T&gt;,
+</span><span class="kw">pub struct </span>ContextBlasBuildEntry&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) blas: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBlas,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) geometries: ContextBlasGeometries&lt;<span class="lifetime">'a</span>&gt;,
 }
 </code></pre></div></section></main></body></html>

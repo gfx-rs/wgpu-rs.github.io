@@ -159,50 +159,9 @@
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::api::blas::{ContextTlasInstance, DynContextTlasInstance, TlasInstance};
-<span class="kw">use </span><span class="kw">crate</span>::context::{Context, DynContext};
-<span class="kw">use crate</span>::{BindingResource, Buffer, Data, Label, C};
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{api::blas::TlasInstance, dispatch};
+<span class="kw">use crate</span>::{BindingResource, Buffer, Label};
 <span class="kw">use </span>std::ops::{Index, IndexMut, Range};
-<span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::thread;
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="doccomment">/// Descriptor to create top level acceleration structures.
@@ -220,24 +179,17 @@
 ///
 /// [TLAS instances]: TlasInstance
 </span><span class="kw">pub struct </span>Tlas {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchTlas,
     <span class="kw">pub</span>(<span class="kw">crate</span>) max_instances: u32,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(Tlas: WasmNotSendSync);
 
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Tlas =&gt; .inner);
+
 <span class="kw">impl </span>Tlas {
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        DynContext::tlas_destroy(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref());
-    }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>Tlas {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.tlas_drop(<span class="self">self</span>.data.as_ref());
-        }
+        <span class="self">self</span>.inner.destroy();
     }
 }
 
@@ -366,33 +318,5 @@
         }
         idx
     }
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DynContextTlasBuildEntry&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tlas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instance_buffer_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instance_count: u32,
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DynContextTlasPackage&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tlas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Data,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instances: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;DynContextTlasInstance&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; + <span class="lifetime">'a</span>&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) lowest_unmodified: u32,
-}
-
-<span class="doccomment">/// Context version see [TlasBuildEntry].
-</span><span class="attr">#[allow(dead_code)]
-</span><span class="kw">pub struct </span>ContextTlasBuildEntry&lt;<span class="lifetime">'a</span>, T: Context&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tlas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::TlasData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instance_buffer_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::BufferData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instance_count: u32,
-}
-
-<span class="doccomment">/// Context version see [TlasPackage].
-</span><span class="attr">#[allow(dead_code)]
-</span><span class="kw">pub struct </span>ContextTlasPackage&lt;<span class="lifetime">'a</span>, T: Context&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tlas_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T::TlasData,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) instances: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;ContextTlasInstance&lt;<span class="lifetime">'a</span>, T&gt;&gt;&gt; + <span class="lifetime">'a</span>&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) lowest_unmodified: u32,
 }
 </code></pre></div></section></main></body></html>

@@ -97,22 +97,6 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Types and functions which define our public api and their
 //! helper functionality.
 //!
@@ -134,17 +118,16 @@
 //! - Avoid having to write out a long list of imports for each module.
 //! - Allow docs to be written naturally, without needing to worry about needing dedicated doc imports.
 //! - Treat wgpu-types types and wgpu-core types as a single set.
-//!
 
 </span><span class="kw">mod </span>adapter;
 <span class="kw">mod </span>bind_group;
 <span class="kw">mod </span>bind_group_layout;
+<span class="kw">mod </span>blas;
 <span class="kw">mod </span>buffer;
 <span class="kw">mod </span>command_buffer;
 <span class="kw">mod </span>command_encoder;
 <span class="comment">// Not a root type, but common descriptor types for pipelines.
-</span><span class="kw">mod </span>blas;
-<span class="kw">mod </span>common_pipeline;
+</span><span class="kw">mod </span>common_pipeline;
 <span class="kw">mod </span>compute_pass;
 <span class="kw">mod </span>compute_pipeline;
 <span class="kw">mod </span>device;
@@ -196,35 +179,20 @@
 <span class="doccomment">/// Object debugging label.
 </span><span class="kw">pub type </span>Label&lt;<span class="lifetime">'a</span>&gt; = <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;;
 
-<span class="macro">macro_rules! </span>impl_partialeq_eq_hash {
-    (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
-        <span class="kw">impl </span>PartialEq <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-                std::ptr::addr_eq(<span class="self">self</span>.data.as_ref(), other.data.as_ref())
-            }
-        }
-        <span class="kw">impl </span>Eq <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{}
+<span class="doccomment">/// A cute utility type that works just like PhantomData, but also
+/// implements Drop. This forces any lifetimes that are associated
+/// with the type to be used until the Drop impl is ran. This prevents
+/// lifetimes from being shortened.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PhantomDrop&lt;T&gt;(std::marker::PhantomData&lt;T&gt;);
 
-        <span class="kw">impl </span>std::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>hash&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
-                <span class="kw">let </span>ptr = <span class="self">self</span>.data.as_ref() <span class="kw">as </span><span class="kw-2">*const </span>Data <span class="kw">as </span><span class="kw-2">*const </span>();
-                ptr.hash(state);
-            }
-        }
-
-        <span class="kw">impl </span>PartialOrd <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
-            }
-        }
-        <span class="kw">impl </span>Ord <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
-                <span class="kw">let </span>a = <span class="self">self</span>.data.as_ref() <span class="kw">as </span><span class="kw-2">*const </span>Data <span class="kw">as </span><span class="kw-2">*const </span>();
-                <span class="kw">let </span>b = other.data.as_ref() <span class="kw">as </span><span class="kw-2">*const </span>Data <span class="kw">as </span><span class="kw-2">*const </span>();
-                a.cmp(<span class="kw-2">&amp;</span>b)
-            }
-        }
-    };
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>PhantomDrop&lt;T&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(std::marker::PhantomData)
+    }
 }
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>impl_partialeq_eq_hash;
+
+<span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>PhantomDrop&lt;T&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {}
+}
 </code></pre></div></section></main></body></html>

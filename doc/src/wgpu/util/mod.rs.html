@@ -191,9 +191,6 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
 //!
 //! Nothing in this module is a part of the WebGPU API specification;
@@ -218,6 +215,8 @@
 <span class="kw">pub use </span>wgt::{
     math::<span class="kw-2">*</span>, DispatchIndirectArgs, DrawIndexedIndirectArgs, DrawIndirectArgs, TextureDataOrder,
 };
+
+<span class="kw">use </span><span class="kw">crate</span>::dispatch;
 
 <span class="doccomment">/// Treat the given byte slice as a SPIR-V module.
 ///
@@ -282,7 +281,7 @@
 <span class="doccomment">/// CPU accessible buffer used to download data back from the GPU.
 </span><span class="kw">pub struct </span>DownloadBuffer {
     _gpu_buffer: Arc&lt;<span class="kw">super</span>::Buffer&gt;,
-    mapped_range: Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::context::BufferMappedRange&gt;,
+    mapped_range: dispatch::DispatchBufferMappedRange,
 }
 
 <span class="kw">impl </span>DownloadBuffer {
@@ -298,8 +297,7 @@
             <span class="prelude-val">None </span>=&gt; buffer.buffer.map_context.lock().total_size - buffer.offset,
         };
 
-        <span class="attr">#[allow(clippy::arc_with_non_send_sync)] </span><span class="comment">// False positive on emscripten
-        </span><span class="kw">let </span>download = Arc::new(device.create_buffer(<span class="kw-2">&amp;</span><span class="kw">super</span>::BufferDescriptor {
+        <span class="kw">let </span>download = Arc::new(device.create_buffer(<span class="kw-2">&amp;</span><span class="kw">super</span>::BufferDescriptor {
             size,
             usage: <span class="kw">super</span>::BufferUsages::COPY_DST | <span class="kw">super</span>::BufferUsages::MAP_READ,
             mapped_at_creation: <span class="bool-val">false</span>,
@@ -321,11 +319,7 @@
                     <span class="kw">return</span>;
                 }
 
-                <span class="kw">let </span>mapped_range = <span class="kw">crate</span>::context::DynContext::buffer_get_mapped_range(
-                    <span class="kw-2">&amp;*</span>download.context,
-                    download.data.as_ref(),
-                    <span class="number">0</span>..size,
-                );
+                <span class="kw">let </span>mapped_range = download.inner.get_mapped_range(<span class="number">0</span>..size);
                 callback(<span class="prelude-val">Ok</span>(<span class="self">Self </span>{
                     _gpu_buffer: download,
                     mapped_range,

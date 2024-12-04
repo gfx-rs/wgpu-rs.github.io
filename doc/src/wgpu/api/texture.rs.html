@@ -132,30 +132,7 @@
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
-
-<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a texture on the GPU.
 ///
@@ -164,14 +141,13 @@
 /// Corresponds to [WebGPU `GPUTexture`](https://gpuweb.github.io/gpuweb/#texture-interface).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Texture {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchTexture,
     <span class="kw">pub</span>(<span class="kw">crate</span>) descriptor: TextureDescriptor&lt;<span class="lifetime">'static</span>&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Texture: Send, Sync);
 
-<span class="macro">super::impl_partialeq_eq_hash!</span>(Texture);
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Texture =&gt; .inner);
 
 <span class="kw">impl </span>Texture {
     <span class="doccomment">/// Returns the inner hal Texture using a callback. The hal texture will be `None` if the
@@ -185,16 +161,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture_callback: F,
     ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ctx) = <span class="self">self
-            </span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
-        {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(tex) = <span class="self">self</span>.inner.as_core_opt() {
             <span class="kw">unsafe </span>{
-                ctx.texture_as_hal::&lt;A, F, R&gt;(
-                    <span class="kw">crate</span>::context::downcast_ref(<span class="self">self</span>.data.as_ref()),
-                    hal_texture_callback,
-                )
+                tex.context
+                    .texture_as_hal::&lt;A, F, R&gt;(tex, hal_texture_callback)
             }
         } <span class="kw">else </span>{
             hal_texture_callback(<span class="prelude-val">None</span>)
@@ -203,16 +173,14 @@
 
     <span class="doccomment">/// Creates a view of this texture.
     </span><span class="kw">pub fn </span>create_view(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>TextureViewDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; TextureView {
-        <span class="kw">let </span>data = DynContext::texture_create_view(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), desc);
-        TextureView {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            data,
-        }
+        <span class="kw">let </span>view = <span class="self">self</span>.inner.create_view(desc);
+
+        TextureView { inner: view }
     }
 
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        DynContext::texture_destroy(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref());
+        <span class="self">self</span>.inner.destroy();
     }
 
     <span class="doccomment">/// Make an `TexelCopyTextureInfo` representing the whole texture.
@@ -286,14 +254,6 @@
     /// This is always equal to the `usage` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TextureUsages {
         <span class="self">self</span>.descriptor.usage
-    }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>Texture {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.texture_drop(<span class="self">self</span>.data.as_ref());
-        }
     }
 }
 

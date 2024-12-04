@@ -387,19 +387,11 @@
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::Mutex;
 
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::{dispatch::InstanceInterface, <span class="kw-2">*</span>};
 
-<span class="kw">use </span>std::{future::Future, sync::Arc};
+<span class="kw">use </span>std::future::Future;
 
 <span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.
 ///
@@ -411,10 +403,12 @@
 /// Corresponds to [WebGPU `GPU`](https://gpuweb.github.io/gpuweb/#gpu-interface).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Instance {
-    context: Arc&lt;C&gt;,
+    inner: dispatch::DispatchInstance,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Instance: Send, Sync);
+
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Instance =&gt; .inner);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Instance {
     <span class="doccomment">/// Creates a new instance of wgpu with default options.
@@ -526,7 +520,7 @@
 
             <span class="kw">if </span>is_only_available_backend || (requested_webgpu &amp;&amp; support_webgpu) {
                 <span class="kw">return </span><span class="self">Self </span>{
-                    context: Arc::from(<span class="kw">crate</span>::backend::ContextWebGpu::init(_instance_desc)),
+                    inner: <span class="kw">crate</span>::backend::ContextWebGpu::new(_instance_desc).into(),
                 };
             }
         }
@@ -534,7 +528,7 @@
         <span class="attr">#[cfg(wgpu_core)]
         </span>{
             <span class="kw">return </span><span class="self">Self </span>{
-                context: Arc::from(<span class="kw">crate</span>::backend::ContextWgpuCore::init(_instance_desc)),
+                inner: <span class="kw">crate</span>::backend::ContextWgpuCore::new(_instance_desc).into(),
             };
         }
 
@@ -555,9 +549,9 @@
     </span><span class="attr">#[cfg(wgpu_core)]
     </span><span class="kw">pub unsafe fn </span>from_hal&lt;A: wgc::hal_api::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            context: Arc::new(<span class="kw">unsafe </span>{
-                <span class="kw">crate</span>::backend::ContextWgpuCore::from_hal_instance::&lt;A&gt;(hal_instance)
-            }),
+            inner: <span class="kw">unsafe </span>{
+                <span class="kw">crate</span>::backend::ContextWgpuCore::from_hal_instance::&lt;A&gt;(hal_instance).into()
+            },
         }
     }
 
@@ -573,10 +567,8 @@
     /// [`Instance`]: hal::Api::Instance
     </span><span class="attr">#[cfg(wgpu_core)]
     </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
-        <span class="self">self</span>.context
-            .as_any()
-            <span class="comment">// If we don't have a wgpu-core instance, we don't have a hal instance either.
-            </span>.downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
+        <span class="self">self</span>.inner
+            .as_core_opt()
             .and_then(|ctx| <span class="kw">unsafe </span>{ ctx.instance_as_hal::&lt;A&gt;() })
     }
 
@@ -592,9 +584,9 @@
     </span><span class="attr">#[cfg(wgpu_core)]
     </span><span class="kw">pub unsafe fn </span>from_core(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            context: Arc::new(<span class="kw">unsafe </span>{
-                <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance)
-            }),
+            inner: <span class="kw">unsafe </span>{
+                <span class="kw">crate</span>::backend::ContextWgpuCore::from_core_instance(core_instance).into()
+            },
         }
     }
 
@@ -605,20 +597,21 @@
     /// - `backends` - Backends from which to enumerate adapters.
     </span><span class="attr">#[cfg(native)]
     </span><span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, backends: Backends) -&gt; Vec&lt;Adapter&gt; {
-        <span class="kw">let </span>context = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context);
-        <span class="self">self</span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
-            .map(|ctx| {
-                ctx.enumerate_adapters(backends)
-                    .into_iter()
-                    .map(<span class="kw">move </span>|adapter| <span class="kw">crate</span>::Adapter {
-                        context: Arc::clone(<span class="kw-2">&amp;</span>context),
-                        data: Box::new(adapter),
-                    })
-                    .collect()
+        <span class="kw">let </span><span class="prelude-val">Some</span>(core_instance) = <span class="self">self</span>.inner.as_core_opt() <span class="kw">else </span>{
+            <span class="kw">return </span>Vec::new();
+        };
+
+        core_instance
+            .enumerate_adapters(backends)
+            .into_iter()
+            .map(|adapter| {
+                <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter {
+                    context: core_instance.clone(),
+                    id: adapter,
+                };
+                <span class="kw">crate</span>::Adapter { inner: core.into() }
             })
-            .unwrap()
+            .collect()
     }
 
     <span class="doccomment">/// Retrieves an [`Adapter`] which matches the given [`RequestAdapterOptions`].
@@ -632,9 +625,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Adapter&gt;&gt; + WasmNotSend {
-        <span class="kw">let </span>context = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context);
-        <span class="kw">let </span>adapter = <span class="self">self</span>.context.instance_request_adapter(options);
-        <span class="kw">async move </span>{ adapter.<span class="kw">await</span>.map(|data| Adapter { context, data }) }
+        <span class="kw">let </span>future = <span class="self">self</span>.inner.request_adapter(options);
+        <span class="kw">async move </span>{ future.<span class="kw">await</span>.map(|inner| Adapter { inner }) }
     }
 
     <span class="doccomment">/// Converts a wgpu-hal `ExposedAdapter` to a wgpu [`Adapter`].
@@ -647,18 +639,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_adapter: hal::ExposedAdapter&lt;A&gt;,
     ) -&gt; Adapter {
-        <span class="kw">let </span>context = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context);
-        <span class="kw">let </span>adapter = <span class="kw">unsafe </span>{
-            context
-                .as_any()
-                .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
-                .unwrap()
-                .create_adapter_from_hal(hal_adapter)
+        <span class="kw">let </span>core_instance = <span class="self">self</span>.inner.as_core();
+        <span class="kw">let </span>adapter = <span class="kw">unsafe </span>{ core_instance.create_adapter_from_hal(hal_adapter) };
+        <span class="kw">let </span>core = backend::wgpu_core::CoreAdapter {
+            context: core_instance.clone(),
+            id: adapter,
         };
-        Adapter {
-            context,
-            data: Box::new(adapter),
-        }
+
+        Adapter { inner: core.into() }
     }
 
     <span class="doccomment">/// Creates a new surface targeting a given window/canvas/surface/etc..
@@ -749,12 +737,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         target: SurfaceTargetUnsafe,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">'window</span>&gt;, CreateSurfaceError&gt; {
-        <span class="kw">let </span>data = <span class="kw">unsafe </span>{ <span class="self">self</span>.context.instance_create_surface(target) }<span class="question-mark">?</span>;
+        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.inner.create_surface(target)<span class="question-mark">? </span>};
 
         <span class="prelude-val">Ok</span>(Surface {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
             _handle_source: <span class="prelude-val">None</span>,
-            surface_data: data,
+            inner: surface,
             config: Mutex::new(<span class="prelude-val">None</span>),
         })
     }
@@ -776,7 +763,7 @@
     ///
     /// [`Queue`s]: Queue
     </span><span class="kw">pub fn </span>poll_all(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; bool {
-        <span class="self">self</span>.context.instance_poll_all_devices(force_wait)
+        <span class="self">self</span>.inner.poll_all_devices(force_wait)
     }
 
     <span class="doccomment">/// Generates memory report.
@@ -785,10 +772,7 @@
     /// which happens only when WebGPU is pre-selected by the instance creation.
     </span><span class="attr">#[cfg(wgpu_core)]
     </span><span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgc::global::GlobalReport&gt; {
-        <span class="self">self</span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
-            .map(|ctx| ctx.generate_report())
+        <span class="self">self</span>.inner.as_core_opt().map(|ctx| ctx.generate_report())
     }
 }
 </code></pre></div></section></main></body></html>

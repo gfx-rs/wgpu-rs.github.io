@@ -223,46 +223,9 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, num::NonZeroU32, ops::Range, sync::Arc};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, num::NonZeroU32, ops::Range};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
+<span class="kw">use </span><span class="kw">crate</span>::dispatch::RenderBundleEncoderInterface;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Encodes a series of GPU operations into a reusable "render bundle".
@@ -278,14 +241,14 @@
 /// https://gpuweb.github.io/gpuweb/#gpurenderbundleencoder).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>RenderBundleEncoder&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) parent: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Device,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchRenderBundleEncoder,
     <span class="doccomment">/// This type should be !Send !Sync, because it represents an allocation on this thread's
     /// command buffer.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) _p: PhantomData&lt;<span class="kw-2">*const </span>u8&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) _p: PhantomData&lt;(<span class="kw-2">*const </span>u8, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>())&gt;,
 }
 <span class="macro">static_assertions::assert_not_impl_any!</span>(RenderBundleEncoder&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(RenderBundleEncoder&lt;<span class="lifetime">'_</span>&gt; =&gt; .inner);
 
 <span class="doccomment">/// Describes a [`RenderBundleEncoder`].
 ///
@@ -314,42 +277,34 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RenderBundleEncoder&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Finishes recording and returns a [`RenderBundle`] that can be executed in other render passes.
     </span><span class="kw">pub fn </span>finish(<span class="self">self</span>, desc: <span class="kw-2">&amp;</span>RenderBundleDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; RenderBundle {
-        <span class="kw">let </span>data = DynContext::render_bundle_encoder_finish(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data, desc);
-        RenderBundle {
-            context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            data,
-        }
+        <span class="kw">let </span>bundle = <span class="kw">match </span><span class="self">self</span>.inner {
+            <span class="attr">#[cfg(wgpu_core)]
+            </span>dispatch::DispatchRenderBundleEncoder::Core(b) =&gt; b.finish(desc),
+            <span class="attr">#[cfg(webgpu)]
+            </span>dispatch::DispatchRenderBundleEncoder::WebGPU(b) =&gt; b.finish(desc),
+        };
+
+        RenderBundle { inner: bundle }
     }
 
     <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout
     /// in the active pipeline when any `draw()` function is called must match the layout of this bind group.
     ///
     /// If the bind group have dynamic offsets, provide them in the binding order.
-    </span><span class="kw">pub fn </span>set_bind_group&lt;<span class="lifetime">'b</span>&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        index: u32,
-        bind_group: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>BindGroup&gt;&gt;,
-        offsets: <span class="kw-2">&amp;</span>[DynamicOffset],
-    ) {
-        <span class="kw">let </span>bg = bind_group.into().map(|x| x.data.as_ref());
-        DynContext::render_bundle_encoder_set_bind_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            index,
-            bg,
-            offsets,
-        )
+    </span><span class="kw">pub fn </span>set_bind_group&lt;<span class="lifetime">'b</span>, BG&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, bind_group: BG, offsets: <span class="kw-2">&amp;</span>[DynamicOffset])
+    <span class="kw">where
+        </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'b </span>BindGroup&gt;: From&lt;BG&gt;,
+    {
+        <span class="kw">let </span>bg: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'b </span>BindGroup&gt; = bind_group.into();
+        <span class="kw">let </span>bg = bg.map(|x| <span class="kw-2">&amp;</span>x.inner);
+        <span class="self">self</span>.inner.set_bind_group(index, bg, offsets);
     }
 
     <span class="doccomment">/// Sets the active render pipeline.
     ///
     /// Subsequent draw calls will exhibit the behavior defined by `pipeline`.
     </span><span class="kw">pub fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>RenderPipeline) {
-        DynContext::render_bundle_encoder_set_pipeline(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            pipeline.data.as_ref(),
-        )
+        <span class="self">self</span>.inner.set_pipeline(<span class="kw-2">&amp;</span>pipeline.inner);
     }
 
     <span class="doccomment">/// Sets the active index buffer.
@@ -357,14 +312,12 @@
     /// Subsequent calls to [`draw_indexed`](RenderBundleEncoder::draw_indexed) on this [`RenderBundleEncoder`] will
     /// use `buffer` as the source index buffer.
     </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;, index_format: IndexFormat) {
-        DynContext::render_bundle_encoder_set_index_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            buffer_slice.buffer.data.as_ref(),
+        <span class="self">self</span>.inner.set_index_buffer(
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
             index_format,
             buffer_slice.offset,
             buffer_slice.size,
-        )
+        );
     }
 
     <span class="doccomment">/// Assign a vertex buffer to a slot.
@@ -378,14 +331,12 @@
     /// [`draw`]: RenderBundleEncoder::draw
     /// [`draw_indexed`]: RenderBundleEncoder::draw_indexed
     </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;) {
-        DynContext::render_bundle_encoder_set_vertex_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
+        <span class="self">self</span>.inner.set_vertex_buffer(
             slot,
-            buffer_slice.buffer.data.as_ref(),
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
             buffer_slice.offset,
             buffer_slice.size,
-        )
+        );
     }
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
@@ -407,12 +358,7 @@
     /// }
     /// ```
     </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
-        DynContext::render_bundle_encoder_draw(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            vertices,
-            instances,
-        )
+        <span class="self">self</span>.inner.draw(vertices, instances);
     }
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffer(s).
@@ -437,13 +383,7 @@
     /// }
     /// ```
     </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
-        DynContext::render_bundle_encoder_draw_indexed(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            indices,
-            base_vertex,
-            instances,
-        );
+        <span class="self">self</span>.inner.draw_indexed(indices, base_vertex, instances);
     }
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
@@ -452,12 +392,8 @@
     ///
     /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer, indirect_offset: BufferAddress) {
-        DynContext::render_bundle_encoder_draw_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            indirect_buffer.data.as_ref(),
-            indirect_offset,
-        );
+        <span class="self">self</span>.inner
+            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
     }
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
@@ -472,12 +408,8 @@
         indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
         indirect_offset: BufferAddress,
     ) {
-        DynContext::render_bundle_encoder_draw_indexed_indirect(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            indirect_buffer.data.as_ref(),
-            indirect_offset,
-        );
+        <span class="self">self</span>.inner
+            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
     }
 }
 
@@ -512,13 +444,7 @@
     /// You would need to upload this in three set_push_constants calls. First for the `Vertex` only range 0..4, second
     /// for the `Vertex | Fragment` range 4..8, third for the `Fragment` range 8..12.
     </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-        DynContext::render_bundle_encoder_set_push_constants(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="self">self</span>.data.as_mut(),
-            stages,
-            offset,
-            data,
-        );
+        <span class="self">self</span>.inner.set_push_constants(stages, offset, data);
     }
 }
 </code></pre></div></section></main></body></html>

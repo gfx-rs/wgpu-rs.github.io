@@ -229,16 +229,7 @@
 <a href="#228" id="228">228</a>
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, marker::PhantomData, sync::Arc, thread};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, future::Future, marker::PhantomData};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -252,26 +243,17 @@
 /// Corresponds to [WebGPU `GPUShaderModule`](https://gpuweb.github.io/gpuweb/#shader-module).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ShaderModule {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchShaderModule,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(ShaderModule: Send, Sync);
 
-<span class="macro">super::impl_partialeq_eq_hash!</span>(ShaderModule);
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>ShaderModule {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.shader_module_drop(<span class="self">self</span>.data.as_ref());
-        }
-    }
-}
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(ShaderModule =&gt; .inner);
 
 <span class="kw">impl </span>ShaderModule {
     <span class="doccomment">/// Get the compilation info for the shader module.
     </span><span class="kw">pub fn </span>get_compilation_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = CompilationInfo&gt; + WasmNotSend {
-        <span class="self">self</span>.context.shader_get_compilation_info(<span class="self">self</span>.data.as_ref())
+        <span class="self">self</span>.inner.get_compilation_info()
     }
 }
 

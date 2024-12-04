@@ -84,18 +84,7 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
-
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a pipeline cache, which is used to accelerate
 /// creating [`RenderPipeline`]s and [`ComputePipeline`]s
@@ -161,12 +150,13 @@
 /// [renaming]: std::fs::rename
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PipelineCache {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchPipelineCache,
 }
 
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(PipelineCache: Send, Sync);
+
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(PipelineCache =&gt; .inner);
 
 <span class="kw">impl </span>PipelineCache {
     <span class="doccomment">/// Get the data associated with this pipeline cache.
@@ -176,15 +166,7 @@
     ///
     /// This function is unique to the Rust API of `wgpu`.
     </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {
-        <span class="self">self</span>.context.pipeline_cache_get_data(<span class="self">self</span>.data.as_ref())
-    }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>PipelineCache {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.pipeline_cache_drop(<span class="self">self</span>.data.as_ref());
-        }
+        <span class="self">self</span>.inner.get_data()
     }
 }
 </code></pre></div></section></main></body></html>

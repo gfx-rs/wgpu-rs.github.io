@@ -239,58 +239,8 @@
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{
-    ops::{Deref, DerefMut},
-    sync::Arc,
-    thread,
-};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::{DynContext, QueueWriteBuffer};
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a command queue on a device.
@@ -302,19 +252,12 @@
 /// Corresponds to [WebGPU `GPUQueue`](https://gpuweb.github.io/gpuweb/#gpu-queue).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Queue {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchQueue,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Queue: Send, Sync);
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>Queue {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.queue_drop(<span class="self">self</span>.data.as_ref());
-        }
-    }
-}
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Queue =&gt; .inner);
 
 <span class="doccomment">/// Identifier for a particular call to [`Queue::submit`]. Can be used
 /// as part of an argument to [`Device::poll`] to block for a particular
@@ -325,7 +268,7 @@
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SubmissionIndex {
     <span class="attr">#[cfg_attr(not(native), allow(dead_code))]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Arc&lt;<span class="kw">crate</span>::Data&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) index: u64,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(SubmissionIndex: Send, Sync);
@@ -345,7 +288,7 @@
     queue: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Queue,
     buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
     offset: BufferAddress,
-    inner: Box&lt;<span class="kw">dyn </span>QueueWriteBuffer&gt;,
+    inner: dispatch::DispatchQueueWriteBuffer,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
@@ -373,13 +316,9 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        DynContext::queue_write_staging_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.queue.context,
-            <span class="self">self</span>.queue.data.as_ref(),
-            <span class="self">self</span>.buffer.data.as_ref(),
-            <span class="self">self</span>.offset,
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.inner,
-        );
+        <span class="self">self</span>.queue
+            .inner
+            .write_staging_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="self">self</span>.offset, <span class="kw-2">&amp;</span><span class="self">self</span>.inner);
     }
 }
 
@@ -405,13 +344,7 @@
     /// method avoids an intermediate copy and is often able to transfer data
     /// more efficiently than this one.
     </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
-        DynContext::queue_write_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.data.as_ref(),
-            buffer.data.as_ref(),
-            offset,
-            data,
-        )
+        <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, data);
     }
 
     <span class="doccomment">/// Write to a buffer via a directly mapped staging buffer.
@@ -450,15 +383,9 @@
         size: BufferSize,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
-        DynContext::queue_validate_write_buffer(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.data.as_ref(),
-            buffer.data.as_ref(),
-            offset,
-            size,
-        )<span class="question-mark">?</span>;
-        <span class="kw">let </span>staging_buffer =
-            DynContext::queue_create_staging_buffer(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.inner
+            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size)<span class="question-mark">?</span>;
+        <span class="kw">let </span>staging_buffer = <span class="self">self</span>.inner.create_staging_buffer(size)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(QueueWriteBufferView {
             queue: <span class="self">self</span>,
             buffer,
@@ -498,14 +425,7 @@
         data_layout: TexelCopyBufferLayout,
         size: Extent3d,
     ) {
-        DynContext::queue_write_texture(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.data.as_ref(),
-            texture,
-            data,
-            data_layout,
-            size,
-        )
+        <span class="self">self</span>.inner.write_texture(texture, data, data_layout, size);
     }
 
     <span class="doccomment">/// Schedule a copy of data from `image` into `texture`.
@@ -513,16 +433,11 @@
     </span><span class="kw">pub fn </span>copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         source: <span class="kw-2">&amp;</span>wgt::CopyExternalImageSourceInfo,
-        dest: <span class="kw">crate</span>::CopyExternalImageDestInfo&lt;<span class="lifetime">'_</span>&gt;,
+        dest: wgt::CopyExternalImageDestInfo&lt;<span class="kw-2">&amp;</span>api::Texture&gt;,
         size: Extent3d,
     ) {
-        DynContext::queue_copy_external_image_to_texture(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.data.as_ref(),
-            source,
-            dest,
-            size,
-        )
+        <span class="self">self</span>.inner
+            .copy_external_image_to_texture(source, dest, size);
     }
 
     <span class="doccomment">/// Submits a series of finished command buffers for execution.
@@ -532,12 +447,11 @@
     ) -&gt; SubmissionIndex {
         <span class="kw">let </span><span class="kw-2">mut </span>command_buffers = command_buffers
             .into_iter()
-            .map(|<span class="kw-2">mut </span>comb| comb.data.take().unwrap());
+            .map(|<span class="kw-2">mut </span>comb| comb.inner.take().unwrap());
 
-        <span class="kw">let </span>data =
-            DynContext::queue_submit(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref(), <span class="kw-2">&amp;mut </span>command_buffers);
+        <span class="kw">let </span>index = <span class="self">self</span>.inner.submit(<span class="kw-2">&amp;mut </span>command_buffers);
 
-        SubmissionIndex { data }
+        SubmissionIndex { index }
     }
 
     <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.
@@ -547,7 +461,7 @@
     /// Timestamp values are represented in nanosecond values on WebGPU, see `&lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;`
     /// Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.
     </span><span class="kw">pub fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
-        DynContext::queue_get_timestamp_period(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.data.as_ref())
+        <span class="self">self</span>.inner.get_timestamp_period()
     }
 
     <span class="doccomment">/// Registers a callback when the previous call to submit finishes running on the gpu. This callback
@@ -562,11 +476,7 @@
     /// call to the function will not complete until the callback returns, so prefer keeping callbacks short
     /// and used to set flags, send messages, etc.
     </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
-        DynContext::queue_on_submitted_work_done(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.data.as_ref(),
-            Box::new(callback),
-        )
+        <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
     }
 }
 </code></pre></div></section></main></body></html>

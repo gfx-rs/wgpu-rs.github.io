@@ -119,15 +119,6 @@
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
 <a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -147,6 +138,7 @@
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![doc(html_logo_url = <span class="string">"https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png"</span>)]
 #![warn(missing_docs, rust_2018_idioms, unsafe_op_in_unsafe_fn)]
+#![allow(clippy::arc_with_non_send_sync)]
 
 </span><span class="comment">//
 //
@@ -156,9 +148,9 @@
 
 </span><span class="kw">mod </span>api;
 <span class="kw">mod </span>backend;
-<span class="kw">mod </span>context;
+<span class="kw">mod </span>cmp;
+<span class="kw">mod </span>dispatch;
 <span class="kw">mod </span>macros;
-<span class="kw">mod </span>send_sync;
 <span class="kw">pub mod </span>util;
 
 <span class="comment">//
@@ -167,17 +159,7 @@
 //
 //
 
-</span><span class="attr">#[allow(unused_imports)] </span><span class="comment">// WebGPU needs this
-</span><span class="kw">use </span>context::Context;
-<span class="kw">use </span>send_sync::<span class="kw-2">*</span>;
-
-<span class="kw">type </span>C = <span class="kw">dyn </span>context::DynContext;
-<span class="attr">#[cfg(send_sync)]
-</span><span class="kw">type </span>Data = <span class="kw">dyn </span>std::any::Any + Send + Sync;
-<span class="attr">#[cfg(not(send_sync))]
-</span><span class="kw">type </span>Data = <span class="kw">dyn </span>std::any::Any;
-
-<span class="comment">//
+//
 //
 // Public re-exports
 //

@@ -385,31 +385,11 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, sync::Arc, thread};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt};
 
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
-<span class="kw">use </span><span class="kw">crate</span>::context::DynContext;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Describes a [`Surface`].
@@ -430,8 +410,6 @@
 /// [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context)
 /// serves a similar role.
 </span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">'window</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-
     <span class="doccomment">/// Optionally, keep the source of the handle used for the surface alive.
     ///
     /// This is useful for platforms where the surface is created from a window and the surface
@@ -439,7 +417,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) _handle_source: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
 
     <span class="doccomment">/// Additional surface data returned by [`DynContext::instance_create_surface`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) surface_data: Box&lt;Data&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchSurface,
 
     <span class="comment">// Stores the latest `SurfaceConfiguration` that was set using `Surface::configure`.
     // It is required to set the attributes of the `SurfaceTexture` in the
@@ -455,11 +433,7 @@
     ///
     /// Returns specified values (see [`SurfaceCapabilities`]) if surface is incompatible with the adapter.
     </span><span class="kw">pub fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>Adapter) -&gt; SurfaceCapabilities {
-        DynContext::surface_get_capabilities(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.surface_data.as_ref(),
-            adapter.data.as_ref(),
-        )
+        <span class="self">self</span>.inner.get_capabilities(<span class="kw-2">&amp;</span>adapter.inner)
     }
 
     <span class="doccomment">/// Return a default `SurfaceConfiguration` from width and height to use for the [`Surface`] with this adapter.
@@ -492,12 +466,7 @@
     /// - Texture format requested is unsupported on the surface.
     /// - `config.width` or `config.height` is zero.
     </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration) {
-        DynContext::surface_configure(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            <span class="self">self</span>.surface_data.as_ref(),
-            device.data.as_ref(),
-            config,
-        );
+        <span class="self">self</span>.inner.configure(<span class="kw-2">&amp;</span>device.inner, config);
 
         <span class="kw">let </span><span class="kw-2">mut </span>conf = <span class="self">self</span>.config.lock();
         <span class="kw-2">*</span>conf = <span class="prelude-val">Some</span>(config.clone());
@@ -512,8 +481,7 @@
     /// If a SurfaceTexture referencing this surface is alive when the swapchain is recreated,
     /// recreating the swapchain will panic.
     </span><span class="kw">pub fn </span>get_current_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceTexture, SurfaceError&gt; {
-        <span class="kw">let </span>(texture_data, status, detail) =
-            DynContext::surface_get_current_texture(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="self">self</span>.surface_data.as_ref());
+        <span class="kw">let </span>(texture, status, detail) = <span class="self">self</span>.inner.get_current_texture();
 
         <span class="kw">let </span>suboptimal = <span class="kw">match </span>status {
             SurfaceStatus::Good =&gt; <span class="bool-val">false</span>,
@@ -543,11 +511,10 @@
             view_formats: <span class="kw-2">&amp;</span>[],
         };
 
-        texture_data
-            .map(|data| SurfaceTexture {
+        texture
+            .map(|texture| SurfaceTexture {
                 texture: Texture {
-                    context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-                    data,
+                    inner: texture,
                     descriptor,
                 },
                 suboptimal,
@@ -567,16 +534,18 @@
     </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Surface&gt;) -&gt; R, R&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_surface_callback: F,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;R&gt; {
-        <span class="self">self</span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::ContextWgpuCore&gt;()
-            .map(|ctx| <span class="kw">unsafe </span>{
-                ctx.surface_as_hal::&lt;A, F, R&gt;(
-                    <span class="kw">crate</span>::context::downcast_ref(<span class="self">self</span>.surface_data.as_ref()),
-                    hal_surface_callback,
-                )
-            })
+    ) -&gt; R {
+        <span class="kw">let </span>core_surface = <span class="self">self</span>.inner.as_core_opt();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_surface) = core_surface {
+            <span class="kw">unsafe </span>{
+                core_surface
+                    .context
+                    .surface_as_hal::&lt;A, F, R&gt;(core_surface, hal_surface_callback)
+            }
+        } <span class="kw">else </span>{
+            hal_surface_callback(<span class="prelude-val">None</span>)
+        }
     }
 }
 
@@ -585,7 +554,6 @@
 </span><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_struct(<span class="string">"Surface"</span>)
-            .field(<span class="string">"context"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.context)
             .field(
                 <span class="string">"_handle_source"</span>,
                 <span class="kw-2">&amp;</span><span class="kw">if </span><span class="self">self</span>._handle_source.is_some() {
@@ -594,7 +562,7 @@
                     <span class="string">"None"
                 </span>},
             )
-            .field(<span class="string">"data"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.surface_data)
+            .field(<span class="string">"inner"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner)
             .field(<span class="string">"config"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
             .finish()
     }
@@ -603,13 +571,7 @@
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Surface&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.surface_drop(<span class="self">self</span>.surface_data.as_ref())
-        }
-    }
-}
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Surface&lt;<span class="lifetime">'_</span>&gt; =&gt; .inner);
 
 <span class="doccomment">/// Super trait for window handles as used in [`SurfaceTarget`].
 </span><span class="kw">pub trait </span>WindowHandle: HasWindowHandle + HasDisplayHandle + WasmNotSendSync {}

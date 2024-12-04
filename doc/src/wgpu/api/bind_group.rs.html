@@ -141,20 +141,7 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{sync::Arc, thread};
-
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a binding group.
 ///
@@ -166,21 +153,12 @@
 /// Corresponds to [WebGPU `GPUBindGroup`](https://gpuweb.github.io/gpuweb/#gpubindgroup).
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>BindGroup {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) context: Arc&lt;C&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;Data&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchBindGroup,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(BindGroup: Send, Sync);
 
-<span class="macro">super::impl_partialeq_eq_hash!</span>(BindGroup);
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>BindGroup {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!thread::panicking() {
-            <span class="self">self</span>.context.bind_group_drop(<span class="self">self</span>.data.as_ref());
-        }
-    }
-}
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(BindGroup =&gt; .inner);
 
 <span class="doccomment">/// Resource that can be bound to a pipeline.
 ///
