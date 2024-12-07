@@ -3536,6 +3536,23 @@
 <a href="#3535" id="3535">3535</a>
 <a href="#3536" id="3536">3536</a>
 <a href="#3537" id="3537">3537</a>
+<a href="#3538" id="3538">3538</a>
+<a href="#3539" id="3539">3539</a>
+<a href="#3540" id="3540">3540</a>
+<a href="#3541" id="3541">3541</a>
+<a href="#3542" id="3542">3542</a>
+<a href="#3543" id="3543">3543</a>
+<a href="#3544" id="3544">3544</a>
+<a href="#3545" id="3545">3545</a>
+<a href="#3546" id="3546">3546</a>
+<a href="#3547" id="3547">3547</a>
+<a href="#3548" id="3548">3548</a>
+<a href="#3549" id="3549">3549</a>
+<a href="#3550" id="3550">3550</a>
+<a href="#3551" id="3551">3551</a>
+<a href="#3552" id="3552">3552</a>
+<a href="#3553" id="3553">3553</a>
+<a href="#3554" id="3554">3554</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
@@ -3980,6 +3997,9 @@
     <span class="doccomment">/// Configured device is needed to know which backend
     /// code to execute when acquiring a new frame.
     </span>configured_device: Mutex&lt;<span class="prelude-ty">Option</span>&lt;wgc::id::DeviceId&gt;&gt;,
+    <span class="doccomment">/// The error sink with which to report errors.
+    /// `None` if the surface has not been configured.
+    </span>error_sink: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ErrorSink&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -4365,6 +4385,7 @@
             context: <span class="self">self</span>.clone(),
             id,
             configured_device: Mutex::default(),
+            error_sink: Mutex::default(),
         }))
     }
 
@@ -6973,9 +6994,11 @@
 
         <span class="kw">let </span>error = <span class="self">self</span>.context.<span class="number">0</span>.surface_configure(<span class="self">self</span>.id, device.id, config);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
-            <span class="self">self</span>.context.handle_error_fatal(e, <span class="string">"Surface::configure"</span>);
+            <span class="self">self</span>.context
+                .handle_error_nolabel(<span class="kw-2">&amp;</span>device.error_sink, e, <span class="string">"Surface::configure"</span>);
         } <span class="kw">else </span>{
             <span class="kw-2">*</span><span class="self">self</span>.configured_device.lock() = <span class="prelude-val">Some</span>(device.id);
+            <span class="kw-2">*</span><span class="self">self</span>.error_sink.lock() = <span class="prelude-val">Some</span>(device.error_sink.clone());
         }
     }
 
@@ -6986,6 +7009,12 @@
         <span class="kw">crate</span>::SurfaceStatus,
         dispatch::DispatchSurfaceOutputDetail,
     ) {
+        <span class="kw">let </span>output_detail = CoreSurfaceOutputDetail {
+            context: <span class="self">self</span>.context.clone(),
+            surface_id: <span class="self">self</span>.id,
+        }
+        .into();
+
         <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.surface_get_current_texture(<span class="self">self</span>.id, <span class="prelude-val">None</span>) {
             <span class="prelude-val">Ok</span>(wgc::present::SurfaceOutput { status, texture_id }) =&gt; {
                 <span class="kw">let </span>data = texture_id
@@ -6996,19 +7025,24 @@
                     })
                     .map(Into::into);
 
-                (
-                    data,
-                    status,
-                    CoreSurfaceOutputDetail {
-                        context: <span class="self">self</span>.context.clone(),
-                        surface_id: <span class="self">self</span>.id,
-                    }
-                    .into(),
-                )
+                (data, status, output_detail)
             }
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self
-                </span>.context
-                .handle_error_fatal(err, <span class="string">"Surface::get_current_texture_view"</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="kw">let </span>error_sink = <span class="self">self</span>.error_sink.lock();
+                <span class="kw">match </span>error_sink.as_ref() {
+                    <span class="prelude-val">Some</span>(error_sink) =&gt; {
+                        <span class="self">self</span>.context.handle_error_nolabel(
+                            error_sink,
+                            err,
+                            <span class="string">"Surface::get_current_texture_view"</span>,
+                        );
+                        (<span class="prelude-val">None</span>, <span class="kw">crate</span>::SurfaceStatus::Unknown, output_detail)
+                    }
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self
+                        </span>.context
+                        .handle_error_fatal(err, <span class="string">"Surface::get_current_texture_view"</span>),
+                }
+            }
         }
     }
 }
