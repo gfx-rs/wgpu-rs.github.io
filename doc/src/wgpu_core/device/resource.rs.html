@@ -3672,7 +3672,6 @@
 <a href="#3671" id="3671">3671</a>
 <a href="#3672" id="3672">3672</a>
 <a href="#3673" id="3673">3673</a>
-<a href="#3674" id="3674">3674</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3829,10 +3828,9 @@
         <span class="comment">// SAFETY: We are in the Drop impl and we don't use self.fence anymore after this point.
         </span><span class="kw">let </span>fence = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fence.write()) };
         <span class="attr">#[cfg(feature = <span class="string">"indirect-validation"</span>)]
-        </span><span class="self">self</span>.indirect_validation
-            .take()
-            .unwrap()
-            .dispose(<span class="self">self</span>.raw.as_ref());
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(indirect_validation) = <span class="self">self</span>.indirect_validation.take() {
+            indirect_validation.dispose(<span class="self">self</span>.raw.as_ref());
+        }
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.raw.destroy_buffer(zero_buffer);
             <span class="self">self</span>.raw.destroy_fence(fence);
