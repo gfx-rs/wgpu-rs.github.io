@@ -682,7 +682,6 @@
 <a href="#681" id="681">681</a>
 <a href="#682" id="682">682</a>
 <a href="#683" id="683">683</a>
-<a href="#684" id="684">684</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle},
     front::spv::{BlockContext, BodyIndex},
@@ -796,6 +795,9 @@
             }
         }
 
+        <span class="comment">// Note the index this function's handle will be assigned, for tracing.
+        </span><span class="kw">let </span>function_index = module.functions.len();
+
         <span class="comment">// Read body
         </span><span class="self">self</span>.function_call_graph.add_node(fun_id);
         <span class="kw">let </span><span class="kw-2">mut </span>parameters_sampling =
@@ -807,14 +809,10 @@
             body_for_label: Default::default(),
             mergers: Default::default(),
             bodies: Default::default(),
+            module,
             function_id: fun_id,
             expressions: <span class="kw-2">&amp;mut </span>fun.expressions,
             local_arena: <span class="kw-2">&amp;mut </span>fun.local_variables,
-            const_arena: <span class="kw-2">&amp;mut </span>module.constants,
-            overrides: <span class="kw-2">&amp;mut </span>module.overrides,
-            global_expressions: <span class="kw-2">&amp;mut </span>module.global_expressions,
-            type_arena: <span class="kw-2">&amp;</span>module.types,
-            global_arena: <span class="kw-2">&amp;</span>module.global_variables,
             arguments: <span class="kw-2">&amp;</span>fun.arguments,
             parameter_sampling: <span class="kw-2">&amp;mut </span>parameters_sampling,
         };
@@ -852,7 +850,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>prefix) = <span class="self">self</span>.options.block_ctx_dump_prefix {
             <span class="kw">let </span>dump_suffix = <span class="kw">match </span><span class="self">self</span>.lookup_entry_point.get(<span class="kw-2">&amp;</span>fun_id) {
                 <span class="prelude-val">Some</span>(ep) =&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.{:?}-{}.txt"</span>, ep.stage, ep.name),
-                <span class="prelude-val">None </span>=&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.Fun-{}.txt"</span>, module.functions.len()),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">format!</span>(<span class="string">"block_ctx.Fun-{}.txt"</span>, function_index),
             };
             <span class="kw">let </span>dest = prefix.join(dump_suffix);
             <span class="kw">let </span>dump = <span class="macro">format!</span>(<span class="string">"{block_ctx:#?}"</span>);
@@ -1265,10 +1263,10 @@
 <span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>gctx(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::proc::GlobalCtx {
         <span class="kw">crate</span>::proc::GlobalCtx {
-            types: <span class="self">self</span>.type_arena,
-            constants: <span class="self">self</span>.const_arena,
-            overrides: <span class="self">self</span>.overrides,
-            global_expressions: <span class="self">self</span>.global_expressions,
+            types: <span class="kw-2">&amp;</span><span class="self">self</span>.module.types,
+            constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
+            overrides: <span class="kw-2">&amp;</span><span class="self">self</span>.module.overrides,
+            global_expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions,
         }
     }
 

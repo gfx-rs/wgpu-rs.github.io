@@ -5988,11 +5988,6 @@
 <a href="#5987" id="5987">5987</a>
 <a href="#5988" id="5988">5988</a>
 <a href="#5989" id="5989">5989</a>
-<a href="#5990" id="5990">5990</a>
-<a href="#5991" id="5991">5991</a>
-<a href="#5992" id="5992">5992</a>
-<a href="#5993" id="5993">5993</a>
-<a href="#5994" id="5994">5994</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -6536,20 +6531,15 @@ This value then gets used instead of `OpLoad` result later on.
     /// The first element is always the function's top-level block.
     </span>bodies: Vec&lt;Body&gt;,
 
+    <span class="doccomment">/// The module we're building.
+    </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+
     <span class="doccomment">/// Id of the function currently being processed
     </span>function_id: spirv::Word,
     <span class="doccomment">/// Expression arena of the function currently being processed
     </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     <span class="doccomment">/// Local variables arena of the function currently being processed
     </span>local_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::LocalVariable&gt;,
-    <span class="doccomment">/// Constants arena of the module being processed
-    </span>const_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
-    overrides: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
-    global_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
-    <span class="doccomment">/// Type arena of the module being processed
-    </span>type_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
-    <span class="doccomment">/// Global arena of the module being processed
-    </span>global_arena: <span class="kw-2">&amp;</span><span class="lifetime">'function </span>Arena&lt;<span class="kw">crate</span>::GlobalVariable&gt;,
     <span class="doccomment">/// Arguments of the function currently being processed
     </span>arguments: <span class="kw-2">&amp;</span><span class="lifetime">'function </span>[<span class="kw">crate</span>::FunctionArgument],
     <span class="doccomment">/// Metadata about the usage of function parameters as sampling objects
@@ -6982,7 +6972,7 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>left = <span class="self">self</span>.get_expr_handle(p1_id, p1_lexp, ctx, emitter, block, body_idx);
 
         <span class="kw">let </span>result_lookup_ty = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>kind = ctx.type_arena[result_lookup_ty.handle]
+        <span class="kw">let </span>kind = ctx.module.types[result_lookup_ty.handle]
             .inner
             .scalar_kind()
             .unwrap();
@@ -7048,7 +7038,7 @@ This value then gets used instead of `OpLoad` result later on.
             SignAnchor::Operand =&gt; p1_lexp.type_id,
         };
         <span class="kw">let </span>expected_lookup_ty = <span class="self">self</span>.lookup_type.lookup(expected_type_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>kind = ctx.type_arena[expected_lookup_ty.handle]
+        <span class="kw">let </span>kind = ctx.module.types[expected_lookup_ty.handle]
             .inner
             .scalar_kind()
             .unwrap();
@@ -7116,14 +7106,14 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="kw">let </span>p1_lexp = <span class="self">self</span>.lookup_expression.lookup(p1_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>left = <span class="self">self</span>.get_expr_handle(p1_id, p1_lexp, ctx, emitter, block, body_idx);
         <span class="kw">let </span>p1_lookup_ty = <span class="self">self</span>.lookup_type.lookup(p1_lexp.type_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>p1_kind = ctx.type_arena[p1_lookup_ty.handle]
+        <span class="kw">let </span>p1_kind = ctx.module.types[p1_lookup_ty.handle]
             .inner
             .scalar_kind()
             .unwrap();
         <span class="kw">let </span>p2_lexp = <span class="self">self</span>.lookup_expression.lookup(p2_id)<span class="question-mark">?</span>;
         <span class="kw">let </span>right = <span class="self">self</span>.get_expr_handle(p2_id, p2_lexp, ctx, emitter, block, body_idx);
         <span class="kw">let </span>p2_lookup_ty = <span class="self">self</span>.lookup_type.lookup(p2_lexp.type_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>p2_kind = ctx.type_arena[p2_lookup_ty.handle]
+        <span class="kw">let </span>p2_kind = ctx.module.types[p2_lookup_ty.handle]
             .inner
             .scalar_kind()
             .unwrap();
@@ -7565,7 +7555,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>var_handle = ctx.local_arena.append(
                         <span class="kw">crate</span>::LocalVariable {
                             name,
-                            ty: <span class="kw">match </span>ctx.type_arena[lookup_ty.handle].inner {
+                            ty: <span class="kw">match </span>ctx.module.types[lookup_ty.handle].inner {
                                 <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; base,
                                 <span class="kw">_ </span>=&gt; lookup_ty.handle,
                             },
@@ -7660,7 +7650,7 @@ This value then gets used instead of `OpLoad` result later on.
                         // This can happen only through `BindingArray`, since
                         // that's the only case where one can obtain a pointer
                         // to an image / sampler, and so let's match on that:
-                        </span><span class="kw">let </span>dereference = <span class="kw">match </span>ctx.type_arena[lty.handle].inner {
+                        </span><span class="kw">let </span>dereference = <span class="kw">match </span>ctx.module.types[lty.handle].inner {
                             <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="bool-val">false</span>,
                             <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
                         };
@@ -7687,7 +7677,7 @@ This value then gets used instead of `OpLoad` result later on.
                         <span class="kw">let </span>index_maybe = <span class="kw">match </span><span class="kw-2">*</span>index_expr_data {
                             <span class="kw">crate</span>::Expression::Constant(const_handle) =&gt; <span class="prelude-val">Some</span>(
                                 ctx.gctx()
-                                    .eval_expr_to_u32(ctx.const_arena[const_handle].init)
+                                    .eval_expr_to_u32(ctx.module.constants[const_handle].init)
                                     .map_err(|<span class="kw">_</span>| {
                                         Error::InvalidAccess(<span class="kw">crate</span>::Expression::Constant(
                                             const_handle,
@@ -7699,7 +7689,7 @@ This value then gets used instead of `OpLoad` result later on.
 
                         <span class="macro">log::trace!</span>(<span class="string">"\t\t\tlooking up type {:?}"</span>, acex.type_id);
                         <span class="kw">let </span>type_lookup = <span class="self">self</span>.lookup_type.lookup(acex.type_id)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>ctx.type_arena[type_lookup.handle];
+                        <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>ctx.module.types[type_lookup.handle];
                         acex = <span class="kw">match </span>ty.inner {
                             <span class="comment">// can only index a struct with a constant
                             </span><span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
@@ -7731,7 +7721,7 @@ This value then gets used instead of `OpLoad` result later on.
                                         <span class="macro">debug_assert!</span>(acex.load_override.is_none());
                                         <span class="kw">let </span>sub_type_lookup =
                                             <span class="self">self</span>.lookup_type.lookup(lookup_member.type_id)<span class="question-mark">?</span>;
-                                        <span class="prelude-val">Some</span>(<span class="kw">match </span>ctx.type_arena[sub_type_lookup.handle].inner {
+                                        <span class="prelude-val">Some</span>(<span class="kw">match </span>ctx.module.types[sub_type_lookup.handle].inner {
                                             <span class="comment">// load it transposed, to match column major expectations
                                             </span><span class="kw">crate</span>::TypeInner::Matrix { .. } =&gt; {
                                                 <span class="kw">let </span>loaded = ctx.expressions.append(
@@ -7880,7 +7870,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>index_handle = <span class="macro">get_expr_handle!</span>(index_id, index_lexp);
                     <span class="kw">let </span>index_type = <span class="self">self</span>.lookup_type.lookup(index_lexp.type_id)<span class="question-mark">?</span>.handle;
 
-                    <span class="kw">let </span>num_components = <span class="kw">match </span>ctx.type_arena[root_type_lookup.handle].inner {
+                    <span class="kw">let </span>num_components = <span class="kw">match </span>ctx.module.types[root_type_lookup.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; size <span class="kw">as </span>u32,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
@@ -7959,7 +7949,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>index_handle = <span class="macro">get_expr_handle!</span>(index_id, index_lexp);
                     <span class="kw">let </span>index_type = <span class="self">self</span>.lookup_type.lookup(index_lexp.type_id)<span class="question-mark">?</span>.handle;
 
-                    <span class="kw">let </span>num_components = <span class="kw">match </span>ctx.type_arena[root_type_lookup.handle].inner {
+                    <span class="kw">let </span>num_components = <span class="kw">match </span>ctx.module.types[root_type_lookup.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; size <span class="kw">as </span>u32,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
@@ -8030,7 +8020,7 @@ This value then gets used instead of `OpLoad` result later on.
                         <span class="kw">let </span>index = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                         <span class="macro">log::trace!</span>(<span class="string">"\t\t\tlooking up type {:?}"</span>, lexp.type_id);
                         <span class="kw">let </span>type_lookup = <span class="self">self</span>.lookup_type.lookup(lexp.type_id)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>type_id = <span class="kw">match </span>ctx.type_arena[type_lookup.handle].inner {
+                        <span class="kw">let </span>type_id = <span class="kw">match </span>ctx.module.types[type_lookup.handle].inner {
                             <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; {
                                 <span class="self">self</span>.lookup_member
                                     .get(<span class="kw-2">&amp;</span>(type_lookup.handle, index))
@@ -8090,7 +8080,7 @@ This value then gets used instead of `OpLoad` result later on.
                         result_type_id,
                         object_handle,
                         <span class="kw-2">&amp;</span>selections,
-                        ctx.type_arena,
+                        <span class="kw-2">&amp;</span>ctx.module.types,
                         ctx.expressions,
                         span,
                     )<span class="question-mark">?</span>;
@@ -8119,7 +8109,7 @@ This value then gets used instead of `OpLoad` result later on.
                     }
                     <span class="kw">let </span>ty = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>.handle;
                     <span class="kw">let </span>first = components[<span class="number">0</span>];
-                    <span class="kw">let </span>expr = <span class="kw">match </span>ctx.type_arena[ty].inner {
+                    <span class="kw">let </span>expr = <span class="kw">match </span>ctx.module.types[ty].inner {
                         <span class="comment">// this is an optimization to detect the splat
                         </span><span class="kw">crate</span>::TypeInner::Vector { size, .. }
                             <span class="kw">if </span>components.len() == size <span class="kw">as </span>usize
@@ -8152,7 +8142,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>base_lexp = <span class="self">self</span>.lookup_expression.lookup(pointer_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>base_handle = <span class="macro">get_expr_handle!</span>(pointer_id, base_lexp);
                     <span class="kw">let </span>type_lookup = <span class="self">self</span>.lookup_type.lookup(base_lexp.type_id)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>handle = <span class="kw">match </span>ctx.type_arena[type_lookup.handle].inner {
+                    <span class="kw">let </span>handle = <span class="kw">match </span>ctx.module.types[type_lookup.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Image { .. } | <span class="kw">crate</span>::TypeInner::Sampler { .. } =&gt; {
                             base_handle
                         }
@@ -8298,7 +8288,7 @@ This value then gets used instead of `OpLoad` result later on.
                     );
 
                     <span class="kw">let </span>result_ty = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>inner = <span class="kw-2">&amp;</span>ctx.type_arena[result_ty.handle].inner;
+                    <span class="kw">let </span>inner = <span class="kw-2">&amp;</span>ctx.module.types[result_ty.handle].inner;
                     <span class="kw">let </span>kind = inner.scalar_kind().unwrap();
                     <span class="kw">let </span>size = inner.size(ctx.gctx()) <span class="kw">as </span>u8;
 
@@ -8526,11 +8516,11 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>count_handle = <span class="macro">get_expr_handle!</span>(count_id, count_lexp);
                     <span class="kw">let </span>count_lookup_ty = <span class="self">self</span>.lookup_type.lookup(count_lexp.type_id)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>offset_kind = ctx.type_arena[offset_lookup_ty.handle]
+                    <span class="kw">let </span>offset_kind = ctx.module.types[offset_lookup_ty.handle]
                         .inner
                         .scalar_kind()
                         .unwrap();
-                    <span class="kw">let </span>count_kind = ctx.type_arena[count_lookup_ty.handle]
+                    <span class="kw">let </span>count_kind = ctx.module.types[count_lookup_ty.handle]
                         .inner
                         .scalar_kind()
                         .unwrap();
@@ -8594,11 +8584,11 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>count_handle = <span class="macro">get_expr_handle!</span>(count_id, count_lexp);
                     <span class="kw">let </span>count_lookup_ty = <span class="self">self</span>.lookup_type.lookup(count_lexp.type_id)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>offset_kind = ctx.type_arena[offset_lookup_ty.handle]
+                    <span class="kw">let </span>offset_kind = ctx.module.types[offset_lookup_ty.handle]
                         .inner
                         .scalar_kind()
                         .unwrap();
-                    <span class="kw">let </span>count_kind = ctx.type_arena[count_lookup_ty.handle]
+                    <span class="kw">let </span>count_kind = ctx.module.types[count_lookup_ty.handle]
                         .inner
                         .scalar_kind()
                         .unwrap();
@@ -8888,14 +8878,14 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>v1_lexp = <span class="self">self</span>.lookup_expression.lookup(v1_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>v1_lty = <span class="self">self</span>.lookup_type.lookup(v1_lexp.type_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>v1_handle = <span class="macro">get_expr_handle!</span>(v1_id, v1_lexp);
-                    <span class="kw">let </span>n1 = <span class="kw">match </span>ctx.type_arena[v1_lty.handle].inner {
+                    <span class="kw">let </span>n1 = <span class="kw">match </span>ctx.module.types[v1_lty.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; size <span class="kw">as </span>u32,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidInnerType(v1_lexp.type_id)),
                     };
                     <span class="kw">let </span>v2_lexp = <span class="self">self</span>.lookup_expression.lookup(v2_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>v2_lty = <span class="self">self</span>.lookup_type.lookup(v2_lexp.type_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>v2_handle = <span class="macro">get_expr_handle!</span>(v2_id, v2_lexp);
-                    <span class="kw">let </span>n2 = <span class="kw">match </span>ctx.type_arena[v2_lty.handle].inner {
+                    <span class="kw">let </span>n2 = <span class="kw">match </span>ctx.module.types[v2_lty.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; size <span class="kw">as </span>u32,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidInnerType(v2_lexp.type_id)),
                     };
@@ -8983,7 +8973,7 @@ This value then gets used instead of `OpLoad` result later on.
 
                     <span class="kw">let </span>value_lexp = <span class="self">self</span>.lookup_expression.lookup(value_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>ty_lookup = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.type_arena[ty_lookup.handle].inner {
+                    <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty_lookup.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Scalar(scalar)
                         | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. }
                         | <span class="kw">crate</span>::TypeInner::Matrix { scalar, .. } =&gt; scalar,
@@ -9509,7 +9499,7 @@ This value then gets used instead of `OpLoad` result later on.
                     <span class="kw">let </span>selector_lexp = <span class="kw-2">&amp;</span><span class="self">self</span>.lookup_expression[<span class="kw-2">&amp;</span>selector];
                     <span class="kw">let </span>selector_lty = <span class="self">self</span>.lookup_type.lookup(selector_lexp.type_id)<span class="question-mark">?</span>;
                     <span class="kw">let </span>selector_handle = <span class="macro">get_expr_handle!</span>(selector, selector_lexp);
-                    <span class="kw">let </span>selector = <span class="kw">match </span>ctx.type_arena[selector_lty.handle].inner {
+                    <span class="kw">let </span>selector = <span class="kw">match </span>ctx.module.types[selector_lty.handle].inner {
                         <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                             kind: <span class="kw">crate</span>::ScalarKind::Uint,
                             width: <span class="kw">_</span>,
@@ -11837,7 +11827,7 @@ This value then gets used instead of `OpLoad` result later on.
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&gt; {
     block.extend(emitter.finish(ctx.expressions));
 
-    <span class="kw">let </span>literal = <span class="kw">match </span>ctx.type_arena[index_type].inner.scalar_kind() {
+    <span class="kw">let </span>literal = <span class="kw">match </span>ctx.module.types[index_type].inner.scalar_kind() {
         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="kw">crate</span>::Literal::U32(index),
         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; <span class="kw">crate</span>::Literal::I32(index <span class="kw">as </span>i32),
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidIndexType(index_type_id)),

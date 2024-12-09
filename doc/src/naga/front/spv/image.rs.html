@@ -834,6 +834,10 @@
 <a href="#833" id="833">833</a>
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Handle, UniqueArena},
     Scalar,
@@ -864,7 +868,9 @@
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&gt; {
         <span class="kw">match </span><span class="self">self</span>.expressions[handle] {
-            <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.global_arena[handle].ty),
+            <span class="kw">crate</span>::Expression::GlobalVariable(handle) =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="self">self</span>.module.global_variables[handle].ty)
+            }
             <span class="kw">crate</span>::Expression::FunctionArgument(i) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.arguments[i <span class="kw">as </span>usize].ty),
             <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_image_expr_ty(base)<span class="question-mark">?</span>),
             <span class="kw-2">ref </span>other =&gt; <span class="prelude-val">Err</span>(Error::InvalidImageExpression(other.clone())),
@@ -900,7 +906,7 @@
     coordinate_ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
     ctx: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::BlockContext,
 ) -&gt; (Handle&lt;<span class="kw">crate</span>::Expression&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;) {
-    <span class="kw">let </span>(given_size, kind) = <span class="kw">match </span>ctx.type_arena[coordinate_ty].inner {
+    <span class="kw">let </span>(given_size, kind) = <span class="kw">match </span>ctx.module.types[coordinate_ty].inner {
         <span class="kw">crate</span>::TypeInner::Scalar(Scalar { kind, .. }) =&gt; (<span class="prelude-val">None</span>, kind),
         <span class="kw">crate</span>::TypeInner::Vector {
             size,
@@ -911,7 +917,8 @@
 
     <span class="kw">let </span>required_size = image_dim.required_coordinate_size();
     <span class="kw">let </span>required_ty = required_size.map(|size| {
-        ctx.type_arena
+        ctx.module
+            .types
             .get(<span class="kw-2">&amp;</span><span class="kw">crate</span>::Type {
                 name: <span class="prelude-val">None</span>,
                 inner: <span class="kw">crate</span>::TypeInner::Vector {
@@ -1123,7 +1130,7 @@
         <span class="kw">let </span>coord_handle =
             <span class="self">self</span>.get_expr_handle(coordinate_id, coord_lexp, ctx, emitter, block, body_idx);
         <span class="kw">let </span>coord_type_handle = <span class="self">self</span>.lookup_type.lookup(coord_lexp.type_id)<span class="question-mark">?</span>.handle;
-        <span class="kw">let </span>(coordinate, array_index) = <span class="kw">match </span>ctx.type_arena[image_ty].inner {
+        <span class="kw">let </span>(coordinate, array_index) = <span class="kw">match </span>ctx.module.types[image_ty].inner {
             <span class="kw">crate</span>::TypeInner::Image {
                 dim,
                 arrayed,
@@ -1214,7 +1221,7 @@
         <span class="kw">let </span>coord_handle =
             <span class="self">self</span>.get_expr_handle(coordinate_id, coord_lexp, ctx, emitter, block, body_idx);
         <span class="kw">let </span>coord_type_handle = <span class="self">self</span>.lookup_type.lookup(coord_lexp.type_id)<span class="question-mark">?</span>.handle;
-        <span class="kw">let </span>(coordinate, array_index, is_depth) = <span class="kw">match </span>ctx.type_arena[image_ty].inner {
+        <span class="kw">let </span>(coordinate, array_index, is_depth) = <span class="kw">match </span>ctx.module.types[image_ty].inner {
             <span class="kw">crate</span>::TypeInner::Image {
                 dim,
                 arrayed,
@@ -1250,7 +1257,7 @@
         <span class="kw">let </span>handle = <span class="kw">if </span>is_depth {
             <span class="kw">let </span>result_ty = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>;
             <span class="comment">// The return type of `OpImageRead` can be a scalar or vector.
-            </span><span class="kw">match </span>ctx.type_arena[result_ty.handle].inner {
+            </span><span class="kw">match </span>ctx.module.types[result_ty.handle].inner {
                 <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
                     <span class="kw">let </span>splat_expr = <span class="kw">crate</span>::Expression::Splat {
                         size,
@@ -1329,7 +1336,7 @@
                         <span class="kw">let </span>image_lexp = <span class="self">self</span>.lookup_sampled_image.lookup(sampled_image_id)<span class="question-mark">?</span>;
                         <span class="kw">let </span>image_ty = ctx.get_image_expr_ty(image_lexp.image)<span class="question-mark">?</span>;
                         <span class="macro">matches!</span>(
-                            ctx.type_arena[image_ty].inner,
+                            ctx.module.types[image_ty].inner,
                             <span class="kw">crate</span>::TypeInner::Image {
                                 class: <span class="kw">crate</span>::ImageClass::Depth { .. },
                                 ..
@@ -1401,6 +1408,7 @@
                         </span>.inner
                         .to_expr();
                     <span class="kw">let </span>offset_handle = ctx
+                        .module
                         .global_expressions
                         .append(offset_expr, Default::default());
                     offset = <span class="prelude-val">Some</span>(offset_handle);
@@ -1435,7 +1443,7 @@
                     <span class="kw-2">*</span>flags |= sampling_bit;
                 }
 
-                ctx.global_arena[handle].ty
+                ctx.module.global_variables[handle].ty
             }
 
             <span class="kw">crate</span>::Expression::FunctionArgument(i) =&gt; {
@@ -1449,7 +1457,7 @@
                         <span class="kw-2">*</span>flags |= sampling_bit;
                     }
 
-                    <span class="kw">match </span>ctx.type_arena[ctx.global_arena[handle].ty].inner {
+                    <span class="kw">match </span>ctx.module.types[ctx.module.global_variables[handle].ty].inner {
                         <span class="kw">crate</span>::TypeInner::BindingArray { base, .. } =&gt; base,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidGlobalVar(ctx.expressions[base].clone())),
                     }
@@ -1481,60 +1489,60 @@
             <span class="kw-2">ref </span>other =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidGlobalVar(other.clone())),
         }
 
-        <span class="kw">let </span>((coordinate, array_index), depth_ref, is_depth) = <span class="kw">match </span>ctx.type_arena[image_ty].inner
-        {
-            <span class="kw">crate</span>::TypeInner::Image {
-                dim,
-                arrayed,
-                class,
-            } =&gt; (
-                extract_image_coordinates(
+        <span class="kw">let </span>((coordinate, array_index), depth_ref, is_depth) =
+            <span class="kw">match </span>ctx.module.types[image_ty].inner {
+                <span class="kw">crate</span>::TypeInner::Image {
                     dim,
-                    <span class="kw">if </span>options.project {
-                        ExtraCoordinate::Projection
-                    } <span class="kw">else if </span>arrayed {
-                        ExtraCoordinate::ArrayLayer
-                    } <span class="kw">else </span>{
-                        ExtraCoordinate::Garbage
-                    },
-                    coord_handle,
-                    coord_type_handle,
-                    ctx,
-                ),
-                {
-                    <span class="kw">match </span>dref_id {
-                        <span class="prelude-val">Some</span>(id) =&gt; {
-                            <span class="kw">let </span>expr_lexp = <span class="self">self</span>.lookup_expression.lookup(id)<span class="question-mark">?</span>;
-                            <span class="kw">let </span><span class="kw-2">mut </span>expr =
-                                <span class="self">self</span>.get_expr_handle(id, expr_lexp, ctx, emitter, block, body_idx);
+                    arrayed,
+                    class,
+                } =&gt; (
+                    extract_image_coordinates(
+                        dim,
+                        <span class="kw">if </span>options.project {
+                            ExtraCoordinate::Projection
+                        } <span class="kw">else if </span>arrayed {
+                            ExtraCoordinate::ArrayLayer
+                        } <span class="kw">else </span>{
+                            ExtraCoordinate::Garbage
+                        },
+                        coord_handle,
+                        coord_type_handle,
+                        ctx,
+                    ),
+                    {
+                        <span class="kw">match </span>dref_id {
+                            <span class="prelude-val">Some</span>(id) =&gt; {
+                                <span class="kw">let </span>expr_lexp = <span class="self">self</span>.lookup_expression.lookup(id)<span class="question-mark">?</span>;
+                                <span class="kw">let </span><span class="kw-2">mut </span>expr = <span class="self">self
+                                    </span>.get_expr_handle(id, expr_lexp, ctx, emitter, block, body_idx);
 
-                            <span class="kw">if </span>options.project {
-                                <span class="kw">let </span>required_size = dim.required_coordinate_size();
-                                <span class="kw">let </span>right = ctx.expressions.append(
-                                    <span class="kw">crate</span>::Expression::AccessIndex {
-                                        base: coord_handle,
-                                        index: required_size.map_or(<span class="number">1</span>, |size| size <span class="kw">as </span>u32),
-                                    },
-                                    <span class="kw">crate</span>::Span::default(),
-                                );
-                                expr = ctx.expressions.append(
-                                    <span class="kw">crate</span>::Expression::Binary {
-                                        op: <span class="kw">crate</span>::BinaryOperator::Divide,
-                                        left: expr,
-                                        right,
-                                    },
-                                    <span class="kw">crate</span>::Span::default(),
-                                )
-                            };
-                            <span class="prelude-val">Some</span>(expr)
+                                <span class="kw">if </span>options.project {
+                                    <span class="kw">let </span>required_size = dim.required_coordinate_size();
+                                    <span class="kw">let </span>right = ctx.expressions.append(
+                                        <span class="kw">crate</span>::Expression::AccessIndex {
+                                            base: coord_handle,
+                                            index: required_size.map_or(<span class="number">1</span>, |size| size <span class="kw">as </span>u32),
+                                        },
+                                        <span class="kw">crate</span>::Span::default(),
+                                    );
+                                    expr = ctx.expressions.append(
+                                        <span class="kw">crate</span>::Expression::Binary {
+                                            op: <span class="kw">crate</span>::BinaryOperator::Divide,
+                                            left: expr,
+                                            right,
+                                        },
+                                        <span class="kw">crate</span>::Span::default(),
+                                    )
+                                };
+                                <span class="prelude-val">Some</span>(expr)
+                            }
+                            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                         }
-                        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-                    }
-                },
-                class.is_depth(),
-            ),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidImage(image_ty)),
-        };
+                    },
+                    class.is_depth(),
+                ),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidImage(image_ty)),
+            };
 
         <span class="kw">let </span>expr = <span class="kw">crate</span>::Expression::ImageSample {
             image: si_lexp.image,
@@ -1600,7 +1608,7 @@
         };
 
         <span class="kw">let </span>result_type_handle = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>.handle;
-        <span class="kw">let </span>maybe_scalar_kind = ctx.type_arena[result_type_handle].inner.scalar_kind();
+        <span class="kw">let </span>maybe_scalar_kind = ctx.module.types[result_type_handle].inner.scalar_kind();
 
         <span class="kw">let </span>expr = <span class="kw">if </span>maybe_scalar_kind == <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) {
             <span class="kw">crate</span>::Expression::As {
@@ -1645,7 +1653,7 @@
         };
 
         <span class="kw">let </span>result_type_handle = <span class="self">self</span>.lookup_type.lookup(result_type_id)<span class="question-mark">?</span>.handle;
-        <span class="kw">let </span>maybe_scalar_kind = ctx.type_arena[result_type_handle].inner.scalar_kind();
+        <span class="kw">let </span>maybe_scalar_kind = ctx.module.types[result_type_handle].inner.scalar_kind();
 
         <span class="kw">let </span>expr = <span class="kw">if </span>maybe_scalar_kind == <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) {
             <span class="kw">crate</span>::Expression::As {
