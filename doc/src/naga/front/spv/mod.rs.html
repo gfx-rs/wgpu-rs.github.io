@@ -5988,6 +5988,63 @@
 <a href="#5987" id="5987">5987</a>
 <a href="#5988" id="5988">5988</a>
 <a href="#5989" id="5989">5989</a>
+<a href="#5990" id="5990">5990</a>
+<a href="#5991" id="5991">5991</a>
+<a href="#5992" id="5992">5992</a>
+<a href="#5993" id="5993">5993</a>
+<a href="#5994" id="5994">5994</a>
+<a href="#5995" id="5995">5995</a>
+<a href="#5996" id="5996">5996</a>
+<a href="#5997" id="5997">5997</a>
+<a href="#5998" id="5998">5998</a>
+<a href="#5999" id="5999">5999</a>
+<a href="#6000" id="6000">6000</a>
+<a href="#6001" id="6001">6001</a>
+<a href="#6002" id="6002">6002</a>
+<a href="#6003" id="6003">6003</a>
+<a href="#6004" id="6004">6004</a>
+<a href="#6005" id="6005">6005</a>
+<a href="#6006" id="6006">6006</a>
+<a href="#6007" id="6007">6007</a>
+<a href="#6008" id="6008">6008</a>
+<a href="#6009" id="6009">6009</a>
+<a href="#6010" id="6010">6010</a>
+<a href="#6011" id="6011">6011</a>
+<a href="#6012" id="6012">6012</a>
+<a href="#6013" id="6013">6013</a>
+<a href="#6014" id="6014">6014</a>
+<a href="#6015" id="6015">6015</a>
+<a href="#6016" id="6016">6016</a>
+<a href="#6017" id="6017">6017</a>
+<a href="#6018" id="6018">6018</a>
+<a href="#6019" id="6019">6019</a>
+<a href="#6020" id="6020">6020</a>
+<a href="#6021" id="6021">6021</a>
+<a href="#6022" id="6022">6022</a>
+<a href="#6023" id="6023">6023</a>
+<a href="#6024" id="6024">6024</a>
+<a href="#6025" id="6025">6025</a>
+<a href="#6026" id="6026">6026</a>
+<a href="#6027" id="6027">6027</a>
+<a href="#6028" id="6028">6028</a>
+<a href="#6029" id="6029">6029</a>
+<a href="#6030" id="6030">6030</a>
+<a href="#6031" id="6031">6031</a>
+<a href="#6032" id="6032">6032</a>
+<a href="#6033" id="6033">6033</a>
+<a href="#6034" id="6034">6034</a>
+<a href="#6035" id="6035">6035</a>
+<a href="#6036" id="6036">6036</a>
+<a href="#6037" id="6037">6037</a>
+<a href="#6038" id="6038">6038</a>
+<a href="#6039" id="6039">6039</a>
+<a href="#6040" id="6040">6040</a>
+<a href="#6041" id="6041">6041</a>
+<a href="#6042" id="6042">6042</a>
+<a href="#6043" id="6043">6043</a>
+<a href="#6044" id="6044">6044</a>
+<a href="#6045" id="6045">6045</a>
+<a href="#6046" id="6046">6046</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -6468,7 +6525,8 @@ This value then gets used instead of `OpLoad` result later on.
 ///   definition, whereas Naga expressions are scoped to the rest of their
 ///   subtree. This means that discovering an expression use later in the
 ///   function retroactively requires us to have spilled that expression into a
-///   local variable back before we left its scope.
+///   local variable back before we left its scope. (The docs for
+///   [`Frontend::get_expr_handle`] explain this in more detail.)
 ///
 /// - We translate SPIR-V OpPhi expressions as Naga local variables in which we
 ///   store the appropriate value before jumping to the OpPhi's block.
@@ -6812,20 +6870,76 @@ This value then gets used instead of `OpLoad` result later on.
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Return the Naga `Expression` for a given SPIR-V result `id`.
+    <span class="doccomment">/// Return the Naga [`Expression`] to use in `body_idx` to refer to the SPIR-V result `id`.
     ///
-    /// `lookup` must be the `LookupExpression` for `id`.
+    /// Ideally, we would just have a map from each SPIR-V instruction id to the
+    /// [`Handle`] for the Naga [`Expression`] we generated for it.
+    /// Unfortunately, SPIR-V and Naga IR are different enough that such a
+    /// straightforward relationship isn't possible.
     ///
-    /// SPIR-V result ids can be used by any block dominated by the id's
-    /// definition, but Naga `Expressions` are only in scope for the remainder
-    /// of their `Statement` subtree. This means that the `Expression` generated
-    /// for `id` may no longer be in scope. In such cases, this function takes
-    /// care of spilling the value of `id` to a `LocalVariable` which can then
-    /// be used anywhere. The SPIR-V domination rule ensures that the
-    /// `LocalVariable` has been initialized before it is used.
+    /// In SPIR-V, an instruction's result id can be used by any instruction
+    /// dominated by that instruction. In Naga, an [`Expression`] is only in
+    /// scope for the remainder of its [`Block`]. In pseudocode:
     ///
-    /// The `body_idx` argument should be the index of the `Body` that hopes to
-    /// use `id`'s `Expression`.
+    /// ```ignore
+    ///     loop {
+    ///         a = f();
+    ///         g(a);
+    ///         break;
+    ///     }
+    ///     h(a);
+    /// ```
+    ///
+    /// Suppose the calls to `f`, `g`, and `h` are SPIR-V instructions. In
+    /// SPIR-V, both the `g` and `h` instructions are allowed to refer to `a`,
+    /// because the loop body, including `f`, dominates both of them.
+    ///
+    /// But if `a` is a Naga [`Expression`], its scope ends at the end of the
+    /// block it's evaluated in: the loop body. Thus, while the [`Expression`]
+    /// we generate for `g` can refer to `a`, the one we generate for `h`
+    /// cannot.
+    ///
+    /// Instead, the SPIR-V front end must generate Naga IR like this:
+    ///
+    /// ```ignore
+    ///     var temp; // INTRODUCED
+    ///     loop {
+    ///         a = f();
+    ///         g(a);
+    ///         temp = a; // INTRODUCED
+    ///     }
+    ///     h(temp); // ADJUSTED
+    /// ```
+    ///
+    /// In other words, where `a` is in scope, [`Expression`]s can refer to it
+    /// directly; but once it is out of scope, we need to spill it to a
+    /// temporary and refer to that instead.
+    ///
+    /// Given a SPIR-V expression `id` and the index `body_idx` of the [body]
+    /// that wants to refer to it:
+    ///
+    /// - If the Naga [`Expression`] we generated for `id` is in scope in
+    ///   `body_idx`, then we simply return its `Handle&lt;Expression&gt;`.
+    ///
+    /// - Otherwise, introduce a new [`LocalVariable`], and add an entry to
+    ///   [`BlockContext::phis`] to arrange for `id`'s value to be spilled to
+    ///   it. Then emit a fresh [`Load`] of that temporary variable for use in
+    ///   `body_idx`'s block, and return its `Handle`.
+    ///
+    /// The SPIR-V domination rule ensures that the introduced [`LocalVariable`]
+    /// will always have been initialized before it is used.
+    ///
+    /// `lookup` must be the [`LookupExpression`] for `id`.
+    ///
+    /// `body_idx` argument must be the index of the [`Body`] that hopes to use
+    /// `id`'s [`Expression`].
+    ///
+    /// [`Expression`]: crate::Expression
+    /// [`Handle`]: crate::Handle
+    /// [`Block`]: crate::Block
+    /// [body]: BlockContext::bodies
+    /// [`LocalVariable`]: crate::LocalVariable
+    /// [`Load`]: crate::Expression::Load
     </span><span class="kw">fn </span>get_expr_handle(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: spirv::Word,
