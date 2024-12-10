@@ -3672,6 +3672,8 @@
 <a href="#3671" id="3671">3671</a>
 <a href="#3672" id="3672">3672</a>
 <a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4324,7 +4326,7 @@
         <span class="kw">let </span>texture = Texture::new(
             <span class="self">self</span>,
             resource::TextureInner::Native { raw: hal_texture },
-            conv::map_texture_usage(desc.usage, desc.format.into()),
+            conv::map_texture_usage(desc.usage, desc.format.into(), format_features.flags),
             desc,
             format_features,
             resource::TextureClearMode::None,
@@ -6176,19 +6178,21 @@
 
                 <span class="kw">let </span>internal_use = <span class="kw">match </span>access {
                     wgt::StorageTextureAccess::WriteOnly =&gt; {
-                        <span class="kw">if </span>!view.format_features.flags.intersects(
-                            wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY
-                                | wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE,
-                        ) {
+                        <span class="kw">if </span>!view
+                            .format_features
+                            .flags
+                            .contains(wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY)
+                        {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::StorageWriteNotSupported(view.desc.format));
                         }
                         hal::TextureUses::STORAGE_WRITE_ONLY
                     }
                     wgt::StorageTextureAccess::ReadOnly =&gt; {
-                        <span class="kw">if </span>!view.format_features.flags.intersects(
-                            wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY
-                                | wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE,
-                        ) {
+                        <span class="kw">if </span>!view
+                            .format_features
+                            .flags
+                            .contains(wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY)
+                        {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::StorageReadNotSupported(view.desc.format));
                         }
                         hal::TextureUses::STORAGE_READ_ONLY

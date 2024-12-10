@@ -253,6 +253,17 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>wgt::TextureFormatFeatures;
 
 <span class="kw">use </span><span class="kw">crate</span>::resource::{<span class="self">self</span>, TextureDescriptor};
@@ -362,6 +373,7 @@
 <span class="kw">pub fn </span>map_texture_usage(
     usage: wgt::TextureUsages,
     aspect: hal::FormatAspects,
+    flags: wgt::TextureFormatFeatureFlags,
 ) -&gt; hal::TextureUses {
     <span class="kw">let </span><span class="kw-2">mut </span>u = hal::TextureUses::empty();
     u.set(
@@ -376,10 +388,20 @@
         hal::TextureUses::RESOURCE,
         usage.contains(wgt::TextureUsages::TEXTURE_BINDING),
     );
-    u.set(
-        hal::TextureUses::STORAGE_READ_WRITE,
-        usage.contains(wgt::TextureUsages::STORAGE_BINDING),
-    );
+    <span class="kw">if </span>usage.contains(wgt::TextureUsages::STORAGE_BINDING) {
+        u.set(
+            hal::TextureUses::STORAGE_READ_ONLY,
+            flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY),
+        );
+        u.set(
+            hal::TextureUses::STORAGE_WRITE_ONLY,
+            flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY),
+        );
+        u.set(
+            hal::TextureUses::STORAGE_READ_WRITE,
+            flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE),
+        );
+    }
     <span class="kw">let </span>is_color = aspect.contains(hal::FormatAspects::COLOR);
     u.set(
         hal::TextureUses::COLOR_TARGET,
@@ -398,7 +420,7 @@
 ) -&gt; hal::TextureUses {
     <span class="comment">// Enforce having COPY_DST/DEPTH_STENCIL_WRITE/COLOR_TARGET otherwise we
     // wouldn't be able to initialize the texture.
-    </span>map_texture_usage(desc.usage, desc.format.into())
+    </span>map_texture_usage(desc.usage, desc.format.into(), format_features.flags)
         | <span class="kw">if </span>desc.format.is_depth_stencil_format() {
             hal::TextureUses::DEPTH_STENCIL_WRITE
         } <span class="kw">else if </span>desc.usage.contains(wgt::TextureUsages::COPY_DST) {

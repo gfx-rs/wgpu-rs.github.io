@@ -7798,6 +7798,10 @@
 <a href="#7797" id="7797">7797</a>
 <a href="#7798" id="7798">7798</a>
 <a href="#7799" id="7799">7799</a>
+<a href="#7800" id="7800">7800</a>
+<a href="#7801" id="7801">7801</a>
+<a href="#7802" id="7802">7802</a>
+<a href="#7803" id="7803">7803</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -10174,7 +10178,7 @@
         /// [`StorageTextureAccess::WriteOnly`].
         </span><span class="kw">const </span>STORAGE_WRITE_ONLY = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
         <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with
-        /// any [`StorageTextureAccess`].
+        /// [`StorageTextureAccess::ReadWrite`].
         </span><span class="kw">const </span>STORAGE_READ_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
         <span class="doccomment">/// If not present, the texture can't be blended into the render target.
         </span><span class="kw">const </span>BLENDABLE = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
@@ -11200,6 +11204,10 @@
         <span class="kw">let </span>msaa = TextureFormatFeatureFlags::MULTISAMPLE_X4;
         <span class="kw">let </span>msaa_resolve = msaa | TextureFormatFeatureFlags::MULTISAMPLE_RESOLVE;
 
+        <span class="kw">let </span>s_ro_wo = TextureFormatFeatureFlags::STORAGE_READ_ONLY
+            | TextureFormatFeatureFlags::STORAGE_WRITE_ONLY;
+        <span class="kw">let </span>s_all = s_ro_wo | TextureFormatFeatureFlags::STORAGE_READ_WRITE;
+
         <span class="comment">// Flags
         </span><span class="kw">let </span>basic =
             TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING;
@@ -11237,31 +11245,31 @@
             <span class="self">Self</span>::Rg8Snorm =&gt;             (        noaa,      basic),
             <span class="self">Self</span>::Rg8Uint =&gt;              (        msaa, attachment),
             <span class="self">Self</span>::Rg8Sint =&gt;              (        msaa, attachment),
-            <span class="self">Self</span>::R32Uint =&gt;              (        noaa,  all_flags),
-            <span class="self">Self</span>::R32Sint =&gt;              (        noaa,  all_flags),
-            <span class="self">Self</span>::R32Float =&gt;             (        msaa,  all_flags),
+            <span class="self">Self</span>::R32Uint =&gt;              (        noaa | s_all,  all_flags),
+            <span class="self">Self</span>::R32Sint =&gt;              (        noaa | s_all,  all_flags),
+            <span class="self">Self</span>::R32Float =&gt;             (        msaa | s_all,  all_flags),
             <span class="self">Self</span>::Rg16Uint =&gt;             (        msaa, attachment),
             <span class="self">Self</span>::Rg16Sint =&gt;             (        msaa, attachment),
             <span class="self">Self</span>::Rg16Float =&gt;            (msaa_resolve, attachment),
-            <span class="self">Self</span>::Rgba8Unorm =&gt;           (msaa_resolve,  all_flags),
+            <span class="self">Self</span>::Rgba8Unorm =&gt;           (msaa_resolve | s_ro_wo,  all_flags),
             <span class="self">Self</span>::Rgba8UnormSrgb =&gt;       (msaa_resolve, attachment),
-            <span class="self">Self</span>::Rgba8Snorm =&gt;           (        noaa,    storage),
-            <span class="self">Self</span>::Rgba8Uint =&gt;            (        msaa,  all_flags),
-            <span class="self">Self</span>::Rgba8Sint =&gt;            (        msaa,  all_flags),
+            <span class="self">Self</span>::Rgba8Snorm =&gt;           (     s_ro_wo,    storage),
+            <span class="self">Self</span>::Rgba8Uint =&gt;            (        msaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba8Sint =&gt;            (        msaa | s_ro_wo,  all_flags),
             <span class="self">Self</span>::Bgra8Unorm =&gt;           (bgra8unorm_f, bgra8unorm),
             <span class="self">Self</span>::Bgra8UnormSrgb =&gt;       (msaa_resolve, attachment),
             <span class="self">Self</span>::Rgb10a2Uint =&gt;          (        msaa, attachment),
             <span class="self">Self</span>::Rgb10a2Unorm =&gt;         (msaa_resolve, attachment),
             <span class="self">Self</span>::Rg11b10Ufloat =&gt;        (        msaa,   rg11b10f),
-            <span class="self">Self</span>::Rg32Uint =&gt;             (        noaa,  all_flags),
-            <span class="self">Self</span>::Rg32Sint =&gt;             (        noaa,  all_flags),
-            <span class="self">Self</span>::Rg32Float =&gt;            (        noaa,  all_flags),
-            <span class="self">Self</span>::Rgba16Uint =&gt;           (        msaa,  all_flags),
-            <span class="self">Self</span>::Rgba16Sint =&gt;           (        msaa,  all_flags),
-            <span class="self">Self</span>::Rgba16Float =&gt;          (msaa_resolve,  all_flags),
-            <span class="self">Self</span>::Rgba32Uint =&gt;           (        noaa,  all_flags),
-            <span class="self">Self</span>::Rgba32Sint =&gt;           (        noaa,  all_flags),
-            <span class="self">Self</span>::Rgba32Float =&gt;          (        noaa,  all_flags),
+            <span class="self">Self</span>::Rg32Uint =&gt;             (        noaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rg32Sint =&gt;             (        noaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rg32Float =&gt;            (        noaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba16Uint =&gt;           (        msaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba16Sint =&gt;           (        msaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba16Float =&gt;          (msaa_resolve | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba32Uint =&gt;           (        noaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba32Sint =&gt;           (        noaa | s_ro_wo,  all_flags),
+            <span class="self">Self</span>::Rgba32Float =&gt;          (        noaa | s_ro_wo,  all_flags),
 
             <span class="self">Self</span>::Stencil8 =&gt;             (        msaa, attachment),
             <span class="self">Self</span>::Depth16Unorm =&gt;         (        msaa, attachment),
@@ -11273,12 +11281,12 @@
             <span class="comment">// We only support sampling nv12 textures until we implement transfer plane data.
             </span><span class="self">Self</span>::NV12 =&gt;                 (        noaa,    binding),
 
-            <span class="self">Self</span>::R16Unorm =&gt;             (        msaa,    storage),
-            <span class="self">Self</span>::R16Snorm =&gt;             (        msaa,    storage),
-            <span class="self">Self</span>::Rg16Unorm =&gt;            (        msaa,    storage),
-            <span class="self">Self</span>::Rg16Snorm =&gt;            (        msaa,    storage),
-            <span class="self">Self</span>::Rgba16Unorm =&gt;          (        msaa,    storage),
-            <span class="self">Self</span>::Rgba16Snorm =&gt;          (        msaa,    storage),
+            <span class="self">Self</span>::R16Unorm =&gt;             (        msaa | s_ro_wo,    storage),
+            <span class="self">Self</span>::R16Snorm =&gt;             (        msaa | s_ro_wo,    storage),
+            <span class="self">Self</span>::Rg16Unorm =&gt;            (        msaa | s_ro_wo,    storage),
+            <span class="self">Self</span>::Rg16Snorm =&gt;            (        msaa | s_ro_wo,    storage),
+            <span class="self">Self</span>::Rgba16Unorm =&gt;          (        msaa | s_ro_wo,    storage),
+            <span class="self">Self</span>::Rgba16Snorm =&gt;          (        msaa | s_ro_wo,    storage),
 
             <span class="self">Self</span>::Rgb9e5Ufloat =&gt;         (        noaa,      basic),
 
