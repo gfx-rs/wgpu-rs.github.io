@@ -2967,6 +2967,9 @@
 <a href="#2966" id="2966">2966</a>
 <a href="#2967" id="2967">2967</a>
 <a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3478,6 +3481,8 @@
     </span>InvalidArrayLengthArg,
     <span class="attr">#[error(<span class="string">"Constants cannot get the array length of a dynamically sized array"</span>)]
     </span>ArrayLengthDynamic,
+    <span class="attr">#[error(<span class="string">"Cannot call arrayLength on array sized by override-expression"</span>)]
+    </span>ArrayLengthOverridden,
     <span class="attr">#[error(<span class="string">"Constants cannot call functions"</span>)]
     </span>Call,
     <span class="attr">#[error(<span class="string">"Constants don't support workGroupUniformLoad"</span>)]
@@ -4280,6 +4285,7 @@
                             <span class="kw">let </span>expr = Expression::Literal(Literal::U32(len.get()));
                             <span class="self">self</span>.register_evaluated_expr(expr, span)
                         }
+                        ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::ArrayLengthOverridden),
                         ArraySize::Dynamic =&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::ArrayLengthDynamic),
                     },
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidArrayLengthArg),

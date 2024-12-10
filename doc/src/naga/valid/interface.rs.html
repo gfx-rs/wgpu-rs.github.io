@@ -779,6 +779,13 @@
 <a href="#778" id="778">778</a>
 <a href="#779" id="779">779</a>
 <a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     analyzer::{FunctionInfo, GlobalUse},
     Capabilities, Disalignment, FunctionError, ModuleInfo,
@@ -1278,7 +1285,10 @@
                 <span class="kw">if </span>access == <span class="kw">crate</span>::StorageAccess::STORE {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::StorageAddressSpaceWriteOnlyNotSupported);
                 }
-                (TypeFlags::DATA | TypeFlags::HOST_SHAREABLE, <span class="bool-val">true</span>)
+                (
+                    TypeFlags::DATA | TypeFlags::HOST_SHAREABLE | TypeFlags::CREATION_RESOLVED,
+                    <span class="bool-val">true</span>,
+                )
             }
             <span class="kw">crate</span>::AddressSpace::Uniform =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>((ty_handle, disalignment)) = type_info.uniform_layout {
@@ -1294,7 +1304,8 @@
                     TypeFlags::DATA
                         | TypeFlags::COPY
                         | TypeFlags::SIZED
-                        | TypeFlags::HOST_SHAREABLE,
+                        | TypeFlags::HOST_SHAREABLE
+                        | TypeFlags::CREATION_RESOLVED,
                     <span class="bool-val">true</span>,
                 )
             }
@@ -1332,7 +1343,10 @@
 
                 (TypeFlags::empty(), <span class="bool-val">true</span>)
             }
-            <span class="kw">crate</span>::AddressSpace::Private =&gt; (TypeFlags::CONSTRUCTIBLE, <span class="bool-val">false</span>),
+            <span class="kw">crate</span>::AddressSpace::Private =&gt; (
+                TypeFlags::CONSTRUCTIBLE | TypeFlags::CREATION_RESOLVED,
+                <span class="bool-val">false</span>,
+            ),
             <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; (TypeFlags::DATA | TypeFlags::SIZED, <span class="bool-val">false</span>),
             <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; {
                 <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::PUSH_CONSTANT) {

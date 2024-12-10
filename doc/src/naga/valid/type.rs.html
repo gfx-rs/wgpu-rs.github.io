@@ -687,6 +687,63 @@
 <a href="#686" id="686">686</a>
 <a href="#687" id="687">687</a>
 <a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
 
@@ -742,6 +799,10 @@
 
         <span class="doccomment">/// Can be used for host-shareable structures.
         </span><span class="kw">const </span>HOST_SHAREABLE = <span class="number">0x10</span>;
+
+        <span class="doccomment">/// The set of types with a fixed size at shader-creation time (ie. everything
+        /// except arrays sized by an override-expression)
+        </span><span class="kw">const </span>CREATION_RESOLVED = <span class="number">0x20</span>;
 
         <span class="doccomment">/// This type can be passed as a function argument.
         </span><span class="kw">const </span>ARGUMENT = <span class="number">0x40</span>;
@@ -831,6 +892,10 @@
     </span>EmptyStruct,
     <span class="attr">#[error(transparent)]
     </span>WidthError(<span class="attr">#[from] </span>WidthError),
+    <span class="attr">#[error(
+        <span class="string">"The base handle {0:?} has an override-expression that didn't get resolved to a constant"
+    </span>)]
+    </span>UnresolvedOverride(Handle&lt;<span class="kw">crate</span>::Type&gt;),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -1008,6 +1073,7 @@
                         | TypeFlags::COPY
                         | TypeFlags::ARGUMENT
                         | TypeFlags::CONSTRUCTIBLE
+                        | TypeFlags::CREATION_RESOLVED
                         | shareable,
                     Alignment::from_width(scalar.width),
                 )
@@ -1025,6 +1091,7 @@
                         | TypeFlags::COPY
                         | TypeFlags::ARGUMENT
                         | TypeFlags::CONSTRUCTIBLE
+                        | TypeFlags::CREATION_RESOLVED
                         | shareable,
                     Alignment::from(size) * Alignment::from_width(scalar.width),
                 )
@@ -1044,7 +1111,8 @@
                         | TypeFlags::COPY
                         | TypeFlags::HOST_SHAREABLE
                         | TypeFlags::ARGUMENT
-                        | TypeFlags::CONSTRUCTIBLE,
+                        | TypeFlags::CONSTRUCTIBLE
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::from(rows) * Alignment::from_width(scalar.width),
                 )
             }
@@ -1072,7 +1140,10 @@
                     }
                 };
                 TypeInfo::new(
-                    TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
+                    TypeFlags::DATA
+                        | TypeFlags::SIZED
+                        | TypeFlags::HOST_SHAREABLE
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::from_width(width),
                 )
             }
@@ -1113,7 +1184,10 @@
                 <span class="comment">// Pointers cannot be stored in variables, structure members, or
                 // array elements, so we do not mark them as `DATA`.
                 </span>TypeInfo::new(
-                    argument_flag | TypeFlags::SIZED | TypeFlags::COPY,
+                    argument_flag
+                        | TypeFlags::SIZED
+                        | TypeFlags::COPY
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::ONE,
                 )
             }
@@ -1140,13 +1214,19 @@
                 <span class="comment">// Pointers cannot be stored in variables, structure members, or
                 // array elements, so we do not mark them as `DATA`.
                 </span>TypeInfo::new(
-                    argument_flag | TypeFlags::SIZED | TypeFlags::COPY,
+                    argument_flag
+                        | TypeFlags::SIZED
+                        | TypeFlags::COPY
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::ONE,
                 )
             }
             Ti::Array { base, size, stride } =&gt; {
                 <span class="kw">let </span>base_info = <span class="kw-2">&amp;</span><span class="self">self</span>.types[base.index()];
-                <span class="kw">if </span>!base_info.flags.contains(TypeFlags::DATA | TypeFlags::SIZED) {
+                <span class="kw">if </span>!base_info
+                    .flags
+                    .contains(TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::CREATION_RESOLVED)
+                {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidArrayBaseType(base));
                 }
 
@@ -1185,12 +1265,23 @@
                             | TypeFlags::HOST_SHAREABLE
                             | TypeFlags::ARGUMENT
                             | TypeFlags::CONSTRUCTIBLE
+                            | TypeFlags::CREATION_RESOLVED
+                    }
+                    <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; {
+                        TypeFlags::DATA
+                            | TypeFlags::SIZED
+                            | TypeFlags::COPY
+                            | TypeFlags::HOST_SHAREABLE
+                            | TypeFlags::ARGUMENT
                     }
                     <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
                         <span class="comment">// Non-SIZED types may only appear as the last element of a structure.
                         // This is enforced by checks for SIZED-ness for all compound types,
                         // and a special case for structs.
-                        </span>TypeFlags::DATA | TypeFlags::COPY | TypeFlags::HOST_SHAREABLE
+                        </span>TypeFlags::DATA
+                            | TypeFlags::COPY
+                            | TypeFlags::HOST_SHAREABLE
+                            | TypeFlags::CREATION_RESOLVED
                     }
                 };
 
@@ -1212,7 +1303,8 @@
                         | TypeFlags::HOST_SHAREABLE
                         | TypeFlags::IO_SHAREABLE
                         | TypeFlags::ARGUMENT
-                        | TypeFlags::CONSTRUCTIBLE,
+                        | TypeFlags::CONSTRUCTIBLE
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::ONE,
                 );
                 ti.uniform_layout = <span class="prelude-val">Ok</span>(Alignment::MIN_UNIFORM);
@@ -1222,7 +1314,10 @@
 
                 <span class="kw">for </span>(i, member) <span class="kw">in </span>members.iter().enumerate() {
                     <span class="kw">let </span>base_info = <span class="kw-2">&amp;</span><span class="self">self</span>.types[member.ty.index()];
-                    <span class="kw">if </span>!base_info.flags.contains(TypeFlags::DATA) {
+                    <span class="kw">if </span>!base_info
+                        .flags
+                        .contains(TypeFlags::DATA | TypeFlags::CREATION_RESOLVED)
+                    {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidData(member.ty));
                     }
                     <span class="kw">if </span>!base_info.flags.contains(TypeFlags::HOST_SHAREABLE) {
@@ -1338,26 +1433,41 @@
                 <span class="kw">if </span>arrayed &amp;&amp; <span class="macro">matches!</span>(dim, <span class="kw">crate</span>::ImageDimension::Cube) {
                     <span class="self">self</span>.require_type_capability(Capabilities::CUBE_ARRAY_TEXTURES)<span class="question-mark">?</span>;
                 }
-                TypeInfo::new(TypeFlags::ARGUMENT, Alignment::ONE)
+                TypeInfo::new(
+                    TypeFlags::ARGUMENT | TypeFlags::CREATION_RESOLVED,
+                    Alignment::ONE,
+                )
             }
-            Ti::Sampler { .. } =&gt; TypeInfo::new(TypeFlags::ARGUMENT, Alignment::ONE),
+            Ti::Sampler { .. } =&gt; TypeInfo::new(
+                TypeFlags::ARGUMENT | TypeFlags::CREATION_RESOLVED,
+                Alignment::ONE,
+            ),
             Ti::AccelerationStructure =&gt; {
                 <span class="self">self</span>.require_type_capability(Capabilities::RAY_QUERY)<span class="question-mark">?</span>;
-                TypeInfo::new(TypeFlags::ARGUMENT, Alignment::ONE)
+                TypeInfo::new(
+                    TypeFlags::ARGUMENT | TypeFlags::CREATION_RESOLVED,
+                    Alignment::ONE,
+                )
             }
             Ti::RayQuery =&gt; {
                 <span class="self">self</span>.require_type_capability(Capabilities::RAY_QUERY)<span class="question-mark">?</span>;
                 TypeInfo::new(
-                    TypeFlags::DATA | TypeFlags::CONSTRUCTIBLE | TypeFlags::SIZED,
+                    TypeFlags::DATA
+                        | TypeFlags::CONSTRUCTIBLE
+                        | TypeFlags::SIZED
+                        | TypeFlags::CREATION_RESOLVED,
                     Alignment::ONE,
                 )
             }
             Ti::BindingArray { base, size } =&gt; {
                 <span class="kw">let </span>type_info_mask = <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) =&gt; TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
+                    <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) =&gt; {
+                        TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE | TypeFlags::CREATION_RESOLVED
+                    }
+                    <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
                     <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
                         <span class="comment">// Final type is non-sized
-                        </span>TypeFlags::HOST_SHAREABLE
+                        </span>TypeFlags::HOST_SHAREABLE | TypeFlags::CREATION_RESOLVED
                     }
                 };
                 <span class="kw">let </span>base_info = <span class="kw-2">&amp;</span><span class="self">self</span>.types[base.index()];
@@ -1368,6 +1478,10 @@
                         <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; {}
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::BindingArrayBaseTypeNotStruct(base)),
                     };
+                }
+
+                <span class="kw">if </span>!base_info.flags.contains(TypeFlags::CREATION_RESOLVED) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidData(base));
                 }
 
                 TypeInfo::new(base_info.flags &amp; type_info_mask, Alignment::ONE)

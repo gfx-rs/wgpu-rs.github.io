@@ -3246,6 +3246,49 @@
 <a href="#3245" id="3245">3245</a>
 <a href="#3246" id="3246">3246</a>
 <a href="#3247" id="3247">3247</a>
+<a href="#3248" id="3248">3248</a>
+<a href="#3249" id="3249">3249</a>
+<a href="#3250" id="3250">3250</a>
+<a href="#3251" id="3251">3251</a>
+<a href="#3252" id="3252">3252</a>
+<a href="#3253" id="3253">3253</a>
+<a href="#3254" id="3254">3254</a>
+<a href="#3255" id="3255">3255</a>
+<a href="#3256" id="3256">3256</a>
+<a href="#3257" id="3257">3257</a>
+<a href="#3258" id="3258">3258</a>
+<a href="#3259" id="3259">3259</a>
+<a href="#3260" id="3260">3260</a>
+<a href="#3261" id="3261">3261</a>
+<a href="#3262" id="3262">3262</a>
+<a href="#3263" id="3263">3263</a>
+<a href="#3264" id="3264">3264</a>
+<a href="#3265" id="3265">3265</a>
+<a href="#3266" id="3266">3266</a>
+<a href="#3267" id="3267">3267</a>
+<a href="#3268" id="3268">3268</a>
+<a href="#3269" id="3269">3269</a>
+<a href="#3270" id="3270">3270</a>
+<a href="#3271" id="3271">3271</a>
+<a href="#3272" id="3272">3272</a>
+<a href="#3273" id="3273">3273</a>
+<a href="#3274" id="3274">3274</a>
+<a href="#3275" id="3275">3275</a>
+<a href="#3276" id="3276">3276</a>
+<a href="#3277" id="3277">3277</a>
+<a href="#3278" id="3278">3278</a>
+<a href="#3279" id="3279">3279</a>
+<a href="#3280" id="3280">3280</a>
+<a href="#3281" id="3281">3281</a>
+<a href="#3282" id="3282">3282</a>
+<a href="#3283" id="3283">3283</a>
+<a href="#3284" id="3284">3284</a>
+<a href="#3285" id="3285">3285</a>
+<a href="#3286" id="3286">3286</a>
+<a href="#3287" id="3287">3287</a>
+<a href="#3288" id="3288">3288</a>
+<a href="#3289" id="3289">3289</a>
+<a href="#3290" id="3290">3290</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -6304,24 +6347,67 @@
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>size {
             ast::ArraySize::Constant(expr) =&gt; {
                 <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
-                <span class="kw">let </span>const_expr = <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
-                <span class="kw">let </span>len =
-                    ctx.module
-                        .to_ctx()
-                        .eval_expr_to_u32(const_expr)
-                        .map_err(|err| <span class="kw">match </span>err {
-                            <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
-                                Error::ExpectedConstExprConcreteIntegerScalar(span)
+                <span class="kw">let </span>const_expr = <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_const());
+                <span class="kw">match </span>const_expr {
+                    <span class="prelude-val">Ok</span>(value) =&gt; {
+                        <span class="kw">let </span>len =
+                            ctx.module.to_ctx().eval_expr_to_u32(value).map_err(
+                                |err| <span class="kw">match </span>err {
+                                    <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
+                                        Error::ExpectedConstExprConcreteIntegerScalar(span)
+                                    }
+                                    <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
+                                        Error::ExpectedPositiveArrayLength(span)
+                                    }
+                                },
+                            )<span class="question-mark">?</span>;
+                        <span class="kw">let </span>size =
+                            NonZeroU32::new(len).ok_or(Error::ExpectedPositiveArrayLength(span))<span class="question-mark">?</span>;
+                        <span class="kw">crate</span>::ArraySize::Constant(size)
+                    }
+                    err =&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Err</span>(Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>)) = err {
+                            <span class="kw">match </span><span class="kw-2">**</span>ty {
+                                <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
+                                    <span class="kw">crate</span>::ArraySize::Pending(<span class="self">self</span>.array_size_override(
+                                        expr,
+                                        <span class="kw-2">&amp;mut </span>ctx.as_override(),
+                                        span,
+                                    )<span class="question-mark">?</span>)
+                                }
+                                <span class="kw">_ </span>=&gt; {
+                                    err<span class="question-mark">?</span>;
+                                    <span class="macro">unreachable!</span>()
+                                }
                             }
-                            <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
-                                Error::ExpectedPositiveArrayLength(span)
-                            }
-                        })<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = NonZeroU32::new(len).ok_or(Error::ExpectedPositiveArrayLength(span))<span class="question-mark">?</span>;
-                <span class="kw">crate</span>::ArraySize::Constant(size)
+                        } <span class="kw">else </span>{
+                            err<span class="question-mark">?</span>;
+                            <span class="macro">unreachable!</span>()
+                        }
+                    }
+                }
             }
             ast::ArraySize::Dynamic =&gt; <span class="kw">crate</span>::ArraySize::Dynamic,
         })
+    }
+
+    <span class="kw">fn </span>array_size_override(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        span: Span,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::PendingArraySize, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+        <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
+        <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
+            <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>({
+                <span class="kw">if let </span><span class="kw">crate</span>::Expression::Override(handle) = ctx.module.global_expressions[expr] {
+                    <span class="kw">crate</span>::PendingArraySize::Override(handle)
+                } <span class="kw">else </span>{
+                    <span class="kw">crate</span>::PendingArraySize::Expression(expr)
+                }
+            }),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::ExpectedConstExprConcreteIntegerScalar(span)),
+        }
     }
 
     <span class="doccomment">/// Build the Naga equivalent of a named AST type.

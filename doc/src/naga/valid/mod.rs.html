@@ -740,6 +740,22 @@
 <a href="#739" id="739">739</a>
 <a href="#740" id="740">740</a>
 <a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
@@ -1074,6 +1090,8 @@ Shader validator.
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         source: ConstExpressionError,
     },
+    <span class="attr">#[error(<span class="string">"Array size expression {handle:?} is not strictly positive"</span>)]
+    </span>ArraySizeError { handle: Handle&lt;<span class="kw">crate</span>::Expression&gt; },
     <span class="attr">#[error(<span class="string">"Constant {handle:?} '{name}' is invalid"</span>)]
     </span>Constant {
         handle: Handle&lt;<span class="kw">crate</span>::Constant&gt;,
@@ -1354,6 +1372,20 @@ Shader validator.
                     }
                     .with_span_handle(handle, <span class="kw-2">&amp;</span>module.types)
                 })<span class="question-mark">?</span>;
+            <span class="kw">if </span>!<span class="self">self</span>.allow_overrides {
+                <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Array {
+                    size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>),
+                    ..
+                } = ty.inner
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>((ValidationError::Type {
+                        handle,
+                        name: ty.name.clone().unwrap_or_default(),
+                        source: TypeError::UnresolvedOverride(handle),
+                    })
+                    .with_span_handle(handle, <span class="kw-2">&amp;</span>module.types));
+                }
+            }
             mod_info.type_flags.push(ty_info.flags);
             <span class="self">self</span>.types[handle.index()] = ty_info;
         }

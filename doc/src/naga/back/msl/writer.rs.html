@@ -6151,6 +6151,12 @@
 <a href="#6150" id="6150">6150</a>
 <a href="#6151" id="6151">6151</a>
 <a href="#6152" id="6152">6152</a>
+<a href="#6153" id="6153">6153</a>
+<a href="#6154" id="6154">6154</a>
+<a href="#6155" id="6155">6155</a>
+<a href="#6156" id="6156">6156</a>
+<a href="#6157" id="6157">6157</a>
+<a href="#6158" id="6158">6158</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -8560,6 +8566,7 @@
                     <span class="self">self</span>.out.write_str(<span class="string">") &lt; "</span>)<span class="question-mark">?</span>;
                     <span class="kw">match </span>length {
                         index::IndexableLength::Known(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
+                        index::IndexableLength::Pending =&gt; <span class="macro">unreachable!</span>(),
                         index::IndexableLength::Dynamic =&gt; {
                             <span class="kw">let </span>global =
                                 context.function.originating_global(base).ok_or_else(|| {
@@ -8722,6 +8729,7 @@
                 index::IndexableLength::Known(limit) =&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}u"</span>, limit - <span class="number">1</span>)<span class="question-mark">?</span>;
                 }
+                index::IndexableLength::Pending =&gt; <span class="macro">unreachable!</span>(),
                 index::IndexableLength::Dynamic =&gt; {
                     <span class="kw">let </span>global = context.function.originating_global(base).ok_or_else(|| {
                         Error::GenericValidation(<span class="string">"Could not find originating global"</span>.into())
@@ -9892,6 +9900,9 @@
                                 size
                             )<span class="question-mark">?</span>;
                             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}};"</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; {
+                            <span class="macro">unreachable!</span>()
                         }
                         <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
                             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"typedef {base_name} {name}[1];"</span>)<span class="question-mark">?</span>;
@@ -12161,6 +12172,7 @@ template &lt;typename A&gt;
                         <span class="kw">let </span>count = <span class="kw">match </span>size.to_indexable_length(module).expect(<span class="string">"Bad array size"</span>)
                         {
                             proc::IndexableLength::Known(count) =&gt; count,
+                            proc::IndexableLength::Pending =&gt; <span class="macro">unreachable!</span>(),
                             proc::IndexableLength::Dynamic =&gt; <span class="macro">unreachable!</span>(),
                         };
 

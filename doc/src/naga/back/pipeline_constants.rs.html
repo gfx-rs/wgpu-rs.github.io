@@ -998,6 +998,66 @@
 <a href="#997" id="997">997</a>
 <a href="#998" id="998">998</a>
 <a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
 <span class="kw">use crate</span>::{
     arena::HandleVec,
@@ -1196,6 +1256,8 @@
     }
     module.entry_points = entry_points;
 
+    process_pending(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>override_map, <span class="kw-2">&amp;</span>adjusted_global_expressions)<span class="question-mark">?</span>;
+
     <span class="comment">// Now that we've rewritten all the expressions, we need to
     // recompute their types and other metadata. For the time being,
     // do a full re-validation.
@@ -1203,6 +1265,64 @@
     <span class="kw">let </span>module_info = validator.validate_no_overrides(<span class="kw-2">&amp;</span>module)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>((Cow::Owned(module), Cow::Owned(module_info)))
+}
+
+<span class="kw">fn </span>process_pending(
+    module: <span class="kw-2">&amp;mut </span>Module,
+    override_map: <span class="kw-2">&amp;</span>HandleVec&lt;Override, Handle&lt;Constant&gt;&gt;,
+    adjusted_global_expressions: <span class="kw-2">&amp;</span>HandleVec&lt;Expression, Handle&lt;Expression&gt;&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineConstantError&gt; {
+    <span class="kw">for </span>(handle, ty) <span class="kw">in </span>module.types.clone().iter() {
+        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Array {
+            base,
+            size: <span class="kw">crate</span>::ArraySize::Pending(size),
+            stride,
+        } = ty.inner
+        {
+            <span class="kw">let </span>expr = <span class="kw">match </span>size {
+                <span class="kw">crate</span>::PendingArraySize::Expression(size_expr) =&gt; {
+                    adjusted_global_expressions[size_expr]
+                }
+                <span class="kw">crate</span>::PendingArraySize::Override(size_override) =&gt; {
+                    module.constants[override_map[size_override]].init
+                }
+            };
+            <span class="kw">let </span>value = module
+                .to_ctx()
+                .eval_expr_to_u32(expr)
+                .map(|n| {
+                    <span class="kw">if </span>n == <span class="number">0 </span>{
+                        <span class="prelude-val">Err</span>(PipelineConstantError::ValidationError(
+                            WithSpan::new(ValidationError::ArraySizeError { handle: expr })
+                                .with_span(
+                                    module.global_expressions.get_span(expr),
+                                    <span class="string">"evaluated to zero"</span>,
+                                ),
+                        ))
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">Ok</span>(std::num::NonZeroU32::new(n).unwrap())
+                    }
+                })
+                .map_err(|<span class="kw">_</span>| {
+                    PipelineConstantError::ValidationError(
+                        WithSpan::new(ValidationError::ArraySizeError { handle: expr })
+                            .with_span(module.global_expressions.get_span(expr), <span class="string">"negative"</span>),
+                    )
+                })<span class="question-mark">??</span>;
+            module.types.replace(
+                handle,
+                <span class="kw">crate</span>::Type {
+                    name: <span class="prelude-val">None</span>,
+                    inner: <span class="kw">crate</span>::TypeInner::Array {
+                        base,
+                        size: <span class="kw">crate</span>::ArraySize::Constant(value),
+                        stride,
+                    },
+                },
+            );
+        }
+    }
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="kw">fn </span>process_workgroup_size_override(
