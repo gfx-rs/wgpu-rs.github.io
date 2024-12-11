@@ -2051,6 +2051,12 @@
 <a href="#2050" id="2050">2050</a>
 <a href="#2051" id="2051">2051</a>
 <a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2689,11 +2695,17 @@
                     });
                     <span class="kw">let </span>transition_src = hal::BufferBarrier {
                         buffer: staging_buffer.raw(),
-                        usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
+                        usage: hal::StateTransition {
+                            from: hal::BufferUses::MAP_WRITE,
+                            to: hal::BufferUses::COPY_SRC,
+                        },
                     };
                     <span class="kw">let </span>transition_dst = hal::BufferBarrier::&lt;<span class="kw">dyn </span>hal::DynBuffer&gt; {
                         buffer: raw_buf,
-                        usage: hal::BufferUses::empty()..hal::BufferUses::COPY_DST,
+                        usage: hal::StateTransition {
+                            from: hal::BufferUses::empty(),
+                            to: hal::BufferUses::COPY_DST,
+                        },
                     };
                     <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = queue.pending_writes.lock();
                     <span class="kw">let </span>encoder = pending_writes.activate();

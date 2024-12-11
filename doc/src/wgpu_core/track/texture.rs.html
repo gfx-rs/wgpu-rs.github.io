@@ -1528,6 +1528,18 @@
 <a href="#1527" id="1527">1527</a>
 <a href="#1528" id="1528">1528</a>
 <a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Texture Trackers
 //!
 //! Texture trackers are significantly more complicated than
@@ -2834,7 +2846,10 @@
             barriers.push(PendingTransition {
                 id: index <span class="kw">as _</span>,
                 selector: texture_selector.clone(),
-                usage: current_simple..new_simple,
+                usage: hal::StateTransition {
+                    from: current_simple,
+                    to: new_simple,
+                },
             });
         }
         (SingleOrManyStates::Single(current_simple), SingleOrManyStates::Many(new_many)) =&gt; {
@@ -2850,7 +2865,10 @@
                 barriers.push(PendingTransition {
                     id: index <span class="kw">as _</span>,
                     selector,
-                    usage: current_simple..new_state,
+                    usage: hal::StateTransition {
+                        from: current_simple,
+                        to: new_state,
+                    },
                 });
             }
         }
@@ -2873,7 +2891,10 @@
                             mips: mip_id..mip_id + <span class="number">1</span>,
                             layers: layers.clone(),
                         },
-                        usage: current_layer_state..new_simple,
+                        usage: hal::StateTransition {
+                            from: current_layer_state,
+                            to: new_simple,
+                        },
                     });
                 }
             }
@@ -2902,7 +2923,10 @@
                                 mips: mip_id..mip_id + <span class="number">1</span>,
                                 layers,
                             },
-                            usage: <span class="kw-2">*</span>current_layer_state..new_state,
+                            usage: hal::StateTransition {
+                                from: <span class="kw-2">*</span>current_layer_state,
+                                to: new_state,
+                            },
                         });
                     }
                 }

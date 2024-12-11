@@ -1582,6 +1582,18 @@
 <a href="#1581" id="1581">1581</a>
 <a href="#1582" id="1582">1582</a>
 <a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1658,7 +1670,10 @@
                 .command_encoder
                 .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
                     buffer: zero_buffer,
-                    usage: hal::BufferUses::empty()..hal::BufferUses::COPY_DST,
+                    usage: hal::StateTransition {
+                        from: hal::BufferUses::empty(),
+                        to: hal::BufferUses::COPY_DST,
+                    },
                 }]);
             pending_writes
                 .command_encoder
@@ -1667,7 +1682,10 @@
                 .command_encoder
                 .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
                     buffer: zero_buffer,
-                    usage: hal::BufferUses::COPY_DST..hal::BufferUses::COPY_SRC,
+                    usage: hal::StateTransition {
+                        from: hal::BufferUses::COPY_DST,
+                        to: hal::BufferUses::COPY_SRC,
+                    },
                 }]);
         }
 
@@ -2212,7 +2230,10 @@
         };
         <span class="kw">let </span>barriers = iter::once(hal::BufferBarrier {
             buffer: staging_buffer.raw(),
-            usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
+            usage: hal::StateTransition {
+                from: hal::BufferUses::MAP_WRITE,
+                to: hal::BufferUses::COPY_SRC,
+            },
         })
         .chain(transition.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>buffer, <span class="kw-2">&amp;</span>snatch_guard)))
         .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -2431,7 +2452,10 @@
         {
             <span class="kw">let </span>buffer_barrier = hal::BufferBarrier {
                 buffer: staging_buffer.raw(),
-                usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
+                usage: hal::StateTransition {
+                    from: hal::BufferUses::MAP_WRITE,
+                    to: hal::BufferUses::COPY_SRC,
+                },
             };
 
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
