@@ -619,26 +619,6 @@
 <a href="#618" id="618">618</a>
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>wgpu::{Instance, Surface};
@@ -920,37 +900,14 @@
             gles_minor_version,
         });
         surface.pre_adapter(<span class="kw-2">&amp;</span>instance, window);
-        <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, surface.get())
-            .<span class="kw">await
-            </span>.expect(<span class="string">"No suitable GPU adapters found on the system!"</span>);
 
-        <span class="kw">let </span>adapter_info = adapter.get_info();
-        <span class="macro">log::info!</span>(<span class="string">"Using {} ({:?})"</span>, adapter_info.name, adapter_info.backend);
-
-        <span class="kw">let </span>optional_features = E::optional_features();
-        <span class="kw">let </span>required_features = E::required_features();
-        <span class="kw">let </span>adapter_features = adapter.features();
-        <span class="macro">assert!</span>(
-            adapter_features.contains(required_features),
-            <span class="string">"Adapter does not support required features for this example: {:?}"</span>,
-            required_features - adapter_features
-        );
-
-        <span class="kw">let </span>required_downlevel_capabilities = E::required_downlevel_capabilities();
-        <span class="kw">let </span>downlevel_capabilities = adapter.get_downlevel_capabilities();
-        <span class="macro">assert!</span>(
-            downlevel_capabilities.shader_model &gt;= required_downlevel_capabilities.shader_model,
-            <span class="string">"Adapter does not support the minimum shader model required to run this example: {:?}"</span>,
-            required_downlevel_capabilities.shader_model
-        );
-        <span class="macro">assert!</span>(
-            downlevel_capabilities
-                .flags
-                .contains(required_downlevel_capabilities.flags),
-            <span class="string">"Adapter does not support the downlevel capabilities required to run this example: {:?}"</span>,
-            required_downlevel_capabilities.flags - downlevel_capabilities.flags
-        );
-
+        <span class="kw">let </span>adapter = get_adapter_with_capabilities_or_from_env(
+            <span class="kw-2">&amp;</span>instance,
+            <span class="kw-2">&amp;</span>E::required_features(),
+            <span class="kw-2">&amp;</span>E::required_downlevel_capabilities(),
+            <span class="kw-2">&amp;</span>surface.get(),
+        )
+        .<span class="kw">await</span>;
         <span class="comment">// Make sure we use the texture resolution limits from the adapter, so we can support images the size of the surface.
         </span><span class="kw">let </span>needed_limits = E::required_limits().using_resolution(adapter.limits());
 
@@ -959,7 +916,8 @@
             .request_device(
                 <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
                     label: <span class="prelude-val">None</span>,
-                    required_features: (optional_features &amp; adapter_features) | required_features,
+                    required_features: (E::optional_features() &amp; adapter.features())
+                        | E::required_features(),
                     required_limits: needed_limits,
                     memory_hints: wgpu::MemoryHints::MemoryUsage,
                 },
@@ -1154,6 +1112,8 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">pub use </span>wgpu_test::image::ComparisonType;
+
+<span class="kw">use </span><span class="kw">crate</span>::utils::get_adapter_with_capabilities_or_from_env;
 
 <span class="attr">#[cfg(test)]
 #[derive(Clone)]
