@@ -3318,6 +3318,41 @@
 <a href="#3317" id="3317">3317</a>
 <a href="#3318" id="3318">3318</a>
 <a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -3386,6 +3421,15 @@
     </span>Load = <span class="number">1</span>,
 }
 
+<span class="kw">impl </span>LoadOp {
+    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
+        <span class="kw">match </span><span class="self">self </span>{
+            LoadOp::Load =&gt; hal::AttachmentOps::LOAD,
+            LoadOp::Clear =&gt; hal::AttachmentOps::empty(),
+        }
+    }
+}
+
 <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
@@ -3398,6 +3442,15 @@
     </span>Discard = <span class="number">0</span>,
     <span class="doccomment">/// Store the result of the renderpass.
     </span>Store = <span class="number">1</span>,
+}
+
+<span class="kw">impl </span>StoreOp {
+    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
+        <span class="kw">match </span><span class="self">self </span>{
+            StoreOp::Store =&gt; hal::AttachmentOps::STORE,
+            StoreOp::Discard =&gt; hal::AttachmentOps::empty(),
+        }
+    }
 }
 
 <span class="doccomment">/// Describes an individual channel within a render pass, such as color, depth, or stencil.
@@ -3424,16 +3477,7 @@
 
 <span class="kw">impl</span>&lt;V&gt; PassChannel&lt;V&gt; {
     <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
-        <span class="kw">let </span><span class="kw-2">mut </span>ops = hal::AttachmentOps::empty();
-        <span class="kw">match </span><span class="self">self</span>.load_op {
-            LoadOp::Load =&gt; ops |= hal::AttachmentOps::LOAD,
-            LoadOp::Clear =&gt; (),
-        };
-        <span class="kw">match </span><span class="self">self</span>.store_op {
-            StoreOp::Store =&gt; ops |= hal::AttachmentOps::STORE,
-            StoreOp::Discard =&gt; (),
-        };
-        ops
+        <span class="self">self</span>.load_op.hal_ops() | <span class="self">self</span>.store_op.hal_ops()
     }
 }
 
@@ -3446,8 +3490,17 @@
     </span><span class="kw">pub </span>view: id::TextureViewId,
     <span class="doccomment">/// The view that will receive the resolved output if multisampling is used.
     </span><span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;id::TextureViewId&gt;,
-    <span class="doccomment">/// What operations will be performed on this color attachment.
-    </span><span class="kw">pub </span>channel: PassChannel&lt;Color&gt;,
+    <span class="doccomment">/// Operation to perform to the output attachment at the start of a
+    /// renderpass.
+    ///
+    /// This must be clear if it is the first renderpass rendering to a swap
+    /// chain image.
+    </span><span class="kw">pub </span>load_op: LoadOp,
+    <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
+    </span><span class="kw">pub </span>store_op: StoreOp,
+    <span class="doccomment">/// If load_op is [`LoadOp::Clear`], the attachment will be cleared to this
+    /// color.
+    </span><span class="kw">pub </span>clear_value: Color,
 }
 
 <span class="doccomment">/// Describes a color attachment to a render pass.
@@ -3457,8 +3510,17 @@
     </span><span class="kw">pub </span>view: Arc&lt;TextureView&gt;,
     <span class="doccomment">/// The view that will receive the resolved output if multisampling is used.
     </span><span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;Arc&lt;TextureView&gt;&gt;,
-    <span class="doccomment">/// What operations will be performed on this color attachment.
-    </span><span class="kw">pub </span>channel: PassChannel&lt;Color&gt;,
+    <span class="doccomment">/// Operation to perform to the output attachment at the start of a
+    /// renderpass.
+    ///
+    /// This must be clear if it is the first renderpass rendering to a swap
+    /// chain image.
+    </span><span class="kw">pub </span>load_op: LoadOp,
+    <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
+    </span><span class="kw">pub </span>store_op: StoreOp,
+    <span class="doccomment">/// If load_op is [`LoadOp::Clear`], the attachment will be cleared to this
+    /// color.
+    </span><span class="kw">pub </span>clear_value: Color,
 }
 
 <span class="doccomment">/// Describes a depth/stencil attachment to a render pass.
@@ -4090,13 +4152,14 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'d</span>&gt; RenderPassInfo&lt;<span class="lifetime">'d</span>&gt; {
-    <span class="kw">fn </span>add_pass_texture_init_actions&lt;V&gt;(
-        channel: <span class="kw-2">&amp;</span>PassChannel&lt;V&gt;,
+    <span class="kw">fn </span>add_pass_texture_init_actions(
+        load_op: LoadOp,
+        store_op: StoreOp,
         texture_memory_actions: <span class="kw-2">&amp;mut </span>CommandBufferTextureMemoryActions,
         view: <span class="kw-2">&amp;</span>TextureView,
         pending_discard_init_fixups: <span class="kw-2">&amp;mut </span>SurfacesInDiscardState,
     ) {
-        <span class="kw">if </span>channel.load_op == LoadOp::Load {
+        <span class="kw">if </span>load_op == LoadOp::Load {
             pending_discard_init_fixups.extend(texture_memory_actions.register_init_action(
                 <span class="kw-2">&amp;</span>TextureInitTrackerAction {
                     texture: view.parent.clone(),
@@ -4105,14 +4168,14 @@
                     </span>kind: MemoryInitKind::NeedsInitializedMemory,
                 },
             ));
-        } <span class="kw">else if </span>channel.store_op == StoreOp::Store {
+        } <span class="kw">else if </span>store_op == StoreOp::Store {
             <span class="comment">// Clear + Store
             </span>texture_memory_actions.register_implicit_init(
                 <span class="kw-2">&amp;</span>view.parent,
                 TextureInitRange::from(view.selector.clone()),
             );
         }
-        <span class="kw">if </span>channel.store_op == StoreOp::Discard {
+        <span class="kw">if </span>store_op == StoreOp::Discard {
             <span class="comment">// the discard happens at the *end* of a pass, but recording the
             // discard right away be alright since the texture can't be used
             // during the pass anyways
@@ -4243,14 +4306,16 @@
                     &amp;&amp; at.stencil.store_op == at.depth.store_op)
             {
                 <span class="self">Self</span>::add_pass_texture_init_actions(
-                    <span class="kw-2">&amp;</span>at.depth,
+                    at.depth.load_op,
+                    at.depth.store_op,
                     texture_memory_actions,
                     view,
                     <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
                 );
             } <span class="kw">else if </span>!ds_aspects.contains(hal::FormatAspects::DEPTH) {
                 <span class="self">Self</span>::add_pass_texture_init_actions(
-                    <span class="kw-2">&amp;</span>at.stencil,
+                    at.stencil.load_op,
+                    at.stencil.store_op,
                     texture_memory_actions,
                     view,
                     <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
@@ -4379,7 +4444,8 @@
             }
 
             <span class="self">Self</span>::add_pass_texture_init_actions(
-                <span class="kw-2">&amp;</span>at.channel,
+                at.load_op,
+                at.store_op,
                 texture_memory_actions,
                 color_view,
                 <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
@@ -4455,8 +4521,8 @@
                     usage: hal::TextureUses::COLOR_TARGET,
                 },
                 resolve_target: hal_resolve_target,
-                ops: at.channel.hal_ops(),
-                clear_value: at.channel.clear_value,
+                ops: at.load_op.hal_ops() | at.store_op.hal_ops(),
+                clear_value: at.clear_value,
             }));
         }
 
@@ -4671,7 +4737,9 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(RenderPassColorAttachment {
                     view: view_id,
                     resolve_target,
-                    channel,
+                    load_op,
+                    store_op,
+                    clear_value,
                 }) = color_attachment
                 {
                     <span class="kw">let </span>view = texture_views.get(<span class="kw-2">*</span>view_id).get()<span class="question-mark">?</span>;
@@ -4691,7 +4759,9 @@
                         .push(<span class="prelude-val">Some</span>(ArcRenderPassColorAttachment {
                             view,
                             resolve_target,
-                            channel: channel.clone(),
+                            load_op: <span class="kw-2">*</span>load_op,
+                            store_op: <span class="kw-2">*</span>store_op,
+                            clear_value: <span class="kw-2">*</span>clear_value,
                         }));
                 } <span class="kw">else </span>{
                     arc_desc.color_attachments.push(<span class="prelude-val">None</span>);

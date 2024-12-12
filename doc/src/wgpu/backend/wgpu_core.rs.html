@@ -3553,6 +3553,8 @@
 <a href="#3552" id="3552">3552</a>
 <a href="#3553" id="3553">3553</a>
 <a href="#3554" id="3554">3554</a>
+<a href="#3555" id="3555">3555</a>
+<a href="#3556" id="3556">3556</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
@@ -3959,28 +3961,26 @@
     }
 }
 
+<span class="kw">fn </span>map_load_op&lt;V: Default&gt;(op: LoadOp&lt;V&gt;) -&gt; (wgc::command::LoadOp, V) {
+    <span class="kw">match </span>op {
+        LoadOp::Clear(v) =&gt; (wgc::command::LoadOp::Clear, v),
+        LoadOp::Load =&gt; (wgc::command::LoadOp::Load, V::default()),
+    }
+}
+
 <span class="kw">fn </span>map_pass_channel&lt;V: Copy + Default&gt;(
     ops: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Operations&lt;V&gt;&gt;,
 ) -&gt; wgc::command::PassChannel&lt;V&gt; {
     <span class="kw">match </span>ops {
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operations {
-            load: LoadOp::Clear(clear_value),
-            store,
-        }) =&gt; wgc::command::PassChannel {
-            load_op: wgc::command::LoadOp::Clear,
-            store_op: map_store_op(store),
-            clear_value,
-            read_only: <span class="bool-val">false</span>,
-        },
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operations {
-            load: LoadOp::Load,
-            store,
-        }) =&gt; wgc::command::PassChannel {
-            load_op: wgc::command::LoadOp::Load,
-            store_op: map_store_op(store),
-            clear_value: V::default(),
-            read_only: <span class="bool-val">false</span>,
-        },
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operations { load, store }) =&gt; {
+            <span class="kw">let </span>(load_op, clear_value) = map_load_op(load);
+            wgc::command::PassChannel {
+                load_op,
+                store_op: map_store_op(store),
+                clear_value,
+                read_only: <span class="bool-val">false</span>,
+            }
+        }
         <span class="prelude-val">None </span>=&gt; wgc::command::PassChannel {
             load_op: wgc::command::LoadOp::Load,
             store_op: wgc::command::StoreOp::Store,
@@ -5804,12 +5804,16 @@
             .color_attachments
             .iter()
             .map(|ca| {
-                ca.as_ref()
-                    .map(|at| wgc::command::RenderPassColorAttachment {
+                ca.as_ref().map(|at| {
+                    <span class="kw">let </span>(load_op, clear_value) = map_load_op(at.ops.load);
+                    wgc::command::RenderPassColorAttachment {
                         view: at.view.inner.as_core().id,
                         resolve_target: at.resolve_target.map(|view| view.inner.as_core().id),
-                        channel: map_pass_channel(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>at.ops)),
-                    })
+                        load_op,
+                        store_op: map_store_op(at.ops.store),
+                        clear_value,
+                    }
+                })
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
