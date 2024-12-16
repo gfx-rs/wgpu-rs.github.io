@@ -2452,8 +2452,6 @@
 <a href="#2451" id="2451">2451</a>
 <a href="#2452" id="2452">2452</a>
 <a href="#2453" id="2453">2453</a>
-<a href="#2454" id="2454">2454</a>
-<a href="#2455" id="2455">2455</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -3954,7 +3952,7 @@
                 <span class="prelude-val">Some</span>(features) =&gt; features.imageless_framebuffer == vk::TRUE,
                 <span class="prelude-val">None </span>=&gt; phd_features
                     .imageless_framebuffer
-                    .map_or(<span class="bool-val">false</span>, |ext| ext.imageless_framebuffer != <span class="number">0</span>),
+                    .is_some_and(|ext| ext.imageless_framebuffer != <span class="number">0</span>),
             },
             image_view_usage: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(khr::maintenance2::NAME),
@@ -3962,7 +3960,7 @@
                 <span class="prelude-val">Some</span>(features) =&gt; features.timeline_semaphore == vk::TRUE,
                 <span class="prelude-val">None </span>=&gt; phd_features
                     .timeline_semaphore
-                    .map_or(<span class="bool-val">false</span>, |ext| ext.timeline_semaphore != <span class="number">0</span>),
+                    .is_some_and(|ext| ext.timeline_semaphore != <span class="number">0</span>),
             },
             texture_d24: supports_format(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
@@ -3993,7 +3991,7 @@
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>f) =&gt; f.robust_image_access2 != <span class="number">0</span>,
                 <span class="prelude-val">None </span>=&gt; phd_features
                     .image_robustness
-                    .map_or(<span class="bool-val">false</span>, |ext| ext.robust_image_access != <span class="number">0</span>),
+                    .is_some_and(|ext| ext.robust_image_access != <span class="number">0</span>),
             },
             robust_buffer_access2: phd_features
                 .robustness2
@@ -4007,9 +4005,7 @@
                 .unwrap_or_default(),
             zero_initialize_workgroup_memory: phd_features
                 .zero_initialize_workgroup_memory
-                .map_or(<span class="bool-val">false</span>, |ext| {
-                    ext.shader_zero_initialize_workgroup_memory == vk::TRUE
-                }),
+                .is_some_and(|ext| ext.shader_zero_initialize_workgroup_memory == vk::TRUE),
             image_format_list: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_2
                 || phd_capabilities.supports_extension(khr::image_format_list::NAME),
             <span class="attr">#[cfg(windows)]
