@@ -4526,11 +4526,11 @@
     </span><span class="kw">fn </span>create_shader_module(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw">crate</span>::ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-        shader_bound_checks: wgt::ShaderBoundChecks,
+        shader_bound_checks: wgt::ShaderRuntimeChecks,
     ) -&gt; dispatch::DispatchShaderModule {
         <span class="kw">let </span>descriptor = wgc::pipeline::ShaderModuleDescriptor {
             label: desc.label.map(Borrowed),
-            shader_bound_checks,
+            runtime_checks: shader_bound_checks,
         };
         <span class="kw">let </span>source = <span class="kw">match </span>desc.source {
             <span class="attr">#[cfg(feature = <span class="string">"spirv"</span>)]
@@ -4591,7 +4591,7 @@
             label: desc.label.map(Borrowed),
             <span class="comment">// Doesn't matter the value since spirv shaders aren't mutated to include
             // runtime checks
-            </span>shader_bound_checks: <span class="kw">unsafe </span>{ wgt::ShaderBoundChecks::unchecked() },
+            </span>runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
         };
         <span class="kw">let </span>(id, error) = <span class="kw">unsafe </span>{
             <span class="self">self</span>.context.<span class="number">0</span>.device_create_shader_module_spirv(

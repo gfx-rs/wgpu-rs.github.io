@@ -7801,6 +7801,29 @@
 <a href="#7800" id="7800">7800</a>
 <a href="#7801" id="7801">7801</a>
 <a href="#7802" id="7802">7802</a>
+<a href="#7803" id="7803">7803</a>
+<a href="#7804" id="7804">7804</a>
+<a href="#7805" id="7805">7805</a>
+<a href="#7806" id="7806">7806</a>
+<a href="#7807" id="7807">7807</a>
+<a href="#7808" id="7808">7808</a>
+<a href="#7809" id="7809">7809</a>
+<a href="#7810" id="7810">7810</a>
+<a href="#7811" id="7811">7811</a>
+<a href="#7812" id="7812">7812</a>
+<a href="#7813" id="7813">7813</a>
+<a href="#7814" id="7814">7814</a>
+<a href="#7815" id="7815">7815</a>
+<a href="#7816" id="7816">7816</a>
+<a href="#7817" id="7817">7817</a>
+<a href="#7818" id="7818">7818</a>
+<a href="#7819" id="7819">7819</a>
+<a href="#7820" id="7820">7820</a>
+<a href="#7821" id="7821">7821</a>
+<a href="#7822" id="7822">7822</a>
+<a href="#7823" id="7823">7823</a>
+<a href="#7824" id="7824">7824</a>
+<a href="#7825" id="7825">7825</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -15250,50 +15273,73 @@
 }
 
 <span class="doccomment">/// Describes how shader bound checks should be performed.
-</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="attr">#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ShaderBoundChecks {
-    runtime_checks: bool,
+</span><span class="kw">pub struct </span>ShaderRuntimeChecks {
+    <span class="doccomment">/// Enforce bounds checks in shaders, even if the underlying driver doesn't
+    /// support doing so natively.
+    ///
+    /// When this is `true`, `wgpu` promises that shaders can only read or
+    /// write the accessible region of a bindgroup's buffer bindings. If
+    /// the underlying graphics platform cannot implement these bounds checks
+    /// itself, `wgpu` will inject bounds checks before presenting the
+    /// shader to the platform.
+    ///
+    /// When this is `false`, `wgpu` only enforces such bounds checks if the
+    /// underlying platform provides a way to do so itself. `wgpu` does not
+    /// itself add any bounds checks to generated shader code.
+    ///
+    /// Note that `wgpu` users may try to initialize only those portions of
+    /// buffers that they anticipate might be read from. Passing `false` here
+    /// may allow shaders to see wider regions of the buffers than expected,
+    /// making such deferred initialization visible to the application.
+    </span><span class="kw">pub </span>bounds_checks: bool,
+    <span class="doccomment">///
+    /// If false, the caller MUST ensure that all passed shaders do not contain any infinite loops.
+    ///
+    /// If it does, backend compilers MAY treat such a loop as unreachable code and draw
+    /// conclusions about other safety-critical code paths. This option SHOULD NOT be disabled
+    /// when running untrusted code.
+    </span><span class="kw">pub </span>force_loop_bounding: bool,
 }
 
-<span class="kw">impl </span>ShaderBoundChecks {
-    <span class="doccomment">/// Creates a new configuration where the shader is bound checked.
+<span class="kw">impl </span>ShaderRuntimeChecks {
+    <span class="doccomment">/// Creates a new configuration where the shader is fully checked.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        ShaderBoundChecks {
-            runtime_checks: <span class="bool-val">true</span>,
-        }
+    </span><span class="kw">pub fn </span>checked() -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">true</span>) }
     }
 
-    <span class="doccomment">/// Creates a new configuration where the shader isn't bound checked.
+    <span class="doccomment">/// Creates a new configuration where none of the checks are performed.
     ///
     /// # Safety
     ///
-    /// The caller MUST ensure that all shaders built with this configuration
-    /// don't perform any out of bounds reads or writes.
-    ///
-    /// Note that `wgpu_core`, in particular, initializes only those portions of
-    /// buffers that it expects might be read, and it does not expect contents
-    /// outside the ranges bound in bindgroups to be accessible, so using this
-    /// configuration with ill-behaved shaders could expose uninitialized GPU
-    /// memory contents to the application.
+    /// See the documentation for the `set_*` methods for the safety requirements
+    /// of each sub-configuration.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub unsafe fn </span>unchecked() -&gt; <span class="self">Self </span>{
-        ShaderBoundChecks {
-            runtime_checks: <span class="bool-val">false</span>,
-        }
+    </span><span class="kw">pub fn </span>unchecked() -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{ <span class="self">Self</span>::all(<span class="bool-val">false</span>) }
     }
 
-    <span class="doccomment">/// Query whether runtime bound checks are enabled in this configuration
+    <span class="doccomment">/// Creates a new configuration where all checks are enabled or disabled. To safely
+    /// create a configuration with all checks enabled, use [`ShaderRuntimeChecks::checked`].
+    ///
+    /// # Safety
+    ///
+    /// See the documentation for the `set_*` methods for the safety requirements
+    /// of each sub-configuration.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>runtime_checks(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.runtime_checks
+    </span><span class="kw">pub unsafe fn </span>all(all_checks: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            bounds_checks: all_checks,
+            force_loop_bounding: all_checks,
+        }
     }
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>ShaderBoundChecks {
+<span class="kw">impl </span>Default <span class="kw">for </span>ShaderRuntimeChecks {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new()
+        <span class="self">Self</span>::checked()
     }
 }
 

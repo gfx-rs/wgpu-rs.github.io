@@ -630,6 +630,30 @@
 <a href="#629" id="629">629</a>
 <a href="#630" id="630">630</a>
 <a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, future::Future, sync::Arc};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -694,7 +718,7 @@
         <span class="self">self</span>.inner.limits()
     }
 
-    <span class="doccomment">/// Creates a shader module from either SPIR-V or WGSL source code.
+    <span class="doccomment">/// Creates a shader module.
     ///
     /// &lt;div class="warning"&gt;
     </span><span class="comment">// NOTE: Keep this in sync with `naga::front::wgsl::parse_str`!
@@ -712,28 +736,52 @@
     </span><span class="kw">pub fn </span>create_shader_module(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; ShaderModule {
         <span class="kw">let </span>module = <span class="self">self
             </span>.inner
-            .create_shader_module(desc, wgt::ShaderBoundChecks::new());
+            .create_shader_module(desc, wgt::ShaderRuntimeChecks::checked());
         ShaderModule { inner: module }
     }
 
-    <span class="doccomment">/// Creates a shader module from either SPIR-V or WGSL source code without runtime checks.
+    <span class="doccomment">/// Deprecated: Use [`create_shader_module_trusted`][csmt] instead.
     ///
     /// # Safety
-    /// In contrast with [`create_shader_module`](Self::create_shader_module) this function
-    /// creates a shader module without runtime checks which allows shaders to perform
-    /// operations which can lead to undefined behavior like indexing out of bounds, thus it's
-    /// the caller responsibility to pass a shader which doesn't perform any of this
-    /// operations.
     ///
-    /// This has no effect on web.
-    </span><span class="attr">#[must_use]
+    /// See [`create_shader_module_trusted`][csmt].
+    ///
+    /// [csmt]: Self::create_shader_module_trusted
+    </span><span class="attr">#[deprecated(
+        since = <span class="string">"24.0.0"</span>,
+        note = <span class="string">"Use `Device::create_shader_module_trusted(desc, wgpu::ShaderRuntimeChecks::unchecked())` instead."
+    </span>)]
+    #[must_use]
     </span><span class="kw">pub unsafe fn </span>create_shader_module_unchecked(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; ShaderModule {
-        <span class="kw">let </span>module = <span class="self">self
-            </span>.inner
-            .create_shader_module(desc, <span class="kw">unsafe </span>{ wgt::ShaderBoundChecks::unchecked() });
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.create_shader_module_trusted(desc, <span class="kw">crate</span>::ShaderRuntimeChecks::unchecked()) }
+    }
+
+    <span class="doccomment">/// Creates a shader module with flags to dictate runtime checks.
+    ///
+    /// When running on WebGPU, this will merely call [`create_shader_module`][csm].
+    ///
+    /// # Safety
+    ///
+    /// In contrast with [`create_shader_module`][csm] this function
+    /// creates a shader module with user-customizable runtime checks which allows shaders to
+    /// perform operations which can lead to undefined behavior like indexing out of bounds,
+    /// thus it's the caller responsibility to pass a shader which doesn't perform any of this
+    /// operations.
+    ///
+    /// See the documentation for [`ShaderRuntimeChecks`][src] for more information about specific checks.
+    ///
+    /// [csm]: Self::create_shader_module
+    /// [src]: crate::ShaderRuntimeChecks
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub unsafe fn </span>create_shader_module_trusted(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        desc: ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;,
+        runtime_checks: <span class="kw">crate</span>::ShaderRuntimeChecks,
+    ) -&gt; ShaderModule {
+        <span class="kw">let </span>module = <span class="self">self</span>.inner.create_shader_module(desc, runtime_checks);
         ShaderModule { inner: module }
     }
 

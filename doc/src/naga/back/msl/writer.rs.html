@@ -6157,6 +6157,12 @@
 <a href="#6156" id="6156">6156</a>
 <a href="#6157" id="6157">6157</a>
 <a href="#6158" id="6158">6158</a>
+<a href="#6159" id="6159">6159</a>
+<a href="#6160" id="6160">6160</a>
+<a href="#6161" id="6161">6161</a>
+<a href="#6162" id="6162">6162</a>
+<a href="#6163" id="6163">6163</a>
+<a href="#6164" id="6164">6164</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -6759,6 +6765,8 @@
     /// accesses. These may need to be cached in temporary variables. See
     /// `index::find_checked_indexes` for details.
     </span>guarded_indices: HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
+    <span class="doccomment">/// See [`Writer::emit_force_bounded_loop_macro`] for details.
+    </span>force_loop_bounding: bool,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ExpressionContext&lt;<span class="lifetime">'a</span>&gt; {
@@ -9227,13 +9235,15 @@
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>,)<span class="question-mark">?</span>;
                     }
                     <span class="self">self</span>.put_block(level.next(), body, context)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.emit_force_bounded_loop_macro()<span class="question-mark">?</span>;
-                    <span class="macro">writeln!</span>(
-                        <span class="self">self</span>.out,
-                        <span class="string">"{}{}"</span>,
-                        level.next(),
-                        <span class="self">self</span>.force_bounded_loop_macro_name
-                    )<span class="question-mark">?</span>;
+                    <span class="kw">if </span>context.expression.force_loop_bounding {
+                        <span class="self">self</span>.emit_force_bounded_loop_macro()<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(
+                            <span class="self">self</span>.out,
+                            <span class="string">"{}{}"</span>,
+                            level.next(),
+                            <span class="self">self</span>.force_bounded_loop_macro_name
+                        )<span class="question-mark">?</span>;
+                    }
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::Statement::Break =&gt; {
@@ -11044,6 +11054,7 @@ template &lt;typename A&gt;
                     module,
                     mod_info,
                     pipeline_options,
+                    force_loop_bounding: options.force_loop_bounding,
                 },
                 result_struct: <span class="prelude-val">None</span>,
             };
@@ -11944,6 +11955,7 @@ template &lt;typename A&gt;
                     module,
                     mod_info,
                     pipeline_options,
+                    force_loop_bounding: options.force_loop_bounding,
                 },
                 result_struct: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>stage_out_name),
             };
