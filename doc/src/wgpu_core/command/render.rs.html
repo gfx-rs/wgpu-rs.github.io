@@ -3416,6 +3416,22 @@
 <a href="#3415" id="3415">3415</a>
 <a href="#3416" id="3416">3416</a>
 <a href="#3417" id="3417">3417</a>
+<a href="#3418" id="3418">3418</a>
+<a href="#3419" id="3419">3419</a>
+<a href="#3420" id="3420">3420</a>
+<a href="#3421" id="3421">3421</a>
+<a href="#3422" id="3422">3422</a>
+<a href="#3423" id="3423">3423</a>
+<a href="#3424" id="3424">3424</a>
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
+<a href="#3429" id="3429">3429</a>
+<a href="#3430" id="3430">3430</a>
+<a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -3555,7 +3571,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;V: Copy&gt; PassChannel&lt;V, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt; {
+<span class="kw">impl</span>&lt;V: Copy + Default&gt; PassChannel&lt;<span class="prelude-ty">Option</span>&lt;V&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt; {
     <span class="kw">fn </span>resolve(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;PassChannel&lt;V, LoadOp, StoreOp&gt;, AttachmentError&gt; {
         <span class="kw">let </span>load_op = <span class="kw">if </span><span class="self">self</span>.read_only {
             <span class="kw">if </span><span class="self">self</span>.load_op.is_some() {
@@ -3578,7 +3594,7 @@
         <span class="prelude-val">Ok</span>(PassChannel {
             load_op,
             store_op,
-            clear_value: <span class="self">self</span>.clear_value,
+            clear_value: <span class="self">self</span>.clear_value.unwrap_or_default(),
             read_only: <span class="self">self</span>.read_only,
         })
     }
@@ -3634,10 +3650,11 @@
     <span class="doccomment">/// The view to use as an attachment.
     </span><span class="kw">pub </span>view: id::TextureViewId,
     <span class="doccomment">/// What operations will be performed on the depth part of the attachment.
-    </span><span class="kw">pub </span>depth: PassChannel&lt;f32, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
+    </span><span class="kw">pub </span>depth: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;f32&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
     <span class="doccomment">/// What operations will be performed on the stencil part of the attachment.
-    </span><span class="kw">pub </span>stencil: PassChannel&lt;u32, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
+    </span><span class="kw">pub </span>stencil: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
 }
+
 <span class="doccomment">/// Describes a depth/stencil attachment to a render pass.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ArcRenderPassDepthStencilAttachment {
@@ -4067,6 +4084,10 @@
     </span>NoLoad,
     <span class="attr">#[error(<span class="string">"Attachment without store"</span>)]
     </span>NoStore,
+    <span class="attr">#[error(<span class="string">"LoadOp is `Clear` but no clear value was provided"</span>)]
+    </span>NoClearValue,
+    <span class="attr">#[error(<span class="string">"Clear value ({0}) must be between 0.0 and 1.0, inclusive"</span>)]
+    </span>ClearValueOutOfRange(f32),
 }
 
 <span class="doccomment">/// Error encountered when performing a render pass.
@@ -4889,6 +4910,17 @@
                         <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::InvalidAttachment(AttachmentError::InvalidDepthStencilAttachmentFormat(
                             view.desc.format,
                         )));
+                    }
+
+                    <span class="comment">// If this.depthLoadOp is "clear", this.depthClearValue must be provided and must be between 0.0 and 1.0, inclusive.
+                    </span><span class="kw">if </span>depth_stencil_attachment.depth.load_op == <span class="prelude-val">Some</span>(LoadOp::Clear) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(clear_value) = depth_stencil_attachment.depth.clear_value {
+                            <span class="kw">if </span>!(<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>clear_value) {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::InvalidAttachment(AttachmentError::ClearValueOutOfRange(clear_value)));
+                            }
+                        } <span class="kw">else </span>{
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::InvalidAttachment(AttachmentError::NoClearValue));
+                        }
                     }
 
                     <span class="prelude-val">Some</span>(ArcRenderPassDepthStencilAttachment {
