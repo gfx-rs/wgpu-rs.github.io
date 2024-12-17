@@ -6061,6 +6061,17 @@
 <a href="#6060" id="6060">6060</a>
 <a href="#6061" id="6061">6061</a>
 <a href="#6062" id="6062">6062</a>
+<a href="#6063" id="6063">6063</a>
+<a href="#6064" id="6064">6064</a>
+<a href="#6065" id="6065">6065</a>
+<a href="#6066" id="6066">6066</a>
+<a href="#6067" id="6067">6067</a>
+<a href="#6068" id="6068">6068</a>
+<a href="#6069" id="6069">6069</a>
+<a href="#6070" id="6070">6070</a>
+<a href="#6071" id="6071">6071</a>
+<a href="#6072" id="6072">6072</a>
+<a href="#6073" id="6073">6073</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -6099,7 +6110,6 @@ This value then gets used instead of `OpLoad` result later on.
 <span class="kw">use </span>convert::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>error::Error;
 <span class="kw">use </span>function::<span class="kw-2">*</span>;
-<span class="kw">use </span>indexmap::IndexSet;
 
 <span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
@@ -6109,6 +6119,8 @@ This value then gets used instead of `OpLoad` result later on.
 
 <span class="kw">use </span>petgraph::graphmap::GraphMap;
 <span class="kw">use </span>std::{convert::TryInto, mem, num::NonZeroU32, path::PathBuf};
+
+<span class="kw">use </span><span class="kw">super</span>::atomic_upgrade::Upgrades;
 
 <span class="kw">pub const </span>SUPPORTED_CAPABILITIES: <span class="kw-2">&amp;</span>[spirv::Capability] = <span class="kw-2">&amp;</span>[
     spirv::Capability::Shader,
@@ -6620,45 +6632,6 @@ This value then gets used instead of `OpLoad` result later on.
     </span>parameter_sampling: <span class="kw-2">&amp;</span><span class="lifetime">'function </span><span class="kw-2">mut </span>[image::SamplingFlags],
 }
 
-<span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="doccomment">/// Descend into the expression with the given handle, locating a contained
-    /// global variable.
-    ///
-    /// If the expression doesn't actually refer to something in a global
-    /// variable, we can't upgrade its type in a way that Naga validation would
-    /// pass, so reject the input instead.
-    ///
-    /// This is used to track atomic upgrades.
-    </span><span class="kw">fn </span>get_contained_global_variable(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw-2">mut </span>handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;, Error&gt; {
-        <span class="macro">log::debug!</span>(<span class="string">"\t\tlocating global variable in {handle:?}"</span>);
-        <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.expressions[handle] {
-                <span class="kw">crate</span>::Expression::Access { base, index: <span class="kw">_ </span>} =&gt; {
-                    handle = base;
-                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  access {handle:?}"</span>);
-                }
-                <span class="kw">crate</span>::Expression::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; {
-                    handle = base;
-                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  access index {handle:?}"</span>);
-                }
-                <span class="kw">crate</span>::Expression::GlobalVariable(h) =&gt; {
-                    <span class="macro">log::debug!</span>(<span class="string">"\t\t  found {h:?}"</span>);
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(h);
-                }
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">break</span>;
-                }
-            }
-        }
-        <span class="prelude-val">Err</span>(Error::AtomicUpgradeError(
-            <span class="kw">crate</span>::front::atomic_upgrade::Error::GlobalVariableMissing,
-        ))
-    }
-}
-
 <span class="kw">enum </span>SignAnchor {
     <span class="prelude-ty">Result</span>,
     Operand,
@@ -6675,11 +6648,12 @@ This value then gets used instead of `OpLoad` result later on.
     future_member_decor: FastHashMap&lt;(spirv::Word, MemberIndex), Decoration&gt;,
     lookup_member: FastHashMap&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, MemberIndex), LookupMember&gt;,
     handle_sampling: FastHashMap&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;, image::SamplingFlags&gt;,
-    <span class="doccomment">/// The set of all global variables accessed by [`Atomic`] statements we've
+
+    <span class="doccomment">/// A record of what is accessed by [`Atomic`] statements we've
     /// generated, so we can upgrade the types of their operands.
     ///
     /// [`Atomic`]: crate::Statement::Atomic
-    </span>upgrade_atomics: IndexSet&lt;Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;&gt;,
+    </span>upgrade_atomics: Upgrades,
 
     lookup_type: FastHashMap&lt;spirv::Word, LookupType&gt;,
     lookup_void_type: <span class="prelude-ty">Option</span>&lt;spirv::Word&gt;,
@@ -7544,8 +7518,7 @@ This value then gets used instead of `OpLoad` result later on.
         block.push(stmt, span);
 
         <span class="comment">// Store any associated global variables so we can upgrade their types later
-        </span><span class="self">self</span>.upgrade_atomics
-            .insert(ctx.get_contained_global_variable(p_lexp_handle)<span class="question-mark">?</span>);
+        </span><span class="self">self</span>.record_atomic_access(ctx, p_lexp_handle)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -10241,8 +10214,7 @@ This value then gets used instead of `OpLoad` result later on.
                     );
 
                     <span class="comment">// Store any associated global variables so we can upgrade their types later
-                    </span><span class="self">self</span>.upgrade_atomics
-                        .insert(ctx.get_contained_global_variable(p_lexp_handle)<span class="question-mark">?</span>);
+                    </span><span class="self">self</span>.record_atomic_access(ctx, p_lexp_handle)<span class="question-mark">?</span>;
                 }
                 Op::AtomicStore =&gt; {
                     inst.expect(<span class="number">5</span>)<span class="question-mark">?</span>;
@@ -10271,8 +10243,7 @@ This value then gets used instead of `OpLoad` result later on.
                     emitter.start(ctx.expressions);
 
                     <span class="comment">// Store any associated global variables so we can upgrade their types later
-                    </span><span class="self">self</span>.upgrade_atomics
-                        .insert(ctx.get_contained_global_variable(p_lexp_handle)<span class="question-mark">?</span>);
+                    </span><span class="self">self</span>.record_atomic_access(ctx, p_lexp_handle)<span class="question-mark">?</span>;
                 }
                 Op::AtomicIIncrement | Op::AtomicIDecrement =&gt; {
                     inst.expect(<span class="number">6</span>)<span class="question-mark">?</span>;
@@ -10336,8 +10307,7 @@ This value then gets used instead of `OpLoad` result later on.
                     block.push(stmt, span);
 
                     <span class="comment">// Store any associated global variables so we can upgrade their types later
-                    </span><span class="self">self</span>.upgrade_atomics
-                        .insert(ctx.get_contained_global_variable(p_exp_h)<span class="question-mark">?</span>);
+                    </span><span class="self">self</span>.record_atomic_access(ctx, p_exp_h)<span class="question-mark">?</span>;
                 }
                 Op::AtomicCompareExchange =&gt; {
                     inst.expect(<span class="number">9</span>)<span class="question-mark">?</span>;
@@ -10432,8 +10402,7 @@ This value then gets used instead of `OpLoad` result later on.
                     block.push(stmt, span);
 
                     <span class="comment">// Store any associated global variables so we can upgrade their types later
-                    </span><span class="self">self</span>.upgrade_atomics
-                        .insert(ctx.get_contained_global_variable(p_exp_h)<span class="question-mark">?</span>);
+                    </span><span class="self">self</span>.record_atomic_access(ctx, p_exp_h)<span class="question-mark">?</span>;
                 }
                 Op::AtomicExchange
                 | Op::AtomicIAdd
@@ -10748,7 +10717,7 @@ This value then gets used instead of `OpLoad` result later on.
 
         <span class="kw">if </span>!<span class="self">self</span>.upgrade_atomics.is_empty() {
             <span class="macro">log::info!</span>(<span class="string">"Upgrading atomic pointers..."</span>);
-            module.upgrade_atomics(mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.upgrade_atomics))<span class="question-mark">?</span>;
+            module.upgrade_atomics(<span class="kw-2">&amp;</span><span class="self">self</span>.upgrade_atomics)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// Do entry point specific processing after all functions are parsed so that we can
@@ -12042,6 +12011,59 @@ This value then gets used instead of `OpLoad` result later on.
             },
         );
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Record an atomic access to some component of a global variable.
+    ///
+    /// Given `handle`, an expression referring to a scalar that has had an
+    /// atomic operation applied to it, descend into the expression, noting
+    /// which global variable it ultimately refers to, and which struct fields
+    /// of that global's value it accesses.
+    ///
+    /// Return the handle of the type of the expression.
+    ///
+    /// If the expression doesn't actually refer to something in a global
+    /// variable, we can't upgrade its type in a way that Naga validation would
+    /// pass, so reject the input instead.
+    </span><span class="kw">fn </span>record_atomic_access(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;</span>BlockContext,
+        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&gt; {
+        <span class="macro">log::debug!</span>(<span class="string">"\t\tlocating global variable in {handle:?}"</span>);
+        <span class="kw">match </span>ctx.expressions[handle] {
+            <span class="kw">crate</span>::Expression::Access { base, index } =&gt; {
+                <span class="macro">log::debug!</span>(<span class="string">"\t\t  access {handle:?} {index:?}"</span>);
+                <span class="kw">let </span>ty = <span class="self">self</span>.record_atomic_access(ctx, base)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw">crate</span>::TypeInner::Array { base, .. } = ctx.module.types[ty].inner <span class="kw">else </span>{
+                    <span class="macro">unreachable!</span>(<span class="string">"Atomic operations on Access expressions only work for arrays"</span>);
+                };
+                <span class="prelude-val">Ok</span>(base)
+            }
+            <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; {
+                <span class="macro">log::debug!</span>(<span class="string">"\t\t  access index {handle:?} {index:?}"</span>);
+                <span class="kw">let </span>ty = <span class="self">self</span>.record_atomic_access(ctx, base)<span class="question-mark">?</span>;
+                <span class="kw">match </span>ctx.module.types[ty].inner {
+                    <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+                        <span class="kw">let </span>index = index <span class="kw">as </span>usize;
+                        <span class="self">self</span>.upgrade_atomics.insert_field(ty, index);
+                        <span class="prelude-val">Ok</span>(members[index].ty)
+                    }
+                    <span class="kw">crate</span>::TypeInner::Array { base, .. } =&gt; {
+                        <span class="prelude-val">Ok</span>(base)
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Atomic operations on AccessIndex expressions only work for structs and arrays"</span>),
+                }
+            }
+            <span class="kw">crate</span>::Expression::GlobalVariable(h) =&gt; {
+                <span class="macro">log::debug!</span>(<span class="string">"\t\t  found {h:?}"</span>);
+                <span class="self">self</span>.upgrade_atomics.insert_global(h);
+                <span class="prelude-val">Ok</span>(ctx.module.global_variables[h].ty)
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::AtomicUpgradeError(
+                <span class="kw">crate</span>::front::atomic_upgrade::Error::GlobalVariableMissing,
+            )),
+        }
     }
 }
 
