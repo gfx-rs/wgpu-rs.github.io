@@ -3665,6 +3665,13 @@
 <a href="#3664" id="3664">3664</a>
 <a href="#3665" id="3665">3665</a>
 <a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -6279,10 +6286,17 @@
             .map(|bgl| bgl.raw())
             .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { hal::MAX_BIND_GROUPS }&gt;&gt;();
 
+        <span class="kw">let </span>additional_flags = <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"indirect-validation"</span>) {
+            hal::PipelineLayoutFlags::INDIRECT_BUILTIN_UPDATE
+        } <span class="kw">else </span>{
+            hal::PipelineLayoutFlags::empty()
+        };
+
         <span class="kw">let </span>hal_desc = hal::PipelineLayoutDescriptor {
             label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             flags: hal::PipelineLayoutFlags::FIRST_VERTEX_INSTANCE
-                | hal::PipelineLayoutFlags::NUM_WORK_GROUPS,
+                | hal::PipelineLayoutFlags::NUM_WORK_GROUPS
+                | additional_flags,
             bind_group_layouts: <span class="kw-2">&amp;</span>raw_bind_group_layouts,
             push_constant_ranges: desc.push_constant_ranges.as_ref(),
         };
