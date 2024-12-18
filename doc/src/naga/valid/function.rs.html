@@ -1478,6 +1478,16 @@
 <a href="#1477" id="1477">1477</a>
 <a href="#1478" id="1478">1478</a>
 <a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleSet};
 
@@ -2492,24 +2502,38 @@
                 } =&gt; {
                     <span class="comment">//Note: this code uses a lot of `FunctionError::InvalidImageStore`,
                     // and could probably be refactored.
-                    </span><span class="kw">let </span>var = <span class="kw">match </span><span class="kw-2">*</span>context.get_expression(image) {
+                    </span><span class="kw">let </span>global_var;
+                    <span class="kw">let </span>image_ty;
+                    <span class="kw">match </span><span class="kw-2">*</span>context.get_expression(image) {
                         <span class="kw">crate</span>::Expression::GlobalVariable(var_handle) =&gt; {
-                            <span class="kw-2">&amp;</span>context.global_vars[var_handle]
+                            global_var = <span class="kw-2">&amp;</span>context.global_vars[var_handle];
+                            image_ty = global_var.ty;
                         }
-                        <span class="comment">// We're looking at a binding index situation, so punch through the index and look at the global behind it.
+                        <span class="comment">// The `image` operand is indexing into a binding array,
+                        // so punch through the `Access`* expression and look at
+                        // the global behind it.
                         </span><span class="kw">crate</span>::Expression::Access { base, .. }
                         | <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; {
-                            <span class="kw">match </span><span class="kw-2">*</span>context.get_expression(base) {
-                                <span class="kw">crate</span>::Expression::GlobalVariable(var_handle) =&gt; {
-                                    <span class="kw-2">&amp;</span>context.global_vars[var_handle]
-                                }
-                                <span class="kw">_ </span>=&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                        ExpressionError::ExpectedGlobalVariable,
-                                    )
-                                    .with_span_handle(image, context.expressions))
-                                }
-                            }
+                            <span class="kw">let </span><span class="kw">crate</span>::Expression::GlobalVariable(var_handle) =
+                                <span class="kw-2">*</span>context.get_expression(base)
+                            <span class="kw">else </span>{
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                                    ExpressionError::ExpectedGlobalVariable,
+                                )
+                                .with_span_handle(image, context.expressions));
+                            };
+                            global_var = <span class="kw-2">&amp;</span>context.global_vars[var_handle];
+
+                            <span class="comment">// The global variable must be a binding array.
+                            </span><span class="kw">let </span>Ti::BindingArray { base, .. } = context.types[global_var.ty].inner
+                            <span class="kw">else </span>{
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                                    ExpressionError::ExpectedBindingArrayType(global_var.ty),
+                                )
+                                .with_span_handle(global_var.ty, context.types));
+                            };
+
+                            image_ty = base;
                         }
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
@@ -2519,78 +2543,74 @@
                         }
                     };
 
-                    <span class="comment">// Punch through a binding array to get the underlying type
-                    </span><span class="kw">let </span>global_ty = <span class="kw">match </span>context.types[var.ty].inner {
-                        Ti::BindingArray { base, .. } =&gt; <span class="kw-2">&amp;</span>context.types[base].inner,
-                        <span class="kw-2">ref </span>inner =&gt; inner,
+                    <span class="comment">// The `image` operand must be an `Image`.
+                    </span><span class="kw">let </span>Ti::Image {
+                        class,
+                        arrayed,
+                        dim,
+                    } = context.types[image_ty].inner
+                    <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                            ExpressionError::ExpectedImageType(global_var.ty),
+                        )
+                        .with_span()
+                        .with_handle(global_var.ty, context.types)
+                        .with_handle(image, context.expressions));
                     };
 
-                    <span class="kw">let </span>value_ty = <span class="kw">match </span><span class="kw-2">*</span>global_ty {
-                        Ti::Image {
-                            class,
-                            arrayed,
-                            dim,
-                        } =&gt; {
-                            <span class="kw">match </span>context
-                                .resolve_type(coordinate, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?
-                                </span>.image_storage_coordinates()
-                            {
-                                <span class="prelude-val">Some</span>(coord_dim) <span class="kw">if </span>coord_dim == dim =&gt; {}
-                                <span class="kw">_ </span>=&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                        ExpressionError::InvalidImageCoordinateType(
-                                            dim, coordinate,
-                                        ),
-                                    )
-                                    .with_span_handle(coordinate, context.expressions));
-                                }
-                            };
-                            <span class="kw">if </span>arrayed != array_index.is_some() {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                    ExpressionError::InvalidImageArrayIndex,
-                                )
-                                .with_span_handle(coordinate, context.expressions));
-                            }
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
-                                <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(expr, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">? </span>{
-                                    Ti::Scalar(<span class="kw">crate</span>::Scalar {
-                                        kind: <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint,
-                                        width: <span class="kw">_</span>,
-                                    }) =&gt; {}
-                                    <span class="kw">_ </span>=&gt; {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                            ExpressionError::InvalidImageArrayIndexType(expr),
-                                        )
-                                        .with_span_handle(expr, context.expressions));
-                                    }
-                                }
-                            }
-                            <span class="kw">match </span>class {
-                                <span class="kw">crate</span>::ImageClass::Storage { format, .. } =&gt; {
-                                    <span class="kw">crate</span>::TypeInner::Vector {
-                                        size: <span class="kw">crate</span>::VectorSize::Quad,
-                                        scalar: format.into(),
-                                    }
-                                }
-                                <span class="kw">_ </span>=&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                        ExpressionError::InvalidImageClass(class),
-                                    )
-                                    .with_span_handle(image, context.expressions));
-                                }
-                            }
-                        }
-                        <span class="kw">_ </span>=&gt; {
+                    <span class="comment">// It had better be a storage image, since we're writing to it.
+                    </span><span class="kw">let </span><span class="kw">crate</span>::ImageClass::Storage { format, .. } = class <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                            ExpressionError::InvalidImageClass(class),
+                        )
+                        .with_span_handle(image, context.expressions));
+                    };
+
+                    <span class="comment">// The `coordinate` operand must be a vector of the appropriate size.
+                    </span><span class="kw">if </span>!context
+                        .resolve_type(coordinate, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?
+                        </span>.image_storage_coordinates()
+                        .is_some_and(|coord_dim| coord_dim == dim)
+                    {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                            ExpressionError::InvalidImageCoordinateType(dim, coordinate),
+                        )
+                        .with_span_handle(coordinate, context.expressions));
+                    }
+
+                    <span class="comment">// The `array_index` operand should be present if and only if
+                    // the image itself is arrayed.
+                    </span><span class="kw">if </span>arrayed != array_index.is_some() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
+                            ExpressionError::InvalidImageArrayIndex,
+                        )
+                        .with_span_handle(coordinate, context.expressions));
+                    }
+
+                    <span class="comment">// If present, `array_index` must be a scalar integer type.
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
+                        <span class="kw">if </span>!<span class="macro">matches!</span>(
+                            <span class="kw-2">*</span>context.resolve_type(expr, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?</span>,
+                            Ti::Scalar(<span class="kw">crate</span>::Scalar {
+                                kind: <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint,
+                                width: <span class="kw">_</span>,
+                            })
+                        ) {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidImageStore(
-                                ExpressionError::ExpectedImageType(var.ty),
+                                ExpressionError::InvalidImageArrayIndexType(expr),
                             )
-                            .with_span()
-                            .with_handle(var.ty, context.types)
-                            .with_handle(image, context.expressions))
+                            .with_span_handle(expr, context.expressions));
                         }
+                    }
+
+                    <span class="kw">let </span>value_ty = <span class="kw">crate</span>::TypeInner::Vector {
+                        size: <span class="kw">crate</span>::VectorSize::Quad,
+                        scalar: format.into(),
                     };
 
-                    <span class="kw">if </span><span class="kw-2">*</span>context.resolve_type(value, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">? </span>!= value_ty {
+                    <span class="comment">// The value we're writing had better match the scalar type
+                    // for `image`'s format.
+                    </span><span class="kw">if </span><span class="kw-2">*</span>context.resolve_type(value, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">? </span>!= value_ty {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidStoreValue(value)
                             .with_span_handle(value, context.expressions));
                     }
