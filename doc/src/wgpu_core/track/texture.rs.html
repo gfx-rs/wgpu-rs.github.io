@@ -1535,10 +1535,6 @@
 <a href="#1534" id="1534">1534</a>
 <a href="#1535" id="1535">1535</a>
 <a href="#1536" id="1536">1536</a>
-<a href="#1537" id="1537">1537</a>
-<a href="#1538" id="1538">1538</a>
-<a href="#1539" id="1539">1539</a>
-<a href="#1540" id="1540">1540</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Texture Trackers
 //!
 //! Texture trackers are significantly more complicated than
@@ -1738,6 +1734,73 @@
     <span class="kw">fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) {
         <span class="self">self</span>.simple.resize(size, TextureUses::UNINITIALIZED);
     }
+
+    <span class="kw">fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.simple.len()
+    }
+
+    <span class="doccomment">/// SAFETY: `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>get_unchecked(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        index: usize,
+    ) -&gt; SingleOrManyStates&lt;TextureUses, <span class="kw-2">&amp;</span>ComplexTextureState&gt; {
+        <span class="kw">let </span>simple = <span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.simple.get_unchecked(index) };
+        <span class="kw">if </span>simple == TextureUses::COMPLEX {
+            SingleOrManyStates::Many(<span class="kw">unsafe </span>{ <span class="self">self</span>.complex.get(<span class="kw-2">&amp;</span>index).unwrap_unchecked() })
+        } <span class="kw">else </span>{
+            SingleOrManyStates::Single(simple)
+        }
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// The `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>get_mut_unchecked(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index: usize,
+    ) -&gt; SingleOrManyStates&lt;<span class="kw-2">&amp;mut </span>TextureUses, <span class="kw-2">&amp;mut </span>ComplexTextureState&gt; {
+        <span class="kw">let </span>simple = <span class="kw">unsafe </span>{ <span class="self">self</span>.simple.get_unchecked_mut(index) };
+        <span class="kw">if </span><span class="kw-2">*</span>simple == TextureUses::COMPLEX {
+            SingleOrManyStates::Many(<span class="kw">unsafe </span>{ <span class="self">self</span>.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked() })
+        } <span class="kw">else </span>{
+            SingleOrManyStates::Single(simple)
+        }
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// The `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>insert_simple_unchecked(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, simple: TextureUses) {
+        <span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.simple.get_unchecked_mut(index) = simple };
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// The `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>insert_complex_unchecked(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, complex: ComplexTextureState) {
+        <span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
+        <span class="self">self</span>.complex.insert(index, complex);
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// The `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>make_simple_unchecked(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, simple: TextureUses) {
+        <span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.simple.get_unchecked_mut(index) = simple };
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.complex.remove(<span class="kw-2">&amp;</span>index).unwrap_unchecked() };
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// The `index` must be in bounds.
+    </span><span class="kw">unsafe fn </span>make_complex_unchecked(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, complex: ComplexTextureState) {
+        <span class="kw">unsafe </span>{ <span class="kw-2">*</span><span class="self">self</span>.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
+        <span class="self">self</span>.complex.insert(index, complex);
+    }
+
+    <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
+        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.size());
+    }
 }
 
 <span class="doccomment">/// Stores all texture state within a single usage scope.
@@ -1759,16 +1822,7 @@
 <span class="kw">impl </span>TextureUsageScope {
     <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
         <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
-
-        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.set.simple.len());
-
-        <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
-            &amp;&amp; <span class="self">self</span>.set.simple[index] == TextureUses::COMPLEX
-        {
-            <span class="self">self</span>.set.complex.contains_key(<span class="kw-2">&amp;</span>index)
-        } <span class="kw">else </span>{
-            <span class="bool-val">true
-        </span>});
+        <span class="self">self</span>.set.tracker_assert_in_bounds(index);
     }
 
     <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -1803,8 +1857,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scope: <span class="kw-2">&amp;</span><span class="self">Self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
-        <span class="kw">let </span>incoming_size = scope.set.simple.len();
-        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.set.simple.len() {
+        <span class="kw">let </span>incoming_size = scope.set.size();
+        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.set.size() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
@@ -1926,24 +1980,8 @@
 
     <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
         <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
-
-        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.start_set.simple.len());
-        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.end_set.simple.len());
-
-        <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
-            &amp;&amp; <span class="self">self</span>.start_set.simple[index] == TextureUses::COMPLEX
-        {
-            <span class="self">self</span>.start_set.complex.contains_key(<span class="kw-2">&amp;</span>index)
-        } <span class="kw">else </span>{
-            <span class="bool-val">true
-        </span>});
-        <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
-            &amp;&amp; <span class="self">self</span>.end_set.simple[index] == TextureUses::COMPLEX
-        {
-            <span class="self">self</span>.end_set.complex.contains_key(<span class="kw-2">&amp;</span>index)
-        } <span class="kw">else </span>{
-            <span class="bool-val">true
-        </span>});
+        <span class="self">self</span>.start_set.tracker_assert_in_bounds(index);
+        <span class="self">self</span>.end_set.tracker_assert_in_bounds(index);
     }
 
     <span class="doccomment">/// Sets the size of all the vectors inside the tracker.
@@ -1959,7 +1997,7 @@
 
     <span class="doccomment">/// Extend the vectors to let the given index be valid.
     </span><span class="kw">fn </span>allow_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) {
-        <span class="kw">if </span>index &gt;= <span class="self">self</span>.start_set.simple.len() {
+        <span class="kw">if </span>index &gt;= <span class="self">self</span>.start_set.size() {
             <span class="self">self</span>.set_size(index + <span class="number">1</span>);
         }
     }
@@ -2038,8 +2076,8 @@
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>set_from_tracker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tracker: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
-        <span class="kw">let </span>incoming_size = tracker.start_set.simple.len();
-        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.simple.len() {
+        <span class="kw">let </span>incoming_size = tracker.start_set.size();
+        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.size() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
@@ -2078,8 +2116,8 @@
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>set_from_usage_scope(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scope: <span class="kw-2">&amp;</span>TextureUsageScope) {
-        <span class="kw">let </span>incoming_size = scope.set.simple.len();
-        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.simple.len() {
+        <span class="kw">let </span>incoming_size = scope.set.size();
+        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.size() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
@@ -2128,8 +2166,8 @@
         scope: <span class="kw-2">&amp;mut </span>TextureUsageScope,
         bind_group_state: <span class="kw-2">&amp;</span>TextureViewBindGroupState,
     ) {
-        <span class="kw">let </span>incoming_size = scope.set.simple.len();
-        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.simple.len() {
+        <span class="kw">let </span>incoming_size = scope.set.size();
+        <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.size() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
@@ -2191,21 +2229,12 @@
 
     <span class="kw">fn </span>tracker_assert_in_bounds(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) {
         <span class="self">self</span>.metadata.tracker_assert_in_bounds(index);
-
-        <span class="macro">strict_assert!</span>(index &lt; <span class="self">self</span>.current_state_set.simple.len());
-
-        <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
-            &amp;&amp; <span class="self">self</span>.current_state_set.simple[index] == TextureUses::COMPLEX
-        {
-            <span class="self">self</span>.current_state_set.complex.contains_key(<span class="kw-2">&amp;</span>index)
-        } <span class="kw">else </span>{
-            <span class="bool-val">true
-        </span>});
+        <span class="self">self</span>.current_state_set.tracker_assert_in_bounds(index);
     }
 
     <span class="doccomment">/// Extend the vectors to let the given index be valid.
     </span><span class="kw">fn </span>allow_index(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) {
-        <span class="kw">if </span>index &gt;= <span class="self">self</span>.current_state_set.simple.len() {
+        <span class="kw">if </span>index &gt;= <span class="self">self</span>.current_state_set.size() {
             <span class="self">self</span>.current_state_set.set_size(index + <span class="number">1</span>);
             <span class="self">self</span>.metadata.set_size(index + <span class="number">1</span>);
         }
@@ -2463,19 +2492,12 @@
                     SingleOrManyStates::Many(EitherIter::Left(iter::once((selector, state))))
                 }
             }
-            TextureStateProvider::TextureSet { set } =&gt; {
-                <span class="kw">let </span>new_state = <span class="kw-2">*</span><span class="kw">unsafe </span>{ set.simple.get_unchecked(index) };
-
-                <span class="kw">if </span>new_state == TextureUses::COMPLEX {
-                    <span class="kw">let </span>new_complex = <span class="kw">unsafe </span>{ set.complex.get(<span class="kw-2">&amp;</span>index).unwrap_unchecked() };
-
-                    SingleOrManyStates::Many(EitherIter::Right(
-                        new_complex.to_selector_state_iter(),
-                    ))
-                } <span class="kw">else </span>{
-                    SingleOrManyStates::Single(new_state)
+            TextureStateProvider::TextureSet { set } =&gt; <span class="kw">match unsafe </span>{ set.get_unchecked(index) } {
+                SingleOrManyStates::Single(single) =&gt; SingleOrManyStates::Single(single),
+                SingleOrManyStates::Many(complex) =&gt; {
+                    SingleOrManyStates::Many(EitherIter::Right(complex.to_selector_state_iter()))
                 }
-            }
+            },
         }
     }
 }
@@ -2615,12 +2637,12 @@
             </span><span class="macro">strict_assert_eq!</span>(invalid_resource_state(state), <span class="bool-val">false</span>);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(start_state) = start_state {
-                <span class="kw">unsafe </span>{ <span class="kw-2">*</span>start_state.simple.get_unchecked_mut(index) = state };
+                <span class="kw">unsafe </span>{ start_state.insert_simple_unchecked(index, state) };
             }
 
             <span class="comment">// We only need to insert ourselves the end state if there is no end state provider.
             </span><span class="kw">if </span>end_state_provider.is_none() {
-                <span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = state };
+                <span class="kw">unsafe </span>{ end_state.insert_simple_unchecked(index, state) };
             }
         }
         SingleOrManyStates::Many(state_iter) =&gt; {
@@ -2630,14 +2652,12 @@
                 <span class="kw">unsafe </span>{ ComplexTextureState::from_selector_state_iter(full_range, state_iter) };
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(start_state) = start_state {
-                <span class="kw">unsafe </span>{ <span class="kw-2">*</span>start_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                start_state.complex.insert(index, complex.clone());
+                <span class="kw">unsafe </span>{ start_state.insert_complex_unchecked(index, complex.clone()) };
             }
 
             <span class="comment">// We only need to insert ourselves the end state if there is no end state provider.
             </span><span class="kw">if </span>end_state_provider.is_none() {
-                <span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                end_state.complex.insert(index, complex);
+                <span class="kw">unsafe </span>{ end_state.insert_complex_unchecked(index, complex) };
             }
         }
     }
@@ -2651,7 +2671,7 @@
 
                 <span class="comment">// We only need to insert into the end, as there is guaranteed to be
                 // a start state provider.
-                </span><span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = state };
+                </span><span class="kw">unsafe </span>{ end_state.insert_simple_unchecked(index, state) };
             }
             SingleOrManyStates::Many(state_iter) =&gt; {
                 <span class="kw">let </span>full_range = texture_selector.unwrap().clone();
@@ -2662,8 +2682,7 @@
 
                 <span class="comment">// We only need to insert into the end, as there is guaranteed to be
                 // a start state provider.
-                </span><span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                end_state.complex.insert(index, complex);
+                </span><span class="kw">unsafe </span>{ end_state.insert_complex_unchecked(index, complex) };
             }
         }
     }
@@ -2682,14 +2701,7 @@
     state_provider: TextureStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">'_</span>, Arc&lt;Texture&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ResourceUsageCompatibilityError&gt; {
-    <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ current_state_set.simple.get_unchecked_mut(index) };
-    <span class="kw">let </span>current_state = <span class="kw">if </span><span class="kw-2">*</span>current_simple == TextureUses::COMPLEX {
-        SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
-        })
-    } <span class="kw">else </span>{
-        SingleOrManyStates::Single(current_simple)
-    };
+    <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_state_set.get_mut_unchecked(index) };
 
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
@@ -2744,8 +2756,7 @@
                 }
             }
 
-            <span class="kw-2">*</span>current_simple = TextureUses::COMPLEX;
-            current_state_set.complex.insert(index, new_complex);
+            <span class="kw">unsafe </span>{ current_state_set.make_complex_unchecked(index, new_complex) };
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Single(new_simple)) =&gt; {
             <span class="kw">for </span>(mip_id, mip) <span class="kw">in </span>current_complex.mips.iter_mut().enumerate() {
@@ -2824,14 +2835,7 @@
     state_provider: TextureStateProvider&lt;<span class="lifetime">'_</span>&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;TextureUses&gt;&gt;,
 ) {
-    <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ <span class="kw-2">*</span>current_state_set.simple.get_unchecked(index) };
-    <span class="kw">let </span>current_state = <span class="kw">if </span>current_simple == TextureUses::COMPLEX {
-        SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set.complex.get(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
-        })
-    } <span class="kw">else </span>{
-        SingleOrManyStates::Single(current_simple)
-    };
+    <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_state_set.get_unchecked(index) };
 
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
@@ -2933,8 +2937,7 @@
     }
 }
 
-<span class="attr">#[allow(clippy::needless_option_as_deref)] </span><span class="comment">// we use this for reborrowing Option&lt;&amp;mut T&gt;
-</span><span class="attr">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>update(
     texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     start_state_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>TextureStateSet&gt;,
@@ -2945,23 +2948,14 @@
     <span class="comment">// We only ever need to update the start state here if the state is complex.
     //
     // If the state is simple, the first insert to the tracker would cover it.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>start_complex = <span class="prelude-val">None</span>;
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(start_state_set) = start_state_set {
-        <span class="kw">let </span>start_simple = <span class="kw">unsafe </span>{ <span class="kw-2">*</span>start_state_set.simple.get_unchecked(index) };
-        <span class="kw">if </span>start_simple == TextureUses::COMPLEX {
-            start_complex =
-                <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ start_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked() });
+    </span><span class="kw">let </span><span class="kw-2">mut </span>start_complex = start_state_set.and_then(|start_state_set| {
+        <span class="kw">match unsafe </span>{ start_state_set.get_mut_unchecked(index) } {
+            SingleOrManyStates::Single(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            SingleOrManyStates::Many(complex) =&gt; <span class="prelude-val">Some</span>(complex),
         }
-    }
+    });
 
-    <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ current_state_set.simple.get_unchecked_mut(index) };
-    <span class="kw">let </span>current_state = <span class="kw">if </span><span class="kw-2">*</span>current_simple == TextureUses::COMPLEX {
-        SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
-        })
-    } <span class="kw">else </span>{
-        SingleOrManyStates::Single(current_simple)
-    };
+    <span class="kw">let </span>current_state = <span class="kw">unsafe </span>{ current_state_set.get_mut_unchecked(index) };
 
     <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
@@ -2997,8 +2991,7 @@
                 }
             }
 
-            <span class="kw-2">*</span>current_simple = TextureUses::COMPLEX;
-            current_state_set.complex.insert(index, new_complex);
+            <span class="kw">unsafe </span>{ current_state_set.make_complex_unchecked(index, new_complex) };
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Single(new_single)) =&gt; {
             <span class="kw">for </span>(mip_id, mip) <span class="kw">in </span>current_complex.mips.iter().enumerate() {
@@ -3023,8 +3016,7 @@
                 }
             }
 
-            <span class="kw">unsafe </span>{ <span class="kw-2">*</span>current_state_set.simple.get_unchecked_mut(index) = new_single };
-            <span class="kw">unsafe </span>{ current_state_set.complex.remove(<span class="kw-2">&amp;</span>index).unwrap_unchecked() };
+            <span class="kw">unsafe </span>{ current_state_set.make_simple_unchecked(index, new_single) };
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Many(new_many)) =&gt; {
             <span class="kw">for </span>(selector, new_state) <span class="kw">in </span>new_many {
