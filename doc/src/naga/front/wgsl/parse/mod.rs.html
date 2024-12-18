@@ -2869,11 +2869,13 @@
 <a href="#2868" id="2868">2868</a>
 <a href="#2869" id="2869">2869</a>
 <a href="#2870" id="2870">2870</a>
+<a href="#2871" id="2871">2871</a>
+<a href="#2872" id="2872">2872</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
     ShouldConflictOnFullDuplicate, StandardFilterableTriggeringRule,
 };
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken};
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{DiagnosticAttributeNotSupportedPosition, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
     EnableExtension, EnableExtensions, UnimplementedEnableExtension,
 };
@@ -5336,17 +5338,16 @@
             unresolved: <span class="kw-2">&amp;mut </span>dependencies,
         };
         <span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = DiagnosticFilterMap::new();
-        <span class="kw">let </span>ensure_no_diag_attrs =
-            |on_what_plural, filters: DiagnosticFilterMap| -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-                <span class="kw">if </span>filters.is_empty() {
-                    <span class="prelude-val">Ok</span>(())
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotSupported {
-                        on_what_plural,
-                        spans: filters.spans().collect(),
-                    })
-                }
-            };
+        <span class="kw">let </span>ensure_no_diag_attrs = |on_what, filters: DiagnosticFilterMap| -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+            <span class="kw">if </span>filters.is_empty() {
+                <span class="prelude-val">Ok</span>(())
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotSupported {
+                    on_what,
+                    spans: filters.spans().collect(),
+                })
+            }
+        };
 
         <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
         <span class="kw">while </span>lexer.skip(Token::Attribute) {
@@ -5433,14 +5434,17 @@
         </span><span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span>kind = <span class="kw">match </span>lexer.next() {
             (Token::Separator(<span class="string">';'</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"semicolons"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(
+                    DiagnosticAttributeNotSupportedPosition::SemicolonInModulePosition,
+                    diagnostic_filters,
+                )<span class="question-mark">?</span>;
                 <span class="prelude-val">None
             </span>}
             (Token::Word(word), directive_span) <span class="kw">if </span>DirectiveKind::from_ident(word).is_some() =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DirectiveAfterFirstGlobalDecl { directive_span });
             }
             (Token::Word(<span class="string">"struct"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`struct`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`struct`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
@@ -5448,7 +5452,7 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Struct(ast::Struct { name, members }))
             }
             (Token::Word(<span class="string">"alias"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`alias`es"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`alias`es"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
@@ -5458,7 +5462,7 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Type(ast::TypeAlias { name, ty }))
             }
             (Token::Word(<span class="string">"const"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`const`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`const`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
@@ -5476,7 +5480,7 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Const(ast::Const { name, ty, init }))
             }
             (Token::Word(<span class="string">"override"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`override`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`override`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>name = lexer.next_ident()<span class="question-mark">?</span>;
 
@@ -5502,7 +5506,7 @@
                 }))
             }
             (Token::Word(<span class="string">"var"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`var`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`var`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span><span class="kw-2">mut </span>var = <span class="self">self</span>.variable_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
                 var.binding = binding.take();
@@ -5533,7 +5537,7 @@
                 }))
             }
             (Token::Word(<span class="string">"const_assert"</span>), <span class="kw">_</span>) =&gt; {
-                ensure_no_diag_attrs(<span class="string">"`const_assert`s"</span>, diagnostic_filters)<span class="question-mark">?</span>;
+                ensure_no_diag_attrs(<span class="string">"`const_assert`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
 
                 <span class="comment">// parentheses are optional
                 </span><span class="kw">let </span>paren = lexer.skip(Token::Paren(<span class="string">'('</span>));
