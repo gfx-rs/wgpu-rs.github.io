@@ -103,6 +103,14 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
 <span class="kw">use crate</span>::{Handle, UniqueArena};
 
@@ -187,9 +195,17 @@
             } =&gt; adjust(base),
             Ti::Array {
                 <span class="kw-2">ref mut </span>base,
-                size: <span class="kw">_</span>,
+                <span class="kw-2">ref mut </span>size,
                 stride: <span class="kw">_</span>,
-            } =&gt; adjust(base),
+            } =&gt; {
+                adjust(base);
+                <span class="kw">if let </span><span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(
+                    <span class="kw-2">ref mut </span>size_expr,
+                )) = <span class="kw-2">*</span>size
+                {
+                    <span class="self">self</span>.global_expressions.adjust(size_expr);
+                }
+            }
             Ti::Struct {
                 <span class="kw-2">ref mut </span>members,
                 span: <span class="kw">_</span>,
