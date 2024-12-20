@@ -3430,8 +3430,6 @@
 <a href="#3429" id="3429">3429</a>
 <a href="#3430" id="3430">3430</a>
 <a href="#3431" id="3431">3431</a>
-<a href="#3432" id="3432">3432</a>
-<a href="#3433" id="3433">3433</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -5085,8 +5083,6 @@
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">let </span>snatch_guard = <span class="kw-2">&amp;</span>device.snatchable_lock.read();
 
-        <span class="kw">let </span>hal_label = hal_label(base.label.as_deref(), device.instance_flags);
-
         <span class="kw">let </span>(scope, pending_discard_init_fixups) = {
             device.check_is_valid().map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
@@ -5099,14 +5095,14 @@
             <span class="comment">// We automatically keep extending command buffers over time, and because
             // we want to insert a command buffer _before_ what we're about to record,
             // we need to make sure to close the previous one.
-            </span>encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            </span>encoder.close_if_open().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             encoder
-                .open_pass(hal_label, <span class="kw-2">&amp;</span>cmd_buf.device)
+                .open_pass(base.label.as_deref())
                 .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>info = RenderPassInfo::start(
                 device,
-                hal_label,
+                hal_label(base.label.as_deref(), device.instance_flags),
                 pass.color_attachments.take(),
                 pass.depth_stencil_attachment.take(),
                 pass.timestamp_writes.take(),
@@ -5405,7 +5401,7 @@
                 .finish(state.raw_encoder, state.snatch_guard)
                 .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
-            encoder.close(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            encoder.close().map_pass_err(pass_scope)<span class="question-mark">?</span>;
             (trackers, pending_discard_init_fixups)
         };
 
@@ -5413,7 +5409,9 @@
         <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
 
         {
-            <span class="kw">let </span>transit = encoder.open(<span class="kw-2">&amp;</span>cmd_buf.device).map_pass_err(pass_scope)<span class="question-mark">?</span>;
+            <span class="kw">let </span>transit = encoder
+                .open_pass(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Pre Pass"</span>))
+                .map_pass_err(pass_scope)<span class="question-mark">?</span>;
 
             fixup_discarded_surfaces(
                 pending_discard_init_fixups.into_iter(),
@@ -5428,9 +5426,7 @@
             CommandBuffer::insert_barriers_from_scope(transit, tracker, <span class="kw-2">&amp;</span>scope, snatch_guard);
         }
 
-        encoder
-            .close_and_swap(<span class="kw-2">&amp;</span>cmd_buf.device)
-            .map_pass_err(pass_scope)<span class="question-mark">?</span>;
+        encoder.close_and_swap().map_pass_err(pass_scope)<span class="question-mark">?</span>;
         cmd_buf_data_guard.mark_successful();
 
         <span class="prelude-val">Ok</span>(())
