@@ -578,83 +578,10 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
-<a href="#642" id="642">642</a>
-<a href="#643" id="643">643</a>
-<a href="#644" id="644">644</a>
-<a href="#645" id="645">645</a>
-<a href="#646" id="646">646</a>
-<a href="#647" id="647">647</a>
-<a href="#648" id="648">648</a>
-<a href="#649" id="649">649</a>
-<a href="#650" id="650">650</a>
-<a href="#651" id="651">651</a>
-<a href="#652" id="652">652</a>
-<a href="#653" id="653">653</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>wgt::{LoadOp, Operations, StoreOp};
 
 <span class="doccomment">/// In-progress recording of a render pass: a list of render commands in a [`CommandEncoder`].
 ///
@@ -1147,81 +1074,6 @@
     /// `begin_pipeline_statistics_query`. Pipeline statistics queries may not be nested.
     </span><span class="kw">pub fn </span>end_pipeline_statistics_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.inner.end_pipeline_statistics_query();
-    }
-}
-
-<span class="doccomment">/// Operation to perform to the output attachment at the start of a render pass.
-///
-/// Corresponds to [WebGPU `GPULoadOp`](https://gpuweb.github.io/gpuweb/#enumdef-gpuloadop),
-/// plus the corresponding clearValue.
-</span><span class="attr">#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub enum </span>LoadOp&lt;V&gt; {
-    <span class="doccomment">/// Loads the specified value for this attachment into the render pass.
-    ///
-    /// On some GPU hardware (primarily mobile), "clear" is significantly cheaper
-    /// because it avoids loading data from main memory into tile-local memory.
-    ///
-    /// On other GPU hardware, there isn’t a significant difference.
-    ///
-    /// As a result, it is recommended to use "clear" rather than "load" in cases
-    /// where the initial value doesn’t matter
-    /// (e.g. the render target will be cleared using a skybox).
-    </span>Clear(V),
-    <span class="doccomment">/// Loads the existing value for this attachment into the render pass.
-    </span>Load,
-}
-
-<span class="kw">impl</span>&lt;V: Default&gt; Default <span class="kw">for </span>LoadOp&lt;V&gt; {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::Clear(Default::default())
-    }
-}
-
-<span class="doccomment">/// Operation to perform to the output attachment at the end of a render pass.
-///
-/// Corresponds to [WebGPU `GPUStoreOp`](https://gpuweb.github.io/gpuweb/#enumdef-gpustoreop).
-</span><span class="attr">#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Default)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub enum </span>StoreOp {
-    <span class="doccomment">/// Stores the resulting value of the render pass for this attachment.
-    </span><span class="attr">#[default]
-    </span>Store,
-    <span class="doccomment">/// Discards the resulting value of the render pass for this attachment.
-    ///
-    /// The attachment will be treated as uninitialized afterwards.
-    /// (If only either Depth or Stencil texture-aspects is set to `Discard`,
-    /// the respective other texture-aspect will be preserved.)
-    ///
-    /// This can be significantly faster on tile-based render hardware.
-    ///
-    /// Prefer this if the attachment is not read by subsequent passes.
-    </span>Discard,
-}
-
-<span class="doccomment">/// Pair of load and store operations for an attachment aspect.
-///
-/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
-/// separate `loadOp` and `storeOp` fields are used instead.
-</span><span class="attr">#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>Operations&lt;V&gt; {
-    <span class="doccomment">/// How data should be read through this attachment.
-    </span><span class="kw">pub </span>load: LoadOp&lt;V&gt;,
-    <span class="doccomment">/// Whether data will be written to through this attachment.
-    ///
-    /// Note that resolve textures (if specified) are always written to,
-    /// regardless of this setting.
-    </span><span class="kw">pub </span>store: StoreOp,
-}
-
-<span class="kw">impl</span>&lt;V: Default&gt; Default <span class="kw">for </span>Operations&lt;V&gt; {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            load: LoadOp::&lt;V&gt;::default(),
-            store: StoreOp::default(),
-        }
     }
 }
 

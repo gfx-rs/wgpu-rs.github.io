@@ -3539,27 +3539,12 @@
 <a href="#3538" id="3538">3538</a>
 <a href="#3539" id="3539">3539</a>
 <a href="#3540" id="3540">3540</a>
-<a href="#3541" id="3541">3541</a>
-<a href="#3542" id="3542">3542</a>
-<a href="#3543" id="3543">3543</a>
-<a href="#3544" id="3544">3544</a>
-<a href="#3545" id="3545">3545</a>
-<a href="#3546" id="3546">3546</a>
-<a href="#3547" id="3547">3547</a>
-<a href="#3548" id="3548">3548</a>
-<a href="#3549" id="3549">3549</a>
-<a href="#3550" id="3550">3550</a>
-<a href="#3551" id="3551">3551</a>
-<a href="#3552" id="3552">3552</a>
-<a href="#3553" id="3553">3553</a>
-<a href="#3554" id="3554">3554</a>
-<a href="#3555" id="3555">3555</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
     CompilationMessageType, ErrorSource, Features, Label, LoadOp, MapMode, Operations,
-    ShaderSource, StoreOp, SurfaceTargetUnsafe, TextureDescriptor,
+    ShaderSource, SurfaceTargetUnsafe, TextureDescriptor,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3953,35 +3938,23 @@
     }
 }
 
-<span class="kw">fn </span>map_store_op(op: StoreOp) -&gt; wgc::command::StoreOp {
-    <span class="kw">match </span>op {
-        StoreOp::Store =&gt; wgc::command::StoreOp::Store,
-        StoreOp::Discard =&gt; wgc::command::StoreOp::Discard,
-    }
-}
-
-<span class="kw">fn </span>map_load_op&lt;V&gt;(op: LoadOp&lt;V&gt;) -&gt; (wgc::command::LoadOp, <span class="prelude-ty">Option</span>&lt;V&gt;) {
-    <span class="kw">match </span>op {
-        LoadOp::Clear(v) =&gt; (wgc::command::LoadOp::Clear, <span class="prelude-val">Some</span>(v)),
-        LoadOp::Load =&gt; (wgc::command::LoadOp::Load, <span class="prelude-val">None</span>),
+<span class="kw">fn </span>map_load_op&lt;V: Copy&gt;(load: <span class="kw-2">&amp;</span>LoadOp&lt;V&gt;) -&gt; LoadOp&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt; {
+    <span class="kw">match </span>load {
+        LoadOp::Clear(clear_value) =&gt; LoadOp::Clear(<span class="prelude-val">Some</span>(<span class="kw-2">*</span>clear_value)),
+        LoadOp::Load =&gt; LoadOp::Load,
     }
 }
 
 <span class="kw">fn </span>map_pass_channel&lt;V: Copy&gt;(ops: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Operations&lt;V&gt;&gt;) -&gt; wgc::command::PassChannel&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt; {
     <span class="kw">match </span>ops {
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operations { load, store }) =&gt; {
-            <span class="kw">let </span>(load_op, clear_value) = map_load_op(load);
-            wgc::command::PassChannel {
-                load_op: <span class="prelude-val">Some</span>(load_op),
-                store_op: <span class="prelude-val">Some</span>(map_store_op(store)),
-                clear_value,
-                read_only: <span class="bool-val">false</span>,
-            }
-        }
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Operations { load, store }) =&gt; wgc::command::PassChannel {
+            load_op: <span class="prelude-val">Some</span>(map_load_op(<span class="kw-2">&amp;</span>load)),
+            store_op: <span class="prelude-val">Some</span>(store),
+            read_only: <span class="bool-val">false</span>,
+        },
         <span class="prelude-val">None </span>=&gt; wgc::command::PassChannel {
             load_op: <span class="prelude-val">None</span>,
             store_op: <span class="prelude-val">None</span>,
-            clear_value: <span class="prelude-val">None</span>,
             read_only: <span class="bool-val">true</span>,
         },
     }
@@ -5802,16 +5775,13 @@
             .color_attachments
             .iter()
             .map(|ca| {
-                ca.as_ref().map(|at| {
-                    <span class="kw">let </span>(load_op, clear_value) = map_load_op(at.ops.load);
-                    wgc::command::RenderPassColorAttachment {
+                ca.as_ref()
+                    .map(|at| wgc::command::RenderPassColorAttachment {
                         view: at.view.inner.as_core().id,
                         resolve_target: at.resolve_target.map(|view| view.inner.as_core().id),
-                        load_op,
-                        store_op: map_store_op(at.ops.store),
-                        clear_value: clear_value.unwrap_or_default(),
-                    }
-                })
+                        load_op: at.ops.load,
+                        store_op: at.ops.store,
+                    })
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 

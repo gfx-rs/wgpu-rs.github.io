@@ -3383,53 +3383,6 @@
 <a href="#3382" id="3382">3382</a>
 <a href="#3383" id="3383">3383</a>
 <a href="#3384" id="3384">3384</a>
-<a href="#3385" id="3385">3385</a>
-<a href="#3386" id="3386">3386</a>
-<a href="#3387" id="3387">3387</a>
-<a href="#3388" id="3388">3388</a>
-<a href="#3389" id="3389">3389</a>
-<a href="#3390" id="3390">3390</a>
-<a href="#3391" id="3391">3391</a>
-<a href="#3392" id="3392">3392</a>
-<a href="#3393" id="3393">3393</a>
-<a href="#3394" id="3394">3394</a>
-<a href="#3395" id="3395">3395</a>
-<a href="#3396" id="3396">3396</a>
-<a href="#3397" id="3397">3397</a>
-<a href="#3398" id="3398">3398</a>
-<a href="#3399" id="3399">3399</a>
-<a href="#3400" id="3400">3400</a>
-<a href="#3401" id="3401">3401</a>
-<a href="#3402" id="3402">3402</a>
-<a href="#3403" id="3403">3403</a>
-<a href="#3404" id="3404">3404</a>
-<a href="#3405" id="3405">3405</a>
-<a href="#3406" id="3406">3406</a>
-<a href="#3407" id="3407">3407</a>
-<a href="#3408" id="3408">3408</a>
-<a href="#3409" id="3409">3409</a>
-<a href="#3410" id="3410">3410</a>
-<a href="#3411" id="3411">3411</a>
-<a href="#3412" id="3412">3412</a>
-<a href="#3413" id="3413">3413</a>
-<a href="#3414" id="3414">3414</a>
-<a href="#3415" id="3415">3415</a>
-<a href="#3416" id="3416">3416</a>
-<a href="#3417" id="3417">3417</a>
-<a href="#3418" id="3418">3418</a>
-<a href="#3419" id="3419">3419</a>
-<a href="#3420" id="3420">3420</a>
-<a href="#3421" id="3421">3421</a>
-<a href="#3422" id="3422">3422</a>
-<a href="#3423" id="3423">3423</a>
-<a href="#3424" id="3424">3424</a>
-<a href="#3425" id="3425">3425</a>
-<a href="#3426" id="3426">3426</a>
-<a href="#3427" id="3427">3427</a>
-<a href="#3428" id="3428">3428</a>
-<a href="#3429" id="3429">3429</a>
-<a href="#3430" id="3430">3430</a>
-<a href="#3431" id="3431">3431</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -3486,47 +3439,19 @@
 };
 <span class="kw">use super</span>::{DrawKind, Rect};
 
-<span class="doccomment">/// Operation to perform to the output attachment at the start of a renderpass.
-</span><span class="attr">#[repr(C)]
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
-</span><span class="kw">pub enum </span>LoadOp {
-    <span class="doccomment">/// Clear the output attachment with the clear color. Clearing is faster than loading.
-    </span>Clear = <span class="number">0</span>,
-    <span class="doccomment">/// Do not clear output attachment.
-    </span>Load = <span class="number">1</span>,
-}
+<span class="kw">pub use </span>wgt::{LoadOp, StoreOp};
 
-<span class="kw">impl </span>LoadOp {
-    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
-        <span class="kw">match </span><span class="self">self </span>{
-            LoadOp::Load =&gt; hal::AttachmentOps::LOAD,
-            LoadOp::Clear =&gt; hal::AttachmentOps::empty(),
-        }
+<span class="kw">fn </span>load_hal_ops&lt;V&gt;(load: LoadOp&lt;V&gt;) -&gt; hal::AttachmentOps {
+    <span class="kw">match </span>load {
+        LoadOp::Load =&gt; hal::AttachmentOps::LOAD,
+        LoadOp::Clear(<span class="kw">_</span>) =&gt; hal::AttachmentOps::empty(),
     }
 }
 
-<span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
-</span><span class="attr">#[repr(C)]
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-#[cfg_attr(feature = <span class="string">"serde"</span>, serde(rename_all = <span class="string">"kebab-case"</span>))]
-</span><span class="kw">pub enum </span>StoreOp {
-    <span class="doccomment">/// Discards the content of the render target.
-    ///
-    /// If you don't care about the contents of the target, this can be faster.
-    </span>Discard = <span class="number">0</span>,
-    <span class="doccomment">/// Store the result of the renderpass.
-    </span>Store = <span class="number">1</span>,
-}
-
-<span class="kw">impl </span>StoreOp {
-    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
-        <span class="kw">match </span><span class="self">self </span>{
-            StoreOp::Store =&gt; hal::AttachmentOps::STORE,
-            StoreOp::Discard =&gt; hal::AttachmentOps::empty(),
-        }
+<span class="kw">fn </span>store_hal_ops(store: StoreOp) -&gt; hal::AttachmentOps {
+    <span class="kw">match </span>store {
+        StoreOp::Store =&gt; hal::AttachmentOps::STORE,
+        StoreOp::Discard =&gt; hal::AttachmentOps::empty(),
     }
 }
 
@@ -3534,67 +3459,83 @@
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>PassChannel&lt;V, L = <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, S = <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt; {
+</span><span class="kw">pub struct </span>PassChannel&lt;V&gt; {
     <span class="doccomment">/// Operation to perform to the output attachment at the start of a
     /// renderpass.
     ///
     /// This must be clear if it is the first renderpass rendering to a swap
     /// chain image.
-    </span><span class="kw">pub </span>load_op: L,
+    </span><span class="kw">pub </span>load_op: <span class="prelude-ty">Option</span>&lt;LoadOp&lt;V&gt;&gt;,
     <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
-    </span><span class="kw">pub </span>store_op: S,
-    <span class="doccomment">/// If load_op is [`LoadOp::Clear`], the attachment will be cleared to this
-    /// color.
-    </span><span class="kw">pub </span>clear_value: V,
+    </span><span class="kw">pub </span>store_op: <span class="prelude-ty">Option</span>&lt;StoreOp&gt;,
     <span class="doccomment">/// If true, the relevant channel is not changed by a renderpass, and the
     /// corresponding attachment can be used inside the pass by other read-only
     /// usages.
     </span><span class="kw">pub </span>read_only: bool,
 }
 
-<span class="kw">impl</span>&lt;V&gt; PassChannel&lt;V, LoadOp, StoreOp&gt; {
-    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
-        <span class="self">self</span>.load_op.hal_ops() | <span class="self">self</span>.store_op.hal_ops()
-    }
-}
-
-<span class="kw">impl</span>&lt;V: Default&gt; Default <span class="kw">for </span>PassChannel&lt;V, LoadOp, StoreOp&gt; {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        PassChannel {
-            load_op: LoadOp::Load,
-            store_op: StoreOp::Store,
-            clear_value: V::default(),
-            read_only: <span class="bool-val">false</span>,
+<span class="kw">impl</span>&lt;V: Copy + Default&gt; PassChannel&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt; {
+    <span class="kw">fn </span>resolve(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        handle_clear: <span class="kw">impl </span>Fn(<span class="prelude-ty">Option</span>&lt;V&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;V, AttachmentError&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedPassChannel&lt;V&gt;, AttachmentError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.read_only {
+            <span class="kw">if </span><span class="self">self</span>.load_op.is_some() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(AttachmentError::ReadOnlyWithLoad);
+            }
+            <span class="kw">if </span><span class="self">self</span>.store_op.is_some() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(AttachmentError::ReadOnlyWithStore);
+            }
+            <span class="prelude-val">Ok</span>(ResolvedPassChannel::ReadOnly)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(ResolvedPassChannel::Operational(wgt::Operations {
+                load: <span class="kw">match </span><span class="self">self</span>.load_op.ok_or(AttachmentError::NoLoad)<span class="question-mark">? </span>{
+                    LoadOp::Clear(clear_value) =&gt; LoadOp::Clear(handle_clear(clear_value)<span class="question-mark">?</span>),
+                    LoadOp::Load =&gt; LoadOp::Load,
+                },
+                store: <span class="self">self</span>.store_op.ok_or(AttachmentError::NoStore)<span class="question-mark">?</span>,
+            }))
         }
     }
 }
 
-<span class="kw">impl</span>&lt;V: Copy + Default&gt; PassChannel&lt;<span class="prelude-ty">Option</span>&lt;V&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt; {
-    <span class="kw">fn </span>resolve(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;PassChannel&lt;V, LoadOp, StoreOp&gt;, AttachmentError&gt; {
-        <span class="kw">let </span>load_op = <span class="kw">if </span><span class="self">self</span>.read_only {
-            <span class="kw">if </span><span class="self">self</span>.load_op.is_some() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(AttachmentError::ReadOnlyWithLoad);
-            } <span class="kw">else </span>{
-                LoadOp::Load
-            }
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.load_op.ok_or(AttachmentError::NoLoad)<span class="question-mark">?
-        </span>};
-        <span class="kw">let </span>store_op = <span class="kw">if </span><span class="self">self</span>.read_only {
-            <span class="kw">if </span><span class="self">self</span>.store_op.is_some() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(AttachmentError::ReadOnlyWithStore);
-            } <span class="kw">else </span>{
-                StoreOp::Store
-            }
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.store_op.ok_or(AttachmentError::NoStore)<span class="question-mark">?
-        </span>};
-        <span class="prelude-val">Ok</span>(PassChannel {
-            load_op,
-            store_op,
-            clear_value: <span class="self">self</span>.clear_value.unwrap_or_default(),
-            read_only: <span class="self">self</span>.read_only,
-        })
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub enum </span>ResolvedPassChannel&lt;V&gt; {
+    ReadOnly,
+    Operational(wgt::Operations&lt;V&gt;),
+}
+
+<span class="kw">impl</span>&lt;V: Copy + Default&gt; ResolvedPassChannel&lt;V&gt; {
+    <span class="kw">fn </span>load_op(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LoadOp&lt;V&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            ResolvedPassChannel::ReadOnly =&gt; LoadOp::Load,
+            ResolvedPassChannel::Operational(wgt::Operations { load, .. }) =&gt; <span class="kw-2">*</span>load,
+        }
+    }
+
+    <span class="kw">fn </span>store_op(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StoreOp {
+        <span class="kw">match </span><span class="self">self </span>{
+            ResolvedPassChannel::ReadOnly =&gt; StoreOp::Store,
+            ResolvedPassChannel::Operational(wgt::Operations { store, .. }) =&gt; <span class="kw-2">*</span>store,
+        }
+    }
+
+    <span class="kw">fn </span>clear_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; V {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Operational(wgt::Operations {
+                load: LoadOp::Clear(clear_value),
+                ..
+            }) =&gt; <span class="kw-2">*</span>clear_value,
+            <span class="kw">_ </span>=&gt; Default::default(),
+        }
+    }
+
+    <span class="kw">fn </span>is_readonly(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::ReadOnly)
+    }
+
+    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
+        load_hal_ops(<span class="self">self</span>.load_op()) | store_hal_ops(<span class="self">self</span>.store_op())
     }
 }
 
@@ -3612,12 +3553,9 @@
     ///
     /// This must be clear if it is the first renderpass rendering to a swap
     /// chain image.
-    </span><span class="kw">pub </span>load_op: LoadOp,
+    </span><span class="kw">pub </span>load_op: LoadOp&lt;Color&gt;,
     <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
     </span><span class="kw">pub </span>store_op: StoreOp,
-    <span class="doccomment">/// If load_op is [`LoadOp::Clear`], the attachment will be cleared to this
-    /// color.
-    </span><span class="kw">pub </span>clear_value: Color,
 }
 
 <span class="doccomment">/// Describes a color attachment to a render pass.
@@ -3632,12 +3570,21 @@
     ///
     /// This must be clear if it is the first renderpass rendering to a swap
     /// chain image.
-    </span><span class="kw">pub </span>load_op: LoadOp,
+    </span><span class="kw">pub </span>load_op: LoadOp&lt;Color&gt;,
     <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
     </span><span class="kw">pub </span>store_op: StoreOp,
-    <span class="doccomment">/// If load_op is [`LoadOp::Clear`], the attachment will be cleared to this
-    /// color.
-    </span><span class="kw">pub </span>clear_value: Color,
+}
+<span class="kw">impl </span>ArcRenderPassColorAttachment {
+    <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
+        load_hal_ops(<span class="self">self</span>.load_op) | store_hal_ops(<span class="self">self</span>.store_op)
+    }
+
+    <span class="kw">fn </span>clear_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Color {
+        <span class="kw">match </span><span class="self">self</span>.load_op {
+            LoadOp::Clear(clear_value) =&gt; clear_value,
+            LoadOp::Load =&gt; Color::default(),
+        }
+    }
 }
 
 <span class="doccomment">/// Describes a depth/stencil attachment to a render pass.
@@ -3648,9 +3595,9 @@
     <span class="doccomment">/// The view to use as an attachment.
     </span><span class="kw">pub </span>view: id::TextureViewId,
     <span class="doccomment">/// What operations will be performed on the depth part of the attachment.
-    </span><span class="kw">pub </span>depth: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;f32&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
+    </span><span class="kw">pub </span>depth: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;f32&gt;&gt;,
     <span class="doccomment">/// What operations will be performed on the stencil part of the attachment.
-    </span><span class="kw">pub </span>stencil: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;, <span class="prelude-ty">Option</span>&lt;LoadOp&gt;, <span class="prelude-ty">Option</span>&lt;StoreOp&gt;&gt;,
+    </span><span class="kw">pub </span>stencil: PassChannel&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;&gt;,
 }
 
 <span class="doccomment">/// Describes a depth/stencil attachment to a render pass.
@@ -3659,47 +3606,9 @@
     <span class="doccomment">/// The view to use as an attachment.
     </span><span class="kw">pub </span>view: Arc&lt;TextureView&gt;,
     <span class="doccomment">/// What operations will be performed on the depth part of the attachment.
-    </span><span class="kw">pub </span>depth: PassChannel&lt;f32, LoadOp, StoreOp&gt;,
+    </span><span class="kw">pub </span>depth: ResolvedPassChannel&lt;f32&gt;,
     <span class="doccomment">/// What operations will be performed on the stencil part of the attachment.
-    </span><span class="kw">pub </span>stencil: PassChannel&lt;u32, LoadOp, StoreOp&gt;,
-}
-
-<span class="kw">impl </span>ArcRenderPassDepthStencilAttachment {
-    <span class="doccomment">/// Validate the given aspects' read-only flags against their load
-    /// and store ops.
-    ///
-    /// When an aspect is read-only, its load and store ops must be
-    /// `LoadOp::Load` and `StoreOp::Store`.
-    ///
-    /// On success, return a pair `(depth, stencil)` indicating
-    /// whether the depth and stencil passes are read-only.
-    </span><span class="kw">fn </span>depth_stencil_read_only(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        aspects: hal::FormatAspects,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(bool, bool), RenderPassErrorInner&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>depth_read_only = <span class="bool-val">true</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>stencil_read_only = <span class="bool-val">true</span>;
-
-        <span class="kw">if </span>aspects.contains(hal::FormatAspects::DEPTH) {
-            <span class="kw">if </span><span class="self">self</span>.depth.read_only
-                &amp;&amp; (<span class="self">self</span>.depth.load_op, <span class="self">self</span>.depth.store_op) != (LoadOp::Load, StoreOp::Store)
-            {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::InvalidDepthOps);
-            }
-            depth_read_only = <span class="self">self</span>.depth.read_only;
-        }
-
-        <span class="kw">if </span>aspects.contains(hal::FormatAspects::STENCIL) {
-            <span class="kw">if </span><span class="self">self</span>.stencil.read_only
-                &amp;&amp; (<span class="self">self</span>.stencil.load_op, <span class="self">self</span>.stencil.store_op) != (LoadOp::Load, StoreOp::Store)
-            {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::InvalidStencilOps);
-            }
-            stencil_read_only = <span class="self">self</span>.stencil.read_only;
-        }
-
-        <span class="prelude-val">Ok</span>((depth_read_only, stencil_read_only))
-    }
+    </span><span class="kw">pub </span>stencil: ResolvedPassChannel&lt;u32&gt;,
 }
 
 <span class="doccomment">/// Describes the attachments of a render pass.
@@ -4287,14 +4196,14 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'d</span>&gt; RenderPassInfo&lt;<span class="lifetime">'d</span>&gt; {
-    <span class="kw">fn </span>add_pass_texture_init_actions(
-        load_op: LoadOp,
+    <span class="kw">fn </span>add_pass_texture_init_actions&lt;V&gt;(
+        load_op: LoadOp&lt;V&gt;,
         store_op: StoreOp,
         texture_memory_actions: <span class="kw-2">&amp;mut </span>CommandBufferTextureMemoryActions,
         view: <span class="kw-2">&amp;</span>TextureView,
         pending_discard_init_fixups: <span class="kw-2">&amp;mut </span>SurfacesInDiscardState,
     ) {
-        <span class="kw">if </span>load_op == LoadOp::Load {
+        <span class="kw">if </span><span class="macro">matches!</span>(load_op, LoadOp::Load) {
             pending_discard_init_fixups.extend(texture_memory_actions.register_init_action(
                 <span class="kw-2">&amp;</span>TextureInitTrackerAction {
                     texture: view.parent.clone(),
@@ -4431,20 +4340,20 @@
             <span class="kw">let </span>ds_aspects = view.desc.aspects();
 
             <span class="kw">if </span>!ds_aspects.contains(hal::FormatAspects::STENCIL)
-                || (at.stencil.load_op == at.depth.load_op
-                    &amp;&amp; at.stencil.store_op == at.depth.store_op)
+                || (at.stencil.load_op().eq_variant(at.depth.load_op())
+                    &amp;&amp; at.stencil.store_op() == at.depth.store_op())
             {
                 <span class="self">Self</span>::add_pass_texture_init_actions(
-                    at.depth.load_op,
-                    at.depth.store_op,
+                    at.depth.load_op(),
+                    at.depth.store_op(),
                     texture_memory_actions,
                     view,
                     <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
                 );
             } <span class="kw">else if </span>!ds_aspects.contains(hal::FormatAspects::DEPTH) {
                 <span class="self">Self</span>::add_pass_texture_init_actions(
-                    at.stencil.load_op,
-                    at.stencil.store_op,
+                    at.stencil.load_op(),
+                    at.stencil.store_op(),
                     texture_memory_actions,
                     view,
                     <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
@@ -4472,7 +4381,7 @@
                 // NeedsInitializedMemory should know that it doesn't need to
                 // clear the aspect that was set to C)
                 </span><span class="kw">let </span>need_init_beforehand =
-                    at.depth.load_op == LoadOp::Load || at.stencil.load_op == LoadOp::Load;
+                    at.depth.load_op() == LoadOp::Load || at.stencil.load_op() == LoadOp::Load;
                 <span class="kw">if </span>need_init_beforehand {
                     pending_discard_init_fixups.extend(
                         texture_memory_actions.register_init_action(<span class="kw-2">&amp;</span>TextureInitTrackerAction {
@@ -4491,7 +4400,7 @@
                 // it isn't already set to NeedsInitializedMemory).
                 //
                 // (possible optimization: Delay and potentially drop this zeroing)
-                </span><span class="kw">if </span>at.depth.store_op != at.stencil.store_op {
+                </span><span class="kw">if </span>at.depth.store_op() != at.stencil.store_op() {
                     <span class="kw">if </span>!need_init_beforehand {
                         texture_memory_actions.register_implicit_init(
                             <span class="kw-2">&amp;</span>view.parent,
@@ -4499,14 +4408,14 @@
                         );
                     }
                     divergent_discarded_depth_stencil_aspect = <span class="prelude-val">Some</span>((
-                        <span class="kw">if </span>at.depth.store_op == StoreOp::Discard {
+                        <span class="kw">if </span>at.depth.store_op() == StoreOp::Discard {
                             wgt::TextureAspect::DepthOnly
                         } <span class="kw">else </span>{
                             wgt::TextureAspect::StencilOnly
                         },
                         view.clone(),
                     ));
-                } <span class="kw">else if </span>at.depth.store_op == StoreOp::Discard {
+                } <span class="kw">else if </span>at.depth.store_op() == StoreOp::Discard {
                     <span class="comment">// Both are discarded using the regular path.
                     </span>discarded_surfaces.push(TextureSurfaceDiscard {
                         texture: view.parent.clone(),
@@ -4516,7 +4425,8 @@
                 }
             }
 
-            (is_depth_read_only, is_stencil_read_only) = at.depth_stencil_read_only(ds_aspects)<span class="question-mark">?</span>;
+            is_depth_read_only = at.depth.is_readonly();
+            is_stencil_read_only = at.stencil.is_readonly();
 
             <span class="kw">let </span>usage = <span class="kw">if </span>is_depth_read_only
                 &amp;&amp; is_stencil_read_only
@@ -4538,7 +4448,7 @@
                 },
                 depth_ops: at.depth.hal_ops(),
                 stencil_ops: at.stencil.hal_ops(),
-                clear_value: (at.depth.clear_value, at.stencil.clear_value),
+                clear_value: (at.depth.clear_value(), at.stencil.clear_value()),
             });
         }
 
@@ -4650,8 +4560,8 @@
                     usage: hal::TextureUses::COLOR_TARGET,
                 },
                 resolve_target: hal_resolve_target,
-                ops: at.load_op.hal_ops() | at.store_op.hal_ops(),
-                clear_value: at.clear_value,
+                ops: at.hal_ops(),
+                clear_value: at.clear_value(),
             }));
         }
 
@@ -4868,7 +4778,6 @@
                     resolve_target,
                     load_op,
                     store_op,
-                    clear_value,
                 }) = color_attachment
                 {
                     <span class="kw">let </span>view = texture_views.get(<span class="kw-2">*</span>view_id).get()<span class="question-mark">?</span>;
@@ -4890,7 +4799,6 @@
                             resolve_target,
                             load_op: <span class="kw-2">*</span>load_op,
                             store_op: <span class="kw-2">*</span>store_op,
-                            clear_value: <span class="kw-2">*</span>clear_value,
                         }));
                 } <span class="kw">else </span>{
                     arc_desc.color_attachments.push(<span class="prelude-val">None</span>);
@@ -4910,28 +4818,26 @@
                         )));
                     }
 
-                    <span class="comment">// If this.depthLoadOp is "clear", this.depthClearValue must be provided and must be between 0.0 and 1.0, inclusive.
-                    </span><span class="kw">if </span>depth_stencil_attachment.depth.load_op == <span class="prelude-val">Some</span>(LoadOp::Clear) {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(clear_value) = depth_stencil_attachment.depth.clear_value {
-                            <span class="kw">if </span>!(<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>clear_value) {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::InvalidAttachment(AttachmentError::ClearValueOutOfRange(clear_value)));
-                            }
-                        } <span class="kw">else </span>{
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(CommandEncoderError::InvalidAttachment(AttachmentError::NoClearValue));
-                        }
-                    }
-
                     <span class="prelude-val">Some</span>(ArcRenderPassDepthStencilAttachment {
                         view,
                         depth: <span class="kw">if </span>format.has_depth_aspect() {
-                            depth_stencil_attachment.depth.resolve()<span class="question-mark">?
+                            depth_stencil_attachment.depth.resolve(|clear| <span class="kw">if let </span><span class="prelude-val">Some</span>(clear) = clear {
+                                <span class="comment">// If this.depthLoadOp is "clear", this.depthClearValue must be provided and must be between 0.0 and 1.0, inclusive.
+                                </span><span class="kw">if </span>!(<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>clear) {
+                                    <span class="prelude-val">Err</span>(AttachmentError::ClearValueOutOfRange(clear))
+                                } <span class="kw">else </span>{
+                                    <span class="prelude-val">Ok</span>(clear)
+                                }
+                            } <span class="kw">else </span>{
+                                <span class="prelude-val">Err</span>(AttachmentError::NoClearValue)
+                            })<span class="question-mark">?
                         </span>} <span class="kw">else </span>{
-                            Default::default()
+                            ResolvedPassChannel::ReadOnly
                         },
                         stencil: <span class="kw">if </span>format.has_stencil_aspect() {
-                            depth_stencil_attachment.stencil.resolve()<span class="question-mark">?
+                            depth_stencil_attachment.stencil.resolve(|clear| <span class="prelude-val">Ok</span>(clear.unwrap_or_default()))<span class="question-mark">?
                         </span>} <span class="kw">else </span>{
-                            Default::default()
+                            ResolvedPassChannel::ReadOnly
                         },
                     })
                 } <span class="kw">else </span>{
