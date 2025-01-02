@@ -3700,6 +3700,44 @@
 <a href="#3699" id="3699">3699</a>
 <a href="#3700" id="3700">3700</a>
 <a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a>
+<a href="#3710" id="3710">3710</a>
+<a href="#3711" id="3711">3711</a>
+<a href="#3712" id="3712">3712</a>
+<a href="#3713" id="3713">3713</a>
+<a href="#3714" id="3714">3714</a>
+<a href="#3715" id="3715">3715</a>
+<a href="#3716" id="3716">3716</a>
+<a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
+<a href="#3721" id="3721">3721</a>
+<a href="#3722" id="3722">3722</a>
+<a href="#3723" id="3723">3723</a>
+<a href="#3724" id="3724">3724</a>
+<a href="#3725" id="3725">3725</a>
+<a href="#3726" id="3726">3726</a>
+<a href="#3727" id="3727">3727</a>
+<a href="#3728" id="3728">3728</a>
+<a href="#3729" id="3729">3729</a>
+<a href="#3730" id="3730">3730</a>
+<a href="#3731" id="3731">3731</a>
+<a href="#3732" id="3732">3732</a>
+<a href="#3733" id="3733">3733</a>
+<a href="#3734" id="3734">3734</a>
+<a href="#3735" id="3735">3735</a>
+<a href="#3736" id="3736">3736</a>
+<a href="#3737" id="3737">3737</a>
+<a href="#3738" id="3738">3738</a>
+<a href="#3739" id="3739">3739</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -6603,19 +6641,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>shader_expects_dual_source_blending = <span class="bool-val">false</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pipeline_expects_dual_source_blending = <span class="bool-val">false</span>;
         <span class="kw">for </span>(i, vb_state) <span class="kw">in </span>desc.vertex.buffers.iter().enumerate() {
-            <span class="kw">let </span><span class="kw-2">mut </span>last_stride = <span class="number">0</span>;
-            <span class="kw">for </span>attribute <span class="kw">in </span>vb_state.attributes.iter() {
-                last_stride = last_stride.max(attribute.offset + attribute.format.size());
-            }
-            vertex_steps.push(pipeline::VertexStep {
-                stride: vb_state.array_stride,
-                last_stride,
-                mode: vb_state.step_mode,
-            });
-            <span class="kw">if </span>vb_state.attributes.is_empty() {
-                <span class="kw">continue</span>;
-            }
-            <span class="kw">if </span>vb_state.array_stride &gt; <span class="self">self</span>.limits.max_vertex_buffer_array_stride <span class="kw">as </span>u64 {
+            <span class="comment">// https://gpuweb.github.io/gpuweb/#abstract-opdef-validating-gpuvertexbufferlayout
+
+            </span><span class="kw">if </span>vb_state.array_stride &gt; <span class="self">self</span>.limits.max_vertex_buffer_array_stride <span class="kw">as </span>u64 {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(pipeline::CreateRenderPipelineError::VertexStrideTooLarge {
                     index: i <span class="kw">as </span>u32,
                     given: vb_state.array_stride <span class="kw">as </span>u32,
@@ -6627,6 +6655,54 @@
                     index: i <span class="kw">as </span>u32,
                     stride: vb_state.array_stride,
                 });
+            }
+
+            <span class="kw">let </span>max_stride = <span class="kw">if </span>vb_state.array_stride == <span class="number">0 </span>{
+                <span class="self">self</span>.limits.max_vertex_buffer_array_stride <span class="kw">as </span>u64
+            } <span class="kw">else </span>{
+                vb_state.array_stride
+            };
+            <span class="kw">let </span><span class="kw-2">mut </span>last_stride = <span class="number">0</span>;
+            <span class="kw">for </span>attribute <span class="kw">in </span>vb_state.attributes.iter() {
+                <span class="kw">let </span>attribute_stride = attribute.offset + attribute.format.size();
+                <span class="kw">if </span>attribute_stride &gt; max_stride {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        pipeline::CreateRenderPipelineError::VertexAttributeStrideTooLarge {
+                            location: attribute.shader_location,
+                            given: attribute_stride <span class="kw">as </span>u32,
+                            limit: max_stride <span class="kw">as </span>u32,
+                        },
+                    );
+                }
+
+                <span class="kw">let </span>required_offset_alignment = attribute.format.size().min(<span class="number">4</span>);
+                <span class="kw">if </span>attribute.offset % required_offset_alignment != <span class="number">0 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        pipeline::CreateRenderPipelineError::InvalidVertexAttributeOffset {
+                            location: attribute.shader_location,
+                            offset: attribute.offset,
+                        },
+                    );
+                }
+
+                <span class="kw">if </span>attribute.shader_location &gt;= <span class="self">self</span>.limits.max_vertex_attributes {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        pipeline::CreateRenderPipelineError::TooManyVertexAttributes {
+                            given: attribute.shader_location,
+                            limit: <span class="self">self</span>.limits.max_vertex_attributes,
+                        },
+                    );
+                }
+
+                last_stride = last_stride.max(attribute_stride);
+            }
+            vertex_steps.push(pipeline::VertexStep {
+                stride: vb_state.array_stride,
+                last_stride,
+                mode: vb_state.step_mode,
+            });
+            <span class="kw">if </span>vb_state.attributes.is_empty() {
+                <span class="kw">continue</span>;
             }
             vertex_buffers.push(hal::VertexBufferLayout {
                 array_stride: vb_state.array_stride,
