@@ -80,7 +80,13 @@
 <a href="#79" id="79">79</a>
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a compute pipeline.
 ///
@@ -88,9 +94,9 @@
 /// It can be created with [`Device::create_compute_pipeline`].
 ///
 /// Corresponds to [WebGPU `GPUComputePipeline`](https://gpuweb.github.io/gpuweb/#compute-pipeline).
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>ComputePipeline {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchComputePipeline,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Arc&lt;dispatch::DispatchComputePipeline&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(ComputePipeline: Send, Sync);
@@ -107,7 +113,9 @@
     /// This method will raise a validation error if there is no bind group layout at `index`.
     </span><span class="kw">pub fn </span>get_bind_group_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, index: u32) -&gt; BindGroupLayout {
         <span class="kw">let </span>bind_group = <span class="self">self</span>.inner.get_bind_group_layout(index);
-        BindGroupLayout { inner: bind_group }
+        BindGroupLayout {
+            inner: Arc::new(bind_group),
+        }
     }
 }
 

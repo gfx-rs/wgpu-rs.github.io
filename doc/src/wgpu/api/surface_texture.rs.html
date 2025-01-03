@@ -77,7 +77,7 @@
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, thread};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, sync::Arc, thread};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -87,7 +87,7 @@
 /// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
 /// the [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context) provides
 /// a texture without any additional information.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SurfaceTexture {
     <span class="doccomment">/// Accessible view of the frame.
     </span><span class="kw">pub </span>texture: Texture,
@@ -95,12 +95,12 @@
     /// but should be recreated for maximum performance.
     </span><span class="kw">pub </span>suboptimal: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) presented: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) detail: dispatch::DispatchSurfaceOutputDetail,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) detail: Arc&lt;dispatch::DispatchSurfaceOutputDetail&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(SurfaceTexture: Send, Sync);
 
-<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(SurfaceTexture =&gt; .texture.inner);
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(SurfaceTexture =&gt; .texture.shared.inner);
 
 <span class="kw">impl </span>SurfaceTexture {
     <span class="doccomment">/// Schedule this texture to be presented on the owning surface.

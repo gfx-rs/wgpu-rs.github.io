@@ -741,14 +741,49 @@
 <a href="#740" id="740">740</a>
 <a href="#741" id="741">741</a>
 <a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     error, fmt,
     ops::{Bound, Deref, DerefMut, Range, RangeBounds},
+    sync::Arc,
 };
 
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BufferShared {
+    <span class="kw">pub </span>inner: dispatch::DispatchBuffer,
+    <span class="kw">pub </span>map_context: Mutex&lt;MapContext&gt;,
+    <span class="kw">pub </span>size: wgt::BufferAddress,
+    <span class="kw">pub </span>usage: BufferUsages,
+    <span class="comment">// Todo: missing map_state https://www.w3.org/TR/webgpu/#dom-gpubuffer-mapstate
+</span>}
 
 <span class="doccomment">/// Handle to a GPU-accessible buffer.
 ///
@@ -910,18 +945,14 @@
 /// [mac]: BufferDescriptor::mapped_at_creation
 /// [`MAP_READ`]: BufferUsages::MAP_READ
 /// [`MAP_WRITE`]: BufferUsages::MAP_WRITE
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Buffer {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchBuffer,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) map_context: Mutex&lt;MapContext&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) size: wgt::BufferAddress,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) usage: BufferUsages,
-    <span class="comment">// Todo: missing map_state https://www.w3.org/TR/webgpu/#dom-gpubuffer-mapstate
-</span>}
+    <span class="kw">pub</span>(<span class="kw">crate</span>) shared: Arc&lt;BufferShared&gt;,
+}
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Buffer: Send, Sync);
 
-<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Buffer =&gt; .inner);
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Buffer =&gt; .shared.inner);
 
 <span class="kw">impl </span>Buffer {
     <span class="doccomment">/// Return the binding view of the entire buffer.
@@ -949,7 +980,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_buffer_callback: F,
     ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = <span class="self">self</span>.inner.as_core_opt() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = <span class="self">self</span>.shared.inner.as_core_opt() {
             <span class="kw">unsafe </span>{
                 buffer
                     .context
@@ -976,7 +1007,7 @@
     /// end of the buffer.
     </span><span class="kw">pub fn </span>slice&lt;S: RangeBounds&lt;BufferAddress&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bounds: S) -&gt; BufferSlice&lt;<span class="lifetime">'_</span>&gt; {
         <span class="kw">let </span>(offset, size) = range_to_offset_size(bounds);
-        check_buffer_bounds(<span class="self">self</span>.size, offset, size);
+        check_buffer_bounds(<span class="self">self</span>.shared.size, offset, size);
         BufferSlice {
             buffer: <span class="self">self</span>,
             offset,
@@ -986,27 +1017,27 @@
 
     <span class="doccomment">/// Flushes any pending write operations and unmaps the buffer from host memory.
     </span><span class="kw">pub fn </span>unmap(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.map_context.lock().reset();
-        <span class="self">self</span>.inner.unmap();
+        <span class="self">self</span>.shared.map_context.lock().reset();
+        <span class="self">self</span>.shared.inner.unmap();
     }
 
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.destroy();
+        <span class="self">self</span>.shared.inner.destroy();
     }
 
     <span class="doccomment">/// Returns the length of the buffer allocation in bytes.
     ///
     /// This is always equal to the `size` that was specified when creating the buffer.
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BufferAddress {
-        <span class="self">self</span>.size
+        <span class="self">self</span>.shared.size
     }
 
     <span class="doccomment">/// Returns the allowed usages for this `Buffer`.
     ///
     /// This is always equal to the `usage` that was specified when creating the buffer.
     </span><span class="kw">pub fn </span>usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BufferUsages {
-        <span class="self">self</span>.usage
+        <span class="self">self</span>.shared.usage
     }
 }
 
@@ -1073,7 +1104,7 @@
         mode: MapMode,
         callback: <span class="kw">impl </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + WasmNotSend + <span class="lifetime">'static</span>,
     ) {
-        <span class="kw">let </span><span class="kw-2">mut </span>mc = <span class="self">self</span>.buffer.map_context.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>mc = <span class="self">self</span>.buffer.shared.map_context.lock();
         <span class="macro">assert_eq!</span>(mc.initial_range, <span class="number">0</span>..<span class="number">0</span>, <span class="string">"Buffer is already mapped"</span>);
         <span class="kw">let </span>end = <span class="kw">match </span><span class="self">self</span>.size {
             <span class="prelude-val">Some</span>(s) =&gt; <span class="self">self</span>.offset + s.get(),
@@ -1082,6 +1113,7 @@
         mc.initial_range = <span class="self">self</span>.offset..end;
 
         <span class="self">self</span>.buffer
+            .shared
             .inner
             .map_async(mode, <span class="self">self</span>.offset..end, Box::new(callback));
     }
@@ -1101,8 +1133,13 @@
     ///
     /// [mapped]: Buffer#mapping-buffers
     </span><span class="kw">pub fn </span>get_mapped_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BufferView&lt;<span class="lifetime">'a</span>&gt; {
-        <span class="kw">let </span>end = <span class="self">self</span>.buffer.map_context.lock().add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
-        <span class="kw">let </span>range = <span class="self">self</span>.buffer.inner.get_mapped_range(<span class="self">self</span>.offset..end);
+        <span class="kw">let </span>end = <span class="self">self
+            </span>.buffer
+            .shared
+            .map_context
+            .lock()
+            .add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
+        <span class="kw">let </span>range = <span class="self">self</span>.buffer.shared.inner.get_mapped_range(<span class="self">self</span>.offset..end);
         BufferView {
             slice: <span class="kw-2">*</span><span class="self">self</span>,
             inner: range,
@@ -1119,9 +1156,15 @@
     /// This is only available on WebGPU, on any other backends this will return `None`.
     </span><span class="attr">#[cfg(webgpu)]
     </span><span class="kw">pub fn </span>get_mapped_range_as_array_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;js_sys::ArrayBuffer&gt; {
-        <span class="kw">let </span>end = <span class="self">self</span>.buffer.map_context.lock().add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
+        <span class="kw">let </span>end = <span class="self">self
+            </span>.buffer
+            .shared
+            .map_context
+            .lock()
+            .add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
 
         <span class="self">self</span>.buffer
+            .shared
             .inner
             .get_mapped_range_as_array_buffer(<span class="self">self</span>.offset..end)
     }
@@ -1141,12 +1184,17 @@
     ///
     /// [mapped]: Buffer#mapping-buffers
     </span><span class="kw">pub fn </span>get_mapped_range_mut(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BufferViewMut&lt;<span class="lifetime">'a</span>&gt; {
-        <span class="kw">let </span>end = <span class="self">self</span>.buffer.map_context.lock().add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
-        <span class="kw">let </span>range = <span class="self">self</span>.buffer.inner.get_mapped_range(<span class="self">self</span>.offset..end);
+        <span class="kw">let </span>end = <span class="self">self
+            </span>.buffer
+            .shared
+            .map_context
+            .lock()
+            .add(<span class="self">self</span>.offset, <span class="self">self</span>.size);
+        <span class="kw">let </span>range = <span class="self">self</span>.buffer.shared.inner.get_mapped_range(<span class="self">self</span>.offset..end);
         BufferViewMut {
             slice: <span class="kw-2">*</span><span class="self">self</span>,
             inner: range,
-            readable: <span class="self">self</span>.buffer.usage.contains(BufferUsages::MAP_READ),
+            readable: <span class="self">self</span>.buffer.shared.usage.contains(BufferUsages::MAP_READ),
         }
     }
 }
@@ -1371,6 +1419,7 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.slice
             .buffer
+            .shared
             .map_context
             .lock()
             .remove(<span class="self">self</span>.slice.offset, <span class="self">self</span>.slice.size);
@@ -1381,6 +1430,7 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.slice
             .buffer
+            .shared
             .map_context
             .lock()
             .remove(<span class="self">self</span>.slice.offset, <span class="self">self</span>.slice.size);

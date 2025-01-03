@@ -348,7 +348,9 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="kw">use crate</span>::{
     api::{
@@ -385,6 +387,7 @@
 </span><span class="kw">pub type </span>CommandEncoderDescriptor&lt;<span class="lifetime">'a</span>&gt; = wgt::CommandEncoderDescriptor&lt;Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(CommandEncoderDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
+<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">pub use </span>wgt::TexelCopyBufferInfo <span class="kw">as </span>TexelCopyBufferInfoBase;
 <span class="doccomment">/// View of a buffer which can be used to copy to/from a texture.
 ///
@@ -409,7 +412,7 @@
         <span class="kw">let </span>buffer = <span class="self">self</span>.inner.finish();
 
         CommandBuffer {
-            inner: <span class="prelude-val">Some</span>(buffer),
+            inner: Arc::new(Mutex::new(<span class="prelude-val">Some</span>(buffer))),
         }
     }
 
@@ -471,9 +474,9 @@
         copy_size: BufferAddress,
     ) {
         <span class="self">self</span>.inner.copy_buffer_to_buffer(
-            <span class="kw-2">&amp;</span>source.inner,
+            <span class="kw-2">&amp;</span>source.shared.inner,
             source_offset,
-            <span class="kw-2">&amp;</span>destination.inner,
+            <span class="kw-2">&amp;</span>destination.shared.inner,
             destination_offset,
             copy_size,
         );
@@ -532,7 +535,8 @@
     /// - `CLEAR_TEXTURE` extension not enabled
     /// - Range is out of bounds
     </span><span class="kw">pub fn </span>clear_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Texture, subresource_range: <span class="kw-2">&amp;</span>ImageSubresourceRange) {
-        <span class="self">self</span>.inner.clear_texture(<span class="kw-2">&amp;</span>texture.inner, subresource_range);
+        <span class="self">self</span>.inner
+            .clear_texture(<span class="kw-2">&amp;</span>texture.shared.inner, subresource_range);
     }
 
     <span class="doccomment">/// Clears buffer to zero.
@@ -547,7 +551,7 @@
         offset: BufferAddress,
         size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
     ) {
-        <span class="self">self</span>.inner.clear_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size);
+        <span class="self">self</span>.inner.clear_buffer(<span class="kw-2">&amp;</span>buffer.shared.inner, offset, size);
     }
 
     <span class="doccomment">/// Inserts debug marker.
@@ -580,7 +584,7 @@
             <span class="kw-2">&amp;</span>query_set.inner,
             query_range.start,
             query_range.end - query_range.start,
-            <span class="kw-2">&amp;</span>destination.inner,
+            <span class="kw-2">&amp;</span>destination.shared.inner,
             destination_offset,
         );
     }

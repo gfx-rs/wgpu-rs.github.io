@@ -294,7 +294,7 @@
     ) {
         <span class="kw">let </span>size = <span class="kw">match </span>buffer.size {
             <span class="prelude-val">Some</span>(size) =&gt; size.into(),
-            <span class="prelude-val">None </span>=&gt; buffer.buffer.map_context.lock().total_size - buffer.offset,
+            <span class="prelude-val">None </span>=&gt; buffer.buffer.shared.map_context.lock().total_size - buffer.offset,
         };
 
         <span class="kw">let </span>download = Arc::new(device.create_buffer(<span class="kw-2">&amp;</span><span class="kw">super</span>::BufferDescriptor {
@@ -319,7 +319,7 @@
                     <span class="kw">return</span>;
                 }
 
-                <span class="kw">let </span>mapped_range = download.inner.get_mapped_range(<span class="number">0</span>..size);
+                <span class="kw">let </span>mapped_range = download.shared.inner.get_mapped_range(<span class="number">0</span>..size);
                 callback(<span class="prelude-val">Ok</span>(<span class="self">Self </span>{
                     _gpu_buffer: download,
                     mapped_range,

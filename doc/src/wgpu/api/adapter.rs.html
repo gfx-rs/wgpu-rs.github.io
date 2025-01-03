@@ -195,7 +195,14 @@
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
 <a href="#196" id="196">196</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::future::Future;
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{future::Future, sync::Arc};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -210,9 +217,9 @@
 /// Does not have to be kept alive.
 ///
 /// Corresponds to [WebGPU `GPUAdapter`](https://gpuweb.github.io/gpuweb/#gpu-adapter).
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Adapter {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchAdapter,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Arc&lt;dispatch::DispatchAdapter&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Adapter: Send, Sync);
@@ -262,9 +269,16 @@
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(Device, Queue), RequestDeviceError&gt;&gt; + WasmNotSend {
         <span class="kw">let </span>device = <span class="self">self</span>.inner.request_device(desc, trace_path);
         <span class="kw">async move </span>{
-            device
-                .<span class="kw">await
-                </span>.map(|(device, queue)| (Device { inner: device }, Queue { inner: queue }))
+            device.<span class="kw">await</span>.map(|(device, queue)| {
+                (
+                    Device {
+                        inner: Arc::new(device),
+                    },
+                    Queue {
+                        inner: Arc::new(queue),
+                    },
+                )
+            })
         }
     }
 
@@ -290,10 +304,10 @@
 
         <span class="prelude-val">Ok</span>((
             Device {
-                inner: device.into(),
+                inner: Arc::new(device.into()),
             },
             Queue {
-                inner: queue.into(),
+                inner: Arc::new(queue.into()),
             },
         ))
     }

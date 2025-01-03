@@ -181,12 +181,6 @@
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::dispatch;
 <span class="kw">use crate</span>::{Buffer, Label};
 <span class="kw">use </span>std::sync::Arc;
@@ -233,7 +227,7 @@
 /// [TlasPackage]: crate::TlasPackage
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>TlasInstance {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blas: Arc&lt;BlasShared&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) blas: Arc&lt;dispatch::DispatchBlas&gt;,
     <span class="doccomment">/// Affine transform matrix 3x4 (rows x columns, row major order).
     </span><span class="kw">pub </span>transform: [f32; <span class="number">12</span>],
     <span class="doccomment">/// Custom index for the instance used inside the shader.
@@ -260,7 +254,7 @@
     /// generate a validation error.
     </span><span class="kw">pub fn </span>new(blas: <span class="kw-2">&amp;</span>Blas, transform: [f32; <span class="number">12</span>], custom_index: u32, mask: u8) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            blas: blas.shared.clone(),
+            blas: blas.inner.clone(),
             transform,
             custom_index,
             mask,
@@ -272,7 +266,7 @@
     /// See the note on [TlasInstance] about the
     /// guarantees of keeping a BLAS alive.
     </span><span class="kw">pub fn </span>set_blas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Blas) {
-        <span class="self">self</span>.blas = blas.shared.clone();
+        <span class="self">self</span>.blas = blas.inner.clone();
     }
 }
 
@@ -317,13 +311,7 @@
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(BlasBuildEntry&lt;<span class="lifetime">'_</span>&gt;: WasmNotSendSync);
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BlasShared {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchBlas,
-}
-<span class="macro">static_assertions::assert_impl_all!</span>(BlasShared: WasmNotSendSync);
-
-<span class="attr">#[derive(Debug)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="doccomment">/// Bottom Level Acceleration Structure (BLAS).
 ///
 /// A BLAS is a device-specific raytracing acceleration structure that contains geometry data.
@@ -333,11 +321,11 @@
 /// [Tlas]: crate::Tlas
 </span><span class="kw">pub struct </span>Blas {
     <span class="kw">pub</span>(<span class="kw">crate</span>) handle: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) shared: Arc&lt;BlasShared&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Arc&lt;dispatch::DispatchBlas&gt;,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(Blas: WasmNotSendSync);
 
-<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Blas =&gt; .shared.inner);
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Blas =&gt; .inner);
 
 <span class="kw">impl </span>Blas {
     <span class="doccomment">/// Raw handle to the acceleration structure, used inside raw instance buffers.
@@ -346,7 +334,7 @@
     }
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.shared.inner.destroy();
+        <span class="self">self</span>.inner.destroy();
     }
 }
 

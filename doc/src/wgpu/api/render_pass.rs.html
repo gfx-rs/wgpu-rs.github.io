@@ -578,6 +578,9 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -650,7 +653,7 @@
         </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>BindGroup&gt;: From&lt;BG&gt;,
     {
         <span class="kw">let </span>bg: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>BindGroup&gt; = bind_group.into();
-        <span class="kw">let </span>bg = bg.map(|bg| <span class="kw-2">&amp;</span>bg.inner);
+        <span class="kw">let </span>bg = bg.map(|bg| <span class="kw-2">&amp;*</span>bg.inner);
 
         <span class="self">self</span>.inner.set_bind_group(index, bg, offsets);
     }
@@ -677,7 +680,7 @@
     /// use `buffer` as the source index buffer.
     </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;, index_format: IndexFormat) {
         <span class="self">self</span>.inner.set_index_buffer(
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.shared.inner,
             index_format,
             buffer_slice.offset,
             buffer_slice.size,
@@ -697,7 +700,7 @@
     </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'_</span>&gt;) {
         <span class="self">self</span>.inner.set_vertex_buffer(
             slot,
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.shared.inner,
             buffer_slice.offset,
             buffer_slice.size,
         );
@@ -817,7 +820,7 @@
     /// See details on the individual flags for more information.
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span>Buffer, indirect_offset: BufferAddress) {
         <span class="self">self</span>.inner
-            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
+            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.shared.inner, indirect_offset);
     }
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
@@ -840,7 +843,7 @@
         indirect_offset: BufferAddress,
     ) {
         <span class="self">self</span>.inner
-            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
+            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.shared.inner, indirect_offset);
     }
 
     <span class="doccomment">/// Execute a [render bundle][RenderBundle], which is a set of pre-recorded commands
@@ -852,7 +855,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         render_bundles: I,
     ) {
-        <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles.into_iter().map(|rb| <span class="kw-2">&amp;</span>rb.inner);
+        <span class="kw">let </span><span class="kw-2">mut </span>render_bundles = render_bundles.into_iter().map(|rb| <span class="kw-2">&amp;*</span>rb.inner);
 
         <span class="self">self</span>.inner.execute_bundles(<span class="kw-2">&amp;mut </span>render_bundles);
     }
@@ -877,7 +880,7 @@
         count: u32,
     ) {
         <span class="self">self</span>.inner
-            .multi_draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset, count);
+            .multi_draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.shared.inner, indirect_offset, count);
     }
 
     <span class="doccomment">/// Dispatches multiple draw calls from the active index buffer and the active vertex buffers,
@@ -897,8 +900,11 @@
         indirect_offset: BufferAddress,
         count: u32,
     ) {
-        <span class="self">self</span>.inner
-            .multi_draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset, count);
+        <span class="self">self</span>.inner.multi_draw_indexed_indirect(
+            <span class="kw-2">&amp;</span>indirect_buffer.shared.inner,
+            indirect_offset,
+            count,
+        );
     }
 }
 
@@ -935,9 +941,9 @@
         max_count: u32,
     ) {
         <span class="self">self</span>.inner.multi_draw_indirect_count(
-            <span class="kw-2">&amp;</span>indirect_buffer.inner,
+            <span class="kw-2">&amp;</span>indirect_buffer.shared.inner,
             indirect_offset,
-            <span class="kw-2">&amp;</span>count_buffer.inner,
+            <span class="kw-2">&amp;</span>count_buffer.shared.inner,
             count_offset,
             max_count,
         );
@@ -977,9 +983,9 @@
         max_count: u32,
     ) {
         <span class="self">self</span>.inner.multi_draw_indexed_indirect_count(
-            <span class="kw-2">&amp;</span>indirect_buffer.inner,
+            <span class="kw-2">&amp;</span>indirect_buffer.shared.inner,
             indirect_offset,
-            <span class="kw-2">&amp;</span>count_buffer.inner,
+            <span class="kw-2">&amp;</span>count_buffer.shared.inner,
             count_offset,
             max_count,
         );
