@@ -2452,6 +2452,8 @@
 <a href="#2451" id="2451">2451</a>
 <a href="#2452" id="2452">2452</a>
 <a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -3228,6 +3230,11 @@
         features.set(
             F::VULKAN_GOOGLE_DISPLAY_TIMING,
             caps.supports_extension(google::display_timing::NAME),
+        );
+
+        features.set(
+            F::VULKAN_EXTERNAL_MEMORY_WIN32,
+            caps.supports_extension(khr::external_memory_win32::NAME),
         );
 
         (features, dl_flags)
@@ -4008,9 +4015,6 @@
                 .is_some_and(|ext| ext.shader_zero_initialize_workgroup_memory == vk::TRUE),
             image_format_list: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_2
                 || phd_capabilities.supports_extension(khr::image_format_list::NAME),
-            <span class="attr">#[cfg(windows)]
-            </span>external_memory_win32: phd_capabilities
-                .supports_extension(khr::external_memory_win32::NAME),
         };
         <span class="kw">let </span>capabilities = <span class="kw">crate</span>::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),

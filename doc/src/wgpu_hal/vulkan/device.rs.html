@@ -2677,6 +2677,10 @@
 <a href="#2676" id="2676">2676</a>
 <a href="#2677" id="2677">2677</a>
 <a href="#2678" id="2678">2678</a>
+<a href="#2679" id="2679">2679</a>
+<a href="#2680" id="2680">2680</a>
+<a href="#2681" id="2681">2681</a>
+<a href="#2682" id="2682">2682</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3465,7 +3469,7 @@
 
     <span class="doccomment">/// # Safety
     ///
-    /// - Vulkan 1.1+ (or VK_KHR_external_memory)
+    /// - Vulkan (with VK_KHR_external_memory_win32)
     /// - The `d3d11_shared_handle` must be valid and respecting `desc`
     /// - `VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_BIT` flag is used because we need to hold a reference to the handle
     </span><span class="attr">#[cfg(windows)]
@@ -3474,8 +3478,12 @@
         d3d11_shared_handle: windows::Win32::Foundation::HANDLE,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Texture, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.shared.private_caps.external_memory_win32 {
-            <span class="macro">log::error!</span>(<span class="string">"VK_KHR_external_memory extension is required"</span>);
+        <span class="kw">if </span>!<span class="self">self
+            </span>.shared
+            .features
+            .contains(wgt::Features::VULKAN_EXTERNAL_MEMORY_WIN32)
+        {
+            <span class="macro">log::error!</span>(<span class="string">"Vulkan driver does not support VK_KHR_external_memory_win32"</span>);
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::DeviceError::ResourceCreationFailed);
         }
 
