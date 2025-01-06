@@ -2964,6 +2964,20 @@
 <a href="#2963" id="2963">2963</a>
 <a href="#2964" id="2964">2964</a>
 <a href="#2965" id="2965">2965</a>
+<a href="#2966" id="2966">2966</a>
+<a href="#2967" id="2967">2967</a>
+<a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
+<a href="#2972" id="2972">2972</a>
+<a href="#2973" id="2973">2973</a>
+<a href="#2974" id="2974">2974</a>
+<a href="#2975" id="2975">2975</a>
+<a href="#2976" id="2976">2976</a>
+<a href="#2977" id="2977">2977</a>
+<a href="#2978" id="2978">2978</a>
+<a href="#2979" id="2979">2979</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4847,6 +4861,20 @@
                             BinaryOperator::Modulo =&gt; a % b,
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidBinaryOpArgs),
                         }),
+                        (Literal::AbstractInt(a), Literal::U32(b)) =&gt; {
+                            Literal::AbstractInt(<span class="kw">match </span>op {
+                                BinaryOperator::ShiftLeft =&gt; {
+                                    <span class="kw">if </span>(<span class="kw">if </span>a.is_negative() { !a } <span class="kw">else </span>{ a }).leading_zeros() &lt;= b {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::Overflow(
+                                            <span class="string">"&lt;&lt;"</span>.to_string(),
+                                        ));
+                                    }
+                                    a.checked_shl(b).unwrap_or(<span class="number">0</span>)
+                                }
+                                BinaryOperator::ShiftRight =&gt; a.checked_shr(b).unwrap_or(<span class="number">0</span>),
+                                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidBinaryOpArgs),
+                            })
+                        }
                         (Literal::AbstractInt(a), Literal::AbstractInt(b)) =&gt; {
                             Literal::AbstractInt(<span class="kw">match </span>op {
                                 BinaryOperator::Add =&gt; a.checked_add(b).ok_or_else(|| {
