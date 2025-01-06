@@ -3289,6 +3289,23 @@
 <a href="#3288" id="3288">3288</a>
 <a href="#3289" id="3289">3289</a>
 <a href="#3290" id="3290">3290</a>
+<a href="#3291" id="3291">3291</a>
+<a href="#3292" id="3292">3292</a>
+<a href="#3293" id="3293">3293</a>
+<a href="#3294" id="3294">3294</a>
+<a href="#3295" id="3295">3295</a>
+<a href="#3296" id="3296">3296</a>
+<a href="#3297" id="3297">3297</a>
+<a href="#3298" id="3298">3298</a>
+<a href="#3299" id="3299">3299</a>
+<a href="#3300" id="3300">3300</a>
+<a href="#3301" id="3301">3301</a>
+<a href="#3302" id="3302">3302</a>
+<a href="#3303" id="3303">3303</a>
+<a href="#3304" id="3304">3304</a>
+<a href="#3305" id="3305">3305</a>
+<a href="#3306" id="3306">3306</a>
+<a href="#3307" id="3307">3307</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -4991,31 +5008,48 @@
             } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
+                <span class="kw">let </span>target_span = ctx.ast_expressions.get_span(ast_target);
 
-                <span class="kw">let </span>target = <span class="self">self</span>.expression_for_reference(
-                    ast_target,
-                    <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter),
-                )<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>value =
-                    <span class="self">self</span>.expression(value, <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter))<span class="question-mark">?</span>;
-
+                <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
+                <span class="kw">let </span>target = <span class="self">self</span>.expression_for_reference(ast_target, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>target_handle = <span class="kw">match </span>target {
                     Typed::Reference(handle) =&gt; handle,
                     Typed::Plain(handle) =&gt; {
                         <span class="kw">let </span>ty = ctx.invalid_assignment_type(handle);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidAssignment {
-                            span: ctx.ast_expressions.get_span(ast_target),
+                            span: target_span,
                             ty,
                         });
                     }
                 };
 
+                <span class="comment">// Usually the value needs to be converted to match the type of
+                // the memory view you're assigning it to. The bit shift
+                // operators are exceptions, in that the right operand is always
+                // a `u32` or `vecN&lt;u32&gt;`.
+                </span><span class="kw">let </span>target_scalar = <span class="kw">match </span>op {
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::ShiftLeft | <span class="kw">crate</span>::BinaryOperator::ShiftRight) =&gt; {
+                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar::U32)
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="macro">resolve_inner!</span>(ectx, target_handle)
+                        .pointer_automatically_convertible_scalar(<span class="kw-2">&amp;</span>ectx.module.types),
+                };
+
+                <span class="kw">let </span>value = <span class="self">self</span>.expression_for_abstract(value, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>target_scalar {
+                    <span class="prelude-val">Some</span>(target_scalar) =&gt; ectx.try_automatic_conversion_for_leaf_scalar(
+                        value,
+                        target_scalar,
+                        target_span,
+                    )<span class="question-mark">?</span>,
+                    <span class="prelude-val">None </span>=&gt; value,
+                };
+
                 <span class="kw">let </span>value = <span class="kw">match </span>op {
                     <span class="prelude-val">Some</span>(op) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>ctx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
-                        <span class="kw">let </span><span class="kw-2">mut </span>left = ctx.apply_load_rule(target)<span class="question-mark">?</span>;
-                        ctx.binary_op_splat(op, <span class="kw-2">&amp;mut </span>left, <span class="kw-2">&amp;mut </span>value)<span class="question-mark">?</span>;
-                        ctx.append_expression(
+                        <span class="kw">let </span><span class="kw-2">mut </span>left = ectx.apply_load_rule(target)<span class="question-mark">?</span>;
+                        ectx.binary_op_splat(op, <span class="kw-2">&amp;mut </span>left, <span class="kw-2">&amp;mut </span>value)<span class="question-mark">?</span>;
+                        ectx.append_expression(
                             <span class="kw">crate</span>::Expression::Binary {
                                 op,
                                 left,
