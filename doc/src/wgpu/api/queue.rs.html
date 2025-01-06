@@ -242,13 +242,7 @@
 <a href="#241" id="241">241</a>
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{
-    ops::{Deref, DerefMut},
-    sync::Arc,
-};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -261,7 +255,7 @@
 /// Corresponds to [WebGPU `GPUQueue`](https://gpuweb.github.io/gpuweb/#gpu-queue).
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Queue {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Arc&lt;dispatch::DispatchQueue&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchQueue,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Queue: Send, Sync);
@@ -327,7 +321,7 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.queue
             .inner
-            .write_staging_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.shared.inner, <span class="self">self</span>.offset, <span class="kw-2">&amp;</span><span class="self">self</span>.inner);
+            .write_staging_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="self">self</span>.offset, <span class="kw-2">&amp;</span><span class="self">self</span>.inner);
     }
 }
 
@@ -353,7 +347,7 @@
     /// method avoids an intermediate copy and is often able to transfer data
     /// more efficiently than this one.
     </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
-        <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.shared.inner, offset, data);
+        <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, data);
     }
 
     <span class="doccomment">/// Write to a buffer via a directly mapped staging buffer.
@@ -393,7 +387,7 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer_with"</span>);
         <span class="self">self</span>.inner
-            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.shared.inner, offset, size)<span class="question-mark">?</span>;
+            .validate_write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, size)<span class="question-mark">?</span>;
         <span class="kw">let </span>staging_buffer = <span class="self">self</span>.inner.create_staging_buffer(size)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(QueueWriteBufferView {
             queue: <span class="self">self</span>,

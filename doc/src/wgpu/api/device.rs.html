@@ -656,30 +656,6 @@
 <a href="#655" id="655">655</a>
 <a href="#656" id="656">656</a>
 <a href="#657" id="657">657</a>
-<a href="#658" id="658">658</a>
-<a href="#659" id="659">659</a>
-<a href="#660" id="660">660</a>
-<a href="#661" id="661">661</a>
-<a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
-<a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
-<a href="#671" id="671">671</a>
-<a href="#672" id="672">672</a>
-<a href="#673" id="673">673</a>
-<a href="#674" id="674">674</a>
-<a href="#675" id="675">675</a>
-<a href="#676" id="676">676</a>
-<a href="#677" id="677">677</a>
-<a href="#678" id="678">678</a>
-<a href="#679" id="679">679</a>
-<a href="#680" id="680">680</a>
-<a href="#681" id="681">681</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt, future::Future, sync::Arc};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -698,7 +674,7 @@
 /// Corresponds to [WebGPU `GPUDevice`](https://gpuweb.github.io/gpuweb/#gpu-device).
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Device {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Arc&lt;dispatch::DispatchDevice&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchDevice,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Device: Send, Sync);
@@ -852,9 +828,7 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>BindGroupDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; BindGroup {
         <span class="kw">let </span>group = <span class="self">self</span>.inner.create_bind_group(desc);
-        BindGroup {
-            inner: Arc::new(group),
-        }
+        BindGroup { inner: group }
     }
 
     <span class="doccomment">/// Creates a [`BindGroupLayout`].
@@ -864,36 +838,28 @@
         desc: <span class="kw-2">&amp;</span>BindGroupLayoutDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; BindGroupLayout {
         <span class="kw">let </span>layout = <span class="self">self</span>.inner.create_bind_group_layout(desc);
-        BindGroupLayout {
-            inner: Arc::new(layout),
-        }
+        BindGroupLayout { inner: layout }
     }
 
     <span class="doccomment">/// Creates a [`PipelineLayout`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_pipeline_layout(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>PipelineLayoutDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; PipelineLayout {
         <span class="kw">let </span>layout = <span class="self">self</span>.inner.create_pipeline_layout(desc);
-        PipelineLayout {
-            inner: Arc::new(layout),
-        }
+        PipelineLayout { inner: layout }
     }
 
     <span class="doccomment">/// Creates a [`RenderPipeline`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_render_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>RenderPipelineDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; RenderPipeline {
         <span class="kw">let </span>pipeline = <span class="self">self</span>.inner.create_render_pipeline(desc);
-        RenderPipeline {
-            inner: Arc::new(pipeline),
-        }
+        RenderPipeline { inner: pipeline }
     }
 
     <span class="doccomment">/// Creates a [`ComputePipeline`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_compute_pipeline(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>ComputePipelineDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; ComputePipeline {
         <span class="kw">let </span>pipeline = <span class="self">self</span>.inner.create_compute_pipeline(desc);
-        ComputePipeline {
-            inner: Arc::new(pipeline),
-        }
+        ComputePipeline { inner: pipeline }
     }
 
     <span class="doccomment">/// Creates a [`Buffer`].
@@ -907,12 +873,10 @@
         <span class="kw">let </span>buffer = <span class="self">self</span>.inner.create_buffer(desc);
 
         Buffer {
-            shared: Arc::new(BufferShared {
-                inner: buffer,
-                map_context: Mutex::new(map_context),
-                size: desc.size,
-                usage: desc.usage,
-            }),
+            inner: buffer,
+            map_context: Arc::new(Mutex::new(map_context)),
+            size: desc.size,
+            usage: desc.usage,
         }
     }
 
@@ -924,14 +888,12 @@
         <span class="kw">let </span>texture = <span class="self">self</span>.inner.create_texture(desc);
 
         Texture {
-            shared: Arc::new(TextureShared {
-                inner: texture,
-                descriptor: TextureDescriptor {
-                    label: <span class="prelude-val">None</span>,
-                    view_formats: <span class="kw-2">&amp;</span>[],
-                    ..desc.clone()
-                },
-            }),
+            inner: texture,
+            descriptor: TextureDescriptor {
+                label: <span class="prelude-val">None</span>,
+                view_formats: <span class="kw-2">&amp;</span>[],
+                ..desc.clone()
+            },
         }
     }
 
@@ -956,14 +918,12 @@
                 .create_texture_from_hal::&lt;A&gt;(hal_texture, core_device, desc)
         };
         Texture {
-            shared: Arc::new(TextureShared {
-                inner: texture.into(),
-                descriptor: TextureDescriptor {
-                    label: <span class="prelude-val">None</span>,
-                    view_formats: <span class="kw-2">&amp;</span>[],
-                    ..desc.clone()
-                },
-            }),
+            inner: texture.into(),
+            descriptor: TextureDescriptor {
+                label: <span class="prelude-val">None</span>,
+                view_formats: <span class="kw-2">&amp;</span>[],
+                ..desc.clone()
+            },
         }
     }
 
@@ -994,12 +954,10 @@
         };
 
         Buffer {
-            shared: Arc::new(BufferShared {
-                inner: buffer.into(),
-                map_context: Mutex::new(map_context),
-                size: desc.size,
-                usage: desc.usage,
-            }),
+            inner: buffer.into(),
+            map_context: Arc::new(Mutex::new(map_context)),
+            size: desc.size,
+            usage: desc.usage,
         }
     }
 
@@ -1009,18 +967,14 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>SamplerDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; Sampler {
         <span class="kw">let </span>sampler = <span class="self">self</span>.inner.create_sampler(desc);
-        Sampler {
-            inner: Arc::new(sampler),
-        }
+        Sampler { inner: sampler }
     }
 
     <span class="doccomment">/// Creates a new [`QuerySet`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>create_query_set(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>QuerySetDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; QuerySet {
         <span class="kw">let </span>query_set = <span class="self">self</span>.inner.create_query_set(desc);
-        QuerySet {
-            inner: Arc::new(query_set),
-        }
+        QuerySet { inner: query_set }
     }
 
     <span class="doccomment">/// Set a callback for errors that are not handled in error scopes.
@@ -1160,9 +1114,7 @@
         desc: <span class="kw-2">&amp;</span>PipelineCacheDescriptor&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; PipelineCache {
         <span class="kw">let </span>cache = <span class="kw">unsafe </span>{ <span class="self">self</span>.inner.create_pipeline_cache(desc) };
-        PipelineCache {
-            inner: Arc::new(cache),
-        }
+        PipelineCache { inner: cache }
     }
 }
 
@@ -1193,7 +1145,7 @@
         <span class="kw">let </span>(handle, blas) = <span class="self">self</span>.inner.create_blas(desc, sizes);
 
         Blas {
-            inner: Arc::new(blas),
+            inner: blas,
             handle,
         }
     }

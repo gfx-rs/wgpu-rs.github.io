@@ -223,11 +223,7 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::{marker::PhantomData, num::NonZeroU32, ops::Range};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, num::NonZeroU32, ops::Range};
 
 <span class="kw">use </span><span class="kw">crate</span>::dispatch::RenderBundleEncoderInterface;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -288,9 +284,7 @@
             </span>dispatch::DispatchRenderBundleEncoder::WebGPU(b) =&gt; b.finish(desc),
         };
 
-        RenderBundle {
-            inner: Arc::new(bundle),
-        }
+        RenderBundle { inner: bundle }
     }
 
     <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout
@@ -302,7 +296,7 @@
         </span><span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'b </span>BindGroup&gt;: From&lt;BG&gt;,
     {
         <span class="kw">let </span>bg: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'b </span>BindGroup&gt; = bind_group.into();
-        <span class="kw">let </span>bg = bg.map(|x| <span class="kw-2">&amp;*</span>x.inner);
+        <span class="kw">let </span>bg = bg.map(|x| <span class="kw-2">&amp;</span>x.inner);
         <span class="self">self</span>.inner.set_bind_group(index, bg, offsets);
     }
 
@@ -319,7 +313,7 @@
     /// use `buffer` as the source index buffer.
     </span><span class="kw">pub fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;, index_format: IndexFormat) {
         <span class="self">self</span>.inner.set_index_buffer(
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.shared.inner,
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
             index_format,
             buffer_slice.offset,
             buffer_slice.size,
@@ -339,7 +333,7 @@
     </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">'a</span>&gt;) {
         <span class="self">self</span>.inner.set_vertex_buffer(
             slot,
-            <span class="kw-2">&amp;</span>buffer_slice.buffer.shared.inner,
+            <span class="kw-2">&amp;</span>buffer_slice.buffer.inner,
             buffer_slice.offset,
             buffer_slice.size,
         );
@@ -399,7 +393,7 @@
     /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer, indirect_offset: BufferAddress) {
         <span class="self">self</span>.inner
-            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.shared.inner, indirect_offset);
+            .draw_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
     }
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
@@ -415,7 +409,7 @@
         indirect_offset: BufferAddress,
     ) {
         <span class="self">self</span>.inner
-            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.shared.inner, indirect_offset);
+            .draw_indexed_indirect(<span class="kw-2">&amp;</span>indirect_buffer.inner, indirect_offset);
     }
 }
 

@@ -132,24 +132,7 @@
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
-
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureShared {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchTexture,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) descriptor: TextureDescriptor&lt;<span class="lifetime">'static</span>&gt;,
-}
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Handle to a texture on the GPU.
 ///
@@ -158,12 +141,13 @@
 /// Corresponds to [WebGPU `GPUTexture`](https://gpuweb.github.io/gpuweb/#texture-interface).
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Texture {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) shared: Arc&lt;TextureShared&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchTexture,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) descriptor: TextureDescriptor&lt;<span class="lifetime">'static</span>&gt;,
 }
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Texture: Send, Sync);
 
-<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Texture =&gt; .shared.inner);
+<span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Texture =&gt; .inner);
 
 <span class="kw">impl </span>Texture {
     <span class="doccomment">/// Returns the inner hal Texture using a callback. The hal texture will be `None` if the
@@ -177,7 +161,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture_callback: F,
     ) -&gt; R {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(tex) = <span class="self">self</span>.shared.inner.as_core_opt() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(tex) = <span class="self">self</span>.inner.as_core_opt() {
             <span class="kw">unsafe </span>{
                 tex.context
                     .texture_as_hal::&lt;A, F, R&gt;(tex, hal_texture_callback)
@@ -189,16 +173,14 @@
 
     <span class="doccomment">/// Creates a view of this texture.
     </span><span class="kw">pub fn </span>create_view(<span class="kw-2">&amp;</span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span>TextureViewDescriptor&lt;<span class="lifetime">'_</span>&gt;) -&gt; TextureView {
-        <span class="kw">let </span>view = <span class="self">self</span>.shared.inner.create_view(desc);
+        <span class="kw">let </span>view = <span class="self">self</span>.inner.create_view(desc);
 
-        TextureView {
-            inner: Arc::new(view),
-        }
+        TextureView { inner: view }
     }
 
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.
     </span><span class="kw">pub fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.shared.inner.destroy();
+        <span class="self">self</span>.inner.destroy();
     }
 
     <span class="doccomment">/// Make an `TexelCopyTextureInfo` representing the whole texture.
@@ -215,63 +197,63 @@
     ///
     /// This is always equal to the `size` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Extent3d {
-        <span class="self">self</span>.shared.descriptor.size
+        <span class="self">self</span>.descriptor.size
     }
 
     <span class="doccomment">/// Returns the width of this `Texture`.
     ///
     /// This is always equal to the `size.width` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.shared.descriptor.size.width
+        <span class="self">self</span>.descriptor.size.width
     }
 
     <span class="doccomment">/// Returns the height of this `Texture`.
     ///
     /// This is always equal to the `size.height` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.shared.descriptor.size.height
+        <span class="self">self</span>.descriptor.size.height
     }
 
     <span class="doccomment">/// Returns the depth or layer count of this `Texture`.
     ///
     /// This is always equal to the `size.depth_or_array_layers` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>depth_or_array_layers(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.shared.descriptor.size.depth_or_array_layers
+        <span class="self">self</span>.descriptor.size.depth_or_array_layers
     }
 
     <span class="doccomment">/// Returns the mip_level_count of this `Texture`.
     ///
     /// This is always equal to the `mip_level_count` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>mip_level_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.shared.descriptor.mip_level_count
+        <span class="self">self</span>.descriptor.mip_level_count
     }
 
     <span class="doccomment">/// Returns the sample_count of this `Texture`.
     ///
     /// This is always equal to the `sample_count` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>sample_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.shared.descriptor.sample_count
+        <span class="self">self</span>.descriptor.sample_count
     }
 
     <span class="doccomment">/// Returns the dimension of this `Texture`.
     ///
     /// This is always equal to the `dimension` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>dimension(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TextureDimension {
-        <span class="self">self</span>.shared.descriptor.dimension
+        <span class="self">self</span>.descriptor.dimension
     }
 
     <span class="doccomment">/// Returns the format of this `Texture`.
     ///
     /// This is always equal to the `format` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TextureFormat {
-        <span class="self">self</span>.shared.descriptor.format
+        <span class="self">self</span>.descriptor.format
     }
 
     <span class="doccomment">/// Returns the allowed usages of this `Texture`.
     ///
     /// This is always equal to the `usage` that was specified when creating the texture.
     </span><span class="kw">pub fn </span>usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TextureUsages {
-        <span class="self">self</span>.shared.descriptor.usage
+        <span class="self">self</span>.descriptor.usage
     }
 }
 
