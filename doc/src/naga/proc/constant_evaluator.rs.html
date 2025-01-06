@@ -2964,12 +2964,6 @@
 <a href="#2963" id="2963">2963</a>
 <a href="#2964" id="2964">2964</a>
 <a href="#2965" id="2965">2965</a>
-<a href="#2966" id="2966">2966</a>
-<a href="#2967" id="2967">2967</a>
-<a href="#2968" id="2968">2968</a>
-<a href="#2969" id="2969">2969</a>
-<a href="#2970" id="2970">2970</a>
-<a href="#2971" id="2971">2971</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -4780,29 +4774,23 @@
 
                     <span class="kw">_ </span>=&gt; <span class="kw">match </span>(left_value, right_value) {
                         (Literal::I32(a), Literal::I32(b)) =&gt; Literal::I32(<span class="kw">match </span>op {
-                            BinaryOperator::Add =&gt; a.checked_add(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">"addition"</span>.into())
-                            })<span class="question-mark">?</span>,
-                            BinaryOperator::Subtract =&gt; a.checked_sub(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">"subtraction"</span>.into())
-                            })<span class="question-mark">?</span>,
-                            BinaryOperator::Multiply =&gt; a.checked_mul(b).ok_or_else(|| {
-                                ConstantEvaluatorError::Overflow(<span class="string">"multiplication"</span>.into())
-                            })<span class="question-mark">?</span>,
-                            BinaryOperator::Divide =&gt; a.checked_div(b).ok_or_else(|| {
+                            BinaryOperator::Add =&gt; a.wrapping_add(b),
+                            BinaryOperator::Subtract =&gt; a.wrapping_sub(b),
+                            BinaryOperator::Multiply =&gt; a.wrapping_mul(b),
+                            BinaryOperator::Divide =&gt; {
                                 <span class="kw">if </span>b == <span class="number">0 </span>{
-                                    ConstantEvaluatorError::DivisionByZero
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::DivisionByZero);
                                 } <span class="kw">else </span>{
-                                    ConstantEvaluatorError::Overflow(<span class="string">"division"</span>.into())
+                                    a.wrapping_div(b)
                                 }
-                            })<span class="question-mark">?</span>,
-                            BinaryOperator::Modulo =&gt; a.checked_rem(b).ok_or_else(|| {
+                            }
+                            BinaryOperator::Modulo =&gt; {
                                 <span class="kw">if </span>b == <span class="number">0 </span>{
-                                    ConstantEvaluatorError::RemainderByZero
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::RemainderByZero);
                                 } <span class="kw">else </span>{
-                                    ConstantEvaluatorError::Overflow(<span class="string">"remainder"</span>.into())
+                                    a.wrapping_rem(b)
                                 }
-                            })<span class="question-mark">?</span>,
+                            }
                             BinaryOperator::And =&gt; a &amp; b,
                             BinaryOperator::ExclusiveOr =&gt; a ^ b,
                             BinaryOperator::InclusiveOr =&gt; a | b,
