@@ -6295,6 +6295,21 @@
 <a href="#6294" id="6294">6294</a>
 <a href="#6295" id="6295">6295</a>
 <a href="#6296" id="6296">6296</a>
+<a href="#6297" id="6297">6297</a>
+<a href="#6298" id="6298">6298</a>
+<a href="#6299" id="6299">6299</a>
+<a href="#6300" id="6300">6300</a>
+<a href="#6301" id="6301">6301</a>
+<a href="#6302" id="6302">6302</a>
+<a href="#6303" id="6303">6303</a>
+<a href="#6304" id="6304">6304</a>
+<a href="#6305" id="6305">6305</a>
+<a href="#6306" id="6306">6306</a>
+<a href="#6307" id="6307">6307</a>
+<a href="#6308" id="6308">6308</a>
+<a href="#6309" id="6309">6309</a>
+<a href="#6310" id="6310">6310</a>
+<a href="#6311" id="6311">6311</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
@@ -6333,6 +6348,14 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ATOMIC_COMP_EXCH_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_atomic_compare_exchange_weak_explicit"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MODF_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_modf"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>FREXP_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_frexp"</span>;
+<span class="doccomment">/// For some reason, Metal does not let you have `metal::texture&lt;..&gt;*` as a buffer argument.
+/// However, if you put that texture inside a struct, everything is totally fine. This
+/// baffles me to no end.
+///
+/// As such, we wrap all argument buffers in a struct that has a single generic `&lt;T&gt;` field.
+/// This allows `NagaArgumentBufferWrapper&lt;metal::texture&lt;..&gt;&gt;*` to work. The astute among
+/// you have noticed that this should be exactly the same to the compiler, and you're correct.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ARGUMENT_BUFFER_WRAPPER_STRUCT: <span class="kw-2">&amp;</span>str = <span class="string">"NagaArgumentBufferWrapper"</span>;
 
 <span class="doccomment">/// Write the Metal name for a Naga numeric type: scalar, vector, or matrix.
 ///
@@ -6572,24 +6595,17 @@
             <span class="kw">crate</span>::TypeInner::RayQuery =&gt; {
                 <span class="macro">write!</span>(out, <span class="string">"{RAY_QUERY_TYPE}"</span>)
             }
-            <span class="kw">crate</span>::TypeInner::BindingArray { base, size } =&gt; {
+            <span class="kw">crate</span>::TypeInner::BindingArray { base, .. } =&gt; {
                 <span class="kw">let </span>base_tyname = <span class="self">Self </span>{
                     handle: base,
                     first_time: <span class="bool-val">false</span>,
                     ..<span class="kw-2">*</span><span class="self">self
                 </span>};
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw">super</span>::ResolvedBinding::Resource(<span class="kw">super</span>::BindTarget {
-                    binding_array_size: <span class="prelude-val">Some</span>(override_size),
-                    ..
-                })) = <span class="self">self</span>.binding
-                {
-                    <span class="macro">write!</span>(out, <span class="string">"{NAMESPACE}::array&lt;{base_tyname}, {override_size}&gt;"</span>)
-                } <span class="kw">else if let </span><span class="kw">crate</span>::ArraySize::Constant(size) = size {
-                    <span class="macro">write!</span>(out, <span class="string">"{NAMESPACE}::array&lt;{base_tyname}, {size}&gt;"</span>)
-                } <span class="kw">else </span>{
-                    <span class="macro">unreachable!</span>(<span class="string">"metal requires all arrays be constant sized"</span>);
-                }
+                <span class="macro">write!</span>(
+                    out,
+                    <span class="string">"constant {ARGUMENT_BUFFER_WRAPPER_STRUCT}&lt;{base_tyname}&gt;*"
+                </span>)
             }
         }
     }
@@ -8849,6 +8865,8 @@
             } =&gt; <span class="bool-val">true</span>,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
+        <span class="kw">let </span>accessing_wrapped_binding_array =
+            <span class="macro">matches!</span>(<span class="kw-2">*</span>base_ty, <span class="kw">crate</span>::TypeInner::BindingArray { .. });
 
         <span class="self">self</span>.put_access_chain(base, policy, context)<span class="question-mark">?</span>;
         <span class="kw">if </span>accessing_wrapped_array {
@@ -8884,6 +8902,10 @@
         }
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>accessing_wrapped_binding_array {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".{WRAPPED_ARRAY_FIELD}"</span>)<span class="question-mark">?</span>;
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -9998,7 +10020,18 @@
     }
 
     <span class="kw">fn </span>write_type_defs(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module) -&gt; BackendResult {
+        <span class="kw">let </span><span class="kw-2">mut </span>generated_argument_buffer_wrapper = <span class="bool-val">false</span>;
         <span class="kw">for </span>(handle, ty) <span class="kw">in </span>module.types.iter() {
+            <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::BindingArray { .. } = ty.inner {
+                <span class="kw">if </span>!generated_argument_buffer_wrapper {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"template &lt;typename T&gt;"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"struct {ARGUMENT_BUFFER_WRAPPER_STRUCT} {{"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{}T {WRAPPED_ARRAY_FIELD};"</span>, back::INDENT)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}};"</span>)<span class="question-mark">?</span>;
+                    generated_argument_buffer_wrapper = <span class="bool-val">true</span>;
+                }
+            }
+
             <span class="kw">if </span>!ty.needs_alias() {
                 <span class="kw">continue</span>;
             }
@@ -11429,13 +11462,10 @@ template &lt;typename A&gt;
                             <span class="kw">let </span>target = options.get_resource_binding_target(ep, br);
                             <span class="kw">let </span>good = <span class="kw">match </span>target {
                                 <span class="prelude-val">Some</span>(target) =&gt; {
-                                    <span class="kw">let </span>binding_ty = <span class="kw">match </span>module.types[var.ty].inner {
-                                        <span class="kw">crate</span>::TypeInner::BindingArray { base, .. } =&gt; {
-                                            <span class="kw-2">&amp;</span>module.types[base].inner
-                                        }
-                                        <span class="kw-2">ref </span>ty =&gt; ty,
-                                    };
-                                    <span class="kw">match </span><span class="kw-2">*</span>binding_ty {
+                                    <span class="comment">// We intentionally don't dereference binding_arrays here,
+                                    // so that binding arrays fall to the buffer location.
+
+                                    </span><span class="kw">match </span>module.types[var.ty].inner {
                                         <span class="kw">crate</span>::TypeInner::Image { .. } =&gt; target.texture.is_some(),
                                         <span class="kw">crate</span>::TypeInner::Sampler { .. } =&gt; {
                                             target.sampler.is_some()
