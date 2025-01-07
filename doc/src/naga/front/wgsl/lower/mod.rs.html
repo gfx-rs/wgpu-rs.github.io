@@ -3302,10 +3302,6 @@
 <a href="#3301" id="3301">3301</a>
 <a href="#3302" id="3302">3302</a>
 <a href="#3303" id="3303">3303</a>
-<a href="#3304" id="3304">3304</a>
-<a href="#3305" id="3305">3305</a>
-<a href="#3306" id="3306">3306</a>
-<a href="#3307" id="3307">3307</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -5612,22 +5608,18 @@
                     args.finish()<span class="question-mark">?</span>;
 
                     <span class="kw">if </span>fun == <span class="kw">crate</span>::MathFunction::Modf || fun == <span class="kw">crate</span>::MathFunction::Frexp {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>((size, width)) = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, arg) {
-                            <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar { width, .. }) =&gt; {
-                                <span class="prelude-val">Some</span>((<span class="prelude-val">None</span>, width))
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>((size, scalar)) = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, arg) {
+                            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; <span class="prelude-val">Some</span>((<span class="prelude-val">None</span>, scalar)),
+                            <span class="kw">crate</span>::TypeInner::Vector { size, scalar, .. } =&gt; {
+                                <span class="prelude-val">Some</span>((<span class="prelude-val">Some</span>(size), scalar))
                             }
-                            <span class="kw">crate</span>::TypeInner::Vector {
-                                size,
-                                scalar: <span class="kw">crate</span>::Scalar { width, .. },
-                                ..
-                            } =&gt; <span class="prelude-val">Some</span>((<span class="prelude-val">Some</span>(size), width)),
                             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                         } {
                             ctx.module.generate_predeclared_type(
                                 <span class="kw">if </span>fun == <span class="kw">crate</span>::MathFunction::Modf {
-                                    <span class="kw">crate</span>::PredeclaredType::ModfResult { size, width }
+                                    <span class="kw">crate</span>::PredeclaredType::ModfResult { size, scalar }
                                 } <span class="kw">else </span>{
-                                    <span class="kw">crate</span>::PredeclaredType::FrexpResult { size, width }
+                                    <span class="kw">crate</span>::PredeclaredType::FrexpResult { size, scalar }
                                 },
                             );
                         }
