@@ -1328,6 +1328,9 @@
 <a href="#1327" id="1327">1327</a>
 <a href="#1328" id="1328">1328</a>
 <a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{queue::TempResource, Device},
     global::Global,
@@ -2499,24 +2502,27 @@
             {
                 input_barriers.push(barrier);
             }
-            <span class="kw">if </span>mesh.transform_buffer_offset.unwrap() % wgt::TRANSFORM_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+
+            <span class="kw">let </span>offset = mesh.transform_buffer_offset.unwrap();
+
+            <span class="kw">if </span>offset % wgt::TRANSFORM_BUFFER_ALIGNMENT != <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
                     BuildAccelerationStructureError::UnalignedTransformBufferOffset(
                         transform_buffer.error_ident(),
                     ),
                 );
             }
-            <span class="kw">if </span>transform_buffer.size &lt; <span class="number">48 </span>+ mesh.transform_buffer_offset.unwrap() {
+            <span class="kw">if </span>transform_buffer.size &lt; <span class="number">48 </span>+ offset {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::InsufficientBufferSize(
                     transform_buffer.error_ident(),
                     transform_buffer.size,
-                    <span class="number">48 </span>+ mesh.transform_buffer_offset.unwrap(),
+                    <span class="number">48 </span>+ offset,
                 ));
             }
             cmd_buf_data.buffer_memory_init_actions.extend(
                 transform_buffer.initialization_status.read().create_action(
                     transform_buffer,
-                    mesh.transform_buffer_offset.unwrap()..(mesh.index_buffer_offset.unwrap() + <span class="number">48</span>),
+                    offset..(offset + <span class="number">48</span>),
                     MemoryInitKind::NeedsInitializedMemory,
                 ),
             );
