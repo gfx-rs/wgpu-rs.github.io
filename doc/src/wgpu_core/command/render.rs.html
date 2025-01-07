@@ -3378,11 +3378,6 @@
 <a href="#3377" id="3377">3377</a>
 <a href="#3378" id="3378">3378</a>
 <a href="#3379" id="3379">3379</a>
-<a href="#3380" id="3380">3380</a>
-<a href="#3381" id="3381">3381</a>
-<a href="#3382" id="3382">3382</a>
-<a href="#3383" id="3383">3383</a>
-<a href="#3384" id="3384">3384</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
@@ -4061,10 +4056,9 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
     <span class="attr">#[error(<span class="string">"Indirect buffer offset {0:?} is not a multiple of 4"</span>)]
     </span>UnalignedIndirectBufferOffset(BufferAddress),
-    <span class="attr">#[error(<span class="string">"Indirect draw uses bytes {offset}..{end_offset} {} which overruns indirect buffer of size {buffer_size}"</span>,
-        count.map_or_else(String::new, |v| <span class="macro">format!</span>(<span class="string">"(using count {v})"</span>)))]
+    <span class="attr">#[error(<span class="string">"Indirect draw uses bytes {offset}..{end_offset} using count {count} which overruns indirect buffer of size {buffer_size}"</span>)]
     </span>IndirectBufferOverrun {
-        count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+        count: u32,
         offset: u64,
         end_offset: u64,
         buffer_size: u64,
@@ -5172,14 +5166,14 @@
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
-                    ArcRenderCommand::MultiDrawIndirect {
+                    ArcRenderCommand::DrawIndirect {
                         buffer,
                         offset,
                         count,
                         indexed,
                     } =&gt; {
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
-                            kind: <span class="kw">if </span>count.is_some() {
+                            kind: <span class="kw">if </span>count != <span class="number">1 </span>{
                                 DrawKind::MultiDrawIndirect
                             } <span class="kw">else </span>{
                                 DrawKind::DrawIndirect
@@ -5852,7 +5846,7 @@
     cmd_buf: <span class="kw-2">&amp;</span>Arc&lt;CommandBuffer&gt;,
     indirect_buffer: Arc&lt;<span class="kw">crate</span>::resource::Buffer&gt;,
     offset: u64,
-    count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    count: u32,
     indexed: bool,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassErrorInner&gt; {
     <span class="macro">api_log!</span>(
@@ -5867,7 +5861,7 @@
         <span class="bool-val">true </span>=&gt; size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;(),
     };
 
-    <span class="kw">if </span>count.is_some() {
+    <span class="kw">if </span>count != <span class="number">1 </span>{
         state
             .device
             .require_features(wgt::Features::MULTI_DRAW_INDIRECT)<span class="question-mark">?</span>;
@@ -5887,13 +5881,11 @@
     indirect_buffer.check_usage(BufferUsages::INDIRECT)<span class="question-mark">?</span>;
     <span class="kw">let </span>indirect_raw = indirect_buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>actual_count = count.map_or(<span class="number">1</span>, |c| c.get());
-
     <span class="kw">if </span>offset % <span class="number">4 </span>!= <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::UnalignedIndirectBufferOffset(offset));
     }
 
-    <span class="kw">let </span>end_offset = offset + stride <span class="kw">as </span>u64 * actual_count <span class="kw">as </span>u64;
+    <span class="kw">let </span>end_offset = offset + stride <span class="kw">as </span>u64 * count <span class="kw">as </span>u64;
     <span class="kw">if </span>end_offset &gt; indirect_buffer.size {
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::IndirectBufferOverrun {
             count,
@@ -5913,14 +5905,12 @@
 
     <span class="kw">match </span>indexed {
         <span class="bool-val">false </span>=&gt; <span class="kw">unsafe </span>{
-            state
-                .raw_encoder
-                .draw_indirect(indirect_raw, offset, actual_count);
+            state.raw_encoder.draw_indirect(indirect_raw, offset, count);
         },
         <span class="bool-val">true </span>=&gt; <span class="kw">unsafe </span>{
             state
                 .raw_encoder
-                .draw_indexed_indirect(indirect_raw, offset, actual_count);
+                .draw_indexed_indirect(indirect_raw, offset, count);
         },
     }
     <span class="prelude-val">Ok</span>(())
@@ -5984,7 +5974,7 @@
     <span class="kw">let </span>end_offset = offset + stride * max_count <span class="kw">as </span>u64;
     <span class="kw">if </span>end_offset &gt; indirect_buffer.size {
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::IndirectBufferOverrun {
-            count: <span class="prelude-val">None</span>,
+            count: <span class="number">1</span>,
             offset,
             end_offset,
             buffer_size: indirect_buffer.size,
@@ -6488,10 +6478,10 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        base.commands.push(ArcRenderCommand::MultiDrawIndirect {
+        base.commands.push(ArcRenderCommand::DrawIndirect {
             buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
             offset,
-            count: <span class="prelude-val">None</span>,
+            count: <span class="number">1</span>,
             indexed: <span class="bool-val">false</span>,
         });
 
@@ -6510,10 +6500,10 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        base.commands.push(ArcRenderCommand::MultiDrawIndirect {
+        base.commands.push(ArcRenderCommand::DrawIndirect {
             buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
             offset,
-            count: <span class="prelude-val">None</span>,
+            count: <span class="number">1</span>,
             indexed: <span class="bool-val">true</span>,
         });
 
@@ -6533,10 +6523,10 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        base.commands.push(ArcRenderCommand::MultiDrawIndirect {
+        base.commands.push(ArcRenderCommand::DrawIndirect {
             buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
             offset,
-            count: NonZeroU32::new(count),
+            count,
             indexed: <span class="bool-val">false</span>,
         });
 
@@ -6556,10 +6546,10 @@
         };
         <span class="kw">let </span>base = pass.base_mut(scope)<span class="question-mark">?</span>;
 
-        base.commands.push(ArcRenderCommand::MultiDrawIndirect {
+        base.commands.push(ArcRenderCommand::DrawIndirect {
             buffer: <span class="self">self</span>.resolve_render_pass_buffer_id(scope, buffer_id)<span class="question-mark">?</span>,
             offset,
-            count: NonZeroU32::new(count),
+            count,
             indexed: <span class="bool-val">true</span>,
         });
 

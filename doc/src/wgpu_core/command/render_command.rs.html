@@ -499,8 +499,6 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::BindGroup,
     id,
@@ -509,7 +507,7 @@
 };
 <span class="kw">use </span>wgt::{BufferAddress, BufferSize, Color};
 
-<span class="kw">use </span>std::{num::NonZeroU32, sync::Arc};
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use super</span>::{Rect, RenderBundle};
 
@@ -585,11 +583,10 @@
         base_vertex: i32,
         first_instance: u32,
     },
-    MultiDrawIndirect {
+    DrawIndirect {
         buffer_id: id::BufferId,
         offset: BufferAddress,
-        <span class="doccomment">/// Count of `None` represents a non-multi call.
-        </span>count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+        count: u32,
         indexed: bool,
     },
     MultiDrawIndirectCount {
@@ -814,16 +811,16 @@
                             first_instance,
                         },
 
-                        RenderCommand::MultiDrawIndirect {
+                        RenderCommand::DrawIndirect {
                             buffer_id,
                             offset,
                             count,
                             indexed,
-                        } =&gt; ArcRenderCommand::MultiDrawIndirect {
+                        } =&gt; ArcRenderCommand::DrawIndirect {
                             buffer: buffers_guard.get(buffer_id).get().map_err(|e| {
                                 RenderPassError {
                                     scope: PassErrorScope::Draw {
-                                        kind: <span class="kw">if </span>count.is_some() {
+                                        kind: <span class="kw">if </span>count != <span class="number">1 </span>{
                                             DrawKind::MultiDrawIndirect
                                         } <span class="kw">else </span>{
                                             DrawKind::DrawIndirect
@@ -962,11 +959,10 @@
         base_vertex: i32,
         first_instance: u32,
     },
-    MultiDrawIndirect {
+    DrawIndirect {
         buffer: Arc&lt;Buffer&gt;,
         offset: BufferAddress,
-        <span class="doccomment">/// Count of `None` represents a non-multi call.
-        </span>count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+        count: u32,
         indexed: bool,
     },
     MultiDrawIndirectCount {

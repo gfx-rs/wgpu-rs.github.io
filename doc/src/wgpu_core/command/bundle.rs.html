@@ -2261,10 +2261,10 @@ index format changes.
                     )
                     .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
-                RenderCommand::MultiDrawIndirect {
+                RenderCommand::DrawIndirect {
                     buffer_id,
                     offset,
-                    count: <span class="prelude-val">None</span>,
+                    count: <span class="number">1</span>,
                     indexed,
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::Draw {
@@ -2281,7 +2281,7 @@ index format changes.
                     )
                     .map_pass_err(scope)<span class="question-mark">?</span>;
                 }
-                RenderCommand::MultiDrawIndirect { .. }
+                RenderCommand::DrawIndirect { .. }
                 | RenderCommand::MultiDrawIndirectCount { .. } =&gt; <span class="macro">unimplemented!</span>(),
                 RenderCommand::PushDebugGroup { color: <span class="kw">_</span>, len: <span class="kw">_ </span>} =&gt; <span class="macro">unimplemented!</span>(),
                 RenderCommand::InsertDebugMarker { color: <span class="kw">_</span>, len: <span class="kw">_ </span>} =&gt; <span class="macro">unimplemented!</span>(),
@@ -2664,10 +2664,10 @@ index format changes.
 
     state.flush_vertices();
     state.flush_binds(used_bind_groups, dynamic_offsets);
-    state.commands.push(ArcRenderCommand::MultiDrawIndirect {
+    state.commands.push(ArcRenderCommand::DrawIndirect {
         buffer,
         offset,
-        count: <span class="prelude-val">None</span>,
+        count: <span class="number">1</span>,
         indexed,
     });
     <span class="prelude-val">Ok</span>(())
@@ -2878,25 +2878,25 @@ index format changes.
                         )
                     };
                 }
-                Cmd::MultiDrawIndirect {
+                Cmd::DrawIndirect {
                     buffer,
                     offset,
-                    count: <span class="prelude-val">None</span>,
+                    count: <span class="number">1</span>,
                     indexed: <span class="bool-val">false</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }
-                Cmd::MultiDrawIndirect {
+                Cmd::DrawIndirect {
                     buffer,
                     offset,
-                    count: <span class="prelude-val">None</span>,
+                    count: <span class="number">1</span>,
                     indexed: <span class="bool-val">true</span>,
                 } =&gt; {
                     <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
                 }
-                Cmd::MultiDrawIndirect { .. } | Cmd::MultiDrawIndirectCount { .. } =&gt; {
+                Cmd::DrawIndirect { .. } | Cmd::MultiDrawIndirectCount { .. } =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"multi-draw-indirect"</span>))
                 }
                 Cmd::PushDebugGroup { .. } | Cmd::InsertDebugMarker { .. } | Cmd::PopDebugGroup =&gt; {
@@ -3504,10 +3504,10 @@ index format changes.
         buffer_id: id::BufferId,
         offset: BufferAddress,
     ) {
-        bundle.base.commands.push(RenderCommand::MultiDrawIndirect {
+        bundle.base.commands.push(RenderCommand::DrawIndirect {
             buffer_id,
             offset,
-            count: <span class="prelude-val">None</span>,
+            count: <span class="number">1</span>,
             indexed: <span class="bool-val">false</span>,
         });
     }
@@ -3517,10 +3517,10 @@ index format changes.
         buffer_id: id::BufferId,
         offset: BufferAddress,
     ) {
-        bundle.base.commands.push(RenderCommand::MultiDrawIndirect {
+        bundle.base.commands.push(RenderCommand::DrawIndirect {
             buffer_id,
             offset,
-            count: <span class="prelude-val">None</span>,
+            count: <span class="number">1</span>,
             indexed: <span class="bool-val">true</span>,
         });
     }

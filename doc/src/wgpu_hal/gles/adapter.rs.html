@@ -1283,6 +1283,7 @@
 <a href="#1282" id="1282">1282</a>
 <a href="#1283" id="1283">1283</a>
 <a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1657,6 +1658,8 @@
         } <span class="kw">else </span>{
             vertex_shader_storage_textures.min(fragment_shader_storage_textures)
         };
+        <span class="kw">let </span>indirect_execution =
+            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_multi_draw_indirect"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>downlevel_flags = wgt::DownlevelFlags::empty()
             | wgt::DownlevelFlags::NON_POWER_OF_TWO_MIPMAPPED_TEXTURES
@@ -1668,10 +1671,7 @@
             wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE,
             max_storage_block_size != <span class="number">0</span>,
         );
-        downlevel_flags.set(
-            wgt::DownlevelFlags::INDIRECT_EXECUTION,
-            supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">"GL_ARB_multi_draw_indirect"</span>),
-        );
+        downlevel_flags.set(wgt::DownlevelFlags::INDIRECT_EXECUTION, indirect_execution);
         downlevel_flags.set(wgt::DownlevelFlags::BASE_VERTEX, supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">2</span>)));
         downlevel_flags.set(
             wgt::DownlevelFlags::INDEPENDENT_BLEND,
@@ -1756,6 +1756,8 @@
             wgt::Features::SHADER_EARLY_DEPTH_TEST,
             supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">2</span>)) || extensions.contains(<span class="string">"GL_ARB_shader_image_load_store"</span>),
         );
+        <span class="comment">// We emulate MDI with a loop of draw calls.
+        </span>features.set(wgt::Features::MULTI_DRAW_INDIRECT, indirect_execution);
         <span class="kw">if </span>extensions.contains(<span class="string">"GL_ARB_timer_query"</span>) {
             features.set(wgt::Features::TIMESTAMP_QUERY, <span class="bool-val">true</span>);
             features.set(wgt::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS, <span class="bool-val">true</span>);
