@@ -2454,6 +2454,13 @@
 <a href="#2453" id="2453">2453</a>
 <a href="#2454" id="2454">2454</a>
 <a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -4015,6 +4022,10 @@
                 .is_some_and(|ext| ext.shader_zero_initialize_workgroup_memory == vk::TRUE),
             image_format_list: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_2
                 || phd_capabilities.supports_extension(khr::image_format_list::NAME),
+            maximum_samplers: phd_capabilities
+                .properties
+                .limits
+                .max_sampler_allocation_count,
         };
         <span class="kw">let </span>capabilities = <span class="kw">crate</span>::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),
@@ -4363,6 +4374,9 @@
             workarounds: <span class="self">self</span>.workarounds,
             render_passes: Mutex::new(Default::default()),
             framebuffers: Mutex::new(Default::default()),
+            sampler_cache: Mutex::new(<span class="kw">super</span>::sampler::SamplerCache::new(
+                <span class="self">self</span>.private_caps.maximum_samplers,
+            )),
             memory_allocations_counter: Default::default(),
         });
 

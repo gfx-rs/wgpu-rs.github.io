@@ -1455,6 +1455,10 @@
 <a href="#1454" id="1454">1454</a>
 <a href="#1455" id="1455">1455</a>
 <a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -1486,6 +1490,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">mod </span>conv;
 <span class="kw">mod </span>device;
 <span class="kw">mod </span>instance;
+<span class="kw">mod </span>sampler;
 
 <span class="kw">use </span>std::{
     borrow::Borrow,
@@ -1989,6 +1994,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     robust_image_access2: bool,
     zero_initialize_workgroup_memory: bool,
     image_format_list: bool,
+    maximum_samplers: u32,
 }
 
 <span class="macro">bitflags::bitflags!</span>(
@@ -2098,6 +2104,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     features: wgt::Features,
     render_passes: Mutex&lt;rustc_hash::FxHashMap&lt;RenderPassKey, vk::RenderPass&gt;&gt;,
     framebuffers: Mutex&lt;rustc_hash::FxHashMap&lt;FramebufferKey, vk::Framebuffer&gt;&gt;,
+    sampler_cache: Mutex&lt;sampler::SamplerCache&gt;,
     memory_allocations_counter: InternalCounter,
 }
 
@@ -2285,6 +2292,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Sampler {
     raw: vk::Sampler,
+    create_info: vk::SamplerCreateInfo&lt;<span class="lifetime">'static</span>&gt;,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::DynSampler <span class="kw">for </span>Sampler {}

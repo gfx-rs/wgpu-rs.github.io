@@ -2685,6 +2685,12 @@
 <a href="#2684" id="2684">2684</a>
 <a href="#2685" id="2685">2685</a>
 <a href="#2686" id="2686">2686</a>
+<a href="#2687" id="2687">2687</a>
+<a href="#2688" id="2688">2688</a>
+<a href="#2689" id="2689">2689</a>
+<a href="#2690" id="2690">2690</a>
+<a href="#2691" id="2691">2691</a>
+<a href="#2692" id="2692">2692</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3991,7 +3997,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SamplerDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Sampler, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SamplerCreateInfo::default()
+        <span class="kw">let </span><span class="kw-2">mut </span>create_info = vk::SamplerCreateInfo::default()
             .flags(vk::SamplerCreateFlags::empty())
             .mag_filter(conv::map_filter_mode(desc.mag_filter))
             .min_filter(conv::map_filter_mode(desc.min_filter))
@@ -4003,7 +4009,7 @@
             .max_lod(desc.lod_clamp.end);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(fun) = desc.compare {
-            vk_info = vk_info
+            create_info = create_info
                 .compare_enable(<span class="bool-val">true</span>)
                 .compare_op(conv::map_comparison(fun));
         }
@@ -4011,32 +4017,38 @@
         <span class="kw">if </span>desc.anisotropy_clamp != <span class="number">1 </span>{
             <span class="comment">// We only enable anisotropy if it is supported, and wgpu-hal interface guarantees
             // the clamp is in the range [1, 16] which is always supported if anisotropy is.
-            </span>vk_info = vk_info
+            </span>create_info = create_info
                 .anisotropy_enable(<span class="bool-val">true</span>)
                 .max_anisotropy(desc.anisotropy_clamp <span class="kw">as </span>f32);
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(color) = desc.border_color {
-            vk_info = vk_info.border_color(conv::map_border_color(color));
+            create_info = create_info.border_color(conv::map_border_color(color));
         }
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.shared
-                .raw
-                .create_sampler(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
-                .map_err(<span class="kw">super</span>::map_host_device_oom_and_ioca_err)<span class="question-mark">?
-        </span>};
+        <span class="kw">let </span>raw = <span class="self">self
+            </span>.shared
+            .sampler_cache
+            .lock()
+            .create_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, create_info)<span class="question-mark">?</span>;
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
+        <span class="comment">// Note: Cached samplers will just continually overwrite the label
+        //
+        // https://github.com/gfx-rs/wgpu/issues/6867
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.set_object_name(raw, label) };
         }
 
         <span class="self">self</span>.counters.samplers.add(<span class="number">1</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Sampler { raw })
+        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Sampler { raw, create_info })
     }
     <span class="kw">unsafe fn </span>destroy_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler: <span class="kw">super</span>::Sampler) {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.raw.destroy_sampler(sampler.raw, <span class="prelude-val">None</span>) };
+        <span class="self">self</span>.shared.sampler_cache.lock().destroy_sampler(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
+            sampler.create_info,
+            sampler.raw,
+        );
 
         <span class="self">self</span>.counters.samplers.sub(<span class="number">1</span>);
     }
