@@ -1315,9 +1315,6 @@
 <a href="#1314" id="1314">1314</a>
 <a href="#1315" id="1315">1315</a>
 <a href="#1316" id="1316">1316</a>
-<a href="#1317" id="1317">1317</a>
-<a href="#1318" id="1318">1318</a>
-<a href="#1319" id="1319">1319</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{device::bgl, resource::InvalidResourceError, FastHashMap, FastHashSet};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{collections::hash_map::Entry, fmt};
@@ -2615,7 +2612,7 @@
     attachment_formats: <span class="kw">impl </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;wgt::TextureFormat&gt;&gt;,
     limit: u32,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), u32&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>total_bytes_per_sample = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>total_bytes_per_sample: u32 = <span class="number">0</span>;
     <span class="kw">for </span>format <span class="kw">in </span>attachment_formats {
         <span class="kw">let </span><span class="prelude-val">Some</span>(format) = format <span class="kw">else </span>{
             <span class="kw">continue</span>;
@@ -2624,10 +2621,7 @@
         <span class="kw">let </span>byte_cost = format.target_pixel_byte_cost().unwrap();
         <span class="kw">let </span>alignment = format.target_component_alignment().unwrap();
 
-        <span class="kw">let </span>rem = total_bytes_per_sample % alignment;
-        <span class="kw">if </span>rem != <span class="number">0 </span>{
-            total_bytes_per_sample += alignment - rem;
-        }
+        total_bytes_per_sample = total_bytes_per_sample.next_multiple_of(alignment);
         total_bytes_per_sample += byte_cost;
     }
 

@@ -7961,6 +7961,15 @@
 <a href="#7960" id="7960">7960</a>
 <a href="#7961" id="7961">7961</a>
 <a href="#7962" id="7962">7962</a>
+<a href="#7963" id="7963">7963</a>
+<a href="#7964" id="7964">7964</a>
+<a href="#7965" id="7965">7965</a>
+<a href="#7966" id="7966">7966</a>
+<a href="#7967" id="7967">7967</a>
+<a href="#7968" id="7968">7968</a>
+<a href="#7969" id="7969">7969</a>
+<a href="#7970" id="7970">7970</a>
+<a href="#7971" id="7971">7971</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
@@ -9155,7 +9164,10 @@
     <span class="doccomment">/// The maximum allowed number of color attachments.
     </span><span class="kw">pub </span>max_color_attachments: u32,
     <span class="doccomment">/// The maximum number of bytes necessary to hold one sample (pixel or subpixel) of render
-    /// pipeline output data, across all color attachments.
+    /// pipeline output data, across all color attachments as described by [`TextureFormat::target_pixel_byte_cost`]
+    /// and [`TextureFormat::target_component_alignment`]. Defaults to 32. Higher is "better".
+    ///
+    /// ⚠️ `Rgba8Unorm`/`Rgba8Snorm`/`Bgra8Unorm`/`Bgra8Snorm` are deceptively 8 bytes per sample. ⚠️
     </span><span class="kw">pub </span>max_color_attachment_bytes_per_sample: u32,
     <span class="doccomment">/// Maximum number of bytes used for workgroup memory in a compute entry point. Defaults to
     /// 16384. Higher is "better".
@@ -11738,6 +11750,9 @@
         }
     }
 
+    <span class="doccomment">/// The largest number that can be returned by [`Self::target_pixel_byte_cost`].
+    </span><span class="kw">pub const </span>MAX_TARGET_PIXEL_BYTE_COST: u32 = <span class="number">16</span>;
+
     <span class="doccomment">/// The number of bytes occupied per pixel in a color attachment
     /// &lt;https://gpuweb.github.io/gpuweb/#render-target-pixel-byte-cost&gt;
     </span><span class="attr">#[must_use]
@@ -11763,12 +11778,14 @@
             | <span class="self">Self</span>::R32Uint
             | <span class="self">Self</span>::R32Sint
             | <span class="self">Self</span>::R32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">4</span>),
-            <span class="self">Self</span>::Rgba8Unorm
+            <span class="comment">// Despite being 4 bytes per pixel, these are 8 bytes per pixel in the table
+            </span><span class="self">Self</span>::Rgba8Unorm
             | <span class="self">Self</span>::Rgba8UnormSrgb
             | <span class="self">Self</span>::Rgba8Snorm
             | <span class="self">Self</span>::Bgra8Unorm
             | <span class="self">Self</span>::Bgra8UnormSrgb
-            | <span class="self">Self</span>::Rgba16Uint
+            <span class="comment">// ---
+            </span>| <span class="self">Self</span>::Rgba16Uint
             | <span class="self">Self</span>::Rgba16Sint
             | <span class="self">Self</span>::Rgba16Unorm
             | <span class="self">Self</span>::Rgba16Snorm
@@ -11780,7 +11797,8 @@
             | <span class="self">Self</span>::Rgb10a2Unorm
             | <span class="self">Self</span>::Rg11b10Ufloat =&gt; <span class="prelude-val">Some</span>(<span class="number">8</span>),
             <span class="self">Self</span>::Rgba32Uint | <span class="self">Self</span>::Rgba32Sint | <span class="self">Self</span>::Rgba32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">16</span>),
-            <span class="self">Self</span>::Stencil8
+            <span class="comment">// ⚠️ If you add formats with larger sizes, make sure you change `MAX_TARGET_PIXEL_BYTE_COST`` ⚠️
+            </span><span class="self">Self</span>::Stencil8
             | <span class="self">Self</span>::Depth16Unorm
             | <span class="self">Self</span>::Depth24Plus
             | <span class="self">Self</span>::Depth24PlusStencil8
