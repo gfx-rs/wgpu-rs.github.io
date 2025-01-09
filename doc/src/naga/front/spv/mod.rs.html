@@ -6072,6 +6072,10 @@
 <a href="#6071" id="6071">6071</a>
 <a href="#6072" id="6072">6072</a>
 <a href="#6073" id="6073">6073</a>
+<a href="#6074" id="6074">6074</a>
+<a href="#6075" id="6075">6075</a>
+<a href="#6076" id="6076">6076</a>
+<a href="#6077" id="6077">6077</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
@@ -6141,6 +6145,7 @@ This value then gets used instead of `OpLoad` result later on.
     spirv::Capability::Int64,
     spirv::Capability::Int64Atomics,
     spirv::Capability::Float16,
+    spirv::Capability::AtomicFloat32AddEXT,
     spirv::Capability::Float64,
     spirv::Capability::Geometry,
     spirv::Capability::MultiView,
@@ -6152,6 +6157,7 @@ This value then gets used instead of `OpLoad` result later on.
     <span class="string">"SPV_KHR_storage_buffer_storage_class"</span>,
     <span class="string">"SPV_KHR_vulkan_memory_model"</span>,
     <span class="string">"SPV_KHR_multiview"</span>,
+    <span class="string">"SPV_EXT_shader_atomic_float_add"</span>,
 ];
 <span class="kw">pub const </span>SUPPORTED_EXT_SETS: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str] = <span class="kw-2">&amp;</span>[<span class="string">"GLSL.std.450"</span>];
 
@@ -10413,7 +10419,8 @@ This value then gets used instead of `OpLoad` result later on.
                 | Op::AtomicUMax
                 | Op::AtomicAnd
                 | Op::AtomicOr
-                | Op::AtomicXor =&gt; <span class="self">self</span>.parse_atomic_expr_with_value(
+                | Op::AtomicXor
+                | Op::AtomicFAddEXT =&gt; <span class="self">self</span>.parse_atomic_expr_with_value(
                     inst,
                     <span class="kw-2">&amp;mut </span>emitter,
                     ctx,
@@ -10422,7 +10429,7 @@ This value then gets used instead of `OpLoad` result later on.
                     body_idx,
                     <span class="kw">match </span>inst.op {
                         Op::AtomicExchange =&gt; <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">None </span>},
-                        Op::AtomicIAdd =&gt; <span class="kw">crate</span>::AtomicFunction::Add,
+                        Op::AtomicIAdd | Op::AtomicFAddEXT =&gt; <span class="kw">crate</span>::AtomicFunction::Add,
                         Op::AtomicISub =&gt; <span class="kw">crate</span>::AtomicFunction::Subtract,
                         Op::AtomicSMin =&gt; <span class="kw">crate</span>::AtomicFunction::Min,
                         Op::AtomicUMin =&gt; <span class="kw">crate</span>::AtomicFunction::Min,
@@ -10430,7 +10437,8 @@ This value then gets used instead of `OpLoad` result later on.
                         Op::AtomicUMax =&gt; <span class="kw">crate</span>::AtomicFunction::Max,
                         Op::AtomicAnd =&gt; <span class="kw">crate</span>::AtomicFunction::And,
                         Op::AtomicOr =&gt; <span class="kw">crate</span>::AtomicFunction::InclusiveOr,
-                        <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::AtomicFunction::ExclusiveOr,
+                        Op::AtomicXor =&gt; <span class="kw">crate</span>::AtomicFunction::ExclusiveOr,
+                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                     },
                 )<span class="question-mark">?</span>,
 

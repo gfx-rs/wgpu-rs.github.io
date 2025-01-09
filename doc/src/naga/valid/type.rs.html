@@ -744,6 +744,12 @@
 <a href="#743" id="743">743</a>
 <a href="#744" id="744">744</a>
 <a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
 
@@ -1116,35 +1122,41 @@
                     Alignment::from(rows) * Alignment::from_width(scalar.width),
                 )
             }
-            Ti::Atomic(<span class="kw">crate</span>::Scalar { kind, width }) =&gt; {
-                <span class="kw">match </span>kind {
-                    <span class="kw">crate</span>::ScalarKind::Bool
-                    | <span class="kw">crate</span>::ScalarKind::Float
-                    | <span class="kw">crate</span>::ScalarKind::AbstractInt
-                    | <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(kind, width))
-                    }
-                    <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
-                        <span class="kw">if </span>width == <span class="number">8 </span>{
-                            <span class="kw">if </span>!<span class="self">self</span>.capabilities.intersects(
+            Ti::Atomic(scalar) =&gt; {
+                <span class="kw">match </span>scalar {
+                    <span class="kw">crate</span>::Scalar {
+                        kind: <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint,
+                        width: <span class="kw">_</span>,
+                    } =&gt; {
+                        <span class="kw">if </span>scalar.width == <span class="number">8
+                            </span>&amp;&amp; !<span class="self">self</span>.capabilities.intersects(
                                 Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
                                     | Capabilities::SHADER_INT64_ATOMIC_MIN_MAX,
-                            ) {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MissingCapability(
-                                    Capabilities::SHADER_INT64_ATOMIC_ALL_OPS,
-                                ));
-                            }
-                        } <span class="kw">else if </span>width != <span class="number">4 </span>{
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(kind, width));
+                            )
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MissingCapability(
+                                Capabilities::SHADER_INT64_ATOMIC_ALL_OPS,
+                            ));
                         }
                     }
+                    <span class="kw">crate</span>::Scalar::F32 =&gt; {
+                        <span class="kw">if </span>!<span class="self">self
+                            </span>.capabilities
+                            .contains(Capabilities::SHADER_FLOAT32_ATOMIC)
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MissingCapability(
+                                Capabilities::SHADER_FLOAT32_ATOMIC,
+                            ));
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::InvalidAtomicWidth(scalar.kind, scalar.width)),
                 };
                 TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::HOST_SHAREABLE
                         | TypeFlags::CREATION_RESOLVED,
-                    Alignment::from_width(width),
+                    Alignment::from_width(scalar.width),
                 )
             }
             Ti::Pointer { base, space } =&gt; {

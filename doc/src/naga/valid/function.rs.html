@@ -1488,6 +1488,47 @@
 <a href="#1487" id="1487">1487</a>
 <a href="#1488" id="1488">1488</a>
 <a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleSet};
 
@@ -1531,10 +1572,12 @@
 </span><span class="kw">pub enum </span>AtomicError {
     <span class="attr">#[error(<span class="string">"Pointer {0:?} to atomic is invalid."</span>)]
     </span>InvalidPointer(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
-    <span class="attr">#[error(<span class="string">"Address space {0:?} does not support 64bit atomics."</span>)]
+    <span class="attr">#[error(<span class="string">"Address space {0:?} is not supported."</span>)]
     </span>InvalidAddressSpace(<span class="kw">crate</span>::AddressSpace),
     <span class="attr">#[error(<span class="string">"Operand {0:?} has invalid type."</span>)]
     </span>InvalidOperand(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
+    <span class="attr">#[error(<span class="string">"Operator {0:?} is not supported."</span>)]
+    </span>InvalidOperator(<span class="kw">crate</span>::AtomicFunction),
     <span class="attr">#[error(<span class="string">"Result expression {0:?} is not an `AtomicResult` expression"</span>)]
     </span>InvalidResultExpression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Result expression {0:?} is marked as an `exchange`"</span>)]
@@ -1891,49 +1934,88 @@
                 .into_other());
         }
 
-        <span class="comment">// Check for the special restrictions on 64-bit atomic operations.
-        //
-        // We don't need to consider other widths here: this function has already checked
-        // that `pointer`'s type is an `Atomic`, and `validate_type` has already checked
-        // that that `Atomic` type has a permitted scalar width.
-        </span><span class="kw">if </span>pointer_scalar.width == <span class="number">8 </span>{
-            <span class="comment">// `Capabilities::SHADER_INT64_ATOMIC_ALL_OPS` enables all sorts of 64-bit
-            // atomic operations.
-            </span><span class="kw">if </span><span class="self">self
-                </span>.capabilities
-                .contains(<span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS)
-            {
-                <span class="comment">// okay
-            </span>} <span class="kw">else </span>{
-                <span class="comment">// `Capabilities::SHADER_INT64_ATOMIC_MIN_MAX` allows `Min` and
-                // `Max` on operations in `Storage`, without a return value.
-                </span><span class="kw">if </span><span class="macro">matches!</span>(
-                    <span class="kw-2">*</span>fun,
-                    <span class="kw">crate</span>::AtomicFunction::Min | <span class="kw">crate</span>::AtomicFunction::Max
-                ) &amp;&amp; <span class="macro">matches!</span>(pointer_space, <span class="kw">crate</span>::AddressSpace::Storage { .. })
-                    &amp;&amp; result.is_none()
+        <span class="kw">match </span>pointer_scalar {
+            <span class="comment">// Check for the special restrictions on 64-bit atomic operations.
+            //
+            // We don't need to consider other widths here: this function has already checked
+            // that `pointer`'s type is an `Atomic`, and `validate_type` has already checked
+            // that `Atomic` type has a permitted scalar width.
+            </span><span class="kw">crate</span>::Scalar::I64 | <span class="kw">crate</span>::Scalar::U64 =&gt; {
+                <span class="comment">// `Capabilities::SHADER_INT64_ATOMIC_ALL_OPS` enables all sorts of 64-bit
+                // atomic operations.
+                </span><span class="kw">if </span><span class="self">self
+                    </span>.capabilities
+                    .contains(<span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS)
                 {
-                    <span class="kw">if </span>!<span class="self">self
-                        </span>.capabilities
-                        .contains(<span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX)
+                    <span class="comment">// okay
+                </span>} <span class="kw">else </span>{
+                    <span class="comment">// `Capabilities::SHADER_INT64_ATOMIC_MIN_MAX` allows `Min` and
+                    // `Max` on operations in `Storage`, without a return value.
+                    </span><span class="kw">if </span><span class="macro">matches!</span>(
+                        <span class="kw-2">*</span>fun,
+                        <span class="kw">crate</span>::AtomicFunction::Min | <span class="kw">crate</span>::AtomicFunction::Max
+                    ) &amp;&amp; <span class="macro">matches!</span>(pointer_space, <span class="kw">crate</span>::AddressSpace::Storage { .. })
+                        &amp;&amp; result.is_none()
                     {
-                        <span class="macro">log::error!</span>(<span class="string">"Int64 min-max atomic operations are not supported"</span>);
+                        <span class="kw">if </span>!<span class="self">self
+                            </span>.capabilities
+                            .contains(<span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX)
+                        {
+                            <span class="macro">log::error!</span>(<span class="string">"Int64 min-max atomic operations are not supported"</span>);
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::MissingCapability(
+                                <span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX,
+                            )
+                            .with_span_handle(value, context.expressions)
+                            .into_other());
+                        }
+                    } <span class="kw">else </span>{
+                        <span class="comment">// Otherwise, we require the full 64-bit atomic capability.
+                        </span><span class="macro">log::error!</span>(<span class="string">"Int64 atomic operations are not supported"</span>);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::MissingCapability(
-                            <span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX,
+                            <span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS,
                         )
                         .with_span_handle(value, context.expressions)
                         .into_other());
                     }
-                } <span class="kw">else </span>{
-                    <span class="comment">// Otherwise, we require the full 64-bit atomic capability.
-                    </span><span class="macro">log::error!</span>(<span class="string">"Int64 atomic operations are not supported"</span>);
+                }
+            }
+            <span class="comment">// Check for the special restrictions on 32-bit floating-point atomic operations.
+            </span><span class="kw">crate</span>::Scalar::F32 =&gt; {
+                <span class="comment">// `Capabilities::SHADER_FLOAT32_ATOMIC` allows 32-bit floating-point
+                // atomic operations `Add`, `Subtract`, and `Exchange`
+                // in the `Storage` address space.
+                </span><span class="kw">if </span>!<span class="self">self
+                    </span>.capabilities
+                    .contains(<span class="kw">super</span>::Capabilities::SHADER_FLOAT32_ATOMIC)
+                {
+                    <span class="macro">log::error!</span>(<span class="string">"Float32 atomic operations are not supported"</span>);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::MissingCapability(
-                        <span class="kw">super</span>::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS,
+                        <span class="kw">super</span>::Capabilities::SHADER_FLOAT32_ATOMIC,
                     )
                     .with_span_handle(value, context.expressions)
                     .into_other());
                 }
+                <span class="kw">if </span>!<span class="macro">matches!</span>(
+                    <span class="kw-2">*</span>fun,
+                    <span class="kw">crate</span>::AtomicFunction::Add
+                        | <span class="kw">crate</span>::AtomicFunction::Subtract
+                        | <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">None </span>}
+                ) {
+                    <span class="macro">log::error!</span>(<span class="string">"Float32 atomic operation {:?} is not supported"</span>, fun);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidOperator(<span class="kw-2">*</span>fun)
+                        .with_span_handle(value, context.expressions)
+                        .into_other());
+                }
+                <span class="kw">if </span>!<span class="macro">matches!</span>(pointer_space, <span class="kw">crate</span>::AddressSpace::Storage { .. }) {
+                    <span class="macro">log::error!</span>(
+                        <span class="string">"Float32 atomic operations are only supported in the Storage address space"
+                    </span>);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(AtomicError::InvalidAddressSpace(pointer_space)
+                        .with_span_handle(value, context.expressions)
+                        .into_other());
+                }
             }
+            <span class="kw">_ </span>=&gt; {}
         }
 
         <span class="comment">// The result expression must be appropriate to the operation.

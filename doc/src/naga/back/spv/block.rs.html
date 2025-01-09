@@ -2993,6 +2993,54 @@
 <a href="#2992" id="2992">2992</a>
 <a href="#2993" id="2993">2993</a>
 <a href="#2994" id="2994">2994</a>
+<a href="#2995" id="2995">2995</a>
+<a href="#2996" id="2996">2996</a>
+<a href="#2997" id="2997">2997</a>
+<a href="#2998" id="2998">2998</a>
+<a href="#2999" id="2999">2999</a>
+<a href="#3000" id="3000">3000</a>
+<a href="#3001" id="3001">3001</a>
+<a href="#3002" id="3002">3002</a>
+<a href="#3003" id="3003">3003</a>
+<a href="#3004" id="3004">3004</a>
+<a href="#3005" id="3005">3005</a>
+<a href="#3006" id="3006">3006</a>
+<a href="#3007" id="3007">3007</a>
+<a href="#3008" id="3008">3008</a>
+<a href="#3009" id="3009">3009</a>
+<a href="#3010" id="3010">3010</a>
+<a href="#3011" id="3011">3011</a>
+<a href="#3012" id="3012">3012</a>
+<a href="#3013" id="3013">3013</a>
+<a href="#3014" id="3014">3014</a>
+<a href="#3015" id="3015">3015</a>
+<a href="#3016" id="3016">3016</a>
+<a href="#3017" id="3017">3017</a>
+<a href="#3018" id="3018">3018</a>
+<a href="#3019" id="3019">3019</a>
+<a href="#3020" id="3020">3020</a>
+<a href="#3021" id="3021">3021</a>
+<a href="#3022" id="3022">3022</a>
+<a href="#3023" id="3023">3023</a>
+<a href="#3024" id="3024">3024</a>
+<a href="#3025" id="3025">3025</a>
+<a href="#3026" id="3026">3026</a>
+<a href="#3027" id="3027">3027</a>
+<a href="#3028" id="3028">3028</a>
+<a href="#3029" id="3029">3029</a>
+<a href="#3030" id="3030">3030</a>
+<a href="#3031" id="3031">3031</a>
+<a href="#3032" id="3032">3032</a>
+<a href="#3033" id="3033">3033</a>
+<a href="#3034" id="3034">3034</a>
+<a href="#3035" id="3035">3035</a>
+<a href="#3036" id="3036">3036</a>
+<a href="#3037" id="3037">3037</a>
+<a href="#3038" id="3038">3038</a>
+<a href="#3039" id="3039">3039</a>
+<a href="#3040" id="3040">3040</a>
+<a href="#3041" id="3041">3041</a>
+<a href="#3042" id="3042">3042</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -5725,62 +5773,115 @@ Implementations for `BlockContext` methods.
                     <span class="kw">let </span>value_id = <span class="self">self</span>.cached[value];
                     <span class="kw">let </span>value_inner = <span class="self">self</span>.fun_info[value].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
 
+                    <span class="kw">let </span><span class="kw">crate</span>::TypeInner::Scalar(scalar) = <span class="kw-2">*</span>value_inner <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FeatureNotImplemented(
+                            <span class="string">"Atomics with non-scalar values"</span>,
+                        ));
+                    };
+
                     <span class="kw">let </span>instruction = <span class="kw">match </span><span class="kw-2">*</span>fun {
-                        <span class="kw">crate</span>::AtomicFunction::Add =&gt; Instruction::atomic_binary(
-                            spirv::Op::AtomicIAdd,
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                            value_id,
-                        ),
-                        <span class="kw">crate</span>::AtomicFunction::Subtract =&gt; Instruction::atomic_binary(
-                            spirv::Op::AtomicISub,
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                            value_id,
-                        ),
-                        <span class="kw">crate</span>::AtomicFunction::And =&gt; Instruction::atomic_binary(
-                            spirv::Op::AtomicAnd,
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                            value_id,
-                        ),
-                        <span class="kw">crate</span>::AtomicFunction::InclusiveOr =&gt; Instruction::atomic_binary(
-                            spirv::Op::AtomicOr,
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                            value_id,
-                        ),
-                        <span class="kw">crate</span>::AtomicFunction::ExclusiveOr =&gt; Instruction::atomic_binary(
-                            spirv::Op::AtomicXor,
-                            result_type_id,
-                            id,
-                            pointer_id,
-                            scope_constant_id,
-                            semantics_id,
-                            value_id,
-                        ),
+                        <span class="kw">crate</span>::AtomicFunction::Add =&gt; {
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    spirv::Op::AtomicIAdd
+                                }
+                                <span class="kw">crate</span>::ScalarKind::Float =&gt; spirv::Op::AtomicFAddEXT,
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
+                            Instruction::atomic_binary(
+                                spirv_op,
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                scope_constant_id,
+                                semantics_id,
+                                value_id,
+                            )
+                        }
+                        <span class="kw">crate</span>::AtomicFunction::Subtract =&gt; {
+                            <span class="kw">let </span>(spirv_op, value_id) = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    (spirv::Op::AtomicISub, value_id)
+                                }
+                                <span class="kw">crate</span>::ScalarKind::Float =&gt; {
+                                    <span class="comment">// HACK: SPIR-V doesn't have a atomic subtraction,
+                                    // so we add the negated value instead.
+                                    </span><span class="kw">let </span>neg_result_id = <span class="self">self</span>.gen_id();
+                                    block.body.push(Instruction::unary(
+                                        spirv::Op::FNegate,
+                                        result_type_id,
+                                        neg_result_id,
+                                        value_id,
+                                    ));
+                                    (spirv::Op::AtomicFAddEXT, neg_result_id)
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
+                            Instruction::atomic_binary(
+                                spirv_op,
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                scope_constant_id,
+                                semantics_id,
+                                value_id,
+                            )
+                        }
+                        <span class="kw">crate</span>::AtomicFunction::And =&gt; {
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    spirv::Op::AtomicAnd
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
+                            Instruction::atomic_binary(
+                                spirv_op,
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                scope_constant_id,
+                                semantics_id,
+                                value_id,
+                            )
+                        }
+                        <span class="kw">crate</span>::AtomicFunction::InclusiveOr =&gt; {
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    spirv::Op::AtomicOr
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
+                            Instruction::atomic_binary(
+                                spirv_op,
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                scope_constant_id,
+                                semantics_id,
+                                value_id,
+                            )
+                        }
+                        <span class="kw">crate</span>::AtomicFunction::ExclusiveOr =&gt; {
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    spirv::Op::AtomicXor
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
+                            Instruction::atomic_binary(
+                                spirv_op,
+                                result_type_id,
+                                id,
+                                pointer_id,
+                                scope_constant_id,
+                                semantics_id,
+                                value_id,
+                            )
+                        }
                         <span class="kw">crate</span>::AtomicFunction::Min =&gt; {
-                            <span class="kw">let </span>spirv_op = <span class="kw">match </span><span class="kw-2">*</span>value_inner {
-                                <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
-                                    kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; spirv::Op::AtomicSMin,
-                                <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
-                                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; spirv::Op::AtomicUMin,
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint =&gt; spirv::Op::AtomicSMin,
+                                <span class="kw">crate</span>::ScalarKind::Uint =&gt; spirv::Op::AtomicUMin,
                                 <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                             };
                             Instruction::atomic_binary(
@@ -5794,15 +5895,9 @@ Implementations for `BlockContext` methods.
                             )
                         }
                         <span class="kw">crate</span>::AtomicFunction::Max =&gt; {
-                            <span class="kw">let </span>spirv_op = <span class="kw">match </span><span class="kw-2">*</span>value_inner {
-                                <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
-                                    kind: <span class="kw">crate</span>::ScalarKind::Sint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; spirv::Op::AtomicSMax,
-                                <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
-                                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; spirv::Op::AtomicUMax,
+                            <span class="kw">let </span>spirv_op = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint =&gt; spirv::Op::AtomicSMax,
+                                <span class="kw">crate</span>::ScalarKind::Uint =&gt; spirv::Op::AtomicUMax,
                                 <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                             };
                             Instruction::atomic_binary(
@@ -5827,20 +5922,21 @@ Implementations for `BlockContext` methods.
                             )
                         }
                         <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } =&gt; {
-                            <span class="kw">let </span>scalar_type_id = <span class="kw">match </span><span class="kw-2">*</span>value_inner {
-                                <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
-                                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                                        NumericType::Scalar(scalar),
-                                    )))
-                                }
-                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                            };
+                            <span class="kw">let </span>scalar_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
+                                LocalType::Numeric(NumericType::Scalar(scalar)),
+                            ));
                             <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
                                 LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL)),
                             ));
 
                             <span class="kw">let </span>cas_result_id = <span class="self">self</span>.gen_id();
                             <span class="kw">let </span>equality_result_id = <span class="self">self</span>.gen_id();
+                            <span class="kw">let </span>equality_operator = <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
+                                    spirv::Op::IEqual
+                                }
+                                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                            };
                             <span class="kw">let </span><span class="kw-2">mut </span>cas_instr = Instruction::new(spirv::Op::AtomicCompareExchange);
                             cas_instr.set_type(scalar_type_id);
                             cas_instr.set_result(cas_result_id);
@@ -5852,7 +5948,7 @@ Implementations for `BlockContext` methods.
                             cas_instr.add_operand(<span class="self">self</span>.cached[cmp]);
                             block.body.push(cas_instr);
                             block.body.push(Instruction::binary(
-                                spirv::Op::IEqual,
+                                equality_operator,
                                 bool_type_id,
                                 equality_result_id,
                                 cas_result_id,

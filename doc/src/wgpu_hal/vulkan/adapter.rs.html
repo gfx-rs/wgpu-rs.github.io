@@ -2435,6 +2435,45 @@
 <a href="#2434" id="2434">2434</a>
 <a href="#2435" id="2435">2435</a>
 <a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a>
+<a href="#2470" id="2470">2470</a>
+<a href="#2471" id="2471">2471</a>
+<a href="#2472" id="2472">2472</a>
+<a href="#2473" id="2473">2473</a>
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
@@ -2546,6 +2585,9 @@
     <span class="doccomment">/// Features provided by `VK_KHR_shader_atomic_int64`, promoted to Vulkan 1.2.
     </span>shader_atomic_int64: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderAtomicInt64Features&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
+    <span class="doccomment">/// Features provided by `VK_EXT_shader_atomic_float`.
+    </span>shader_atomic_float: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT&lt;<span class="lifetime">'static</span>&gt;&gt;,
+
     <span class="doccomment">/// Features provided by `VK_EXT_subgroup_size_control`, promoted to Vulkan 1.3.
     </span>subgroup_size_control: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceSubgroupSizeControlFeatures&lt;<span class="lifetime">'static</span>&gt;&gt;,
 }
@@ -2592,6 +2634,9 @@
             info = info.push_next(feature);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_atomic_int64 {
+            info = info.push_next(feature);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_atomic_float {
             info = info.push_next(feature);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.subgroup_size_control {
@@ -2875,6 +2920,16 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
+            shader_atomic_float: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>ext::shader_atomic_float::NAME) {
+                <span class="kw">let </span>needed = requested_features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC);
+                <span class="prelude-val">Some</span>(
+                    vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT::default()
+                        .shader_buffer_float32_atomics(needed)
+                        .shader_buffer_float32_atomic_add(needed),
+                )
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>},
             subgroup_size_control: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_3
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>ext::subgroup_size_control::NAME)
             {
@@ -3016,6 +3071,14 @@
                 F::SHADER_INT64_ATOMIC_ALL_OPS | F::SHADER_INT64_ATOMIC_MIN_MAX,
                 shader_atomic_int64.shader_buffer_int64_atomics != <span class="number">0
                     </span>&amp;&amp; shader_atomic_int64.shader_shared_int64_atomics != <span class="number">0</span>,
+            );
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_atomic_float) = <span class="self">self</span>.shader_atomic_float {
+            features.set(
+                F::SHADER_FLOAT32_ATOMIC,
+                shader_atomic_float.shader_buffer_float32_atomics != <span class="number">0
+                    </span>&amp;&amp; shader_atomic_float.shader_buffer_float32_atomic_add != <span class="number">0</span>,
             );
         }
 
@@ -3431,6 +3494,11 @@
             extensions.push(khr::shader_atomic_int64::NAME);
         }
 
+        <span class="comment">// Require `VK_EXT_shader_atomic_float` if the associated feature was requested
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC) {
+            extensions.push(ext::shader_atomic_float::NAME);
+        }
+
         <span class="comment">// Require VK_GOOGLE_display_timing if the associated feature was requested
         </span><span class="kw">if </span>requested_features.contains(wgt::Features::VULKAN_GOOGLE_DISPLAY_TIMING) {
             extensions.push(google::display_timing::NAME);
@@ -3726,6 +3794,12 @@
                 features2 = features2.push_next(next);
             }
 
+            <span class="kw">if </span>capabilities.supports_extension(ext::shader_atomic_float::NAME) {
+                <span class="kw">let </span>next = features
+                    .shader_atomic_float
+                    .insert(vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT::default());
+                features2 = features2.push_next(next);
+            }
             <span class="kw">if </span>capabilities.supports_extension(ext::image_robustness::NAME) {
                 <span class="kw">let </span>next = features
                     .image_robustness
@@ -4219,6 +4293,10 @@
                     | wgt::Features::SHADER_INT64_ATOMIC_MIN_MAX,
             ) {
                 capabilities.push(spv::Capability::Int64Atomics);
+            }
+
+            <span class="kw">if </span>features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC) {
+                capabilities.push(spv::Capability::AtomicFloat32AddEXT);
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>flags = spv::WriterFlags::empty();
