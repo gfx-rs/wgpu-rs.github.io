@@ -84,15 +84,31 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `requires …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`LanguageExtension`] API.
 
-/// A language extension not guaranteed to be present in all environments.
+</span><span class="kw">use </span>strum::VariantArray;
+
+<span class="doccomment">/// A language extension recognized by Naga, but not guaranteed to be present in all environments.
 ///
 /// WGSL spec.: &lt;https://www.w3.org/TR/WGSL/#language-extensions-sec&gt;
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>LanguageExtension {
+</span><span class="kw">pub enum </span>LanguageExtension {
     <span class="attr">#[allow(unused)]
     </span>Implemented(ImplementedLanguageExtension),
     Unimplemented(UnimplementedLanguageExtension),
@@ -127,7 +143,7 @@
     <span class="doccomment">/// Maps this [`LanguageExtension`] into the sentinel word associated with it in WGSL.
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Implemented(kind) =&gt; <span class="kw">match </span>kind {},
+            <span class="self">Self</span>::Implemented(kind) =&gt; kind.to_ident(),
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
                 UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures =&gt; {
                     <span class="self">Self</span>::READONLY_AND_READWRITE_STORAGE_TEXTURES
@@ -147,12 +163,24 @@
 }
 
 <span class="doccomment">/// A variant of [`LanguageExtension::Implemented`].
-</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ImplementedLanguageExtension {}
+</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, VariantArray)]
+</span><span class="kw">pub enum </span>ImplementedLanguageExtension {}
+
+<span class="kw">impl </span>ImplementedLanguageExtension {
+    <span class="doccomment">/// Returns slice of all variants of [`ImplementedLanguageExtension`].
+    </span><span class="kw">pub const fn </span>all() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[<span class="self">Self</span>] {
+        <span class="self">Self</span>::VARIANTS
+    }
+
+    <span class="doccomment">/// Maps this [`ImplementedLanguageExtension`] into the sentinel word associated with it in WGSL.
+    </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="kw">match </span><span class="self">self </span>{}
+    }
+}
 
 <span class="doccomment">/// A variant of [`LanguageExtension::Unimplemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>UnimplementedLanguageExtension {
+</span><span class="kw">pub enum </span>UnimplementedLanguageExtension {
     ReadOnlyAndReadWriteStorageTextures,
     Packed4x8IntegerDotProduct,
     UnrestrictedPointerParameters,

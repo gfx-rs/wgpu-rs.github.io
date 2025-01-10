@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["parse_str"],"struct":["Frontend","ParseError"]};
+window.SIDEBAR_ITEMS = {"enum":["ImplementedLanguageExtension","LanguageExtension","UnimplementedLanguageExtension"],"fn":["parse_str"],"struct":["Frontend","ParseError"]};
