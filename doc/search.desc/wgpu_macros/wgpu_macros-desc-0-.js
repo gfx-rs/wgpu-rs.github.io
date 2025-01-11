@@ -1,0 +1,1 @@
+searchState.loadedDescShard("wgpu_macros", 0, "Creates a test that will run on all gpus on a given system.")

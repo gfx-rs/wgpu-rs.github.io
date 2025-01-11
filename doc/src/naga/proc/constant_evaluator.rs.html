@@ -1,5 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-804b98a1284a310a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (445177724 2023-12-16)" data-channel="nightly" data-search-js="search-874d56868bf05518.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">naga/proc/</div>constant_evaluator.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2977,8 +2977,7 @@
 <a href="#2976" id="2976">2976</a>
 <a href="#2977" id="2977">2977</a>
 <a href="#2978" id="2978">2978</a>
-<a href="#2979" id="2979">2979</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
+<a href="#2979" id="2979">2979</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
@@ -2993,14 +2992,14 @@
 ///
 /// Technique stolen directly from
 /// &lt;https://github.com/rust-lang/rust/issues/35853#issuecomment-415993963&gt;.
-</span><span class="macro">macro_rules! </span>with_dollar_sign {
+</span><span class="macro">macro_rules!</span> with_dollar_sign {
     ($(<span class="macro-nonterminal">$body</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="macro">macro_rules! </span>__with_dollar_sign { $(<span class="macro-nonterminal">$body</span>)* }
+        <span class="macro">macro_rules!</span> __with_dollar_sign { $(<span class="macro-nonterminal">$body</span>)* }
         <span class="macro">__with_dollar_sign!</span>($);
     }
 }
 
-<span class="macro">macro_rules! </span>gen_component_wise_extractor {
+<span class="macro">macro_rules!</span> gen_component_wise_extractor {
     (
         <span class="macro-nonterminal">$ident</span>:ident -&gt; <span class="macro-nonterminal">$target</span>:ident,
         literals: [$( <span class="macro-nonterminal">$literal</span>:ident =&gt; <span class="macro-nonterminal">$mapping</span>:ident: <span class="macro-nonterminal">$ty</span>:ident ),+ $(,)<span class="question-mark">?</span>],
@@ -3057,7 +3056,7 @@
             <span class="kw">let </span>err = ConstantEvaluatorError::InvalidMathArg;
             <span class="kw">let </span><span class="kw-2">mut </span>exprs = exprs.into_iter();
 
-            <span class="macro">macro_rules! </span>sanitize {
+            <span class="macro">macro_rules!</span> sanitize {
                 (<span class="macro-nonterminal">$expr</span>:expr) =&gt; {
                     eval.eval_zero_value_and_splat(<span class="macro-nonterminal">$expr</span>, span)
                         .map(|expr| <span class="kw-2">&amp;</span>eval.expressions[expr])
@@ -3142,7 +3141,7 @@
             eval.register_evaluated_expr(new_expr, span)
         }
 
-        <span class="macro">with_dollar_sign! </span>{
+        <span class="macro">with_dollar_sign!</span> {
             (<span class="macro-nonterminal">$d</span>:tt) =&gt; {
                 <span class="attr">#[allow(unused)]
                 #[doc = <span class="macro">concat!</span>(
@@ -3152,7 +3151,7 @@
                     <span class="macro">stringify!</span>(<span class="macro-nonterminal">$ident</span>),
                     <span class="string">"`]."</span>,
                 )]
-                </span><span class="macro">macro_rules! </span><span class="macro-nonterminal">$ident </span>{
+                </span><span class="macro">macro_rules!</span> <span class="macro-nonterminal">$ident </span>{
                     (
                         <span class="macro-nonterminal">$eval</span>:expr,
                         <span class="macro-nonterminal">$span</span>:expr,
@@ -3174,7 +3173,7 @@
     };
 }
 
-<span class="macro">gen_component_wise_extractor! </span>{
+<span class="macro">gen_component_wise_extractor!</span> {
     component_wise_scalar -&gt; Scalar,
     literals: [
         AbstractFloat =&gt; AbstractFloat: f64,
@@ -3194,7 +3193,7 @@
     ],
 }
 
-<span class="macro">gen_component_wise_extractor! </span>{
+<span class="macro">gen_component_wise_extractor!</span> {
     component_wise_float -&gt; Float,
     literals: [
         AbstractFloat =&gt; Abstract: f64,
@@ -3206,7 +3205,7 @@
     ],
 }
 
-<span class="macro">gen_component_wise_extractor! </span>{
+<span class="macro">gen_component_wise_extractor!</span> {
     component_wise_concrete_int -&gt; ConcreteInt,
     literals: [
         U32 =&gt; U32: u32,
@@ -3218,7 +3217,7 @@
     ],
 }
 
-<span class="macro">gen_component_wise_extractor! </span>{
+<span class="macro">gen_component_wise_extractor!</span> {
     component_wise_signed -&gt; Signed,
     literals: [
         AbstractFloat =&gt; AbstractFloat: f64,

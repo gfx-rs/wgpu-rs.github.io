@@ -1,5 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/dispatch.rs`."><title>dispatch.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-804b98a1284a310a.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (445177724 2023-12-16)" data-channel="nightly" data-search-js="search-874d56868bf05518.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><a class="sub-logo-container" href="../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/dispatch.rs`."><title>dispatch.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">wgpu/</div>dispatch.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -839,8 +839,7 @@
 <a href="#838" id="838">838</a>
 <a href="#839" id="839">839</a>
 <a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
+<a href="#841" id="841">841</a></pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
 //!
 //! - `wgpu_core`: An implementation of the the wgpu api on top of various native graphics APIs.
 //! - `webgpu`: An implementation of the wgpu api which calls WebGPU directly.
@@ -862,7 +861,7 @@
 <span class="doccomment">/// Create a single trait with the given supertraits and a blanket impl for all types that implement them.
 ///
 /// This is useful for creating a trait alias as a shorthand.
-</span><span class="macro">macro_rules! </span>trait_alias {
+</span><span class="macro">macro_rules!</span> trait_alias {
     (<span class="macro-nonterminal">$name</span>:ident: $(<span class="macro-nonterminal">$bound</span>:tt)+) =&gt; {
         <span class="kw">pub trait </span><span class="macro-nonterminal">$name</span>: $(<span class="macro-nonterminal">$bound</span>)+ {}
         <span class="kw">impl</span>&lt;T: $(<span class="macro-nonterminal">$bound</span>)+&gt; <span class="macro-nonterminal">$name </span><span class="kw">for </span>T {}
@@ -1400,7 +1399,7 @@
 /// arguments. These are similarly free when there is only one backend.
 ///
 /// In the future, we may want a truly generic backend, which could be extended from this enum.
-</span><span class="macro">macro_rules! </span>dispatch_types_inner {
+</span><span class="macro">macro_rules!</span> dispatch_types_inner {
     (
         wgpu_core = <span class="macro-nonterminal">$wgpu_core_context</span>:ty;
         webgpu = <span class="macro-nonterminal">$webgpu_context</span>:ty;
@@ -1417,7 +1416,7 @@
         <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
@@ -1427,7 +1426,7 @@
 
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; <span class="prelude-val">Some</span>(value),
@@ -1437,7 +1436,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
@@ -1447,7 +1446,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; <span class="prelude-val">Some</span>(value),
@@ -1502,7 +1501,7 @@
         <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
@@ -1512,7 +1511,7 @@
 
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
@@ -1522,7 +1521,7 @@
 
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; <span class="prelude-val">Some</span>(value),
@@ -1532,7 +1531,7 @@
 
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core_mut_opt(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
             ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
@@ -1544,7 +1543,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
@@ -1554,7 +1553,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
@@ -1564,7 +1563,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; <span class="prelude-val">Some</span>(value),
@@ -1574,7 +1573,7 @@
 
             <span class="attr">#[cfg(webgpu)]
             #[inline]
-            #[allow(unused)]
+            #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu_mut_opt(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
             ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
@@ -1629,7 +1628,7 @@
     };
 }
 
-<span class="macro">macro_rules! </span>dispatch_types {
+<span class="macro">macro_rules!</span> dispatch_types {
     (
         wgpu_core = <span class="macro-nonterminal">$wgpu_core_context</span>:ty;
         webgpu = <span class="macro-nonterminal">$webgpu_context</span>:ty;
@@ -1647,7 +1646,7 @@
     };
 }
 
-<span class="macro">dispatch_types! </span>{
+<span class="macro">dispatch_types!</span> {
     <span class="macro-nonterminal">wgpu_core </span>= backend::ContextWgpuCore;
     webgpu = backend::ContextWebGpu;
     {

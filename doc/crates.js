@@ -1,1 +1,2 @@
 window.ALL_CRATES = ["hlsl_snapshots","naga","player","wgpu","wgpu_core","wgpu_examples","wgpu_hal","wgpu_macros","wgpu_test","wgpu_types"];
+//{"start":21,"fragment_lengths":[16,7,9,7,12,16,11,14,12,13]}
