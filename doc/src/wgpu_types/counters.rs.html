@@ -230,9 +230,11 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"counters"</span>)]
-</span><span class="kw">use </span>std::sync::atomic::{AtomicIsize, Ordering};
-<span class="kw">use </span>std::{fmt, ops::Range};
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{string::String, vec::Vec};
+<span class="attr">#[cfg(feature = <span class="string">"counters"</span>)]
+</span><span class="kw">use </span>core::sync::atomic::{AtomicIsize, Ordering};
+<span class="kw">use </span>core::{fmt, ops::Range};
 
 <span class="doccomment">/// An internal counter for debugging purposes
 ///
@@ -327,8 +329,8 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>InternalCounter {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>InternalCounter {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="self">self</span>.read().fmt(f)
     }
 }
@@ -424,7 +426,7 @@
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AllocatorReport {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span><span class="kw-2">mut </span>allocations = <span class="self">self</span>.allocations.clone();
-        allocations.sort_by_key(|alloc| std::cmp::Reverse(alloc.size));
+        allocations.sort_by_key(|alloc| core::cmp::Reverse(alloc.size));
 
         <span class="kw">let </span>max_num_allocations_to_print = f.precision().unwrap_or(usize::MAX);
         allocations.truncate(max_num_allocations_to_print);
@@ -432,7 +434,7 @@
         f.debug_struct(<span class="string">"AllocatorReport"</span>)
             .field(
                 <span class="string">"summary"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">std::format_args!</span>(
+                <span class="kw-2">&amp;</span><span class="macro">core::format_args!</span>(
                     <span class="string">"{} / {}"</span>,
                     FmtBytes(<span class="self">self</span>.total_allocated_bytes),
                     FmtBytes(<span class="self">self</span>.total_reserved_bytes)

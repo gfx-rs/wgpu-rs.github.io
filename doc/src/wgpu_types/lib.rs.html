@@ -7989,7 +7989,25 @@
 <a href="#7988" id="7988">7988</a>
 <a href="#7989" id="7989">7989</a>
 <a href="#7990" id="7990">7990</a>
-<a href="#7991" id="7991">7991</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7991" id="7991">7991</a>
+<a href="#7992" id="7992">7992</a>
+<a href="#7993" id="7993">7993</a>
+<a href="#7994" id="7994">7994</a>
+<a href="#7995" id="7995">7995</a>
+<a href="#7996" id="7996">7996</a>
+<a href="#7997" id="7997">7997</a>
+<a href="#7998" id="7998">7998</a>
+<a href="#7999" id="7999">7999</a>
+<a href="#8000" id="8000">8000</a>
+<a href="#8001" id="8001">8001</a>
+<a href="#8002" id="8002">8002</a>
+<a href="#8003" id="8003">8003</a>
+<a href="#8004" id="8004">8004</a>
+<a href="#8005" id="8005">8005</a>
+<a href="#8006" id="8006">8006</a>
+<a href="#8007" id="8007">8007</a>
+<a href="#8008" id="8008">8008</a>
+<a href="#8009" id="8009">8009</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -7998,15 +8016,26 @@
     </span>clippy::match_like_matches_macro,
 )]
 #![warn(clippy::ptr_as_ptr, missing_docs, unsafe_op_in_unsafe_fn)]
+#![no_std]
 
-#[cfg(any(feature = <span class="string">"serde"</span>, test))]
-</span><span class="kw">use </span>serde::Deserialize;
+#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">extern crate </span>std;
+
+<span class="kw">extern crate </span>alloc;
+
+<span class="kw">use </span>alloc::{string::String, vec, vec::Vec};
+<span class="kw">use </span>core::{
+    hash::{Hash, Hasher},
+    mem::size_of,
+    num::NonZeroU32,
+    ops::Range,
+};
+
 <span class="attr">#[cfg(any(feature = <span class="string">"serde"</span>, test))]
-</span><span class="kw">use </span>serde::Serialize;
-<span class="kw">use </span>std::hash::{Hash, Hasher};
-<span class="kw">use </span>std::mem::size_of;
-<span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>std::{num::NonZeroU32, ops::Range};
+</span><span class="kw">use </span>{
+    alloc::format,
+    serde::{Deserialize, Serialize},
+};
 
 <span class="kw">pub mod </span>assertions;
 <span class="kw">mod </span>counters;
@@ -8017,7 +8046,7 @@
 <span class="doccomment">/// Integral type used for buffer offsets.
 </span><span class="kw">pub type </span>BufferAddress = u64;
 <span class="doccomment">/// Integral type used for buffer slice sizes.
-</span><span class="kw">pub type </span>BufferSize = std::num::NonZeroU64;
+</span><span class="kw">pub type </span>BufferSize = core::num::NonZeroU64;
 <span class="doccomment">/// Integral type used for binding locations in shaders.
 </span><span class="kw">pub type </span>ShaderLocation = u32;
 <span class="doccomment">/// Integral type used for dynamic bind group offsets.
@@ -8079,8 +8108,8 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Backend {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>Backend {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         f.write_str(<span class="self">self</span>.to_str())
     }
 }
@@ -9069,11 +9098,16 @@
     /// - WGPU_VALIDATION
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>with_env(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">fn </span>env(key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;bool&gt; {
-            std::env::var(key).ok().map(|s| <span class="kw">match </span>s.as_str() {
+        <span class="kw">fn </span>env(_key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;bool&gt; {
+            <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+            </span><span class="kw">return </span>std::env::var(_key).ok().map(|s| <span class="kw">match </span>s.as_str() {
                 <span class="string">"0" </span>=&gt; <span class="bool-val">false</span>,
                 <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
-            })
+            });
+
+            <span class="comment">// Without access to std, environment variables are considered unset
+            </span><span class="attr">#[cfg(not(feature = <span class="string">"std"</span>))]
+            </span><span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(bit) = env(<span class="string">"WGPU_VALIDATION"</span>) {
@@ -9470,7 +9504,7 @@
         fatal: bool,
         <span class="kw-2">mut </span>fail_fn: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u64, u64),
     ) {
-        <span class="kw">use </span>std::cmp::Ordering;
+        <span class="kw">use </span>core::cmp::Ordering;
 
         <span class="macro">macro_rules!</span> compare {
             (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$ordering</span>:ident) =&gt; {
@@ -10839,7 +10873,7 @@
         <span class="kw">impl </span>de::Visitor&lt;<span class="lifetime">'_</span>&gt; <span class="kw">for </span>TextureFormatVisitor {
             <span class="kw">type </span>Value = TextureFormat;
 
-            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>std::fmt::Formatter) -&gt; std::fmt::Result {
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>core::fmt::Formatter) -&gt; core::fmt::Result {
                 formatter.write_str(<span class="string">"a valid texture format"</span>)
             }
 
@@ -12102,6 +12136,8 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>texture_format_serialize() {
+    <span class="kw">use </span>alloc::string::ToString;
+
     <span class="macro">assert_eq!</span>(
         serde_json::to_string(<span class="kw-2">&amp;</span>TextureFormat::R8Unorm).unwrap(),
         <span class="string">"\"r8unorm\""</span>.to_string()
@@ -13952,8 +13988,8 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>Origin2d {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>Origin2d {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         (<span class="self">self</span>.x, <span class="self">self</span>.y).fmt(f)
     }
 }
@@ -13995,8 +14031,8 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>Origin3d {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>Origin3d {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         (<span class="self">self</span>.x, <span class="self">self</span>.y, <span class="self">self</span>.z).fmt(f)
     }
 }
@@ -14019,8 +14055,8 @@
     </span><span class="kw">pub </span>depth_or_array_layers: u32,
 }
 
-<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>Extent3d {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>Extent3d {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         (<span class="self">self</span>.width, <span class="self">self</span>.height, <span class="self">self</span>.depth_or_array_layers).fmt(f)
     }
 }
@@ -15212,7 +15248,7 @@
 }
 
 <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
-</span><span class="kw">impl </span>std::ops::Deref <span class="kw">for </span>ExternalImageSource {
+</span><span class="kw">impl </span>core::ops::Deref <span class="kw">for </span>ExternalImageSource {
     <span class="kw">type </span>Target = js_sys::Object;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -15537,8 +15573,8 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="kw">unsafe </span>{
-            std::mem::transmute(std::slice::from_raw_parts(
-                std::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
+            core::mem::transmute(core::slice::from_raw_parts(
+                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
                 size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
@@ -15568,8 +15604,8 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="kw">unsafe </span>{
-            std::mem::transmute(std::slice::from_raw_parts(
-                std::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
+            core::mem::transmute(core::slice::from_raw_parts(
+                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
                 size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
@@ -15593,8 +15629,8 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="kw">unsafe </span>{
-            std::mem::transmute(std::slice::from_raw_parts(
-                std::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
+            core::mem::transmute(core::slice::from_raw_parts(
+                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
                 size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
@@ -15696,9 +15732,9 @@
     /// It also requires WDDM 2.1 (Windows 10 version 1607).
     </span>DynamicDxc {
         <span class="doccomment">/// Path to `dxcompiler.dll`.
-        </span>dxc_path: PathBuf,
+        </span>dxc_path: String,
         <span class="doccomment">/// Path to `dxil.dll`.
-        </span>dxil_path: PathBuf,
+        </span>dxil_path: String,
     },
     <span class="doccomment">/// The statically-linked variant of Dxc.
     ///
