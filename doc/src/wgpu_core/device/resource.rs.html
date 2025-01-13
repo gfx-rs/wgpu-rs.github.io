@@ -3737,7 +3737,30 @@
 <a href="#3736" id="3736">3736</a>
 <a href="#3737" id="3737">3737</a>
 <a href="#3738" id="3738">3738</a>
-<a href="#3739" id="3739">3739</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#3739" id="3739">3739</a>
+<a href="#3740" id="3740">3740</a>
+<a href="#3741" id="3741">3741</a>
+<a href="#3742" id="3742">3742</a>
+<a href="#3743" id="3743">3743</a>
+<a href="#3744" id="3744">3744</a>
+<a href="#3745" id="3745">3745</a>
+<a href="#3746" id="3746">3746</a>
+<a href="#3747" id="3747">3747</a>
+<a href="#3748" id="3748">3748</a>
+<a href="#3749" id="3749">3749</a>
+<a href="#3750" id="3750">3750</a>
+<a href="#3751" id="3751">3751</a>
+<a href="#3752" id="3752">3752</a>
+<a href="#3753" id="3753">3753</a>
+<a href="#3754" id="3754">3754</a>
+<a href="#3755" id="3755">3755</a>
+<a href="#3756" id="3756">3756</a>
+<a href="#3757" id="3757">3757</a>
+<a href="#3758" id="3758">3758</a>
+<a href="#3759" id="3759">3759</a>
+<a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a>
+<a href="#3762" id="3762">3762</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
@@ -5529,6 +5552,14 @@
                         <span class="kw">_ </span>=&gt; (),
                     }
                     <span class="kw">match </span>access {
+                        wgt::StorageTextureAccess::Atomic
+                            <span class="kw">if </span>!<span class="self">self</span>.features.contains(wgt::Features::TEXTURE_ATOMIC) =&gt;
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(binding_model::CreateBindGroupLayoutError::Entry {
+                                binding: entry.binding,
+                                error: BindGroupLayoutEntryError::StorageTextureAtomic,
+                            });
+                        }
                         wgt::StorageTextureAccess::ReadOnly
                         | wgt::StorageTextureAccess::ReadWrite
                             <span class="kw">if </span>!<span class="self">self</span>.features.contains(
@@ -5557,6 +5588,10 @@
                             wgt::StorageTextureAccess::ReadWrite =&gt; {
                                 required_features |=
                                     wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+                                WritableStorage::Yes
+                            }
+                            wgt::StorageTextureAccess::Atomic =&gt; {
+                                required_features |= wgt::Features::TEXTURE_ATOMIC;
                                 WritableStorage::Yes
                             }
                         },
@@ -6288,6 +6323,17 @@
                         }
 
                         hal::TextureUses::STORAGE_READ_WRITE
+                    }
+                    wgt::StorageTextureAccess::Atomic =&gt; {
+                        <span class="kw">if </span>!view
+                            .format_features
+                            .flags
+                            .contains(wgt::TextureFormatFeatureFlags::STORAGE_ATOMIC)
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::StorageAtomicNotSupported(view.desc.format));
+                        }
+
+                        hal::TextureUses::STORAGE_ATOMIC
                     }
                 };
                 view.check_usage(wgt::TextureUsages::STORAGE_BINDING)<span class="question-mark">?</span>;

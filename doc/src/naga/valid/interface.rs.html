@@ -785,7 +785,12 @@
 <a href="#784" id="784">784</a>
 <a href="#785" id="785">785</a>
 <a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     analyzer::{FunctionInfo, GlobalUse},
     Capabilities, Disalignment, FunctionError, ModuleInfo,
 };
@@ -915,6 +920,9 @@
     }
     <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::STORE) {
         storage_usage |= GlobalUse::WRITE;
+    }
+    <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
+        storage_usage |= GlobalUse::ATOMIC;
     }
     storage_usage
 }
@@ -1545,7 +1553,9 @@
                     } =&gt; storage_usage(access),
                     <span class="kw">_ </span>=&gt; GlobalUse::READ | GlobalUse::QUERY,
                 },
-                <span class="kw">crate</span>::AddressSpace::Private | <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; GlobalUse::all(),
+                <span class="kw">crate</span>::AddressSpace::Private | <span class="kw">crate</span>::AddressSpace::WorkGroup =&gt; {
+                    GlobalUse::READ | GlobalUse::WRITE | GlobalUse::QUERY
+                }
                 <span class="kw">crate</span>::AddressSpace::PushConstant =&gt; GlobalUse::READ,
             };
             <span class="kw">if </span>!allowed_usage.contains(usage) {

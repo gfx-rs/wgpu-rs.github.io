@@ -6309,7 +6309,44 @@
 <a href="#6308" id="6308">6308</a>
 <a href="#6309" id="6309">6309</a>
 <a href="#6310" id="6310">6310</a>
-<a href="#6311" id="6311">6311</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
+<a href="#6311" id="6311">6311</a>
+<a href="#6312" id="6312">6312</a>
+<a href="#6313" id="6313">6313</a>
+<a href="#6314" id="6314">6314</a>
+<a href="#6315" id="6315">6315</a>
+<a href="#6316" id="6316">6316</a>
+<a href="#6317" id="6317">6317</a>
+<a href="#6318" id="6318">6318</a>
+<a href="#6319" id="6319">6319</a>
+<a href="#6320" id="6320">6320</a>
+<a href="#6321" id="6321">6321</a>
+<a href="#6322" id="6322">6322</a>
+<a href="#6323" id="6323">6323</a>
+<a href="#6324" id="6324">6324</a>
+<a href="#6325" id="6325">6325</a>
+<a href="#6326" id="6326">6326</a>
+<a href="#6327" id="6327">6327</a>
+<a href="#6328" id="6328">6328</a>
+<a href="#6329" id="6329">6329</a>
+<a href="#6330" id="6330">6330</a>
+<a href="#6331" id="6331">6331</a>
+<a href="#6332" id="6332">6332</a>
+<a href="#6333" id="6333">6333</a>
+<a href="#6334" id="6334">6334</a>
+<a href="#6335" id="6335">6335</a>
+<a href="#6336" id="6336">6336</a>
+<a href="#6337" id="6337">6337</a>
+<a href="#6338" id="6338">6338</a>
+<a href="#6339" id="6339">6339</a>
+<a href="#6340" id="6340">6340</a>
+<a href="#6341" id="6341">6341</a>
+<a href="#6342" id="6342">6342</a>
+<a href="#6343" id="6343">6343</a>
+<a href="#6344" id="6344">6344</a>
+<a href="#6345" id="6345">6345</a>
+<a href="#6346" id="6346">6346</a>
+<a href="#6347" id="6347">6347</a>
+<a href="#6348" id="6348">6348</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
@@ -6655,7 +6692,7 @@
         <span class="kw">let </span>(space, access, reference) = <span class="kw">match </span>var.space.to_msl_name() {
             <span class="prelude-val">Some</span>(space) <span class="kw">if </span><span class="self">self</span>.reference =&gt; {
                 <span class="kw">let </span>access = <span class="kw">if </span>var.space.needs_access_qualifier()
-                    &amp;&amp; !<span class="self">self</span>.usage.contains(valid::GlobalUse::WRITE)
+                    &amp;&amp; !<span class="self">self</span>.usage.intersects(valid::GlobalUse::WRITE)
                 {
                     <span class="string">"const"
                 </span>} <span class="kw">else </span>{
@@ -7508,6 +7545,28 @@
             }
         }
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>put_image_atomic(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        level: back::Level,
+        image: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        address: <span class="kw-2">&amp;</span>TexelAddress,
+        fun: <span class="kw">crate</span>::AtomicFunction,
+        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        context: <span class="kw-2">&amp;</span>StatementContext,
+    ) -&gt; BackendResult {
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.put_expression(image, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>op = fun.to_msl();
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".atomic_{}("</span>, op)<span class="question-mark">?</span>;
+        <span class="comment">// coordinates in IR are int, but Metal expects uint
+        </span><span class="self">self</span>.put_cast_to_uint_scalar_or_vector(address.coordinate, <span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.put_expression(value, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -9559,6 +9618,21 @@
                     <span class="comment">// Done
                     </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
                 }
+                <span class="kw">crate</span>::Statement::ImageAtomic {
+                    image,
+                    coordinate,
+                    array_index,
+                    fun,
+                    value,
+                } =&gt; {
+                    <span class="kw">let </span>address = TexelAddress {
+                        coordinate,
+                        array_index,
+                        sample: <span class="prelude-val">None</span>,
+                        level: <span class="prelude-val">None</span>,
+                    };
+                    <span class="self">self</span>.put_image_atomic(level, image, <span class="kw-2">&amp;</span>address, fun, value, context)<span class="question-mark">?
+                </span>}
                 <span class="kw">crate</span>::Statement::WorkGroupUniformLoad { pointer, result } =&gt; {
                     <span class="self">self</span>.write_barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP, level)<span class="question-mark">?</span>;
 

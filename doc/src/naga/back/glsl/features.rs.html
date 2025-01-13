@@ -595,7 +595,31 @@
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
 <span class="kw">use crate</span>::{
     back::glsl::{Options, WriterFlags},
     AddressSpace, Binding, Expression, Handle, ImageClass, ImageDimension, Interpolation,
@@ -649,6 +673,8 @@
         </span><span class="kw">const </span>TEXTURE_SHADOW_LOD = <span class="number">1 </span>&lt;&lt; <span class="number">23</span>;
         <span class="doccomment">/// Subgroup operations
         </span><span class="kw">const </span>SUBGROUP_OPERATIONS = <span class="number">1 </span>&lt;&lt; <span class="number">24</span>;
+        <span class="doccomment">/// Image atomics
+        </span><span class="kw">const </span>TEXTURE_ATOMICS = <span class="number">1 </span>&lt;&lt; <span class="number">25</span>;
     }
 }
 
@@ -717,6 +743,7 @@
         <span class="macro">check_feature!</span>(DYNAMIC_ARRAY_SIZE, <span class="number">430</span>, <span class="number">310</span>);
         <span class="macro">check_feature!</span>(DUAL_SOURCE_BLENDING, <span class="number">330</span>, <span class="number">300 </span><span class="comment">/* with extension */</span>);
         <span class="macro">check_feature!</span>(SUBGROUP_OPERATIONS, <span class="number">430</span>, <span class="number">310</span>);
+        <span class="macro">check_feature!</span>(TEXTURE_ATOMICS, <span class="number">420</span>, <span class="number">310</span>);
         <span class="kw">match </span>version {
             Version::Embedded { is_webgl: <span class="bool-val">true</span>, .. } =&gt; <span class="macro">check_feature!</span>(MULTI_VIEW, <span class="number">140</span>, <span class="number">300</span>),
             <span class="kw">_ </span>=&gt; <span class="macro">check_feature!</span>(MULTI_VIEW, <span class="number">140</span>, <span class="number">310</span>),
@@ -873,6 +900,11 @@
                 out,
                 <span class="string">"#extension GL_KHR_shader_subgroup_shuffle_relative : require"
             </span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::TEXTURE_ATOMICS) {
+            <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_shader_image_atomic.txt
+            </span><span class="macro">writeln!</span>(out, <span class="string">"#extension GL_OES_shader_image_atomic : require"</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1140,6 +1172,22 @@
                 }
                 <span class="kw">_ </span>=&gt; {}
             }
+            }
+        }
+
+        <span class="kw">for </span>blocks <span class="kw">in </span>module
+            .functions
+            .iter()
+            .map(|(<span class="kw">_</span>, f)| <span class="kw-2">&amp;</span>f.body)
+            .chain(std::iter::once(<span class="kw-2">&amp;</span>entry_point.function.body))
+        {
+            <span class="kw">for </span>(stmt, <span class="kw">_</span>) <span class="kw">in </span>blocks.span_iter() {
+                <span class="kw">match </span><span class="kw-2">*</span>stmt {
+                    <span class="kw">crate</span>::Statement::ImageAtomic { .. } =&gt; {
+                        features.request(Features::TEXTURE_ATOMICS)
+                    }
+                    <span class="kw">_ </span>=&gt; {}
+                }
             }
         }
 

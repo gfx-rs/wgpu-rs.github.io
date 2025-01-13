@@ -4916,7 +4916,71 @@
 <a href="#4915" id="4915">4915</a>
 <a href="#4916" id="4916">4916</a>
 <a href="#4917" id="4917">4917</a>
-<a href="#4918" id="4918">4918</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#4918" id="4918">4918</a>
+<a href="#4919" id="4919">4919</a>
+<a href="#4920" id="4920">4920</a>
+<a href="#4921" id="4921">4921</a>
+<a href="#4922" id="4922">4922</a>
+<a href="#4923" id="4923">4923</a>
+<a href="#4924" id="4924">4924</a>
+<a href="#4925" id="4925">4925</a>
+<a href="#4926" id="4926">4926</a>
+<a href="#4927" id="4927">4927</a>
+<a href="#4928" id="4928">4928</a>
+<a href="#4929" id="4929">4929</a>
+<a href="#4930" id="4930">4930</a>
+<a href="#4931" id="4931">4931</a>
+<a href="#4932" id="4932">4932</a>
+<a href="#4933" id="4933">4933</a>
+<a href="#4934" id="4934">4934</a>
+<a href="#4935" id="4935">4935</a>
+<a href="#4936" id="4936">4936</a>
+<a href="#4937" id="4937">4937</a>
+<a href="#4938" id="4938">4938</a>
+<a href="#4939" id="4939">4939</a>
+<a href="#4940" id="4940">4940</a>
+<a href="#4941" id="4941">4941</a>
+<a href="#4942" id="4942">4942</a>
+<a href="#4943" id="4943">4943</a>
+<a href="#4944" id="4944">4944</a>
+<a href="#4945" id="4945">4945</a>
+<a href="#4946" id="4946">4946</a>
+<a href="#4947" id="4947">4947</a>
+<a href="#4948" id="4948">4948</a>
+<a href="#4949" id="4949">4949</a>
+<a href="#4950" id="4950">4950</a>
+<a href="#4951" id="4951">4951</a>
+<a href="#4952" id="4952">4952</a>
+<a href="#4953" id="4953">4953</a>
+<a href="#4954" id="4954">4954</a>
+<a href="#4955" id="4955">4955</a>
+<a href="#4956" id="4956">4956</a>
+<a href="#4957" id="4957">4957</a>
+<a href="#4958" id="4958">4958</a>
+<a href="#4959" id="4959">4959</a>
+<a href="#4960" id="4960">4960</a>
+<a href="#4961" id="4961">4961</a>
+<a href="#4962" id="4962">4962</a>
+<a href="#4963" id="4963">4963</a>
+<a href="#4964" id="4964">4964</a>
+<a href="#4965" id="4965">4965</a>
+<a href="#4966" id="4966">4966</a>
+<a href="#4967" id="4967">4967</a>
+<a href="#4968" id="4968">4968</a>
+<a href="#4969" id="4969">4969</a>
+<a href="#4970" id="4970">4970</a>
+<a href="#4971" id="4971">4971</a>
+<a href="#4972" id="4972">4972</a>
+<a href="#4973" id="4973">4973</a>
+<a href="#4974" id="4974">4974</a>
+<a href="#4975" id="4975">4975</a>
+<a href="#4976" id="4976">4976</a>
+<a href="#4977" id="4977">4977</a>
+<a href="#4978" id="4978">4978</a>
+<a href="#4979" id="4979">4979</a>
+<a href="#4980" id="4980">4980</a>
+<a href="#4981" id="4981">4981</a>
+<a href="#4982" id="4982">4982</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -7393,6 +7457,17 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="self">self</span>.write_expr(value, ctx)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
             }
+            <span class="comment">// Stores a value into an image.
+            </span>Statement::ImageAtomic {
+                image,
+                coordinate,
+                array_index,
+                fun,
+                value,
+            } =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_image_atomic(ctx, image, coordinate, array_index, fun, value)<span class="question-mark">?
+            </span>}
             Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
@@ -9055,6 +9130,56 @@ to output a [`Module`](crate::Module) into glsl
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Helper method to write the `ImageAtomic` statement
+    </span><span class="kw">fn </span>write_image_atomic(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;</span>back::FunctionCtx,
+        image: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        coordinate: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        array_index: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+        fun: <span class="kw">crate</span>::AtomicFunction,
+        value: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::ImageDimension <span class="kw">as </span>IDim;
+
+        <span class="comment">// NOTE: openGL requires that `imageAtomic`s have no effects when the texel is invalid
+        // so we don't need to generate bounds checks (OpenGL 4.2 Core §3.9.20)
+
+        // This will only panic if the module is invalid
+        </span><span class="kw">let </span>dim = <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(image, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
+            TypeInner::Image { dim, .. } =&gt; dim,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        };
+
+        <span class="comment">// Begin our call to `imageAtomic`
+        </span><span class="kw">let </span>fun_str = fun.to_glsl();
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"imageAtomic{fun_str}("</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_expr(image, ctx)<span class="question-mark">?</span>;
+        <span class="comment">// Separate the image argument from the coordinates
+        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+
+        <span class="comment">// openGL es doesn't have 1D images so we need workaround it
+        </span><span class="kw">let </span>tex_1d_hack = dim == IDim::D1 &amp;&amp; <span class="self">self</span>.options.version.is_es();
+        <span class="comment">// Write the coordinate vector
+        </span><span class="self">self</span>.write_texture_coord(
+            ctx,
+            <span class="comment">// Get the size of the coordinate vector
+            </span><span class="self">self</span>.get_coordinate_vector_size(dim, <span class="bool-val">false</span>),
+            coordinate,
+            array_index,
+            tex_1d_hack,
+        )<span class="question-mark">?</span>;
+
+        <span class="comment">// Separate the coordinate from the value to write and write the expression
+        // of the value to write.
+        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_expr(value, ctx)<span class="question-mark">?</span>;
+        <span class="comment">// End the call to `imageAtomic` and the statement.
+        </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Helper method for writing an `ImageLoad` expression.
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">fn </span>write_image_load(
@@ -9451,6 +9576,9 @@ to output a [`Module`](crate::Module) into glsl
     /// they can only be used to query information about the resource which isn't what
     /// we want here so when storage access is both `LOAD` and `STORE` add no modifiers
     </span><span class="kw">fn </span>write_storage_access(<span class="kw-2">&amp;mut </span><span class="self">self</span>, storage_access: <span class="kw">crate</span>::StorageAccess) -&gt; BackendResult {
+        <span class="kw">if </span>storage_access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
         <span class="kw">if </span>!storage_access.contains(<span class="kw">crate</span>::StorageAccess::STORE) {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"readonly "</span>)<span class="question-mark">?</span>;
         }

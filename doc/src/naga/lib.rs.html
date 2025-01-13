@@ -2379,7 +2379,52 @@
 <a href="#2378" id="2378">2378</a>
 <a href="#2379" id="2379">2379</a>
 <a href="#2380" id="2380">2380</a>
-<a href="#2381" id="2381">2381</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
+<a href="#2381" id="2381">2381</a>
+<a href="#2382" id="2382">2382</a>
+<a href="#2383" id="2383">2383</a>
+<a href="#2384" id="2384">2384</a>
+<a href="#2385" id="2385">2385</a>
+<a href="#2386" id="2386">2386</a>
+<a href="#2387" id="2387">2387</a>
+<a href="#2388" id="2388">2388</a>
+<a href="#2389" id="2389">2389</a>
+<a href="#2390" id="2390">2390</a>
+<a href="#2391" id="2391">2391</a>
+<a href="#2392" id="2392">2392</a>
+<a href="#2393" id="2393">2393</a>
+<a href="#2394" id="2394">2394</a>
+<a href="#2395" id="2395">2395</a>
+<a href="#2396" id="2396">2396</a>
+<a href="#2397" id="2397">2397</a>
+<a href="#2398" id="2398">2398</a>
+<a href="#2399" id="2399">2399</a>
+<a href="#2400" id="2400">2400</a>
+<a href="#2401" id="2401">2401</a>
+<a href="#2402" id="2402">2402</a>
+<a href="#2403" id="2403">2403</a>
+<a href="#2404" id="2404">2404</a>
+<a href="#2405" id="2405">2405</a>
+<a href="#2406" id="2406">2406</a>
+<a href="#2407" id="2407">2407</a>
+<a href="#2408" id="2408">2408</a>
+<a href="#2409" id="2409">2409</a>
+<a href="#2410" id="2410">2410</a>
+<a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
 
@@ -2978,6 +3023,8 @@ An override expression can be evaluated at pipeline creation time.
         </span><span class="kw">const </span>LOAD = <span class="number">0x1</span>;
         <span class="doccomment">/// Storage can be used as a target for store ops.
         </span><span class="kw">const </span>STORE = <span class="number">0x2</span>;
+        <span class="doccomment">/// Storage can be used as a target for atomic ops.
+        </span><span class="kw">const </span>ATOMIC = <span class="number">0x4</span>;
     }
 }
 
@@ -4397,6 +4444,49 @@ An override expression can be evaluated at pipeline creation time.
         /// [`SHADER_INT64_ATOMIC_MIN_MAX`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_MIN_MAX
         /// [`SHADER_INT64_ATOMIC_ALL_OPS`]: crate::valid::Capabilities::SHADER_INT64_ATOMIC_ALL_OPS
         </span>result: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
+    },
+    <span class="doccomment">/// Performs an atomic operation on a texel value of an image.
+    ///
+    /// Doing atomics on images with mipmaps is not supported, so there is no
+    /// `level` operand.
+    </span>ImageAtomic {
+        <span class="doccomment">/// The image to perform an atomic operation on. This must have type
+        /// [`Image`]. (This will necessarily be a [`GlobalVariable`] or
+        /// [`FunctionArgument`] expression, since no other expressions are
+        /// allowed to have that type.)
+        ///
+        /// [`Image`]: TypeInner::Image
+        /// [`GlobalVariable`]: Expression::GlobalVariable
+        /// [`FunctionArgument`]: Expression::FunctionArgument
+        </span>image: Handle&lt;Expression&gt;,
+
+        <span class="doccomment">/// The coordinate of the texel we wish to load. This must be a scalar
+        /// for [`D1`] images, a [`Bi`] vector for [`D2`] images, and a [`Tri`]
+        /// vector for [`D3`] images. (Array indices, sample indices, and
+        /// explicit level-of-detail values are supplied separately.) Its
+        /// component type must be [`Sint`].
+        ///
+        /// [`D1`]: ImageDimension::D1
+        /// [`D2`]: ImageDimension::D2
+        /// [`D3`]: ImageDimension::D3
+        /// [`Bi`]: VectorSize::Bi
+        /// [`Tri`]: VectorSize::Tri
+        /// [`Sint`]: ScalarKind::Sint
+        </span>coordinate: Handle&lt;Expression&gt;,
+
+        <span class="doccomment">/// The index into an arrayed image. If the [`arrayed`] flag in
+        /// `image`'s type is `true`, then this must be `Some(expr)`, where
+        /// `expr` is a [`Sint`] scalar. Otherwise, it must be `None`.
+        ///
+        /// [`arrayed`]: TypeInner::Image::arrayed
+        /// [`Sint`]: ScalarKind::Sint
+        </span>array_index: <span class="prelude-ty">Option</span>&lt;Handle&lt;Expression&gt;&gt;,
+
+        <span class="doccomment">/// The kind of atomic operation to perform on the texel.
+        </span>fun: AtomicFunction,
+
+        <span class="doccomment">/// The value with which to perform the atomic operation.
+        </span>value: Handle&lt;Expression&gt;,
     },
     <span class="doccomment">/// Load uniformly from a uniform pointer in the workgroup address space.
     ///

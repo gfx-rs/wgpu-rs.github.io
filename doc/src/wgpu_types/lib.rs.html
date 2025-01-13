@@ -8007,7 +8007,53 @@
 <a href="#8006" id="8006">8006</a>
 <a href="#8007" id="8007">8007</a>
 <a href="#8008" id="8008">8008</a>
-<a href="#8009" id="8009">8009</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#8009" id="8009">8009</a>
+<a href="#8010" id="8010">8010</a>
+<a href="#8011" id="8011">8011</a>
+<a href="#8012" id="8012">8012</a>
+<a href="#8013" id="8013">8013</a>
+<a href="#8014" id="8014">8014</a>
+<a href="#8015" id="8015">8015</a>
+<a href="#8016" id="8016">8016</a>
+<a href="#8017" id="8017">8017</a>
+<a href="#8018" id="8018">8018</a>
+<a href="#8019" id="8019">8019</a>
+<a href="#8020" id="8020">8020</a>
+<a href="#8021" id="8021">8021</a>
+<a href="#8022" id="8022">8022</a>
+<a href="#8023" id="8023">8023</a>
+<a href="#8024" id="8024">8024</a>
+<a href="#8025" id="8025">8025</a>
+<a href="#8026" id="8026">8026</a>
+<a href="#8027" id="8027">8027</a>
+<a href="#8028" id="8028">8028</a>
+<a href="#8029" id="8029">8029</a>
+<a href="#8030" id="8030">8030</a>
+<a href="#8031" id="8031">8031</a>
+<a href="#8032" id="8032">8032</a>
+<a href="#8033" id="8033">8033</a>
+<a href="#8034" id="8034">8034</a>
+<a href="#8035" id="8035">8035</a>
+<a href="#8036" id="8036">8036</a>
+<a href="#8037" id="8037">8037</a>
+<a href="#8038" id="8038">8038</a>
+<a href="#8039" id="8039">8039</a>
+<a href="#8040" id="8040">8040</a>
+<a href="#8041" id="8041">8041</a>
+<a href="#8042" id="8042">8042</a>
+<a href="#8043" id="8043">8043</a>
+<a href="#8044" id="8044">8044</a>
+<a href="#8045" id="8045">8045</a>
+<a href="#8046" id="8046">8046</a>
+<a href="#8047" id="8047">8047</a>
+<a href="#8048" id="8048">8048</a>
+<a href="#8049" id="8049">8049</a>
+<a href="#8050" id="8050">8050</a>
+<a href="#8051" id="8051">8051</a>
+<a href="#8052" id="8052">8052</a>
+<a href="#8053" id="8053">8053</a>
+<a href="#8054" id="8054">8054</a>
+<a href="#8055" id="8055">8055</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -8820,6 +8866,15 @@
         ///
         /// This is a native only feature.
         </span><span class="kw">const </span>VERTEX_ATTRIBUTE_64BIT = <span class="number">1 </span>&lt;&lt; <span class="number">45</span>;
+        <span class="doccomment">/// Enables image atomic fetch add, and, xor, or, min, and max for R32Uint and R32Sint textures.
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        /// - DX12
+        /// - Metal (with MSL 3.1+)
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>TEXTURE_ATOMIC = <span class="number">1 </span>&lt;&lt; <span class="number">46</span>;
         <span class="doccomment">/// Allows for creation of textures of format [`TextureFormat::NV12`]
         ///
         /// Supported platforms:
@@ -10433,8 +10488,11 @@
         <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with
         /// [`StorageTextureAccess::ReadWrite`].
         </span><span class="kw">const </span>STORAGE_READ_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with
+        /// [`StorageTextureAccess::Atomic`].
+        </span><span class="kw">const </span>STORAGE_ATOMIC = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
         <span class="doccomment">/// If not present, the texture can't be blended into the render target.
-        </span><span class="kw">const </span>BLENDABLE = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+        </span><span class="kw">const </span>BLENDABLE = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
     }
 }
 
@@ -11467,7 +11525,12 @@
         <span class="kw">let </span>attachment = basic | TextureUsages::RENDER_ATTACHMENT;
         <span class="kw">let </span>storage = basic | TextureUsages::STORAGE_BINDING;
         <span class="kw">let </span>binding = TextureUsages::TEXTURE_BINDING;
-        <span class="kw">let </span>all_flags = TextureUsages::all();
+        <span class="kw">let </span>all_flags = attachment | storage | binding;
+        <span class="kw">let </span>atomic = <span class="kw">if </span>device_features.contains(Features::TEXTURE_ATOMIC) {
+            all_flags | TextureUsages::STORAGE_ATOMIC
+        } <span class="kw">else </span>{
+            all_flags
+        };
         <span class="kw">let </span>rg11b10f = <span class="kw">if </span>device_features.contains(Features::RG11B10UFLOAT_RENDERABLE) {
             attachment
         } <span class="kw">else </span>{
@@ -11498,8 +11561,8 @@
             <span class="self">Self</span>::Rg8Snorm =&gt;             (        none,      basic),
             <span class="self">Self</span>::Rg8Uint =&gt;              (        msaa, attachment),
             <span class="self">Self</span>::Rg8Sint =&gt;              (        msaa, attachment),
-            <span class="self">Self</span>::R32Uint =&gt;              (       s_all,  all_flags),
-            <span class="self">Self</span>::R32Sint =&gt;              (       s_all,  all_flags),
+            <span class="self">Self</span>::R32Uint =&gt;              (       s_all,     atomic),
+            <span class="self">Self</span>::R32Sint =&gt;              (       s_all,     atomic),
             <span class="self">Self</span>::R32Float =&gt;             (msaa | s_all,  all_flags),
             <span class="self">Self</span>::Rg16Uint =&gt;             (        msaa, attachment),
             <span class="self">Self</span>::Rg16Sint =&gt;             (        msaa, attachment),
@@ -11582,6 +11645,10 @@
 
         flags.set(TextureFormatFeatureFlags::FILTERABLE, is_filterable);
         flags.set(TextureFormatFeatureFlags::BLENDABLE, is_blendable);
+        flags.set(
+            TextureFormatFeatureFlags::STORAGE_ATOMIC,
+            allowed_usages.contains(TextureUsages::STORAGE_ATOMIC),
+        );
 
         TextureFormatFeatures {
             allowed_usages,
@@ -13695,7 +13762,12 @@
     #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>TextureUsages: u32 {
-        <span class="doccomment">/// Allows a texture to be the source in a [`CommandEncoder::copy_texture_to_buffer`] or
+        <span class="comment">//
+        // ---- Start numbering at 1 &lt;&lt; 0 ----
+        //
+        // WebGPU features:
+        //
+        </span><span class="doccomment">/// Allows a texture to be the source in a [`CommandEncoder::copy_texture_to_buffer`] or
         /// [`CommandEncoder::copy_texture_to_texture`] operation.
         </span><span class="kw">const </span>COPY_SRC = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="doccomment">/// Allows a texture to be the destination in a  [`CommandEncoder::copy_buffer_to_texture`],
@@ -13707,6 +13779,14 @@
         </span><span class="kw">const </span>STORAGE_BINDING = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
         <span class="doccomment">/// Allows a texture to be an output attachment of a render pass.
         </span><span class="kw">const </span>RENDER_ATTACHMENT = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+
+        <span class="comment">//
+        // ---- Restart Numbering for Native Features ---
+        //
+        // Native Features:
+        //
+        </span><span class="doccomment">/// Allows a texture to be used with image atomics. Requires [`Features::TEXTURE_ATOMIC`].
+        </span><span class="kw">const </span>STORAGE_ATOMIC = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
     }
 }
 
@@ -14891,6 +14971,18 @@
     /// layout(set=0, binding=0, r32f) uniform image2D myStorageImage;
     /// ```
     </span>ReadWrite,
+    <span class="doccomment">/// The texture can be both read and written in the shader via atomics and must be annotated
+    /// with `read_write` in WGSL.
+    ///
+    /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access
+    /// mode.  This is a nonstandard, native-only extension.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var my_storage_image: texture_storage_2d&lt;r32uint, atomic&gt;;
+    /// ```
+    </span>Atomic,
 }
 
 <span class="doccomment">/// Specific type of a sampler binding.

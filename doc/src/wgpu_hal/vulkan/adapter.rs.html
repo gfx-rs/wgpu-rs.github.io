@@ -2473,7 +2473,15 @@
 <a href="#2472" id="2472">2472</a>
 <a href="#2473" id="2473">2473</a>
 <a href="#2474" id="2474">2474</a>
-<a href="#2475" id="2475">2475</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
+<a href="#2478" id="2478">2478</a>
+<a href="#2479" id="2479">2479</a>
+<a href="#2480" id="2480">2480</a>
+<a href="#2481" id="2481">2481</a>
+<a href="#2482" id="2482">2482</a>
+<a href="#2483" id="2483">2483</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -2969,7 +2977,8 @@
             | F::TIMESTAMP_QUERY_INSIDE_PASSES
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | F::CLEAR_TEXTURE
-            | F::PIPELINE_CACHE;
+            | F::PIPELINE_CACHE
+            | F::TEXTURE_ATOMIC;
 
         <span class="kw">let </span><span class="kw-2">mut </span>dl_flags = Df::COMPUTE_SHADERS
             | Df::BASE_VERTEX
@@ -4610,7 +4619,10 @@
         //     features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX),
         // );
         </span>flags.set(
-            Tfc::STORAGE_READ_WRITE | Tfc::STORAGE_WRITE_ONLY | Tfc::STORAGE_READ_ONLY,
+            Tfc::STORAGE_READ_WRITE
+                | Tfc::STORAGE_WRITE_ONLY
+                | Tfc::STORAGE_READ_ONLY
+                | Tfc::STORAGE_ATOMIC,
             features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE),
         );
         flags.set(
@@ -4636,6 +4648,10 @@
         flags.set(
             Tfc::COPY_DST,
             features.intersects(vk::FormatFeatureFlags::TRANSFER_DST),
+        );
+        flags.set(
+            Tfc::STORAGE_ATOMIC,
+            features.intersects(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC),
         );
         <span class="comment">// Vulkan is very permissive about MSAA
         </span>flags.set(Tfc::MULTISAMPLE_RESOLVE, !format.is_compressed());
