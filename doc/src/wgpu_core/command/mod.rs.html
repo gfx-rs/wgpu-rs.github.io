@@ -1068,7 +1068,12 @@
 <a href="#1067" id="1067">1067</a>
 <a href="#1068" id="1068">1068</a>
 <a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1098,6 +1103,7 @@
 
 <span class="kw">use </span><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions;
 
+<span class="kw">use </span><span class="kw">crate</span>::device::queue::TempResource;
 <span class="kw">use </span><span class="kw">crate</span>::device::{Device, DeviceError, MissingFeatures};
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, Mutex};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
@@ -1502,6 +1508,7 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BakedCommands {
     <span class="kw">pub</span>(<span class="kw">crate</span>) encoder: CommandEncoder,
     <span class="kw">pub</span>(<span class="kw">crate</span>) trackers: Tracker,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) temp_resources: Vec&lt;TempResource&gt;,
     buffer_memory_init_actions: Vec&lt;BufferInitTrackerAction&gt;,
     texture_memory_actions: CommandBufferTextureMemoryActions,
 }
@@ -1530,6 +1537,7 @@
 
     blas_actions: Vec&lt;BlasAction&gt;,
     tlas_actions: Vec&lt;TlasAction&gt;,
+    temp_resources: Vec&lt;TempResource&gt;,
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) commands: <span class="prelude-ty">Option</span>&lt;Vec&lt;TraceCommand&gt;&gt;,
@@ -1549,6 +1557,7 @@
         BakedCommands {
             encoder: <span class="self">self</span>.encoder,
             trackers: <span class="self">self</span>.trackers,
+            temp_resources: <span class="self">self</span>.temp_resources,
             buffer_memory_init_actions: <span class="self">self</span>.buffer_memory_init_actions,
             texture_memory_actions: <span class="self">self</span>.texture_memory_actions,
         }
@@ -1615,6 +1624,7 @@
                     pending_query_resets: QueryResetMap::new(),
                     blas_actions: Default::default(),
                     tlas_actions: Default::default(),
+                    temp_resources: Default::default(),
                     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
                     </span>commands: <span class="kw">if </span>device.trace.lock().is_some() {
                         <span class="prelude-val">Some</span>(Vec::new())

@@ -1548,39 +1548,7 @@
 <a href="#1547" id="1547">1547</a>
 <a href="#1548" id="1548">1548</a>
 <a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
-<a href="#1553" id="1553">1553</a>
-<a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a>
-<a href="#1556" id="1556">1556</a>
-<a href="#1557" id="1557">1557</a>
-<a href="#1558" id="1558">1558</a>
-<a href="#1559" id="1559">1559</a>
-<a href="#1560" id="1560">1560</a>
-<a href="#1561" id="1561">1561</a>
-<a href="#1562" id="1562">1562</a>
-<a href="#1563" id="1563">1563</a>
-<a href="#1564" id="1564">1564</a>
-<a href="#1565" id="1565">1565</a>
-<a href="#1566" id="1566">1566</a>
-<a href="#1567" id="1567">1567</a>
-<a href="#1568" id="1568">1568</a>
-<a href="#1569" id="1569">1569</a>
-<a href="#1570" id="1570">1570</a>
-<a href="#1571" id="1571">1571</a>
-<a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a>
-<a href="#1574" id="1574">1574</a>
-<a href="#1575" id="1575">1575</a>
-<a href="#1576" id="1576">1576</a>
-<a href="#1577" id="1577">1577</a>
-<a href="#1578" id="1578">1578</a>
-<a href="#1579" id="1579">1579</a>
-<a href="#1580" id="1580">1580</a>
-<a href="#1581" id="1581">1581</a>
-<a href="#1582" id="1582">1582</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#1550" id="1550">1550</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
     api_log,
@@ -1609,7 +1577,6 @@
 
 <span class="kw">use </span>smallvec::SmallVec;
 
-<span class="kw">use </span><span class="kw">crate</span>::resource::{Blas, DestroyedAccelerationStructure, Tlas};
 <span class="kw">use </span><span class="kw">crate</span>::scratch::ScratchBuffer;
 <span class="kw">use </span>std::{
     iter,
@@ -1839,7 +1806,6 @@
     ScratchBuffer(ScratchBuffer),
     DestroyedBuffer(DestroyedBuffer),
     DestroyedTexture(DestroyedTexture),
-    DestroyedAccelerationStructure(DestroyedAccelerationStructure),
 }
 
 <span class="doccomment">/// A series of raw [`CommandBuffer`]s that have been submitted to a
@@ -1850,15 +1816,12 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EncoderInFlight {
     inner: <span class="kw">crate</span>::command::CommandEncoder,
     <span class="kw">pub</span>(<span class="kw">crate</span>) trackers: Tracker,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) temp_resources: Vec&lt;TempResource&gt;,
 
     <span class="doccomment">/// These are the buffers that have been tracked by `PendingWrites`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&gt;&gt;,
     <span class="doccomment">/// These are the textures that have been tracked by `PendingWrites`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&gt;&gt;,
-    <span class="doccomment">/// These are the BLASes that have been tracked by `PendingWrites`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_blas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Blas&gt;&gt;,
-    <span class="doccomment">/// These are the TLASes that have been tracked by `PendingWrites`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pending_tlas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Tlas&gt;&gt;,
 }
 
 <span class="doccomment">/// A private command encoder for writes made directly on the device
@@ -1896,8 +1859,6 @@
     temp_resources: Vec&lt;TempResource&gt;,
     dst_buffers: FastHashMap&lt;TrackerIndex, Arc&lt;Buffer&gt;&gt;,
     dst_textures: FastHashMap&lt;TrackerIndex, Arc&lt;Texture&gt;&gt;,
-    dst_blas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Blas&gt;&gt;,
-    dst_tlas_s: FastHashMap&lt;TrackerIndex, Arc&lt;Tlas&gt;&gt;,
 }
 
 <span class="kw">impl </span>PendingWrites {
@@ -1908,8 +1869,6 @@
             temp_resources: Vec::new(),
             dst_buffers: FastHashMap::default(),
             dst_textures: FastHashMap::default(),
-            dst_blas_s: FastHashMap::default(),
-            dst_tlas_s: FastHashMap::default(),
         }
     }
 
@@ -1931,22 +1890,6 @@
         <span class="self">self</span>.dst_textures.contains_key(<span class="kw-2">&amp;</span>texture.tracker_index())
     }
 
-    <span class="kw">pub fn </span>insert_blas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Arc&lt;Blas&gt;) {
-        <span class="self">self</span>.dst_blas_s.insert(blas.tracker_index(), blas.clone());
-    }
-
-    <span class="kw">pub fn </span>insert_tlas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tlas: <span class="kw-2">&amp;</span>Arc&lt;Tlas&gt;) {
-        <span class="self">self</span>.dst_tlas_s.insert(tlas.tracker_index(), tlas.clone());
-    }
-
-    <span class="kw">pub fn </span>contains_blas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blas: <span class="kw-2">&amp;</span>Arc&lt;Blas&gt;) -&gt; bool {
-        <span class="self">self</span>.dst_blas_s.contains_key(<span class="kw-2">&amp;</span>blas.tracker_index())
-    }
-
-    <span class="kw">pub fn </span>contains_tlas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tlas: <span class="kw-2">&amp;</span>Arc&lt;Tlas&gt;) -&gt; bool {
-        <span class="self">self</span>.dst_tlas_s.contains_key(<span class="kw-2">&amp;</span>tlas.tracker_index())
-    }
-
     <span class="kw">pub fn </span>consume_temp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: TempResource) {
         <span class="self">self</span>.temp_resources.push(resource);
     }
@@ -1965,8 +1908,6 @@
         <span class="kw">if </span><span class="self">self</span>.is_recording {
             <span class="kw">let </span>pending_buffers = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_buffers);
             <span class="kw">let </span>pending_textures = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_textures);
-            <span class="kw">let </span>pending_blas_s = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_blas_s);
-            <span class="kw">let </span>pending_tlas_s = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.dst_tlas_s);
 
             <span class="kw">let </span>cmd_buf = <span class="kw">unsafe </span>{ <span class="self">self</span>.command_encoder.end_encoding() }
                 .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
@@ -1985,10 +1926,9 @@
                     hal_label: <span class="prelude-val">None</span>,
                 },
                 trackers: Tracker::new(),
+                temp_resources: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_resources),
                 pending_buffers,
                 pending_textures,
-                pending_blas_s,
-                pending_tlas_s,
             };
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(encoder))
         } <span class="kw">else </span>{
@@ -2805,10 +2745,9 @@
                         </span>active_executions.push(EncoderInFlight {
                             inner: baked.encoder,
                             trackers: baked.trackers,
+                            temp_resources: baked.temp_resources,
                             pending_buffers: FastHashMap::default(),
                             pending_textures: FastHashMap::default(),
-                            pending_blas_s: FastHashMap::default(),
-                            pending_tlas_s: FastHashMap::default(),
                         });
                     }
 
@@ -2905,11 +2844,8 @@
             <span class="macro">profiling::scope!</span>(<span class="string">"cleanup"</span>);
 
             <span class="comment">// this will register the new submission to the life time tracker
-            </span><span class="self">self</span>.lock_life().track_submission(
-                submit_index,
-                pending_writes.temp_resources.drain(..),
-                active_executions,
-            );
+            </span><span class="self">self</span>.lock_life()
+                .track_submission(submit_index, active_executions);
             drop(pending_writes);
 
             <span class="comment">// This will schedule destruction of all resources that are no longer needed

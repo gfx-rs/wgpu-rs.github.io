@@ -254,29 +254,7 @@
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
+<a href="#256" id="256">256</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
 // Major missing optimizations (no api surface changes needed):
 // - use custom tracker to track build state
 // - no forced rebuilt (build mode deduction)
@@ -287,9 +265,9 @@
 
 </span><span class="kw">use crate</span>::{
     command::CommandEncoderError,
-    device::DeviceError,
+    device::{DeviceError, MissingFeatures},
     id::{BlasId, BufferId, TlasId},
-    resource::CreateBufferError,
+    resource::{DestroyedResourceError, InvalidResourceError, MissingBufferUsageError},
 };
 <span class="kw">use </span>std::num::NonZeroU64;
 <span class="kw">use </span>std::sync::Arc;
@@ -303,15 +281,13 @@
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
-    </span>CreateBufferError(<span class="attr">#[from] </span>CreateBufferError),
+    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
     <span class="attr">#[error(
         <span class="string">"Only one of 'index_count' and 'index_format' was provided (either provide both or none)"
     </span>)]
     </span>MissingIndexData,
     <span class="attr">#[error(<span class="string">"Provided format was not within allowed formats. Provided format: {0:?}. Allowed formats: {1:?}"</span>)]
     </span>InvalidVertexFormat(VertexFormat, Vec&lt;VertexFormat&gt;),
-    <span class="attr">#[error(<span class="string">"Features::RAY_TRACING_ACCELERATION_STRUCTURE is not enabled"</span>)]
-    </span>MissingFeature,
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -319,9 +295,7 @@
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
-    </span>CreateBufferError(<span class="attr">#[from] </span>CreateBufferError),
-    <span class="attr">#[error(<span class="string">"Features::RAY_TRACING_ACCELERATION_STRUCTURE is not enabled"</span>)]
-    </span>MissingFeature,
+    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 }
 
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.
@@ -333,14 +307,17 @@
     <span class="attr">#[error(transparent)]
     </span>Device(<span class="attr">#[from] </span>DeviceError),
 
-    <span class="attr">#[error(<span class="string">"BufferId is invalid or destroyed"</span>)]
-    </span>InvalidBufferId,
+    <span class="attr">#[error(transparent)]
+    </span>InvalidResource(<span class="attr">#[from] </span>InvalidResourceError),
 
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidBuffer(ResourceErrorIdent),
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
 
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is missing `BLAS_INPUT` usage flag"</span>)]
-    </span>MissingBlasInputUsageFlag(ResourceErrorIdent),
+    <span class="attr">#[error(transparent)]
+    </span>MissingBufferUsage(<span class="attr">#[from] </span>MissingBufferUsageError),
+
+    <span class="attr">#[error(transparent)]
+    </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
 
     <span class="attr">#[error(
         <span class="string">"Buffer {0:?} size is insufficient for provided size information (size: {1}, required: {2}"
@@ -389,12 +366,6 @@
     <span class="attr">#[error(<span class="string">"Blas {0:?} build sizes require index buffer but none was provided"</span>)]
     </span>MissingIndexBuffer(ResourceErrorIdent),
 
-    <span class="attr">#[error(<span class="string">"BlasId is invalid"</span>)]
-    </span>InvalidBlasId,
-
-    <span class="attr">#[error(<span class="string">"Blas {0:?} is destroyed"</span>)]
-    </span>InvalidBlas(ResourceErrorIdent),
-
     <span class="attr">#[error(
         <span class="string">"Tlas {0:?} an associated instances contains an invalid custom index (more than 24bits)"
     </span>)]
@@ -404,21 +375,6 @@
         <span class="string">"Tlas {0:?} has {1} active instances but only {2} are allowed as specified by the descriptor at creation"
     </span>)]
     </span>TlasInstanceCountExceeded(ResourceErrorIdent, u32, u32),
-
-    <span class="attr">#[error(<span class="string">"BlasId is invalid or destroyed (for instance)"</span>)]
-    </span>InvalidBlasIdForInstance,
-
-    <span class="attr">#[error(<span class="string">"TlasId is invalid or destroyed"</span>)]
-    </span>InvalidTlasId,
-
-    <span class="attr">#[error(<span class="string">"Tlas {0:?} is invalid or destroyed"</span>)]
-    </span>InvalidTlas(ResourceErrorIdent),
-
-    <span class="attr">#[error(<span class="string">"Features::RAY_TRACING_ACCELERATION_STRUCTURE is not enabled"</span>)]
-    </span>MissingFeature,
-
-    <span class="attr">#[error(<span class="string">"Buffer {0:?} is missing `TLAS_INPUT` usage flag"</span>)]
-    </span>MissingTlasInputUsageFlag(ResourceErrorIdent),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -429,14 +385,14 @@
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>ValidateTlasActionsError {
+    <span class="attr">#[error(transparent)]
+    </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
+
     <span class="attr">#[error(<span class="string">"Tlas {0:?} is used before it is built"</span>)]
     </span>UsedUnbuilt(ResourceErrorIdent),
 
     <span class="attr">#[error(<span class="string">"Blas {0:?} is used before it is built (in Tlas {1:?})"</span>)]
     </span>UsedUnbuiltBlas(ResourceErrorIdent, ResourceErrorIdent),
-
-    <span class="attr">#[error(<span class="string">"BlasId is destroyed (in Tlas {0:?})"</span>)]
-    </span>InvalidBlas(ResourceErrorIdent),
 
     <span class="attr">#[error(<span class="string">"Blas {0:?} is newer than the containing Tlas {1:?}"</span>)]
     </span>BlasNewerThenTlas(ResourceErrorIdent, ResourceErrorIdent),
