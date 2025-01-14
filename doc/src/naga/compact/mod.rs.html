@@ -352,8 +352,7 @@
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a></pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
+<a href="#354" id="354">354</a></pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>handle_set_map;
 <span class="kw">mod </span>statements;
@@ -428,14 +427,6 @@
         }
     }
 
-    <span class="kw">for </span>e <span class="kw">in </span>module.entry_points.iter() {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(sizes) = e.workgroup_size_overrides {
-            <span class="kw">for </span>size <span class="kw">in </span>sizes.iter().filter_map(|x| <span class="kw-2">*</span>x) {
-                module_tracer.global_expressions_used.insert(size);
-            }
-        }
-    }
-
     <span class="comment">// We assume that all functions are used.
     //
     // Observe which types, constant expressions, constants, and
@@ -461,6 +452,13 @@
         .iter()
         .map(|e| {
             <span class="macro">log::trace!</span>(<span class="string">"tracing entry point {:?}"</span>, e.function.name);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(sizes) = e.workgroup_size_overrides {
+                <span class="kw">for </span>size <span class="kw">in </span>sizes.iter().filter_map(|x| <span class="kw-2">*</span>x) {
+                    module_tracer.global_expressions_used.insert(size);
+                }
+            }
+
             <span class="kw">let </span><span class="kw-2">mut </span>used = module_tracer.as_function(<span class="kw-2">&amp;</span>e.function);
             used.trace();
             FunctionMap::from(used)
