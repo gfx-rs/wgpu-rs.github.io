@@ -985,38 +985,7 @@
 <a href="#984" id="984">984</a>
 <a href="#985" id="985">985</a>
 <a href="#986" id="986">986</a>
-<a href="#987" id="987">987</a>
-<a href="#988" id="988">988</a>
-<a href="#989" id="989">989</a>
-<a href="#990" id="990">990</a>
-<a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a>
-<a href="#1000" id="1000">1000</a>
-<a href="#1001" id="1001">1001</a>
-<a href="#1002" id="1002">1002</a>
-<a href="#1003" id="1003">1003</a>
-<a href="#1004" id="1004">1004</a>
-<a href="#1005" id="1005">1005</a>
-<a href="#1006" id="1006">1006</a>
-<a href="#1007" id="1007">1007</a>
-<a href="#1008" id="1008">1008</a>
-<a href="#1009" id="1009">1009</a>
-<a href="#1010" id="1010">1010</a>
-<a href="#1011" id="1011">1011</a>
-<a href="#1012" id="1012">1012</a>
-<a href="#1013" id="1013">1013</a>
-<a href="#1014" id="1014">1014</a>
-<a href="#1015" id="1015">1015</a>
-<a href="#1016" id="1016">1016</a>
-<a href="#1017" id="1017">1017</a>
-<a href="#1018" id="1018">1018</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+<a href="#987" id="987">987</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{borrow::Cow, collections::HashMap};
 
 <span class="kw">use crate</span>::{
@@ -1091,8 +1060,12 @@
                 <span class="kw">let </span>hal_desc = hal::InstanceDescriptor {
                     name: <span class="string">"wgpu"</span>,
                     flags: instance_desc.flags,
-                    dx12_shader_compiler: instance_desc.dx12_shader_compiler.clone(),
-                    gles_minor_version: instance_desc.gles_minor_version,
+                    dx12_shader_compiler: instance_desc
+                        .backend_options
+                        .dx12
+                        .shader_compiler
+                        .clone(),
+                    gles_minor_version: instance_desc.backend_options.gl.gles_minor_version,
                 };
 
                 <span class="kw">use </span>hal::Instance <span class="kw">as _</span>;
@@ -1998,40 +1971,5 @@
 
         <span class="prelude-val">Ok</span>((device_id, queue_id))
     }
-}
-
-<span class="doccomment">/// Generates a set of backends from a comma separated list of case-insensitive backend names.
-///
-/// Whitespace is stripped, so both 'gl, dx12' and 'gl,dx12' are valid.
-///
-/// Always returns WEBGPU on wasm over webgpu.
-///
-/// Names:
-/// - vulkan = "vulkan" or "vk"
-/// - dx12   = "dx12" or "d3d12"
-/// - metal  = "metal" or "mtl"
-/// - gles   = "opengl" or "gles" or "gl"
-/// - webgpu = "webgpu"
-</span><span class="kw">pub fn </span>parse_backends_from_comma_list(string: <span class="kw-2">&amp;</span>str) -&gt; Backends {
-    <span class="kw">let </span><span class="kw-2">mut </span>backends = Backends::empty();
-    <span class="kw">for </span>backend <span class="kw">in </span>string.to_lowercase().split(<span class="string">','</span>) {
-        backends |= <span class="kw">match </span>backend.trim() {
-            <span class="string">"vulkan" </span>| <span class="string">"vk" </span>=&gt; Backends::VULKAN,
-            <span class="string">"dx12" </span>| <span class="string">"d3d12" </span>=&gt; Backends::DX12,
-            <span class="string">"metal" </span>| <span class="string">"mtl" </span>=&gt; Backends::METAL,
-            <span class="string">"opengl" </span>| <span class="string">"gles" </span>| <span class="string">"gl" </span>=&gt; Backends::GL,
-            <span class="string">"webgpu" </span>=&gt; Backends::BROWSER_WEBGPU,
-            b =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">"unknown backend string '{}'"</span>, b);
-                <span class="kw">continue</span>;
-            }
-        }
-    }
-
-    <span class="kw">if </span>backends.is_empty() {
-        <span class="macro">log::warn!</span>(<span class="string">"no valid backend strings found!"</span>);
-    }
-
-    backends
 }
 </code></pre></div></section></main></body></html>

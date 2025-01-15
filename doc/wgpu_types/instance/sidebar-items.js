@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Dx12Compiler","Gles3MinorVersion"],"struct":["BackendOptions","Dx12BackendOptions","GlBackendOptions","InstanceDescriptor","InstanceFlags"]};

@@ -180,7 +180,11 @@
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a></pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a></pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Adapter, Device, Instance, Queue};
 <span class="kw">use </span>wgt::{Backends, Features, Limits};
 
 <span class="kw">use </span><span class="kw">crate</span>::report::AdapterReport;
@@ -216,14 +220,18 @@
     </span><span class="kw">let </span>dx12_shader_compiler = <span class="kw">if </span>force_fxc {
         wgpu::Dx12Compiler::Fxc
     } <span class="kw">else </span>{
-        wgpu::util::dx12_shader_compiler_from_env().unwrap_or(wgpu::Dx12Compiler::StaticDxc)
+        wgpu::Dx12Compiler::from_env().unwrap_or(wgpu::Dx12Compiler::StaticDxc)
     };
-    <span class="kw">let </span>gles_minor_version = wgpu::util::gles_minor_version_from_env().unwrap_or_default();
+    <span class="kw">let </span>gles_minor_version = wgpu::Gles3MinorVersion::from_env().unwrap_or_default();
     Instance::new(<span class="kw-2">&amp;</span>wgpu::InstanceDescriptor {
         backends,
         flags: wgpu::InstanceFlags::debugging().with_env(),
-        dx12_shader_compiler,
-        gles_minor_version,
+        backend_options: wgpu::BackendOptions {
+            dx12: wgpu::Dx12BackendOptions {
+                shader_compiler: dx12_shader_compiler,
+            },
+            gl: wgpu::GlBackendOptions { gles_minor_version },
+        },
     })
 }
 
