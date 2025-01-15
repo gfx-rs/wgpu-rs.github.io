@@ -3829,7 +3829,62 @@
 <a href="#3828" id="3828">3828</a>
 <a href="#3829" id="3829">3829</a>
 <a href="#3830" id="3830">3830</a>
-<a href="#3831" id="3831">3831</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#3831" id="3831">3831</a>
+<a href="#3832" id="3832">3832</a>
+<a href="#3833" id="3833">3833</a>
+<a href="#3834" id="3834">3834</a>
+<a href="#3835" id="3835">3835</a>
+<a href="#3836" id="3836">3836</a>
+<a href="#3837" id="3837">3837</a>
+<a href="#3838" id="3838">3838</a>
+<a href="#3839" id="3839">3839</a>
+<a href="#3840" id="3840">3840</a>
+<a href="#3841" id="3841">3841</a>
+<a href="#3842" id="3842">3842</a>
+<a href="#3843" id="3843">3843</a>
+<a href="#3844" id="3844">3844</a>
+<a href="#3845" id="3845">3845</a>
+<a href="#3846" id="3846">3846</a>
+<a href="#3847" id="3847">3847</a>
+<a href="#3848" id="3848">3848</a>
+<a href="#3849" id="3849">3849</a>
+<a href="#3850" id="3850">3850</a>
+<a href="#3851" id="3851">3851</a>
+<a href="#3852" id="3852">3852</a>
+<a href="#3853" id="3853">3853</a>
+<a href="#3854" id="3854">3854</a>
+<a href="#3855" id="3855">3855</a>
+<a href="#3856" id="3856">3856</a>
+<a href="#3857" id="3857">3857</a>
+<a href="#3858" id="3858">3858</a>
+<a href="#3859" id="3859">3859</a>
+<a href="#3860" id="3860">3860</a>
+<a href="#3861" id="3861">3861</a>
+<a href="#3862" id="3862">3862</a>
+<a href="#3863" id="3863">3863</a>
+<a href="#3864" id="3864">3864</a>
+<a href="#3865" id="3865">3865</a>
+<a href="#3866" id="3866">3866</a>
+<a href="#3867" id="3867">3867</a>
+<a href="#3868" id="3868">3868</a>
+<a href="#3869" id="3869">3869</a>
+<a href="#3870" id="3870">3870</a>
+<a href="#3871" id="3871">3871</a>
+<a href="#3872" id="3872">3872</a>
+<a href="#3873" id="3873">3873</a>
+<a href="#3874" id="3874">3874</a>
+<a href="#3875" id="3875">3875</a>
+<a href="#3876" id="3876">3876</a>
+<a href="#3877" id="3877">3877</a>
+<a href="#3878" id="3878">3878</a>
+<a href="#3879" id="3879">3879</a>
+<a href="#3880" id="3880">3880</a>
+<a href="#3881" id="3881">3881</a>
+<a href="#3882" id="3882">3882</a>
+<a href="#3883" id="3883">3883</a>
+<a href="#3884" id="3884">3884</a>
+<a href="#3885" id="3885">3885</a>
+<a href="#3886" id="3886">3886</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
         WrappedZeroValue,
@@ -3840,7 +3895,7 @@
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, index, ExpressionKindTracker, NameKey},
-    valid, Handle, Module, Scalar, ScalarKind, ShaderStage, TypeInner,
+    valid, Handle, Module, RayQueryFunction, Scalar, ScalarKind, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>std::{fmt, mem};
 
@@ -3935,6 +3990,8 @@
             entry_point_io: Vec::new(),
             named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
             wrapped: <span class="kw">super</span>::Wrapped::default(),
+            written_committed_intersection: <span class="bool-val">false</span>,
+            written_candidate_intersection: <span class="bool-val">false</span>,
             continue_ctx: back::continue_forward::ContinueCtx::default(),
             temp_access_chain: Vec::new(),
             need_bake_expressions: Default::default(),
@@ -3954,6 +4011,8 @@
         <span class="self">self</span>.entry_point_io.clear();
         <span class="self">self</span>.named_expressions.clear();
         <span class="self">self</span>.wrapped.clear();
+        <span class="self">self</span>.written_committed_intersection = <span class="bool-val">false</span>;
+        <span class="self">self</span>.written_candidate_intersection = <span class="bool-val">false</span>;
         <span class="self">self</span>.continue_ctx.clear();
         <span class="self">self</span>.need_bake_expressions.clear();
     }
@@ -5049,6 +5108,13 @@
             </span>TypeInner::Array { base, size, .. } | TypeInner::BindingArray { base, size } =&gt; {
                 <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
             }
+            TypeInner::AccelerationStructure =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"RaytracingAccelerationStructure"</span>)<span class="question-mark">?</span>;
+            }
+            TypeInner::RayQuery =&gt; {
+                <span class="comment">// these are constant flags, there are dynamic flags also but constant flags are not supported by naga
+                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"RayQuery&lt;RAY_FLAG_NONE&gt;"</span>)<span class="question-mark">?</span>;
+            }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(<span class="string">"write_value_type {inner:?}"</span>))),
         }
 
@@ -5206,15 +5272,20 @@
                 <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
             }
 
-            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-            <span class="comment">// Write the local initializer if needed
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(init) = local.init {
-                <span class="self">self</span>.write_expr(module, init, func_ctx)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                <span class="comment">// Zero initialize local variables
-                </span><span class="self">self</span>.write_default_init(module, local.ty)<span class="question-mark">?</span>;
+            <span class="kw">match </span>module.types[local.ty].inner {
+                <span class="comment">// from https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html#tracerayinline-example-1 it seems that ray queries shouldn't be zeroed
+                </span>TypeInner::RayQuery =&gt; {}
+                <span class="kw">_ </span>=&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
+                    <span class="comment">// Write the local initializer if needed
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(init) = local.init {
+                        <span class="self">self</span>.write_expr(module, init, func_ctx)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="comment">// Zero initialize local variables
+                        </span><span class="self">self</span>.write_default_init(module, local.ty)<span class="question-mark">?</span>;
+                    }
+                }
             }
-
             <span class="comment">// Finish the local with `;` and add a newline (only for readability)
             </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?
         </span>}
@@ -6081,7 +6152,37 @@
             } =&gt; {
                 <span class="self">self</span>.write_switch(module, func_ctx, level, selector, cases)<span class="question-mark">?</span>;
             }
-            Statement::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
+            Statement::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; <span class="kw">match </span><span class="kw-2">*</span>fun {
+                RayQueryFunction::Initialize {
+                    acceleration_structure,
+                    descriptor,
+                } =&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, query, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".TraceRayInline("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, acceleration_structure, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, descriptor, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".flags, "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, descriptor, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".cull_mask, "</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"RayDescFromRayDesc_("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, descriptor, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"));"</span>)<span class="question-mark">?</span>;
+                }
+                RayQueryFunction::Proceed { result } =&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>name = Baked(result).to_string();
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const bool {name} = "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.named_expressions.insert(result, name);
+                    <span class="self">self</span>.write_expr(module, query, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".Proceed();"</span>)<span class="question-mark">?</span>;
+                }
+                RayQueryFunction::Terminate =&gt; {
+                    <span class="self">self</span>.write_expr(module, query, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".Abort();"</span>)<span class="question-mark">?</span>;
+                }
+            },
             Statement::SubgroupBallot { result, predicate } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>name = Baked(result).to_string();
@@ -7439,8 +7540,17 @@
                 <span class="self">self</span>.write_expr(module, reject, func_ctx)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?
             </span>}
-            <span class="comment">// Not supported yet
-            </span>Expression::RayQueryGetIntersection { .. } =&gt; <span class="macro">unreachable!</span>(),
+            Expression::RayQueryGetIntersection { query, committed } =&gt; {
+                <span class="kw">if </span>committed {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"GetCommittedIntersection("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, query, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"GetCandidateIntersection("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, query, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                }
+            }
             <span class="comment">// Nothing to do here, since call expression already cached
             </span>Expression::CallResult(<span class="kw">_</span>)
             | Expression::AtomicResult { .. }
