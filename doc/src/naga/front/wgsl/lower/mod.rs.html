@@ -3330,20 +3330,7 @@
 <a href="#3329" id="3329">3329</a>
 <a href="#3330" id="3330">3330</a>
 <a href="#3331" id="3331">3331</a>
-<a href="#3332" id="3332">3332</a>
-<a href="#3333" id="3333">3333</a>
-<a href="#3334" id="3334">3334</a>
-<a href="#3335" id="3335">3335</a>
-<a href="#3336" id="3336">3336</a>
-<a href="#3337" id="3337">3337</a>
-<a href="#3338" id="3338">3338</a>
-<a href="#3339" id="3339">3339</a>
-<a href="#3340" id="3340">3340</a>
-<a href="#3341" id="3341">3341</a>
-<a href="#3342" id="3342">3342</a>
-<a href="#3343" id="3343">3343</a>
-<a href="#3344" id="3344">3344</a>
-<a href="#3345" id="3345">3345</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3332" id="3332">3332</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -4387,38 +4374,8 @@
                         v.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx))
                             .transpose()<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_override();
-
-                    <span class="kw">let </span>ty;
-                    <span class="kw">let </span>initializer;
-                    <span class="kw">match </span>(v.init, explicit_ty) {
-                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
-                            <span class="kw">let </span>init = <span class="self">self</span>.expression_for_abstract(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
-                            <span class="kw">let </span>init = ectx
-                                .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, v.name.span)
-                                .map_err(|error| <span class="kw">match </span>error {
-                                Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
-                                    name: v.name.span,
-                                    expected: e.dest_type,
-                                    got: e.source_type,
-                                },
-                                other =&gt; other,
-                            })<span class="question-mark">?</span>;
-                            ty = explicit_ty;
-                            initializer = <span class="prelude-val">Some</span>(init);
-                        }
-                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">None</span>) =&gt; {
-                            <span class="kw">let </span>concretized = <span class="self">self</span>.expression(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                            ty = ectx.register_type(concretized)<span class="question-mark">?</span>;
-                            initializer = <span class="prelude-val">Some</span>(concretized);
-                        }
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
-                            ty = explicit_ty;
-                            initializer = <span class="prelude-val">None</span>;
-                        }
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(v.name.span)),
-                    }
+                    <span class="kw">let </span>(ty, initializer) =
+                        <span class="self">self</span>.type_and_init(v.name, v.init, explicit_ty, <span class="kw-2">&amp;mut </span>ctx.as_override())<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>binding = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) = v.binding {
                         <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ResourceBinding {
@@ -4481,17 +4438,13 @@
                         .insert(c.name.name, LoweredGlobalDecl::Const(handle));
                 }
                 ast::GlobalDeclKind::Override(<span class="kw-2">ref </span>o) =&gt; {
-                    <span class="kw">let </span>init = o
-                        .init
-                        .map(|init| <span class="self">self</span>.expression(init, <span class="kw-2">&amp;mut </span>ctx.as_override()))
-                        .transpose()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>inferred_type = init
-                        .map(|init| ctx.as_const().register_type(init))
-                        .transpose()<span class="question-mark">?</span>;
-
                     <span class="kw">let </span>explicit_ty =
-                        o.ty.map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx))
+                        o.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx))
                             .transpose()<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_override();
+
+                    <span class="kw">let </span>(ty, init) = <span class="self">self</span>.type_and_init(o.name, o.init, explicit_ty, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>id =
                         o.id.map(|id| <span class="self">self</span>.const_u32(id, <span class="kw-2">&amp;mut </span>ctx.as_const()))
@@ -4505,26 +4458,6 @@
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
-
-                    <span class="kw">let </span>ty = <span class="kw">match </span>(explicit_ty, inferred_type) {
-                        (<span class="prelude-val">Some</span>(explicit_ty), <span class="prelude-val">Some</span>(inferred_type)) =&gt; {
-                            <span class="kw">if </span>explicit_ty == inferred_type {
-                                explicit_ty
-                            } <span class="kw">else </span>{
-                                <span class="kw">let </span>gctx = ctx.module.to_ctx();
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InitializationTypeMismatch {
-                                    name: o.name.span,
-                                    expected: explicit_ty.to_wgsl(<span class="kw-2">&amp;</span>gctx).into(),
-                                    got: inferred_type.to_wgsl(<span class="kw-2">&amp;</span>gctx).into(),
-                                });
-                            }
-                        }
-                        (<span class="prelude-val">Some</span>(explicit_ty), <span class="prelude-val">None</span>) =&gt; explicit_ty,
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(inferred_type)) =&gt; inferred_type,
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(o.name.span));
-                        }
-                    };
 
                     <span class="kw">let </span>handle = ctx.module.overrides.append(
                         <span class="kw">crate</span>::Override {
@@ -4576,6 +4509,47 @@
         </span><span class="kw">crate</span>::compact::compact(<span class="kw-2">&amp;mut </span>module);
 
         <span class="prelude-val">Ok</span>(module)
+    }
+
+    <span class="doccomment">/// Obtain (inferred) type and initializer after automatic conversion
+    </span><span class="kw">fn </span>type_and_init(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: ast::Ident&lt;<span class="lifetime">'source</span>&gt;,
+        init: <span class="prelude-ty">Option</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;&gt;,
+        explicit_ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;,
+        ectx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+        <span class="kw">let </span>ty;
+        <span class="kw">let </span>initializer;
+        <span class="kw">match </span>(init, explicit_ty) {
+            (<span class="prelude-val">Some</span>(init), <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
+                <span class="kw">let </span>init = <span class="self">self</span>.expression_for_abstract(init, ectx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
+                <span class="kw">let </span>init = ectx
+                    .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, name.span)
+                    .map_err(|error| <span class="kw">match </span>error {
+                        Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
+                            name: name.span,
+                            expected: e.dest_type,
+                            got: e.source_type,
+                        },
+                        other =&gt; other,
+                    })<span class="question-mark">?</span>;
+                ty = explicit_ty;
+                initializer = <span class="prelude-val">Some</span>(init);
+            }
+            (<span class="prelude-val">Some</span>(init), <span class="prelude-val">None</span>) =&gt; {
+                <span class="kw">let </span>concretized = <span class="self">self</span>.expression(init, ectx)<span class="question-mark">?</span>;
+                ty = ectx.register_type(concretized)<span class="question-mark">?</span>;
+                initializer = <span class="prelude-val">Some</span>(concretized);
+            }
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
+                ty = explicit_ty;
+                initializer = <span class="prelude-val">None</span>;
+            }
+            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(name.span)),
+        }
+        <span class="prelude-val">Ok</span>((ty, initializer))
     }
 
     <span class="kw">fn </span>function(
