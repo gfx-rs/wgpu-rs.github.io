@@ -189,7 +189,50 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a></pre></div><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a></pre></div><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
 //!
 //! Nothing in this module is a part of the WebGPU API specification;
 //! they are unique to the `wgpu` library.
@@ -378,6 +421,49 @@
             adapter_info.vendor, adapter_info.device
         )),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+    }
+}
+
+<span class="doccomment">/// Adds extra conversion functions to `TextureFormat`.
+</span><span class="kw">pub trait </span>TextureFormatExt {
+    <span class="doccomment">/// Finds the [`TextureFormat`](wgt::TextureFormat) corresponding to the given
+    /// [`StorageFormat`](wgc::naga::StorageFormat).
+    ///
+    /// # Examples
+    /// ```
+    /// use wgpu::util::TextureFormatExt;
+    /// assert_eq!(wgpu::TextureFormat::from_storage_format(wgpu::naga::StorageFormat::Bgra8Unorm), wgpu::TextureFormat::Bgra8Unorm);
+    /// ```
+    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+    #[cfg(any(wgpu_core, naga))]
+    </span><span class="kw">fn </span>from_storage_format(storage_format: <span class="kw">crate</span>::naga::StorageFormat) -&gt; <span class="self">Self</span>;
+
+    <span class="doccomment">/// Finds the [`StorageFormat`](wgc::naga::StorageFormat) corresponding to the given [`TextureFormat`](wgt::TextureFormat).
+    /// Returns `None` if there is no matching storage format,
+    /// which typically indicates this format is not supported
+    /// for storage textures.
+    ///
+    /// # Examples
+    /// ```
+    /// use wgpu::util::TextureFormatExt;
+    /// assert_eq!(wgpu::TextureFormat::Bgra8Unorm.to_storage_format(), Some(wgpu::naga::StorageFormat::Bgra8Unorm));
+    /// ```
+    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+    #[cfg(any(wgpu_core, naga))]
+    </span><span class="kw">fn </span>to_storage_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::naga::StorageFormat&gt;;
+}
+
+<span class="kw">impl </span>TextureFormatExt <span class="kw">for </span>wgt::TextureFormat {
+    <span class="attr">#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+    #[cfg(any(wgpu_core, naga))]
+    </span><span class="kw">fn </span>from_storage_format(storage_format: <span class="kw">crate</span>::naga::StorageFormat) -&gt; <span class="self">Self </span>{
+        wgc::map_storage_format_from_naga(storage_format)
+    }
+
+    <span class="attr">#[cfg_attr(docsrs, doc(cfg(any(wgpu_core, naga))))]
+    #[cfg(any(wgpu_core, naga))]
+    </span><span class="kw">fn </span>to_storage_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::naga::StorageFormat&gt; {
+        wgc::map_storage_format_to_naga(<span class="kw-2">*</span><span class="self">self</span>)
     }
 }
 </code></pre></div></section></main></body></html>
