@@ -6346,7 +6346,11 @@
 <a href="#6345" id="6345">6345</a>
 <a href="#6346" id="6346">6346</a>
 <a href="#6347" id="6347">6347</a>
-<a href="#6348" id="6348">6348</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
+<a href="#6348" id="6348">6348</a>
+<a href="#6349" id="6349">6349</a>
+<a href="#6350" id="6350">6350</a>
+<a href="#6351" id="6351">6351</a>
+<a href="#6352" id="6352">6352</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
@@ -7560,7 +7564,11 @@
     ) -&gt; BackendResult {
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.put_expression(image, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>op = fun.to_msl();
+        <span class="kw">let </span>op = <span class="kw">if </span>context.expression.resolve_type(value).scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
+            fun.to_msl_64_bit()<span class="question-mark">?
+        </span>} <span class="kw">else </span>{
+            fun.to_msl()
+        };
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".atomic_{}("</span>, op)<span class="question-mark">?</span>;
         <span class="comment">// coordinates in IR are int, but Metal expects uint
         </span><span class="self">self</span>.put_cast_to_uint_scalar_or_vector(address.coordinate, <span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;

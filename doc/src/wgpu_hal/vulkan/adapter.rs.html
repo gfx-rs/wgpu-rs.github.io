@@ -2481,7 +2481,50 @@
 <a href="#2480" id="2480">2480</a>
 <a href="#2481" id="2481">2481</a>
 <a href="#2482" id="2482">2482</a>
-<a href="#2483" id="2483">2483</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
+<a href="#2483" id="2483">2483</a>
+<a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
+<a href="#2486" id="2486">2486</a>
+<a href="#2487" id="2487">2487</a>
+<a href="#2488" id="2488">2488</a>
+<a href="#2489" id="2489">2489</a>
+<a href="#2490" id="2490">2490</a>
+<a href="#2491" id="2491">2491</a>
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
+<a href="#2494" id="2494">2494</a>
+<a href="#2495" id="2495">2495</a>
+<a href="#2496" id="2496">2496</a>
+<a href="#2497" id="2497">2497</a>
+<a href="#2498" id="2498">2498</a>
+<a href="#2499" id="2499">2499</a>
+<a href="#2500" id="2500">2500</a>
+<a href="#2501" id="2501">2501</a>
+<a href="#2502" id="2502">2502</a>
+<a href="#2503" id="2503">2503</a>
+<a href="#2504" id="2504">2504</a>
+<a href="#2505" id="2505">2505</a>
+<a href="#2506" id="2506">2506</a>
+<a href="#2507" id="2507">2507</a>
+<a href="#2508" id="2508">2508</a>
+<a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
+<a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -2592,6 +2635,9 @@
     <span class="doccomment">/// Features provided by `VK_KHR_shader_atomic_int64`, promoted to Vulkan 1.2.
     </span>shader_atomic_int64: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderAtomicInt64Features&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
+    <span class="doccomment">/// Features provided by `VK_EXT_shader_image_atomic_int64`
+    </span>shader_image_atomic_int64: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderImageAtomicInt64FeaturesEXT&lt;<span class="lifetime">'static</span>&gt;&gt;,
+
     <span class="doccomment">/// Features provided by `VK_EXT_shader_atomic_float`.
     </span>shader_atomic_float: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT&lt;<span class="lifetime">'static</span>&gt;&gt;,
 
@@ -2641,6 +2687,9 @@
             info = info.push_next(feature);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_atomic_int64 {
+            info = info.push_next(feature);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_image_atomic_int64 {
             info = info.push_next(feature);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>feature) = <span class="self">self</span>.shader_atomic_float {
@@ -2927,6 +2976,17 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
+            shader_image_atomic_int64: <span class="kw">if </span>enabled_extensions
+                .contains(<span class="kw-2">&amp;</span>ext::shader_image_atomic_int64::NAME)
+            {
+                <span class="kw">let </span>needed = requested_features.intersects(wgt::Features::TEXTURE_INT64_ATOMIC);
+                <span class="prelude-val">Some</span>(
+                    vk::PhysicalDeviceShaderImageAtomicInt64FeaturesEXT::default()
+                        .shader_image_int64_atomics(needed),
+                )
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>},
             shader_atomic_float: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>ext::shader_atomic_float::NAME) {
                 <span class="kw">let </span>needed = requested_features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC);
                 <span class="prelude-val">Some</span>(
@@ -3079,6 +3139,16 @@
                 F::SHADER_INT64_ATOMIC_ALL_OPS | F::SHADER_INT64_ATOMIC_MIN_MAX,
                 shader_atomic_int64.shader_buffer_int64_atomics != <span class="number">0
                     </span>&amp;&amp; shader_atomic_int64.shader_shared_int64_atomics != <span class="number">0</span>,
+            );
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_image_atomic_int64) = <span class="self">self</span>.shader_image_atomic_int64 {
+            features.set(
+                F::TEXTURE_INT64_ATOMIC,
+                shader_image_atomic_int64
+                    .shader_image_int64_atomics(<span class="bool-val">true</span>)
+                    .shader_image_int64_atomics
+                    != <span class="number">0</span>,
             );
         }
 
@@ -3502,6 +3572,11 @@
             extensions.push(khr::shader_atomic_int64::NAME);
         }
 
+        <span class="comment">// Require `VK_EXT_shader_image_atomic_int64` if the associated feature was requested
+        </span><span class="kw">if </span>requested_features.intersects(wgt::Features::TEXTURE_INT64_ATOMIC) {
+            extensions.push(ext::shader_image_atomic_int64::NAME);
+        }
+
         <span class="comment">// Require `VK_EXT_shader_atomic_float` if the associated feature was requested
         </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC) {
             extensions.push(ext::shader_atomic_float::NAME);
@@ -3802,6 +3877,12 @@
                 features2 = features2.push_next(next);
             }
 
+            <span class="kw">if </span>capabilities.supports_extension(ext::shader_image_atomic_int64::NAME) {
+                <span class="kw">let </span>next = features
+                    .shader_image_atomic_int64
+                    .insert(vk::PhysicalDeviceShaderImageAtomicInt64FeaturesEXT::default());
+                features2 = features2.push_next(next);
+            }
             <span class="kw">if </span>capabilities.supports_extension(ext::shader_atomic_float::NAME) {
                 <span class="kw">let </span>next = features
                     .shader_atomic_float
@@ -4298,9 +4379,14 @@
 
             <span class="kw">if </span>features.intersects(
                 wgt::Features::SHADER_INT64_ATOMIC_ALL_OPS
-                    | wgt::Features::SHADER_INT64_ATOMIC_MIN_MAX,
+                    | wgt::Features::SHADER_INT64_ATOMIC_MIN_MAX
+                    | wgt::Features::TEXTURE_INT64_ATOMIC,
             ) {
                 capabilities.push(spv::Capability::Int64Atomics);
+            }
+
+            <span class="kw">if </span>features.intersects(wgt::Features::TEXTURE_INT64_ATOMIC) {
+                capabilities.push(spv::Capability::Int64ImageEXT);
             }
 
             <span class="kw">if </span>features.contains(wgt::Features::SHADER_FLOAT32_ATOMIC) {

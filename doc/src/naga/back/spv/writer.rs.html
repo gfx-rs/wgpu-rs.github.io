@@ -2116,7 +2116,10 @@
 <a href="#2115" id="2115">2115</a>
 <a href="#2116" id="2116">2116</a>
 <a href="#2117" id="2117">2117</a>
-<a href="#2118" id="2118">2118</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#2118" id="2118">2118</a>
+<a href="#2119" id="2119">2119</a>
+<a href="#2120" id="2120">2120</a>
+<a href="#2121" id="2121">2121</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
     Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo, EntryPointContext, Error,
@@ -3207,10 +3210,13 @@
                 <span class="string">"storage image format"</span>,
                 <span class="kw-2">&amp;</span>[spirv::Capability::StorageImageExtendedFormats],
             ),
-            If::R64ui | If::R64i =&gt; <span class="self">self</span>.require_any(
-                <span class="string">"64-bit integer storage image format"</span>,
-                <span class="kw-2">&amp;</span>[spirv::Capability::Int64ImageEXT],
-            ),
+            If::R64ui | If::R64i =&gt; {
+                <span class="self">self</span>.use_extension(<span class="string">"SPV_EXT_shader_image_int64"</span>);
+                <span class="self">self</span>.require_any(
+                    <span class="string">"64-bit integer storage image format"</span>,
+                    <span class="kw-2">&amp;</span>[spirv::Capability::Int64ImageEXT],
+                )
+            }
             If::Unknown
             | If::Rgba32f
             | If::Rgba16f

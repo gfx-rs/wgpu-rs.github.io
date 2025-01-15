@@ -8063,7 +8063,40 @@
 <a href="#8062" id="8062">8062</a>
 <a href="#8063" id="8063">8063</a>
 <a href="#8064" id="8064">8064</a>
-<a href="#8065" id="8065">8065</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#8065" id="8065">8065</a>
+<a href="#8066" id="8066">8066</a>
+<a href="#8067" id="8067">8067</a>
+<a href="#8068" id="8068">8068</a>
+<a href="#8069" id="8069">8069</a>
+<a href="#8070" id="8070">8070</a>
+<a href="#8071" id="8071">8071</a>
+<a href="#8072" id="8072">8072</a>
+<a href="#8073" id="8073">8073</a>
+<a href="#8074" id="8074">8074</a>
+<a href="#8075" id="8075">8075</a>
+<a href="#8076" id="8076">8076</a>
+<a href="#8077" id="8077">8077</a>
+<a href="#8078" id="8078">8078</a>
+<a href="#8079" id="8079">8079</a>
+<a href="#8080" id="8080">8080</a>
+<a href="#8081" id="8081">8081</a>
+<a href="#8082" id="8082">8082</a>
+<a href="#8083" id="8083">8083</a>
+<a href="#8084" id="8084">8084</a>
+<a href="#8085" id="8085">8085</a>
+<a href="#8086" id="8086">8086</a>
+<a href="#8087" id="8087">8087</a>
+<a href="#8088" id="8088">8088</a>
+<a href="#8089" id="8089">8089</a>
+<a href="#8090" id="8090">8090</a>
+<a href="#8091" id="8091">8091</a>
+<a href="#8092" id="8092">8092</a>
+<a href="#8093" id="8093">8093</a>
+<a href="#8094" id="8094">8094</a>
+<a href="#8095" id="8095">8095</a>
+<a href="#8096" id="8096">8096</a>
+<a href="#8097" id="8097">8097</a>
+<a href="#8098" id="8098">8098</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -8471,7 +8504,7 @@
         /// This is a web and native feature.
         </span><span class="kw">const </span>FLOAT32_FILTERABLE = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
 
-        <span class="comment">// Bits 12-19 available for webgpu features. Should you chose to use some of them for
+        <span class="comment">// Bits 12-18 available for webgpu features. Should you chose to use some of them for
         // for native features, don't forget to update `all_webgpu_mask` and `all_native_mask`
         // accordingly.
 
@@ -8481,7 +8514,17 @@
         // Native Features:
         //
 
-        </span><span class="doccomment">/// Allows shaders to use f32 atomic load, store, add, sub, and exchange.
+        </span><span class="doccomment">/// Enables R64Uint image atomic min and max.
+        ///
+        /// Supported platforms:
+        /// - Vulkan (with VK_EXT_shader_image_atomic_int64)
+        /// - DX12 (with SM 6.6+)
+        /// - Metal (with MSL 3.1+)
+        ///
+        /// This is a native only feature.
+        </span><span class="kw">const </span>TEXTURE_INT64_ATOMIC = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
+
+        <span class="doccomment">/// Allows shaders to use f32 atomic load, store, add, sub, and exchange.
         ///
         /// Supported platforms:
         /// - Metal (with MSL 3.0+ and Apple7+/Mac2)
@@ -9060,7 +9103,7 @@
     <span class="doccomment">/// Mask of all features which are part of the upstream WebGPU standard.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>all_webgpu_mask() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::from_bits_truncate(<span class="number">0x7FFFF</span>)
+        <span class="self">Self</span>::from_bits_truncate(<span class="number">0x3FFFF</span>)
     }
 
     <span class="doccomment">/// Mask of all features that are only available when targeting native (not web).
@@ -10692,7 +10735,11 @@
     </span>Rg11b10Ufloat,
 
     <span class="comment">// Normal 64 bit formats
-    </span><span class="doccomment">/// Red and green channels. 32 bit integer per channel. Unsigned in shader.
+    </span><span class="doccomment">/// Red channel only. 64 bit integer per channel. Unsigned in shader.
+    ///
+    /// [`Features::TEXTURE_INT64_ATOMIC`] must be enabled to use this texture format.
+    </span>R64Uint,
+    <span class="doccomment">/// Red and green channels. 32 bit integer per channel. Unsigned in shader.
     </span>Rg32Uint,
     <span class="doccomment">/// Red and green channels. 32 bit integer per channel. Signed in shader.
     </span>Rg32Sint,
@@ -10978,6 +11025,7 @@
                     <span class="string">"rgb10a2uint" </span>=&gt; TextureFormat::Rgb10a2Uint,
                     <span class="string">"rgb10a2unorm" </span>=&gt; TextureFormat::Rgb10a2Unorm,
                     <span class="string">"rg11b10ufloat" </span>=&gt; TextureFormat::Rg11b10Ufloat,
+                    <span class="string">"r64uint" </span>=&gt; TextureFormat::R64Uint,
                     <span class="string">"rg32uint" </span>=&gt; TextureFormat::Rg32Uint,
                     <span class="string">"rg32sint" </span>=&gt; TextureFormat::Rg32Sint,
                     <span class="string">"rg32float" </span>=&gt; TextureFormat::Rg32Float,
@@ -11106,6 +11154,7 @@
             TextureFormat::Rgb10a2Uint =&gt; <span class="string">"rgb10a2uint"</span>,
             TextureFormat::Rgb10a2Unorm =&gt; <span class="string">"rgb10a2unorm"</span>,
             TextureFormat::Rg11b10Ufloat =&gt; <span class="string">"rg11b10ufloat"</span>,
+            TextureFormat::R64Uint =&gt; <span class="string">"r64uint"</span>,
             TextureFormat::Rg32Uint =&gt; <span class="string">"rg32uint"</span>,
             TextureFormat::Rg32Sint =&gt; <span class="string">"rg32sint"</span>,
             TextureFormat::Rg32Float =&gt; <span class="string">"rg32float"</span>,
@@ -11348,6 +11397,7 @@
             | <span class="self">Self</span>::Rgb10a2Uint
             | <span class="self">Self</span>::Rgb10a2Unorm
             | <span class="self">Self</span>::Rg11b10Ufloat
+            | <span class="self">Self</span>::R64Uint
             | <span class="self">Self</span>::Rg32Uint
             | <span class="self">Self</span>::Rg32Sint
             | <span class="self">Self</span>::Rg32Float
@@ -11471,6 +11521,8 @@
             | <span class="self">Self</span>::Depth24PlusStencil8
             | <span class="self">Self</span>::Depth32Float =&gt; Features::empty(),
 
+            <span class="self">Self</span>::R64Uint =&gt; Features::TEXTURE_INT64_ATOMIC,
+
             <span class="self">Self</span>::Depth32FloatStencil8 =&gt; Features::DEPTH32FLOAT_STENCIL8,
 
             <span class="self">Self</span>::NV12 =&gt; Features::TEXTURE_FORMAT_NV12,
@@ -11536,11 +11588,12 @@
         <span class="kw">let </span>storage = basic | TextureUsages::STORAGE_BINDING;
         <span class="kw">let </span>binding = TextureUsages::TEXTURE_BINDING;
         <span class="kw">let </span>all_flags = attachment | storage | binding;
-        <span class="kw">let </span>atomic = <span class="kw">if </span>device_features.contains(Features::TEXTURE_ATOMIC) {
-            all_flags | TextureUsages::STORAGE_ATOMIC
+        <span class="kw">let </span>atomic_64 = <span class="kw">if </span>device_features.contains(Features::TEXTURE_ATOMIC) {
+            storage | binding | TextureUsages::STORAGE_ATOMIC
         } <span class="kw">else </span>{
-            all_flags
+            storage | binding
         };
+        <span class="kw">let </span>atomic = attachment | atomic_64;
         <span class="kw">let </span>rg11b10f = <span class="kw">if </span>device_features.contains(Features::RG11B10UFLOAT_RENDERABLE) {
             attachment
         } <span class="kw">else </span>{
@@ -11587,6 +11640,7 @@
             <span class="self">Self</span>::Rgb10a2Uint =&gt;          (        msaa, attachment),
             <span class="self">Self</span>::Rgb10a2Unorm =&gt;         (msaa_resolve, attachment),
             <span class="self">Self</span>::Rg11b10Ufloat =&gt;        (        msaa,   rg11b10f),
+            <span class="self">Self</span>::R64Uint =&gt;              (     s_ro_wo,  atomic_64),
             <span class="self">Self</span>::Rg32Uint =&gt;             (     s_ro_wo,  all_flags),
             <span class="self">Self</span>::Rg32Sint =&gt;             (     s_ro_wo,  all_flags),
             <span class="self">Self</span>::Rg32Float =&gt;            (     s_ro_wo,  all_flags),
@@ -11712,6 +11766,7 @@
             | <span class="self">Self</span>::Rg16Uint
             | <span class="self">Self</span>::Rgba16Uint
             | <span class="self">Self</span>::R32Uint
+            | <span class="self">Self</span>::R64Uint
             | <span class="self">Self</span>::Rg32Uint
             | <span class="self">Self</span>::Rgba32Uint
             | <span class="self">Self</span>::Rgb10a2Uint =&gt; <span class="prelude-val">Some</span>(uint),
@@ -11842,7 +11897,7 @@
             | <span class="self">Self</span>::Rgba16Uint
             | <span class="self">Self</span>::Rgba16Sint
             | <span class="self">Self</span>::Rgba16Float =&gt; <span class="prelude-val">Some</span>(<span class="number">8</span>),
-            <span class="self">Self</span>::Rg32Uint | <span class="self">Self</span>::Rg32Sint | <span class="self">Self</span>::Rg32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">8</span>),
+            <span class="self">Self</span>::R64Uint | <span class="self">Self</span>::Rg32Uint | <span class="self">Self</span>::Rg32Sint | <span class="self">Self</span>::Rg32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">8</span>),
 
             <span class="self">Self</span>::Rgba32Uint | <span class="self">Self</span>::Rgba32Sint | <span class="self">Self</span>::Rgba32Float =&gt; <span class="prelude-val">Some</span>(<span class="number">16</span>),
 
@@ -11936,6 +11991,7 @@
             | <span class="self">Self</span>::Rgba16Unorm
             | <span class="self">Self</span>::Rgba16Snorm
             | <span class="self">Self</span>::Rgba16Float
+            | <span class="self">Self</span>::R64Uint
             | <span class="self">Self</span>::Rg32Uint
             | <span class="self">Self</span>::Rg32Sint
             | <span class="self">Self</span>::Rg32Float
@@ -12017,6 +12073,7 @@
             <span class="self">Self</span>::R32Uint
             | <span class="self">Self</span>::R32Sint
             | <span class="self">Self</span>::R32Float
+            | <span class="self">Self</span>::R64Uint
             | <span class="self">Self</span>::Rg32Uint
             | <span class="self">Self</span>::Rg32Sint
             | <span class="self">Self</span>::Rg32Float
@@ -12085,7 +12142,8 @@
             | <span class="self">Self</span>::R16Float
             | <span class="self">Self</span>::R32Uint
             | <span class="self">Self</span>::R32Sint
-            | <span class="self">Self</span>::R32Float =&gt; <span class="number">1</span>,
+            | <span class="self">Self</span>::R32Float
+            | <span class="self">Self</span>::R64Uint =&gt; <span class="number">1</span>,
 
             <span class="self">Self</span>::Rg8Unorm
             | <span class="self">Self</span>::Rg8Snorm
@@ -12338,6 +12396,10 @@
     <span class="macro">assert_eq!</span>(
         serde_json::to_string(<span class="kw-2">&amp;</span>TextureFormat::Rg11b10Ufloat).unwrap(),
         <span class="string">"\"rg11b10ufloat\""</span>.to_string()
+    );
+    <span class="macro">assert_eq!</span>(
+        serde_json::to_string(<span class="kw-2">&amp;</span>TextureFormat::R64Uint).unwrap(),
+        <span class="string">"\"r64uint\""</span>.to_string()
     );
     <span class="macro">assert_eq!</span>(
         serde_json::to_string(<span class="kw-2">&amp;</span>TextureFormat::Rg32Uint).unwrap(),
@@ -12634,6 +12696,10 @@
     <span class="macro">assert_eq!</span>(
         serde_json::from_str::&lt;TextureFormat&gt;(<span class="string">"\"rg11b10ufloat\""</span>).unwrap(),
         TextureFormat::Rg11b10Ufloat
+    );
+    <span class="macro">assert_eq!</span>(
+        serde_json::from_str::&lt;TextureFormat&gt;(<span class="string">"\"r64uint\""</span>).unwrap(),
+        TextureFormat::R64Uint
     );
     <span class="macro">assert_eq!</span>(
         serde_json::from_str::&lt;TextureFormat&gt;(<span class="string">"\"rg32uint\""</span>).unwrap(),
