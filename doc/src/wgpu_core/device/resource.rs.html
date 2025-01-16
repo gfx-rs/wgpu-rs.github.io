@@ -3953,11 +3953,11 @@
         raw_device: Box&lt;<span class="kw">dyn </span>hal::DynDevice&gt;,
         adapter: <span class="kw-2">&amp;</span>Arc&lt;Adapter&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
-        trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
+        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         instance_flags: wgt::InstanceFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DeviceError&gt; {
         <span class="attr">#[cfg(not(feature = <span class="string">"trace"</span>))]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = trace_path {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = trace_dir_name {
             <span class="macro">log::error!</span>(<span class="string">"Feature 'trace' is not enabled"</span>);
         }
         <span class="kw">let </span>fence = <span class="kw">unsafe </span>{ raw_device.create_fence() }.map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
@@ -4016,7 +4016,7 @@
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span>trace: Mutex::new(
                 rank::DEVICE_TRACE,
-                trace_path.and_then(|path| <span class="kw">match </span>trace::Trace::new(path) {
+                trace_dir_name.and_then(|dir_path_name| <span class="kw">match </span>trace::Trace::new(dir_path_name) {
                     <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>trace) =&gt; {
                         trace.add(trace::Action::Init {
                             desc: desc.clone(),
@@ -4025,7 +4025,7 @@
                         <span class="prelude-val">Some</span>(trace)
                     }
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">"Unable to start a trace in '{path:?}': {e}"</span>);
+                        <span class="macro">log::error!</span>(<span class="string">"Unable to start a trace in '{dir_path_name:?}': {e}"</span>);
                         <span class="prelude-val">None
                     </span>}
                 }),
