@@ -2119,7 +2119,9 @@
 <a href="#2118" id="2118">2118</a>
 <a href="#2119" id="2119">2119</a>
 <a href="#2120" id="2120">2120</a>
-<a href="#2121" id="2121">2121</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#2121" id="2121">2121</a>
+<a href="#2122" id="2122">2122</a>
+<a href="#2123" id="2123">2123</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
     Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo, EntryPointContext, Error,
@@ -2142,7 +2144,7 @@
 }
 
 <span class="kw">impl </span>Function {
-    <span class="kw">fn </span>to_words(<span class="kw-2">&amp;</span><span class="self">self</span>, sink: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;Word&gt;) {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>to_words(<span class="kw-2">&amp;</span><span class="self">self</span>, sink: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;Word&gt;) {
         <span class="self">self</span>.signature.as_ref().unwrap().to_words(sink);
         <span class="kw">for </span>argument <span class="kw">in </span><span class="self">self</span>.parameters.iter() {
             argument.instruction.to_words(sink);
@@ -2202,6 +2204,7 @@
             saved_cached: CachedExpressions::default(),
             gl450_ext_inst_id,
             temp_list: Vec::new(),
+            ray_get_intersection_function: <span class="prelude-val">None</span>,
         })
     }
 
@@ -2252,6 +2255,7 @@
             global_variables: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.global_variables).recycle(),
             saved_cached: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached).recycle(),
             temp_list: take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list).recycle(),
+            ray_get_intersection_function: <span class="prelude-val">None</span>,
         };
 
         <span class="kw-2">*</span><span class="self">self </span>= fresh;
@@ -3967,7 +3971,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>get_function_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lookup_function_type: LookupFunctionType) -&gt; Word {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_function_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, lookup_function_type: LookupFunctionType) -&gt; Word {
         <span class="kw">match </span><span class="self">self
             </span>.lookup_function_type
             .entry(lookup_function_type.clone())

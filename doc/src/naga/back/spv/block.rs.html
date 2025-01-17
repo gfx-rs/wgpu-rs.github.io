@@ -3056,7 +3056,20 @@
 <a href="#3055" id="3055">3055</a>
 <a href="#3056" id="3056">3056</a>
 <a href="#3057" id="3057">3057</a>
-<a href="#3058" id="3058">3058</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3058" id="3058">3058</a>
+<a href="#3059" id="3059">3059</a>
+<a href="#3060" id="3060">3060</a>
+<a href="#3061" id="3061">3061</a>
+<a href="#3062" id="3062">3062</a>
+<a href="#3063" id="3063">3063</a>
+<a href="#3064" id="3064">3064</a>
+<a href="#3065" id="3065">3065</a>
+<a href="#3066" id="3066">3066</a>
+<a href="#3067" id="3067">3067</a>
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -4794,7 +4807,20 @@ Implementations for `BlockContext` methods.
             }
             <span class="kw">crate</span>::Expression::ArrayLength(expr) =&gt; <span class="self">self</span>.write_runtime_array_length(expr, block)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Expression::RayQueryGetIntersection { query, committed } =&gt; {
-                <span class="self">self</span>.write_ray_query_get_intersection(query, block, committed)
+                <span class="kw">let </span>query_id = <span class="self">self</span>.cached[query];
+                <span class="kw">let </span>func_id = <span class="self">self
+                    </span>.writer
+                    .write_ray_query_get_intersection_function(committed, <span class="self">self</span>.ir_module);
+                <span class="kw">let </span>ray_intersection = <span class="self">self</span>.ir_module.special_types.ray_intersection.unwrap();
+                <span class="kw">let </span>intersection_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(ray_intersection));
+                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::function_call(
+                    intersection_type_id,
+                    id,
+                    func_id,
+                    <span class="kw-2">&amp;</span>[query_id],
+                ));
+                id
             }
         };
 
