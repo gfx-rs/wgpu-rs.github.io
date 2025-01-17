@@ -1986,7 +1986,25 @@
 <a href="#1985" id="1985">1985</a>
 <a href="#1986" id="1986">1986</a>
 <a href="#1987" id="1987">1987</a>
-<a href="#1988" id="1988">1988</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
+<a href="#1999" id="1999">1999</a>
+<a href="#2000" id="2000">2000</a>
+<a href="#2001" id="2001">2001</a>
+<a href="#2002" id="2002">2002</a>
+<a href="#2003" id="2003">2003</a>
+<a href="#2004" id="2004">2004</a>
+<a href="#2005" id="2005">2005</a>
+<a href="#2006" id="2006">2006</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::BindGroup,
@@ -1996,7 +2014,10 @@
     },
     global::Global,
     hal_api::HalApi,
-    id::{AdapterId, BufferId, CommandEncoderId, DeviceId, SurfaceId, TextureId, TextureViewId},
+    id::{
+        AdapterId, BufferId, CommandEncoderId, DeviceId, QueueId, SurfaceId, TextureId,
+        TextureViewId,
+    },
     init_tracker::{BufferInitTracker, TextureInitTracker},
     lock::{rank, Mutex, RwLock},
     resource_log,
@@ -3375,6 +3396,21 @@
         } <span class="kw">else </span>{
             hal_command_encoder_callback(<span class="prelude-val">None</span>)
         }
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The raw queue handle must not be manually destroyed
+    </span><span class="kw">pub unsafe fn </span>queue_as_hal&lt;A: HalApi, F, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: QueueId, hal_queue_callback: F) -&gt; R
+    <span class="kw">where
+        </span>F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Queue&gt;) -&gt; R,
+    {
+        <span class="macro">profiling::scope!</span>(<span class="string">"Queue::as_hal"</span>);
+
+        <span class="kw">let </span>queue = <span class="self">self</span>.hub.queues.get(id);
+        <span class="kw">let </span>hal_queue = queue.raw().as_any().downcast_ref();
+
+        hal_queue_callback(hal_queue)
     }
 }
 
