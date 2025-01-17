@@ -465,7 +465,11 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     command::{CommandBuffer, CommandEncoderError},
@@ -612,17 +616,17 @@
     <span class="attr">#[error(<span class="string">"Resolving queries {start_query}..{end_query} would overrun the query set of size {query_set_size}"</span>)]
     </span>QueryOverrun {
         start_query: u32,
-        end_query: u32,
+        end_query: u64,
         query_set_size: u32,
     },
-    <span class="attr">#[error(<span class="string">"Resolving queries {start_query}..{end_query} ({stride} byte queries) will end up overrunning the bounds of the destination buffer of size {buffer_size} using offsets {buffer_start_offset}..{buffer_end_offset}"</span>)]
+    <span class="attr">#[error(<span class="string">"Resolving queries {start_query}..{end_query} ({stride} byte queries) will end up overrunning the bounds of the destination buffer of size {buffer_size} using offsets {buffer_start_offset}..(&lt;start&gt; + {bytes_used})"</span>)]
     </span>BufferOverrun {
         start_query: u32,
         end_query: u32,
         stride: u32,
         buffer_size: BufferAddress,
         buffer_start_offset: BufferAddress,
-        buffer_end_offset: BufferAddress,
+        bytes_used: BufferAddress,
     },
 }
 
@@ -871,8 +875,10 @@
             .check_usage(wgt::BufferUsages::QUERY_RESOLVE)
             .map_err(ResolveError::MissingBufferUsage)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>end_query = start_query + query_count;
-        <span class="kw">if </span>end_query &gt; query_set.desc.count {
+        <span class="kw">let </span>end_query = u64::from(start_query)
+            .checked_add(u64::from(query_count))
+            .expect(<span class="string">"`u64` overflow from adding two `u32`s, should be unreachable"</span>);
+        <span class="kw">if </span>end_query &gt; u64::from(query_set.desc.count) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::QueryOverrun {
                 start_query,
                 end_query,
@@ -880,6 +886,8 @@
             }
             .into());
         }
+        <span class="kw">let </span>end_query = u32::try_from(end_query)
+            .expect(<span class="string">"`u32` overflow for `end_query`, which should be `u32`"</span>);
 
         <span class="kw">let </span>elements_per_query = <span class="kw">match </span>query_set.desc.ty {
             wgt::QueryType::Occlusion =&gt; <span class="number">1</span>,
@@ -887,22 +895,22 @@
             wgt::QueryType::Timestamp =&gt; <span class="number">1</span>,
         };
         <span class="kw">let </span>stride = elements_per_query * wgt::QUERY_SIZE;
-        <span class="kw">let </span>bytes_used = (stride * query_count) <span class="kw">as </span>BufferAddress;
+        <span class="kw">let </span>bytes_used: BufferAddress = u64::from(stride)
+            .checked_mul(u64::from(query_count))
+            .expect(<span class="string">"`stride` * `query_count` overflowed `u32`, should be unreachable"</span>);
 
         <span class="kw">let </span>buffer_start_offset = destination_offset;
-        <span class="kw">let </span>buffer_end_offset = buffer_start_offset + bytes_used;
-
-        <span class="kw">if </span>buffer_end_offset &gt; dst_buffer.size {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::BufferOverrun {
+        <span class="kw">let </span>buffer_end_offset = buffer_start_offset
+            .checked_add(bytes_used)
+            .filter(|buffer_end_offset| <span class="kw-2">*</span>buffer_end_offset &lt;= dst_buffer.size)
+            .ok_or(ResolveError::BufferOverrun {
                 start_query,
                 end_query,
                 stride,
                 buffer_size: dst_buffer.size,
                 buffer_start_offset,
-                buffer_end_offset,
-            }
-            .into());
-        }
+                bytes_used,
+            })<span class="question-mark">?</span>;
 
         <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/3993): Need to track initialization state.
         </span>cmd_buf_data.buffer_memory_init_actions.extend(
