@@ -2871,7 +2871,29 @@
 <a href="#2870" id="2870">2870</a>
 <a href="#2871" id="2871">2871</a>
 <a href="#2872" id="2872">2872</a>
-<a href="#2873" id="2873">2873</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
+<a href="#2873" id="2873">2873</a>
+<a href="#2874" id="2874">2874</a>
+<a href="#2875" id="2875">2875</a>
+<a href="#2876" id="2876">2876</a>
+<a href="#2877" id="2877">2877</a>
+<a href="#2878" id="2878">2878</a>
+<a href="#2879" id="2879">2879</a>
+<a href="#2880" id="2880">2880</a>
+<a href="#2881" id="2881">2881</a>
+<a href="#2882" id="2882">2882</a>
+<a href="#2883" id="2883">2883</a>
+<a href="#2884" id="2884">2884</a>
+<a href="#2885" id="2885">2885</a>
+<a href="#2886" id="2886">2886</a>
+<a href="#2887" id="2887">2887</a>
+<a href="#2888" id="2888">2888</a>
+<a href="#2889" id="2889">2889</a>
+<a href="#2890" id="2890">2890</a>
+<a href="#2891" id="2891">2891</a>
+<a href="#2892" id="2892">2892</a>
+<a href="#2893" id="2893">2893</a>
+<a href="#2894" id="2894">2894</a>
+<a href="#2895" id="2895">2895</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
     ShouldConflictOnFullDuplicate, StandardFilterableTriggeringRule,
 };
@@ -5205,6 +5227,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         diagnostic_filter_leaf: <span class="prelude-ty">Option</span>&lt;Handle&lt;DiagnosticFilterNode&gt;&gt;,
+        must_use: <span class="prelude-ty">Option</span>&lt;Span&gt;,
         out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
         dependencies: <span class="kw-2">&amp;mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">'a</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Function&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
@@ -5256,7 +5279,17 @@
         </span><span class="kw">let </span>result = <span class="kw">if </span>lexer.skip(Token::Arrow) {
             <span class="kw">let </span>binding = <span class="self">self</span>.varying_binding(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
             <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>(ast::FunctionResult { ty, binding })
+            <span class="kw">let </span>must_use = must_use.is_some();
+            <span class="prelude-val">Some</span>(ast::FunctionResult {
+                ty,
+                binding,
+                must_use,
+            })
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(must_use) = must_use {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FunctionMustUseReturnsVoid(
+                must_use,
+                <span class="self">self</span>.peek_rule_span(lexer),
+            ));
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -5329,6 +5362,8 @@
         <span class="kw">let </span>(<span class="kw-2">mut </span>bind_index, <span class="kw-2">mut </span>bind_group) =
             (ParsedAttribute::default(), ParsedAttribute::default());
         <span class="kw">let </span><span class="kw-2">mut </span>id = ParsedAttribute::default();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>must_use: ParsedAttribute&lt;Span&gt; = ParsedAttribute::default();
 
         <span class="kw">let </span><span class="kw-2">mut </span>dependencies = FastIndexSet::default();
         <span class="kw">let </span><span class="kw-2">mut </span>ctx = ExpressionContext {
@@ -5413,6 +5448,9 @@
                         <span class="prelude-val">None
                     </span>};
                     early_depth_test.set(<span class="kw">crate</span>::EarlyDepthTest { conservative }, name_span)<span class="question-mark">?</span>;
+                }
+                <span class="string">"must_use" </span>=&gt; {
+                    must_use.set(name_span, name_span)<span class="question-mark">?</span>;
                 }
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
             }
@@ -5519,8 +5557,14 @@
                     diagnostic_filters,
                     out.diagnostic_filter_leaf,
                 );
-                <span class="kw">let </span>function =
-                    <span class="self">self</span>.function_decl(lexer, diagnostic_filter_leaf, out, <span class="kw-2">&amp;mut </span>dependencies)<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>function = <span class="self">self</span>.function_decl(
+                    lexer,
+                    diagnostic_filter_leaf,
+                    must_use.value,
+                    out,
+                    <span class="kw-2">&amp;mut </span>dependencies,
+                )<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Fn(ast::Function {
                     entry_point: <span class="kw">if let </span><span class="prelude-val">Some</span>(stage) = stage.value {
                         <span class="kw">if </span>stage == ShaderStage::Compute &amp;&amp; workgroup_size.value.is_none() {

@@ -3345,7 +3345,22 @@
 <a href="#3344" id="3344">3344</a>
 <a href="#3345" id="3345">3345</a>
 <a href="#3346" id="3346">3346</a>
-<a href="#3347" id="3347">3347</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a>
+<a href="#3355" id="3355">3355</a>
+<a href="#3356" id="3356">3356</a>
+<a href="#3357" id="3357">3357</a>
+<a href="#3358" id="3358">3358</a>
+<a href="#3359" id="3359">3359</a>
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -4281,7 +4296,10 @@
 
 <span class="doccomment">/// An `ast::GlobalDecl` for which we have built the Naga IR equivalent.
 </span><span class="kw">enum </span>LoweredGlobalDecl {
-    Function(Handle&lt;<span class="kw">crate</span>::Function&gt;),
+    Function {
+        handle: Handle&lt;<span class="kw">crate</span>::Function&gt;,
+        must_use: bool,
+    },
     Var(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;),
     Const(Handle&lt;<span class="kw">crate</span>::Constant&gt;),
     Override(Handle&lt;<span class="kw">crate</span>::Override&gt;),
@@ -4712,7 +4730,10 @@
             <span class="prelude-val">Ok</span>(LoweredGlobalDecl::EntryPoint)
         } <span class="kw">else </span>{
             <span class="kw">let </span>handle = ctx.module.functions.append(function, span);
-            <span class="prelude-val">Ok</span>(LoweredGlobalDecl::Function(handle))
+            <span class="prelude-val">Ok</span>(LoweredGlobalDecl::Function {
+                handle,
+                must_use: f.result.as_ref().is_some_and(|res| res.must_use),
+            })
         }
     }
 
@@ -5281,7 +5302,7 @@
                     LoweredGlobalDecl::Override(handle) =&gt; {
                         Typed::Plain(<span class="kw">crate</span>::Expression::Override(handle))
                     }
-                    LoweredGlobalDecl::Function(<span class="kw">_</span>)
+                    LoweredGlobalDecl::Function { .. }
                     | LoweredGlobalDecl::Type(<span class="kw">_</span>)
                     | LoweredGlobalDecl::EntryPoint =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(span, ExpectedToken::Variable));
@@ -5528,12 +5549,13 @@
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         is_statement: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+        <span class="kw">let </span>function_span = function.span;
         <span class="kw">match </span>ctx.globals.get(function.name) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Type(ty)) =&gt; {
                 <span class="kw">let </span>handle = <span class="self">self</span>.construct(
                     span,
                     <span class="kw-2">&amp;</span>ast::ConstructorType::Type(ty),
-                    function.span,
+                    function_span,
                     arguments,
                     ctx,
                 )<span class="question-mark">?</span>;
@@ -5543,9 +5565,12 @@
                 <span class="kw-2">&amp;</span>LoweredGlobalDecl::Const(<span class="kw">_</span>)
                 | <span class="kw-2">&amp;</span>LoweredGlobalDecl::Override(<span class="kw">_</span>)
                 | <span class="kw-2">&amp;</span>LoweredGlobalDecl::Var(<span class="kw">_</span>),
-            ) =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(function.span, ExpectedToken::Function)),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::EntryPoint) =&gt; <span class="prelude-val">Err</span>(Error::CalledEntryPoint(function.span)),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Function(function)) =&gt; {
+            ) =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(function_span, ExpectedToken::Function)),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::EntryPoint) =&gt; <span class="prelude-val">Err</span>(Error::CalledEntryPoint(function_span)),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Function {
+                handle: function,
+                must_use,
+            }) =&gt; {
                 <span class="kw">let </span>arguments = arguments
                     .iter()
                     .enumerate()
@@ -5570,6 +5595,11 @@
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>has_result = ctx.module.functions[function].result.is_some();
+
+                <span class="kw">if </span>must_use &amp;&amp; is_statement {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FunctionMustUseUnused(function_span));
+                }
+
                 <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                 <span class="comment">// we need to always do this before a fn call since all arguments need to be emitted before the fn call
                 </span>rctx.block
@@ -5596,7 +5626,7 @@
                 <span class="prelude-val">Ok</span>(result)
             }
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>span = function.span;
+                <span class="kw">let </span>span = function_span;
                 <span class="kw">let </span>expr = <span class="kw">if let </span><span class="prelude-val">Some</span>(fun) = conv::map_relational_fun(function.name) {
                     <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
                     <span class="kw">let </span>argument = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
