@@ -3330,7 +3330,22 @@
 <a href="#3329" id="3329">3329</a>
 <a href="#3330" id="3330">3330</a>
 <a href="#3331" id="3331">3331</a>
-<a href="#3332" id="3332">3332</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -3704,14 +3719,29 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
-    <span class="kw">fn </span>as_const(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">fn </span>as_const(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
         ExpressionContext {
             globals: <span class="self">self</span>.globals,
             types: <span class="self">self</span>.types,
             ast_expressions: <span class="self">self</span>.ast_expressions,
             const_typifier: <span class="self">self</span>.const_typifier,
             module: <span class="self">self</span>.module,
-            expr_type: ExpressionContextType::Constant(<span class="prelude-val">None</span>),
+            expr_type: ExpressionContextType::Constant(<span class="kw">match </span><span class="self">self</span>.expr_type {
+                ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>local_expression_context)
+                | ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>local_expression_context)) =&gt; {
+                    <span class="prelude-val">Some</span>(LocalExpressionContext {
+                        local_table: local_expression_context.local_table,
+                        function: local_expression_context.function,
+                        block: local_expression_context.block,
+                        emitter: local_expression_context.emitter,
+                        typifier: local_expression_context.typifier,
+                        local_expression_kind_tracker: local_expression_context
+                            .local_expression_kind_tracker,
+                    })
+                }
+                ExpressionContextType::Constant(<span class="prelude-val">None</span>) | ExpressionContextType::Override =&gt; <span class="prelude-val">None</span>,
+            }),
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
         }
     }
@@ -6235,7 +6265,7 @@
 
         <span class="kw">let </span>offset = args
             .next()
-            .map(|arg| <span class="self">self</span>.expression(arg, <span class="kw-2">&amp;mut </span>ctx.as_const()))
+            .map(|arg| <span class="self">self</span>.expression(arg, <span class="kw-2">&amp;mut </span>ctx.as_global().as_const()))
             .ok()
             .transpose()<span class="question-mark">?</span>;
 
