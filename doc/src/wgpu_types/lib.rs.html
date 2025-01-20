@@ -7976,7 +7976,14 @@
 <a href="#7975" id="7975">7975</a>
 <a href="#7976" id="7976">7976</a>
 <a href="#7977" id="7977">7977</a>
-<a href="#7978" id="7978">7978</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7978" id="7978">7978</a>
+<a href="#7979" id="7979">7979</a>
+<a href="#7980" id="7980">7980</a>
+<a href="#7981" id="7981">7981</a>
+<a href="#7982" id="7982">7982</a>
+<a href="#7983" id="7983">7983</a>
+<a href="#7984" id="7984">7984</a>
+<a href="#7985" id="7985">7985</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -15091,17 +15098,24 @@
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>BindGroupLayoutEntry {
     <span class="doccomment">/// Binding index. Must match shader index and be unique inside a BindGroupLayout. A binding
-    /// of index 1, would be described as `layout(set = 0, binding = 1) uniform` in shaders.
+    /// of index 1, would be described as `@group(0) @binding(1)` in shaders.
     </span><span class="kw">pub </span>binding: u32,
     <span class="doccomment">/// Which shader stages can see this binding.
     </span><span class="kw">pub </span>visibility: ShaderStages,
     <span class="doccomment">/// The type of the binding
     </span><span class="kw">pub </span>ty: BindingType,
-    <span class="doccomment">/// If this value is Some, indicates this entry is an array. Array size must be 1 or greater.
+    <span class="doccomment">/// If the binding is an array of multiple resources. Corresponds to `binding_array&lt;T&gt;` in the shader.
     ///
-    /// If this value is Some and `ty` is `BindingType::Texture`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
+    /// When this is `Some` the following validation applies:
+    /// - Size must be of value 1 or greater.
+    /// - When `ty == BindingType::Texture`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
+    /// - When `ty == BindingType::Sampler`, [`Features::TEXTURE_BINDING_ARRAY`] must be supported.
+    /// - When `ty == BindingType::Buffer`, [`Features::BUFFER_BINDING_ARRAY`] must be supported.
+    /// - When `ty == BindingType::Buffer` and `ty.ty == BufferBindingType::Storage`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
+    /// - When `ty == BindingType::StorageTexture`, [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] must be supported.
+    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `has_dynamic_offset == true`
+    /// - When any binding in the group is an array, no `BindingType::Buffer` in the group may have `ty.ty == BufferBindingType::Uniform`.
     ///
-    /// If this value is Some and `ty` is any other variant, bind group creation will fail.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
     </span><span class="kw">pub </span>count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
 }

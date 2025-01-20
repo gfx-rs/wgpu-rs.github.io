@@ -1027,7 +1027,32 @@
 <a href="#1026" id="1026">1026</a>
 <a href="#1027" id="1027">1027</a>
 <a href="#1028" id="1028">1028</a>
-<a href="#1029" id="1029">1029</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
@@ -1097,6 +1122,10 @@
     },
     <span class="attr">#[error(transparent)]
     </span>TooManyBindings(BindingTypeMaxCountError),
+    <span class="attr">#[error(<span class="string">"Bind groups may not contain both a binding array and a dynamically offset buffer"</span>)]
+    </span>ContainsBothBindingArrayAndDynamicOffsetArray,
+    <span class="attr">#[error(<span class="string">"Bind groups may not contain both a binding array and a uniform buffer"</span>)]
+    </span>ContainsBothBindingArrayAndUniformBuffer,
     <span class="attr">#[error(<span class="string">"Binding index {binding} is greater than the maximum number {maximum}"</span>)]
     </span>InvalidBindingIndex { binding: u32, maximum: u32 },
     <span class="attr">#[error(<span class="string">"Invalid visibility {0:?}"</span>)]
@@ -1348,6 +1377,7 @@
     storage_textures: PerStageBindingTypeCounter,
     uniform_buffers: PerStageBindingTypeCounter,
     acceleration_structures: PerStageBindingTypeCounter,
+    has_bindless_array: bool,
 }
 
 <span class="kw">impl </span>BindingTypeMaxCountValidator {
@@ -1386,6 +1416,9 @@
             wgt::BindingType::AccelerationStructure =&gt; {
                 <span class="self">self</span>.acceleration_structures.add(binding.visibility, count);
             }
+        }
+        <span class="kw">if </span>binding.count.is_some() {
+            <span class="self">self</span>.has_bindless_array = <span class="bool-val">true</span>;
         }
     }
 
@@ -1436,6 +1469,23 @@
             limits.max_uniform_buffers_per_shader_stage,
             BindingTypeMaxCountErrorKind::UniformBuffers,
         )<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Validate that the bind group layout does not contain both a binding array and a dynamic offset array.
+    ///
+    /// This allows us to use `UPDATE_AFTER_BIND` on vulkan for bindless arrays. Vulkan does not allow
+    /// `UPDATE_AFTER_BIND` on dynamic offset arrays. See &lt;https://github.com/gfx-rs/wgpu/issues/6737&gt;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_binding_arrays(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CreateBindGroupLayoutError&gt; {
+        <span class="kw">let </span>has_dynamic_offset_array =
+            <span class="self">self</span>.dynamic_uniform_buffers &gt; <span class="number">0 </span>|| <span class="self">self</span>.dynamic_storage_buffers &gt; <span class="number">0</span>;
+        <span class="kw">let </span>has_uniform_buffer = <span class="self">self</span>.uniform_buffers.max().<span class="number">1 </span>&gt; <span class="number">0</span>;
+        <span class="kw">if </span><span class="self">self</span>.has_bindless_array &amp;&amp; has_dynamic_offset_array {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CreateBindGroupLayoutError::ContainsBothBindingArrayAndDynamicOffsetArray);
+        }
+        <span class="kw">if </span><span class="self">self</span>.has_bindless_array &amp;&amp; has_uniform_buffer {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CreateBindGroupLayoutError::ContainsBothBindingArrayAndUniformBuffer);
+        }
         <span class="prelude-val">Ok</span>(())
     }
 }

@@ -447,7 +447,21 @@
 <a href="#446" id="446">446</a>
 <a href="#447" id="447">447</a>
 <a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>std::num::{NonZeroU32, NonZeroU64};
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
@@ -513,6 +527,7 @@
 <span class="kw">struct </span>Example {
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
+    uniform_bind_group: wgpu::BindGroup,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     index_format: wgpu::IndexFormat,
@@ -710,8 +725,14 @@
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: NonZeroU32::new(<span class="number">2</span>),
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: <span class="number">3</span>,
+            ],
+        });
+
+        <span class="kw">let </span>uniform_bind_group_layout =
+            device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
+                label: <span class="prelude-val">Some</span>(<span class="string">"uniform bind group layout"</span>),
+                entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupLayoutEntry {
+                    binding: <span class="number">0</span>,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
@@ -719,9 +740,8 @@
                         min_binding_size: <span class="prelude-val">Some</span>(NonZeroU64::new(<span class="number">4</span>).unwrap()),
                     },
                     count: <span class="prelude-val">None</span>,
-                },
-            ],
-        });
+                }],
+            });
 
         <span class="kw">let </span>bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
             entries: <span class="kw-2">&amp;</span>[
@@ -743,22 +763,27 @@
                     binding: <span class="number">2</span>,
                     resource: wgpu::BindingResource::SamplerArray(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>sampler, <span class="kw-2">&amp;</span>sampler]),
                 },
-                wgpu::BindGroupEntry {
-                    binding: <span class="number">3</span>,
-                    resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                        buffer: <span class="kw-2">&amp;</span>texture_index_buffer,
-                        offset: <span class="number">0</span>,
-                        size: <span class="prelude-val">Some</span>(NonZeroU64::new(<span class="number">4</span>).unwrap()),
-                    }),
-                },
             ],
             layout: <span class="kw-2">&amp;</span>bind_group_layout,
             label: <span class="prelude-val">Some</span>(<span class="string">"bind group"</span>),
         });
 
+        <span class="kw">let </span>uniform_bind_group = device.create_bind_group(<span class="kw-2">&amp;</span>wgpu::BindGroupDescriptor {
+            entries: <span class="kw-2">&amp;</span>[wgpu::BindGroupEntry {
+                binding: <span class="number">0</span>,
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: <span class="kw-2">&amp;</span>texture_index_buffer,
+                    offset: <span class="number">0</span>,
+                    size: <span class="prelude-val">Some</span>(NonZeroU64::new(<span class="number">4</span>).unwrap()),
+                }),
+            }],
+            layout: <span class="kw-2">&amp;</span>uniform_bind_group_layout,
+            label: <span class="prelude-val">Some</span>(<span class="string">"uniform bind group"</span>),
+        });
+
         <span class="kw">let </span>pipeline_layout = device.create_pipeline_layout(<span class="kw-2">&amp;</span>wgpu::PipelineLayoutDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">"main"</span>),
-            bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>bind_group_layout],
+            bind_group_layouts: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>bind_group_layout, <span class="kw-2">&amp;</span>uniform_bind_group_layout],
             push_constant_ranges: <span class="kw-2">&amp;</span>[],
         });
 
@@ -796,6 +821,7 @@
         <span class="self">Self </span>{
             pipeline,
             bind_group,
+            uniform_bind_group,
             vertex_buffer,
             index_buffer,
             index_format,
@@ -837,12 +863,14 @@
         rpass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.vertex_buffer.slice(..));
         rpass.set_index_buffer(<span class="self">self</span>.index_buffer.slice(..), <span class="self">self</span>.index_format);
         <span class="kw">if </span><span class="self">self</span>.uniform_workaround {
-            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[<span class="number">0</span>]);
+            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[]);
+            rpass.set_bind_group(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uniform_bind_group, <span class="kw-2">&amp;</span>[<span class="number">0</span>]);
             rpass.draw_indexed(<span class="number">0</span>..<span class="number">6</span>, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
-            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[<span class="number">256</span>]);
+            rpass.set_bind_group(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uniform_bind_group, <span class="kw-2">&amp;</span>[<span class="number">256</span>]);
             rpass.draw_indexed(<span class="number">6</span>..<span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
         } <span class="kw">else </span>{
-            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[<span class="number">0</span>]);
+            rpass.set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bind_group, <span class="kw-2">&amp;</span>[]);
+            rpass.set_bind_group(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uniform_bind_group, <span class="kw-2">&amp;</span>[<span class="number">0</span>]);
             rpass.draw_indexed(<span class="number">0</span>..<span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
         }
 
