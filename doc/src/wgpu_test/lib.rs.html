@@ -98,7 +98,17 @@
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a></pre></div><pre class="rust"><code><span class="doccomment">//! Test utilities for the wgpu repository.
 
 </span><span class="attr">#![allow(clippy::arc_with_non_send_sync)] </span><span class="comment">// False positive on wasm
 
@@ -181,6 +191,16 @@
     } <span class="kw">else </span>{
         valid(device, callback)
     }
+}
+
+<span class="doccomment">/// Returns true if the provided callback fails validation.
+</span><span class="kw">pub fn </span>did_fail&lt;T&gt;(device: <span class="kw-2">&amp;</span>wgpu::Device, callback: <span class="kw">impl </span>FnOnce() -&gt; T) -&gt; (bool, T) {
+    device.push_error_scope(wgpu::ErrorFilter::Validation);
+    <span class="kw">let </span>result = callback();
+    <span class="kw">let </span>validation_error = pollster::block_on(device.pop_error_scope());
+    <span class="kw">let </span>failed = validation_error.is_some();
+
+    (failed, result)
 }
 
 <span class="doccomment">/// Adds the necissary main function for our gpu test harness.

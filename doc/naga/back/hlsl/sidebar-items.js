@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["EntryPointError","Error","ShaderModel"],"struct":["BindTarget","FragmentEntryPoint","Options","ReflectionInfo","Writer"],"type":["BindingMap"]};
+window.SIDEBAR_ITEMS = {"enum":["EntryPointError","Error","ShaderModel"],"struct":["BindTarget","FragmentEntryPoint","Options","ReflectionInfo","SamplerHeapBindTargets","SamplerIndexBufferKey","Writer"],"type":["BindingMap","SamplerIndexBufferBindingMap"]};
