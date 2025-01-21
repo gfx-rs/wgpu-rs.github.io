@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["CAMERA","SIZE"],"fn":["main"],"mod":["point_gen"],"struct":["Example","Matrices","TerrainUniforms","Uniforms","WaterUniforms"]};

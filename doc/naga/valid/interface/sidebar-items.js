@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_WORKGROUP_SIZE"],"enum":["EntryPointError","GlobalVariableError","VaryingError"],"fn":["storage_usage"],"struct":["VaryingContext"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["A","B","C45","S45","SQRT_3"],"fn":["calculate_normal","q_given_r","surrounding_hexagonal_points","surrounding_point_values_iter"],"struct":["HexTerrainMesh","HexWaterMesh","TerrainVertex","TerrainVertexAttributes","WaterVertexAttributes"]};

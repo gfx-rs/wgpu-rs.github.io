@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Config","ConfigItem"]};
+window.SIDEBAR_ITEMS = {"enum":["BadRonParseKind"],"struct":["BadRonParse","Config","ConfigItem"]};

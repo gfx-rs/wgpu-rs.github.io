@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["decl_ident"],"struct":["DependencySolver","Index","ResolvedDependency"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"fn":["load_model","load_scene","main","upload_scene_components"],"struct":["ErrorFuture","Example","GeometryEntry","InstanceEntry","Material","RawSceneComponents","SceneComponents","Uniforms","Vertex"]};

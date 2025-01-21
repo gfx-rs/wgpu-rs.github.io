@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action","Command"]};
+window.SIDEBAR_ITEMS = {"constant":["FILE_NAME"],"enum":["Action","Command"],"type":["FileName"]};

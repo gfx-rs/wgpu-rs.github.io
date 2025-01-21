@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"enum":["Color"],"fn":["create_indices","create_texture_data","create_vertices","main","vertex"],"struct":["Example","Vertex"]};

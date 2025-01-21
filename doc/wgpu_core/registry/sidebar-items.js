@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RegistryReport"]};
+window.SIDEBAR_ITEMS = {"struct":["FutureId","Registry","RegistryReport"]};

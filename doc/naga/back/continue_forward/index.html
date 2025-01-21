@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Workarounds for platform bugs and limitations in switches and loops."><title>naga::back::continue_forward - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../naga/index.html">naga</a><span class="version">24.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module continue_<wbr>forward</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#avoiding-continue-within-switch" title="Avoiding `continue` within `switch`">Avoiding <code>continue</code> within <code>switch</code></a></li><li><a href="#avoiding-single-body-switch-statements" title="Avoiding single body `switch` statements">Avoiding single body <code>switch</code> statements</a></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In naga::<wbr>back</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><span class="rustdoc-breadcrumbs"><a href="../../index.html">naga</a>::<wbr><a href="../index.html">back</a></span><h1>Module <span>continue_forward</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/naga/back/continue_forward.rs.html#1-311">source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Workarounds for platform bugs and limitations in switches and loops.</p>
+<p>In these docs, we use CamelCase links for Naga IR concepts, and ordinary
+<code>code</code> formatting for HLSL or GLSL concepts.</p>
+<h3 id="avoiding-continue-within-switch"><a class="doc-anchor" href="#avoiding-continue-within-switch">§</a>Avoiding <code>continue</code> within <code>switch</code></h3>
+<p>As described in <a href="https://github.com/gfx-rs/wgpu/issues/4485">https://github.com/gfx-rs/wgpu/issues/4485</a>, the FXC HLSL
+compiler doesn’t allow <code>continue</code> statements within <code>switch</code> statements, but
+Naga IR does. We work around this by introducing synthetic boolean local
+variables and branches.</p>
+<p>Specifically:</p>
+<ul>
+<li>
+<p>We generate code for <a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a> statements within <a href="../../struct.SwitchCase.html" title="struct naga::SwitchCase"><code>SwitchCase</code></a>s that
+sets an introduced <code>bool</code> local to <code>true</code> and does a <code>break</code>, jumping to
+immediately after the generated <code>switch</code>.</p>
+</li>
+<li>
+<p>When generating code for a <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a> statement, we conservatively assume
+it might contain such a <a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a> statement, so:</p>
+<ul>
+<li>
+<p>If it’s the outermost such <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a> within a <a href="../../enum.Statement.html#variant.Loop" title="variant naga::Statement::Loop"><code>Loop</code></a>, we declare the
+<code>bool</code> local ahead of the switch, initialized to <code>false</code>. Immediately
+after the <code>switch</code>, we check the local and do a <code>continue</code> if it’s set.</p>
+</li>
+<li>
+<p>If the <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a> is nested within other <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a>es, then after the
+generated <code>switch</code>, we check the local (which we know was declared
+before the surrounding <code>switch</code>) and do a <code>break</code> if it’s set.</p>
+</li>
+<li>
+<p>As an optimization, we only generate the check of the local if a
+<a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a> statement is encountered within the <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a>. This may
+help drivers more easily identify that the <code>bool</code> is unused.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>So while we “weaken” the <a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a> statement by rendering it as a <code>break</code>
+statement, we also place checks immediately at the locations to which those
+<code>break</code> statements will jump, until we can be sure we’ve reached the
+intended target of the original <a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a>.</p>
+<p>In the case of nested <a href="../../enum.Statement.html#variant.Loop" title="variant naga::Statement::Loop"><code>Loop</code></a> and <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a> statements, there may be
+multiple introduced <code>bool</code> locals in scope, but there’s no problem knowing
+which one to operate on. At any point, there is at most one <a href="../../enum.Statement.html#variant.Loop" title="variant naga::Statement::Loop"><code>Loop</code></a>
+statement that could be targeted by a <a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a> statement, so the correct
+<code>bool</code> local to set and test is always the one introduced for the innermost
+enclosing <a href="../../enum.Statement.html#variant.Loop" title="variant naga::Statement::Loop"><code>Loop</code></a>’s outermost <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a>.</p>
+<h2 id="avoiding-single-body-switch-statements"><a class="doc-anchor" href="#avoiding-single-body-switch-statements">§</a>Avoiding single body <code>switch</code> statements</h2>
+<p>As described in <a href="https://github.com/gfx-rs/wgpu/issues/4514">https://github.com/gfx-rs/wgpu/issues/4514</a>, some language
+front ends miscompile <code>switch</code> statements where all cases branch to the same
+body. Our HLSL and GLSL backends render <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a> statements with a single
+<a href="../../struct.SwitchCase.html" title="struct naga::SwitchCase"><code>SwitchCase</code></a> as <code>do {} while(false);</code> loops.</p>
+<p>However, this rewriting introduces a new loop that could “capture”
+<code>continue</code> statements in its body. To avoid doing so, we apply the
+<a href="../../enum.Statement.html#variant.Continue" title="variant naga::Statement::Continue"><code>Continue</code></a>-to-<code>break</code> transformation described above.</p>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.ContinueCtx.html" title="struct naga::back::continue_forward::ContinueCtx">Continue<wbr>Ctx</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="desc docblock-short">Utility for tracking nesting of loops and switches to orchestrate forwarding
+of continue statements inside of a switch to the enclosing loop.</div></li></ul><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.ExitControlFlow.html" title="enum naga::back::continue_forward::ExitControlFlow">Exit<wbr>Control<wbr>Flow</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="desc docblock-short">A micro-IR for code a backend should generate after a <a href="../../enum.Statement.html#variant.Switch" title="variant naga::Statement::Switch"><code>Switch</code></a>.</div></li><li><div class="item-name"><a class="enum" href="enum.Nesting.html" title="enum naga::back::continue_forward::Nesting">Nesting</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="desc docblock-short">A summary of the code surrounding a statement.</div></li></ul></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["declarations","expressions","functions","types"],"struct":["DeclarationContext","ParsingContext"]};

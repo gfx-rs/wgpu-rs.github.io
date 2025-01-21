@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CompilationMessageType","ShaderSource"],"struct":["CompilationInfo","CompilationMessage","ShaderModule","ShaderModuleDescriptor","ShaderModuleDescriptorSpirV","SourceLocation"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CommandEncoder","TexelCopyBufferInfoBase","TexelCopyTextureInfoBase"],"type":["CommandEncoderDescriptor","TexelCopyBufferInfo","TexelCopyTextureInfo"]};

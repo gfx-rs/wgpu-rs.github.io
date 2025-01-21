@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ErrorKind","ExpectedToken","Precision","Profile","TokenValue"],"struct":["Error","Frontend","Options","ParseErrors","ShaderMetadata"]};
+window.SIDEBAR_ITEMS = {"enum":["ErrorKind","ExpectedToken","Precision","Profile","TokenValue"],"mod":["ast","builtins","context","error","functions","lex","offset","parser","token","types","variables"],"struct":["Error","Frontend","Options","ParseErrors","ShaderMetadata"],"type":["Result"]};

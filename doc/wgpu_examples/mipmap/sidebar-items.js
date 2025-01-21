@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["MIP_LEVEL_COUNT","MIP_PASS_COUNT","QUERY_FEATURES","TEXTURE_FORMAT"],"fn":["create_texels","main","pipeline_statistics_offset"],"struct":["Example","QuerySets","TimestampData"],"type":["PipelineStatisticsQueries","TimestampQueries"]};

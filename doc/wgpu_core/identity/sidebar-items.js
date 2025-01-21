@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["IdentityManager"]};
+window.SIDEBAR_ITEMS = {"enum":["IdSource"],"struct":["IdentityManager","IdentityValues"]};

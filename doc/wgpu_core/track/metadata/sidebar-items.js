@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ResourceMetadataProvider"],"fn":["iterate_bitvec_indices","resize_bitvec"],"struct":["ResourceMetadata"]};

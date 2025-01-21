@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["element_or_member_type"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ComputePassErrorInner","DispatchError"],"fn":["dispatch","dispatch_indirect","insert_debug_marker","pop_debug_group","push_debug_group","set_bind_group","set_pipeline","set_push_constant","write_timestamp"],"struct":["ArcComputePassDescriptor","ComputePass","ComputePassDescriptor","ComputePassError","State"]};

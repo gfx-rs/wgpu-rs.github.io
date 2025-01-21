@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"fn":["create_cube","create_plane","main","vertex"],"struct":["Entity","EntityUniforms","Example","GlobalUniforms","Light","LightRaw","Pass","Vertex"]};

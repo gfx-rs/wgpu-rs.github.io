@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ImageQuery"],"struct":["WrappedArrayLength","WrappedConstructor","WrappedImageQuery","WrappedMatCx2","WrappedMath","WrappedStructMatrixAccess","WrappedZeroValue"]};

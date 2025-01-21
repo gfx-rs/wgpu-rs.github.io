@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"],"type":["MainResult"]};
+window.SIDEBAR_ITEMS = {"fn":["execute_native","main"],"struct":["NativeTest"],"type":["MainResult","NativeTestFuture"]};

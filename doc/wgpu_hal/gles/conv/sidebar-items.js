@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["_map_view_dimension","describe_vertex_format","is_layered_target","map_address_mode","map_blend","map_blend_component","map_blend_factor","map_compare_func","map_filter_modes","map_primitive_state","map_primitive_topology","map_stencil","map_stencil_op","map_stencil_ops","map_storage_access"]};

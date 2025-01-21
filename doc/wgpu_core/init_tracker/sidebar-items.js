@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MemoryInitKind"],"mod":["buffer","texture"],"struct":["InitTracker","InitTrackerDrain","UninitializedIter"],"type":["UninitializedRangeVec"]};

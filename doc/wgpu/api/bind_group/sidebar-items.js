@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BindingResource"],"struct":["BindGroup","BindGroupDescriptor","BindGroupEntry","BufferBinding"]};

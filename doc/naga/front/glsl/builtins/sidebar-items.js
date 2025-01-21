@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MacroCall","TextureLevelType"],"fn":["image_dims_to_coords_size","inject_builtin","inject_common_builtin","inject_double_builtin","inject_standard_builtins","make_coords_arg","sampled_to_depth","texture_args_generator","texture_call"],"struct":["CoordComponents","TextureArgsOptions"]};

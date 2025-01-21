@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["initialize_adapter_from_env","initialize_adapter_from_env_or_default","is_browser_webgpu_supported","new_instance_with_webgpu_detection"]};

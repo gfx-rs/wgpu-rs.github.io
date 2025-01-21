@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["TEXTURE_DIMS"],"fn":["main","run"]};

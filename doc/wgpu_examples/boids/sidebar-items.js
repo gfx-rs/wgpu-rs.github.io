@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["NUM_PARTICLES","PARTICLES_PER_GROUP"],"fn":["main"],"struct":["Example"]};

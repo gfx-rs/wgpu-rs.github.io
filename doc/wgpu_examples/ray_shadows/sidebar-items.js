@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["CAM_LOOK_AT"],"fn":["create_matrix","create_vertices","main","vertex"],"struct":["ErrorFuture","Example","Uniforms","Vertex"]};

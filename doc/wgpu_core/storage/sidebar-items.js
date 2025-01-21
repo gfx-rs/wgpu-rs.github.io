@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {};
+window.SIDEBAR_ITEMS = {"enum":["Element"],"struct":["Storage"],"trait":["StorageItem"]};

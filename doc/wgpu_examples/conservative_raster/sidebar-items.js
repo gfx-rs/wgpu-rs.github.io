@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["RENDER_TARGET_FORMAT"],"fn":["main"],"struct":["Example"]};

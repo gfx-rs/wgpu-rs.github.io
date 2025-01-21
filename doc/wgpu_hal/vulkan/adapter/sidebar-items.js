@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["depth_stencil_required_flags","indexing_features","is_float32_filterable_supported","is_format_16bit_norm_supported","is_intel_igpu_outdated_for_robustness2","supports_bgra8unorm_storage","supports_format"],"struct":["PhysicalDeviceFeatures","PhysicalDeviceProperties"]};

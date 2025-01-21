@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EitherIter","SingleOrManyStates","TextureStateProvider"],"fn":["barrier","insert","insert_or_barrier_update","insert_or_merge","merge","update"],"struct":["ComplexTextureState","DeviceTextureTracker","TextureSelector","TextureStateSet","TextureTracker","TextureUsageScope","TextureViewBindGroupState"],"trait":["TextureTrackerSetSingle"]};

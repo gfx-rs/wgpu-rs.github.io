@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["output_image_native"]};
+window.SIDEBAR_ITEMS = {"fn":["get_adapter_with_capabilities_or_from_env","output_image_native"]};

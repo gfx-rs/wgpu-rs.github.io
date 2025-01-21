@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["parse_type","scalar_components","type_power"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["write_string"],"struct":["Writer","WriterFlags"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["write_string"],"mod":["polyfill","writer"],"struct":["Writer","WriterFlags"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["BadHandle","Handle"],"type":["Index"]};

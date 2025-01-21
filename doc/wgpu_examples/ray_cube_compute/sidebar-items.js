@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"fn":["affine_to_rows","create_vertices","main","vertex"],"struct":["ErrorFuture","Example","Uniforms","Vertex"]};

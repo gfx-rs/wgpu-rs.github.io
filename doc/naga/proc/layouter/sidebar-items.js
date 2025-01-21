@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LayoutErrorInner"],"struct":["Alignment","LayoutError","Layouter","TypeLayout"]};

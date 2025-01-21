@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"fn":["compute_pass","main","render_pass","run","submit_render_and_compute_pass_with_queries"],"struct":["Queries","QueryResults"]};

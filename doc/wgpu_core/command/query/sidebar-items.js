@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["QueryError","QueryUseError","ResolveError","SimplifiedQueryType"],"fn":["end_occlusion_query","end_pipeline_statistics_query","validate_and_begin_occlusion_query","validate_and_begin_pipeline_statistics_query"],"struct":["QueryResetMap"]};

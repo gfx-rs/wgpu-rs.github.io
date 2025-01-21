@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DISABLE_UNIFORMITY_REQ_FOR_FRAGMENT_STAGE"],"enum":["GlobalOrArgument","UniformityDisruptor"],"struct":["ExitFlags","ExpressionInfo","FunctionInfo","FunctionUniformity","GlobalUse","Sampling","SamplingKey","Uniformity","UniformityRequirements"],"type":["NonUniformResult"]};

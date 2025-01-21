@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["CAMERA_POS_INCREMENT_FACTOR","ZOOM_INCREMENT_FACTOR"],"fn":["main","run"],"struct":["AppState","WgpuContext"]};

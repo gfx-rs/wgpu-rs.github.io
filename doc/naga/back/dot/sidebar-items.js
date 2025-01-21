@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["write"],"struct":["Options"]};
+window.SIDEBAR_ITEMS = {"constant":["COLORS"],"fn":["name","write","write_fun","write_function_expressions"],"struct":["Options","Prefixed","StatementGraph","Targets"],"type":["NodeId"]};

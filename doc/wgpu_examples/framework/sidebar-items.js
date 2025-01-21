@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"trait":["Example"]};
+window.SIDEBAR_ITEMS = {"fn":["init_logger","run","start"],"struct":["EventLoopWrapper","ExampleContext","FrameCounter","SurfaceWrapper"],"trait":["Example"]};

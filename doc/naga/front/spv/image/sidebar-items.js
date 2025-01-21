@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExtraCoordinate"],"fn":["extract_image_coordinates","patch_comparison_type"],"struct":["LookupSampledImage","SamplingFlags","SamplingOptions"]};

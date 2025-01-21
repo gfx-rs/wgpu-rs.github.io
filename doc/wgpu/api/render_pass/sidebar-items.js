@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LoadOp","StoreOp"],"struct":["Operations","RenderPass","RenderPassColorAttachment","RenderPassDepthStencilAttachment","RenderPassDescriptor","RenderPassTimestampWrites"]};

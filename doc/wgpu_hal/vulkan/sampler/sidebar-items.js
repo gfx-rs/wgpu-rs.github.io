@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ENABLE_SAMPLER_CACHE_CUTOFF"],"struct":["CacheEntry","HashableSamplerCreateInfo","SamplerCache"]};

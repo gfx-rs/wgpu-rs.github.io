@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Generate SPIR-V conditional structures."><title>naga::back::spv::selection - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../../naga/index.html">naga</a><span class="version">24.0.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module selection</a></h2><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In naga::<wbr>back::<wbr>spv</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><span class="rustdoc-breadcrumbs"><a href="../../../index.html">naga</a>::<wbr><a href="../../index.html">back</a>::<wbr><a href="../index.html">spv</a></span><h1>Module <span>selection</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/naga/back/spv/selection.rs.html#1-257">source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Generate SPIR-V conditional structures.</p>
+<p>Builders for <code>if</code> structures with <code>and</code>s.</p>
+<p>The types in this module track the information needed to emit SPIR-V code
+for complex conditional structures, like those whose conditions involve
+short-circuiting ‘and’ and ‘or’ structures. These track labels and can emit
+<code>OpPhi</code> instructions to merge values produced along different paths.</p>
+<p>This currently only supports exactly the forms Naga uses, so it doesn’t
+support <code>or</code> or <code>else</code>, and only supports zero or one merged values.</p>
+<p>Naga needs to emit code roughly like this:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code>
+    value = DEFAULT;
+    <span class="kw">if </span>COND1 &amp;&amp; COND2 {
+        value = THEN_VALUE;
+    }
+    <span class="comment">// use value
+</span></code></pre></div>
+<p>Assuming <code>ctx</code> and <code>block</code> are a mutable references to a <a href="../struct.BlockContext.html" title="struct naga::back::spv::BlockContext"><code>BlockContext</code></a>
+and the current <a href="../struct.Block.html" title="struct naga::back::spv::Block"><code>Block</code></a>, and <code>merge_type</code> is the SPIR-V type for the
+merged value <code>value</code>, we can build SPIR-V for the code above like so:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code>
+    <span class="kw">let </span>cond = Selection::start(block, merge_type);
+        <span class="comment">// ... compute `cond1` ...
+    </span>cond.if_true(ctx, cond1, DEFAULT);
+        <span class="comment">// ... compute `cond2` ...
+    </span>cond.if_true(ctx, cond2, DEFAULT);
+        <span class="comment">// ... compute THEN_VALUE
+    </span><span class="kw">let </span>merged_value = cond.finish(ctx, THEN_VALUE);
+</code></pre></div>
+<p>After this, <code>merged_value</code> is either <code>DEFAULT</code> or <code>THEN_VALUE</code>, depending on
+the path by which the merged block was reached.</p>
+<p>This takes care of writing all branch instructions, including an
+<code>OpSelectionMerge</code> annotation in the header block; starting new blocks and
+assigning them labels; and emitting the <code>OpPhi</code> that gathers together the
+right sources for the merged values, for every path through the selection
+construct.</p>
+<p>When there is no merged value to produce, you can pass <code>()</code> for <code>merge_type</code>
+and the merge values. In this case no <code>OpPhi</code> instructions are produced, and
+the <code>finish</code> method returns <code>()</code>.</p>
+<p>To enforce proper nesting, a <code>Selection</code> takes ownership of the <code>&amp;mut Block</code>
+pointer for the duration of its lifetime. To obtain the block for generating
+code in the selection’s body, call the <code>Selection::block</code> method.</p>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Selection.html" title="struct naga::back::spv::selection::Selection">Selection</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="desc docblock-short">A private struct recording what we know about the selection construct so far.</div></li></ul><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.MergeTuple.html" title="trait naga::back::spv::selection::MergeTuple">Merge<wbr>Tuple</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="desc docblock-short">A trait to help <code>Selection</code> manage any number of merged values.</div></li></ul></section></div></main></body></html>

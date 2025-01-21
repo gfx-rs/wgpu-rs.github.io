@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FunctionCallKind","FunctionKind","GlobalLookupKind","HirExprKind","ParameterQualifier","Precision","Profile","QualifierKey","QualifierValue","StorageQualifier","StructLayout"],"struct":["BuiltinVariations","EntryArg","FunctionCall","FunctionDeclaration","GlobalLookup","HirExpr","Overload","ParameterInfo","TypeQualifiers","VariableReference"]};

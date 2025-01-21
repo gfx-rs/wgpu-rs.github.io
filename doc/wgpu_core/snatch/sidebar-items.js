@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SNATCH_LOCK_TRACE"],"struct":["ExclusiveSnatchGuard","LockTrace","SnatchGuard","SnatchLock","Snatchable"]};

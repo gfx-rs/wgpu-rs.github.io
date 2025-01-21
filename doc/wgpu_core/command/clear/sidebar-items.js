@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ClearError"],"fn":["clear_texture","clear_texture_via_buffer_copies","clear_texture_via_render_passes"]};

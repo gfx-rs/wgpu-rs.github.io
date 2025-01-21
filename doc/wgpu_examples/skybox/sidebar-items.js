@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"],"struct":["Example"]};
+window.SIDEBAR_ITEMS = {"constant":["IMAGE_SIZE","MODEL_CENTER_Y"],"fn":["main"],"struct":["Camera","Entity","Example","Vertex"]};

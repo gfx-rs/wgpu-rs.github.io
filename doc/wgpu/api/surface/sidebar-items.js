@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CreateSurfaceErrorKind","SurfaceTarget","SurfaceTargetUnsafe"],"struct":["CreateSurfaceError","Surface"],"trait":["WindowHandle"],"type":["SurfaceConfiguration"]};

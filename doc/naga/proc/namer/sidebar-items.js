@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SEPARATOR"],"enum":["NameKey"],"struct":["AsciiUniCase","Namer"],"type":["EntryPointIndex"]};

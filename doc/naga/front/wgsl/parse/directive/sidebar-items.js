@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DirectiveKind"],"mod":["enable_extension","language_extension"]};

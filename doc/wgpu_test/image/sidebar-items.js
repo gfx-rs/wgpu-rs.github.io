@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["compare_image_output"],"struct":["ReadbackBuffers"]};
+window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["add_alpha","compare_image_output","copy_texture_to_buffer","copy_texture_to_buffer_with_aspect","copy_via_compute","print_flip","read_png","remove_alpha","sanitize_for_path","write_png"],"struct":["ReadbackBuffers"]};

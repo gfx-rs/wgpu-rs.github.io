@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["EXAMPLE_NAME"],"fn":["create_ball_texture_data","main"],"struct":["Example","MultiTargetRenderer","TargetRenderer","TextureTargets"]};

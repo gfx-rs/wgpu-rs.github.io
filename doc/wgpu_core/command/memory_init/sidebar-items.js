@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["fixup_discarded_surfaces"],"struct":["CommandBufferTextureMemoryActions","TextureSurfaceDiscard"],"type":["SurfacesInDiscardState"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Components","Declared","ExpressionContextType","LoweredGlobalDecl","SubgroupGather","Texture","Typed"],"macro":["resolve","resolve_inner","resolve_inner_binary"],"mod":["construction","conversion"],"struct":["ArgumentContext","ExpressionContext","GlobalContext","LocalExpressionContext","Lowerer","StatementContext"]};

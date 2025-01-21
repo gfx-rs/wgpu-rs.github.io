@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MapMode"],"fn":["check_buffer_bounds","range_to_offset_size"],"struct":["Buffer","BufferAsyncError","BufferSlice","BufferView","BufferViewMut","MapContext"],"type":["BufferDescriptor"]};

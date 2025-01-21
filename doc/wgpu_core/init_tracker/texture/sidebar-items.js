@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["has_copy_partial_init_tracker_coverage"],"struct":["TextureInitRange","TextureInitTracker","TextureInitTrackerAction"],"type":["TextureLayerInitTracker"]};

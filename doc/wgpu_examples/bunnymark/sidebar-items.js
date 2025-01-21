@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"]};
+window.SIDEBAR_ITEMS = {"constant":["BUNNY_SIZE","GRAVITY","MAX_BUNNIES","MAX_VELOCITY"],"fn":["main"],"struct":["Bunny","Example","Globals"]};
