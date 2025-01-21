@@ -1089,64 +1089,7 @@
 <a href="#1088" id="1088">1088</a>
 <a href="#1089" id="1089">1089</a>
 <a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a>
-<a href="#1093" id="1093">1093</a>
-<a href="#1094" id="1094">1094</a>
-<a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a>
-<a href="#1097" id="1097">1097</a>
-<a href="#1098" id="1098">1098</a>
-<a href="#1099" id="1099">1099</a>
-<a href="#1100" id="1100">1100</a>
-<a href="#1101" id="1101">1101</a>
-<a href="#1102" id="1102">1102</a>
-<a href="#1103" id="1103">1103</a>
-<a href="#1104" id="1104">1104</a>
-<a href="#1105" id="1105">1105</a>
-<a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-<a href="#1113" id="1113">1113</a>
-<a href="#1114" id="1114">1114</a>
-<a href="#1115" id="1115">1115</a>
-<a href="#1116" id="1116">1116</a>
-<a href="#1117" id="1117">1117</a>
-<a href="#1118" id="1118">1118</a>
-<a href="#1119" id="1119">1119</a>
-<a href="#1120" id="1120">1120</a>
-<a href="#1121" id="1121">1121</a>
-<a href="#1122" id="1122">1122</a>
-<a href="#1123" id="1123">1123</a>
-<a href="#1124" id="1124">1124</a>
-<a href="#1125" id="1125">1125</a>
-<a href="#1126" id="1126">1126</a>
-<a href="#1127" id="1127">1127</a>
-<a href="#1128" id="1128">1128</a>
-<a href="#1129" id="1129">1129</a>
-<a href="#1130" id="1130">1130</a>
-<a href="#1131" id="1131">1131</a>
-<a href="#1132" id="1132">1132</a>
-<a href="#1133" id="1133">1133</a>
-<a href="#1134" id="1134">1134</a>
-<a href="#1135" id="1135">1135</a>
-<a href="#1136" id="1136">1136</a>
-<a href="#1137" id="1137">1137</a>
-<a href="#1138" id="1138">1138</a>
-<a href="#1139" id="1139">1139</a>
-<a href="#1140" id="1140">1140</a>
-<a href="#1141" id="1141">1141</a>
-<a href="#1142" id="1142">1142</a>
-<a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a>
-<a href="#1146" id="1146">1146</a>
-<a href="#1147" id="1147">1147</a>
-<a href="#1148" id="1148">1148</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1091" id="1091">1091</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
 Designed to work on Linux and Android, with context provided by EGL.
@@ -1243,9 +1186,12 @@ we don't bother with that combination.
 <span class="kw">mod </span>command;
 <span class="kw">mod </span>conv;
 <span class="kw">mod </span>device;
+<span class="kw">mod </span>fence;
 <span class="kw">mod </span>queue;
 
 <span class="kw">use crate</span>::{CopyExtent, TextureDescriptor};
+
+<span class="kw">pub use </span>fence::Fence;
 
 <span class="attr">#[cfg(not(any(windows, webgl)))]
 </span><span class="kw">pub use </span><span class="self">self</span>::egl::{AdapterContext, AdapterContextLock};
@@ -1268,7 +1214,7 @@ we don't bother with that combination.
 
 <span class="kw">use </span>naga::FastHashMap;
 <span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+<span class="kw">use </span>std::sync::atomic::{AtomicU32, AtomicU8};
 <span class="kw">use </span>std::{fmt, ops::Range, sync::Arc};
 
 <span class="attr">#[derive(Clone, Debug)]
@@ -1420,6 +1366,7 @@ we don't bother with that combination.
     private_caps: PrivateCapabilities,
     features: wgt::Features,
     workarounds: Workarounds,
+    options: wgt::GlBackendOptions,
     shading_language_version: naga::back::glsl::Version,
     next_shader_id: AtomicU32,
     program_cache: Mutex&lt;ProgramCache&gt;,
@@ -1879,67 +1826,6 @@ we don't bother with that combination.
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::DynQuerySet <span class="kw">for </span>QuerySet {}
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Fence {
-    last_completed: <span class="kw">crate</span>::AtomicFenceValue,
-    pending: Vec&lt;(<span class="kw">crate</span>::FenceValue, glow::Fence)&gt;,
-}
-
-<span class="kw">impl </span><span class="kw">crate</span>::DynFence <span class="kw">for </span>Fence {}
-
-<span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">"wasm32"</span>),
-    all(
-        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-        not(target_feature = <span class="string">"atomics"</span>)
-    )
-))]
-</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>Fence {}
-<span class="attr">#[cfg(any(
-    not(target_arch = <span class="string">"wasm32"</span>),
-    all(
-        feature = <span class="string">"fragile-send-sync-non-atomic-wasm"</span>,
-        not(target_feature = <span class="string">"atomics"</span>)
-    )
-))]
-</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Fence {}
-
-<span class="kw">impl </span>Fence {
-    <span class="kw">fn </span>get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) -&gt; <span class="kw">crate</span>::FenceValue {
-        <span class="kw">let </span><span class="kw-2">mut </span>max_value = <span class="self">self</span>.last_completed.load(Ordering::Relaxed);
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(value, sync) <span class="kw">in </span><span class="self">self</span>.pending.iter() {
-            <span class="kw">if </span>value &lt;= max_value {
-                <span class="comment">// We already know this was good, no need to check again
-                </span><span class="kw">continue</span>;
-            }
-            <span class="kw">let </span>status = <span class="kw">unsafe </span>{ gl.get_sync_status(sync) };
-            <span class="kw">if </span>status == glow::SIGNALED {
-                max_value = value;
-            } <span class="kw">else </span>{
-                <span class="comment">// Anything after the first unsignalled is guaranteed to also be unsignalled
-                </span><span class="kw">break</span>;
-            }
-        }
-
-        <span class="comment">// Track the latest value, to save ourselves some querying later
-        </span><span class="self">self</span>.last_completed.fetch_max(max_value, Ordering::Relaxed);
-
-        max_value
-    }
-
-    <span class="kw">fn </span>maintain(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
-        <span class="kw">let </span>latest = <span class="self">self</span>.get_latest(gl);
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(value, sync) <span class="kw">in </span><span class="self">self</span>.pending.iter() {
-            <span class="kw">if </span>value &lt;= latest {
-                <span class="kw">unsafe </span>{
-                    gl.delete_sync(sync);
-                }
-            }
-        }
-        <span class="self">self</span>.pending.retain(|<span class="kw-2">&amp;</span>(value, <span class="kw">_</span>)| value &gt; latest);
-    }
-}
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>AccelerationStructure;

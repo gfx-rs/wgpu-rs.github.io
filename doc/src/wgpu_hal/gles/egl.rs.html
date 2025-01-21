@@ -1511,7 +1511,21 @@
 <a href="#1510" id="1510">1510</a>
 <a href="#1511" id="1511">1511</a>
 <a href="#1512" id="1512">1512</a>
-<a href="#1513" id="1513">1513</a></pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a></pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>hashbrown::HashMap;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{MappedMutexGuard, Mutex, MutexGuard, RwLock};
@@ -2250,6 +2264,7 @@
 <span class="kw">pub struct </span>Instance {
     wsi: WindowSystemInterface,
     flags: wgt::InstanceFlags,
+    options: wgt::GlBackendOptions,
     inner: Mutex&lt;Inner&gt;,
 }
 
@@ -2434,7 +2449,12 @@
             <span class="kw">unsafe </span>{ (function)(<span class="prelude-val">Some</span>(egl_debug_proc), attributes.as_ptr()) };
         }
 
-        <span class="kw">let </span>inner = Inner::create(desc.flags, egl, display, desc.gles_minor_version)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inner = Inner::create(
+            desc.flags,
+            egl,
+            display,
+            desc.backend_options.gl.gles_minor_version,
+        )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Instance {
             wsi: WindowSystemInterface {
@@ -2442,6 +2462,7 @@
                 kind: wsi_kind,
             },
             flags: desc.flags,
+            options: desc.backend_options.gl.clone(),
             inner: Mutex::new(inner),
         })
     }
@@ -2601,10 +2622,13 @@
         inner.egl.unmake_current();
 
         <span class="kw">unsafe </span>{
-            <span class="kw">super</span>::Adapter::expose(AdapterContext {
-                glow: Mutex::new(gl),
-                egl: <span class="prelude-val">Some</span>(inner.egl.clone()),
-            })
+            <span class="kw">super</span>::Adapter::expose(
+                AdapterContext {
+                    glow: Mutex::new(gl),
+                    egl: <span class="prelude-val">Some</span>(inner.egl.clone()),
+                },
+                <span class="self">self</span>.options.clone(),
+            )
         }
         .into_iter()
         .collect()
@@ -2623,13 +2647,17 @@
     ///   dropping any objects returned from this adapter.
     </span><span class="kw">pub unsafe fn </span>new_external(
         fun: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">*const </span>ffi::c_void,
+        options: wgt::GlBackendOptions,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ExposedAdapter&lt;<span class="kw">super</span>::Api&gt;&gt; {
         <span class="kw">let </span>context = <span class="kw">unsafe </span>{ glow::Context::from_loader_function(fun) };
         <span class="kw">unsafe </span>{
-            <span class="self">Self</span>::expose(AdapterContext {
-                glow: Mutex::new(ManuallyDrop::new(context)),
-                egl: <span class="prelude-val">None</span>,
-            })
+            <span class="self">Self</span>::expose(
+                AdapterContext {
+                    glow: Mutex::new(ManuallyDrop::new(context)),
+                    egl: <span class="prelude-val">None</span>,
+                },
+                options,
+            )
         }
     }
 
