@@ -1116,7 +1116,15 @@
 <a href="#1115" id="1115">1115</a>
 <a href="#1116" id="1116">1116</a>
 <a href="#1117" id="1117">1117</a>
-<a href="#1118" id="1118">1118</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
     str::FromStr,
@@ -1178,6 +1186,14 @@
     <span class="kw">if </span>cd.message_id_number == VUID_VKRENDERPASSBEGININFO_FRAMEBUFFER_04627
         &amp;&amp; user_data.has_obs_layer
     {
+        <span class="kw">return </span>vk::FALSE;
+    }
+
+    <span class="comment">// Silence Vulkan Validation error "VUID-vkCmdCopyImageToBuffer-pRegions-00184".
+    // While we aren't sure yet, we suspect this is probably a VVL issue.
+    // https://github.com/KhronosGroup/Vulkan-ValidationLayers/issues/9276
+    </span><span class="kw">const </span>VUID_VKCMDCOPYIMAGETOBUFFER_PREGIONS_00184: i32 = <span class="number">0x45ef177c</span>;
+    <span class="kw">if </span>cd.message_id_number == VUID_VKCMDCOPYIMAGETOBUFFER_PREGIONS_00184 {
         <span class="kw">return </span>vk::FALSE;
     }
 
