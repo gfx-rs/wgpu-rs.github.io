@@ -3758,10 +3758,7 @@
 <a href="#3757" id="3757">3757</a>
 <a href="#3758" id="3758">3758</a>
 <a href="#3759" id="3759">3759</a>
-<a href="#3760" id="3760">3760</a>
-<a href="#3761" id="3761">3761</a>
-<a href="#3762" id="3762">3762</a>
-<a href="#3763" id="3763">3763</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#3760" id="3760">3760</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
@@ -3796,6 +3793,7 @@
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>bitflags::Flags;
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>wgt::{
     math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension,
@@ -4258,9 +4256,7 @@
             <span class="self">self</span>.require_downlevel_flags(wgt::DownlevelFlags::UNRESTRICTED_INDEX_BUFFER)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span>desc.usage.is_empty()
-            || desc.usage | wgt::BufferUsages::all() != wgt::BufferUsages::all()
-        {
+        <span class="kw">if </span>desc.usage.is_empty() || desc.usage.contains_unknown_bits() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(resource::CreateBufferError::InvalidUsage(desc.usage));
         }
 
@@ -4494,9 +4490,7 @@
 
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>desc.usage.is_empty()
-            || desc.usage | wgt::TextureUsages::all() != wgt::TextureUsages::all()
-        {
+        <span class="kw">if </span>desc.usage.is_empty() || desc.usage.contains_unknown_bits() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidUsage(desc.usage));
         }
 
@@ -5611,7 +5605,7 @@
                     })<span class="question-mark">?</span>;
             }
 
-            <span class="kw">if </span>entry.visibility | wgt::ShaderStages::all() != wgt::ShaderStages::all() {
+            <span class="kw">if </span>entry.visibility.contains_unknown_bits() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
                     binding_model::CreateBindGroupLayoutError::InvalidVisibility(entry.visibility),
                 );
@@ -6840,7 +6834,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(cs) = cs.as_ref() {
                 target_specified = <span class="bool-val">true</span>;
                 <span class="kw">let </span>error = <span class="lifetime">'error</span>: {
-                    <span class="kw">if </span>cs.write_mask | wgt::ColorWrites::all() != wgt::ColorWrites::all() {
+                    <span class="kw">if </span>cs.write_mask.contains_unknown_bits() {
                         <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidWriteMask(
                             cs.write_mask,
                         ));
