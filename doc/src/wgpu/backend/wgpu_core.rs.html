@@ -3541,7 +3541,10 @@
 <a href="#3540" id="3540">3540</a>
 <a href="#3541" id="3541">3541</a>
 <a href="#3542" id="3542">3542</a>
-<a href="#3543" id="3543">3543</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3543" id="3543">3543</a>
+<a href="#3544" id="3544">3544</a>
+<a href="#3545" id="3545">3545</a>
+<a href="#3546" id="3546">3546</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
@@ -4397,14 +4400,17 @@
 
     <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
     </span><span class="kw">fn </span>wgsl_language_features(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::WgslLanguageFeatures {
-        wgc::naga::front::wgsl::ImplementedLanguageExtension::all()
-            .iter()
-            .copied()
-            .fold(
-                <span class="kw">crate</span>::WgslLanguageFeatures::empty(),
-                <span class="attr">#[expect(unreachable_code)]
-                </span>|acc, wle| acc | <span class="kw">match </span>wle {},
-            )
+        <span class="kw">use </span>wgc::naga::front::wgsl::ImplementedLanguageExtension;
+        ImplementedLanguageExtension::all().iter().copied().fold(
+            <span class="kw">crate</span>::WgslLanguageFeatures::empty(),
+            |acc, wle| {
+                acc | <span class="kw">match </span>wle {
+                    ImplementedLanguageExtension::PointerCompositeAccess =&gt; {
+                        <span class="kw">crate</span>::WgslLanguageFeatures::PointerCompositeAccess
+                    }
+                }
+            },
+        )
     }
 }
 

@@ -3358,9 +3358,7 @@
 <a href="#3357" id="3357">3357</a>
 <a href="#3358" id="3358">3358</a>
 <a href="#3359" id="3359">3359</a>
-<a href="#3360" id="3360">3360</a>
-<a href="#3361" id="3361">3361</a>
-<a href="#3362" id="3362">3362</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3360" id="3360">3360</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -5360,15 +5358,14 @@
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Plain(handle));
             }
             ast::Expression::Index { base, index } =&gt; {
-                <span class="kw">let </span>lowered_base = <span class="self">self</span>.expression_for_reference(base, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>lowered_base = <span class="self">self</span>.expression_for_reference(base, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>index = <span class="self">self</span>.expression(index, ctx)<span class="question-mark">?</span>;
 
-                <span class="kw">if let </span>Typed::Plain(handle) = lowered_base {
+                <span class="comment">// &lt;https://www.w3.org/TR/WGSL/#language_extension-pointer_composite_access&gt;
+                // Declare pointer as reference
+                </span><span class="kw">if let </span>Typed::Plain(handle) = lowered_base {
                     <span class="kw">if </span><span class="macro">resolve_inner!</span>(ctx, handle).pointer_space().is_some() {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Pointer(
-                            <span class="string">"the value indexed by a `[]` subscripting expression"</span>,
-                            ctx.ast_expressions.get_span(base),
-                        ));
+                        lowered_base = Typed::Reference(handle);
                     }
                 }
 
@@ -5378,7 +5375,15 @@
                 })
             }
             ast::Expression::Member { base, <span class="kw-2">ref </span>field } =&gt; {
-                <span class="kw">let </span>lowered_base = <span class="self">self</span>.expression_for_reference(base, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>lowered_base = <span class="self">self</span>.expression_for_reference(base, ctx)<span class="question-mark">?</span>;
+
+                <span class="comment">// &lt;https://www.w3.org/TR/WGSL/#language_extension-pointer_composite_access&gt;
+                // Declare pointer as reference
+                </span><span class="kw">if let </span>Typed::Plain(handle) = lowered_base {
+                    <span class="kw">if </span><span class="macro">resolve_inner!</span>(ctx, handle).pointer_space().is_some() {
+                        lowered_base = Typed::Reference(handle);
+                    }
+                }
 
                 <span class="kw">let </span>temp_inner;
                 <span class="kw">let </span>composite_type: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner = <span class="kw">match </span>lowered_base {
@@ -5407,16 +5412,7 @@
                     }
 
                     Typed::Plain(handle) =&gt; {
-                        <span class="kw">let </span>inner = <span class="macro">resolve_inner!</span>(ctx, handle);
-                        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Pointer { .. }
-                        | <span class="kw">crate</span>::TypeInner::ValuePointer { .. } = <span class="kw-2">*</span>inner
-                        {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Pointer(
-                                <span class="string">"the value accessed by a `.member` expression"</span>,
-                                ctx.ast_expressions.get_span(base),
-                            ));
-                        }
-                        inner
+                        <span class="macro">resolve_inner!</span>(ctx, handle)
                     }
                 };
 
