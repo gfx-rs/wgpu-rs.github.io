@@ -4067,7 +4067,27 @@
 <a href="#4066" id="4066">4066</a>
 <a href="#4067" id="4067">4067</a>
 <a href="#4068" id="4068">4068</a>
-<a href="#4069" id="4069">4069</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#4069" id="4069">4069</a>
+<a href="#4070" id="4070">4070</a>
+<a href="#4071" id="4071">4071</a>
+<a href="#4072" id="4072">4072</a>
+<a href="#4073" id="4073">4073</a>
+<a href="#4074" id="4074">4074</a>
+<a href="#4075" id="4075">4075</a>
+<a href="#4076" id="4076">4076</a>
+<a href="#4077" id="4077">4077</a>
+<a href="#4078" id="4078">4078</a>
+<a href="#4079" id="4079">4079</a>
+<a href="#4080" id="4080">4080</a>
+<a href="#4081" id="4081">4081</a>
+<a href="#4082" id="4082">4082</a>
+<a href="#4083" id="4083">4083</a>
+<a href="#4084" id="4084">4084</a>
+<a href="#4085" id="4085">4085</a>
+<a href="#4086" id="4086">4086</a>
+<a href="#4087" id="4087">4087</a>
+<a href="#4088" id="4088">4088</a>
+<a href="#4089" id="4089">4089</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
         WrappedZeroValue,
@@ -5405,25 +5425,37 @@
 
         </span><span class="self">self</span>.update_expressions_to_bake(module, func, info);
 
-        <span class="comment">// Write modifier
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::FunctionResult {
-            binding:
-                <span class="prelude-val">Some</span>(
-                    <span class="kw-2">ref </span>binding @ <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::Position {
-                        invariant: <span class="bool-val">true</span>,
-                    }),
-                ),
-            ..
-        }) = func.result
-        {
-            <span class="self">self</span>.write_modifier(binding)<span class="question-mark">?</span>;
-        }
-
-        <span class="comment">// Write return type
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) = func.result {
-            <span class="kw">match </span>func_ctx.ty {
-                back::FunctionType::Function(<span class="kw">_</span>) =&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) = func.result {
+            <span class="comment">// Write typedef if return type is an array
+            </span><span class="kw">let </span>array_return_type = <span class="kw">match </span>module.types[result.ty].inner {
+                TypeInner::Array { base, size, .. } =&gt; {
+                    <span class="kw">let </span>array_return_type = <span class="self">self</span>.namer.call(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"ret_{name}"</span>));
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"typedef "</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.write_type(module, result.ty)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {}"</span>, array_return_type)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
+                    <span class="prelude-val">Some</span>(array_return_type)
+                }
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            };
+
+            <span class="comment">// Write modifier
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(
+                <span class="kw-2">ref </span>binding @ <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">true </span>}),
+            ) = result.binding
+            {
+                <span class="self">self</span>.write_modifier(binding)<span class="question-mark">?</span>;
+            }
+
+            <span class="comment">// Write return type
+            </span><span class="kw">match </span>func_ctx.ty {
+                back::FunctionType::Function(<span class="kw">_</span>) =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(array_return_type) = array_return_type {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{array_return_type}"</span>)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="self">self</span>.write_type(module, result.ty)<span class="question-mark">?</span>;
+                    }
                 }
                 back::FunctionType::EntryPoint(index) =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ep_output) = <span class="self">self</span>.entry_point_io[index <span class="kw">as </span>usize].output {
@@ -6281,13 +6313,21 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"const "</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>name = Baked(expr).to_string();
                     <span class="kw">let </span>expr_ty = <span class="kw-2">&amp;</span>func_ctx.info[expr].ty;
-                    <span class="kw">match </span><span class="kw-2">*</span>expr_ty {
-                        proc::TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>,
+                    <span class="kw">let </span>ty_inner = <span class="kw">match </span><span class="kw-2">*</span>expr_ty {
+                        proc::TypeResolution::Handle(handle) =&gt; {
+                            <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>;
+                            <span class="kw-2">&amp;</span>module.types[handle].inner
+                        }
                         proc::TypeResolution::Value(<span class="kw-2">ref </span>value) =&gt; {
-                            <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?
-                        </span>}
+                            <span class="self">self</span>.write_value_type(module, value)<span class="question-mark">?</span>;
+                            value
+                        }
                     };
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name} = "</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" {name}"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">if let </span>TypeInner::Array { base, size, .. } = <span class="kw-2">*</span>ty_inner {
+                        <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
+                    }
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.named_expressions.insert(expr, name);
                 }
                 <span class="kw">let </span>func_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Function(function)];
