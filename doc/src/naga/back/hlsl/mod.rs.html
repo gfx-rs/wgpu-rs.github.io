@@ -415,7 +415,33 @@
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [HLSL][hlsl] (High-Level Shading Language).
 
 # Supported shader model versions:
@@ -547,6 +573,23 @@ information.
     </span><span class="kw">pub </span>register: u32,
     <span class="doccomment">/// If the binding is an unsized binding array, this overrides the size.
     </span><span class="kw">pub </span>binding_array_size: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="doccomment">/// This is the index in the buffer at [`Options::dynamic_storage_buffer_offsets_targets`].
+    </span><span class="kw">pub </span>dynamic_storage_buffer_offsets_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="doccomment">/// This is a hint that we need to restrict indexing of vectors, matrices and arrays.
+    ///
+    /// If [`Options::restrict_indexing`] is also `true`, we will restrict indexing.
+    </span><span class="attr">#[cfg_attr(any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>), serde(default))]
+    </span><span class="kw">pub </span>restrict_indexing: bool,
+}
+
+<span class="attr">#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
+</span><span class="doccomment">/// BindTarget for dynamic storage buffer offsets
+</span><span class="kw">pub struct </span>OffsetsBindTarget {
+    <span class="kw">pub </span>space: u8,
+    <span class="kw">pub </span>register: u32,
+    <span class="kw">pub </span>size: u32,
 }
 
 <span class="comment">// Using `BTreeMap` instead of `HashMap` so that we can hash itself.
@@ -631,11 +674,15 @@ information.
                 space: <span class="number">0</span>,
                 register: <span class="number">0</span>,
                 binding_array_size: <span class="prelude-val">None</span>,
+                dynamic_storage_buffer_offsets_index: <span class="prelude-val">None</span>,
+                restrict_indexing: <span class="bool-val">false</span>,
             },
             comparison_samplers: BindTarget {
                 space: <span class="number">1</span>,
                 register: <span class="number">0</span>,
                 binding_array_size: <span class="prelude-val">None</span>,
+                dynamic_storage_buffer_offsets_index: <span class="prelude-val">None</span>,
+                restrict_indexing: <span class="bool-val">false</span>,
             },
         }
     }
@@ -677,6 +724,8 @@ information.
     </span><span class="kw">pub </span>sampler_heap_target: SamplerHeapBindTargets,
     <span class="doccomment">/// Mapping of each bind group's sampler index buffer to a bind target.
     </span><span class="kw">pub </span>sampler_buffer_binding_map: SamplerIndexBufferBindingMap,
+    <span class="doccomment">/// Bind target for dynamic storage buffer offsets
+    </span><span class="kw">pub </span>dynamic_storage_buffer_offsets_targets: std::collections::BTreeMap&lt;u32, OffsetsBindTarget&gt;,
     <span class="doccomment">/// Should workgroup variables be zero initialized (by polyfilling)?
     </span><span class="kw">pub </span>zero_initialize_workgroup_memory: bool,
     <span class="doccomment">/// Should we restrict indexing of vectors, matrices and arrays?
@@ -693,6 +742,7 @@ information.
             sampler_heap_target: SamplerHeapBindTargets::default(),
             sampler_buffer_binding_map: std::collections::BTreeMap::default(),
             push_constants_target: <span class="prelude-val">None</span>,
+            dynamic_storage_buffer_offsets_targets: std::collections::BTreeMap::new(),
             zero_initialize_workgroup_memory: <span class="bool-val">true</span>,
             restrict_indexing: <span class="bool-val">true</span>,
         }
@@ -710,6 +760,8 @@ information.
                 space: res_binding.group <span class="kw">as </span>u8,
                 register: res_binding.binding,
                 binding_array_size: <span class="prelude-val">None</span>,
+                dynamic_storage_buffer_offsets_index: <span class="prelude-val">None</span>,
+                restrict_indexing: <span class="bool-val">false</span>,
             }),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(EntryPointError::MissingBinding(<span class="kw-2">*</span>res_binding)),
         }
