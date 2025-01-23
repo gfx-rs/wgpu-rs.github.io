@@ -2425,7 +2425,42 @@
 <a href="#2424" id="2424">2424</a>
 <a href="#2425" id="2425">2425</a>
 <a href="#2426" id="2426">2426</a>
-<a href="#2427" id="2427">2427</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a>
+<a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
 
@@ -4603,18 +4638,29 @@ An override expression can be evaluated at pipeline creation time.
     </span><span class="kw">pub </span>local_variables: Arena&lt;LocalVariable&gt;,
     <span class="doccomment">/// Expressions used inside this function.
     ///
-    /// If an [`Expression`] is in this arena, then its subexpressions are in this
-    /// arena too. In other words, every `Handle&lt;Expression&gt;` in this arena
-    /// refers to an [`Expression`] in this arena too. The only way this arena
-    /// can refer to [`Module::global_expressions`] is indirectly, via
-    /// [`Constant`] and [`Override`] expressions, which hold handles for their
-    /// respective types.
+    /// Unless explicitly stated otherwise, if an [`Expression`] is in this
+    /// arena, then its subexpressions are in this arena too. In other words,
+    /// every `Handle&lt;Expression&gt;` in this arena refers to an [`Expression`] in
+    /// this arena too.
+    ///
+    /// The main ways this arena refers to [`Module::global_expressions`] are:
+    ///
+    /// - [`Constant`], [`Override`], and [`GlobalVariable`] expressions hold
+    ///   handles for their respective types, whose initializer expressions are
+    ///   in [`Module::global_expressions`].
+    ///
+    /// - Various expressions hold [`Type`] handles, and [`Type`]s may refer to
+    ///   global expressions, for things like array lengths.
+    ///
+    /// - [`Expression::ImageSample::offset`] refers to an expression in
+    ///   [`Module::global_expressions`].
     ///
     /// An [`Expression`] must occur before all other [`Expression`]s that use
     /// its value.
     ///
     /// [`Constant`]: Expression::Constant
     /// [`Override`]: Expression::Override
+    /// [`GlobalVariable`]: Expression::GlobalVariable
     </span><span class="kw">pub </span>expressions: Arena&lt;Expression&gt;,
     <span class="doccomment">/// Map of expressions that have associated variable names
     </span><span class="kw">pub </span>named_expressions: NamedExpressions,
@@ -4804,12 +4850,37 @@ An override expression can be evaluated at pipeline creation time.
 /// Alternatively, you can load an existing shader using one of the [available front ends][front].
 ///
 /// When finished, you can export modules using one of the [available backends][back].
+///
+/// ## Module arenas
+///
+/// Most module contents are stored in [`Arena`]s. In a valid module, arena
+/// elements only refer to prior arena elements. That is, whenever an element in
+/// some `Arena&lt;T&gt;` contains a `Handle&lt;T&gt;` referring to another element the same
+/// arena, the handle's referent always precedes the element containing the
+/// handle.
+///
+/// The elements of [`Module::types`] may refer to [`Expression`]s in
+/// [`Module::global_expressions`], and those expressions may in turn refer back
+/// to [`Type`]s in [`Module::types`]. In a valid module, there exists an order
+/// in which all types and global expressions can be visited such that:
+///
+/// - types and expressions are visited in the order in which they appear in
+///   their arenas, and
+///
+/// - every element refers only to previously visited elements.
+///
+/// This implies that the graph of types and global expressions is acyclic.
+/// (However, it is a stronger condition: there are cycle-free arrangements of
+/// types and expressions for which an order like the one described above does
+/// not exist. Modules arranged in such a way are not valid.)
 </span><span class="attr">#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
 #[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
 </span><span class="kw">pub struct </span>Module {
     <span class="doccomment">/// Arena for the types defined in this module.
+    ///
+    /// See the [`Module`] docs for more details about this field.
     </span><span class="kw">pub </span>types: UniqueArena&lt;Type&gt;,
     <span class="doccomment">/// Dictionary of special type handles.
     </span><span class="kw">pub </span>special_types: SpecialTypes,
@@ -4825,8 +4896,7 @@ An override expression can be evaluated at pipeline creation time.
     /// arena too. In other words, every `Handle&lt;Expression&gt;` in this arena
     /// refers to an [`Expression`] in this arena too.
     ///
-    /// Each `Expression` must occur in the arena before any
-    /// `Expression` that uses its value.
+    /// See the [`Module`] docs for more details about this field.
     ///
     /// [Constant expressions]: index.html#constant-expressions
     /// [override expressions]: index.html#override-expressions
