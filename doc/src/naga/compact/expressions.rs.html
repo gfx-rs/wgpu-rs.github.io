@@ -425,7 +425,10 @@
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
 <span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
@@ -489,167 +492,170 @@
             }
 
             <span class="macro">log::trace!</span>(<span class="string">"tracing new expression {:?}"</span>, expr);
+            <span class="self">self</span>.trace_expression(expr);
+        }
+    }
 
-            <span class="kw">use </span><span class="kw">crate</span>::Expression <span class="kw">as </span>Ex;
-            <span class="kw">match </span><span class="kw-2">*</span>expr {
-                <span class="comment">// Expressions that do not contain handles that need to be traced.
-                </span>Ex::Literal(<span class="kw">_</span>)
-                | Ex::FunctionArgument(<span class="kw">_</span>)
-                | Ex::GlobalVariable(<span class="kw">_</span>)
-                | Ex::LocalVariable(<span class="kw">_</span>)
-                | Ex::CallResult(<span class="kw">_</span>)
-                | Ex::SubgroupBallotResult
-                | Ex::RayQueryProceedResult =&gt; {}
+    <span class="kw">pub fn </span>trace_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression) {
+        <span class="kw">use </span><span class="kw">crate</span>::Expression <span class="kw">as </span>Ex;
+        <span class="kw">match </span><span class="kw-2">*</span>expr {
+            <span class="comment">// Expressions that do not contain handles that need to be traced.
+            </span>Ex::Literal(<span class="kw">_</span>)
+            | Ex::FunctionArgument(<span class="kw">_</span>)
+            | Ex::GlobalVariable(<span class="kw">_</span>)
+            | Ex::LocalVariable(<span class="kw">_</span>)
+            | Ex::CallResult(<span class="kw">_</span>)
+            | Ex::SubgroupBallotResult
+            | Ex::RayQueryProceedResult =&gt; {}
 
-                Ex::Constant(handle) =&gt; {
-                    <span class="self">self</span>.constants_used.insert(handle);
-                    <span class="comment">// Constants and expressions are mutually recursive, which
-                    // complicates our nice one-pass algorithm. However, since
-                    // constants don't refer to each other, we can get around
-                    // this by looking *through* each constant and marking its
-                    // initializer as used. Since `expr` refers to the constant,
-                    // and the constant refers to the initializer, it must
-                    // precede `expr` in the arena.
-                    </span><span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
-                    <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
-                        <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
-                        <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
-                    };
+            Ex::Constant(handle) =&gt; {
+                <span class="self">self</span>.constants_used.insert(handle);
+                <span class="comment">// Constants and expressions are mutually recursive, which
+                // complicates our nice one-pass algorithm. However, since
+                // constants don't refer to each other, we can get around
+                // this by looking *through* each constant and marking its
+                // initializer as used. Since `expr` refers to the constant,
+                // and the constant refers to the initializer, it must
+                // precede `expr` in the arena.
+                </span><span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
+                <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
+                };
+            }
+            Ex::Override(<span class="kw">_</span>) =&gt; {
+                <span class="comment">// All overrides are considered used by definition. We mark
+                // their types and initialization expressions as used in
+                // `compact::compact`, so we have no more work to do here.
+            </span>}
+            Ex::ZeroValue(ty) =&gt; {
+                <span class="self">self</span>.types_used.insert(ty);
+            }
+            Ex::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
+                <span class="self">self</span>.types_used.insert(ty);
+                <span class="self">self</span>.expressions_used
+                    .insert_iter(components.iter().cloned());
+            }
+            Ex::Access { base, index } =&gt; <span class="self">self</span>.expressions_used.insert_iter([base, index]),
+            Ex::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; {
+                <span class="self">self</span>.expressions_used.insert(base);
+            }
+            Ex::Splat { size: <span class="kw">_</span>, value } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(value);
+            }
+            Ex::Swizzle {
+                size: <span class="kw">_</span>,
+                vector,
+                pattern: <span class="kw">_</span>,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(vector);
+            }
+            Ex::Load { pointer } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(pointer);
+            }
+            Ex::ImageSample {
+                image,
+                sampler,
+                gather: <span class="kw">_</span>,
+                coordinate,
+                array_index,
+                offset,
+                <span class="kw-2">ref </span>level,
+                depth_ref,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used
+                    .insert_iter([image, sampler, coordinate]);
+                <span class="self">self</span>.expressions_used.insert_iter(array_index);
+                <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert_iter(offset),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert_iter(offset),
                 }
-                Ex::Override(<span class="kw">_</span>) =&gt; {
-                    <span class="comment">// All overrides are considered used by definition. We mark
-                    // their types and initialization expressions as used in
-                    // `compact::compact`, so we have no more work to do here.
-                </span>}
-                Ex::ZeroValue(ty) =&gt; {
-                    <span class="self">self</span>.types_used.insert(ty);
-                }
-                Ex::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
-                    <span class="self">self</span>.types_used.insert(ty);
-                    <span class="self">self</span>.expressions_used
-                        .insert_iter(components.iter().cloned());
-                }
-                Ex::Access { base, index } =&gt; <span class="self">self</span>.expressions_used.insert_iter([base, index]),
-                Ex::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(base);
-                }
-                Ex::Splat { size: <span class="kw">_</span>, value } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(value);
-                }
-                Ex::Swizzle {
-                    size: <span class="kw">_</span>,
-                    vector,
-                    pattern: <span class="kw">_</span>,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(vector);
-                }
-                Ex::Load { pointer } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(pointer);
-                }
-                Ex::ImageSample {
-                    image,
-                    sampler,
-                    gather: <span class="kw">_</span>,
-                    coordinate,
-                    array_index,
-                    offset,
-                    <span class="kw-2">ref </span>level,
-                    depth_ref,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used
-                        .insert_iter([image, sampler, coordinate]);
-                    <span class="self">self</span>.expressions_used.insert_iter(array_index);
-                    <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
-                        <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert_iter(offset),
-                        <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert_iter(offset),
+                <span class="kw">use </span><span class="kw">crate</span>::SampleLevel <span class="kw">as </span>Sl;
+                <span class="kw">match </span><span class="kw-2">*</span>level {
+                    Sl::Auto | Sl::Zero =&gt; {}
+                    Sl::Exact(expr) | Sl::Bias(expr) =&gt; {
+                        <span class="self">self</span>.expressions_used.insert(expr);
                     }
-                    <span class="kw">use </span><span class="kw">crate</span>::SampleLevel <span class="kw">as </span>Sl;
-                    <span class="kw">match </span><span class="kw-2">*</span>level {
-                        Sl::Auto | Sl::Zero =&gt; {}
-                        Sl::Exact(expr) | Sl::Bias(expr) =&gt; {
-                            <span class="self">self</span>.expressions_used.insert(expr);
-                        }
-                        Sl::Gradient { x, y } =&gt; <span class="self">self</span>.expressions_used.insert_iter([x, y]),
-                    }
-                    <span class="self">self</span>.expressions_used.insert_iter(depth_ref);
+                    Sl::Gradient { x, y } =&gt; <span class="self">self</span>.expressions_used.insert_iter([x, y]),
                 }
-                Ex::ImageLoad {
-                    image,
-                    coordinate,
-                    array_index,
-                    sample,
-                    level,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(image);
-                    <span class="self">self</span>.expressions_used.insert(coordinate);
-                    <span class="self">self</span>.expressions_used.insert_iter(array_index);
-                    <span class="self">self</span>.expressions_used.insert_iter(sample);
-                    <span class="self">self</span>.expressions_used.insert_iter(level);
+                <span class="self">self</span>.expressions_used.insert_iter(depth_ref);
+            }
+            Ex::ImageLoad {
+                image,
+                coordinate,
+                array_index,
+                sample,
+                level,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(image);
+                <span class="self">self</span>.expressions_used.insert(coordinate);
+                <span class="self">self</span>.expressions_used.insert_iter(array_index);
+                <span class="self">self</span>.expressions_used.insert_iter(sample);
+                <span class="self">self</span>.expressions_used.insert_iter(level);
+            }
+            Ex::ImageQuery { image, <span class="kw-2">ref </span>query } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(image);
+                <span class="kw">use </span><span class="kw">crate</span>::ImageQuery <span class="kw">as </span>Iq;
+                <span class="kw">match </span><span class="kw-2">*</span>query {
+                    Iq::Size { level } =&gt; <span class="self">self</span>.expressions_used.insert_iter(level),
+                    Iq::NumLevels | Iq::NumLayers | Iq::NumSamples =&gt; {}
                 }
-                Ex::ImageQuery { image, <span class="kw-2">ref </span>query } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(image);
-                    <span class="kw">use </span><span class="kw">crate</span>::ImageQuery <span class="kw">as </span>Iq;
-                    <span class="kw">match </span><span class="kw-2">*</span>query {
-                        Iq::Size { level } =&gt; <span class="self">self</span>.expressions_used.insert_iter(level),
-                        Iq::NumLevels | Iq::NumLayers | Iq::NumSamples =&gt; {}
-                    }
-                }
-                Ex::Unary { op: <span class="kw">_</span>, expr } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(expr);
-                }
-                Ex::Binary { op: <span class="kw">_</span>, left, right } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert_iter([left, right]);
-                }
-                Ex::Select {
-                    condition,
-                    accept,
-                    reject,
-                } =&gt; <span class="self">self
-                    </span>.expressions_used
-                    .insert_iter([condition, accept, reject]),
-                Ex::Derivative {
-                    axis: <span class="kw">_</span>,
-                    ctrl: <span class="kw">_</span>,
-                    expr,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(expr);
-                }
-                Ex::Relational { fun: <span class="kw">_</span>, argument } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(argument);
-                }
-                Ex::Math {
-                    fun: <span class="kw">_</span>,
-                    arg,
-                    arg1,
-                    arg2,
-                    arg3,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(arg);
-                    <span class="self">self</span>.expressions_used.insert_iter(arg1);
-                    <span class="self">self</span>.expressions_used.insert_iter(arg2);
-                    <span class="self">self</span>.expressions_used.insert_iter(arg3);
-                }
-                Ex::As {
-                    expr,
-                    kind: <span class="kw">_</span>,
-                    convert: <span class="kw">_</span>,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(expr);
-                }
-                Ex::ArrayLength(expr) =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(expr);
-                }
-                Ex::AtomicResult { ty, comparison: <span class="kw">_ </span>}
-                | Ex::WorkGroupUniformLoadResult { ty }
-                | Ex::SubgroupOperationResult { ty } =&gt; {
-                    <span class="self">self</span>.types_used.insert(ty);
-                }
-                Ex::RayQueryGetIntersection {
-                    query,
-                    committed: <span class="kw">_</span>,
-                } =&gt; {
-                    <span class="self">self</span>.expressions_used.insert(query);
-                }
+            }
+            Ex::Unary { op: <span class="kw">_</span>, expr } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+            }
+            Ex::Binary { op: <span class="kw">_</span>, left, right } =&gt; {
+                <span class="self">self</span>.expressions_used.insert_iter([left, right]);
+            }
+            Ex::Select {
+                condition,
+                accept,
+                reject,
+            } =&gt; <span class="self">self
+                </span>.expressions_used
+                .insert_iter([condition, accept, reject]),
+            Ex::Derivative {
+                axis: <span class="kw">_</span>,
+                ctrl: <span class="kw">_</span>,
+                expr,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+            }
+            Ex::Relational { fun: <span class="kw">_</span>, argument } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(argument);
+            }
+            Ex::Math {
+                fun: <span class="kw">_</span>,
+                arg,
+                arg1,
+                arg2,
+                arg3,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(arg);
+                <span class="self">self</span>.expressions_used.insert_iter(arg1);
+                <span class="self">self</span>.expressions_used.insert_iter(arg2);
+                <span class="self">self</span>.expressions_used.insert_iter(arg3);
+            }
+            Ex::As {
+                expr,
+                kind: <span class="kw">_</span>,
+                convert: <span class="kw">_</span>,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+            }
+            Ex::ArrayLength(expr) =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+            }
+            Ex::AtomicResult { ty, comparison: <span class="kw">_ </span>}
+            | Ex::WorkGroupUniformLoadResult { ty }
+            | Ex::SubgroupOperationResult { ty } =&gt; {
+                <span class="self">self</span>.types_used.insert(ty);
+            }
+            Ex::RayQueryGetIntersection {
+                query,
+                committed: <span class="kw">_</span>,
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(query);
             }
         }
     }

@@ -105,66 +105,56 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
-<span class="kw">use crate</span>::{Handle, UniqueArena};
+<a href="#107" id="107">107</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
+<span class="kw">use </span><span class="kw">crate</span>::Handle;
 
 <span class="kw">pub struct </span>TypeTracer&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub </span>types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
+    <span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 }
 
 <span class="kw">impl </span>TypeTracer&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="doccomment">/// Propagate usage through `self.types`, starting with `self.types_used`.
-    ///
-    /// Treat `self.types_used` as the initial set of "known
-    /// live" types, and follow through to identify all
-    /// transitively used types.
-    </span><span class="kw">pub fn </span>trace_types(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// We don't need recursion or a work list. Because an
-        // expression may only refer to other expressions that precede
-        // it in the arena, it suffices to make a single pass over the
-        // arena from back to front, marking the referents of used
-        // expressions as used themselves.
-        </span><span class="kw">for </span>(handle, ty) <span class="kw">in </span><span class="self">self</span>.types.iter().rev() {
-            <span class="comment">// If this type isn't used, it doesn't matter what it uses.
-            </span><span class="kw">if </span>!<span class="self">self</span>.types_used.contains(handle) {
-                <span class="kw">continue</span>;
+    <span class="kw">pub fn </span>trace_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Type) {
+        <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
+        <span class="kw">match </span>ty.inner {
+            <span class="comment">// Types that do not contain handles.
+            </span>Ti::Scalar { .. }
+            | Ti::Vector { .. }
+            | Ti::Matrix { .. }
+            | Ti::Atomic { .. }
+            | Ti::ValuePointer { .. }
+            | Ti::Image { .. }
+            | Ti::Sampler { .. }
+            | Ti::AccelerationStructure
+            | Ti::RayQuery =&gt; {}
+
+            <span class="comment">// Types that do contain handles.
+            </span>Ti::Array {
+                base,
+                size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(expr)),
+                stride: <span class="kw">_</span>,
             }
-
-            <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
-            <span class="kw">match </span>ty.inner {
-                <span class="comment">// Types that do not contain handles.
-                </span>Ti::Scalar { .. }
-                | Ti::Vector { .. }
-                | Ti::Matrix { .. }
-                | Ti::Atomic { .. }
-                | Ti::ValuePointer { .. }
-                | Ti::Image { .. }
-                | Ti::Sampler { .. }
-                | Ti::AccelerationStructure
-                | Ti::RayQuery =&gt; {}
-
-                <span class="comment">// Types that do contain handles.
-                </span>Ti::Pointer { base, space: <span class="kw">_ </span>}
-                | Ti::Array {
-                    base,
-                    size: <span class="kw">_</span>,
-                    stride: <span class="kw">_</span>,
-                }
-                | Ti::BindingArray { base, size: <span class="kw">_ </span>} =&gt; {
-                    <span class="self">self</span>.types_used.insert(base);
-                }
-                Ti::Struct {
-                    <span class="kw-2">ref </span>members,
-                    span: <span class="kw">_</span>,
-                } =&gt; {
-                    <span class="self">self</span>.types_used.insert_iter(members.iter().map(|m| m.ty));
-                }
+            | Ti::BindingArray {
+                base,
+                size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(expr)),
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+                <span class="self">self</span>.types_used.insert(base);
+            }
+            Ti::Pointer { base, space: <span class="kw">_ </span>}
+            | Ti::Array {
+                base,
+                size: <span class="kw">_</span>,
+                stride: <span class="kw">_</span>,
+            }
+            | Ti::BindingArray { base, size: <span class="kw">_ </span>} =&gt; {
+                <span class="self">self</span>.types_used.insert(base);
+            }
+            Ti::Struct {
+                <span class="kw-2">ref </span>members,
+                span: <span class="kw">_</span>,
+            } =&gt; {
+                <span class="self">self</span>.types_used.insert_iter(members.iter().map(|m| m.ty));
             }
         }
     }
