@@ -3544,7 +3544,38 @@
 <a href="#3543" id="3543">3543</a>
 <a href="#3544" id="3544">3544</a>
 <a href="#3545" id="3545">3545</a>
-<a href="#3546" id="3546">3546</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3546" id="3546">3546</a>
+<a href="#3547" id="3547">3547</a>
+<a href="#3548" id="3548">3548</a>
+<a href="#3549" id="3549">3549</a>
+<a href="#3550" id="3550">3550</a>
+<a href="#3551" id="3551">3551</a>
+<a href="#3552" id="3552">3552</a>
+<a href="#3553" id="3553">3553</a>
+<a href="#3554" id="3554">3554</a>
+<a href="#3555" id="3555">3555</a>
+<a href="#3556" id="3556">3556</a>
+<a href="#3557" id="3557">3557</a>
+<a href="#3558" id="3558">3558</a>
+<a href="#3559" id="3559">3559</a>
+<a href="#3560" id="3560">3560</a>
+<a href="#3561" id="3561">3561</a>
+<a href="#3562" id="3562">3562</a>
+<a href="#3563" id="3563">3563</a>
+<a href="#3564" id="3564">3564</a>
+<a href="#3565" id="3565">3565</a>
+<a href="#3566" id="3566">3566</a>
+<a href="#3567" id="3567">3567</a>
+<a href="#3568" id="3568">3568</a>
+<a href="#3569" id="3569">3569</a>
+<a href="#3570" id="3570">3570</a>
+<a href="#3571" id="3571">3571</a>
+<a href="#3572" id="3572">3572</a>
+<a href="#3573" id="3573">3573</a>
+<a href="#3574" id="3574">3574</a>
+<a href="#3575" id="3575">3575</a>
+<a href="#3576" id="3576">3576</a>
+<a href="#3577" id="3577">3577</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
@@ -6088,6 +6119,37 @@
                 <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
                 cause,
                 <span class="string">"CommandEncoder::build_acceleration_structures_unsafe_tlas"</span>,
+            );
+        }
+    }
+
+    <span class="kw">fn </span>transition_resources&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer_transitions: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;
+            Item = wgt::BufferTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchBuffer&gt;,
+        &gt;,
+        texture_transitions: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;
+            Item = wgt::TextureTransition&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>dispatch::DispatchTexture&gt;,
+        &gt;,
+    ) {
+        <span class="kw">let </span>result = <span class="self">self</span>.context.<span class="number">0</span>.command_encoder_transition_resources(
+            <span class="self">self</span>.id,
+            buffer_transitions.map(|t| wgt::BufferTransition {
+                buffer: t.buffer.as_core().id,
+                state: t.state,
+            }),
+            texture_transitions.map(|t| wgt::TextureTransition {
+                texture: t.texture.as_core().id,
+                selector: t.selector.clone(),
+                state: t.state,
+            }),
+        );
+
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = result {
+            <span class="self">self</span>.context.handle_error_nolabel(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
+                cause,
+                <span class="string">"CommandEncoder::transition_resources"</span>,
             );
         }
     }

@@ -324,54 +324,54 @@
     }
 }
 
-<span class="kw">pub fn </span>map_buffer_usage(usage: wgt::BufferUsages) -&gt; hal::BufferUses {
-    <span class="kw">let </span><span class="kw-2">mut </span>u = hal::BufferUses::empty();
+<span class="kw">pub fn </span>map_buffer_usage(usage: wgt::BufferUsages) -&gt; wgt::BufferUses {
+    <span class="kw">let </span><span class="kw-2">mut </span>u = wgt::BufferUses::empty();
     u.set(
-        hal::BufferUses::MAP_READ,
+        wgt::BufferUses::MAP_READ,
         usage.contains(wgt::BufferUsages::MAP_READ),
     );
     u.set(
-        hal::BufferUses::MAP_WRITE,
+        wgt::BufferUses::MAP_WRITE,
         usage.contains(wgt::BufferUsages::MAP_WRITE),
     );
     u.set(
-        hal::BufferUses::COPY_SRC,
+        wgt::BufferUses::COPY_SRC,
         usage.contains(wgt::BufferUsages::COPY_SRC),
     );
     u.set(
-        hal::BufferUses::COPY_DST,
+        wgt::BufferUses::COPY_DST,
         usage.contains(wgt::BufferUsages::COPY_DST),
     );
     u.set(
-        hal::BufferUses::INDEX,
+        wgt::BufferUses::INDEX,
         usage.contains(wgt::BufferUsages::INDEX),
     );
     u.set(
-        hal::BufferUses::VERTEX,
+        wgt::BufferUses::VERTEX,
         usage.contains(wgt::BufferUsages::VERTEX),
     );
     u.set(
-        hal::BufferUses::UNIFORM,
+        wgt::BufferUses::UNIFORM,
         usage.contains(wgt::BufferUsages::UNIFORM),
     );
     u.set(
-        hal::BufferUses::STORAGE_READ_ONLY | hal::BufferUses::STORAGE_READ_WRITE,
+        wgt::BufferUses::STORAGE_READ_ONLY | wgt::BufferUses::STORAGE_READ_WRITE,
         usage.contains(wgt::BufferUsages::STORAGE),
     );
     u.set(
-        hal::BufferUses::INDIRECT,
+        wgt::BufferUses::INDIRECT,
         usage.contains(wgt::BufferUsages::INDIRECT),
     );
     u.set(
-        hal::BufferUses::QUERY_RESOLVE,
+        wgt::BufferUses::QUERY_RESOLVE,
         usage.contains(wgt::BufferUsages::QUERY_RESOLVE),
     );
     u.set(
-        hal::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT,
+        wgt::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT,
         usage.contains(wgt::BufferUsages::BLAS_INPUT),
     );
     u.set(
-        hal::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
+        wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
         usage.contains(wgt::BufferUsages::TLAS_INPUT),
     );
     u
@@ -381,45 +381,45 @@
     usage: wgt::TextureUsages,
     aspect: hal::FormatAspects,
     flags: wgt::TextureFormatFeatureFlags,
-) -&gt; hal::TextureUses {
-    <span class="kw">let </span><span class="kw-2">mut </span>u = hal::TextureUses::empty();
+) -&gt; wgt::TextureUses {
+    <span class="kw">let </span><span class="kw-2">mut </span>u = wgt::TextureUses::empty();
     u.set(
-        hal::TextureUses::COPY_SRC,
+        wgt::TextureUses::COPY_SRC,
         usage.contains(wgt::TextureUsages::COPY_SRC),
     );
     u.set(
-        hal::TextureUses::COPY_DST,
+        wgt::TextureUses::COPY_DST,
         usage.contains(wgt::TextureUsages::COPY_DST),
     );
     u.set(
-        hal::TextureUses::RESOURCE,
+        wgt::TextureUses::RESOURCE,
         usage.contains(wgt::TextureUsages::TEXTURE_BINDING),
     );
     <span class="kw">if </span>usage.contains(wgt::TextureUsages::STORAGE_BINDING) {
         u.set(
-            hal::TextureUses::STORAGE_READ_ONLY,
+            wgt::TextureUses::STORAGE_READ_ONLY,
             flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_READ_ONLY),
         );
         u.set(
-            hal::TextureUses::STORAGE_WRITE_ONLY,
+            wgt::TextureUses::STORAGE_WRITE_ONLY,
             flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_WRITE_ONLY),
         );
         u.set(
-            hal::TextureUses::STORAGE_READ_WRITE,
+            wgt::TextureUses::STORAGE_READ_WRITE,
             flags.contains(wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE),
         );
     }
     <span class="kw">let </span>is_color = aspect.contains(hal::FormatAspects::COLOR);
     u.set(
-        hal::TextureUses::COLOR_TARGET,
+        wgt::TextureUses::COLOR_TARGET,
         usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) &amp;&amp; is_color,
     );
     u.set(
-        hal::TextureUses::DEPTH_STENCIL_READ | hal::TextureUses::DEPTH_STENCIL_WRITE,
+        wgt::TextureUses::DEPTH_STENCIL_READ | wgt::TextureUses::DEPTH_STENCIL_WRITE,
         usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) &amp;&amp; !is_color,
     );
     u.set(
-        hal::TextureUses::STORAGE_ATOMIC,
+        wgt::TextureUses::STORAGE_ATOMIC,
         usage.contains(wgt::TextureUsages::STORAGE_ATOMIC),
     );
     u
@@ -428,14 +428,14 @@
 <span class="kw">pub fn </span>map_texture_usage_for_texture(
     desc: <span class="kw-2">&amp;</span>TextureDescriptor,
     format_features: <span class="kw-2">&amp;</span>TextureFormatFeatures,
-) -&gt; hal::TextureUses {
+) -&gt; wgt::TextureUses {
     <span class="comment">// Enforce having COPY_DST/DEPTH_STENCIL_WRITE/COLOR_TARGET otherwise we
     // wouldn't be able to initialize the texture.
     </span>map_texture_usage(desc.usage, desc.format.into(), format_features.flags)
         | <span class="kw">if </span>desc.format.is_depth_stencil_format() {
-            hal::TextureUses::DEPTH_STENCIL_WRITE
+            wgt::TextureUses::DEPTH_STENCIL_WRITE
         } <span class="kw">else if </span>desc.usage.contains(wgt::TextureUsages::COPY_DST) {
-            hal::TextureUses::COPY_DST <span class="comment">// (set already)
+            wgt::TextureUses::COPY_DST <span class="comment">// (set already)
         </span>} <span class="kw">else </span>{
             <span class="comment">// Use COPY_DST only if we can't use COLOR_TARGET
             </span><span class="kw">if </span>format_features
@@ -444,42 +444,42 @@
                 &amp;&amp; desc.dimension == wgt::TextureDimension::D2
             <span class="comment">// Render targets dimension must be 2d
             </span>{
-                hal::TextureUses::COLOR_TARGET
+                wgt::TextureUses::COLOR_TARGET
             } <span class="kw">else </span>{
-                hal::TextureUses::COPY_DST
+                wgt::TextureUses::COPY_DST
             }
         }
 }
 
-<span class="kw">pub fn </span>map_texture_usage_from_hal(uses: hal::TextureUses) -&gt; wgt::TextureUsages {
+<span class="kw">pub fn </span>map_texture_usage_from_hal(uses: wgt::TextureUses) -&gt; wgt::TextureUsages {
     <span class="kw">let </span><span class="kw-2">mut </span>u = wgt::TextureUsages::empty();
     u.set(
         wgt::TextureUsages::COPY_SRC,
-        uses.contains(hal::TextureUses::COPY_SRC),
+        uses.contains(wgt::TextureUses::COPY_SRC),
     );
     u.set(
         wgt::TextureUsages::COPY_DST,
-        uses.contains(hal::TextureUses::COPY_DST),
+        uses.contains(wgt::TextureUses::COPY_DST),
     );
     u.set(
         wgt::TextureUsages::TEXTURE_BINDING,
-        uses.contains(hal::TextureUses::RESOURCE),
+        uses.contains(wgt::TextureUses::RESOURCE),
     );
     u.set(
         wgt::TextureUsages::STORAGE_BINDING,
         uses.intersects(
-            hal::TextureUses::STORAGE_READ_ONLY
-                | hal::TextureUses::STORAGE_WRITE_ONLY
-                | hal::TextureUses::STORAGE_READ_WRITE,
+            wgt::TextureUses::STORAGE_READ_ONLY
+                | wgt::TextureUses::STORAGE_WRITE_ONLY
+                | wgt::TextureUses::STORAGE_READ_WRITE,
         ),
     );
     u.set(
         wgt::TextureUsages::RENDER_ATTACHMENT,
-        uses.contains(hal::TextureUses::COLOR_TARGET),
+        uses.contains(wgt::TextureUses::COLOR_TARGET),
     );
     u.set(
         wgt::TextureUsages::STORAGE_ATOMIC,
-        uses.contains(hal::TextureUses::STORAGE_ATOMIC),
+        uses.contains(wgt::TextureUses::STORAGE_ATOMIC),
     );
     u
 }

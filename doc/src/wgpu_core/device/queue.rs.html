@@ -1623,8 +1623,8 @@
                 .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
                     buffer: zero_buffer,
                     usage: hal::StateTransition {
-                        from: hal::BufferUses::empty(),
-                        to: hal::BufferUses::COPY_DST,
+                        from: wgt::BufferUses::empty(),
+                        to: wgt::BufferUses::COPY_DST,
                     },
                 }]);
             pending_writes
@@ -1635,8 +1635,8 @@
                 .transition_buffers(<span class="kw-2">&amp;</span>[hal::BufferBarrier {
                     buffer: zero_buffer,
                     usage: hal::StateTransition {
-                        from: hal::BufferUses::COPY_DST,
-                        to: hal::BufferUses::COPY_SRC,
+                        from: wgt::BufferUses::COPY_DST,
+                        to: wgt::BufferUses::COPY_SRC,
                     },
                 }]);
         }
@@ -2138,7 +2138,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
             trackers
                 .buffers
-                .set_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::COPY_DST)
+                .set_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::COPY_DST)
         };
 
         <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
@@ -2156,8 +2156,8 @@
         <span class="kw">let </span>barriers = iter::once(hal::BufferBarrier {
             buffer: staging_buffer.raw(),
             usage: hal::StateTransition {
-                from: hal::BufferUses::MAP_WRITE,
-                to: hal::BufferUses::COPY_SRC,
+                from: wgt::BufferUses::MAP_WRITE,
+                to: wgt::BufferUses::COPY_SRC,
             },
         })
         .chain(transition.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>buffer, <span class="kw-2">&amp;</span>snatch_guard)))
@@ -2378,8 +2378,8 @@
             <span class="kw">let </span>buffer_barrier = hal::BufferBarrier {
                 buffer: staging_buffer.raw(),
                 usage: hal::StateTransition {
-                    from: hal::BufferUses::MAP_WRITE,
-                    to: hal::BufferUses::COPY_SRC,
+                    from: wgt::BufferUses::MAP_WRITE,
+                    to: wgt::BufferUses::COPY_SRC,
                 },
             };
 
@@ -2387,7 +2387,7 @@
             <span class="kw">let </span>transition =
                 trackers
                     .textures
-                    .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST);
+                    .set_single(<span class="kw-2">&amp;</span>dst, selector, wgt::TextureUses::COPY_DST);
             <span class="kw">let </span>texture_barriers = transition
                 .map(|pending| pending.into_hal(dst_raw))
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -2564,7 +2564,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
         <span class="kw">let </span>transitions = trackers
             .textures
-            .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST);
+            .set_single(<span class="kw-2">&amp;</span>dst, selector, wgt::TextureUses::COPY_DST);
 
         <span class="comment">// `copy_external_image_to_texture` is exclusive to the WebGL backend.
         // Don't go through the `DynCommandEncoder` abstraction and directly to the WebGL backend.
@@ -2771,7 +2771,7 @@
 
                             <span class="kw">unsafe </span>{
                                 used_surface_textures
-                                    .merge_single(texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
+                                    .merge_single(texture, <span class="prelude-val">None</span>, wgt::TextureUses::PRESENT)
                                     .unwrap()
                             };
                         }
@@ -3082,7 +3082,7 @@
                 <span class="kw">if </span>should_extend {
                     <span class="kw">unsafe </span>{
                         used_surface_textures
-                            .merge_single(texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
+                            .merge_single(texture, <span class="prelude-val">None</span>, wgt::TextureUses::PRESENT)
                             .unwrap();
                     };
                 }

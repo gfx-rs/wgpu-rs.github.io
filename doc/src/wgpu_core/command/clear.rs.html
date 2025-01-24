@@ -497,7 +497,10 @@
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{ops::Range, sync::Arc};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
@@ -514,11 +517,14 @@
         ParentDevice, ResourceErrorIdent, Texture, TextureClearMode,
     },
     snatch::SnatchGuard,
-    track::{TextureSelector, TextureTrackerSetSingle},
+    track::TextureTrackerSetSingle,
 };
 
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{math::align_to, BufferAddress, BufferUsages, ImageSubresourceRange, TextureAspect};
+<span class="kw">use </span>wgt::{
+    math::align_to, BufferAddress, BufferUsages, ImageSubresourceRange, TextureAspect,
+    TextureSelector,
+};
 
 <span class="doccomment">/// Error encountered while attempting a clear.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
@@ -606,7 +612,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let </span>dst_pending = cmd_buf_data
             .trackers
             .buffers
-            .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
+            .set_single(<span class="kw-2">&amp;</span>dst_buffer, wgt::BufferUses::COPY_DST);
 
         <span class="kw">let </span>snatch_guard = dst_buffer.device.snatchable_lock.read();
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
@@ -768,12 +774,12 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
 
     <span class="comment">// Issue the right barrier.
     </span><span class="kw">let </span>clear_usage = <span class="kw">match </span>dst_texture.clear_mode {
-        TextureClearMode::BufferCopy =&gt; hal::TextureUses::COPY_DST,
+        TextureClearMode::BufferCopy =&gt; wgt::TextureUses::COPY_DST,
         TextureClearMode::RenderPass {
             is_color: <span class="bool-val">false</span>, ..
-        } =&gt; hal::TextureUses::DEPTH_STENCIL_WRITE,
+        } =&gt; wgt::TextureUses::DEPTH_STENCIL_WRITE,
         TextureClearMode::Surface { .. } | TextureClearMode::RenderPass { is_color: <span class="bool-val">true</span>, .. } =&gt; {
-            hal::TextureUses::COLOR_TARGET
+            wgt::TextureUses::COLOR_TARGET
         }
         TextureClearMode::None =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ClearError::NoValidTextureClearMode(
@@ -954,7 +960,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                             mip_level,
                             depth_or_layer,
                         ),
-                        usage: hal::TextureUses::COLOR_TARGET,
+                        usage: wgt::TextureUses::COLOR_TARGET,
                     },
                     resolve_target: <span class="prelude-val">None</span>,
                     ops: hal::AttachmentOps::STORE,
@@ -972,7 +978,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                                 mip_level,
                                 depth_or_layer,
                             ),
-                            usage: hal::TextureUses::DEPTH_STENCIL_WRITE,
+                            usage: wgt::TextureUses::DEPTH_STENCIL_WRITE,
                         },
                         depth_ops: hal::AttachmentOps::STORE,
                         stencil_ops: hal::AttachmentOps::STORE,

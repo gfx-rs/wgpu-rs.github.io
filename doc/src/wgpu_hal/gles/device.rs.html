@@ -2122,7 +2122,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::BufferDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Buffer, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>target = <span class="kw">if </span>desc.usage.contains(<span class="kw">crate</span>::BufferUses::INDEX) {
+        <span class="kw">let </span>target = <span class="kw">if </span>desc.usage.contains(wgt::BufferUses::INDEX) {
             glow::ELEMENT_ARRAY_BUFFER
         } <span class="kw">else </span>{
             glow::ARRAY_BUFFER
@@ -2137,7 +2137,7 @@
                 .private_caps
                 .contains(PrivateCapabilities::BUFFER_ALLOCATION);
 
-        <span class="kw">if </span>emulate_map &amp;&amp; desc.usage.intersects(<span class="kw">crate</span>::BufferUses::MAP_WRITE) {
+        <span class="kw">if </span>emulate_map &amp;&amp; desc.usage.intersects(wgt::BufferUses::MAP_WRITE) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="kw">super</span>::Buffer {
                 raw: <span class="prelude-val">None</span>,
                 target,
@@ -2150,7 +2150,7 @@
 
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
 
-        <span class="kw">let </span>target = <span class="kw">if </span>desc.usage.contains(<span class="kw">crate</span>::BufferUses::INDEX) {
+        <span class="kw">let </span>target = <span class="kw">if </span>desc.usage.contains(wgt::BufferUses::INDEX) {
             glow::ELEMENT_ARRAY_BUFFER
         } <span class="kw">else </span>{
             glow::ARRAY_BUFFER
@@ -2158,16 +2158,16 @@
 
         <span class="kw">let </span>is_host_visible = desc
             .usage
-            .intersects(<span class="kw">crate</span>::BufferUses::MAP_READ | <span class="kw">crate</span>::BufferUses::MAP_WRITE);
+            .intersects(wgt::BufferUses::MAP_READ | wgt::BufferUses::MAP_WRITE);
         <span class="kw">let </span>is_coherent = desc
             .memory_flags
             .contains(<span class="kw">crate</span>::MemoryFlags::PREFER_COHERENT);
 
         <span class="kw">let </span><span class="kw-2">mut </span>map_flags = <span class="number">0</span>;
-        <span class="kw">if </span>desc.usage.contains(<span class="kw">crate</span>::BufferUses::MAP_READ) {
+        <span class="kw">if </span>desc.usage.contains(wgt::BufferUses::MAP_READ) {
             map_flags |= glow::MAP_READ_BIT;
         }
-        <span class="kw">if </span>desc.usage.contains(<span class="kw">crate</span>::BufferUses::MAP_WRITE) {
+        <span class="kw">if </span>desc.usage.contains(wgt::BufferUses::MAP_WRITE) {
             map_flags |= glow::MAP_WRITE_BIT;
         }
 
@@ -2190,14 +2190,14 @@
                 }
             }
             <span class="comment">// TODO: may also be required for other calls involving `buffer_sub_data_u8_slice` (e.g. copy buffer to buffer and clear buffer)
-            </span><span class="kw">if </span>desc.usage.intersects(<span class="kw">crate</span>::BufferUses::QUERY_RESOLVE) {
+            </span><span class="kw">if </span>desc.usage.intersects(wgt::BufferUses::QUERY_RESOLVE) {
                 map_flags |= glow::DYNAMIC_STORAGE_BIT;
             }
             <span class="kw">unsafe </span>{ gl.buffer_storage(target, raw_size, <span class="prelude-val">None</span>, map_flags) };
         } <span class="kw">else </span>{
             <span class="macro">assert!</span>(!is_coherent);
             <span class="kw">let </span>usage = <span class="kw">if </span>is_host_visible {
-                <span class="kw">if </span>desc.usage.contains(<span class="kw">crate</span>::BufferUses::MAP_READ) {
+                <span class="kw">if </span>desc.usage.contains(wgt::BufferUses::MAP_READ) {
                     glow::STREAM_READ
                 } <span class="kw">else </span>{
                     glow::DYNAMIC_DRAW
@@ -2213,7 +2213,7 @@
 
         <span class="kw">unsafe </span>{ gl.bind_buffer(target, <span class="prelude-val">None</span>) };
 
-        <span class="kw">if </span>!is_coherent &amp;&amp; desc.usage.contains(<span class="kw">crate</span>::BufferUses::MAP_WRITE) {
+        <span class="kw">if </span>!is_coherent &amp;&amp; desc.usage.contains(wgt::BufferUses::MAP_WRITE) {
             map_flags |= glow::MAP_FLUSH_EXPLICIT_BIT;
         }
         <span class="comment">//TODO: do we need `glow::MAP_UNSYNCHRONIZED_BIT`?
@@ -2230,7 +2230,7 @@
             }
         }
 
-        <span class="kw">let </span>data = <span class="kw">if </span>emulate_map &amp;&amp; desc.usage.contains(<span class="kw">crate</span>::BufferUses::MAP_READ) {
+        <span class="kw">let </span>data = <span class="kw">if </span>emulate_map &amp;&amp; desc.usage.contains(wgt::BufferUses::MAP_READ) {
             <span class="prelude-val">Some</span>(Arc::new(Mutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize])))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -2344,9 +2344,9 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Texture, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
 
-        <span class="kw">let </span>render_usage = <span class="kw">crate</span>::TextureUses::COLOR_TARGET
-            | <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE
-            | <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ;
+        <span class="kw">let </span>render_usage = wgt::TextureUses::COLOR_TARGET
+            | wgt::TextureUses::DEPTH_STENCIL_WRITE
+            | wgt::TextureUses::DEPTH_STENCIL_READ;
         <span class="kw">let </span>format_desc = <span class="self">self</span>.shared.describe_texture_format(desc.format);
 
         <span class="kw">let </span>inner = <span class="kw">if </span>render_usage.contains(desc.usage)

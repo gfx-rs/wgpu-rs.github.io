@@ -1182,8 +1182,7 @@
 <a href="#1181" id="1181">1181</a>
 <a href="#1182" id="1182">1182</a>
 <a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a>
-<a href="#1185" id="1185">1185</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#1184" id="1184">1184</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Command <span class="kw">as </span>TraceCommand;
 <span class="kw">use crate</span>::{
     api_log,
@@ -1201,12 +1200,11 @@
         MissingTextureUsageError, ParentDevice, Texture, TextureErrorDimension,
     },
     snatch::SnatchGuard,
-    track::TextureSelector,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{BufferAddress, BufferUsages, Extent3d, TextureUsages};
+<span class="kw">use </span>wgt::{BufferAddress, BufferUsages, Extent3d, TextureSelector, TextureUsages};
 
 <span class="kw">use </span>std::sync::Arc;
 
@@ -1761,7 +1759,7 @@
         <span class="kw">let </span>src_pending = cmd_buf_data
             .trackers
             .buffers
-            .set_single(<span class="kw-2">&amp;</span>src_buffer, hal::BufferUses::COPY_SRC);
+            .set_single(<span class="kw-2">&amp;</span>src_buffer, wgt::BufferUses::COPY_SRC);
 
         <span class="kw">let </span>src_raw = src_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         src_buffer
@@ -1777,7 +1775,7 @@
         <span class="kw">let </span>dst_pending = cmd_buf_data
             .trackers
             .buffers
-            .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
+            .set_single(<span class="kw-2">&amp;</span>dst_buffer, wgt::BufferUses::COPY_DST);
 
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         dst_buffer
@@ -1952,7 +1950,7 @@
         <span class="kw">let </span>src_pending = cmd_buf_data
             .trackers
             .buffers
-            .set_single(<span class="kw-2">&amp;</span>src_buffer, hal::BufferUses::COPY_SRC);
+            .set_single(<span class="kw-2">&amp;</span>src_buffer, wgt::BufferUses::COPY_SRC);
 
         <span class="kw">let </span>src_raw = src_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         src_buffer
@@ -1963,7 +1961,7 @@
         <span class="kw">let </span>dst_pending = cmd_buf_data.trackers.textures.set_single(
             <span class="kw-2">&amp;</span>dst_texture,
             dst_range,
-            hal::TextureUses::COPY_DST,
+            wgt::TextureUses::COPY_DST,
         );
         <span class="kw">let </span>dst_raw = dst_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         dst_texture
@@ -2101,7 +2099,7 @@
         <span class="kw">let </span>src_pending = cmd_buf_data.trackers.textures.set_single(
             <span class="kw-2">&amp;</span>src_texture,
             src_range,
-            hal::TextureUses::COPY_SRC,
+            wgt::TextureUses::COPY_SRC,
         );
         <span class="kw">let </span>src_raw = src_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         src_texture
@@ -2131,7 +2129,7 @@
         <span class="kw">let </span>dst_pending = cmd_buf_data
             .trackers
             .buffers
-            .set_single(<span class="kw-2">&amp;</span>dst_buffer, hal::BufferUses::COPY_DST);
+            .set_single(<span class="kw-2">&amp;</span>dst_buffer, wgt::BufferUses::COPY_DST);
 
         <span class="kw">let </span>dst_raw = dst_buffer.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         dst_buffer
@@ -2195,7 +2193,7 @@
             cmd_buf_raw.transition_textures(<span class="kw-2">&amp;</span>src_barrier);
             cmd_buf_raw.copy_texture_to_buffer(
                 src_raw,
-                hal::TextureUses::COPY_SRC,
+                wgt::TextureUses::COPY_SRC,
                 dst_raw,
                 <span class="kw-2">&amp;</span>regions,
             );
@@ -2310,7 +2308,7 @@
         <span class="kw">let </span>src_pending = cmd_buf_data.trackers.textures.set_single(
             <span class="kw-2">&amp;</span>src_texture,
             src_range,
-            hal::TextureUses::COPY_SRC,
+            wgt::TextureUses::COPY_SRC,
         );
         <span class="kw">let </span>src_raw = src_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         src_texture
@@ -2326,7 +2324,7 @@
         <span class="kw">let </span>dst_pending = cmd_buf_data.trackers.textures.set_single(
             <span class="kw-2">&amp;</span>dst_texture,
             dst_range,
-            hal::TextureUses::COPY_DST,
+            wgt::TextureUses::COPY_DST,
         );
         <span class="kw">let </span>dst_raw = dst_texture.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
         dst_texture
@@ -2358,7 +2356,7 @@
             cmd_buf_raw.transition_textures(<span class="kw-2">&amp;</span>barriers);
             cmd_buf_raw.copy_texture_to_texture(
                 src_raw,
-                hal::TextureUses::COPY_SRC,
+                wgt::TextureUses::COPY_SRC,
                 dst_raw,
                 <span class="kw-2">&amp;</span>regions,
             );

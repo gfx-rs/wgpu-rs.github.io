@@ -2004,7 +2004,9 @@
 <a href="#2003" id="2003">2003</a>
 <a href="#2004" id="2004">2004</a>
 <a href="#2005" id="2005">2005</a>
-<a href="#2006" id="2006">2006</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#2006" id="2006">2006</a>
+<a href="#2007" id="2007">2007</a>
+<a href="#2008" id="2008">2008</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::BindGroup,
@@ -2022,10 +2024,12 @@
     lock::{rank, Mutex, RwLock},
     resource_log,
     snatch::{SnatchGuard, Snatchable},
-    track::{SharedTrackerIndexAllocator, TextureSelector, TrackerIndex},
+    track::{SharedTrackerIndexAllocator, TrackerIndex},
     weak_vec::WeakVec,
     Label, LabelHelpers, SubmissionIndex,
 };
+
+<span class="kw">use </span>wgt::TextureSelector;
 
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
@@ -2464,8 +2468,8 @@
         }
 
         <span class="kw">let </span>(pub_usage, internal_use) = <span class="kw">match </span>op.host {
-            HostMap::Read =&gt; (wgt::BufferUsages::MAP_READ, hal::BufferUses::MAP_READ),
-            HostMap::Write =&gt; (wgt::BufferUsages::MAP_WRITE, hal::BufferUses::MAP_WRITE),
+            HostMap::Read =&gt; (wgt::BufferUsages::MAP_READ, wgt::BufferUses::MAP_READ),
+            HostMap::Write =&gt; (wgt::BufferUsages::MAP_WRITE, wgt::BufferUses::MAP_WRITE),
         };
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.check_usage(pub_usage) {
@@ -2643,15 +2647,15 @@
                     <span class="kw">let </span>transition_src = hal::BufferBarrier {
                         buffer: staging_buffer.raw(),
                         usage: hal::StateTransition {
-                            from: hal::BufferUses::MAP_WRITE,
-                            to: hal::BufferUses::COPY_SRC,
+                            from: wgt::BufferUses::MAP_WRITE,
+                            to: wgt::BufferUses::COPY_SRC,
                         },
                     };
                     <span class="kw">let </span>transition_dst = hal::BufferBarrier::&lt;<span class="kw">dyn </span>hal::DynBuffer&gt; {
                         buffer: raw_buf,
                         usage: hal::StateTransition {
-                            from: hal::BufferUses::empty(),
-                            to: hal::BufferUses::COPY_DST,
+                            from: wgt::BufferUses::empty(),
+                            to: wgt::BufferUses::COPY_DST,
                         },
                     };
                     <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = queue.pending_writes.lock();
@@ -2865,7 +2869,7 @@
         <span class="kw">let </span>stage_desc = hal::BufferDescriptor {
             label: <span class="kw">crate</span>::hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) Staging"</span>), device.instance_flags),
             size: size.get(),
-            usage: hal::BufferUses::MAP_WRITE | hal::BufferUses::COPY_SRC,
+            usage: wgt::BufferUses::MAP_WRITE | wgt::BufferUses::COPY_SRC,
             memory_flags: hal::MemoryFlags::TRANSIENT,
         };
 
@@ -3019,7 +3023,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) inner: Snatchable&lt;TextureInner&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) desc: wgt::TextureDescriptor&lt;(), Vec&lt;wgt::TextureFormat&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) hal_usage: hal::TextureUses,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) hal_usage: wgt::TextureUses,
     <span class="kw">pub</span>(<span class="kw">crate</span>) format_features: wgt::TextureFormatFeatures,
     <span class="kw">pub</span>(<span class="kw">crate</span>) initialization_status: RwLock&lt;TextureInitTracker&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) full_range: TextureSelector,
@@ -3035,7 +3039,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
         device: <span class="kw-2">&amp;</span>Arc&lt;Device&gt;,
         inner: TextureInner,
-        hal_usage: hal::TextureUses,
+        hal_usage: wgt::TextureUses,
         desc: <span class="kw-2">&amp;</span>TextureDescriptor,
         format_features: wgt::TextureFormatFeatures,
         clear_mode: TextureClearMode,

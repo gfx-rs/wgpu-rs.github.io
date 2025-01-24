@@ -3408,7 +3408,7 @@
         DestroyedResourceError, Labeled, MissingBufferUsageError, MissingTextureUsageError,
         ParentDevice, QuerySet, Texture, TextureView, TextureViewNotRenderableReason,
     },
-    track::{ResourceUsageCompatibilityError, TextureSelector, Tracker, UsageScope},
+    track::{ResourceUsageCompatibilityError, Tracker, UsageScope},
     Label,
 };
 
@@ -3416,7 +3416,7 @@
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{
     BufferAddress, BufferSize, BufferUsages, Color, DynamicOffset, IndexFormat, ShaderStages,
-    TextureUsages, TextureViewDimension, VertexStepMode,
+    TextureSelector, TextureUsages, TextureViewDimension, VertexStepMode,
 };
 
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
@@ -4158,11 +4158,11 @@
 <span class="kw">struct </span>RenderAttachment {
     texture: Arc&lt;Texture&gt;,
     selector: TextureSelector,
-    usage: hal::TextureUses,
+    usage: wgt::TextureUses,
 }
 
 <span class="kw">impl </span>TextureView {
-    <span class="kw">fn </span>to_render_attachment(<span class="kw-2">&amp;</span><span class="self">self</span>, usage: hal::TextureUses) -&gt; RenderAttachment {
+    <span class="kw">fn </span>to_render_attachment(<span class="kw-2">&amp;</span><span class="self">self</span>, usage: wgt::TextureUses) -&gt; RenderAttachment {
         RenderAttachment {
             texture: <span class="self">self</span>.parent.clone(),
             selector: <span class="self">self</span>.selector.clone(),
@@ -4428,9 +4428,9 @@
                     .flags
                     .contains(wgt::DownlevelFlags::READ_ONLY_DEPTH_STENCIL)
             {
-                hal::TextureUses::DEPTH_STENCIL_READ | hal::TextureUses::RESOURCE
+                wgt::TextureUses::DEPTH_STENCIL_READ | wgt::TextureUses::RESOURCE
             } <span class="kw">else </span>{
-                hal::TextureUses::DEPTH_STENCIL_WRITE
+                wgt::TextureUses::DEPTH_STENCIL_WRITE
             };
             render_attachments.push(view.to_render_attachment(usage));
 
@@ -4483,7 +4483,7 @@
                 <span class="kw-2">&amp;mut </span>pending_discard_init_fixups,
             );
             render_attachments
-                .push(color_view.to_render_attachment(hal::TextureUses::COLOR_TARGET));
+                .push(color_view.to_render_attachment(wgt::TextureUses::COLOR_TARGET));
 
             <span class="kw">let </span><span class="kw-2">mut </span>hal_resolve_target = <span class="prelude-val">None</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(resolve_view) = <span class="kw-2">&amp;</span>at.resolve_target {
@@ -4539,18 +4539,18 @@
                     TextureInitRange::from(resolve_view.selector.clone()),
                 );
                 render_attachments
-                    .push(resolve_view.to_render_attachment(hal::TextureUses::COLOR_TARGET));
+                    .push(resolve_view.to_render_attachment(wgt::TextureUses::COLOR_TARGET));
 
                 hal_resolve_target = <span class="prelude-val">Some</span>(hal::Attachment {
                     view: resolve_view.try_raw(snatch_guard)<span class="question-mark">?</span>,
-                    usage: hal::TextureUses::COLOR_TARGET,
+                    usage: wgt::TextureUses::COLOR_TARGET,
                 });
             }
 
             color_attachments_hal.push(<span class="prelude-val">Some</span>(hal::ColorAttachment {
                 target: hal::Attachment {
                     view: color_view.try_raw(snatch_guard)<span class="question-mark">?</span>,
-                    usage: hal::TextureUses::COLOR_TARGET,
+                    usage: wgt::TextureUses::COLOR_TARGET,
                 },
                 resolve_target: hal_resolve_target,
                 ops: at.hal_ops(),
@@ -4712,7 +4712,7 @@
                 depth_stencil_attachment: <span class="prelude-val">Some</span>(hal::DepthStencilAttachment {
                     target: hal::Attachment {
                         view: view.try_raw(snatch_guard)<span class="question-mark">?</span>,
-                        usage: hal::TextureUses::DEPTH_STENCIL_WRITE,
+                        usage: wgt::TextureUses::DEPTH_STENCIL_WRITE,
                     },
                     depth_ops,
                     stencil_ops,
@@ -5546,7 +5546,7 @@
         .info
         .usage_scope
         .buffers
-        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::INDEX)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::INDEX)<span class="question-mark">?</span>;
 
     buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
@@ -5595,7 +5595,7 @@
         .info
         .usage_scope
         .buffers
-        .merge_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::VERTEX)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::VERTEX)<span class="question-mark">?</span>;
 
     buffer.same_device_as(cmd_buf.as_ref())<span class="question-mark">?</span>;
 
@@ -5875,7 +5875,7 @@
         .info
         .usage_scope
         .buffers
-        .merge_single(<span class="kw-2">&amp;</span>indirect_buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>indirect_buffer, wgt::BufferUses::INDIRECT)<span class="question-mark">?</span>;
 
     indirect_buffer.check_usage(BufferUsages::INDIRECT)<span class="question-mark">?</span>;
     <span class="kw">let </span>indirect_raw = indirect_buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
@@ -5952,7 +5952,7 @@
         .info
         .usage_scope
         .buffers
-        .merge_single(<span class="kw-2">&amp;</span>indirect_buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>indirect_buffer, wgt::BufferUses::INDIRECT)<span class="question-mark">?</span>;
 
     indirect_buffer.check_usage(BufferUsages::INDIRECT)<span class="question-mark">?</span>;
     <span class="kw">let </span>indirect_raw = indirect_buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
@@ -5961,7 +5961,7 @@
         .info
         .usage_scope
         .buffers
-        .merge_single(<span class="kw-2">&amp;</span>count_buffer, hal::BufferUses::INDIRECT)<span class="question-mark">?</span>;
+        .merge_single(<span class="kw-2">&amp;</span>count_buffer, wgt::BufferUses::INDIRECT)<span class="question-mark">?</span>;
 
     count_buffer.check_usage(BufferUsages::INDIRECT)<span class="question-mark">?</span>;
     <span class="kw">let </span>count_raw = count_buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;

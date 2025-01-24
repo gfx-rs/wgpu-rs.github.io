@@ -785,8 +785,8 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 <span class="kw">use </span>metadata::{ResourceMetadata, ResourceMetadataProvider};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>stateless::StatelessTracker;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>texture::{
-    DeviceTextureTracker, TextureSelector, TextureTracker, TextureTrackerSetSingle,
-    TextureUsageScope, TextureViewBindGroupState,
+    DeviceTextureTracker, TextureTracker, TextureTrackerSetSingle, TextureUsageScope,
+    TextureViewBindGroupState,
 };
 <span class="kw">use </span>wgt::strict_assert_ne;
 
@@ -923,9 +923,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="kw">pub </span>usage: hal::StateTransition&lt;S&gt;,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>PendingTransitionList = Vec&lt;PendingTransition&lt;hal::TextureUses&gt;&gt;;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>PendingTransitionList = Vec&lt;PendingTransition&lt;wgt::TextureUses&gt;&gt;;
 
-<span class="kw">impl </span>PendingTransition&lt;hal::BufferUses&gt; {
+<span class="kw">impl </span>PendingTransition&lt;wgt::BufferUses&gt; {
     <span class="doccomment">/// Produce the hal barrier corresponding to the transition.
     </span><span class="kw">pub fn </span>into_hal&lt;<span class="lifetime">'a</span>&gt;(
         <span class="self">self</span>,
@@ -940,15 +940,15 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     }
 }
 
-<span class="kw">impl </span>PendingTransition&lt;hal::TextureUses&gt; {
+<span class="kw">impl </span>PendingTransition&lt;wgt::TextureUses&gt; {
     <span class="doccomment">/// Produce the hal barrier corresponding to the transition.
     </span><span class="kw">pub fn </span>into_hal(
         <span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynTexture,
     ) -&gt; hal::TextureBarrier&lt;<span class="lifetime">'_</span>, <span class="kw">dyn </span>hal::DynTexture&gt; {
         <span class="comment">// These showing up in a barrier is always a bug
-        </span><span class="macro">strict_assert_ne!</span>(<span class="self">self</span>.usage.from, hal::TextureUses::UNKNOWN);
-        <span class="macro">strict_assert_ne!</span>(<span class="self">self</span>.usage.to, hal::TextureUses::UNKNOWN);
+        </span><span class="macro">strict_assert_ne!</span>(<span class="self">self</span>.usage.from, wgt::TextureUses::UNKNOWN);
+        <span class="macro">strict_assert_ne!</span>(<span class="self">self</span>.usage.to, wgt::TextureUses::UNKNOWN);
 
         <span class="kw">let </span>mip_count = <span class="self">self</span>.selector.mips.end - <span class="self">self</span>.selector.mips.start;
         <span class="macro">strict_assert_ne!</span>(mip_count, <span class="number">0</span>);
@@ -1008,7 +1008,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     <span class="attr">#[error(<span class="string">"Attempted to use {res} with {invalid_use}."</span>)]
     </span>Buffer {
         res: ResourceErrorIdent,
-        invalid_use: InvalidUse&lt;hal::BufferUses&gt;,
+        invalid_use: InvalidUse&lt;wgt::BufferUses&gt;,
     },
     <span class="attr">#[error(
         <span class="string">"Attempted to use {res} (mips {mip_levels:?} layers {array_layers:?}) with {invalid_use}."
@@ -1017,15 +1017,15 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         res: ResourceErrorIdent,
         mip_levels: ops::Range&lt;u32&gt;,
         array_layers: ops::Range&lt;u32&gt;,
-        invalid_use: InvalidUse&lt;hal::TextureUses&gt;,
+        invalid_use: InvalidUse&lt;wgt::TextureUses&gt;,
     },
 }
 
 <span class="kw">impl </span>ResourceUsageCompatibilityError {
     <span class="kw">fn </span>from_buffer(
         buffer: <span class="kw-2">&amp;</span>resource::Buffer,
-        current_state: hal::BufferUses,
-        new_state: hal::BufferUses,
+        current_state: wgt::BufferUses,
+        new_state: wgt::BufferUses,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Buffer {
             res: buffer.error_ident(),
@@ -1038,9 +1038,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
 
     <span class="kw">fn </span>from_texture(
         texture: <span class="kw-2">&amp;</span>resource::Texture,
-        selector: TextureSelector,
-        current_state: hal::TextureUses,
-        new_state: hal::TextureUses,
+        selector: wgt::TextureSelector,
+        current_state: wgt::TextureUses,
+        new_state: wgt::TextureUses,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Texture {
             res: texture.error_ident(),
@@ -1308,7 +1308,7 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     /// bind group as a source of which IDs to look at. The bind groups
     /// must have first been added to the usage scope.
     ///
-    /// Only stateful things are merged in herell other resources are owned
+    /// Only stateful things are merged in here, all other resources are owned
     /// indirectly by the bind group.
     ///
     /// # Safety

@@ -989,14 +989,7 @@
 <a href="#988" id="988">988</a>
 <a href="#989" id="989">989</a>
 <a href="#990" id="990">990</a>
-<a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a></pre></div><pre class="rust"><code><span class="kw">use </span>ash::vk;
+<a href="#991" id="991">991</a></pre></div><pre class="rust"><code><span class="kw">use </span>ash::vk;
 
 <span class="kw">impl </span><span class="kw">super</span>::PrivateCapabilities {
     <span class="kw">pub fn </span>map_texture_format(<span class="kw-2">&amp;</span><span class="self">self</span>, format: wgt::TextureFormat) -&gt; vk::Format {
@@ -1216,23 +1209,18 @@
     }
 }
 
-<span class="kw">pub fn </span>derive_image_layout(
-    usage: <span class="kw">crate</span>::TextureUses,
-    format: wgt::TextureFormat,
-) -&gt; vk::ImageLayout {
+<span class="kw">pub fn </span>derive_image_layout(usage: wgt::TextureUses, format: wgt::TextureFormat) -&gt; vk::ImageLayout {
     <span class="comment">// Note: depth textures are always sampled with RODS layout
     </span><span class="kw">let </span>is_color = !format.is_depth_stencil_format();
     <span class="kw">match </span>usage {
-        <span class="kw">crate</span>::TextureUses::UNINITIALIZED =&gt; vk::ImageLayout::UNDEFINED,
-        <span class="kw">crate</span>::TextureUses::COPY_SRC =&gt; vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
-        <span class="kw">crate</span>::TextureUses::COPY_DST =&gt; vk::ImageLayout::TRANSFER_DST_OPTIMAL,
-        <span class="kw">crate</span>::TextureUses::RESOURCE <span class="kw">if </span>is_color =&gt; vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
-        <span class="kw">crate</span>::TextureUses::COLOR_TARGET =&gt; vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
-        <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE =&gt; {
-            vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        }
+        wgt::TextureUses::UNINITIALIZED =&gt; vk::ImageLayout::UNDEFINED,
+        wgt::TextureUses::COPY_SRC =&gt; vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
+        wgt::TextureUses::COPY_DST =&gt; vk::ImageLayout::TRANSFER_DST_OPTIMAL,
+        wgt::TextureUses::RESOURCE <span class="kw">if </span>is_color =&gt; vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
+        wgt::TextureUses::COLOR_TARGET =&gt; vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+        wgt::TextureUses::DEPTH_STENCIL_WRITE =&gt; vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         <span class="kw">_ </span>=&gt; {
-            <span class="kw">if </span>usage == <span class="kw">crate</span>::TextureUses::PRESENT {
+            <span class="kw">if </span>usage == wgt::TextureUses::PRESENT {
                 vk::ImageLayout::PRESENT_SRC_KHR
             } <span class="kw">else if </span>is_color {
                 vk::ImageLayout::GENERAL
@@ -1243,30 +1231,30 @@
     }
 }
 
-<span class="kw">pub fn </span>map_texture_usage(usage: <span class="kw">crate</span>::TextureUses) -&gt; vk::ImageUsageFlags {
+<span class="kw">pub fn </span>map_texture_usage(usage: wgt::TextureUses) -&gt; vk::ImageUsageFlags {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::ImageUsageFlags::empty();
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COPY_SRC) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COPY_SRC) {
         flags |= vk::ImageUsageFlags::TRANSFER_SRC;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COPY_DST) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COPY_DST) {
         flags |= vk::ImageUsageFlags::TRANSFER_DST;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::RESOURCE) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::RESOURCE) {
         flags |= vk::ImageUsageFlags::SAMPLED;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COLOR_TARGET) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COLOR_TARGET) {
         flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT;
     }
-    <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ | <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE,
-    ) {
+    <span class="kw">if </span>usage
+        .intersects(wgt::TextureUses::DEPTH_STENCIL_READ | wgt::TextureUses::DEPTH_STENCIL_WRITE)
+    {
         flags |= vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT;
     }
     <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::TextureUses::STORAGE_READ_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_WRITE_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE
-            | <span class="kw">crate</span>::TextureUses::STORAGE_ATOMIC,
+        wgt::TextureUses::STORAGE_READ_ONLY
+            | wgt::TextureUses::STORAGE_WRITE_ONLY
+            | wgt::TextureUses::STORAGE_READ_WRITE
+            | wgt::TextureUses::STORAGE_ATOMIC,
     ) {
         flags |= vk::ImageUsageFlags::STORAGE;
     }
@@ -1274,7 +1262,7 @@
 }
 
 <span class="kw">pub fn </span>map_texture_usage_to_barrier(
-    usage: <span class="kw">crate</span>::TextureUses,
+    usage: wgt::TextureUses,
 ) -&gt; (vk::PipelineStageFlags, vk::AccessFlags) {
     <span class="kw">let </span><span class="kw-2">mut </span>stages = vk::PipelineStageFlags::empty();
     <span class="kw">let </span><span class="kw-2">mut </span>access = vk::AccessFlags::empty();
@@ -1282,51 +1270,51 @@
         | vk::PipelineStageFlags::FRAGMENT_SHADER
         | vk::PipelineStageFlags::COMPUTE_SHADER;
 
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COPY_SRC) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COPY_SRC) {
         stages |= vk::PipelineStageFlags::TRANSFER;
         access |= vk::AccessFlags::TRANSFER_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COPY_DST) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COPY_DST) {
         stages |= vk::PipelineStageFlags::TRANSFER;
         access |= vk::AccessFlags::TRANSFER_WRITE;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::RESOURCE) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::RESOURCE) {
         stages |= shader_stages;
         access |= vk::AccessFlags::SHADER_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::TextureUses::COLOR_TARGET) {
+    <span class="kw">if </span>usage.contains(wgt::TextureUses::COLOR_TARGET) {
         stages |= vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT;
         access |= vk::AccessFlags::COLOR_ATTACHMENT_READ | vk::AccessFlags::COLOR_ATTACHMENT_WRITE;
     }
-    <span class="kw">if </span>usage.intersects(<span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ) {
+    <span class="kw">if </span>usage.intersects(wgt::TextureUses::DEPTH_STENCIL_READ) {
         stages |= vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS
             | vk::PipelineStageFlags::LATE_FRAGMENT_TESTS;
         access |= vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ;
     }
-    <span class="kw">if </span>usage.intersects(<span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE) {
+    <span class="kw">if </span>usage.intersects(wgt::TextureUses::DEPTH_STENCIL_WRITE) {
         stages |= vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS
             | vk::PipelineStageFlags::LATE_FRAGMENT_TESTS;
         access |= vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ
             | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE;
     }
     <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::TextureUses::STORAGE_READ_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE
-            | <span class="kw">crate</span>::TextureUses::STORAGE_ATOMIC,
+        wgt::TextureUses::STORAGE_READ_ONLY
+            | wgt::TextureUses::STORAGE_READ_WRITE
+            | wgt::TextureUses::STORAGE_ATOMIC,
     ) {
         stages |= shader_stages;
         access |= vk::AccessFlags::SHADER_READ;
     }
     <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::TextureUses::STORAGE_WRITE_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE
-            | <span class="kw">crate</span>::TextureUses::STORAGE_ATOMIC,
+        wgt::TextureUses::STORAGE_WRITE_ONLY
+            | wgt::TextureUses::STORAGE_READ_WRITE
+            | wgt::TextureUses::STORAGE_ATOMIC,
     ) {
         stages |= shader_stages;
         access |= vk::AccessFlags::SHADER_WRITE;
     }
 
-    <span class="kw">if </span>usage == <span class="kw">crate</span>::TextureUses::UNINITIALIZED || usage == <span class="kw">crate</span>::TextureUses::PRESENT {
+    <span class="kw">if </span>usage == wgt::TextureUses::UNINITIALIZED || usage == wgt::TextureUses::PRESENT {
         (
             vk::PipelineStageFlags::TOP_OF_PIPE,
             vk::AccessFlags::empty(),
@@ -1336,28 +1324,28 @@
     }
 }
 
-<span class="kw">pub fn </span>map_vk_image_usage(usage: vk::ImageUsageFlags) -&gt; <span class="kw">crate</span>::TextureUses {
-    <span class="kw">let </span><span class="kw-2">mut </span>bits = <span class="kw">crate</span>::TextureUses::empty();
+<span class="kw">pub fn </span>map_vk_image_usage(usage: vk::ImageUsageFlags) -&gt; wgt::TextureUses {
+    <span class="kw">let </span><span class="kw-2">mut </span>bits = wgt::TextureUses::empty();
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::TRANSFER_SRC) {
-        bits |= <span class="kw">crate</span>::TextureUses::COPY_SRC;
+        bits |= wgt::TextureUses::COPY_SRC;
     }
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::TRANSFER_DST) {
-        bits |= <span class="kw">crate</span>::TextureUses::COPY_DST;
+        bits |= wgt::TextureUses::COPY_DST;
     }
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::SAMPLED) {
-        bits |= <span class="kw">crate</span>::TextureUses::RESOURCE;
+        bits |= wgt::TextureUses::RESOURCE;
     }
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::COLOR_ATTACHMENT) {
-        bits |= <span class="kw">crate</span>::TextureUses::COLOR_TARGET;
+        bits |= wgt::TextureUses::COLOR_TARGET;
     }
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT) {
-        bits |= <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ | <span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE;
+        bits |= wgt::TextureUses::DEPTH_STENCIL_READ | wgt::TextureUses::DEPTH_STENCIL_WRITE;
     }
     <span class="kw">if </span>usage.contains(vk::ImageUsageFlags::STORAGE) {
-        bits |= <span class="kw">crate</span>::TextureUses::STORAGE_READ_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_WRITE_ONLY
-            | <span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE
-            | <span class="kw">crate</span>::TextureUses::STORAGE_ATOMIC;
+        bits |= wgt::TextureUses::STORAGE_READ_ONLY
+            | wgt::TextureUses::STORAGE_WRITE_ONLY
+            | wgt::TextureUses::STORAGE_READ_WRITE
+            | wgt::TextureUses::STORAGE_ATOMIC;
     }
     bits
 }
@@ -1521,37 +1509,35 @@
     modes
 }
 
-<span class="kw">pub fn </span>map_buffer_usage(usage: <span class="kw">crate</span>::BufferUses) -&gt; vk::BufferUsageFlags {
+<span class="kw">pub fn </span>map_buffer_usage(usage: wgt::BufferUses) -&gt; vk::BufferUsageFlags {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::BufferUsageFlags::empty();
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::COPY_SRC) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::COPY_SRC) {
         flags |= vk::BufferUsageFlags::TRANSFER_SRC;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::COPY_DST) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::COPY_DST) {
         flags |= vk::BufferUsageFlags::TRANSFER_DST;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::UNIFORM) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::UNIFORM) {
         flags |= vk::BufferUsageFlags::UNIFORM_BUFFER;
     }
-    <span class="kw">if </span>usage
-        .intersects(<span class="kw">crate</span>::BufferUses::STORAGE_READ_ONLY | <span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE)
-    {
+    <span class="kw">if </span>usage.intersects(wgt::BufferUses::STORAGE_READ_ONLY | wgt::BufferUses::STORAGE_READ_WRITE) {
         flags |= vk::BufferUsageFlags::STORAGE_BUFFER;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::INDEX) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::INDEX) {
         flags |= vk::BufferUsageFlags::INDEX_BUFFER;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::VERTEX) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::VERTEX) {
         flags |= vk::BufferUsageFlags::VERTEX_BUFFER;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::INDIRECT) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::INDIRECT) {
         flags |= vk::BufferUsageFlags::INDIRECT_BUFFER;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::ACCELERATION_STRUCTURE_SCRATCH) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::ACCELERATION_STRUCTURE_SCRATCH) {
         flags |= vk::BufferUsageFlags::STORAGE_BUFFER | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS;
     }
     <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT
-            | <span class="kw">crate</span>::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
+        wgt::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT
+            | wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT,
     ) {
         flags |= vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR
             | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS;
@@ -1560,7 +1546,7 @@
 }
 
 <span class="kw">pub fn </span>map_buffer_usage_to_barrier(
-    usage: <span class="kw">crate</span>::BufferUses,
+    usage: wgt::BufferUses,
 ) -&gt; (vk::PipelineStageFlags, vk::AccessFlags) {
     <span class="kw">let </span><span class="kw-2">mut </span>stages = vk::PipelineStageFlags::empty();
     <span class="kw">let </span><span class="kw-2">mut </span>access = vk::AccessFlags::empty();
@@ -1568,50 +1554,50 @@
         | vk::PipelineStageFlags::FRAGMENT_SHADER
         | vk::PipelineStageFlags::COMPUTE_SHADER;
 
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::MAP_READ) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::MAP_READ) {
         stages |= vk::PipelineStageFlags::HOST;
         access |= vk::AccessFlags::HOST_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::MAP_WRITE) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::MAP_WRITE) {
         stages |= vk::PipelineStageFlags::HOST;
         access |= vk::AccessFlags::HOST_WRITE;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::COPY_SRC) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::COPY_SRC) {
         stages |= vk::PipelineStageFlags::TRANSFER;
         access |= vk::AccessFlags::TRANSFER_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::COPY_DST) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::COPY_DST) {
         stages |= vk::PipelineStageFlags::TRANSFER;
         access |= vk::AccessFlags::TRANSFER_WRITE;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::UNIFORM) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::UNIFORM) {
         stages |= shader_stages;
         access |= vk::AccessFlags::UNIFORM_READ;
     }
-    <span class="kw">if </span>usage.intersects(<span class="kw">crate</span>::BufferUses::STORAGE_READ_ONLY) {
+    <span class="kw">if </span>usage.intersects(wgt::BufferUses::STORAGE_READ_ONLY) {
         stages |= shader_stages;
         access |= vk::AccessFlags::SHADER_READ;
     }
-    <span class="kw">if </span>usage.intersects(<span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE) {
+    <span class="kw">if </span>usage.intersects(wgt::BufferUses::STORAGE_READ_WRITE) {
         stages |= shader_stages;
         access |= vk::AccessFlags::SHADER_READ | vk::AccessFlags::SHADER_WRITE;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::INDEX) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::INDEX) {
         stages |= vk::PipelineStageFlags::VERTEX_INPUT;
         access |= vk::AccessFlags::INDEX_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::VERTEX) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::VERTEX) {
         stages |= vk::PipelineStageFlags::VERTEX_INPUT;
         access |= vk::AccessFlags::VERTEX_ATTRIBUTE_READ;
     }
-    <span class="kw">if </span>usage.contains(<span class="kw">crate</span>::BufferUses::INDIRECT) {
+    <span class="kw">if </span>usage.contains(wgt::BufferUses::INDIRECT) {
         stages |= vk::PipelineStageFlags::DRAW_INDIRECT;
         access |= vk::AccessFlags::INDIRECT_COMMAND_READ;
     }
     <span class="kw">if </span>usage.intersects(
-        <span class="kw">crate</span>::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT
-            | <span class="kw">crate</span>::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT
-            | <span class="kw">crate</span>::BufferUses::ACCELERATION_STRUCTURE_SCRATCH,
+        wgt::BufferUses::BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT
+            | wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT
+            | wgt::BufferUses::ACCELERATION_STRUCTURE_SCRATCH,
     ) {
         stages |= vk::PipelineStageFlags::ACCELERATION_STRUCTURE_BUILD_KHR;
         access |= vk::AccessFlags::ACCELERATION_STRUCTURE_READ_KHR
