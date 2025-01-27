@@ -2247,6 +2247,8 @@
                 .map_err(TransferError::from)<span class="question-mark">?</span>;
         }
 
+        <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
+
         <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = <span class="self">self</span>.pending_writes.lock();
         <span class="kw">let </span>encoder = pending_writes.activate();
 
@@ -2282,7 +2284,7 @@
                         <span class="kw-2">&amp;mut </span>trackers.textures,
                         <span class="kw-2">&amp;</span><span class="self">self</span>.device.alignments,
                         <span class="self">self</span>.device.zero_buffer.as_ref(),
-                        <span class="kw-2">&amp;</span><span class="self">self</span>.device.snatchable_lock.read(),
+                        <span class="kw-2">&amp;</span>snatch_guard,
                     )
                     .map_err(QueueWriteError::from)<span class="question-mark">?</span>;
                 }
@@ -2291,8 +2293,6 @@
                     .drain(init_layer_range);
             }
         }
-
-        <span class="kw">let </span>snatch_guard = <span class="self">self</span>.device.snatchable_lock.read();
 
         <span class="kw">let </span>dst_raw = dst.try_raw(<span class="kw-2">&amp;</span>snatch_guard)<span class="question-mark">?</span>;
 
