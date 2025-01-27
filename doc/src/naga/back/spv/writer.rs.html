@@ -2121,7 +2121,11 @@
 <a href="#2120" id="2120">2120</a>
 <a href="#2121" id="2121">2121</a>
 <a href="#2122" id="2122">2122</a>
-<a href="#2123" id="2123">2123</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#2123" id="2123">2123</a>
+<a href="#2124" id="2124">2124</a>
+<a href="#2125" id="2125">2125</a>
+<a href="#2126" id="2126">2126</a>
+<a href="#2127" id="2127">2127</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
     Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo, EntryPointContext, Error,
@@ -2135,8 +2139,8 @@
     proc::{Alignment, TypeResolution},
     valid::{FunctionInfo, ModuleInfo},
 };
+<span class="kw">use </span>hashbrown::hash_map::Entry;
 <span class="kw">use </span>spirv::Word;
-<span class="kw">use </span>std::collections::hash_map::Entry;
 
 <span class="kw">struct </span>FunctionInterface&lt;<span class="lifetime">'a</span>&gt; {
     varying_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;Word&gt;,
@@ -2290,7 +2294,11 @@
                 </span><span class="kw">let </span>selected = <span class="kw">match </span><span class="self">self</span>.capabilities_available {
                     <span class="prelude-val">None </span>=&gt; first,
                     <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>available) =&gt; {
-                        <span class="kw">match </span>capabilities.iter().find(|cap| available.contains(cap)) {
+                        <span class="kw">match </span>capabilities
+                            .iter()
+                            <span class="comment">// need explicit type for hashbrown::HashSet::contains fn call to keep rustc happy
+                            </span>.find(|cap| available.contains::&lt;spirv::Capability&gt;(cap))
+                        {
                             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>cap) =&gt; cap,
                             <span class="prelude-val">None </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingCapabilities(what, capabilities.to_vec()))

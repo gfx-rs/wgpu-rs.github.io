@@ -2460,7 +2460,14 @@
 <a href="#2459" id="2459">2459</a>
 <a href="#2460" id="2460">2460</a>
 <a href="#2461" id="2461">2461</a>
-<a href="#2462" id="2462">2462</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
 
@@ -2745,9 +2752,15 @@ An override expression can be evaluated at pipeline creation time.
 </span><span class="kw">pub const </span>ABSTRACT_WIDTH: Bytes = <span class="number">8</span>;
 
 <span class="doccomment">/// Hash map that is faster but not resilient to DoS attacks.
-</span><span class="kw">pub type </span>FastHashMap&lt;K, T&gt; = rustc_hash::FxHashMap&lt;K, T&gt;;
+/// (Similar to rustc_hash::FxHashMap but using hashbrown::HashMap instead of std::collections::HashMap.)
+/// To construct a new instance: `FastHashMap::default()`
+</span><span class="kw">pub type </span>FastHashMap&lt;K, T&gt; =
+    hashbrown::HashMap&lt;K, T, std::hash::BuildHasherDefault&lt;rustc_hash::FxHasher&gt;&gt;;
+
 <span class="doccomment">/// Hash set that is faster but not resilient to DoS attacks.
-</span><span class="kw">pub type </span>FastHashSet&lt;K&gt; = rustc_hash::FxHashSet&lt;K&gt;;
+/// (Similar to rustc_hash::FxHashSet but using hashbrown::HashSet instead of std::collections::HashMap.)
+</span><span class="kw">pub type </span>FastHashSet&lt;K&gt; =
+    hashbrown::HashSet&lt;K, std::hash::BuildHasherDefault&lt;rustc_hash::FxHasher&gt;&gt;;
 
 <span class="doccomment">/// Insertion-order-preserving hash set (`IndexSet&lt;K&gt;`), but with the same
 /// hasher as `FastHashSet&lt;K&gt;` (faster but not resilient to DoS attacks).
@@ -2787,6 +2800,7 @@ An override expression can be evaluated at pipeline creation time.
 </span><span class="kw">pub struct </span>EarlyDepthTest {
     <span class="kw">pub </span>conservative: <span class="prelude-ty">Option</span>&lt;ConservativeDepth&gt;,
 }
+
 <span class="doccomment">/// Enables adjusting depth without disabling early Z.
 ///
 /// To use in a shader:

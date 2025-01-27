@@ -5034,6 +5034,7 @@ to output a [`Module`](crate::Module) into glsl
     valid, Handle, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>features::FeaturesManager;
+<span class="kw">use </span>hashbrown::hash_map;
 <span class="kw">use </span>std::{
     cmp::Ordering,
     fmt::{<span class="self">self</span>, Error <span class="kw">as </span>FmtError, Write},
@@ -9591,7 +9592,6 @@ to output a [`Module`](crate::Module) into glsl
 
     <span class="doccomment">/// Helper method used to produce the reflection info that's returned to the user
     </span><span class="kw">fn </span>collect_reflection_info(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReflectionInfo, Error&gt; {
-        <span class="kw">use </span>std::collections::hash_map::Entry;
         <span class="kw">let </span>info = <span class="self">self</span>.info.get_entry_point(<span class="self">self</span>.entry_point_idx <span class="kw">as </span>usize);
         <span class="kw">let </span><span class="kw-2">mut </span>texture_mapping = <span class="kw">crate</span>::FastHashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>uniforms = <span class="kw">crate</span>::FastHashMap::default();
@@ -9600,13 +9600,13 @@ to output a [`Module`](crate::Module) into glsl
             <span class="kw">let </span>tex_name = <span class="self">self</span>.reflection_names_globals[<span class="kw-2">&amp;</span>sampling.image].clone();
 
             <span class="kw">match </span>texture_mapping.entry(tex_name) {
-                Entry::Vacant(v) =&gt; {
+                hash_map::Entry::Vacant(v) =&gt; {
                     v.insert(TextureMapping {
                         texture: sampling.image,
                         sampler: <span class="prelude-val">Some</span>(sampling.sampler),
                     });
                 }
-                Entry::Occupied(e) =&gt; {
+                hash_map::Entry::Occupied(e) =&gt; {
                     <span class="kw">if </span>e.get().sampler != <span class="prelude-val">Some</span>(sampling.sampler) {
                         <span class="macro">log::error!</span>(<span class="string">"Conflicting samplers for {}"</span>, e.key());
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ImageMultipleSamplers);
@@ -9624,13 +9624,13 @@ to output a [`Module`](crate::Module) into glsl
                 TypeInner::Image { .. } =&gt; {
                     <span class="kw">let </span>tex_name = <span class="self">self</span>.reflection_names_globals[<span class="kw-2">&amp;</span>handle].clone();
                     <span class="kw">match </span>texture_mapping.entry(tex_name) {
-                        Entry::Vacant(v) =&gt; {
+                        hash_map::Entry::Vacant(v) =&gt; {
                             v.insert(TextureMapping {
                                 texture: handle,
                                 sampler: <span class="prelude-val">None</span>,
                             });
                         }
-                        Entry::Occupied(<span class="kw">_</span>) =&gt; {
+                        hash_map::Entry::Occupied(<span class="kw">_</span>) =&gt; {
                             <span class="comment">// already used with a sampler, do nothing
                         </span>}
                     }
