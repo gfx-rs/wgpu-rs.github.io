@@ -385,7 +385,9 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt};
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{error, fmt};
 
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>raw_window_handle::{HasDisplayHandle, HasWindowHandle};
@@ -410,12 +412,6 @@
 /// [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context)
 /// serves a similar role.
 </span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">'window</span>&gt; {
-    <span class="doccomment">/// Optionally, keep the source of the handle used for the surface alive.
-    ///
-    /// This is useful for platforms where the surface is created from a window and the surface
-    /// would become invalid when the window is dropped.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) _handle_source: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
-
     <span class="doccomment">/// Additional surface data returned by [`DynContext::instance_create_surface`].
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) inner: dispatch::DispatchSurface,
 
@@ -426,6 +422,14 @@
     // be wrapped in a mutex and since the configuration is only supplied after the surface has
     // been created is is additionally wrapped in an option.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&gt;&gt;,
+
+    <span class="doccomment">/// Optionally, keep the source of the handle used for the surface alive.
+    ///
+    /// This is useful for platforms where the surface is created from a window and the surface
+    /// would become invalid when the window is dropped.
+    ///
+    /// SAFETY: This field must be dropped *after* all other fields to ensure proper cleanup.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) _handle_source: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WindowHandle + <span class="lifetime">'window</span>&gt;&gt;,
 }
 
 <span class="kw">impl </span>Surface&lt;<span class="lifetime">'_</span>&gt; {
