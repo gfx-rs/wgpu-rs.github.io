@@ -501,7 +501,10 @@
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
 <a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Arena, Handle, UniqueArena};
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Arena, Handle, UniqueArena};
 <span class="kw">use </span>std::{error::Error, fmt, ops::Range};
 
 <span class="doccomment">/// A source code span, used for error reporting.
@@ -817,7 +820,9 @@
 
 <span class="doccomment">/// Convenience trait for [`Error`] to be able to apply spans to anything.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>AddSpan: Sized {
-    <span class="kw">type </span>Output;
+    <span class="doccomment">/// The returned output type.
+    </span><span class="kw">type </span>Output;
+
     <span class="doccomment">/// See [`WithSpan::new`].
     </span><span class="kw">fn </span>with_span(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// See [`WithSpan::with_span`].
@@ -826,6 +831,30 @@
     </span><span class="kw">fn </span>with_span_context(<span class="self">self</span>, span_context: SpanContext) -&gt; <span class="self">Self</span>::Output;
     <span class="doccomment">/// See [`WithSpan::with_handle`].
     </span><span class="kw">fn </span>with_span_handle&lt;T, A: SpanProvider&lt;T&gt;&gt;(<span class="self">self</span>, handle: Handle&lt;T&gt;, arena: <span class="kw-2">&amp;</span>A) -&gt; <span class="self">Self</span>::Output;
+}
+
+<span class="kw">impl</span>&lt;E&gt; AddSpan <span class="kw">for </span>E {
+    <span class="kw">type </span>Output = WithSpan&lt;<span class="self">Self</span>&gt;;
+
+    <span class="kw">fn </span>with_span(<span class="self">self</span>) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
+        WithSpan::new(<span class="self">self</span>)
+    }
+
+    <span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
+        WithSpan::new(<span class="self">self</span>).with_span(span, description)
+    }
+
+    <span class="kw">fn </span>with_span_context(<span class="self">self</span>, span_context: SpanContext) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
+        WithSpan::new(<span class="self">self</span>).with_context(span_context)
+    }
+
+    <span class="kw">fn </span>with_span_handle&lt;T, A: SpanProvider&lt;T&gt;&gt;(
+        <span class="self">self</span>,
+        handle: Handle&lt;T&gt;,
+        arena: <span class="kw-2">&amp;</span>A,
+    ) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
+        WithSpan::new(<span class="self">self</span>).with_handle(handle, arena)
+    }
 }
 
 <span class="doccomment">/// Trait abstracting over getting a span from an [`Arena`] or a [`UniqueArena`].
@@ -854,36 +883,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E&gt; AddSpan <span class="kw">for </span>E
-<span class="kw">where
-    </span>E: Error,
-{
-    <span class="kw">type </span>Output = WithSpan&lt;<span class="self">Self</span>&gt;;
-    <span class="kw">fn </span>with_span(<span class="self">self</span>) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
-        WithSpan::new(<span class="self">self</span>)
-    }
-
-    <span class="kw">fn </span>with_span_static(<span class="self">self</span>, span: Span, description: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
-        WithSpan::new(<span class="self">self</span>).with_span(span, description)
-    }
-
-    <span class="kw">fn </span>with_span_context(<span class="self">self</span>, span_context: SpanContext) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
-        WithSpan::new(<span class="self">self</span>).with_context(span_context)
-    }
-
-    <span class="kw">fn </span>with_span_handle&lt;T, A: SpanProvider&lt;T&gt;&gt;(
-        <span class="self">self</span>,
-        handle: Handle&lt;T&gt;,
-        arena: <span class="kw-2">&amp;</span>A,
-    ) -&gt; WithSpan&lt;<span class="self">Self</span>&gt; {
-        WithSpan::new(<span class="self">self</span>).with_handle(handle, arena)
-    }
-}
-
 <span class="doccomment">/// Convenience trait for [`Result`], adding a [`MapErrWithSpan::map_err_inner`]
 /// mapping to [`WithSpan::and_then`].
-</span><span class="kw">pub trait </span>MapErrWithSpan&lt;E, E2&gt;: Sized {
-    <span class="kw">type </span>Output: Sized;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>MapErrWithSpan&lt;E, E2&gt;: Sized {
+    <span class="doccomment">/// The returned output type.
+    </span><span class="kw">type </span>Output: Sized;
+
     <span class="kw">fn </span>map_err_inner&lt;F, E3&gt;(<span class="self">self</span>, func: F) -&gt; <span class="self">Self</span>::Output
     <span class="kw">where
         </span>F: FnOnce(E) -&gt; WithSpan&lt;E3&gt;,
@@ -892,6 +897,7 @@
 
 <span class="kw">impl</span>&lt;T, E, E2&gt; MapErrWithSpan&lt;E, E2&gt; <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;T, WithSpan&lt;E&gt;&gt; {
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;T, WithSpan&lt;E2&gt;&gt;;
+
     <span class="kw">fn </span>map_err_inner&lt;F, E3&gt;(<span class="self">self</span>, func: F) -&gt; <span class="prelude-ty">Result</span>&lt;T, WithSpan&lt;E2&gt;&gt;
     <span class="kw">where
         </span>F: FnOnce(E) -&gt; WithSpan&lt;E3&gt;,
