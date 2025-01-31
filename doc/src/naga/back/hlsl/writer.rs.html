@@ -4116,7 +4116,45 @@
 <a href="#4115" id="4115">4115</a>
 <a href="#4116" id="4116">4116</a>
 <a href="#4117" id="4117">4117</a>
-<a href="#4118" id="4118">4118</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#4118" id="4118">4118</a>
+<a href="#4119" id="4119">4119</a>
+<a href="#4120" id="4120">4120</a>
+<a href="#4121" id="4121">4121</a>
+<a href="#4122" id="4122">4122</a>
+<a href="#4123" id="4123">4123</a>
+<a href="#4124" id="4124">4124</a>
+<a href="#4125" id="4125">4125</a>
+<a href="#4126" id="4126">4126</a>
+<a href="#4127" id="4127">4127</a>
+<a href="#4128" id="4128">4128</a>
+<a href="#4129" id="4129">4129</a>
+<a href="#4130" id="4130">4130</a>
+<a href="#4131" id="4131">4131</a>
+<a href="#4132" id="4132">4132</a>
+<a href="#4133" id="4133">4133</a>
+<a href="#4134" id="4134">4134</a>
+<a href="#4135" id="4135">4135</a>
+<a href="#4136" id="4136">4136</a>
+<a href="#4137" id="4137">4137</a>
+<a href="#4138" id="4138">4138</a>
+<a href="#4139" id="4139">4139</a>
+<a href="#4140" id="4140">4140</a>
+<a href="#4141" id="4141">4141</a>
+<a href="#4142" id="4142">4142</a>
+<a href="#4143" id="4143">4143</a>
+<a href="#4144" id="4144">4144</a>
+<a href="#4145" id="4145">4145</a>
+<a href="#4146" id="4146">4146</a>
+<a href="#4147" id="4147">4147</a>
+<a href="#4148" id="4148">4148</a>
+<a href="#4149" id="4149">4149</a>
+<a href="#4150" id="4150">4150</a>
+<a href="#4151" id="4151">4151</a>
+<a href="#4152" id="4152">4152</a>
+<a href="#4153" id="4153">4153</a>
+<a href="#4154" id="4154">4154</a>
+<a href="#4155" id="4155">4155</a>
+<a href="#4156" id="4156">4156</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
         WrappedZeroValue,
@@ -4259,6 +4297,33 @@
         <span class="self">self</span>.written_candidate_intersection = <span class="bool-val">false</span>;
         <span class="self">self</span>.continue_ctx.clear();
         <span class="self">self</span>.need_bake_expressions.clear();
+    }
+
+    <span class="doccomment">/// Generates statements to be inserted immediately before and at the very
+    /// start of the body of each loop, to defeat infinite loop reasoning.
+    /// The 0th item of the returned tuple should be inserted immediately prior
+    /// to the loop and the 1st item should be inserted at the very start of
+    /// the loop body.
+    ///
+    /// See [`back::msl::Writer::gen_force_bounded_loop_statements`] for details.
+    </span><span class="kw">fn </span>gen_force_bounded_loop_statements(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        level: back::Level,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(String, String)&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.options.force_loop_bounding {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+
+        <span class="kw">let </span>loop_bound_name = <span class="self">self</span>.namer.call(<span class="string">"loop_bound"</span>);
+        <span class="kw">let </span>decl = <span class="macro">format!</span>(<span class="string">"{level}uint2 {loop_bound_name} = uint2(0u, 0u);"</span>);
+        <span class="kw">let </span>level = level.next();
+        <span class="kw">let </span>max = u32::MAX;
+        <span class="kw">let </span>break_and_inc = <span class="macro">format!</span>(
+            <span class="string">"{level}if (all({loop_bound_name} == uint2({max}u, {max}u))) {{ break; }}
+{level}{loop_bound_name} += uint2({loop_bound_name}.y == {max}u, 1u);"
+        </span>);
+
+        <span class="prelude-val">Some</span>((decl, break_and_inc))
     }
 
     <span class="doccomment">/// Helper method used to find which expressions of a given function require baking
@@ -6280,12 +6345,24 @@
                 <span class="kw-2">ref </span>continuing,
                 break_if,
             } =&gt; {
-                <span class="self">self</span>.continue_ctx.enter_loop();
-                <span class="kw">let </span>l2 = level.next();
-                <span class="kw">if </span>!continuing.is_empty() || break_if.is_some() {
-                    <span class="kw">let </span>gate_name = <span class="self">self</span>.namer.call(<span class="string">"loop_init"</span>);
+                <span class="kw">let </span>force_loop_bound_statements = <span class="self">self</span>.gen_force_bounded_loop_statements(level);
+                <span class="kw">let </span>gate_name = (!continuing.is_empty() || break_if.is_some())
+                    .then(|| <span class="self">self</span>.namer.call(<span class="string">"loop_init"</span>));
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">ref </span>decl, <span class="kw">_</span>)) = force_loop_bound_statements {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{decl}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>gate_name) = gate_name {
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}bool {gate_name} = true;"</span>)<span class="question-mark">?</span>;
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>)<span class="question-mark">?</span>;
+                }
+
+                <span class="self">self</span>.continue_ctx.enter_loop();
+                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw-2">ref </span>break_and_inc)) = force_loop_bound_statements {
+                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{break_and_inc}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">let </span>l2 = level.next();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(gate_name) = gate_name {
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}if (!{gate_name}) {{"</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>l3 = l2.next();
                     <span class="kw">for </span>sta <span class="kw">in </span>continuing.iter() {
@@ -6300,13 +6377,12 @@
                     }
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}}}"</span>)<span class="question-mark">?</span>;
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{l2}{gate_name} = false;"</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}while(true) {{"</span>)<span class="question-mark">?</span>;
                 }
 
                 <span class="kw">for </span>sta <span class="kw">in </span>body.iter() {
                     <span class="self">self</span>.write_stmt(module, sta, func_ctx, l2)<span class="question-mark">?</span>;
                 }
+
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}}}"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.continue_ctx.exit_loop();
             }
