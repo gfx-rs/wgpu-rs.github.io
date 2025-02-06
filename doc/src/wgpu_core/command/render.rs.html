@@ -3363,21 +3363,7 @@
 <a href="#3362" id="3362">3362</a>
 <a href="#3363" id="3363">3363</a>
 <a href="#3364" id="3364">3364</a>
-<a href="#3365" id="3365">3365</a>
-<a href="#3366" id="3366">3366</a>
-<a href="#3367" id="3367">3367</a>
-<a href="#3368" id="3368">3368</a>
-<a href="#3369" id="3369">3369</a>
-<a href="#3370" id="3370">3370</a>
-<a href="#3371" id="3371">3371</a>
-<a href="#3372" id="3372">3372</a>
-<a href="#3373" id="3373">3373</a>
-<a href="#3374" id="3374">3374</a>
-<a href="#3375" id="3375">3375</a>
-<a href="#3376" id="3376">3376</a>
-<a href="#3377" id="3377">3377</a>
-<a href="#3378" id="3378">3378</a>
-<a href="#3379" id="3379">3379</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
+<a href="#3365" id="3365">3365</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
 };
@@ -3537,11 +3523,11 @@
 </span><span class="attr">#[repr(C)]
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>RenderPassColorAttachment {
+</span><span class="kw">pub struct </span>RenderPassColorAttachment&lt;TV = id::TextureViewId&gt; {
     <span class="doccomment">/// The view to use as an attachment.
-    </span><span class="kw">pub </span>view: id::TextureViewId,
+    </span><span class="kw">pub </span>view: TV,
     <span class="doccomment">/// The view that will receive the resolved output if multisampling is used.
-    </span><span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;id::TextureViewId&gt;,
+    </span><span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;TV&gt;,
     <span class="doccomment">/// Operation to perform to the output attachment at the start of a
     /// renderpass.
     ///
@@ -3552,22 +3538,8 @@
     </span><span class="kw">pub </span>store_op: StoreOp,
 }
 
-<span class="doccomment">/// Describes a color attachment to a render pass.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>ArcRenderPassColorAttachment {
-    <span class="doccomment">/// The view to use as an attachment.
-    </span><span class="kw">pub </span>view: Arc&lt;TextureView&gt;,
-    <span class="doccomment">/// The view that will receive the resolved output if multisampling is used.
-    </span><span class="kw">pub </span>resolve_target: <span class="prelude-ty">Option</span>&lt;Arc&lt;TextureView&gt;&gt;,
-    <span class="doccomment">/// Operation to perform to the output attachment at the start of a
-    /// renderpass.
-    ///
-    /// This must be clear if it is the first renderpass rendering to a swap
-    /// chain image.
-    </span><span class="kw">pub </span>load_op: LoadOp&lt;Color&gt;,
-    <span class="doccomment">/// Operation to perform to the output attachment at the end of a renderpass.
-    </span><span class="kw">pub </span>store_op: StoreOp,
-}
+<span class="kw">pub type </span>ArcRenderPassColorAttachment = RenderPassColorAttachment&lt;Arc&lt;TextureView&gt;&gt;;
+
 <span class="kw">impl </span>ArcRenderPassColorAttachment {
     <span class="kw">fn </span>hal_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; hal::AttachmentOps {
         load_hal_ops(<span class="self">self</span>.load_op) | store_hal_ops(<span class="self">self</span>.store_op)
