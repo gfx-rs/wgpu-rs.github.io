@@ -1052,7 +1052,24 @@
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
 <a href="#1053" id="1053">1053</a>
-<a href="#1054" id="1054">1054</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
@@ -1493,50 +1510,73 @@
 <span class="doccomment">/// Bindable resource and the slot to bind it to.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>BindGroupEntry&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>BindGroupEntry&lt;<span class="lifetime">'a</span>, B = BufferId, S = SamplerId, TV = TextureViewId, TLAS = TlasId&gt;
+<span class="kw">where
+    </span>[BufferBinding&lt;B&gt;]: ToOwned,
+    [S]: ToOwned,
+    [TV]: ToOwned,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+{
     <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same
     /// binding index in the [`BindGroupLayoutDescriptor`].
     </span><span class="kw">pub </span>binding: u32,
-    <span class="doccomment">/// Resource to attach to the binding
-    </span><span class="kw">pub </span>resource: BindingResource&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(deserialize = <span class="string">"BindingResource&lt;'a, B, S, TV, TLAS&gt;: Deserialize&lt;'de&gt;"</span>))
+    )]
+    </span><span class="doccomment">/// Resource to attach to the binding
+    </span><span class="kw">pub </span>resource: BindingResource&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;,
 }
 
-<span class="doccomment">/// Bindable resource and the slot to bind it to.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same
-    /// binding index in the [`BindGroupLayoutDescriptor`].
-    </span><span class="kw">pub </span>binding: u32,
-    <span class="doccomment">/// Resource to attach to the binding
-    </span><span class="kw">pub </span>resource: ResolvedBindingResource&lt;<span class="lifetime">'a</span>&gt;,
-}
+<span class="kw">pub type </span>ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>&gt; =
+    BindGroupEntry&lt;<span class="lifetime">'a</span>, Arc&lt;Buffer&gt;, Arc&lt;Sampler&gt;, Arc&lt;TextureView&gt;, Arc&lt;Tlas&gt;&gt;;
 
 <span class="doccomment">/// Describes a group of bindings and the resources to be bound.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>BindGroupDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    BGL = BindGroupLayoutId,
+    B = BufferId,
+    S = SamplerId,
+    TV = TextureViewId,
+    TLAS = TlasId,
+&gt; <span class="kw">where
+    </span>[BufferBinding&lt;B&gt;]: ToOwned,
+    [S]: ToOwned,
+    [TV]: ToOwned,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    [BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;]: ToOwned,
+    &lt;[BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+{
     <span class="doccomment">/// Debug label of the bind group.
     ///
     /// This will show up in graphics debuggers for easy identification.
     </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The [`BindGroupLayout`] that corresponds to this bind group.
-    </span><span class="kw">pub </span>layout: BindGroupLayoutId,
-    <span class="doccomment">/// The resources to bind to this bind group.
-    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [BindGroupEntry&lt;<span class="lifetime">'a</span>&gt;]&gt;,
+    </span><span class="kw">pub </span>layout: BGL,
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(
+            deserialize = <span class="string">"&lt;[BindGroupEntry&lt;'a, B, S, TV, TLAS&gt;] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"
+        </span>))
+    )]
+    </span><span class="doccomment">/// The resources to bind to this bind group.
+    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;]&gt;,
 }
 
-<span class="doccomment">/// Describes a group of bindings and the resources to be bound.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedBindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// Debug label of the bind group.
-    ///
-    /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The [`BindGroupLayout`] that corresponds to this bind group.
-    </span><span class="kw">pub </span>layout: Arc&lt;BindGroupLayout&gt;,
-    <span class="doccomment">/// The resources to bind to this bind group.
-    </span><span class="kw">pub </span>entries: Cow&lt;<span class="lifetime">'a</span>, [ResolvedBindGroupEntry&lt;<span class="lifetime">'a</span>&gt;]&gt;,
-}
+<span class="kw">pub type </span>ResolvedBindGroupDescriptor&lt;<span class="lifetime">'a</span>&gt; = BindGroupDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    Arc&lt;BindGroupLayout&gt;,
+    Arc&lt;Buffer&gt;,
+    Arc&lt;Sampler&gt;,
+    Arc&lt;TextureView&gt;,
+    Arc&lt;Tlas&gt;,
+&gt;;
 
 <span class="doccomment">/// Describes a [`BindGroupLayout`].
 </span><span class="attr">#[derive(Clone, Debug)]
@@ -1695,14 +1735,23 @@
 /// A `PipelineLayoutDescriptor` can be used to create a pipeline layout.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+#[cfg_attr(feature = <span class="string">"serde"</span>, serde(bound = <span class="string">"BGL: Serialize"</span>))]
+</span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, BGL = BindGroupLayoutId&gt;
+<span class="kw">where
+    </span>[BGL]: ToOwned,
+    &lt;[BGL] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+{
     <span class="doccomment">/// Debug label of the pipeline layout.
     ///
     /// This will show up in graphics debuggers for easy identification.
     </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Bind groups that this pipeline uses. The first entry will provide all the bindings for
     /// "set = 0", second entry will provide all the bindings for "set = 1" etc.
-    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [BindGroupLayoutId]&gt;,
+    </span><span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(deserialize = <span class="string">"&lt;[BGL] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"</span>))
+    )]
+    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [BGL]&gt;,
     <span class="doccomment">/// Set of push constant ranges this pipeline uses. Each shader stage that
     /// uses push constants must define the range in push constant memory that
     /// corresponds to its single `layout(push_constant)` uniform block.
@@ -1713,27 +1762,7 @@
     </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
 }
 
-<span class="doccomment">/// Describes a pipeline layout.
-///
-/// A `PipelineLayoutDescriptor` can be used to create a pipeline layout.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ResolvedPipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// Debug label of the pipeline layout.
-    ///
-    /// This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// Bind groups that this pipeline uses. The first entry will provide all the bindings for
-    /// "set = 0", second entry will provide all the bindings for "set = 1" etc.
-    </span><span class="kw">pub </span>bind_group_layouts: Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;BindGroupLayout&gt;]&gt;,
-    <span class="doccomment">/// Set of push constant ranges this pipeline uses. Each shader stage that
-    /// uses push constants must define the range in push constant memory that
-    /// corresponds to its single `layout(push_constant)` uniform block.
-    ///
-    /// If this array is non-empty, the
-    /// [`Features::PUSH_CONSTANTS`](wgt::Features::PUSH_CONSTANTS) feature must
-    /// be enabled.
-    </span><span class="kw">pub </span>push_constant_ranges: Cow&lt;<span class="lifetime">'a</span>, [wgt::PushConstantRange]&gt;,
-}
+<span class="kw">pub type </span>ResolvedPipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>&gt; = PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, Arc&lt;BindGroupLayout&gt;&gt;;
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PipelineLayout {
@@ -1855,45 +1884,50 @@
 <span class="attr">#[repr(C)]
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-</span><span class="kw">pub struct </span>BufferBinding {
-    <span class="kw">pub </span>buffer_id: BufferId,
+</span><span class="kw">pub struct </span>BufferBinding&lt;B = BufferId&gt; {
+    <span class="kw">pub </span>buffer: B,
     <span class="kw">pub </span>offset: wgt::BufferAddress,
     <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
 }
 
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedBufferBinding {
-    <span class="kw">pub </span>buffer: Arc&lt;Buffer&gt;,
-    <span class="kw">pub </span>offset: wgt::BufferAddress,
-    <span class="kw">pub </span>size: <span class="prelude-ty">Option</span>&lt;wgt::BufferSize&gt;,
-}
+<span class="kw">pub type </span>ResolvedBufferBinding = BufferBinding&lt;Arc&lt;Buffer&gt;&gt;;
 
 <span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`
 // They're different enough that it doesn't make sense to share a common type
 </span><span class="attr">#[derive(Debug, Clone)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub enum </span>BindingResource&lt;<span class="lifetime">'a</span>&gt; {
-    Buffer(BufferBinding),
-    BufferArray(Cow&lt;<span class="lifetime">'a</span>, [BufferBinding]&gt;),
-    Sampler(SamplerId),
-    SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [SamplerId]&gt;),
-    TextureView(TextureViewId),
-    TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [TextureViewId]&gt;),
-    AccelerationStructure(TlasId),
+</span><span class="kw">pub enum </span>BindingResource&lt;<span class="lifetime">'a</span>, B = BufferId, S = SamplerId, TV = TextureViewId, TLAS = TlasId&gt;
+<span class="kw">where
+    </span>[BufferBinding&lt;B&gt;]: ToOwned,
+    [S]: ToOwned,
+    [TV]: ToOwned,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+{
+    Buffer(BufferBinding&lt;B&gt;),
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(deserialize = <span class="string">"&lt;[BufferBinding&lt;B&gt;] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"</span>))
+    )]
+    </span>BufferArray(Cow&lt;<span class="lifetime">'a</span>, [BufferBinding&lt;B&gt;]&gt;),
+    Sampler(S),
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(deserialize = <span class="string">"&lt;[S] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"</span>))
+    )]
+    </span>SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [S]&gt;),
+    TextureView(TV),
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"serde"</span>,
+        serde(bound(deserialize = <span class="string">"&lt;[TV] as ToOwned&gt;::Owned: Deserialize&lt;'de&gt;"</span>))
+    )]
+    </span>TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [TV]&gt;),
+    AccelerationStructure(TLAS),
 }
 
-<span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`
-// They're different enough that it doesn't make sense to share a common type
-</span><span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub enum </span>ResolvedBindingResource&lt;<span class="lifetime">'a</span>&gt; {
-    Buffer(ResolvedBufferBinding),
-    BufferArray(Cow&lt;<span class="lifetime">'a</span>, [ResolvedBufferBinding]&gt;),
-    Sampler(Arc&lt;Sampler&gt;),
-    SamplerArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;Sampler&gt;]&gt;),
-    TextureView(Arc&lt;TextureView&gt;),
-    TextureViewArray(Cow&lt;<span class="lifetime">'a</span>, [Arc&lt;TextureView&gt;]&gt;),
-    AccelerationStructure(Arc&lt;Tlas&gt;),
-}
+<span class="kw">pub type </span>ResolvedBindingResource&lt;<span class="lifetime">'a</span>&gt; =
+    BindingResource&lt;<span class="lifetime">'a</span>, Arc&lt;Buffer&gt;, Arc&lt;Sampler&gt;, Arc&lt;TextureView&gt;, Arc&lt;Tlas&gt;&gt;;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]

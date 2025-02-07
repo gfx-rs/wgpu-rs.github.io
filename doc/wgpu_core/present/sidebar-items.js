@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FRAME_TIMEOUT_MS"],"enum":["ConfigureSurfaceError","SurfaceError"],"struct":["Presentation","ResolvedSurfaceOutput","SurfaceOutput"]};
+window.SIDEBAR_ITEMS = {"constant":["FRAME_TIMEOUT_MS"],"enum":["ConfigureSurfaceError","SurfaceError"],"struct":["Presentation","SurfaceOutput"],"type":["ResolvedSurfaceOutput"]};

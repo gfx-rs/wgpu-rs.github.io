@@ -555,64 +555,7 @@
 <a href="#554" id="554">554</a>
 <a href="#555" id="555">555</a>
 <a href="#556" id="556">556</a>
-<a href="#557" id="557">557</a>
-<a href="#558" id="558">558</a>
-<a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
-<a href="#562" id="562">562</a>
-<a href="#563" id="563">563</a>
-<a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a></pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::pipeline_cache::PipelineCacheValidationError;
+<a href="#557" id="557">557</a></pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::pipeline_cache::PipelineCacheValidationError;
 <span class="kw">use crate</span>::{
     binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError, PipelineLayout},
     command::ColorAttachmentError,
@@ -736,9 +679,9 @@
 <span class="doccomment">/// Describes a programmable pipeline stage.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, SM = ShaderModuleId&gt; {
     <span class="doccomment">/// The compiled shader module for this stage.
-    </span><span class="kw">pub </span>module: ShaderModuleId,
+    </span><span class="kw">pub </span>module: SM,
     <span class="doccomment">/// The name of the entry point in the compiled shader. The name is selected using the
     /// following logic:
     ///
@@ -761,32 +704,8 @@
     </span><span class="kw">pub </span>zero_initialize_workgroup_memory: bool,
 }
 
-<span class="doccomment">/// Describes a programmable pipeline stage.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// The compiled shader module for this stage.
-    </span><span class="kw">pub </span>module: Arc&lt;ShaderModule&gt;,
-    <span class="doccomment">/// The name of the entry point in the compiled shader. The name is selected using the
-    /// following logic:
-    ///
-    /// * If `Some(name)` is specified, there must be a function with this name in the shader.
-    /// * If a single entry point associated with this stage must be in the shader, then proceed as
-    ///   if `Some(…)` was specified with that entry point's name.
-    </span><span class="kw">pub </span>entry_point: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'a</span>, str&gt;&gt;,
-    <span class="doccomment">/// Specifies the values of pipeline-overridable constants in the shader module.
-    ///
-    /// If an `@id` attribute was specified on the declaration,
-    /// the key must be the pipeline constant ID as a decimal ASCII number; if not,
-    /// the key must be the constant's identifier name.
-    ///
-    /// The value may represent any of WGSL's concrete scalar types.
-    </span><span class="kw">pub </span>constants: Cow&lt;<span class="lifetime">'a</span>, naga::back::PipelineConstants&gt;,
-    <span class="doccomment">/// Whether workgroup scoped memory will be initialized with zero values for this stage.
-    ///
-    /// This is required by the WebGPU spec, but may have overhead which can be avoided
-    /// for cross-platform applications
-    </span><span class="kw">pub </span>zero_initialize_workgroup_memory: bool,
-}
+<span class="kw">pub type </span>ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt; =
+    ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, Arc&lt;ShaderModule&gt;&gt;;
 
 <span class="doccomment">/// Number of implicit bind groups derived at pipeline creation.
 </span><span class="kw">pub type </span>ImplicitBindGroupCount = u8;
@@ -809,27 +728,23 @@
 <span class="doccomment">/// Describes a compute pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>ComputePipelineDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    PLL = PipelineLayoutId,
+    SM = ShaderModuleId,
+    PLC = PipelineCacheId,
+&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
+    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PLL&gt;,
     <span class="doccomment">/// The compiled compute stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, SM&gt;,
     <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PipelineCacheId&gt;,
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PLC&gt;,
 }
 
-<span class="doccomment">/// Describes a compute pipeline.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineLayout&gt;&gt;,
-    <span class="doccomment">/// The compiled compute stage and its entry point.
-    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineCache&gt;&gt;,
-}
+<span class="kw">pub type </span>ResolvedComputePipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; =
+    ComputePipelineDescriptor&lt;<span class="lifetime">'a</span>, Arc&lt;PipelineLayout&gt;, Arc&lt;ShaderModule&gt;, Arc&lt;PipelineCache&gt;&gt;;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -942,50 +857,41 @@
 <span class="doccomment">/// Describes the vertex process in a render pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>VertexState&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>VertexState&lt;<span class="lifetime">'a</span>, SM = ShaderModuleId&gt; {
     <span class="doccomment">/// The compiled vertex stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, SM&gt;,
     <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
     </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">'a</span>, [VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;]&gt;,
 }
 
-<span class="doccomment">/// Describes the vertex process in a render pipeline.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedVertexState&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// The compiled vertex stage and its entry point.
-    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
-    </span><span class="kw">pub </span>buffers: Cow&lt;<span class="lifetime">'a</span>, [VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;]&gt;,
-}
+<span class="kw">pub type </span>ResolvedVertexState&lt;<span class="lifetime">'a</span>&gt; = VertexState&lt;<span class="lifetime">'a</span>, Arc&lt;ShaderModule&gt;&gt;;
 
 <span class="doccomment">/// Describes fragment processing in a render pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>FragmentState&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>FragmentState&lt;<span class="lifetime">'a</span>, SM = ShaderModuleId&gt; {
     <span class="doccomment">/// The compiled fragment stage and its entry point.
-    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
+    </span><span class="kw">pub </span>stage: ProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>, SM&gt;,
     <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
     </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
 }
 
-<span class="doccomment">/// Describes fragment processing in a render pipeline.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedFragmentState&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// The compiled fragment stage and its entry point.
-    </span><span class="kw">pub </span>stage: ResolvedProgrammableStageDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.
-    </span><span class="kw">pub </span>targets: Cow&lt;<span class="lifetime">'a</span>, [<span class="prelude-ty">Option</span>&lt;wgt::ColorTargetState&gt;]&gt;,
-}
+<span class="kw">pub type </span>ResolvedFragmentState&lt;<span class="lifetime">'a</span>&gt; = FragmentState&lt;<span class="lifetime">'a</span>, Arc&lt;ShaderModule&gt;&gt;;
 
 <span class="doccomment">/// Describes a render (graphics) pipeline.
 </span><span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">pub struct </span>RenderPipelineDescriptor&lt;
+    <span class="lifetime">'a</span>,
+    PLL = PipelineLayoutId,
+    SM = ShaderModuleId,
+    PLC = PipelineCacheId,
+&gt; {
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PipelineLayoutId&gt;,
+    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;PLL&gt;,
     <span class="doccomment">/// The vertex processing state for this pipeline.
-    </span><span class="kw">pub </span>vertex: VertexState&lt;<span class="lifetime">'a</span>&gt;,
+    </span><span class="kw">pub </span>vertex: VertexState&lt;<span class="lifetime">'a</span>, SM&gt;,
     <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
     </span><span class="kw">pub </span>primitive: wgt::PrimitiveState,
@@ -996,36 +902,16 @@
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(default))]
     </span><span class="kw">pub </span>multisample: wgt::MultisampleState,
     <span class="doccomment">/// The fragment processing state for this pipeline.
-    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;FragmentState&lt;<span class="lifetime">'a</span>&gt;&gt;,
+    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;FragmentState&lt;<span class="lifetime">'a</span>, SM&gt;&gt;,
     <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
     /// layers the attachments will have.
     </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
     <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PipelineCacheId&gt;,
+    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;PLC&gt;,
 }
 
-<span class="doccomment">/// Describes a render (graphics) pipeline.
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>ResolvedRenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The layout of bind groups for this pipeline.
-    </span><span class="kw">pub </span>layout: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineLayout&gt;&gt;,
-    <span class="doccomment">/// The vertex processing state for this pipeline.
-    </span><span class="kw">pub </span>vertex: ResolvedVertexState&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.
-    </span><span class="kw">pub </span>primitive: wgt::PrimitiveState,
-    <span class="doccomment">/// The effect of draw calls on the depth and stencil aspects of the output target, if any.
-    </span><span class="kw">pub </span>depth_stencil: <span class="prelude-ty">Option</span>&lt;wgt::DepthStencilState&gt;,
-    <span class="doccomment">/// The multi-sampling properties of the pipeline.
-    </span><span class="kw">pub </span>multisample: wgt::MultisampleState,
-    <span class="doccomment">/// The fragment processing state for this pipeline.
-    </span><span class="kw">pub </span>fragment: <span class="prelude-ty">Option</span>&lt;ResolvedFragmentState&lt;<span class="lifetime">'a</span>&gt;&gt;,
-    <span class="doccomment">/// If the pipeline will be used with a multiview render pass, this indicates how many array
-    /// layers the attachments will have.
-    </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
-    <span class="doccomment">/// The pipeline cache to use when creating this pipeline.
-    </span><span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineCache&gt;&gt;,
-}
+<span class="kw">pub type </span>ResolvedRenderPipelineDescriptor&lt;<span class="lifetime">'a</span>&gt; =
+    RenderPipelineDescriptor&lt;<span class="lifetime">'a</span>, Arc&lt;PipelineLayout&gt;, Arc&lt;ShaderModule&gt;, Arc&lt;PipelineCache&gt;&gt;;
 
 <span class="attr">#[derive(Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
