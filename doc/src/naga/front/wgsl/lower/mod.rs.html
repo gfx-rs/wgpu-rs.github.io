@@ -3358,7 +3358,22 @@
 <a href="#3357" id="3357">3357</a>
 <a href="#3358" id="3358">3358</a>
 <a href="#3359" id="3359">3359</a>
-<a href="#3360" id="3360">3360</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a>
+<a href="#3363" id="3363">3363</a>
+<a href="#3364" id="3364">3364</a>
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -5032,13 +5047,28 @@
             }
             ast::StatementKind::Break =&gt; <span class="kw">crate</span>::Statement::Break,
             ast::StatementKind::Continue =&gt; <span class="kw">crate</span>::Statement::Continue,
-            ast::StatementKind::Return { value } =&gt; {
+            ast::StatementKind::Return { value: ast_value } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
-                <span class="kw">let </span>value = value
-                    .map(|expr| <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter)))
-                    .transpose()<span class="question-mark">?</span>;
+                <span class="kw">let </span>value;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(ast_expr) = ast_value {
+                    <span class="kw">let </span>result_ty = ctx.function.result.as_ref().map(|r| r.ty);
+                    <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
+                    <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(ast_expr, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(result_ty) = result_ty {
+                        <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
+                        <span class="kw">let </span>resolution = <span class="kw">crate</span>::proc::TypeResolution::Handle(result_ty);
+                        <span class="kw">let </span>converted =
+                            ectx.try_automatic_conversions(expr, <span class="kw-2">&amp;</span>resolution, Span::default())<span class="question-mark">?</span>;
+                        value = <span class="prelude-val">Some</span>(converted);
+                    } <span class="kw">else </span>{
+                        value = <span class="prelude-val">Some</span>(expr);
+                    }
+                } <span class="kw">else </span>{
+                    value = <span class="prelude-val">None</span>;
+                }
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
 
                 <span class="kw">crate</span>::Statement::Return { value }
