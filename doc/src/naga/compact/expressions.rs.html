@@ -428,11 +428,21 @@
 <a href="#427" id="427">427</a>
 <a href="#428" id="428">428</a>
 <a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
 <span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
     <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
+    <span class="kw">pub </span>overrides: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Override&gt;,
 
     <span class="doccomment">/// The arena in which we are currently tracing expressions.
     </span><span class="kw">pub </span>expressions: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
@@ -442,6 +452,9 @@
 
     <span class="doccomment">/// The used map for `constants`.
     </span><span class="kw">pub </span>constants_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
+
+    <span class="doccomment">/// The used map for `overrides`.
+    </span><span class="kw">pub </span>overrides_used: <span class="kw-2">&amp;</span><span class="lifetime">'tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Override&gt;,
 
     <span class="doccomment">/// The used set for `arena`.
     ///
@@ -508,26 +521,33 @@
             | Ex::SubgroupBallotResult
             | Ex::RayQueryProceedResult =&gt; {}
 
-            Ex::Constant(handle) =&gt; {
+            <span class="comment">// Expressions can refer to constants and overrides, which can refer
+            // in turn to expressions, which complicates our nice one-pass
+            // algorithm. But since constants and overrides don't refer to each
+            // other directly, only via expressions, we can get around this by
+            // looking *through* each constant/override and marking its
+            // initializer expression as used immediately. Since `expr` refers
+            // to the constant/override, which then refers to the initializer,
+            // the initializer must precede `expr` in the arena, so we know we
+            // have yet to visit the initializer, so it's not too late to mark
+            // it.
+            </span>Ex::Constant(handle) =&gt; {
                 <span class="self">self</span>.constants_used.insert(handle);
-                <span class="comment">// Constants and expressions are mutually recursive, which
-                // complicates our nice one-pass algorithm. However, since
-                // constants don't refer to each other, we can get around
-                // this by looking *through* each constant and marking its
-                // initializer as used. Since `expr` refers to the constant,
-                // and the constant refers to the initializer, it must
-                // precede `expr` in the arena.
-                </span><span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
+                <span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
                 <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
                     <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
                     <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
                 };
             }
-            Ex::Override(<span class="kw">_</span>) =&gt; {
-                <span class="comment">// All overrides are considered used by definition. We mark
-                // their types and initialization expressions as used in
-                // `compact::compact`, so we have no more work to do here.
-            </span>}
+            Ex::Override(handle) =&gt; {
+                <span class="self">self</span>.overrides_used.insert(handle);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = <span class="self">self</span>.overrides[handle].init {
+                    <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
+                        <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
+                    };
+                }
+            }
             Ex::ZeroValue(ty) =&gt; {
                 <span class="self">self</span>.types_used.insert(ty);
             }
@@ -686,11 +706,9 @@
             | Ex::SubgroupBallotResult
             | Ex::RayQueryProceedResult =&gt; {}
 
-            <span class="comment">// All overrides are retained, so their handles never change.
-            </span>Ex::Override(<span class="kw">_</span>) =&gt; {}
-
             <span class="comment">// Expressions that contain handles that need to be adjusted.
             </span>Ex::Constant(<span class="kw-2">ref mut </span>constant) =&gt; <span class="self">self</span>.constants.adjust(constant),
+            Ex::Override(<span class="kw-2">ref mut </span>r#override) =&gt; <span class="self">self</span>.overrides.adjust(r#override),
             Ex::ZeroValue(<span class="kw-2">ref mut </span>ty) =&gt; <span class="self">self</span>.types.adjust(ty),
             Ex::Compose {
                 <span class="kw-2">ref mut </span>ty,

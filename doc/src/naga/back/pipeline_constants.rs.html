@@ -1379,7 +1379,7 @@
 ///
 /// Add the new `Constant` to `override_map` and `adjusted_constant_initializers`.
 </span><span class="kw">fn </span>process_override(
-    (old_h, override_, span): (Handle&lt;Override&gt;, Override, Span),
+    (old_h, r#override, span): (Handle&lt;Override&gt;, Override, Span),
     pipeline_constants: <span class="kw-2">&amp;</span>PipelineConstants,
     module: <span class="kw-2">&amp;mut </span>Module,
     override_map: <span class="kw-2">&amp;mut </span>HandleVec&lt;Override, Handle&lt;Constant&gt;&gt;,
@@ -1387,20 +1387,20 @@
     adjusted_constant_initializers: <span class="kw-2">&amp;mut </span>HashSet&lt;Handle&lt;Constant&gt;&gt;,
     global_expression_kind_tracker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Constant&gt;, PipelineConstantError&gt; {
-    <span class="comment">// Determine which key to use for `override_` in `pipeline_constants`.
-    </span><span class="kw">let </span>key = <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = override_.id {
+    <span class="comment">// Determine which key to use for `r#override` in `pipeline_constants`.
+    </span><span class="kw">let </span>key = <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = r#override.id {
         Cow::Owned(id.to_string())
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) = override_.name {
+    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) = r#override.name {
         Cow::Borrowed(name)
     } <span class="kw">else </span>{
         <span class="macro">unreachable!</span>();
     };
 
-    <span class="comment">// Generate a global expression for `override_`'s value, either
+    <span class="comment">// Generate a global expression for `r#override`'s value, either
     // from the provided `pipeline_constants` table or its initializer
     // in the module.
     </span><span class="kw">let </span>init = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = pipeline_constants.get::&lt;str&gt;(<span class="kw-2">&amp;</span>key) {
-        <span class="kw">let </span>literal = <span class="kw">match </span>module.types[override_.ty].inner {
+        <span class="kw">let </span>literal = <span class="kw">match </span>module.types[r#override.ty].inner {
             TypeInner::Scalar(scalar) =&gt; map_value_to_literal(<span class="kw-2">*</span>value, scalar)<span class="question-mark">?</span>,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
@@ -1409,7 +1409,7 @@
             .append(Expression::Literal(literal), Span::UNDEFINED);
         global_expression_kind_tracker.insert(expr, <span class="kw">crate</span>::proc::ExpressionKind::Const);
         expr
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(init) = override_.init {
+    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(init) = r#override.init {
         adjusted_global_expressions[init]
     } <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineConstantError::MissingValue(key.to_string()));
@@ -1417,8 +1417,8 @@
 
     <span class="comment">// Generate a new `Constant` to represent the override's value.
     </span><span class="kw">let </span>constant = Constant {
-        name: override_.name,
-        ty: override_.ty,
+        name: r#override.name,
+        ty: r#override.ty,
         init,
     };
     <span class="kw">let </span>h = module.constants.append(constant, span);

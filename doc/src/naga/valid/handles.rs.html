@@ -1172,13 +1172,13 @@
             validate_const_expr(init)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">for </span>(_handle, override_) <span class="kw">in </span>overrides.iter() {
+        <span class="kw">for </span>(_handle, r#override) <span class="kw">in </span>overrides.iter() {
             <span class="kw">let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Override {
                 name: <span class="kw">_</span>,
                 id: <span class="kw">_</span>,
                 ty,
                 init,
-            } = override_;
+            } = r#override;
             validate_type(ty)<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(init_expr) = init {
                 validate_const_expr(init_expr)<span class="question-mark">?</span>;
@@ -1356,9 +1356,9 @@
                         <span class="kw">crate</span>::PendingArraySize::Expression(expr) =&gt; <span class="prelude-val">Some</span>(expr),
                         <span class="kw">crate</span>::PendingArraySize::Override(h) =&gt; {
                             <span class="self">Self</span>::validate_override_handle(h, overrides)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>override_ = <span class="kw-2">&amp;</span>overrides[h];
-                            handle.check_dep(override_.ty)<span class="question-mark">?</span>;
-                            override_.init
+                            <span class="kw">let </span>r#override = <span class="kw-2">&amp;</span>overrides[h];
+                            handle.check_dep(r#override.ty)<span class="question-mark">?</span>;
+                            r#override.init
                         }
                     },
                     <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) | <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="prelude-val">None</span>,
@@ -1396,9 +1396,9 @@
                 handle.check_dep(constants[constant].init)<span class="question-mark">?</span>;
                 <span class="prelude-val">None
             </span>}
-            <span class="kw">crate</span>::Expression::Override(override_) =&gt; {
-                validate_override(override_)<span class="question-mark">?</span>;
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = overrides[override_].init {
+            <span class="kw">crate</span>::Expression::Override(r#override) =&gt; {
+                validate_override(r#override)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = overrides[r#override].init {
                     handle.check_dep(init)<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">None
@@ -1449,8 +1449,8 @@
             <span class="kw">crate</span>::Expression::Constant(constant) =&gt; {
                 validate_constant(constant)<span class="question-mark">?</span>;
             }
-            <span class="kw">crate</span>::Expression::Override(override_) =&gt; {
-                validate_override(override_)<span class="question-mark">?</span>;
+            <span class="kw">crate</span>::Expression::Override(r#override) =&gt; {
+                validate_override(r#override)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; {
                 validate_type(ty)<span class="question-mark">?</span>;

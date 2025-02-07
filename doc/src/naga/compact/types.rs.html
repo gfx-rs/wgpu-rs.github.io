@@ -105,12 +105,27 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::Handle;
 
 <span class="kw">pub struct </span>TypeTracer&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>overrides: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Override&gt;,
     <span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
+    <span class="kw">pub </span>overrides_used: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Override&gt;,
 }
 
 <span class="kw">impl </span>TypeTracer&lt;<span class="lifetime">'_</span>&gt; {
@@ -131,23 +146,29 @@
             <span class="comment">// Types that do contain handles.
             </span>Ti::Array {
                 base,
-                size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(expr)),
+                size,
                 stride: <span class="kw">_</span>,
             }
-            | Ti::BindingArray {
-                base,
-                size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(expr)),
-            } =&gt; {
-                <span class="self">self</span>.expressions_used.insert(expr);
+            | Ti::BindingArray { base, size } =&gt; {
                 <span class="self">self</span>.types_used.insert(base);
+                <span class="kw">match </span>size {
+                    <span class="kw">crate</span>::ArraySize::Pending(pending) =&gt; <span class="kw">match </span>pending {
+                        <span class="kw">crate</span>::PendingArraySize::Expression(expr) =&gt; {
+                            <span class="self">self</span>.expressions_used.insert(expr);
+                        }
+                        <span class="kw">crate</span>::PendingArraySize::Override(handle) =&gt; {
+                            <span class="self">self</span>.overrides_used.insert(handle);
+                            <span class="kw">let </span>r#override = <span class="kw-2">&amp;</span><span class="self">self</span>.overrides[handle];
+                            <span class="self">self</span>.types_used.insert(r#override.ty);
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = r#override.init {
+                                <span class="self">self</span>.expressions_used.insert(expr);
+                            }
+                        }
+                    },
+                    <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) | <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {}
+                }
             }
-            Ti::Pointer { base, space: <span class="kw">_ </span>}
-            | Ti::Array {
-                base,
-                size: <span class="kw">_</span>,
-                stride: <span class="kw">_</span>,
-            }
-            | Ti::BindingArray { base, size: <span class="kw">_ </span>} =&gt; {
+            Ti::Pointer { base, space: <span class="kw">_ </span>} =&gt; {
                 <span class="self">self</span>.types_used.insert(base);
             }
             Ti::Struct {
@@ -186,13 +207,24 @@
                 <span class="kw-2">ref mut </span>base,
                 <span class="kw-2">ref mut </span>size,
                 stride: <span class="kw">_</span>,
+            }
+            | Ti::BindingArray {
+                <span class="kw-2">ref mut </span>base,
+                <span class="kw-2">ref mut </span>size,
             } =&gt; {
                 adjust(base);
-                <span class="kw">if let </span><span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(
-                    <span class="kw-2">ref mut </span>size_expr,
-                )) = <span class="kw-2">*</span>size
-                {
-                    <span class="self">self</span>.global_expressions.adjust(size_expr);
+                <span class="kw">match </span><span class="kw-2">*</span>size {
+                    <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Expression(
+                        <span class="kw-2">ref mut </span>size_expr,
+                    )) =&gt; {
+                        <span class="self">self</span>.global_expressions.adjust(size_expr);
+                    }
+                    <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">crate</span>::PendingArraySize::Override(
+                        <span class="kw-2">ref mut </span>r#override,
+                    )) =&gt; {
+                        <span class="self">self</span>.overrides.adjust(r#override);
+                    }
+                    <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) | <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {}
                 }
             }
             Ti::Struct {
@@ -202,12 +234,6 @@
                 <span class="kw">for </span>member <span class="kw">in </span>members {
                     <span class="self">self</span>.types.adjust(<span class="kw-2">&amp;mut </span>member.ty);
                 }
-            }
-            Ti::BindingArray {
-                <span class="kw-2">ref mut </span>base,
-                size: <span class="kw">_</span>,
-            } =&gt; {
-                adjust(base);
             }
         };
     }
