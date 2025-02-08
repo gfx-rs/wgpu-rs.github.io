@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["bit_array_impl","bitflags_array","bitflags_array_impl","bitflags_array_impl_assign","bitflags_independent_two_arg"],"struct":["FeatureBits","Features","FeaturesWGPU","FeaturesWebGPU"]};
