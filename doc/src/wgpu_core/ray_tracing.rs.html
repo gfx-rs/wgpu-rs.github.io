@@ -254,7 +254,15 @@
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
 // Major missing optimizations (no api surface changes needed):
 // - use custom tracker to track build state
 // - no forced rebuilt (build mode deduction)
@@ -296,6 +304,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>MissingFeatures(<span class="attr">#[from] </span>MissingFeatures),
+    <span class="attr">#[error(<span class="string">"Flag {0:?} is not allowed on a TLAS"</span>)]
+    </span>DisallowedFlag(wgt::AccelerationStructureFlags),
 }
 
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.
@@ -375,6 +385,12 @@
         <span class="string">"Tlas {0:?} has {1} active instances but only {2} are allowed as specified by the descriptor at creation"
     </span>)]
     </span>TlasInstanceCountExceeded(ResourceErrorIdent, u32, u32),
+
+    <span class="attr">#[error(<span class="string">"Blas {0:?} has flag USE_TRANSFORM but the transform buffer is missing"</span>)]
+    </span>TransformMissing(ResourceErrorIdent),
+
+    <span class="attr">#[error(<span class="string">"Blas {0:?} is missing the flag USE_TRANSFORM but the transform buffer is set"</span>)]
+    </span>UseTransformMissing(ResourceErrorIdent),
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]

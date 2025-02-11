@@ -1218,7 +1218,23 @@
 <a href="#1217" id="1217">1217</a>
 <a href="#1218" id="1218">1218</a>
 <a href="#1219" id="1219">1219</a>
-<a href="#1220" id="1220">1220</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::queue::TempResource,
     global::Global,
     hub::Hub,
@@ -2142,6 +2158,14 @@
                         <span class="prelude-val">None
                     </span>};
                     <span class="kw">let </span>transform_data = <span class="kw">if let </span><span class="prelude-val">Some</span>(transform_id) = mesh.transform_buffer {
+                        <span class="kw">if </span>!blas
+                            .flags
+                            .contains(wgt::AccelerationStructureFlags::USE_TRANSFORM)
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::UseTransformMissing(
+                                blas.error_ident(),
+                            ));
+                        }
                         <span class="kw">let </span>transform_buffer = hub.buffers.get(transform_id).get()<span class="question-mark">?</span>;
                         <span class="kw">if </span>mesh.transform_buffer_offset.is_none() {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::MissingAssociatedData(
@@ -2154,6 +2178,14 @@
                         );
                         <span class="prelude-val">Some</span>((transform_buffer, data))
                     } <span class="kw">else </span>{
+                        <span class="kw">if </span>blas
+                            .flags
+                            .contains(wgt::AccelerationStructureFlags::USE_TRANSFORM)
+                        {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(BuildAccelerationStructureError::TransformMissing(
+                                blas.error_ident(),
+                            ));
+                        }
                         <span class="prelude-val">None
                     </span>};
                     temp_buffer.push(TriangleBufferStore {

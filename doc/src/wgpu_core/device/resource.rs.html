@@ -3756,7 +3756,16 @@
 <a href="#3755" id="3755">3755</a>
 <a href="#3756" id="3756">3756</a>
 <a href="#3757" id="3757">3757</a>
-<a href="#3758" id="3758">3758</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#3758" id="3758">3758</a>
+<a href="#3759" id="3759">3759</a>
+<a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a>
+<a href="#3762" id="3762">3762</a>
+<a href="#3763" id="3763">3763</a>
+<a href="#3764" id="3764">3764</a>
+<a href="#3765" id="3765">3765</a>
+<a href="#3766" id="3766">3766</a>
+<a href="#3767" id="3767">3767</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
@@ -3961,12 +3970,21 @@
 
         <span class="kw">let </span>command_allocator = command::CommandAllocator::new();
 
-        <span class="comment">// Create zeroed buffer used for texture clears.
+        <span class="kw">let </span>rt_uses = <span class="kw">if </span>desc
+            .required_features
+            .contains(wgt::Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)
+        {
+            wgt::BufferUses::TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT
+        } <span class="kw">else </span>{
+            wgt::BufferUses::empty()
+        };
+
+        <span class="comment">// Create zeroed buffer used for texture clears (and raytracing if required).
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{
             raw_device.create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
                 label: hal_label(<span class="prelude-val">Some</span>(<span class="string">"(wgpu internal) zero init buffer"</span>), instance_flags),
                 size: ZERO_BUFFER_SIZE,
-                usage: wgt::BufferUses::COPY_SRC | wgt::BufferUses::COPY_DST,
+                usage: wgt::BufferUses::COPY_SRC | wgt::BufferUses::COPY_DST | rt_uses,
                 memory_flags: hal::MemoryFlags::empty(),
             })
         }

@@ -2691,7 +2691,39 @@
 <a href="#2690" id="2690">2690</a>
 <a href="#2691" id="2691">2691</a>
 <a href="#2692" id="2692">2692</a>
-<a href="#2693" id="2693">2693</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
+<a href="#2693" id="2693">2693</a>
+<a href="#2694" id="2694">2694</a>
+<a href="#2695" id="2695">2695</a>
+<a href="#2696" id="2696">2696</a>
+<a href="#2697" id="2697">2697</a>
+<a href="#2698" id="2698">2698</a>
+<a href="#2699" id="2699">2699</a>
+<a href="#2700" id="2700">2700</a>
+<a href="#2701" id="2701">2701</a>
+<a href="#2702" id="2702">2702</a>
+<a href="#2703" id="2703">2703</a>
+<a href="#2704" id="2704">2704</a>
+<a href="#2705" id="2705">2705</a>
+<a href="#2706" id="2706">2706</a>
+<a href="#2707" id="2707">2707</a>
+<a href="#2708" id="2708">2708</a>
+<a href="#2709" id="2709">2709</a>
+<a href="#2710" id="2710">2710</a>
+<a href="#2711" id="2711">2711</a>
+<a href="#2712" id="2712">2712</a>
+<a href="#2713" id="2713">2713</a>
+<a href="#2714" id="2714">2714</a>
+<a href="#2715" id="2715">2715</a>
+<a href="#2716" id="2716">2716</a>
+<a href="#2717" id="2717">2717</a>
+<a href="#2718" id="2718">2718</a>
+<a href="#2719" id="2719">2719</a>
+<a href="#2720" id="2720">2720</a>
+<a href="#2721" id="2721">2721</a>
+<a href="#2722" id="2722">2722</a>
+<a href="#2723" id="2723">2723</a>
+<a href="#2724" id="2724">2724</a>
+<a href="#2725" id="2725">2725</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
@@ -5058,7 +5090,39 @@
                             .index_type(vk::IndexType::NONE_KHR)
                             .vertex_format(conv::map_vertex_format(triangles.vertex_format))
                             .max_vertex(triangles.vertex_count)
-                            .vertex_stride(triangles.vertex_stride);
+                            .vertex_stride(triangles.vertex_stride)
+                            <span class="comment">// The vulkan spec suggests we could pass a non-zero invalid address here if fetching
+                            // the real address has significant overhead, but we pass the real one to be on the
+                            // safe side for now.
+                            // from https://registry.khronos.org/vulkan/specs/latest/man/html/vkGetAccelerationStructureBuildSizesKHR.html
+                            // &gt; The srcAccelerationStructure, dstAccelerationStructure, and mode members
+                            // &gt; of pBuildInfo are ignored. Any VkDeviceOrHostAddressKHR or VkDeviceOrHostAddressConstKHR
+                            // &gt; members of pBuildInfo are ignored by this command, except that the hostAddress
+                            // &gt; member of VkAccelerationStructureGeometryTrianglesDataKHR::transformData will
+                            // &gt; be examined to check if it is NULL.
+                            </span>.transform_data(vk::DeviceOrHostAddressConstKHR {
+                                device_address: <span class="kw">if </span>desc
+                                    .flags
+                                    .contains(wgt::AccelerationStructureFlags::USE_TRANSFORM)
+                                {
+                                    <span class="kw">unsafe </span>{
+                                        ray_tracing_functions
+                                            .buffer_device_address
+                                            .get_buffer_device_address(
+                                                <span class="kw-2">&amp;</span>vk::BufferDeviceAddressInfo::default().buffer(
+                                                    triangles
+                                                        .transform
+                                                        .as_ref()
+                                                        .unwrap()
+                                                        .buffer
+                                                        .raw,
+                                                ),
+                                            )
+                                    }
+                                } <span class="kw">else </span>{
+                                    <span class="number">0
+                                </span>},
+                            });
 
                     <span class="kw">let </span>pritive_count = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>indices) = triangles.indices {
                         triangle_data =
