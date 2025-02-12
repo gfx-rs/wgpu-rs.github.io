@@ -243,7 +243,16 @@
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -354,6 +363,11 @@
     /// If possible, consider using [`Queue::write_buffer_with`] instead. That
     /// method avoids an intermediate copy and is often able to transfer data
     /// more efficiently than this one.
+    ///
+    /// Currently on native platforms, for both of these methods the staging
+    /// memory will be a new allocation. This will then be released after the
+    /// next submission finishes. To entirely avoid short-lived allocations, you might
+    /// be able to use [`StagingBelt`](crate::util::StagingBelt).
     </span><span class="kw">pub fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>Buffer, offset: BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
         <span class="self">self</span>.inner.write_buffer(<span class="kw-2">&amp;</span>buffer.inner, offset, data);
     }
@@ -386,6 +400,10 @@
     /// ```
     ///
     /// This method fails if `size` is greater than the size of `buffer` starting at `offset`.
+    ///
+    /// Currently on native platforms, the staging memory will be a new allocation, which will
+    /// then be released after the next submission finishes. To entirely avoid short-lived
+    /// allocations, you might be able to use [`StagingBelt`](crate::util::StagingBelt).
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>write_buffer_with&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
