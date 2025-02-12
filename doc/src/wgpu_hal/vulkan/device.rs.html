@@ -2723,7 +2723,26 @@
 <a href="#2722" id="2722">2722</a>
 <a href="#2723" id="2723">2723</a>
 <a href="#2724" id="2724">2724</a>
-<a href="#2725" id="2725">2725</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
+<a href="#2725" id="2725">2725</a>
+<a href="#2726" id="2726">2726</a>
+<a href="#2727" id="2727">2727</a>
+<a href="#2728" id="2728">2728</a>
+<a href="#2729" id="2729">2729</a>
+<a href="#2730" id="2730">2730</a>
+<a href="#2731" id="2731">2731</a>
+<a href="#2732" id="2732">2732</a>
+<a href="#2733" id="2733">2733</a>
+<a href="#2734" id="2734">2734</a>
+<a href="#2735" id="2735">2735</a>
+<a href="#2736" id="2736">2736</a>
+<a href="#2737" id="2737">2737</a>
+<a href="#2738" id="2738">2738</a>
+<a href="#2739" id="2739">2739</a>
+<a href="#2740" id="2740">2740</a>
+<a href="#2741" id="2741">2741</a>
+<a href="#2742" id="2742">2742</a>
+<a href="#2743" id="2743">2743</a>
+<a href="#2744" id="2744">2744</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
@@ -5282,10 +5301,26 @@
                     .set_object_name(raw_acceleration_structure, label);
             }
 
+            <span class="kw">let </span>pool = <span class="kw">if </span>desc.allow_compaction {
+                <span class="kw">let </span>vk_info = vk::QueryPoolCreateInfo::default()
+                    .query_type(vk::QueryType::ACCELERATION_STRUCTURE_COMPACTED_SIZE_KHR)
+                    .query_count(<span class="number">1</span>);
+
+                <span class="kw">let </span>raw = <span class="self">self
+                    </span>.shared
+                    .raw
+                    .create_query_pool(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>)
+                    .map_err(<span class="kw">super</span>::map_host_oom_and_ioca_err)<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>(raw)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>};
+
             <span class="prelude-val">Ok</span>(<span class="kw">super</span>::AccelerationStructure {
                 raw: raw_acceleration_structure,
                 buffer: raw_buffer,
                 block: Mutex::new(block),
+                compacted_size_query: pool,
             })
         }
     }
@@ -5311,6 +5346,9 @@
             <span class="self">self</span>.mem_allocator
                 .lock()
                 .dealloc(<span class="kw-2">&amp;*</span><span class="self">self</span>.shared, acceleration_structure.block.into_inner());
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(query) = acceleration_structure.compacted_size_query {
+                <span class="self">self</span>.shared.raw.destroy_query_pool(query, <span class="prelude-val">None</span>)
+            }
         }
     }
 

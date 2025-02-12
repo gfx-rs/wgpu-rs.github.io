@@ -2448,7 +2448,31 @@
 <a href="#2447" id="2447">2447</a>
 <a href="#2448" id="2448">2448</a>
 <a href="#2449" id="2449">2449</a>
-<a href="#2450" id="2450">2450</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a>
+<a href="#2470" id="2470">2470</a>
+<a href="#2471" id="2471">2471</a>
+<a href="#2472" id="2472">2472</a>
+<a href="#2473" id="2473">2473</a>
+<a href="#2474" id="2474">2474</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
 //! with implementations ("backends") for Vulkan, Metal, Direct3D, and GL.
@@ -3699,6 +3723,12 @@
     ) <span class="kw">where
         </span>T: Iterator&lt;Item = BufferTextureCopy&gt;;
 
+    <span class="kw">unsafe fn </span>copy_acceleration_structure_to_acceleration_structure(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
+        dst: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
+        copy: wgt::AccelerationStructureCopy,
+    );
     <span class="comment">// pass common
 
     </span><span class="doccomment">/// Sets the bind group at `index` to `group`.
@@ -3958,6 +3988,12 @@
     <span class="kw">unsafe fn </span>place_acceleration_structure_barrier(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         barrier: AccelerationStructureBarrier,
+    );
+    <span class="comment">// modeled off dx12, because this is able to be polyfilled in vulkan as opposed to the other way round
+    </span><span class="kw">unsafe fn </span>read_acceleration_structure_compact_size(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        acceleration_structure: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::AccelerationStructure,
+        buf: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Buffer,
     );
 }
 
@@ -4761,6 +4797,7 @@
     <span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub </span>size: wgt::BufferAddress,
     <span class="kw">pub </span>format: AccelerationStructureFormat,
+    <span class="kw">pub </span>allow_compaction: bool,
 }
 
 <span class="attr">#[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -4847,6 +4884,11 @@
     <span class="kw">pub </span>flags: AccelerationStructureGeometryFlags,
 }
 
+<span class="kw">pub struct </span>AccelerationStructureCopy {
+    <span class="kw">pub </span>copy_flags: wgt::AccelerationStructureCopy,
+    <span class="kw">pub </span>type_flags: wgt::AccelerationStructureType,
+}
+
 <span class="doccomment">/// * `offset` - offset in bytes
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>AccelerationStructureInstances&lt;<span class="lifetime">'a</span>, B: DynBuffer + <span class="question-mark">?</span>Sized&gt; {
@@ -4883,6 +4925,12 @@
         </span><span class="kw">const </span>BUILD_OUTPUT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="comment">// Tlas used in a shader
         </span><span class="kw">const </span>SHADER_INPUT = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="comment">// Blas used to query compacted size
+        </span><span class="kw">const </span>QUERY_INPUT = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="comment">// BLAS used as a src for a copy operation
+        </span><span class="kw">const </span>COPY_SRC = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="comment">// BLAS used as a dst for a copy operation
+        </span><span class="kw">const </span>COPY_DST = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
     }
 }
 

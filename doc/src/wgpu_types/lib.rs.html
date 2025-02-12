@@ -7289,7 +7289,29 @@
 <a href="#7288" id="7288">7288</a>
 <a href="#7289" id="7289">7289</a>
 <a href="#7290" id="7290">7290</a>
-<a href="#7291" id="7291">7291</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7291" id="7291">7291</a>
+<a href="#7292" id="7292">7292</a>
+<a href="#7293" id="7293">7293</a>
+<a href="#7294" id="7294">7294</a>
+<a href="#7295" id="7295">7295</a>
+<a href="#7296" id="7296">7296</a>
+<a href="#7297" id="7297">7297</a>
+<a href="#7298" id="7298">7298</a>
+<a href="#7299" id="7299">7299</a>
+<a href="#7300" id="7300">7300</a>
+<a href="#7301" id="7301">7301</a>
+<a href="#7302" id="7302">7302</a>
+<a href="#7303" id="7303">7303</a>
+<a href="#7304" id="7304">7304</a>
+<a href="#7305" id="7305">7305</a>
+<a href="#7306" id="7306">7306</a>
+<a href="#7307" id="7307">7307</a>
+<a href="#7308" id="7308">7308</a>
+<a href="#7309" id="7309">7309</a>
+<a href="#7310" id="7310">7310</a>
+<a href="#7311" id="7311">7311</a>
+<a href="#7312" id="7312">7312</a>
+<a href="#7313" id="7313">7313</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -12027,6 +12049,8 @@
         </span><span class="kw">const </span>BOTTOM_LEVEL_ACCELERATION_STRUCTURE_INPUT = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
         <span class="doccomment">/// Buffer used for top level acceleration structure building.
         </span><span class="kw">const </span>TOP_LEVEL_ACCELERATION_STRUCTURE_INPUT = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
+        <span class="doccomment">/// A buffer used to store the compacted size of an acceleration structure
+        </span><span class="kw">const </span>ACCELERATION_STRUCTURE_QUERY = <span class="number">1 </span>&lt;&lt; <span class="number">14</span>;
         <span class="doccomment">/// The combination of states that a buffer may be in _at the same time_.
         </span><span class="kw">const </span>INCLUSIVE = <span class="self">Self</span>::MAP_READ.bits() | <span class="self">Self</span>::COPY_SRC.bits() |
             <span class="self">Self</span>::INDEX.bits() | <span class="self">Self</span>::VERTEX.bits() | <span class="self">Self</span>::UNIFORM.bits() |
@@ -14488,6 +14512,26 @@
         </span><span class="kw">const </span>NO_DUPLICATE_ANY_HIT_INVOCATION = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
     }
 );
+
+<span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+</span><span class="doccomment">/// What a copy between acceleration structures should do
+</span><span class="kw">pub enum </span>AccelerationStructureCopy {
+    <span class="doccomment">/// Directly duplicate an acceleration structure to another
+    </span>Clone,
+    <span class="doccomment">/// Duplicate and compact an acceleration structure
+    </span>Compact,
+}
+
+<span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+</span><span class="doccomment">/// What type the data of an acceleration structure is
+</span><span class="kw">pub enum </span>AccelerationStructureType {
+    <span class="doccomment">/// The types of the acceleration structure are triangles
+    </span>Triangles,
+    <span class="doccomment">/// The types of the acceleration structure are axis aligned bounding boxes
+    </span>AABBs,
+    <span class="doccomment">/// The types of the acceleration structure are instances
+    </span>Instances,
+}
 
 <span class="doccomment">/// Alignment requirement for transform buffers used in acceleration structure builds
 </span><span class="kw">pub const </span>TRANSFORM_BUFFER_ALIGNMENT: BufferAddress = <span class="number">16</span>;
