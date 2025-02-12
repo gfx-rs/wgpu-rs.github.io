@@ -437,7 +437,10 @@
 <a href="#436" id="436">436</a>
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
 <span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">'tracer</span>&gt; {
@@ -533,15 +536,18 @@
             // it.
             </span>Ex::Constant(handle) =&gt; {
                 <span class="self">self</span>.constants_used.insert(handle);
-                <span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
+                <span class="kw">let </span>constant = <span class="kw-2">&amp;</span><span class="self">self</span>.constants[handle];
+                <span class="self">self</span>.types_used.insert(constant.ty);
                 <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
-                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(constant.init),
+                    <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(constant.init),
                 };
             }
             Ex::Override(handle) =&gt; {
                 <span class="self">self</span>.overrides_used.insert(handle);
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = <span class="self">self</span>.overrides[handle].init {
+                <span class="kw">let </span>r#override = <span class="kw-2">&amp;</span><span class="self">self</span>.overrides[handle];
+                <span class="self">self</span>.types_used.insert(r#override.ty);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = r#override.init {
                     <span class="kw">match </span><span class="self">self</span>.global_expressions_used {
                         <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
                         <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
