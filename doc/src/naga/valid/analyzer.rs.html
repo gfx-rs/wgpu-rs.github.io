@@ -1475,7 +1475,14 @@
 <a href="#1474" id="1474">1474</a>
 <a href="#1475" id="1475">1475</a>
 <a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
 //! - control flow uniformity
@@ -2557,13 +2564,20 @@
                 }
                 S::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
                     <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(query);
-                    <span class="kw">if let </span><span class="kw">crate</span>::RayQueryFunction::Initialize {
-                        acceleration_structure,
-                        descriptor,
-                    } = <span class="kw-2">*</span>fun
-                    {
-                        <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(acceleration_structure);
-                        <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(descriptor);
+                    <span class="kw">match </span><span class="kw-2">*</span>fun {
+                        <span class="kw">crate</span>::RayQueryFunction::Initialize {
+                            acceleration_structure,
+                            descriptor,
+                        } =&gt; {
+                            <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(acceleration_structure);
+                            <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(descriptor);
+                        }
+                        <span class="kw">crate</span>::RayQueryFunction::Proceed { result: <span class="kw">_ </span>} =&gt; {}
+                        <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t } =&gt; {
+                            <span class="kw">let _ </span>= <span class="self">self</span>.add_ref(hit_t);
+                        }
+                        <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection =&gt; {}
+                        <span class="kw">crate</span>::RayQueryFunction::Terminate =&gt; {}
                     }
                     FunctionUniformity::new()
                 }

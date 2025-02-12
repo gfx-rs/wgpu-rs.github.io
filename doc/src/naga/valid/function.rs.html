@@ -1744,7 +1744,22 @@
 <a href="#1743" id="1743">1743</a>
 <a href="#1744" id="1744">1744</a>
 <a href="#1745" id="1745">1745</a>
-<a href="#1746" id="1746">1746</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleSet};
 
 <span class="kw">use </span><span class="kw">super</span>::validate_atomic_compare_exchange_struct;
@@ -1923,6 +1938,8 @@
     </span>InvalidRayDescriptor(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Ray Query {0:?} does not have a matching type"</span>)]
     </span>InvalidRayQueryType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
+    <span class="attr">#[error(<span class="string">"Hit distance {0:?} must be an f32"</span>)]
+    </span>InvalidHitDistanceType(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Shader requires capability {0:?}"</span>)]
     </span>MissingCapability(<span class="kw">super</span>::Capabilities),
     <span class="attr">#[error(
@@ -3233,6 +3250,19 @@
                         <span class="kw">crate</span>::RayQueryFunction::Proceed { result } =&gt; {
                             <span class="self">self</span>.emit_expression(result, context)<span class="question-mark">?</span>;
                         }
+                        <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t } =&gt; {
+                            <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(hit_t, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">? </span>{
+                                Ti::Scalar(<span class="kw">crate</span>::Scalar {
+                                    kind: <span class="kw">crate</span>::ScalarKind::Float,
+                                    width: <span class="kw">_</span>,
+                                }) =&gt; {}
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidHitDistanceType(hit_t)
+                                        .with_span_static(span, <span class="string">"invalid hit_t"</span>))
+                                }
+                            }
+                        }
+                        <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection =&gt; {}
                         <span class="kw">crate</span>::RayQueryFunction::Terminate =&gt; {}
                     }
                 }

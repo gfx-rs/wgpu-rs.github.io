@@ -6468,7 +6468,33 @@
 <a href="#6467" id="6467">6467</a>
 <a href="#6468" id="6468">6468</a>
 <a href="#6469" id="6469">6469</a>
-<a href="#6470" id="6470">6470</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
+<a href="#6470" id="6470">6470</a>
+<a href="#6471" id="6471">6471</a>
+<a href="#6472" id="6472">6472</a>
+<a href="#6473" id="6473">6473</a>
+<a href="#6474" id="6474">6474</a>
+<a href="#6475" id="6475">6475</a>
+<a href="#6476" id="6476">6476</a>
+<a href="#6477" id="6477">6477</a>
+<a href="#6478" id="6478">6478</a>
+<a href="#6479" id="6479">6479</a>
+<a href="#6480" id="6480">6480</a>
+<a href="#6481" id="6481">6481</a>
+<a href="#6482" id="6482">6482</a>
+<a href="#6483" id="6483">6483</a>
+<a href="#6484" id="6484">6484</a>
+<a href="#6485" id="6485">6485</a>
+<a href="#6486" id="6486">6486</a>
+<a href="#6487" id="6487">6487</a>
+<a href="#6488" id="6488">6488</a>
+<a href="#6489" id="6489">6489</a>
+<a href="#6490" id="6490">6490</a>
+<a href="#6491" id="6491">6491</a>
+<a href="#6492" id="6492">6492</a>
+<a href="#6493" id="6493">6493</a>
+<a href="#6494" id="6494">6494</a>
+<a href="#6495" id="6495">6495</a>
+<a href="#6496" id="6496">6496</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
@@ -6500,7 +6526,8 @@
 <span class="kw">const </span>RAY_QUERY_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">"_RayQuery"</span>;
 <span class="kw">const </span>RAY_QUERY_FIELD_INTERSECTOR: <span class="kw-2">&amp;</span>str = <span class="string">"intersector"</span>;
 <span class="kw">const </span>RAY_QUERY_FIELD_INTERSECTION: <span class="kw-2">&amp;</span>str = <span class="string">"intersection"</span>;
-<span class="kw">const </span>RAY_QUERY_FIELD_READY: <span class="kw-2">&amp;</span>str = <span class="string">"ready"</span>;
+<span class="kw">const </span>RAY_QUERY_MODERN_SUPPORT: bool = <span class="bool-val">false</span>; <span class="comment">//TODO
+</span><span class="kw">const </span>RAY_QUERY_FIELD_READY: <span class="kw-2">&amp;</span>str = <span class="string">"ready"</span>;
 <span class="kw">const </span>RAY_QUERY_FUN_MAP_INTERSECTION: <span class="kw-2">&amp;</span>str = <span class="string">"_map_intersection_type"</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ATOMIC_COMP_EXCH_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_atomic_compare_exchange_weak_explicit"</span>;
@@ -9976,16 +10003,41 @@
                             <span class="self">self</span>.named_expressions.insert(result, name);
                             <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".{RAY_QUERY_FIELD_READY};"</span>)<span class="question-mark">?</span>;
-                            <span class="comment">//TODO: actually proceed?
-
-                            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".{RAY_QUERY_FIELD_READY} = false;"</span>)<span class="question-mark">?</span>;
+                            <span class="kw">if </span>RAY_QUERY_MODERN_SUPPORT {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".?.next();"</span>)<span class="question-mark">?</span>;
+                            }
+                        }
+                        <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t } =&gt; {
+                            <span class="kw">if </span>RAY_QUERY_MODERN_SUPPORT {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".?.commit_bounding_box_intersection("</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.put_expression(hit_t, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">");"</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                <span class="macro">log::warn!</span>(<span class="string">"Ray Query GenerateIntersection is not yet supported"</span>);
+                            }
+                        }
+                        <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection =&gt; {
+                            <span class="kw">if </span>RAY_QUERY_MODERN_SUPPORT {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".?.commit_triangle_intersection();"</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                <span class="macro">log::warn!</span>(<span class="string">"Ray Query ConfirmIntersection is not yet supported"</span>);
+                            }
                         }
                         <span class="kw">crate</span>::RayQueryFunction::Terminate =&gt; {
+                            <span class="kw">if </span>RAY_QUERY_MODERN_SUPPORT {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".?.abort();"</span>)<span class="question-mark">?</span>;
+                            }
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.put_expression(query, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".{RAY_QUERY_FIELD_INTERSECTION}.abort();"</span>)<span class="question-mark">?</span>;
+                            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">".{RAY_QUERY_FIELD_READY} = false;"</span>)<span class="question-mark">?</span>;
                         }
                     }
                 }
