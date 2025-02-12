@@ -3341,52 +3341,7 @@
 <a href="#3340" id="3340">3340</a>
 <a href="#3341" id="3341">3341</a>
 <a href="#3342" id="3342">3342</a>
-<a href="#3343" id="3343">3343</a>
-<a href="#3344" id="3344">3344</a>
-<a href="#3345" id="3345">3345</a>
-<a href="#3346" id="3346">3346</a>
-<a href="#3347" id="3347">3347</a>
-<a href="#3348" id="3348">3348</a>
-<a href="#3349" id="3349">3349</a>
-<a href="#3350" id="3350">3350</a>
-<a href="#3351" id="3351">3351</a>
-<a href="#3352" id="3352">3352</a>
-<a href="#3353" id="3353">3353</a>
-<a href="#3354" id="3354">3354</a>
-<a href="#3355" id="3355">3355</a>
-<a href="#3356" id="3356">3356</a>
-<a href="#3357" id="3357">3357</a>
-<a href="#3358" id="3358">3358</a>
-<a href="#3359" id="3359">3359</a>
-<a href="#3360" id="3360">3360</a>
-<a href="#3361" id="3361">3361</a>
-<a href="#3362" id="3362">3362</a>
-<a href="#3363" id="3363">3363</a>
-<a href="#3364" id="3364">3364</a>
-<a href="#3365" id="3365">3365</a>
-<a href="#3366" id="3366">3366</a>
-<a href="#3367" id="3367">3367</a>
-<a href="#3368" id="3368">3368</a>
-<a href="#3369" id="3369">3369</a>
-<a href="#3370" id="3370">3370</a>
-<a href="#3371" id="3371">3371</a>
-<a href="#3372" id="3372">3372</a>
-<a href="#3373" id="3373">3373</a>
-<a href="#3374" id="3374">3374</a>
-<a href="#3375" id="3375">3375</a>
-<a href="#3376" id="3376">3376</a>
-<a href="#3377" id="3377">3377</a>
-<a href="#3378" id="3378">3378</a>
-<a href="#3379" id="3379">3379</a>
-<a href="#3380" id="3380">3380</a>
-<a href="#3381" id="3381">3381</a>
-<a href="#3382" id="3382">3382</a>
-<a href="#3383" id="3383">3383</a>
-<a href="#3384" id="3384">3384</a>
-<a href="#3385" id="3385">3385</a>
-<a href="#3386" id="3386">3386</a>
-<a href="#3387" id="3387">3387</a>
-<a href="#3388" id="3388">3388</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3343" id="3343">3343</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -4488,28 +4443,14 @@
                 }
                 ast::GlobalDeclKind::Const(<span class="kw-2">ref </span>c) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_const();
-                    <span class="kw">let </span><span class="kw-2">mut </span>init = <span class="self">self</span>.expression_for_abstract(c.init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>ty;
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(explicit_ty) = c.ty {
-                        <span class="kw">let </span>explicit_ty =
-                            <span class="self">self</span>.resolve_ast_type(explicit_ty, <span class="kw-2">&amp;mut </span>ectx.as_global())<span class="question-mark">?</span>;
-                        <span class="kw">let </span>explicit_ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
-                        init = ectx
-                            .try_automatic_conversions(init, <span class="kw-2">&amp;</span>explicit_ty_res, c.name.span)
-                            .map_err(|error| <span class="kw">match </span>error {
-                                Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
-                                    name: c.name.span,
-                                    expected: e.dest_type,
-                                    got: e.source_type,
-                                },
-                                other =&gt; other,
-                            })<span class="question-mark">?</span>;
-                        ty = explicit_ty;
-                    } <span class="kw">else </span>{
-                        init = ectx.concretize(init)<span class="question-mark">?</span>;
-                        ty = ectx.register_type(init)<span class="question-mark">?</span>;
-                    }
+                    <span class="kw">let </span>explicit_ty =
+                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_global()))
+                            .transpose()<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>(ty, init) =
+                        <span class="self">self</span>.type_and_init(c.name, <span class="prelude-val">Some</span>(c.init), explicit_ty, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>init = init.expect(<span class="string">"Global const must have init"</span>);
 
                     <span class="kw">let </span>handle = ctx.module.constants.append(
                         <span class="kw">crate</span>::Constant {
@@ -4621,6 +4562,17 @@
                         },
                         other =&gt; other,
                     })<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>init_ty = ectx.register_type(init)<span class="question-mark">?</span>;
+                <span class="kw">let </span>explicit_inner = <span class="kw-2">&amp;</span>ectx.module.types[explicit_ty].inner;
+                <span class="kw">let </span>init_inner = <span class="kw-2">&amp;</span>ectx.module.types[init_ty].inner;
+                <span class="kw">if </span>!explicit_inner.equivalent(init_inner, <span class="kw-2">&amp;</span>ectx.module.types) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InitializationTypeMismatch {
+                        name: name.span,
+                        expected: explicit_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()).into(),
+                        got: init_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()).into(),
+                    });
+                }
                 ty = explicit_ty;
                 initializer = <span class="prelude-val">Some</span>(init);
             }
@@ -4867,37 +4819,8 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
-
-                    <span class="kw">let </span>ty;
-                    <span class="kw">let </span>initializer;
-                    <span class="kw">match </span>(v.init, explicit_ty) {
-                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
-                            <span class="kw">let </span>init = <span class="self">self</span>.expression_for_abstract(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
-                            <span class="kw">let </span>init = ectx
-                                .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, v.name.span)
-                                .map_err(|error| <span class="kw">match </span>error {
-                                Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
-                                    name: v.name.span,
-                                    expected: e.dest_type,
-                                    got: e.source_type,
-                                },
-                                other =&gt; other,
-                            })<span class="question-mark">?</span>;
-                            ty = explicit_ty;
-                            initializer = <span class="prelude-val">Some</span>(init);
-                        }
-                        (<span class="prelude-val">Some</span>(init), <span class="prelude-val">None</span>) =&gt; {
-                            <span class="kw">let </span>concretized = <span class="self">self</span>.expression(init, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
-                            ty = ectx.register_type(concretized)<span class="question-mark">?</span>;
-                            initializer = <span class="prelude-val">Some</span>(concretized);
-                        }
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
-                            ty = explicit_ty;
-                            initializer = <span class="prelude-val">None</span>;
-                        }
-                        (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(v.name.span)),
-                    }
+                    <span class="kw">let </span>(ty, initializer) =
+                        <span class="self">self</span>.type_and_init(v.name, v.init, explicit_ty, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>(const_initializer, initializer) = {
                         <span class="kw">match </span>initializer {
@@ -4952,26 +4875,13 @@
 
                     <span class="kw">let </span>ectx = <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter);
 
-                    <span class="kw">let </span><span class="kw-2">mut </span>init = <span class="self">self</span>.expression_for_abstract(c.init, ectx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>explicit_ty =
+                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_global()))
+                            .transpose()<span class="question-mark">?</span>;
 
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(explicit_ty) = c.ty {
-                        <span class="kw">let </span>explicit_ty =
-                            <span class="self">self</span>.resolve_ast_type(explicit_ty, <span class="kw-2">&amp;mut </span>ectx.as_global())<span class="question-mark">?</span>;
-                        <span class="kw">let </span>explicit_ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
-                        init = ectx
-                            .try_automatic_conversions(init, <span class="kw-2">&amp;</span>explicit_ty_res, c.name.span)
-                            .map_err(|error| <span class="kw">match </span>error {
-                                Error::AutoConversion(error) =&gt; Error::InitializationTypeMismatch {
-                                    name: c.name.span,
-                                    expected: error.dest_type,
-                                    got: error.source_type,
-                                },
-                                other =&gt; other,
-                            })<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        init = ectx.concretize(init)<span class="question-mark">?</span>;
-                        ectx.register_type(init)<span class="question-mark">?</span>;
-                    }
+                    <span class="kw">let </span>(_ty, init) =
+                        <span class="self">self</span>.type_and_init(c.name, <span class="prelude-val">Some</span>(c.init), explicit_ty, ectx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>init = init.expect(<span class="string">"Local const must have init"</span>);
 
                     block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
                     ctx.local_table
