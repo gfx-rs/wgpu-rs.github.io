@@ -3373,7 +3373,20 @@
 <a href="#3372" id="3372">3372</a>
 <a href="#3373" id="3373">3373</a>
 <a href="#3374" id="3374">3374</a>
-<a href="#3375" id="3375">3375</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -3462,6 +3475,8 @@
 
     const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
 
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
+
     global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 }
 
@@ -3473,6 +3488,7 @@
             types: <span class="self">self</span>.types,
             module: <span class="self">self</span>.module,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             expr_type: ExpressionContextType::Constant(<span class="prelude-val">None</span>),
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
         }
@@ -3485,6 +3501,7 @@
             types: <span class="self">self</span>.types,
             module: <span class="self">self</span>.module,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             expr_type: ExpressionContextType::Override,
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
         }
@@ -3540,6 +3557,7 @@
 
     const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
     typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
     function: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Function,
     <span class="doccomment">/// Stores the names of expressions that are assigned in `let` statement
     /// Also stores the spans of the names, for use in errors.
@@ -3573,6 +3591,7 @@
             types: <span class="self">self</span>.types,
             ast_expressions: <span class="self">self</span>.ast_expressions,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
             module: <span class="self">self</span>.module,
             expr_type: ExpressionContextType::Constant(<span class="prelude-val">Some</span>(LocalExpressionContext {
@@ -3599,6 +3618,7 @@
             types: <span class="self">self</span>.types,
             ast_expressions: <span class="self">self</span>.ast_expressions,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
             module: <span class="self">self</span>.module,
             expr_type: ExpressionContextType::Runtime(LocalExpressionContext {
@@ -3619,6 +3639,7 @@
             types: <span class="self">self</span>.types,
             module: <span class="self">self</span>.module,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
         }
     }
@@ -3739,6 +3760,7 @@
     ///
     /// [`module::global_expressions`]: crate::Module::global_expressions
     </span>const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
     global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
 
     <span class="doccomment">/// Whether we are lowering a constant expression or a general
@@ -3754,6 +3776,7 @@
             types: <span class="self">self</span>.types,
             ast_expressions: <span class="self">self</span>.ast_expressions,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             module: <span class="self">self</span>.module,
             expr_type: ExpressionContextType::Constant(<span class="kw">match </span><span class="self">self</span>.expr_type {
                 ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>local_expression_context)
@@ -3781,6 +3804,7 @@
             types: <span class="self">self</span>.types,
             module: <span class="self">self</span>.module,
             const_typifier: <span class="self">self</span>.const_typifier,
+            layouter: <span class="self">self</span>.layouter,
             global_expression_kind_tracker: <span class="self">self</span>.global_expression_kind_tracker,
         }
     }
@@ -3791,6 +3815,7 @@
                 <span class="self">self</span>.module,
                 <span class="kw-2">&amp;mut </span>rctx.function.expressions,
                 rctx.local_expression_kind_tracker,
+                <span class="self">self</span>.layouter,
                 rctx.emitter,
                 rctx.block,
                 <span class="bool-val">false</span>,
@@ -3800,6 +3825,7 @@
                     <span class="self">self</span>.module,
                     <span class="kw-2">&amp;mut </span>rctx.function.expressions,
                     rctx.local_expression_kind_tracker,
+                    <span class="self">self</span>.layouter,
                     rctx.emitter,
                     rctx.block,
                     <span class="bool-val">true</span>,
@@ -3808,11 +3834,13 @@
             ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; ConstantEvaluator::for_wgsl_module(
                 <span class="self">self</span>.module,
                 <span class="self">self</span>.global_expression_kind_tracker,
+                <span class="self">self</span>.layouter,
                 <span class="bool-val">false</span>,
             ),
             ExpressionContextType::Override =&gt; ConstantEvaluator::for_wgsl_module(
                 <span class="self">self</span>.module,
                 <span class="self">self</span>.global_expression_kind_tracker,
+                <span class="self">self</span>.layouter,
                 <span class="bool-val">true</span>,
             ),
         }
@@ -4391,15 +4419,11 @@
 
 <span class="kw">pub struct </span>Lowerer&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>&gt; {
     index: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>Index&lt;<span class="lifetime">'source</span>&gt;,
-    layouter: Layouter,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>&gt; Lowerer&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>&gt; {
-    <span class="kw">pub fn </span>new(index: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>Index&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            index,
-            layouter: Layouter::default(),
-        }
+    <span class="kw">pub const fn </span>new(index: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>Index&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ index }
     }
 
     <span class="kw">pub fn </span>lower(
@@ -4418,6 +4442,7 @@
             types: <span class="kw-2">&amp;</span>tu.types,
             module: <span class="kw-2">&amp;mut </span>module,
             const_typifier: <span class="kw-2">&amp;mut </span>Typifier::new(),
+            layouter: <span class="kw-2">&amp;mut </span>Layouter::default(),
             global_expression_kind_tracker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker::new(),
         };
 
@@ -4674,6 +4699,7 @@
             ast_expressions: ctx.ast_expressions,
             const_typifier: ctx.const_typifier,
             typifier: <span class="kw-2">&amp;mut </span>typifier,
+            layouter: ctx.layouter,
             function: <span class="kw-2">&amp;mut </span>function,
             named_expressions: <span class="kw-2">&amp;mut </span>named_expressions,
             types: ctx.types,
@@ -6426,10 +6452,10 @@
         <span class="kw">for </span>member <span class="kw">in </span>s.members.iter() {
             <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(member.ty, ctx)<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.layouter.update(ctx.module.to_ctx()).unwrap();
+            ctx.layouter.update(ctx.module.to_ctx()).unwrap();
 
-            <span class="kw">let </span>member_min_size = <span class="self">self</span>.layouter[ty].size;
-            <span class="kw">let </span>member_min_alignment = <span class="self">self</span>.layouter[ty].alignment;
+            <span class="kw">let </span>member_min_size = ctx.layouter[ty].size;
+            <span class="kw">let </span>member_min_alignment = ctx.layouter[ty].alignment;
 
             <span class="kw">let </span>member_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size_expr) = member.size {
                 <span class="kw">let </span>(size, span) = <span class="self">self</span>.const_u32(size_expr, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
@@ -6633,8 +6659,8 @@
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>size = <span class="self">self</span>.array_size(size, ctx)<span class="question-mark">?</span>;
 
-                <span class="self">self</span>.layouter.update(ctx.module.to_ctx()).unwrap();
-                <span class="kw">let </span>stride = <span class="self">self</span>.layouter[base].to_stride();
+                ctx.layouter.update(ctx.module.to_ctx()).unwrap();
+                <span class="kw">let </span>stride = ctx.layouter[base].to_stride();
 
                 <span class="kw">crate</span>::TypeInner::Array { base, size, stride }
             }

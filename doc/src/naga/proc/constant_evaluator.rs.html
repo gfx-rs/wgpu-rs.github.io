@@ -3062,7 +3062,29 @@
 <a href="#3061" id="3061">3061</a>
 <a href="#3062" id="3062">3062</a>
 <a href="#3063" id="3063">3063</a>
-<a href="#3064" id="3064">3064</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
+<a href="#3064" id="3064">3064</a>
+<a href="#3065" id="3065">3065</a>
+<a href="#3066" id="3066">3066</a>
+<a href="#3067" id="3067">3067</a>
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
+<a href="#3073" id="3073">3073</a>
+<a href="#3074" id="3074">3074</a>
+<a href="#3075" id="3075">3075</a>
+<a href="#3076" id="3076">3076</a>
+<a href="#3077" id="3077">3077</a>
+<a href="#3078" id="3078">3078</a>
+<a href="#3079" id="3079">3079</a>
+<a href="#3080" id="3080">3080</a>
+<a href="#3081" id="3081">3081</a>
+<a href="#3082" id="3082">3082</a>
+<a href="#3083" id="3083">3083</a>
+<a href="#3084" id="3084">3084</a>
+<a href="#3085" id="3085">3085</a>
+<a href="#3086" id="3086">3086</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
@@ -3376,6 +3398,8 @@
 
     <span class="doccomment">/// Tracks the constness of expressions residing in [`Self::expressions`]
     </span>expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -3658,6 +3682,7 @@
     </span><span class="kw">pub fn </span>for_wgsl_module(
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
         global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+        layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
         in_override_ctx: bool,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_module(
@@ -3668,6 +3693,7 @@
             }),
             module,
             global_expression_kind_tracker,
+            layouter,
         )
     }
 
@@ -3678,11 +3704,13 @@
     </span><span class="kw">pub fn </span>for_glsl_module(
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
         global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+        layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::for_module(
             Behavior::Glsl(GlslRestrictions::Const),
             module,
             global_expression_kind_tracker,
+            layouter,
         )
     }
 
@@ -3690,6 +3718,7 @@
         behavior: Behavior&lt;<span class="lifetime">'a</span>&gt;,
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
         global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+        layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             behavior,
@@ -3698,6 +3727,7 @@
             overrides: <span class="kw-2">&amp;</span>module.overrides,
             expressions: <span class="kw-2">&amp;mut </span>module.global_expressions,
             expression_kind_tracker: global_expression_kind_tracker,
+            layouter,
         }
     }
 
@@ -3709,6 +3739,7 @@
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
         expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
         local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+        layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
         emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
         block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
         is_const: bool,
@@ -3729,6 +3760,7 @@
             overrides: <span class="kw-2">&amp;</span>module.overrides,
             expressions,
             expression_kind_tracker: local_expression_kind_tracker,
+            layouter,
         }
     }
 
@@ -3740,6 +3772,7 @@
         module: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
         expressions: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Arena&lt;Expression&gt;,
         local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ExpressionKindTracker,
+        layouter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::Layouter,
         emitter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::Emitter,
         block: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
     ) -&gt; <span class="self">Self </span>{
@@ -3754,6 +3787,7 @@
             overrides: <span class="kw-2">&amp;</span>module.overrides,
             expressions,
             expression_kind_tracker: local_expression_kind_tracker,
+            layouter,
         }
     }
 
@@ -4782,7 +4816,11 @@
                 <span class="self">self</span>.types.insert(Type { name: <span class="prelude-val">None</span>, inner }, span)
             }
         };
-        <span class="kw">let </span>new_base_stride = <span class="self">self</span>.types[new_base].inner.size(<span class="self">self</span>.to_ctx());
+        <span class="kw">let </span><span class="kw-2">mut </span>layouter = std::mem::take(<span class="self">self</span>.layouter);
+        layouter.update(<span class="self">self</span>.to_ctx()).unwrap();
+        <span class="kw-2">*</span><span class="self">self</span>.layouter = layouter;
+
+        <span class="kw">let </span>new_base_stride = <span class="self">self</span>.layouter[new_base].to_stride();
         <span class="kw">let </span>new_array_ty = <span class="self">self</span>.types.insert(
             Type {
                 name: <span class="prelude-val">None</span>,
@@ -5631,6 +5669,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>res1 = solver
@@ -5717,6 +5756,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>res = solver
@@ -5835,6 +5875,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>root1 = Expression::AccessIndex { base, index: <span class="number">1 </span>};
@@ -5928,6 +5969,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>solved_compose = solver
@@ -6010,6 +6052,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>solved_compose = solver
@@ -6098,6 +6141,7 @@
             overrides: <span class="kw-2">&amp;</span>overrides,
             expressions: <span class="kw-2">&amp;mut </span>global_expressions,
             expression_kind_tracker,
+            layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter::default(),
         };
 
         <span class="kw">let </span>solved_add = solver

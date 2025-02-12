@@ -1499,7 +1499,11 @@
 <a href="#1498" id="1498">1498</a>
 <a href="#1499" id="1499">1499</a>
 <a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         GlobalLookup, GlobalLookupKind, HirExpr, HirExprKind, ParameterInfo, ParameterQualifier,
         VariableReference,
@@ -1509,9 +1513,9 @@
     Frontend, <span class="prelude-ty">Result</span>,
 };
 <span class="kw">use crate</span>::{
-    front::Typifier, proc::Emitter, AddressSpace, Arena, BinaryOperator, Block, Expression,
-    FastHashMap, FunctionArgument, Handle, Literal, LocalVariable, RelationalFunction, Scalar,
-    Span, Statement, Type, TypeInner, VectorSize,
+    front::Typifier, proc::Emitter, proc::Layouter, AddressSpace, Arena, BinaryOperator, Block,
+    Expression, FastHashMap, FunctionArgument, Handle, Literal, LocalVariable, RelationalFunction,
+    Scalar, Span, Statement, Type, TypeInner, VectorSize,
 };
 <span class="kw">use </span>std::ops::Index;
 
@@ -1573,6 +1577,7 @@
 
     <span class="kw">pub </span>const_typifier: Typifier,
     <span class="kw">pub </span>typifier: Typifier,
+    layouter: Layouter,
     emitter: Emitter,
     stmt_ctx: <span class="prelude-ty">Option</span>&lt;StmtContext&gt;,
     <span class="kw">pub </span>body: Block,
@@ -1604,6 +1609,7 @@
 
             const_typifier: Typifier::new(),
             typifier: Typifier::new(),
+            layouter: Layouter::default(),
             emitter: Emitter::default(),
             stmt_ctx: <span class="prelude-val">Some</span>(StmtContext::new()),
             body: Block::new(),
@@ -1761,12 +1767,14 @@
             <span class="kw">crate</span>::proc::ConstantEvaluator::for_glsl_module(
                 <span class="self">self</span>.module,
                 <span class="self">self</span>.global_expression_kind_tracker,
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.layouter,
             )
         } <span class="kw">else </span>{
             <span class="kw">crate</span>::proc::ConstantEvaluator::for_glsl_function(
                 <span class="self">self</span>.module,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.local_expression_kind_tracker,
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.layouter,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.body,
             )

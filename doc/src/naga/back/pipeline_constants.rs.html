@@ -1072,7 +1072,11 @@
 <a href="#1071" id="1071">1071</a>
 <a href="#1072" id="1072">1072</a>
 <a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PipelineConstants;
 <span class="kw">use crate</span>::{
     arena::HandleVec,
     proc::{ConstantEvaluator, ConstantEvaluatorError, Emitter},
@@ -1149,6 +1153,7 @@
     </span><span class="kw">let </span><span class="kw-2">mut </span>adjusted_constant_initializers = HashSet::with_capacity(module.constants.len());
 
     <span class="kw">let </span><span class="kw-2">mut </span>global_expression_kind_tracker = <span class="kw">crate</span>::proc::ExpressionKindTracker::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>layouter = <span class="kw">crate</span>::proc::Layouter::default();
 
     <span class="comment">// An iterator through the original overrides table, consumed in
     // approximate tandem with the global expressions.
@@ -1221,6 +1226,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>evaluator = ConstantEvaluator::for_wgsl_module(
             <span class="kw-2">&amp;mut </span>module,
             <span class="kw-2">&amp;mut </span>global_expression_kind_tracker,
+            <span class="kw-2">&amp;mut </span>layouter,
             <span class="bool-val">false</span>,
         );
         adjust_expr(<span class="kw-2">&amp;</span>adjusted_global_expressions, <span class="kw-2">&amp;mut </span>expr);
@@ -1260,13 +1266,13 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>functions = mem::take(<span class="kw-2">&amp;mut </span>module.functions);
     <span class="kw">for </span>(<span class="kw">_</span>, function) <span class="kw">in </span>functions.iter_mut() {
-        process_function(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>override_map, function)<span class="question-mark">?</span>;
+        process_function(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>override_map, <span class="kw-2">&amp;mut </span>layouter, function)<span class="question-mark">?</span>;
     }
     module.functions = functions;
 
     <span class="kw">let </span><span class="kw-2">mut </span>entry_points = mem::take(<span class="kw-2">&amp;mut </span>module.entry_points);
     <span class="kw">for </span>ep <span class="kw">in </span>entry_points.iter_mut() {
-        process_function(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>override_map, <span class="kw-2">&amp;mut </span>ep.function)<span class="question-mark">?</span>;
+        process_function(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>override_map, <span class="kw-2">&amp;mut </span>layouter, <span class="kw-2">&amp;mut </span>ep.function)<span class="question-mark">?</span>;
         process_workgroup_size_override(<span class="kw-2">&amp;mut </span>module, <span class="kw-2">&amp;</span>adjusted_global_expressions, ep)<span class="question-mark">?</span>;
     }
     module.entry_points = entry_points;
@@ -1439,6 +1445,7 @@
 </span><span class="kw">fn </span>process_function(
     module: <span class="kw-2">&amp;mut </span>Module,
     override_map: <span class="kw-2">&amp;</span>HandleVec&lt;Override, Handle&lt;Constant&gt;&gt;,
+    layouter: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::Layouter,
     function: <span class="kw-2">&amp;mut </span>Function,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ConstantEvaluatorError&gt; {
     <span class="comment">// A map from original local expression handles to
@@ -1463,6 +1470,7 @@
         module,
         <span class="kw-2">&amp;mut </span>function.expressions,
         <span class="kw-2">&amp;mut </span>local_expression_kind_tracker,
+        layouter,
         <span class="kw-2">&amp;mut </span>emitter,
         <span class="kw-2">&amp;mut </span>block,
         <span class="bool-val">false</span>,
