@@ -4167,7 +4167,33 @@
 <a href="#4166" id="4166">4166</a>
 <a href="#4167" id="4167">4167</a>
 <a href="#4168" id="4168">4168</a>
-<a href="#4169" id="4169">4169</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#4169" id="4169">4169</a>
+<a href="#4170" id="4170">4170</a>
+<a href="#4171" id="4171">4171</a>
+<a href="#4172" id="4172">4172</a>
+<a href="#4173" id="4173">4173</a>
+<a href="#4174" id="4174">4174</a>
+<a href="#4175" id="4175">4175</a>
+<a href="#4176" id="4176">4176</a>
+<a href="#4177" id="4177">4177</a>
+<a href="#4178" id="4178">4178</a>
+<a href="#4179" id="4179">4179</a>
+<a href="#4180" id="4180">4180</a>
+<a href="#4181" id="4181">4181</a>
+<a href="#4182" id="4182">4182</a>
+<a href="#4183" id="4183">4183</a>
+<a href="#4184" id="4184">4184</a>
+<a href="#4185" id="4185">4185</a>
+<a href="#4186" id="4186">4186</a>
+<a href="#4187" id="4187">4187</a>
+<a href="#4188" id="4188">4188</a>
+<a href="#4189" id="4189">4189</a>
+<a href="#4190" id="4190">4190</a>
+<a href="#4191" id="4191">4191</a>
+<a href="#4192" id="4192">4192</a>
+<a href="#4193" id="4193">4193</a>
+<a href="#4194" id="4194">4194</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+    help,
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
         WrappedZeroValue,
@@ -4510,7 +4536,7 @@
 
         <span class="self">self</span>.write_special_functions(module)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.write_wrapped_compose_functions(module, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_wrapped_expression_functions(module, <span class="kw-2">&amp;</span>module.global_expressions, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.write_wrapped_zero_value_functions(module, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
 
         <span class="comment">// Write all named constants
@@ -7321,6 +7347,26 @@
                 sample,
                 level,
             } =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>wrapping_type = <span class="prelude-val">None</span>;
+                <span class="kw">match </span><span class="kw-2">*</span>func_ctx.resolve_type(image, <span class="kw-2">&amp;</span>module.types) {
+                    TypeInner::Image {
+                        class: <span class="kw">crate</span>::ImageClass::Storage { format, .. },
+                        ..
+                    } =&gt; {
+                        <span class="kw">if </span>format.single_component() {
+                            wrapping_type = <span class="prelude-val">Some</span>(Scalar::from(format));
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; {}
+                }
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = wrapping_type {
+                    <span class="macro">write!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"{}{}("</span>,
+                        help::IMAGE_STORAGE_LOAD_SCALAR_WRAPPER,
+                        scalar.to_hlsl_str()<span class="question-mark">?
+                    </span>)<span class="question-mark">?</span>;
+                }
                 <span class="comment">// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
                 </span><span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".Load("</span>)<span class="question-mark">?</span>;
@@ -7341,6 +7387,10 @@
 
                 <span class="comment">// close bracket for Load function
                 </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>wrapping_type.is_some() {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                }
 
                 <span class="comment">// return x component if return type is scalar
                 </span><span class="kw">if let </span>TypeInner::Scalar(<span class="kw">_</span>) = <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types) {

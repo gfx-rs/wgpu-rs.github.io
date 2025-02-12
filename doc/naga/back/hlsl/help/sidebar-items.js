@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ImageQuery"],"struct":["WrappedArrayLength","WrappedConstructor","WrappedImageQuery","WrappedMatCx2","WrappedMath","WrappedStructMatrixAccess","WrappedZeroValue"]};
+window.SIDEBAR_ITEMS = {"constant":["IMAGE_STORAGE_LOAD_SCALAR_WRAPPER"],"enum":["ImageQuery"],"struct":["WrappedArrayLength","WrappedConstructor","WrappedImageQuery","WrappedMatCx2","WrappedMath","WrappedStructMatrixAccess","WrappedZeroValue"]};
