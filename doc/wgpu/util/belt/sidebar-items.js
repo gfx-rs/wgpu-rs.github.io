@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Chunk","Exclusive","StagingBelt"]};
+window.SIDEBAR_ITEMS = {"mod":["exclusive"],"struct":["Chunk","StagingBelt"]};
