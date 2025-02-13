@@ -1525,7 +1525,13 @@
 <a href="#1524" id="1524">1524</a>
 <a href="#1525" id="1525">1525</a>
 <a href="#1526" id="1526">1526</a>
-<a href="#1527" id="1527">1527</a></pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a></pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>hashbrown::HashMap;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>parking_lot::{MappedMutexGuard, Mutex, MutexGuard, RwLock};
@@ -1786,11 +1792,12 @@
                     </span><span class="macro">log::warn!</span>(<span class="string">"EGL says it can present to the window but not natively"</span>,);
                 }
                 <span class="comment">// Android emulator can't natively present either.
-                </span><span class="kw">let </span>tier_threshold = <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"android"</span>) || <span class="macro">cfg!</span>(windows) {
-                    <span class="number">1
-                </span>} <span class="kw">else </span>{
-                    <span class="number">2
-                </span>};
+                </span><span class="kw">let </span>tier_threshold =
+                    <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"android"</span>) || <span class="macro">cfg!</span>(windows) || <span class="macro">cfg!</span>(target_env = <span class="string">"ohos"</span>) {
+                        <span class="number">1
+                    </span>} <span class="kw">else </span>{
+                        <span class="number">2
+                    </span>};
                 <span class="kw">return </span><span class="prelude-val">Ok</span>((config, tier_max &gt;= tier_threshold));
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
@@ -2483,6 +2490,7 @@
             (Rwh::Xcb(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             (Rwh::Win32(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             (Rwh::AppKit(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
+            (Rwh::OhosNdk(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             <span class="attr">#[cfg(target_os = <span class="string">"android"</span>)]
             </span>(Rwh::AndroidNdk(handle), <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>format = inner
@@ -2833,6 +2841,7 @@
                     (WindowKind::Unknown, Rwh::AndroidNdk(handle)) =&gt; {
                         handle.a_native_window.as_ptr()
                     }
+                    (WindowKind::Unknown, Rwh::OhosNdk(handle)) =&gt; handle.native_window.as_ptr(),
                     (WindowKind::Wayland, Rwh::Wayland(handle)) =&gt; {
                         <span class="kw">let </span>library = <span class="kw-2">&amp;</span><span class="self">self</span>.wsi.display_owner.as_ref().unwrap().library;
                         <span class="kw">let </span>wl_egl_window_create: libloading::Symbol&lt;WlEglWindowCreateFun&gt; =
@@ -2876,8 +2885,11 @@
                     <span class="comment">// We don't want any of the buffering done by the driver, because we
                     // manage a swapchain on our side.
                     // Some drivers just fail on surface creation seeing `EGL_SINGLE_BUFFER`.
-                    </span><span class="kw">if </span><span class="macro">cfg!</span>(any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"macos"</span>))
-                        || <span class="macro">cfg!</span>(windows)
+                    </span><span class="kw">if </span><span class="macro">cfg!</span>(any(
+                        target_os = <span class="string">"android"</span>,
+                        target_os = <span class="string">"macos"</span>,
+                        target_env = <span class="string">"ohos"
+                    </span>)) || <span class="macro">cfg!</span>(windows)
                         || <span class="self">self</span>.wsi.kind == WindowKind::AngleX11
                     {
                         khronos_egl::BACK_BUFFER
