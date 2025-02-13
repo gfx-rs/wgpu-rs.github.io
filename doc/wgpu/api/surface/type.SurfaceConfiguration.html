@@ -10,9 +10,9 @@
     pub desired_maximum_frame_latency: <a class="primitive" href="https://doc.rust-lang.org/1.83.0/std/primitive.u32.html">u32</a>,
     pub alpha_mode: <a class="enum" href="../../enum.CompositeAlphaMode.html" title="enum wgpu::CompositeAlphaMode">CompositeAlphaMode</a>,
     pub view_formats: <a class="struct" href="https://doc.rust-lang.org/1.83.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="../../enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;,
-}</code></pre><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.usage" class="structfield section-header"><a href="#structfield.usage" class="anchor field">§</a><code>usage: <a class="struct" href="../../struct.TextureUsages.html" title="struct wgpu::TextureUsages">TextureUsages</a></code></span><div class="docblock"><p>The usage of the swap chain. The only usage guaranteed to be supported is <code>RENDER_ATTACHMENT</code>.</p>
+}</code></pre><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.usage" class="structfield section-header"><a href="#structfield.usage" class="anchor field">§</a><code>usage: <a class="struct" href="../../struct.TextureUsages.html" title="struct wgpu::TextureUsages">TextureUsages</a></code></span><div class="docblock"><p>The usage of the swap chain. The only usage guaranteed to be supported is [<code>TextureUsages::RENDER_ATTACHMENT</code>].</p>
 </div><span id="structfield.format" class="structfield section-header"><a href="#structfield.format" class="anchor field">§</a><code>format: <a class="enum" href="../../enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a></code></span><div class="docblock"><p>The texture format of the swap chain. The only formats that are guaranteed are
-<code>Bgra8Unorm</code> and <code>Bgra8UnormSrgb</code></p>
+[<code>TextureFormat::Bgra8Unorm</code>] and [<code>TextureFormat::Bgra8UnormSrgb</code>].</p>
 </div><span id="structfield.width" class="structfield section-header"><a href="#structfield.width" class="anchor field">§</a><code>width: <a class="primitive" href="https://doc.rust-lang.org/1.83.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Width of the swap chain. Must be the same size as the surface, and nonzero.</p>
 <p>If this is not the same size as the underlying surface (e.g. if it is
 set once, and the window is later resized), the behaviour is defined
@@ -24,15 +24,15 @@ set once, and the window is later resized), the behaviour is defined
 but platform-specific, and may change in the future (currently macOS
 scales the surface, other platforms may do something else).</p>
 </div><span id="structfield.present_mode" class="structfield section-header"><a href="#structfield.present_mode" class="anchor field">§</a><code>present_mode: <a class="enum" href="../../enum.PresentMode.html" title="enum wgpu::PresentMode">PresentMode</a></code></span><div class="docblock"><p>Presentation mode of the swap chain. Fifo is the only mode guaranteed to be supported.
-FifoRelaxed, Immediate, and Mailbox will crash if unsupported, while AutoVsync and
-AutoNoVsync will gracefully do a designed sets of fallbacks if their primary modes are
+<code>FifoRelaxed</code>, <code>Immediate</code>, and <code>Mailbox</code> will crash if unsupported, while <code>AutoVsync</code> and
+<code>AutoNoVsync</code> will gracefully do a designed sets of fallbacks if their primary modes are
 unsupported.</p>
 </div><span id="structfield.desired_maximum_frame_latency" class="structfield section-header"><a href="#structfield.desired_maximum_frame_latency" class="anchor field">§</a><code>desired_maximum_frame_latency: <a class="primitive" href="https://doc.rust-lang.org/1.83.0/std/primitive.u32.html">u32</a></code></span><div class="docblock"><p>Desired maximum number of frames that the presentation engine should queue in advance.</p>
 <p>This is a hint to the backend implementation and will always be clamped to the supported range.
 As a consequence, either the maximum frame latency is set directly on the swap chain,
 or waits on present are scheduled to avoid exceeding the maximum frame latency if supported,
 or the swap chain size is set to (max-latency + 1).</p>
-<p>Defaults to 2 when created via <code>wgpu::Surface::get_default_config</code>.</p>
+<p>Defaults to 2 when created via <code>Surface::get_default_config</code>.</p>
 <p>Typical values range from 3 to 1, but higher values are possible:</p>
 <ul>
 <li>Choose 2 or higher for potentially smoother frame display, as it allows to be at least one frame
@@ -40,13 +40,13 @@ to be queued up. This typically avoids starving the GPU’s work queue.
 Higher values are useful for achieving a constant flow of frames to the display under varying load.</li>
 <li>Choose 1 for low latency from frame recording to frame display.
 ⚠️ If the backend does not support waiting on present, this will cause the CPU to wait for the GPU
-to finish all work related to the previous frame when calling <code>wgpu::Surface::get_current_texture</code>,
-causing CPU-GPU serialization (i.e. when <code>wgpu::Surface::get_current_texture</code> returns, the GPU might be idle).
+to finish all work related to the previous frame when calling <code>Surface::get_current_texture</code>,
+causing CPU-GPU serialization (i.e. when <code>Surface::get_current_texture</code> returns, the GPU might be idle).
 It is currently not possible to query this. See <a href="https://github.com/gfx-rs/wgpu/issues/2869">https://github.com/gfx-rs/wgpu/issues/2869</a>.</li>
 <li>A value of 0 is generally not supported and always clamped to a higher value.</li>
 </ul>
 </div><span id="structfield.alpha_mode" class="structfield section-header"><a href="#structfield.alpha_mode" class="anchor field">§</a><code>alpha_mode: <a class="enum" href="../../enum.CompositeAlphaMode.html" title="enum wgpu::CompositeAlphaMode">CompositeAlphaMode</a></code></span><div class="docblock"><p>Specifies how the alpha channel of the textures should be handled during compositing.</p>
-</div><span id="structfield.view_formats" class="structfield section-header"><a href="#structfield.view_formats" class="anchor field">§</a><code>view_formats: <a class="struct" href="https://doc.rust-lang.org/1.83.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="../../enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;</code></span><div class="docblock"><p>Specifies what view formats will be allowed when calling create_view() on texture returned by get_current_texture().</p>
+</div><span id="structfield.view_formats" class="structfield section-header"><a href="#structfield.view_formats" class="anchor field">§</a><code>view_formats: <a class="struct" href="https://doc.rust-lang.org/1.83.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="enum" href="../../enum.TextureFormat.html" title="enum wgpu::TextureFormat">TextureFormat</a>&gt;</code></span><div class="docblock"><p>Specifies what view formats will be allowed when calling <code>Texture::create_view</code> on the texture returned by <code>Surface::get_current_texture</code>.</p>
 <p>View formats of the same format as the texture are always allowed.</p>
-<p>Note: currently, only the srgb-ness is allowed to change. (ex: Rgba8Unorm texture + Rgba8UnormSrgb view)</p>
+<p>Note: currently, only the srgb-ness is allowed to change. (ex: <code>Rgba8Unorm</code> texture + <code>Rgba8UnormSrgb</code> view)</p>
 </div><script src="../../../type.impl/wgpu_types/struct.SurfaceConfiguration.js" data-self-path="wgpu::api::surface::SurfaceConfiguration" async></script></section></div></main></body></html>
