@@ -7312,7 +7312,43 @@
 <a href="#7311" id="7311">7311</a>
 <a href="#7312" id="7312">7312</a>
 <a href="#7313" id="7313">7313</a>
-<a href="#7314" id="7314">7314</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7314" id="7314">7314</a>
+<a href="#7315" id="7315">7315</a>
+<a href="#7316" id="7316">7316</a>
+<a href="#7317" id="7317">7317</a>
+<a href="#7318" id="7318">7318</a>
+<a href="#7319" id="7319">7319</a>
+<a href="#7320" id="7320">7320</a>
+<a href="#7321" id="7321">7321</a>
+<a href="#7322" id="7322">7322</a>
+<a href="#7323" id="7323">7323</a>
+<a href="#7324" id="7324">7324</a>
+<a href="#7325" id="7325">7325</a>
+<a href="#7326" id="7326">7326</a>
+<a href="#7327" id="7327">7327</a>
+<a href="#7328" id="7328">7328</a>
+<a href="#7329" id="7329">7329</a>
+<a href="#7330" id="7330">7330</a>
+<a href="#7331" id="7331">7331</a>
+<a href="#7332" id="7332">7332</a>
+<a href="#7333" id="7333">7333</a>
+<a href="#7334" id="7334">7334</a>
+<a href="#7335" id="7335">7335</a>
+<a href="#7336" id="7336">7336</a>
+<a href="#7337" id="7337">7337</a>
+<a href="#7338" id="7338">7338</a>
+<a href="#7339" id="7339">7339</a>
+<a href="#7340" id="7340">7340</a>
+<a href="#7341" id="7341">7341</a>
+<a href="#7342" id="7342">7342</a>
+<a href="#7343" id="7343">7343</a>
+<a href="#7344" id="7344">7344</a>
+<a href="#7345" id="7345">7345</a>
+<a href="#7346" id="7346">7346</a>
+<a href="#7347" id="7347">7347</a>
+<a href="#7348" id="7348">7348</a>
+<a href="#7349" id="7349">7349</a>
+<a href="#7350" id="7350">7350</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -7385,12 +7421,33 @@
 </span><span class="kw">pub const </span>QUERY_SIZE: u32 = <span class="number">8</span>;
 
 <span class="doccomment">/// Backends supported by wgpu.
+///
+/// See also [`Backends`].
 </span><span class="attr">#[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub enum </span>Backend {
-    <span class="doccomment">/// Dummy backend, used for testing.
-    </span>Empty = <span class="number">0</span>,
+    <span class="doccomment">/// Dummy backend, which may be used for testing.
+    ///
+    /// It performs no rendering or computation, but allows creation of stub GPU resource types,
+    /// so that code which manages GPU resources can be tested without an available GPU.
+    /// Specifically, the following operations are implemented:
+    ///
+    /// * Enumerating adapters will always return one noop adapter, which can be used to create
+    ///   devices.
+    /// * Buffers may be created, written, mapped, and copied to other buffers.
+    /// * Command encoders may be created, but only buffer operations are useful.
+    ///
+    /// Other resources can be created but are nonfunctional; notably,
+    ///
+    /// * Render passes and compute passes are not executed.
+    /// * Textures may be created, but do not store any texels.
+    /// * There are no compatible surfaces.
+    ///
+    /// An adapter using the noop backend can only be obtained if [`NoopBackendOptions`]
+    /// enables it, in addition to the ordinary requirement of [`Backends::NOOP`] being set.
+    /// This ensures that applications not desiring a non-functional backend will not receive it.
+    </span>Noop = <span class="number">0</span>,
     <span class="doccomment">/// Vulkan API (Windows, Linux, Android, MacOS via `vulkan-portability`/MoltenVK)
     </span>Vulkan = <span class="number">1</span>,
     <span class="doccomment">/// Metal API (Apple platforms)
@@ -7408,7 +7465,7 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>to_str(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            Backend::Empty =&gt; <span class="string">"empty"</span>,
+            Backend::Noop =&gt; <span class="string">"noop"</span>,
             Backend::Vulkan =&gt; <span class="string">"vulkan"</span>,
             Backend::Metal =&gt; <span class="string">"metal"</span>,
             Backend::Dx12 =&gt; <span class="string">"dx12"</span>,
@@ -7462,22 +7519,35 @@
     #[cfg_attr(feature = <span class="string">"serde"</span>, serde(transparent))]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>Backends: u32 {
-        <span class="doccomment">/// Supported on Windows, Linux/Android, and macOS/iOS via Vulkan Portability (with the Vulkan feature enabled)
+        <span class="doccomment">/// [`Backend::Noop`].
+        </span><span class="kw">const </span>NOOP = <span class="number">1 </span>&lt;&lt; Backend::Noop <span class="kw">as </span>u32;
+
+        <span class="doccomment">/// [`Backend::Vulkan`].
+        /// Supported on Windows, Linux/Android, and macOS/iOS via Vulkan Portability (with the Vulkan feature enabled)
         </span><span class="kw">const </span>VULKAN = <span class="number">1 </span>&lt;&lt; Backend::Vulkan <span class="kw">as </span>u32;
-        <span class="doccomment">/// Supported on Linux/Android, the web through webassembly via WebGL, and Windows and
+
+        <span class="doccomment">/// [`Backend::Gl`].
+        /// Supported on Linux/Android, the web through webassembly via WebGL, and Windows and
         /// macOS/iOS via ANGLE
         </span><span class="kw">const </span>GL = <span class="number">1 </span>&lt;&lt; Backend::Gl <span class="kw">as </span>u32;
-        <span class="doccomment">/// Supported on macOS/iOS
+
+        <span class="doccomment">/// [`Backend::Metal`].
+        /// Supported on macOS and iOS.
         </span><span class="kw">const </span>METAL = <span class="number">1 </span>&lt;&lt; Backend::Metal <span class="kw">as </span>u32;
-        <span class="doccomment">/// Supported on Windows 10 and later
+
+        <span class="doccomment">/// [`Backend::Dx12`].
+        /// Supported on Windows 10 and later
         </span><span class="kw">const </span>DX12 = <span class="number">1 </span>&lt;&lt; Backend::Dx12 <span class="kw">as </span>u32;
-        <span class="doccomment">/// Supported when targeting the web through webassembly with the `webgpu` feature enabled.
+
+        <span class="doccomment">/// [`Backend::BrowserWebGpu`].
+        /// Supported when targeting the web through WebAssembly with the `webgpu` feature enabled.
         ///
         /// The WebGPU backend is special in several ways:
         /// It is not not implemented by `wgpu_core` and instead by the higher level `wgpu` crate.
         /// Whether WebGPU is targeted is decided upon the creation of the `wgpu::Instance`,
         /// *not* upon adapter creation. See `wgpu::Instance::new`.
         </span><span class="kw">const </span>BROWSER_WEBGPU = <span class="number">1 </span>&lt;&lt; Backend::BrowserWebGpu <span class="kw">as </span>u32;
+
         <span class="doccomment">/// All the apis that wgpu offers first tier of support for.
         ///
         /// * [`Backends::VULKAN`]
@@ -7488,6 +7558,7 @@
             | <span class="self">Self</span>::METAL.bits()
             | <span class="self">Self</span>::DX12.bits()
             | <span class="self">Self</span>::BROWSER_WEBGPU.bits();
+
         <span class="doccomment">/// All the apis that wgpu offers second tier of support for. These may
         /// be unsupported/still experimental.
         ///
@@ -7547,6 +7618,7 @@
                 <span class="string">"metal" </span>| <span class="string">"mtl" </span>=&gt; <span class="self">Self</span>::METAL,
                 <span class="string">"opengl" </span>| <span class="string">"gles" </span>| <span class="string">"gl" </span>=&gt; <span class="self">Self</span>::GL,
                 <span class="string">"webgpu" </span>=&gt; <span class="self">Self</span>::BROWSER_WEBGPU,
+                <span class="string">"noop" </span>=&gt; <span class="self">Self</span>::NOOP,
                 b =&gt; {
                     <span class="macro">log::warn!</span>(<span class="string">"unknown backend string '{}'"</span>, b);
                     <span class="kw">continue</span>;

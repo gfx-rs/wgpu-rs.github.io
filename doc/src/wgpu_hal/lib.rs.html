@@ -2472,7 +2472,10 @@
 <a href="#2471" id="2471">2471</a>
 <a href="#2472" id="2472">2472</a>
 <a href="#2473" id="2473">2473</a>
-<a href="#2474" id="2474">2474</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
 //! with implementations ("backends") for Vulkan, Metal, Direct3D, and GL.
@@ -2713,14 +2716,15 @@
 <span class="doccomment">/// DirectX12 API internals.
 </span><span class="attr">#[cfg(dx12)]
 </span><span class="kw">pub mod </span>dx12;
-<span class="doccomment">/// A dummy API implementation.
-</span><span class="kw">pub mod </span>empty;
 <span class="doccomment">/// GLES API internals.
 </span><span class="attr">#[cfg(gles)]
 </span><span class="kw">pub mod </span>gles;
 <span class="doccomment">/// Metal API internals.
 </span><span class="attr">#[cfg(metal)]
 </span><span class="kw">pub mod </span>metal;
+<span class="doccomment">/// A dummy API implementation.
+</span><span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/7120): this should have a cfg
+</span><span class="kw">pub mod </span>noop;
 <span class="doccomment">/// Vulkan API internals.
 </span><span class="attr">#[cfg(vulkan)]
 </span><span class="kw">pub mod </span>vulkan;
@@ -2729,11 +2733,11 @@
 <span class="kw">pub mod </span>api {
     <span class="attr">#[cfg(dx12)]
     </span><span class="kw">pub use </span><span class="kw">super</span>::dx12::Api <span class="kw">as </span>Dx12;
-    <span class="kw">pub use </span><span class="kw">super</span>::empty::Api <span class="kw">as </span>Empty;
     <span class="attr">#[cfg(gles)]
     </span><span class="kw">pub use </span><span class="kw">super</span>::gles::Api <span class="kw">as </span>Gles;
     <span class="attr">#[cfg(metal)]
     </span><span class="kw">pub use </span><span class="kw">super</span>::metal::Api <span class="kw">as </span>Metal;
+    <span class="kw">pub use </span><span class="kw">super</span>::noop::Api <span class="kw">as </span>Noop;
     <span class="attr">#[cfg(vulkan)]
     </span><span class="kw">pub use </span><span class="kw">super</span>::vulkan::Api <span class="kw">as </span>Vulkan;
 }
@@ -3409,6 +3413,8 @@
     ///
     /// Calling `wait` with a lower [`FenceValue`] than `fence`'s current value
     /// returns immediately.
+    ///
+    /// Returns `Ok(true)` on success and `Ok(false)` on timeout.
     ///
     /// [`Fence`]: Api::Fence
     /// [`FencePool`]: vulkan/enum.Fence.html#variant.FencePool
