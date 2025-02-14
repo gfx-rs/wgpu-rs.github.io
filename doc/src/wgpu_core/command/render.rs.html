@@ -3363,12 +3363,19 @@
 <a href="#3362" id="3362">3362</a>
 <a href="#3363" id="3363">3363</a>
 <a href="#3364" id="3364">3364</a>
-<a href="#3365" id="3365">3365</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::binding_model::BindGroup;
 <span class="kw">use </span><span class="kw">crate</span>::command::{
     validate_and_begin_occlusion_query, validate_and_begin_pipeline_statistics_query,
 };
 <span class="kw">use </span><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction;
-<span class="kw">use </span><span class="kw">crate</span>::pipeline::RenderPipeline;
+<span class="kw">use </span><span class="kw">crate</span>::pipeline::{RenderPipeline, VertexStep};
 <span class="kw">use </span><span class="kw">crate</span>::resource::InvalidResourceError;
 <span class="kw">use </span><span class="kw">crate</span>::snatch::SnatchGuard;
 <span class="kw">use crate</span>::{
@@ -3389,7 +3396,7 @@
     global::Global,
     hal_label, id,
     init_tracker::{MemoryInitKind, TextureInitRange, TextureInitTrackerAction},
-    pipeline::{<span class="self">self</span>, PipelineFlags},
+    pipeline::PipelineFlags,
     resource::{
         DestroyedResourceError, Labeled, MissingBufferUsageError, MissingTextureUsageError,
         ParentDevice, QuerySet, Texture, TextureView, TextureViewNotRenderableReason,
@@ -3410,7 +3417,7 @@
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
-<span class="kw">use </span>std::{borrow::Cow, fmt, iter, mem::size_of, num::NonZeroU32, ops::Range, str, sync::Arc};
+<span class="kw">use </span>std::{borrow::Cow, fmt, mem::size_of, num::NonZeroU32, ops::Range, str, sync::Arc};
 
 <span class="kw">use </span><span class="kw">super</span>::render_command::ArcRenderCommand;
 <span class="kw">use super</span>::{
@@ -3733,57 +3740,45 @@
     }
 }
 
-<span class="attr">#[derive(Clone, Copy, Debug)]
-</span><span class="kw">struct </span>VertexBufferState {
-    total_size: BufferAddress,
-    step: pipeline::VertexStep,
-    bound: bool,
-}
-
-<span class="kw">impl </span>VertexBufferState {
-    <span class="kw">const </span>EMPTY: <span class="self">Self </span>= <span class="self">Self </span>{
-        total_size: <span class="number">0</span>,
-        step: pipeline::VertexStep {
-            stride: <span class="number">0</span>,
-            last_stride: <span class="number">0</span>,
-            mode: VertexStepMode::Vertex,
-        },
-        bound: <span class="bool-val">false</span>,
-    };
-}
-
 <span class="attr">#[derive(Debug, Default)]
-</span><span class="kw">struct </span>VertexState {
-    inputs: ArrayVec&lt;VertexBufferState, { hal::MAX_VERTEX_BUFFERS }&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VertexLimits {
     <span class="doccomment">/// Length of the shortest vertex rate vertex buffer
-    </span>vertex_limit: u64,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) vertex_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest vertex rate vertex buffer is bound to
     </span>vertex_limit_slot: u32,
     <span class="doccomment">/// Length of the shortest instance rate vertex buffer
-    </span>instance_limit: u64,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) instance_limit: u64,
     <span class="doccomment">/// Buffer slot which the shortest instance rate vertex buffer is bound to
     </span>instance_limit_slot: u32,
 }
 
-<span class="kw">impl </span>VertexState {
-    <span class="kw">fn </span>update_limits(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<span class="kw">impl </span>VertexLimits {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        buffer_sizes: <span class="kw">impl </span>Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;&gt;,
+        pipeline_steps: <span class="kw-2">&amp;</span>[VertexStep],
+    ) -&gt; <span class="self">Self </span>{
         <span class="comment">// Implements the validation from https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-draw
         // Except that the formula is shuffled to extract the number of vertices in order
         // to carry the bulk of the computation when changing states instead of when producing
         // draws. Draw calls tend to happen at a higher frequency. Here we determine vertex
         // limits that can be cheaply checked for each draw call.
-        </span><span class="self">self</span>.vertex_limit = u32::MAX <span class="kw">as </span>u64;
-        <span class="self">self</span>.instance_limit = u32::MAX <span class="kw">as </span>u64;
-        <span class="kw">for </span>(idx, vbs) <span class="kw">in </span><span class="self">self</span>.inputs.iter().enumerate() {
-            <span class="kw">if </span>!vbs.bound {
-                <span class="kw">continue</span>;
-            }
 
-            <span class="kw">let </span>limit = <span class="kw">if </span>vbs.total_size &lt; vbs.step.last_stride {
+        </span><span class="kw">let </span><span class="kw-2">mut </span>vertex_limit = u64::MAX;
+        <span class="kw">let </span><span class="kw-2">mut </span>vertex_limit_slot = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>instance_limit = u64::MAX;
+        <span class="kw">let </span><span class="kw-2">mut </span>instance_limit_slot = <span class="number">0</span>;
+
+        <span class="kw">for </span>(idx, (buffer_size, step)) <span class="kw">in </span>buffer_sizes.zip(pipeline_steps).enumerate() {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(buffer_size) = buffer_size <span class="kw">else </span>{
+                <span class="comment">// Missing required vertex buffer
+                </span><span class="kw">return </span><span class="self">Self</span>::default();
+            };
+
+            <span class="kw">let </span>limit = <span class="kw">if </span>buffer_size &lt; step.last_stride {
                 <span class="comment">// The buffer cannot fit the last vertex.
                 </span><span class="number">0
             </span>} <span class="kw">else </span>{
-                <span class="kw">if </span>vbs.step.stride == <span class="number">0 </span>{
+                <span class="kw">if </span>step.stride == <span class="number">0 </span>{
                     <span class="comment">// We already checked that the last stride fits, the same
                     // vertex will be repeated so this slot can accommodate any number of
                     // vertices.
@@ -3791,30 +3786,79 @@
                 }
 
                 <span class="comment">// The general case.
-                </span>(vbs.total_size - vbs.step.last_stride) / vbs.step.stride + <span class="number">1
+                </span>(buffer_size - step.last_stride) / step.stride + <span class="number">1
             </span>};
 
-            <span class="kw">match </span>vbs.step.mode {
+            <span class="kw">match </span>step.mode {
                 VertexStepMode::Vertex =&gt; {
-                    <span class="kw">if </span>limit &lt; <span class="self">self</span>.vertex_limit {
-                        <span class="self">self</span>.vertex_limit = limit;
-                        <span class="self">self</span>.vertex_limit_slot = idx <span class="kw">as _</span>;
+                    <span class="kw">if </span>limit &lt; vertex_limit {
+                        vertex_limit = limit;
+                        vertex_limit_slot = idx <span class="kw">as _</span>;
                     }
                 }
                 VertexStepMode::Instance =&gt; {
-                    <span class="kw">if </span>limit &lt; <span class="self">self</span>.instance_limit {
-                        <span class="self">self</span>.instance_limit = limit;
-                        <span class="self">self</span>.instance_limit_slot = idx <span class="kw">as _</span>;
+                    <span class="kw">if </span>limit &lt; instance_limit {
+                        instance_limit = limit;
+                        instance_limit_slot = idx <span class="kw">as _</span>;
                     }
                 }
             }
         }
+
+        <span class="self">Self </span>{
+            vertex_limit,
+            vertex_limit_slot,
+            instance_limit,
+            instance_limit_slot,
+        }
     }
 
-    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.inputs.clear();
-        <span class="self">self</span>.vertex_limit = <span class="number">0</span>;
-        <span class="self">self</span>.instance_limit = <span class="number">0</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_vertex_limit(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        first_vertex: u32,
+        vertex_count: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DrawError&gt; {
+        <span class="kw">let </span>last_vertex = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
+        <span class="kw">let </span>vertex_limit = <span class="self">self</span>.vertex_limit;
+        <span class="kw">if </span>last_vertex &gt; vertex_limit {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexBeyondLimit {
+                last_vertex,
+                vertex_limit,
+                slot: <span class="self">self</span>.vertex_limit_slot,
+            });
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_instance_limit(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        first_instance: u32,
+        instance_count: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DrawError&gt; {
+        <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
+        <span class="kw">let </span>instance_limit = <span class="self">self</span>.instance_limit;
+        <span class="kw">if </span>last_instance &gt; instance_limit {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
+                last_instance,
+                instance_limit,
+                slot: <span class="self">self</span>.instance_limit_slot,
+            });
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">struct </span>VertexState {
+    buffer_sizes: [<span class="prelude-ty">Option</span>&lt;BufferAddress&gt;; hal::MAX_VERTEX_BUFFERS],
+    limits: VertexLimits,
+}
+
+<span class="kw">impl </span>VertexState {
+    <span class="kw">fn </span>update_limits(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline_steps: <span class="kw-2">&amp;</span>[VertexStep]) {
+        <span class="self">self</span>.limits = VertexLimits::new(<span class="self">self</span>.buffer_sizes.iter().copied(), pipeline_steps);
     }
 }
 
@@ -3861,8 +3905,12 @@
             }
 
             <span class="comment">// Determine how many vertex buffers have already been bound
-            </span><span class="kw">let </span>vertex_buffer_count =
-                <span class="self">self</span>.vertex.inputs.iter().take_while(|v| v.bound).count() <span class="kw">as </span>u32;
+            </span><span class="kw">let </span>vertex_buffer_count = <span class="self">self
+                </span>.vertex
+                .buffer_sizes
+                .iter()
+                .take_while(|v| v.is_some())
+                .count() <span class="kw">as </span>u32;
             <span class="comment">// Compare with the needed quantity
             </span><span class="kw">if </span>vertex_buffer_count &lt; pipeline.vertex_steps.len() <span class="kw">as </span>u32 {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::MissingVertexBuffer {
@@ -3901,7 +3949,7 @@
         <span class="self">self</span>.binder.reset();
         <span class="self">self</span>.pipeline = <span class="prelude-val">None</span>;
         <span class="self">self</span>.index.reset();
-        <span class="self">self</span>.vertex.reset();
+        <span class="self">self</span>.vertex = Default::default();
     }
 }
 
@@ -5484,23 +5532,8 @@
         }
     }
 
-    <span class="comment">// Initialize each `vertex.inputs[i].step` from
-    // `pipeline.vertex_steps[i]`.  Enlarge `vertex.inputs`
-    // as necessary to accommodate all slots in the
-    // pipeline. If `vertex.inputs` is longer, fill the
-    // extra entries with default `VertexStep`s.
-    </span><span class="kw">while </span>state.vertex.inputs.len() &lt; pipeline.vertex_steps.len() {
-        state.vertex.inputs.push(VertexBufferState::EMPTY);
-    }
-
-    <span class="comment">// This is worse as a `zip`, but it's close.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>steps = pipeline.vertex_steps.iter();
-    <span class="kw">for </span>input <span class="kw">in </span>state.vertex.inputs.iter_mut() {
-        input.step = steps.next().cloned().unwrap_or_default();
-    }
-
     <span class="comment">// Update vertex buffer limits.
-    </span>state.vertex.update_limits();
+    </span>state.vertex.update_limits(<span class="kw-2">&amp;</span>pipeline.vertex_steps);
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -5583,24 +5616,18 @@
     buffer.check_usage(BufferUsages::VERTEX)<span class="question-mark">?</span>;
     <span class="kw">let </span>buf_raw = buffer.try_raw(state.snatch_guard)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>empty_slots = (<span class="number">1 </span>+ slot <span class="kw">as </span>usize).saturating_sub(state.vertex.inputs.len());
-    state
-        .vertex
-        .inputs
-        .extend(iter::repeat(VertexBufferState::EMPTY).take(empty_slots));
-    <span class="kw">let </span>vertex_state = <span class="kw-2">&amp;mut </span>state.vertex.inputs[slot <span class="kw">as </span>usize];
     <span class="comment">//TODO: where are we checking that the offset is in bound?
-    </span>vertex_state.total_size = <span class="kw">match </span>size {
+    </span><span class="kw">let </span>buffer_size = <span class="kw">match </span>size {
         <span class="prelude-val">Some</span>(s) =&gt; s.get(),
         <span class="prelude-val">None </span>=&gt; buffer.size - offset,
     };
-    vertex_state.bound = <span class="bool-val">true</span>;
+    state.vertex.buffer_sizes[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(buffer_size);
 
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..(offset + vertex_state.total_size),
+            offset..(offset + buffer_size),
             MemoryInitKind::NeedsInitializedMemory,
         ));
 
@@ -5612,7 +5639,9 @@
     <span class="kw">unsafe </span>{
         hal::DynCommandEncoder::set_vertex_buffer(state.raw_encoder, slot, bb);
     }
-    state.vertex.update_limits();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(pipeline) = state.pipeline.as_ref() {
+        state.vertex.update_limits(<span class="kw-2">&amp;</span>pipeline.vertex_steps);
+    }
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -5739,24 +5768,14 @@
 
     state.is_ready(<span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>last_vertex = first_vertex <span class="kw">as </span>u64 + vertex_count <span class="kw">as </span>u64;
-    <span class="kw">let </span>vertex_limit = state.vertex.vertex_limit;
-    <span class="kw">if </span>last_vertex &gt; vertex_limit {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::VertexBeyondLimit {
-            last_vertex,
-            vertex_limit,
-            slot: state.vertex.vertex_limit_slot,
-        });
-    }
-    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
-    <span class="kw">let </span>instance_limit = state.vertex.instance_limit;
-    <span class="kw">if </span>last_instance &gt; instance_limit {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
-            last_instance,
-            instance_limit,
-            slot: state.vertex.instance_limit_slot,
-        });
-    }
+    state
+        .vertex
+        .limits
+        .validate_vertex_limit(first_vertex, vertex_count)<span class="question-mark">?</span>;
+    state
+        .vertex
+        .limits
+        .validate_instance_limit(first_instance, instance_count)<span class="question-mark">?</span>;
 
     <span class="kw">unsafe </span>{
         <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; vertex_count &gt; <span class="number">0 </span>{
@@ -5788,15 +5807,10 @@
             index_limit,
         });
     }
-    <span class="kw">let </span>last_instance = first_instance <span class="kw">as </span>u64 + instance_count <span class="kw">as </span>u64;
-    <span class="kw">let </span>instance_limit = state.vertex.instance_limit;
-    <span class="kw">if </span>last_instance &gt; instance_limit {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::InstanceBeyondLimit {
-            last_instance,
-            instance_limit,
-            slot: state.vertex.instance_limit_slot,
-        });
-    }
+    state
+        .vertex
+        .limits
+        .validate_instance_limit(first_instance, instance_count)<span class="question-mark">?</span>;
 
     <span class="kw">unsafe </span>{
         <span class="kw">if </span>instance_count &gt; <span class="number">0 </span>&amp;&amp; index_count &gt; <span class="number">0 </span>{
