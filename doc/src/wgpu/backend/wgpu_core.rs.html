@@ -3607,7 +3607,10 @@
 <a href="#3606" id="3606">3606</a>
 <a href="#3607" id="3607">3607</a>
 <a href="#3608" id="3608">3608</a>
-<a href="#3609" id="3609">3609</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3609" id="3609">3609</a>
+<a href="#3610" id="3610">3610</a>
+<a href="#3611" id="3611">3611</a>
+<a href="#3612" id="3612">3612</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
@@ -5254,14 +5257,17 @@
         <span class="self">self</span>.context.<span class="number">0</span>.device_stop_capture(<span class="self">self</span>.id);
     }
 
-    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, maintain: <span class="kw">crate</span>::Maintain) -&gt; <span class="kw">crate</span>::MaintainResult {
-        <span class="kw">let </span>maintain_inner = maintain.map_index(|i| i.index);
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, poll_type: <span class="kw">crate</span>::PollType) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::PollStatus, <span class="kw">crate</span>::PollError&gt; {
+        <span class="kw">let </span>maintain_inner = poll_type.map_index(|i| i.index);
         <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.device_poll(<span class="self">self</span>.id, maintain_inner) {
-            <span class="prelude-val">Ok</span>(done) =&gt; <span class="kw">match </span>done {
-                <span class="bool-val">true </span>=&gt; wgt::MaintainResult::SubmissionQueueEmpty,
-                <span class="bool-val">false </span>=&gt; wgt::MaintainResult::Ok,
-            },
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.context.handle_error_fatal(err, <span class="string">"Device::poll"</span>),
+            <span class="prelude-val">Ok</span>(status) =&gt; <span class="prelude-val">Ok</span>(status),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(poll_error) = err.to_poll_error() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(poll_error);
+                }
+
+                <span class="self">self</span>.context.handle_error_fatal(err, <span class="string">"Device::poll"</span>)
+            }
         }
     }
 

@@ -181,7 +181,7 @@
 </span><span class="kw">pub struct </span>Fence {
     last_completed: AtomicFenceValue,
     pending: Vec&lt;GLFence&gt;,
-    fence_mode: wgt::GlFenceBehavior,
+    fence_behavior: wgt::GlFenceBehavior,
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::DynFence <span class="kw">for </span>Fence {}
@@ -196,7 +196,7 @@
         <span class="self">Self </span>{
             last_completed: AtomicFenceValue::new(<span class="number">0</span>),
             pending: Vec::new(),
-            fence_mode: options.short_circuit_fences,
+            fence_behavior: options.fence_behavior,
         }
     }
 
@@ -205,7 +205,7 @@
         gl: <span class="kw-2">&amp;</span>glow::Context,
         value: <span class="kw">crate</span>::FenceValue,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.fence_mode.is_auto_finish() {
+        <span class="kw">if </span><span class="self">self</span>.fence_behavior.is_auto_finish() {
             <span class="kw-2">*</span><span class="self">self</span>.last_completed.get_mut() = value;
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
@@ -224,7 +224,7 @@
     <span class="kw">pub fn </span>get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) -&gt; <span class="kw">crate</span>::FenceValue {
         <span class="kw">let </span><span class="kw-2">mut </span>max_value = <span class="self">self</span>.last_completed.load(Ordering::Acquire);
 
-        <span class="kw">if </span><span class="self">self</span>.fence_mode.is_auto_finish() {
+        <span class="kw">if </span><span class="self">self</span>.fence_behavior.is_auto_finish() {
             <span class="kw">return </span>max_value;
         }
 
@@ -249,7 +249,7 @@
     }
 
     <span class="kw">pub fn </span>maintain(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
-        <span class="kw">if </span><span class="self">self</span>.fence_mode.is_auto_finish() {
+        <span class="kw">if </span><span class="self">self</span>.fence_behavior.is_auto_finish() {
             <span class="kw">return</span>;
         }
 
@@ -272,7 +272,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>last_completed = <span class="self">self</span>.last_completed.load(Ordering::Acquire);
 
-        <span class="kw">if </span><span class="self">self</span>.fence_mode.is_auto_finish() {
+        <span class="kw">if </span><span class="self">self</span>.fence_behavior.is_auto_finish() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(last_completed &gt;= wait_value);
         }
 
@@ -321,7 +321,7 @@
     }
 
     <span class="kw">pub fn </span>destroy(<span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
-        <span class="kw">if </span><span class="self">self</span>.fence_mode.is_auto_finish() {
+        <span class="kw">if </span><span class="self">self</span>.fence_behavior.is_auto_finish() {
             <span class="kw">return</span>;
         }
 

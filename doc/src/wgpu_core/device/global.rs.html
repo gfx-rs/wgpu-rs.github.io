@@ -4141,9 +4141,21 @@
                 <span class="comment">// Wait for all work to finish before configuring the surface.
                 </span><span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
                 <span class="kw">let </span>fence = device.fence.read();
-                <span class="kw">match </span>device.maintain(fence, wgt::Maintain::Wait, snatch_guard) {
-                    <span class="prelude-val">Ok</span>((closures, <span class="kw">_</span>)) =&gt; {
-                        user_callbacks = closures;
+
+                <span class="kw">let </span>maintain_result;
+                (user_callbacks, maintain_result) =
+                    device.maintain(fence, wgt::PollType::Wait, snatch_guard);
+
+                <span class="kw">match </span>maintain_result {
+                    <span class="comment">// We're happy
+                    </span><span class="prelude-val">Ok</span>(wgt::PollStatus::QueueEmpty) =&gt; {}
+                    <span class="prelude-val">Ok</span>(wgt::PollStatus::WaitSucceeded) =&gt; {
+                        <span class="comment">// After the wait, the queue should be empty. It can only be non-empty
+                        // if another thread is submitting at the same time.
+                        </span><span class="kw">break </span><span class="lifetime">'error </span>E::GpuWaitTimeout;
+                    }
+                    <span class="prelude-val">Ok</span>(wgt::PollStatus::Poll) =&gt; {
+                        <span class="macro">unreachable!</span>(<span class="string">"Cannot get a Poll result from a Wait action."</span>)
                     }
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         <span class="kw">break </span><span class="lifetime">'error </span>e.into();
@@ -4203,38 +4215,32 @@
     </span><span class="kw">pub fn </span>device_poll(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
-        maintain: wgt::Maintain&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
-        <span class="macro">api_log!</span>(<span class="string">"Device::poll {maintain:?}"</span>);
+        poll_type: wgt::PollType&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::PollStatus, WaitIdleError&gt; {
+        <span class="macro">api_log!</span>(<span class="string">"Device::poll {poll_type:?}"</span>);
 
         <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
-        <span class="kw">let </span>DevicePoll {
-            closures,
-            queue_empty,
-        } = <span class="self">Self</span>::poll_single_device(<span class="kw-2">&amp;</span>device, maintain)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(closures, result) = <span class="self">Self</span>::poll_single_device(<span class="kw-2">&amp;</span>device, poll_type);
 
         closures.fire();
 
-        <span class="prelude-val">Ok</span>(queue_empty)
+        result
     }
 
     <span class="kw">fn </span>poll_single_device(
         device: <span class="kw-2">&amp;</span><span class="kw">crate</span>::device::Device,
-        maintain: wgt::Maintain&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;DevicePoll, WaitIdleError&gt; {
+        poll_type: wgt::PollType&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
+    ) -&gt; (UserClosures, <span class="prelude-ty">Result</span>&lt;wgt::PollStatus, WaitIdleError&gt;) {
         <span class="kw">let </span>snatch_guard = device.snatchable_lock.read();
         <span class="kw">let </span>fence = device.fence.read();
-        <span class="kw">let </span>(closures, queue_empty) = device.maintain(fence, maintain, snatch_guard)<span class="question-mark">?</span>;
+        <span class="kw">let </span>maintain_result = device.maintain(fence, poll_type, snatch_guard);
 
         <span class="comment">// Some deferred destroys are scheduled in maintain so run this right after
         // to avoid holding on to them until the next device poll.
         </span>device.deferred_resource_destruction();
 
-        <span class="prelude-val">Ok</span>(DevicePoll {
-            closures,
-            queue_empty,
-        })
+        maintain_result
     }
 
     <span class="doccomment">/// Poll all devices belonging to the specified backend.
@@ -4246,7 +4252,7 @@
     </span><span class="kw">fn </span>poll_all_devices_of_api(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         force_wait: bool,
-        closures: <span class="kw-2">&amp;mut </span>UserClosures,
+        closure_list: <span class="kw-2">&amp;mut </span>UserClosures,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"poll_device"</span>);
 
@@ -4256,20 +4262,19 @@
             <span class="kw">let </span>device_guard = hub.devices.read();
 
             <span class="kw">for </span>(_id, device) <span class="kw">in </span>device_guard.iter() {
-                <span class="kw">let </span>maintain = <span class="kw">if </span>force_wait {
-                    wgt::Maintain::Wait
+                <span class="kw">let </span>poll_type = <span class="kw">if </span>force_wait {
+                    wgt::PollType::Wait
                 } <span class="kw">else </span>{
-                    wgt::Maintain::Poll
+                    wgt::PollType::Poll
                 };
 
-                <span class="kw">let </span>DevicePoll {
-                    closures: cbs,
-                    queue_empty,
-                } = <span class="self">Self</span>::poll_single_device(device, maintain)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(closures, result) = <span class="self">Self</span>::poll_single_device(device, poll_type);
 
-                all_queue_empty &amp;= queue_empty;
+                <span class="kw">let </span>is_queue_empty = <span class="macro">matches!</span>(result, <span class="prelude-val">Ok</span>(wgt::PollStatus::QueueEmpty));
 
-                closures.extend(cbs);
+                all_queue_empty &amp;= is_queue_empty;
+
+                closure_list.extend(closures);
             }
         }
 
@@ -4536,10 +4541,5 @@
             </span>buffer_id,
         )
     }
-}
-
-<span class="kw">struct </span>DevicePoll {
-    closures: UserClosures,
-    queue_empty: bool,
 }
 </code></pre></div></section></main></body></html>

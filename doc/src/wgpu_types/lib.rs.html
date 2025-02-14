@@ -7362,7 +7362,25 @@
 <a href="#7361" id="7361">7361</a>
 <a href="#7362" id="7362">7362</a>
 <a href="#7363" id="7363">7363</a>
-<a href="#7364" id="7364">7364</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7364" id="7364">7364</a>
+<a href="#7365" id="7365">7365</a>
+<a href="#7366" id="7366">7366</a>
+<a href="#7367" id="7367">7367</a>
+<a href="#7368" id="7368">7368</a>
+<a href="#7369" id="7369">7369</a>
+<a href="#7370" id="7370">7370</a>
+<a href="#7371" id="7371">7371</a>
+<a href="#7372" id="7372">7372</a>
+<a href="#7373" id="7373">7373</a>
+<a href="#7374" id="7374">7374</a>
+<a href="#7375" id="7375">7375</a>
+<a href="#7376" id="7376">7376</a>
+<a href="#7377" id="7377">7377</a>
+<a href="#7378" id="7378">7378</a>
+<a href="#7379" id="7379">7379</a>
+<a href="#7380" id="7380">7380</a>
+<a href="#7381" id="7381">7381</a>
+<a href="#7382" id="7382">7382</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -11350,7 +11368,7 @@
 
 <span class="doccomment">/// Passed to `Device::poll` to control how and if it should block.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub enum </span>Maintain&lt;T&gt; {
+</span><span class="kw">pub enum </span>PollType&lt;T&gt; {
     <span class="doccomment">/// On wgpu-core based backends, block until the given submission has
     /// completed execution, and any callbacks have been invoked.
     ///
@@ -11363,7 +11381,7 @@
     </span>Poll,
 }
 
-<span class="kw">impl</span>&lt;T&gt; Maintain&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; PollType&lt;T&gt; {
     <span class="doccomment">/// Construct a [`Self::Wait`] variant
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>wait() -&gt; <span class="self">Self </span>{
@@ -11382,7 +11400,7 @@
         </span><span class="self">Self</span>::WaitForSubmissionIndex(submission_index)
     }
 
-    <span class="doccomment">/// This maintain represents a wait of some kind.
+    <span class="doccomment">/// This `PollType` represents a wait of some kind.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>is_wait(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
@@ -11393,39 +11411,57 @@
 
     <span class="doccomment">/// Map on the wait index type.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>map_index&lt;U, F&gt;(<span class="self">self</span>, func: F) -&gt; Maintain&lt;U&gt;
+    </span><span class="kw">pub fn </span>map_index&lt;U, F&gt;(<span class="self">self</span>, func: F) -&gt; PollType&lt;U&gt;
     <span class="kw">where
         </span>F: FnOnce(T) -&gt; U,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::WaitForSubmissionIndex(i) =&gt; Maintain::WaitForSubmissionIndex(func(i)),
-            <span class="self">Self</span>::Wait =&gt; Maintain::Wait,
-            <span class="self">Self</span>::Poll =&gt; Maintain::Poll,
+            <span class="self">Self</span>::WaitForSubmissionIndex(i) =&gt; PollType::WaitForSubmissionIndex(func(i)),
+            <span class="self">Self</span>::Wait =&gt; PollType::Wait,
+            <span class="self">Self</span>::Poll =&gt; PollType::Poll,
         }
     }
 }
 
-<span class="doccomment">/// Result of a maintain operation.
-</span><span class="kw">pub enum </span>MaintainResult {
-    <span class="doccomment">/// There are no active submissions in flight as of the beginning of the poll call.
-    /// Other submissions may have been queued on other threads at the same time.
-    ///
-    /// This implies that the given poll is complete.
-    </span>SubmissionQueueEmpty,
-    <span class="doccomment">/// More information coming soon &lt;https://github.com/gfx-rs/wgpu/pull/5012&gt;
-    </span><span class="prelude-val">Ok</span>,
+<span class="doccomment">/// Error states after a device poll
+</span><span class="attr">#[derive(Debug)]
+#[cfg_attr(feature = <span class="string">"std"</span>, derive(thiserror::Error))]
+</span><span class="kw">pub enum </span>PollError {
+    <span class="doccomment">/// The requested Wait timed out before the submission was completed.
+    </span><span class="attr">#[cfg_attr(
+        feature = <span class="string">"std"</span>,
+        error(<span class="string">"The requested Wait timed out before the submission was completed."</span>)
+    )]
+    </span>Timeout,
 }
 
-<span class="kw">impl </span>MaintainResult {
-    <span class="doccomment">/// Returns true if the result is [`Self::SubmissionQueueEmpty`].
+<span class="doccomment">/// Status of device poll operation.
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>PollStatus {
+    <span class="doccomment">/// There are no active submissions in flight as of the beginning of the poll call.
+    /// Other submissions may have been queued on other threads during the call.
+    ///
+    /// This implies that the given Wait was satisfied before the timeout.
+    </span>QueueEmpty,
+
+    <span class="doccomment">/// The requested Wait was satisfied before the timeout.
+    </span>WaitSucceeded,
+
+    <span class="doccomment">/// This was a poll.
+    </span>Poll,
+}
+
+<span class="kw">impl </span>PollStatus {
+    <span class="doccomment">/// Returns true if the result is [`Self::QueueEmpty`]`.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>is_queue_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::SubmissionQueueEmpty)
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::QueueEmpty)
     }
 
-    <span class="doccomment">/// Panics if the [`MaintainResult`] is not Ok.
-    </span><span class="kw">pub fn </span>panic_on_timeout(<span class="self">self</span>) {
-        <span class="kw">let _ </span>= <span class="self">self</span>;
+    <span class="doccomment">/// Returns true if the result is either [`Self::WaitSucceeded`] or [`Self::QueueEmpty`].
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>wait_finished(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::WaitSucceeded | <span class="self">Self</span>::QueueEmpty)
     }
 }
 

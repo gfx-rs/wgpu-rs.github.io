@@ -3765,7 +3765,64 @@
 <a href="#3764" id="3764">3764</a>
 <a href="#3765" id="3765">3765</a>
 <a href="#3766" id="3766">3766</a>
-<a href="#3767" id="3767">3767</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#3767" id="3767">3767</a>
+<a href="#3768" id="3768">3768</a>
+<a href="#3769" id="3769">3769</a>
+<a href="#3770" id="3770">3770</a>
+<a href="#3771" id="3771">3771</a>
+<a href="#3772" id="3772">3772</a>
+<a href="#3773" id="3773">3773</a>
+<a href="#3774" id="3774">3774</a>
+<a href="#3775" id="3775">3775</a>
+<a href="#3776" id="3776">3776</a>
+<a href="#3777" id="3777">3777</a>
+<a href="#3778" id="3778">3778</a>
+<a href="#3779" id="3779">3779</a>
+<a href="#3780" id="3780">3780</a>
+<a href="#3781" id="3781">3781</a>
+<a href="#3782" id="3782">3782</a>
+<a href="#3783" id="3783">3783</a>
+<a href="#3784" id="3784">3784</a>
+<a href="#3785" id="3785">3785</a>
+<a href="#3786" id="3786">3786</a>
+<a href="#3787" id="3787">3787</a>
+<a href="#3788" id="3788">3788</a>
+<a href="#3789" id="3789">3789</a>
+<a href="#3790" id="3790">3790</a>
+<a href="#3791" id="3791">3791</a>
+<a href="#3792" id="3792">3792</a>
+<a href="#3793" id="3793">3793</a>
+<a href="#3794" id="3794">3794</a>
+<a href="#3795" id="3795">3795</a>
+<a href="#3796" id="3796">3796</a>
+<a href="#3797" id="3797">3797</a>
+<a href="#3798" id="3798">3798</a>
+<a href="#3799" id="3799">3799</a>
+<a href="#3800" id="3800">3800</a>
+<a href="#3801" id="3801">3801</a>
+<a href="#3802" id="3802">3802</a>
+<a href="#3803" id="3803">3803</a>
+<a href="#3804" id="3804">3804</a>
+<a href="#3805" id="3805">3805</a>
+<a href="#3806" id="3806">3806</a>
+<a href="#3807" id="3807">3807</a>
+<a href="#3808" id="3808">3808</a>
+<a href="#3809" id="3809">3809</a>
+<a href="#3810" id="3810">3810</a>
+<a href="#3811" id="3811">3811</a>
+<a href="#3812" id="3812">3812</a>
+<a href="#3813" id="3813">3813</a>
+<a href="#3814" id="3814">3814</a>
+<a href="#3815" id="3815">3815</a>
+<a href="#3816" id="3816">3816</a>
+<a href="#3817" id="3817">3817</a>
+<a href="#3818" id="3818">3818</a>
+<a href="#3819" id="3819">3819</a>
+<a href="#3820" id="3820">3820</a>
+<a href="#3821" id="3821">3821</a>
+<a href="#3822" id="3822">3822</a>
+<a href="#3823" id="3823">3823</a>
+<a href="#3824" id="3824">3824</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
@@ -4146,74 +4203,134 @@
         <span class="macro">assert!</span>(<span class="self">self</span>.queue.set(Arc::downgrade(queue)).is_ok());
     }
 
-    <span class="doccomment">/// Check this device for completed commands.
+    <span class="doccomment">/// Check the current status of the GPU and process any submissions that have
+    /// finished.
     ///
-    /// The `maintain` argument tells how the maintenance function should behave, either
-    /// blocking or just polling the current state of the gpu.
+    /// The `poll_type` argument tells if this function should wait for a particular
+    /// submission index to complete, or if it should just poll the current status.
     ///
-    /// Return a pair `(closures, queue_empty)`, where:
+    /// This will process _all_ completed submissions, even if the caller only asked
+    /// us to poll to a given submission index.
     ///
-    /// - `closures` is a list of actions to take: mapping buffers, notifying the user
+    /// Return a pair `(closures, result)`, where:
     ///
-    /// - `queue_empty` is a boolean indicating whether there are more queue
-    ///   submissions still in flight. (We have to take the locks needed to
-    ///   produce this information for other reasons, so we might as well just
-    ///   return it to our callers.)
+    /// - `closures` is a list of callbacks that need to be invoked informing the user
+    ///   about various things occurring. These happen and should be handled even if
+    ///   this function returns an error, hence they are outside of the result.
+    ///
+    /// - `results` is a boolean indicating the result of the wait operation, including
+    ///   if there was a timeout or a validation error.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>maintain&lt;<span class="lifetime">'this</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="self">self</span>,
         fence: <span class="kw">crate</span>::lock::RwLockReadGuard&lt;ManuallyDrop&lt;Box&lt;<span class="kw">dyn </span>hal::DynFence&gt;&gt;&gt;,
-        maintain: wgt::Maintain&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
+        poll_type: wgt::PollType&lt;<span class="kw">crate</span>::SubmissionIndex&gt;,
         snatch_guard: SnatchGuard,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(UserClosures, bool), WaitIdleError&gt; {
+    ) -&gt; (UserClosures, <span class="prelude-ty">Result</span>&lt;wgt::PollStatus, WaitIdleError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">"Device::maintain"</span>);
 
-        <span class="comment">// Determine which submission index `maintain` represents.
-        </span><span class="kw">let </span>submission_index = <span class="kw">match </span>maintain {
-            wgt::Maintain::WaitForSubmissionIndex(submission_index) =&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>user_closures = UserClosures::default();
+
+        <span class="comment">// If a wait was requested, determine which submission index to wait for.
+        </span><span class="kw">let </span>wait_submission_index = <span class="kw">match </span>poll_type {
+            wgt::PollType::WaitForSubmissionIndex(submission_index) =&gt; {
                 <span class="kw">let </span>last_successful_submission_index = <span class="self">self
                     </span>.last_successful_submission_index
                     .load(Ordering::Acquire);
 
                 <span class="kw">if </span>submission_index &gt; last_successful_submission_index {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
+                    <span class="kw">let </span>result = <span class="prelude-val">Err</span>(WaitIdleError::WrongSubmissionIndex(
                         submission_index,
                         last_successful_submission_index,
                     ));
+
+                    <span class="kw">return </span>(user_closures, result);
                 }
 
-                submission_index
+                <span class="prelude-val">Some</span>(submission_index)
             }
-            wgt::Maintain::Wait =&gt; <span class="self">self
-                </span>.last_successful_submission_index
-                .load(Ordering::Acquire),
-            wgt::Maintain::Poll =&gt; <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) }
-                .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>,
+            wgt::PollType::Wait =&gt; <span class="prelude-val">Some</span>(
+                <span class="self">self</span>.last_successful_submission_index
+                    .load(Ordering::Acquire),
+            ),
+            wgt::PollType::Poll =&gt; <span class="prelude-val">None</span>,
         };
 
-        <span class="comment">// If necessary, wait for that submission to complete.
-        </span><span class="kw">if </span>maintain.is_wait() {
-            <span class="macro">log::trace!</span>(<span class="string">"Device::maintain: waiting for submission index {submission_index}"</span>);
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.raw()
-                    .wait(fence.as_ref(), submission_index, CLEANUP_WAIT_MS)
-            }
-            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
-        }
+        <span class="comment">// Wait for the submission index if requested.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(target_submission_index) = wait_submission_index {
+            <span class="macro">log::trace!</span>(<span class="string">"Device::maintain: waiting for submission index {target_submission_index}"</span>);
 
-        <span class="kw">let </span>(submission_closures, mapping_closures, queue_empty) =
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.get_queue() {
-                queue.maintain(submission_index, <span class="kw-2">&amp;</span>snatch_guard)
-            } <span class="kw">else </span>{
-                (SmallVec::new(), Vec::new(), <span class="bool-val">true</span>)
+            <span class="kw">let </span>wait_result = <span class="kw">unsafe </span>{
+                <span class="self">self</span>.raw()
+                    .wait(fence.as_ref(), target_submission_index, CLEANUP_WAIT_MS)
             };
 
+            <span class="comment">// This error match is only about `DeviceErrors`. At this stage we do not care if
+            // the wait succeeded or not, and the `Ok(bool)`` variant is ignored.
+            </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = wait_result {
+                <span class="kw">let </span>hal_error: WaitIdleError = <span class="self">self</span>.handle_hal_error(e).into();
+                <span class="kw">return </span>(user_closures, <span class="prelude-val">Err</span>(hal_error));
+            }
+        }
+
+        <span class="comment">// Get the currently finished submission index. This may be higher than the requested
+        // wait, or it may be less than the requested wait if the wait failed.
+        </span><span class="kw">let </span>fence_value_result = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().get_fence_value(fence.as_ref()) };
+        <span class="kw">let </span>current_finished_submission = <span class="kw">match </span>fence_value_result {
+            <span class="prelude-val">Ok</span>(fence_value) =&gt; fence_value,
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">let </span>hal_error: WaitIdleError = <span class="self">self</span>.handle_hal_error(e).into();
+                <span class="kw">return </span>(user_closures, <span class="prelude-val">Err</span>(hal_error));
+            }
+        };
+
+        <span class="comment">// Maintain all finished submissions on the queue, updating the relevant user closures and collecting if the queue is empty.
+        //
+        // We don't use the result of the wait here, as we want to progress forward as far as possible
+        // and the wait could have been for submissions that finished long ago.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>queue_empty = <span class="bool-val">false</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.get_queue() {
+            <span class="kw">let </span>queue_result = queue.maintain(current_finished_submission, <span class="kw-2">&amp;</span>snatch_guard);
+            (
+                user_closures.submissions,
+                user_closures.mappings,
+                queue_empty,
+            ) = queue_result
+        };
+
+        <span class="comment">// Based on the queue empty status, and the current finished submission index, determine the result of the poll.
+        </span><span class="kw">let </span>result = <span class="kw">if </span>queue_empty {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(wait_submission_index) = wait_submission_index {
+                <span class="comment">// Assert to ensure that if we received a queue empty status, the fence shows the correct value.
+                // This is defensive, as this should never be hit.
+                </span><span class="macro">assert!</span>(
+                    current_finished_submission &gt;= wait_submission_index,
+                    <span class="string">"If the queue is empty, the current submission index ({}) should be at least the wait submission index ({})"</span>,
+                    current_finished_submission,
+                    wait_submission_index
+                );
+            }
+
+            <span class="prelude-val">Ok</span>(wgt::PollStatus::QueueEmpty)
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wait_submission_index) = wait_submission_index {
+            <span class="comment">// This is theoretically possible to succeed more than checking on the poll result
+            // as submissions could have finished in the time between the timeout resolving,
+            // the thread getting scheduled again, and us checking the fence value.
+            </span><span class="kw">if </span>current_finished_submission &gt;= wait_submission_index {
+                <span class="prelude-val">Ok</span>(wgt::PollStatus::WaitSucceeded)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(WaitIdleError::Timeout)
+            }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(wgt::PollStatus::Poll)
+        };
+
         <span class="comment">// Detect if we have been destroyed and now need to lose the device.
+        //
         // If we are invalid (set at start of destroy) and our queue is empty,
         // and we have a DeviceLostClosure, return the closure to be called by
         // our caller. This will complete the steps for both destroy and for
         // "lose the device".
-        </span><span class="kw">let </span><span class="kw-2">mut </span>device_lost_invocations = SmallVec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>should_release_gpu_resource = <span class="bool-val">false</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>should_release_gpu_resource = <span class="bool-val">false</span>;
         <span class="kw">if </span>!<span class="self">self</span>.is_valid() &amp;&amp; queue_empty {
             <span class="comment">// We can release gpu resources associated with this device (but not
             // while holding the life_tracker lock).
@@ -4222,11 +4339,13 @@
             <span class="comment">// If we have a DeviceLostClosure, build an invocation with the
             // reason DeviceLostReason::Destroyed and no message.
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(device_lost_closure) = <span class="self">self</span>.device_lost_closure.lock().take() {
-                device_lost_invocations.push(DeviceLostInvocation {
-                    closure: device_lost_closure,
-                    reason: DeviceLostReason::Destroyed,
-                    message: String::new(),
-                });
+                user_closures
+                    .device_lost_invocations
+                    .push(DeviceLostInvocation {
+                        closure: device_lost_closure,
+                        reason: DeviceLostReason::Destroyed,
+                        message: String::new(),
+                    });
             }
         }
 
@@ -4238,12 +4357,7 @@
             <span class="self">self</span>.release_gpu_resources();
         }
 
-        <span class="kw">let </span>closures = UserClosures {
-            mappings: mapping_closures,
-            submissions: submission_closures,
-            device_lost_invocations,
-        };
-        <span class="prelude-val">Ok</span>((closures, queue_empty))
+        (user_closures, result)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_buffer(

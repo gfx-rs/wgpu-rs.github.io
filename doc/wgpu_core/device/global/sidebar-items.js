@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DevicePoll"]};
+window.SIDEBAR_ITEMS = {};

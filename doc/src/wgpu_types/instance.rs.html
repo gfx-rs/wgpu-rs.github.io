@@ -755,7 +755,7 @@
     <span class="doccomment">/// Which OpenGL ES 3 minor version to request, if using OpenGL ES.
     </span><span class="kw">pub </span>gles_minor_version: Gles3MinorVersion,
     <span class="doccomment">/// Behavior of OpenGL fences. Affects how `on_completed_work_done` and `device.poll` behave.
-    </span><span class="kw">pub </span>short_circuit_fences: GlFenceBehavior,
+    </span><span class="kw">pub </span>fence_behavior: GlFenceBehavior,
 }
 
 <span class="kw">impl </span>GlBackendOptions {
@@ -767,7 +767,7 @@
         <span class="kw">let </span>gles_minor_version = Gles3MinorVersion::from_env().unwrap_or_default();
         <span class="self">Self </span>{
             gles_minor_version,
-            short_circuit_fences: GlFenceBehavior::Normal,
+            fence_behavior: GlFenceBehavior::Normal,
         }
     }
 
@@ -777,10 +777,10 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>with_env(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>gles_minor_version = <span class="self">self</span>.gles_minor_version.with_env();
-        <span class="kw">let </span>short_circuit_fences = <span class="self">self</span>.short_circuit_fences.with_env();
+        <span class="kw">let </span>short_circuit_fences = <span class="self">self</span>.fence_behavior.with_env();
         <span class="self">Self </span>{
             gles_minor_version,
-            short_circuit_fences,
+            fence_behavior: short_circuit_fences,
         }
     }
 }
@@ -997,7 +997,7 @@
     ///
     /// This solves a very specific issue that arose due to a bug in wgpu-core that made
     /// many WebGL programs work when they "shouldn't" have. If you have code that is trying
-    /// to call `device.poll(wgpu::Maintain::Wait)` on WebGL, you need to enable this option
+    /// to call `device.poll(wgpu::PollType::Wait)` on WebGL, you need to enable this option
     /// for the "Wait" to behave how you would expect.
     ///
     /// Previously all `poll(Wait)` acted like the OpenGL fences were signalled even if they weren't.
