@@ -3082,7 +3082,18 @@
 <a href="#3081" id="3081">3081</a>
 <a href="#3082" id="3082">3082</a>
 <a href="#3083" id="3083">3083</a>
-<a href="#3084" id="3084">3084</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
+<a href="#3084" id="3084">3084</a>
+<a href="#3085" id="3085">3085</a>
+<a href="#3086" id="3086">3086</a>
+<a href="#3087" id="3087">3087</a>
+<a href="#3088" id="3088">3088</a>
+<a href="#3089" id="3089">3089</a>
+<a href="#3090" id="3090">3090</a>
+<a href="#3091" id="3091">3091</a>
+<a href="#3092" id="3092">3092</a>
+<a href="#3093" id="3093">3093</a>
+<a href="#3094" id="3094">3094</a>
+<a href="#3095" id="3095">3095</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::iter;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
@@ -4495,6 +4506,17 @@
         <span class="kw-2">mut </span>expr: Handle&lt;Expression&gt;,
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
+        <span class="comment">// If expr is a Compose expression, eliminate ZeroValue and Splat expressions for
+        // each of its components.
+        </span><span class="kw">if let </span>Expression::Compose { ty, <span class="kw-2">ref </span>components } = <span class="self">self</span>.expressions[expr] {
+            <span class="kw">let </span>components = components
+                .clone()
+                .iter()
+                .map(|component| <span class="self">self</span>.eval_zero_value_and_splat(<span class="kw-2">*</span>component, span))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+            expr = <span class="self">self</span>.register_evaluated_expr(Expression::Compose { ty, components }, span)<span class="question-mark">?</span>;
+        }
+
         <span class="comment">// The result of the splat() for a Splat of a scalar ZeroValue is a
         // vector ZeroValue, so we must call eval_zero_value_impl() after
         // splat() in order to ensure we have no ZeroValues remaining.
