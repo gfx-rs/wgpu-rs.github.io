@@ -3578,7 +3578,36 @@
 <a href="#3577" id="3577">3577</a>
 <a href="#3578" id="3578">3578</a>
 <a href="#3579" id="3579">3579</a>
-<a href="#3580" id="3580">3580</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3580" id="3580">3580</a>
+<a href="#3581" id="3581">3581</a>
+<a href="#3582" id="3582">3582</a>
+<a href="#3583" id="3583">3583</a>
+<a href="#3584" id="3584">3584</a>
+<a href="#3585" id="3585">3585</a>
+<a href="#3586" id="3586">3586</a>
+<a href="#3587" id="3587">3587</a>
+<a href="#3588" id="3588">3588</a>
+<a href="#3589" id="3589">3589</a>
+<a href="#3590" id="3590">3590</a>
+<a href="#3591" id="3591">3591</a>
+<a href="#3592" id="3592">3592</a>
+<a href="#3593" id="3593">3593</a>
+<a href="#3594" id="3594">3594</a>
+<a href="#3595" id="3595">3595</a>
+<a href="#3596" id="3596">3596</a>
+<a href="#3597" id="3597">3597</a>
+<a href="#3598" id="3598">3598</a>
+<a href="#3599" id="3599">3599</a>
+<a href="#3600" id="3600">3600</a>
+<a href="#3601" id="3601">3601</a>
+<a href="#3602" id="3602">3602</a>
+<a href="#3603" id="3603">3603</a>
+<a href="#3604" id="3604">3604</a>
+<a href="#3605" id="3605">3605</a>
+<a href="#3606" id="3606">3606</a>
+<a href="#3607" id="3607">3607</a>
+<a href="#3608" id="3608">3608</a>
+<a href="#3609" id="3609">3609</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
@@ -4574,7 +4603,13 @@
                 stage,
                 defines,
             } =&gt; {
-                <span class="kw">let </span>options = naga::front::glsl::Options { stage, defines };
+                <span class="kw">let </span>options = naga::front::glsl::Options {
+                    stage,
+                    defines: defines
+                        .iter()
+                        .map(|<span class="kw-2">&amp;</span>(key, value)| (String::from(key), String::from(value)))
+                        .collect(),
+                };
                 wgc::pipeline::ShaderModuleSource::Glsl(Borrowed(shader), options)
             }
             <span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
@@ -4841,6 +4876,14 @@
             })
             .collect();
 
+        <span class="kw">let </span>vert_constants = desc
+            .vertex
+            .compilation_options
+            .constants
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>(key, value)| (String::from(key), value))
+            .collect();
+
         <span class="kw">let </span>descriptor = pipe::RenderPipelineDescriptor {
             label: desc.label.map(Borrowed),
             layout: desc.layout.map(|layout| layout.inner.as_core().id),
@@ -4848,7 +4891,7 @@
                 stage: pipe::ProgrammableStageDescriptor {
                     module: desc.vertex.module.inner.as_core().id,
                     entry_point: desc.vertex.entry_point.map(Borrowed),
-                    constants: Borrowed(desc.vertex.compilation_options.constants),
+                    constants: vert_constants,
                     zero_initialize_workgroup_memory: desc
                         .vertex
                         .compilation_options
@@ -4859,16 +4902,24 @@
             primitive: desc.primitive,
             depth_stencil: desc.depth_stencil.clone(),
             multisample: desc.multisample,
-            fragment: desc.fragment.as_ref().map(|frag| pipe::FragmentState {
-                stage: pipe::ProgrammableStageDescriptor {
-                    module: frag.module.inner.as_core().id,
-                    entry_point: frag.entry_point.map(Borrowed),
-                    constants: Borrowed(frag.compilation_options.constants),
-                    zero_initialize_workgroup_memory: frag
-                        .compilation_options
-                        .zero_initialize_workgroup_memory,
-                },
-                targets: Borrowed(frag.targets),
+            fragment: desc.fragment.as_ref().map(|frag| {
+                <span class="kw">let </span>frag_constants = frag
+                    .compilation_options
+                    .constants
+                    .iter()
+                    .map(|<span class="kw-2">&amp;</span>(key, value)| (String::from(key), value))
+                    .collect();
+                pipe::FragmentState {
+                    stage: pipe::ProgrammableStageDescriptor {
+                        module: frag.module.inner.as_core().id,
+                        entry_point: frag.entry_point.map(Borrowed),
+                        constants: frag_constants,
+                        zero_initialize_workgroup_memory: frag
+                            .compilation_options
+                            .zero_initialize_workgroup_memory,
+                    },
+                    targets: Borrowed(frag.targets),
+                }
             }),
             multiview: desc.multiview,
             cache: desc.cache.map(|cache| cache.inner.as_core().id),
@@ -4904,13 +4955,20 @@
     ) -&gt; dispatch::DispatchComputePipeline {
         <span class="kw">use </span>wgc::pipeline <span class="kw">as </span>pipe;
 
+        <span class="kw">let </span>constants = desc
+            .compilation_options
+            .constants
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>(key, value)| (String::from(key), value))
+            .collect();
+
         <span class="kw">let </span>descriptor = pipe::ComputePipelineDescriptor {
             label: desc.label.map(Borrowed),
             layout: desc.layout.map(|pll| pll.inner.as_core().id),
             stage: pipe::ProgrammableStageDescriptor {
                 module: desc.module.inner.as_core().id,
                 entry_point: desc.entry_point.map(Borrowed),
-                constants: Borrowed(desc.compilation_options.constants),
+                constants,
                 zero_initialize_workgroup_memory: desc
                     .compilation_options
                     .zero_initialize_workgroup_memory,

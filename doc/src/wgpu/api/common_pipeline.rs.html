@@ -56,15 +56,7 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a></pre></div><pre class="rust"><code><span class="kw">use </span>hashbrown::HashMap;
-
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+<a href="#58" id="58">58</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="doccomment">/// Advanced options for use when a pipeline is compiled
@@ -77,8 +69,10 @@
     /// the key must be the pipeline constant ID as a decimal ASCII number; if not,
     /// the key must be the constant's identifier name.
     ///
+    /// If the given constant is specified more than once, the last value specified is used.
+    ///
     /// The value may represent any of WGSL's concrete scalar types.
-    </span><span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;String, f64&gt;,
+    </span><span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, f64)],
     <span class="doccomment">/// Whether workgroup scoped memory will be initialized with zero values for this stage.
     ///
     /// This is required by the WebGPU spec, but may have overhead which can be avoided
@@ -88,14 +82,8 @@
 
 <span class="kw">impl </span>Default <span class="kw">for </span>PipelineCompilationOptions&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="comment">// HashMap doesn't have a const constructor, due to the use of RandomState
-        // This does introduce some synchronisation costs, but these should be minor,
-        // and might be cheaper than the alternative of getting new random state
-        </span><span class="kw">static </span>DEFAULT_CONSTANTS: std::sync::OnceLock&lt;HashMap&lt;String, f64&gt;&gt; =
-            std::sync::OnceLock::new();
-        <span class="kw">let </span>constants = DEFAULT_CONSTANTS.get_or_init(Default::default);
         <span class="self">Self </span>{
-            constants,
+            constants: Default::default(),
             zero_initialize_workgroup_memory: <span class="bool-val">true</span>,
         }
     }
