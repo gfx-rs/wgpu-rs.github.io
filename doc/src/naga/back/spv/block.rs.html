@@ -3069,13 +3069,41 @@
 <a href="#3068" id="3068">3068</a>
 <a href="#3069" id="3069">3069</a>
 <a href="#3070" id="3070">3070</a>
-<a href="#3071" id="3071">3071</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
+<a href="#3073" id="3073">3073</a>
+<a href="#3074" id="3074">3074</a>
+<a href="#3075" id="3075">3075</a>
+<a href="#3076" id="3076">3076</a>
+<a href="#3077" id="3077">3077</a>
+<a href="#3078" id="3078">3078</a>
+<a href="#3079" id="3079">3079</a>
+<a href="#3080" id="3080">3080</a>
+<a href="#3081" id="3081">3081</a>
+<a href="#3082" id="3082">3082</a>
+<a href="#3083" id="3083">3083</a>
+<a href="#3084" id="3084">3084</a>
+<a href="#3085" id="3085">3085</a>
+<a href="#3086" id="3086">3086</a>
+<a href="#3087" id="3087">3087</a>
+<a href="#3088" id="3088">3088</a>
+<a href="#3089" id="3089">3089</a>
+<a href="#3090" id="3090">3090</a>
+<a href="#3091" id="3091">3091</a>
+<a href="#3092" id="3092">3092</a>
+<a href="#3093" id="3093">3093</a>
+<a href="#3094" id="3094">3094</a>
+<a href="#3095" id="3095">3095</a>
+<a href="#3096" id="3096">3096</a>
+<a href="#3097" id="3097">3097</a>
+<a href="#3098" id="3098">3098</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
 </span><span class="kw">use super</span>::{
     index::BoundsCheckResult, selection::Selection, Block, BlockContext, Dimension, Error,
-    Instruction, LocalType, LookupType, NumericType, ResultMember, Writer, WriterFlags,
+    Instruction, LocalType, LookupType, NumericType, ResultMember, WrappedFunction, Writer,
+    WriterFlags,
 };
 <span class="kw">use crate</span>::{arena::Handle, proc::index::GuardedIndex, Statement};
 <span class="kw">use </span>spirv::Word;
@@ -3649,201 +3677,227 @@ Implementations for `BlockContext` methods.
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                 <span class="kw">let </span>left_id = <span class="self">self</span>.cached[left];
                 <span class="kw">let </span>right_id = <span class="self">self</span>.cached[right];
+                <span class="kw">let </span>left_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[left].ty);
+                <span class="kw">let </span>right_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[right].ty);
 
-                <span class="kw">let </span>left_ty_inner = <span class="self">self</span>.fun_info[left].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
-                <span class="kw">let </span>right_ty_inner = <span class="self">self</span>.fun_info[right].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(function_id) =
+                    <span class="self">self</span>.writer
+                        .wrapped_functions
+                        .get(<span class="kw-2">&amp;</span>WrappedFunction::BinaryOp {
+                            op,
+                            left_type_id,
+                            right_type_id,
+                        })
+                {
+                    block.body.push(Instruction::function_call(
+                        result_type_id,
+                        id,
+                        <span class="kw-2">*</span>function_id,
+                        <span class="kw-2">&amp;</span>[left_id, right_id],
+                    ));
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>left_ty_inner = <span class="self">self</span>.fun_info[left].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
+                    <span class="kw">let </span>right_ty_inner = <span class="self">self</span>.fun_info[right].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
 
-                <span class="kw">let </span>left_dimension = get_dimension(left_ty_inner);
-                <span class="kw">let </span>right_dimension = get_dimension(right_ty_inner);
+                    <span class="kw">let </span>left_dimension = get_dimension(left_ty_inner);
+                    <span class="kw">let </span>right_dimension = get_dimension(right_ty_inner);
 
-                <span class="kw">let </span><span class="kw-2">mut </span>reverse_operands = <span class="bool-val">false</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>reverse_operands = <span class="bool-val">false</span>;
 
-                <span class="kw">let </span>spirv_op = <span class="kw">match </span>op {
-                    <span class="kw">crate</span>::BinaryOperator::Add =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_ty_inner {
-                        <span class="kw">crate</span>::TypeInner::Scalar(scalar)
-                        | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
-                            <span class="kw">crate</span>::ScalarKind::Float =&gt; spirv::Op::FAdd,
-                            <span class="kw">_ </span>=&gt; spirv::Op::IAdd,
-                        },
-                        <span class="kw">crate</span>::TypeInner::Matrix {
-                            columns,
-                            rows,
-                            scalar,
-                        } =&gt; {
-                            <span class="self">self</span>.write_matrix_matrix_column_op(
-                                block,
-                                id,
-                                result_type_id,
-                                left_id,
-                                right_id,
+                    <span class="kw">let </span>spirv_op = <span class="kw">match </span>op {
+                        <span class="kw">crate</span>::BinaryOperator::Add =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_ty_inner {
+                            <span class="kw">crate</span>::TypeInner::Scalar(scalar)
+                            | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Float =&gt; spirv::Op::FAdd,
+                                <span class="kw">_ </span>=&gt; spirv::Op::IAdd,
+                            },
+                            <span class="kw">crate</span>::TypeInner::Matrix {
                                 columns,
                                 rows,
-                                scalar.width,
-                                spirv::Op::FAdd,
-                            );
+                                scalar,
+                            } =&gt; {
+                                <span class="self">self</span>.write_matrix_matrix_column_op(
+                                    block,
+                                    id,
+                                    result_type_id,
+                                    left_id,
+                                    right_id,
+                                    columns,
+                                    rows,
+                                    scalar.width,
+                                    spirv::Op::FAdd,
+                                );
 
-                            <span class="self">self</span>.cached[expr_handle] = id;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                        }
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Subtract =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_ty_inner {
-                        <span class="kw">crate</span>::TypeInner::Scalar(scalar)
-                        | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
-                            <span class="kw">crate</span>::ScalarKind::Float =&gt; spirv::Op::FSub,
-                            <span class="kw">_ </span>=&gt; spirv::Op::ISub,
+                                <span class="self">self</span>.cached[expr_handle] = id;
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                         },
-                        <span class="kw">crate</span>::TypeInner::Matrix {
-                            columns,
-                            rows,
-                            scalar,
-                        } =&gt; {
-                            <span class="self">self</span>.write_matrix_matrix_column_op(
-                                block,
-                                id,
-                                result_type_id,
-                                left_id,
-                                right_id,
+                        <span class="kw">crate</span>::BinaryOperator::Subtract =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_ty_inner {
+                            <span class="kw">crate</span>::TypeInner::Scalar(scalar)
+                            | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
+                                <span class="kw">crate</span>::ScalarKind::Float =&gt; spirv::Op::FSub,
+                                <span class="kw">_ </span>=&gt; spirv::Op::ISub,
+                            },
+                            <span class="kw">crate</span>::TypeInner::Matrix {
                                 columns,
                                 rows,
-                                scalar.width,
-                                spirv::Op::FSub,
-                            );
+                                scalar,
+                            } =&gt; {
+                                <span class="self">self</span>.write_matrix_matrix_column_op(
+                                    block,
+                                    id,
+                                    result_type_id,
+                                    left_id,
+                                    right_id,
+                                    columns,
+                                    rows,
+                                    scalar.width,
+                                    spirv::Op::FSub,
+                                );
 
-                            <span class="self">self</span>.cached[expr_handle] = id;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                        }
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Multiply =&gt; <span class="kw">match </span>(left_dimension, right_dimension) {
-                        (Dimension::Scalar, Dimension::Vector) =&gt; {
-                            <span class="self">self</span>.write_vector_scalar_mult(
-                                block,
-                                id,
-                                result_type_id,
-                                right_id,
-                                left_id,
-                                right_ty_inner,
-                            );
+                                <span class="self">self</span>.cached[expr_handle] = id;
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::Multiply =&gt; {
+                            <span class="kw">match </span>(left_dimension, right_dimension) {
+                                (Dimension::Scalar, Dimension::Vector) =&gt; {
+                                    <span class="self">self</span>.write_vector_scalar_mult(
+                                        block,
+                                        id,
+                                        result_type_id,
+                                        right_id,
+                                        left_id,
+                                        right_ty_inner,
+                                    );
 
-                            <span class="self">self</span>.cached[expr_handle] = id;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                        }
-                        (Dimension::Vector, Dimension::Scalar) =&gt; {
-                            <span class="self">self</span>.write_vector_scalar_mult(
-                                block,
-                                id,
-                                result_type_id,
-                                left_id,
-                                right_id,
-                                left_ty_inner,
-                            );
+                                    <span class="self">self</span>.cached[expr_handle] = id;
+                                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                                }
+                                (Dimension::Vector, Dimension::Scalar) =&gt; {
+                                    <span class="self">self</span>.write_vector_scalar_mult(
+                                        block,
+                                        id,
+                                        result_type_id,
+                                        left_id,
+                                        right_id,
+                                        left_ty_inner,
+                                    );
 
-                            <span class="self">self</span>.cached[expr_handle] = id;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                                    <span class="self">self</span>.cached[expr_handle] = id;
+                                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                                }
+                                (Dimension::Vector, Dimension::Matrix) =&gt; {
+                                    spirv::Op::VectorTimesMatrix
+                                }
+                                (Dimension::Matrix, Dimension::Scalar) =&gt; {
+                                    spirv::Op::MatrixTimesScalar
+                                }
+                                (Dimension::Scalar, Dimension::Matrix) =&gt; {
+                                    reverse_operands = <span class="bool-val">true</span>;
+                                    spirv::Op::MatrixTimesScalar
+                                }
+                                (Dimension::Matrix, Dimension::Vector) =&gt; {
+                                    spirv::Op::MatrixTimesVector
+                                }
+                                (Dimension::Matrix, Dimension::Matrix) =&gt; {
+                                    spirv::Op::MatrixTimesMatrix
+                                }
+                                (Dimension::Vector, Dimension::Vector)
+                                | (Dimension::Scalar, Dimension::Scalar)
+                                    <span class="kw">if </span>left_ty_inner.scalar_kind()
+                                        == <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt;
+                                {
+                                    spirv::Op::FMul
+                                }
+                                (Dimension::Vector, Dimension::Vector)
+                                | (Dimension::Scalar, Dimension::Scalar) =&gt; spirv::Op::IMul,
+                            }
                         }
-                        (Dimension::Vector, Dimension::Matrix) =&gt; spirv::Op::VectorTimesMatrix,
-                        (Dimension::Matrix, Dimension::Scalar) =&gt; spirv::Op::MatrixTimesScalar,
-                        (Dimension::Scalar, Dimension::Matrix) =&gt; {
-                            reverse_operands = <span class="bool-val">true</span>;
-                            spirv::Op::MatrixTimesScalar
-                        }
-                        (Dimension::Matrix, Dimension::Vector) =&gt; spirv::Op::MatrixTimesVector,
-                        (Dimension::Matrix, Dimension::Matrix) =&gt; spirv::Op::MatrixTimesMatrix,
-                        (Dimension::Vector, Dimension::Vector)
-                        | (Dimension::Scalar, Dimension::Scalar)
-                            <span class="kw">if </span>left_ty_inner.scalar_kind() == <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt;
-                        {
-                            spirv::Op::FMul
-                        }
-                        (Dimension::Vector, Dimension::Vector)
-                        | (Dimension::Scalar, Dimension::Scalar) =&gt; spirv::Op::IMul,
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Divide =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SDiv,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UDiv,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FDiv,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Modulo =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="comment">// TODO: handle undefined behavior
-                        // if right == 0 return 0
-                        // if left == min(type_of(left)) &amp;&amp; right == -1 return 0
-                        </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SRem,
-                        <span class="comment">// TODO: handle undefined behavior
-                        // if right == 0 return 0
-                        </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UMod,
-                        <span class="comment">// TODO: handle undefined behavior
-                        // if right == 0 return ? see https://github.com/gpuweb/gpuweb/issues/2798
-                        </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FRem,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Equal =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
-                            spirv::Op::IEqual
-                        }
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalEqual,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::NotEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
-                            spirv::Op::INotEqual
-                        }
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdNotEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalNotEqual,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Less =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SLessThan,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ULessThan,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdLessThan,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::LessEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SLessThanEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ULessThanEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdLessThanEqual,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::Greater =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SGreaterThan,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UGreaterThan,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdGreaterThan,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::GreaterEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SGreaterThanEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UGreaterThanEqual,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdGreaterThanEqual,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::And =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalAnd,
-                        <span class="kw">_ </span>=&gt; spirv::Op::BitwiseAnd,
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::ExclusiveOr =&gt; spirv::Op::BitwiseXor,
-                    <span class="kw">crate</span>::BinaryOperator::InclusiveOr =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalOr,
-                        <span class="kw">_ </span>=&gt; spirv::Op::BitwiseOr,
-                    },
-                    <span class="kw">crate</span>::BinaryOperator::LogicalAnd =&gt; spirv::Op::LogicalAnd,
-                    <span class="kw">crate</span>::BinaryOperator::LogicalOr =&gt; spirv::Op::LogicalOr,
-                    <span class="kw">crate</span>::BinaryOperator::ShiftLeft =&gt; spirv::Op::ShiftLeftLogical,
-                    <span class="kw">crate</span>::BinaryOperator::ShiftRight =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::ShiftRightArithmetic,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ShiftRightLogical,
-                        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
-                    },
-                };
+                        <span class="kw">crate</span>::BinaryOperator::Divide =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SDiv,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UDiv,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FDiv,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::Modulo =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="comment">// TODO: handle undefined behavior
+                            // if right == 0 return ? see https://github.com/gpuweb/gpuweb/issues/2798
+                            </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FRem,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
+                                <span class="macro">unreachable!</span>(<span class="string">"Should have been handled by wrapped function"</span>)
+                            }
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::Equal =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
+                                spirv::Op::IEqual
+                            }
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalEqual,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::NotEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint) =&gt; {
+                                spirv::Op::INotEqual
+                            }
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdNotEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalNotEqual,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::Less =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SLessThan,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ULessThan,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdLessThan,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::LessEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SLessThanEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ULessThanEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdLessThanEqual,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::Greater =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SGreaterThan,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UGreaterThan,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdGreaterThan,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::GreaterEqual =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::SGreaterThanEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::UGreaterThanEqual,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Float) =&gt; spirv::Op::FOrdGreaterThanEqual,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::And =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalAnd,
+                            <span class="kw">_ </span>=&gt; spirv::Op::BitwiseAnd,
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::ExclusiveOr =&gt; spirv::Op::BitwiseXor,
+                        <span class="kw">crate</span>::BinaryOperator::InclusiveOr =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Bool) =&gt; spirv::Op::LogicalOr,
+                            <span class="kw">_ </span>=&gt; spirv::Op::BitwiseOr,
+                        },
+                        <span class="kw">crate</span>::BinaryOperator::LogicalAnd =&gt; spirv::Op::LogicalAnd,
+                        <span class="kw">crate</span>::BinaryOperator::LogicalOr =&gt; spirv::Op::LogicalOr,
+                        <span class="kw">crate</span>::BinaryOperator::ShiftLeft =&gt; spirv::Op::ShiftLeftLogical,
+                        <span class="kw">crate</span>::BinaryOperator::ShiftRight =&gt; <span class="kw">match </span>left_ty_inner.scalar_kind() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Sint) =&gt; spirv::Op::ShiftRightArithmetic,
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; spirv::Op::ShiftRightLogical,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
+                        },
+                    };
 
-                block.body.push(Instruction::binary(
-                    spirv_op,
-                    result_type_id,
-                    id,
-                    <span class="kw">if </span>reverse_operands { right_id } <span class="kw">else </span>{ left_id },
-                    <span class="kw">if </span>reverse_operands { left_id } <span class="kw">else </span>{ right_id },
-                ));
+                    block.body.push(Instruction::binary(
+                        spirv_op,
+                        result_type_id,
+                        id,
+                        <span class="kw">if </span>reverse_operands { right_id } <span class="kw">else </span>{ left_id },
+                        <span class="kw">if </span>reverse_operands { left_id } <span class="kw">else </span>{ right_id },
+                    ));
+                }
                 id
             }
             <span class="kw">crate</span>::Expression::Math {

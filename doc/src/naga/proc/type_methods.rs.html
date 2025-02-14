@@ -260,7 +260,29 @@
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
 //!
 //! [`TypeInner`]: crate::TypeInner
 //! [`Scalar`]: crate::Scalar
@@ -520,6 +542,28 @@
             <span class="self">Self</span>::Struct { <span class="kw-2">ref </span>members, .. } =&gt; TypeResolution::Handle(members[index].ty),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         })
+    }
+
+    <span class="doccomment">/// If the type is a Vector or a Scalar return a tuple of the vector size (or None
+    /// for Scalars), and the scalar kind. Returns (None, None) for other types.
+    </span><span class="kw">pub const fn </span>vector_size_and_scalar(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::VectorSize&gt;, <span class="kw">crate</span>::Scalar)&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; <span class="prelude-val">Some</span>((<span class="prelude-val">None</span>, scalar)),
+            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; <span class="prelude-val">Some</span>((<span class="prelude-val">Some</span>(size), scalar)),
+            <span class="kw">crate</span>::TypeInner::Matrix { .. }
+            | <span class="kw">crate</span>::TypeInner::Atomic(<span class="kw">_</span>)
+            | <span class="kw">crate</span>::TypeInner::Pointer { .. }
+            | <span class="kw">crate</span>::TypeInner::ValuePointer { .. }
+            | <span class="kw">crate</span>::TypeInner::Array { .. }
+            | <span class="kw">crate</span>::TypeInner::Struct { .. }
+            | <span class="kw">crate</span>::TypeInner::Image { .. }
+            | <span class="kw">crate</span>::TypeInner::Sampler { .. }
+            | <span class="kw">crate</span>::TypeInner::AccelerationStructure
+            | <span class="kw">crate</span>::TypeInner::RayQuery
+            | <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 </code></pre></div></section></main></body></html>
