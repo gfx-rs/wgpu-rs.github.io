@@ -2742,7 +2742,15 @@
 <a href="#2741" id="2741">2741</a>
 <a href="#2742" id="2742">2742</a>
 <a href="#2743" id="2743">2743</a>
-<a href="#2744" id="2744">2744</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
+<a href="#2744" id="2744">2744</a>
+<a href="#2745" id="2745">2745</a>
+<a href="#2746" id="2746">2746</a>
+<a href="#2747" id="2747">2747</a>
+<a href="#2748" id="2748">2748</a>
+<a href="#2749" id="2749">2749</a>
+<a href="#2750" id="2750">2750</a>
+<a href="#2751" id="2751">2751</a>
+<a href="#2752" id="2752">2752</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
@@ -4355,11 +4363,19 @@
             <span class="kw">super</span>::AccelerationStructure,
         &gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::BindGroup, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">let </span>contains_binding_arrays = !desc.layout.binding_arrays.is_empty();
+
+        <span class="kw">let </span>desc_set_layout_flags = <span class="kw">if </span>contains_binding_arrays {
+            gpu_descriptor::DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND
+        } <span class="kw">else </span>{
+            gpu_descriptor::DescriptorSetLayoutCreateFlags::empty()
+        };
+
         <span class="kw">let </span><span class="kw-2">mut </span>vk_sets = <span class="kw">unsafe </span>{
             <span class="self">self</span>.desc_allocator.lock().allocate(
                 <span class="kw-2">&amp;*</span><span class="self">self</span>.shared,
                 <span class="kw-2">&amp;</span>desc.layout.raw,
-                gpu_descriptor::DescriptorSetLayoutCreateFlags::empty(),
+                desc_set_layout_flags,
                 <span class="kw-2">&amp;</span>desc.layout.desc_count,
                 <span class="number">1</span>,
             )<span class="question-mark">?

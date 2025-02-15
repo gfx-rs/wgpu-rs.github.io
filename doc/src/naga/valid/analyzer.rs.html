@@ -1482,7 +1482,8 @@
 <a href="#1481" id="1481">1481</a>
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
 //! - control flow uniformity
@@ -2015,7 +2016,8 @@
                         ..
                     } =&gt; {
                         <span class="comment">// these are nasty aliases, but these idents are too long and break rustfmt
-                        </span><span class="kw">let </span>ub_st = <span class="kw">super</span>::Capabilities::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING;
+                        </span><span class="kw">let </span>sto = <span class="kw">super</span>::Capabilities::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING;
+                        <span class="kw">let </span>uni = <span class="kw">super</span>::Capabilities::UNIFORM_BUFFER_ARRAY_NON_UNIFORM_INDEXING;
                         <span class="kw">let </span>st_sb = <span class="kw">super</span>::Capabilities::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING;
                         <span class="kw">let </span>sampler = <span class="kw">super</span>::Capabilities::SAMPLER_NON_UNIFORM_INDEXING;
 
@@ -2026,7 +2028,7 @@
                         needed_caps |= <span class="kw">match </span><span class="kw-2">*</span>array_element_ty {
                             <span class="comment">// If we're an image, use the appropriate limit.
                             </span><span class="kw">crate</span>::TypeInner::Image { class, .. } =&gt; <span class="kw">match </span>class {
-                                <span class="kw">crate</span>::ImageClass::Storage { .. } =&gt; ub_st,
+                                <span class="kw">crate</span>::ImageClass::Storage { .. } =&gt; sto,
                                 <span class="kw">_ </span>=&gt; st_sb,
                             },
                             <span class="kw">crate</span>::TypeInner::Sampler { .. } =&gt; sampler,
@@ -2035,7 +2037,7 @@
                                 <span class="kw">if let </span>E::GlobalVariable(global_handle) = expression_arena[base] {
                                     <span class="kw">let </span>global = <span class="kw-2">&amp;</span>resolve_context.global_vars[global_handle];
                                     <span class="kw">match </span>global.space {
-                                        <span class="kw">crate</span>::AddressSpace::Uniform =&gt; ub_st,
+                                        <span class="kw">crate</span>::AddressSpace::Uniform =&gt; uni,
                                         <span class="kw">crate</span>::AddressSpace::Storage { .. } =&gt; st_sb,
                                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                                     }

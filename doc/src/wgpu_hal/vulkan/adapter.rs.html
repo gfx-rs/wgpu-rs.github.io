@@ -2515,17 +2515,7 @@
 <a href="#2514" id="2514">2514</a>
 <a href="#2515" id="2515">2515</a>
 <a href="#2516" id="2516">2516</a>
-<a href="#2517" id="2517">2517</a>
-<a href="#2518" id="2518">2518</a>
-<a href="#2519" id="2519">2519</a>
-<a href="#2520" id="2520">2520</a>
-<a href="#2521" id="2521">2521</a>
-<a href="#2522" id="2522">2522</a>
-<a href="#2523" id="2523">2523</a>
-<a href="#2524" id="2524">2524</a>
-<a href="#2525" id="2525">2525</a>
-<a href="#2526" id="2526">2526</a>
-<a href="#2527" id="2527">2527</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
+<a href="#2517" id="2517">2517</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -2539,7 +2529,8 @@
 <span class="comment">//TODO: const fn?
 </span><span class="kw">fn </span>indexing_features() -&gt; wgt::Features {
     wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
-        | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
+        | wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
+        | wgt::Features::UNIFORM_BUFFER_BINDING_ARRAYS
         | wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY
 }
 
@@ -2744,14 +2735,12 @@
                 | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
                 | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
         );
-        <span class="kw">let </span>needs_uniform_buffer_non_uniform = requested_features.contains(
-            wgt::Features::TEXTURE_BINDING_ARRAY
-                | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-        );
+        <span class="kw">let </span>needs_uniform_buffer_non_uniform =
+            requested_features.contains(wgt::Features::UNIFORM_BUFFER_BINDING_ARRAYS);
         <span class="kw">let </span>needs_storage_image_non_uniform = requested_features.contains(
             wgt::Features::TEXTURE_BINDING_ARRAY
                 | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
-                | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
+                | wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
         );
         <span class="kw">let </span>needs_partially_bound =
             requested_features.intersects(wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY);
@@ -3025,7 +3014,6 @@
         phd: vk::PhysicalDevice,
         caps: <span class="kw-2">&amp;</span>PhysicalDeviceProperties,
     ) -&gt; (wgt::Features, wgt::DownlevelFlags) {
-        <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
         <span class="kw">use </span>wgt::{DownlevelFlags <span class="kw">as </span>Df, Features <span class="kw">as </span>F};
         <span class="kw">let </span><span class="kw-2">mut </span>features = F::empty()
             | F::SPIRV_SHADER_PASSTHROUGH
@@ -3110,30 +3098,12 @@
             F::VERTEX_WRITABLE_STORAGE,
             <span class="self">self</span>.core.vertex_pipeline_stores_and_atomics != <span class="number">0</span>,
         );
-        <span class="comment">//if self.core.shader_image_gather_extended != 0 {
-        //if self.core.shader_storage_image_extended_formats != 0 {
-        </span>features.set(
-            F::BUFFER_BINDING_ARRAY,
-            <span class="self">self</span>.core.shader_uniform_buffer_array_dynamic_indexing != <span class="number">0</span>,
-        );
-        features.set(
-            F::TEXTURE_BINDING_ARRAY,
-            <span class="self">self</span>.core.shader_sampled_image_array_dynamic_indexing != <span class="number">0</span>,
-        );
-        features.set(F::SHADER_PRIMITIVE_INDEX, <span class="self">self</span>.core.geometry_shader != <span class="number">0</span>);
-        features.set(
-            F::STORAGE_RESOURCE_BINDING_ARRAY,
-            (features.contains(F::BUFFER_BINDING_ARRAY)
-                &amp;&amp; <span class="self">self</span>.core.shader_storage_buffer_array_dynamic_indexing != <span class="number">0</span>)
-                || (features.contains(F::TEXTURE_BINDING_ARRAY)
-                    &amp;&amp; <span class="self">self</span>.core.shader_storage_image_array_dynamic_indexing != <span class="number">0</span>),
-        );
-        <span class="comment">//if self.core.shader_storage_image_array_dynamic_indexing != 0 {
-        //if self.core.shader_clip_distance != 0 {
-        //if self.core.shader_cull_distance != 0 {
-        </span>features.set(F::SHADER_F64, <span class="self">self</span>.core.shader_float64 != <span class="number">0</span>);
+
+        features.set(F::SHADER_F64, <span class="self">self</span>.core.shader_float64 != <span class="number">0</span>);
         features.set(F::SHADER_INT64, <span class="self">self</span>.core.shader_int64 != <span class="number">0</span>);
         features.set(F::SHADER_I16, <span class="self">self</span>.core.shader_int16 != <span class="number">0</span>);
+
+        features.set(F::SHADER_PRIMITIVE_INDEX, <span class="self">self</span>.core.geometry_shader != <span class="number">0</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>shader_atomic_int64) = <span class="self">self</span>.shader_atomic_int64 {
             features.set(
@@ -3172,29 +3142,38 @@
             caps.supports_extension(ext::conservative_rasterization::NAME),
         );
 
-        <span class="kw">let </span>intel_windows = caps.properties.vendor_id == db::intel::VENDOR &amp;&amp; <span class="macro">cfg!</span>(windows);
-
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>descriptor_indexing) = <span class="self">self</span>.descriptor_indexing {
-            <span class="kw">const </span>STORAGE: F = F::STORAGE_RESOURCE_BINDING_ARRAY;
-            features.set(
-                F::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-                (features.contains(F::TEXTURE_BINDING_ARRAY)
-                    &amp;&amp; descriptor_indexing.shader_sampled_image_array_non_uniform_indexing != <span class="number">0</span>)
-                    &amp;&amp; (features.contains(F::BUFFER_BINDING_ARRAY | STORAGE)
-                        &amp;&amp; descriptor_indexing.shader_storage_buffer_array_non_uniform_indexing
-                            != <span class="number">0</span>),
-            );
-            features.set(
-                F::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-                (features.contains(F::BUFFER_BINDING_ARRAY)
-                    &amp;&amp; descriptor_indexing.shader_uniform_buffer_array_non_uniform_indexing != <span class="number">0</span>)
-                    &amp;&amp; (features.contains(F::TEXTURE_BINDING_ARRAY | STORAGE)
-                        &amp;&amp; descriptor_indexing.shader_storage_image_array_non_uniform_indexing
-                            != <span class="number">0</span>),
-            );
-            <span class="kw">if </span>descriptor_indexing.descriptor_binding_partially_bound != <span class="number">0 </span>&amp;&amp; !intel_windows {
-                features |= F::PARTIALLY_BOUND_BINDING_ARRAY;
-            }
+            <span class="comment">// We use update-after-bind descriptors for all bind groups containing binding arrays.
+            //
+            // In those bind groups, we allow all binding types except uniform buffers to be present.
+            //
+            // As we can only switch between update-after-bind and not on a per bind group basis,
+            // all supported binding types need to be able to be marked update after bind.
+            //
+            // As such, we enable all features as a whole, rather individually.
+            </span><span class="kw">let </span>supports_descriptor_indexing =
+                <span class="comment">// Sampled Images
+                </span>descriptor_indexing.shader_sampled_image_array_non_uniform_indexing != <span class="number">0
+                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_sampled_image_update_after_bind != <span class="number">0
+                    </span><span class="comment">// Storage Images
+                    </span>&amp;&amp; descriptor_indexing.shader_storage_image_array_non_uniform_indexing != <span class="number">0
+                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_storage_image_update_after_bind != <span class="number">0
+                    </span><span class="comment">// Storage Buffers
+                    </span>&amp;&amp; descriptor_indexing.shader_storage_buffer_array_non_uniform_indexing != <span class="number">0
+                    </span>&amp;&amp; descriptor_indexing.descriptor_binding_storage_buffer_update_after_bind != <span class="number">0</span>;
+
+            <span class="kw">let </span>descriptor_indexing_features = F::BUFFER_BINDING_ARRAY
+                | F::TEXTURE_BINDING_ARRAY
+                | F::STORAGE_RESOURCE_BINDING_ARRAY
+                | F::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+                | F::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING;
+
+            features.set(descriptor_indexing_features, supports_descriptor_indexing);
+
+            <span class="kw">let </span>supports_partially_bound =
+                descriptor_indexing.descriptor_binding_partially_bound != <span class="number">0</span>;
+
+            features.set(F::PARTIALLY_BOUND_BINDING_ARRAY, supports_partially_bound);
         }
 
         features.set(F::DEPTH_CLIP_CONTROL, <span class="self">self</span>.core.depth_clamp != <span class="number">0</span>);
@@ -4362,7 +4341,8 @@
 
             <span class="kw">if </span>features.intersects(
                 wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
-                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
+                    | wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
+                    | wgt::Features::UNIFORM_BUFFER_BINDING_ARRAYS,
             ) {
                 capabilities.push(spv::Capability::ShaderNonUniform);
             }
