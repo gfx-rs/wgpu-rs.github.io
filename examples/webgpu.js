@@ -290,7 +290,7 @@ function __wbg_adapter_60(arg0, arg1, arg2) {
 }
 
 function __wbg_adapter_63(arg0, arg1, arg2) {
-    wasm.closure1607_externref_shim(arg0, arg1, arg2);
+    wasm.closure971_externref_shim(arg0, arg1, arg2);
 }
 
 function __wbg_adapter_66(arg0, arg1, arg2) {
@@ -3115,8 +3115,8 @@ function __wbg_get_imports() {
         const ret = false;
         return ret;
     };
-    imports.wbg.__wbindgen_closure_wrapper12881 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 1608, __wbg_adapter_63);
+    imports.wbg.__wbindgen_closure_wrapper12114 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 972, __wbg_adapter_63);
         return ret;
     };
     imports.wbg.__wbindgen_closure_wrapper15445 = function(arg0, arg1, arg2) {
