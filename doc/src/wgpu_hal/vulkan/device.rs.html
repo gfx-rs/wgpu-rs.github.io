@@ -2750,7 +2750,10 @@
 <a href="#2749" id="2749">2749</a>
 <a href="#2750" id="2750">2750</a>
 <a href="#2751" id="2751">2751</a>
-<a href="#2752" id="2752">2752</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
+<a href="#2752" id="2752">2752</a>
+<a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, RawTlasInstance};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{khr, vk};
@@ -4213,44 +4216,47 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>vk_info = vk::DescriptorSetLayoutCreateInfo::default().bindings(<span class="kw-2">&amp;</span>vk_bindings);
-
-        <span class="kw">let </span>binding_arrays = desc
+        <span class="kw">let </span>binding_arrays: Vec&lt;<span class="kw">_</span>&gt; = desc
             .entries
             .iter()
             .enumerate()
             .filter_map(|(idx, entry)| entry.count.map(|count| (idx <span class="kw">as </span>u32, count)))
             .collect();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>binding_flag_info;
-        <span class="kw">let </span>binding_flag_vec;
+        <span class="kw">let </span>vk_info = vk::DescriptorSetLayoutCreateInfo::default()
+            .bindings(<span class="kw-2">&amp;</span>vk_bindings)
+            .flags(<span class="kw">if </span>!binding_arrays.is_empty() {
+                vk::DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND_POOL
+            } <span class="kw">else </span>{
+                vk::DescriptorSetLayoutCreateFlags::empty()
+            });
 
         <span class="kw">let </span>partially_bound = desc
             .flags
             .contains(<span class="kw">crate</span>::BindGroupLayoutFlags::PARTIALLY_BOUND);
 
-        <span class="kw">let </span>vk_info = <span class="kw">if </span>partially_bound {
-            binding_flag_vec = desc
-                .entries
-                .iter()
-                .map(|entry| {
-                    <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::DescriptorBindingFlags::empty();
+        <span class="kw">let </span>binding_flag_vec = desc
+            .entries
+            .iter()
+            .map(|entry| {
+                <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::DescriptorBindingFlags::empty();
 
-                    <span class="kw">if </span>partially_bound &amp;&amp; entry.count.is_some() {
-                        flags |= vk::DescriptorBindingFlags::PARTIALLY_BOUND;
-                    }
+                <span class="kw">if </span>partially_bound &amp;&amp; entry.count.is_some() {
+                    flags |= vk::DescriptorBindingFlags::PARTIALLY_BOUND;
+                }
 
-                    flags
-                })
-                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+                <span class="kw">if </span>entry.count.is_some() {
+                    flags |= vk::DescriptorBindingFlags::UPDATE_AFTER_BIND;
+                }
 
-            binding_flag_info = vk::DescriptorSetLayoutBindingFlagsCreateInfo::default()
-                .binding_flags(<span class="kw-2">&amp;</span>binding_flag_vec);
+                flags
+            })
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            vk_info.push_next(<span class="kw-2">&amp;mut </span>binding_flag_info)
-        } <span class="kw">else </span>{
-            vk_info
-        };
+        <span class="kw">let </span><span class="kw-2">mut </span>binding_flag_info = vk::DescriptorSetLayoutBindingFlagsCreateInfo::default()
+            .binding_flags(<span class="kw-2">&amp;</span>binding_flag_vec);
+
+        <span class="kw">let </span>vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>binding_flag_info);
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{
             <span class="self">self</span>.shared

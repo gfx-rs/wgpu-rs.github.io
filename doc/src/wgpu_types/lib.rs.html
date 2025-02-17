@@ -7380,7 +7380,23 @@
 <a href="#7379" id="7379">7379</a>
 <a href="#7380" id="7380">7380</a>
 <a href="#7381" id="7381">7381</a>
-<a href="#7382" id="7382">7382</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7382" id="7382">7382</a>
+<a href="#7383" id="7383">7383</a>
+<a href="#7384" id="7384">7384</a>
+<a href="#7385" id="7385">7385</a>
+<a href="#7386" id="7386">7386</a>
+<a href="#7387" id="7387">7387</a>
+<a href="#7388" id="7388">7388</a>
+<a href="#7389" id="7389">7389</a>
+<a href="#7390" id="7390">7390</a>
+<a href="#7391" id="7391">7391</a>
+<a href="#7392" id="7392">7392</a>
+<a href="#7393" id="7393">7393</a>
+<a href="#7394" id="7394">7394</a>
+<a href="#7395" id="7395">7395</a>
+<a href="#7396" id="7396">7396</a>
+<a href="#7397" id="7397">7397</a>
+<a href="#7398" id="7398">7398</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -7766,6 +7782,15 @@
     </span><span class="kw">pub </span>max_storage_textures_per_shader_stage: u32,
     <span class="doccomment">/// Amount of uniform buffers visible in a single shader stage. Defaults to 12. Higher is "better".
     </span><span class="kw">pub </span>max_uniform_buffers_per_shader_stage: u32,
+    <span class="doccomment">/// Amount of individual resources within binding arrays that can be accessed in a single shader stage. Applies
+    /// to all types of bindings except samplers.
+    ///
+    /// This "defaults" to 0. However if binding arrays are supported, all devices can support 500,000. Higher is "better".
+    </span><span class="kw">pub </span>max_binding_array_elements_per_shader_stage: u32,
+    <span class="doccomment">/// Amount of individual samplers within binding arrays that can be accessed in a single shader stage.
+    ///
+    /// This "defaults" to 0. However if binding arrays are supported, all devices can support 1,000. Higher is "better".
+    </span><span class="kw">pub </span>max_binding_array_sampler_elements_per_shader_stage: u32,
     <span class="doccomment">/// Maximum size in bytes of a binding to a uniform buffer. Defaults to 64 KiB. Higher is "better".
     </span><span class="kw">pub </span>max_uniform_buffer_binding_size: u32,
     <span class="doccomment">/// Maximum size in bytes of a binding to a storage buffer. Defaults to 128 MiB. Higher is "better".
@@ -7870,6 +7895,8 @@
             max_storage_buffers_per_shader_stage: <span class="number">8</span>,
             max_storage_textures_per_shader_stage: <span class="number">4</span>,
             max_uniform_buffers_per_shader_stage: <span class="number">12</span>,
+            max_binding_array_elements_per_shader_stage: <span class="number">0</span>,
+            max_binding_array_sampler_elements_per_shader_stage: <span class="number">0</span>,
             max_uniform_buffer_binding_size: <span class="number">64 </span>&lt;&lt; <span class="number">10</span>, <span class="comment">// (64 KiB)
             </span>max_storage_buffer_binding_size: <span class="number">128 </span>&lt;&lt; <span class="number">20</span>, <span class="comment">// (128 MiB)
             </span>max_vertex_buffers: <span class="number">8</span>,
@@ -7913,6 +7940,8 @@
     ///     max_storage_buffers_per_shader_stage: 4, // *
     ///     max_storage_textures_per_shader_stage: 4,
     ///     max_uniform_buffers_per_shader_stage: 12,
+    ///     max_binding_array_elements_per_shader_stage: 0,
+    ///     max_binding_array_sampler_elements_per_shader_stage: 0,
     ///     max_uniform_buffer_binding_size: 16 &lt;&lt; 10, // * (16 KiB)
     ///     max_storage_buffer_binding_size: 128 &lt;&lt; 20, // (128 MiB)
     ///     max_vertex_buffers: 8,
@@ -7971,6 +8000,8 @@
     ///     max_storage_buffers_per_shader_stage: 0, // * +
     ///     max_storage_textures_per_shader_stage: 0, // +
     ///     max_uniform_buffers_per_shader_stage: 11, // +
+    ///     max_binding_array_elements_per_shader_stage: 0,
+    ///     max_binding_array_sampler_elements_per_shader_stage: 0,
     ///     max_uniform_buffer_binding_size: 16 &lt;&lt; 10, // * (16 KiB)
     ///     max_storage_buffer_binding_size: 0, // * +
     ///     max_vertex_buffers: 8,
@@ -8102,6 +8133,7 @@
         <span class="macro">compare!</span>(max_storage_buffers_per_shader_stage, Less);
         <span class="macro">compare!</span>(max_storage_textures_per_shader_stage, Less);
         <span class="macro">compare!</span>(max_uniform_buffers_per_shader_stage, Less);
+        <span class="macro">compare!</span>(max_binding_array_elements_per_shader_stage, Less);
         <span class="macro">compare!</span>(max_uniform_buffer_binding_size, Less);
         <span class="macro">compare!</span>(max_storage_buffer_binding_size, Less);
         <span class="macro">compare!</span>(max_vertex_buffers, Less);

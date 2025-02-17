@@ -5780,9 +5780,6 @@
             entries: <span class="kw-2">&amp;</span>hal_bindings,
         };
 
-        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_bind_group_layout(<span class="kw-2">&amp;</span>hal_desc) }
-            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
-
         <span class="kw">let </span><span class="kw-2">mut </span>count_validator = binding_model::BindingTypeMaxCountValidator::default();
         <span class="kw">for </span>entry <span class="kw">in </span>entry_map.values() {
             count_validator.add_binding(entry);
@@ -5795,6 +5792,9 @@
 
         <span class="comment">// Validate that binding arrays don't conflict with dynamic offsets.
         </span>count_validator.validate_binding_arrays()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_bind_group_layout(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bgl = BindGroupLayout {
             raw: ManuallyDrop::new(raw),
