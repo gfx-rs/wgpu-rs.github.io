@@ -1892,7 +1892,8 @@
 <a href="#1891" id="1891">1891</a>
 <a href="#1892" id="1892">1892</a>
 <a href="#1893" id="1893">1893</a>
-<a href="#1894" id="1894">1894</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 
 <span class="kw">use crate</span>::{
@@ -2174,25 +2175,26 @@
                     }
                 }
 
-                <span class="comment">// If we know both the length and the index, we can do the
-                // bounds check now.
-                </span><span class="kw">if let </span><span class="kw">crate</span>::proc::IndexableLength::Known(known_length) =
-                    base_type.indexable_length(module)<span class="question-mark">?
-                </span>{
-                    <span class="kw">match </span>module
-                        .to_ctx()
-                        .eval_expr_to_u32_from(index, <span class="kw-2">&amp;</span>function.expressions)
-                    {
-                        <span class="prelude-val">Ok</span>(value) =&gt; {
+                <span class="comment">// If index is const we can do check for non-negative index
+                </span><span class="kw">match </span>module
+                    .to_ctx()
+                    .eval_expr_to_u32_from(index, <span class="kw-2">&amp;</span>function.expressions)
+                {
+                    <span class="prelude-val">Ok</span>(value) =&gt; {
+                        <span class="comment">// If we know both the length and the index, we can do the
+                        // bounds check now.
+                        </span><span class="kw">if let </span><span class="kw">crate</span>::proc::IndexableLength::Known(known_length) =
+                            base_type.indexable_length(module)<span class="question-mark">?
+                        </span>{
                             <span class="kw">if </span>value &gt;= known_length {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::IndexOutOfBounds(base, value));
                             }
                         }
-                        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::Negative) =&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::NegativeIndex(base))
-                        }
-                        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst) =&gt; {}
                     }
+                    <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::Negative) =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::NegativeIndex(base))
+                    }
+                    <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst) =&gt; {}
                 }
 
                 ShaderStages::all()
