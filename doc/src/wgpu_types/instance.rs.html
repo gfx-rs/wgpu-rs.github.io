@@ -523,7 +523,26 @@
 <a href="#522" id="522">522</a>
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
 
 </span><span class="kw">use </span>alloc::string::String;
 
@@ -862,6 +881,20 @@
     }
 }
 
+<span class="doccomment">/// DXC shader model.
+</span><span class="attr">#[derive(Clone, Debug)]
+#[allow(missing_docs)]
+</span><span class="kw">pub enum </span>DxcShaderModel {
+    V6_0,
+    V6_1,
+    V6_2,
+    V6_3,
+    V6_4,
+    V6_5,
+    V6_6,
+    V6_7,
+}
+
 <span class="doccomment">/// Selects which DX12 shader compiler to use.
 ///
 /// If the `DynamicDxc` option is selected, but `dxcompiler.dll` and `dxil.dll` files aren't found,
@@ -886,6 +919,8 @@
         </span>dxc_path: String,
         <span class="doccomment">/// Path to `dxil.dll`.
         </span>dxil_path: String,
+        <span class="doccomment">/// Maximum shader model the given dll supports.
+        </span>max_shader_model: DxcShaderModel,
     },
     <span class="doccomment">/// The statically-linked variant of Dxc.
     ///
@@ -896,10 +931,13 @@
 
 <span class="kw">impl </span>Dx12Compiler {
     <span class="doccomment">/// Helper function to construct a `DynamicDxc` variant with default paths.
+    ///
+    /// The dll must support at least shader model 6.5.
     </span><span class="kw">pub fn </span>default_dynamic_dxc() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::DynamicDxc {
             dxc_path: String::from(<span class="string">"dxcompiler.dll"</span>),
             dxil_path: String::from(<span class="string">"dxil.dll"</span>),
+            max_shader_model: DxcShaderModel::V6_5,
         }
     }
 
