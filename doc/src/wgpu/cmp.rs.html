@@ -111,7 +111,7 @@
 //!
 //! For types (like WebGPU) that don't have such a property, we generate an identifier and use that.
 
-</span><span class="kw">use </span>std::{
+</span><span class="kw">use </span>core::{
     num::NonZeroU64,
     sync::atomic::{AtomicU64, Ordering},
 };
@@ -148,19 +148,19 @@
         <span class="kw">impl </span>Eq <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{}
 
         <span class="kw">impl </span><span class="macro-nonterminal">PartialOrd </span><span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
+            <span class="kw">fn </span><span class="macro-nonterminal">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;core::cmp::Ordering&gt; {
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
             }
         }
 
         <span class="kw">impl </span>Ord <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
+            <span class="kw">fn </span><span class="macro-nonterminal">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; core::cmp::Ordering {
                 <span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>.cmp(<span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>)
             }
         }
 
-        <span class="kw">impl </span>std::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">hash</span>&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+        <span class="kw">impl </span>core::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
+            <span class="kw">fn </span><span class="macro-nonterminal">hash</span>&lt;H: core::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
                 <span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>.hash(state)
             }
         }
@@ -177,8 +177,8 @@
     (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ty </span>=&gt; $(<span class="macro-nonterminal">$access</span>:tt)<span class="kw-2">*</span>) =&gt; {
         <span class="kw">impl </span>PartialEq <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
             <span class="kw">fn </span><span class="macro-nonterminal">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-                <span class="kw">let </span>address_left = std::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
-                <span class="kw">let </span>address_right = std::sync::Arc::as_ptr(<span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
+                <span class="kw">let </span>address_left = alloc::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
+                <span class="kw">let </span>address_right = alloc::sync::Arc::as_ptr(<span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
 
                 address_left == address_right
             }
@@ -187,23 +187,23 @@
         <span class="kw">impl </span>Eq <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{}
 
         <span class="kw">impl </span><span class="macro-nonterminal">PartialOrd </span><span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
+            <span class="kw">fn </span><span class="macro-nonterminal">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;core::cmp::Ordering&gt; {
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
             }
         }
 
         <span class="kw">impl </span>Ord <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
-                <span class="kw">let </span>address_left = std::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
-                <span class="kw">let </span>address_right = std::sync::Arc::as_ptr(<span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
+            <span class="kw">fn </span><span class="macro-nonterminal">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; core::cmp::Ordering {
+                <span class="kw">let </span>address_left = alloc::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
+                <span class="kw">let </span>address_right = alloc::sync::Arc::as_ptr(<span class="kw-2">&amp;</span>other $(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
 
                 address_left.cmp(<span class="kw-2">&amp;</span>address_right)
             }
         }
 
-        <span class="kw">impl </span>std::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-            <span class="kw">fn </span><span class="macro-nonterminal">hash</span>&lt;H: std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
-                <span class="kw">let </span>address = std::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
+        <span class="kw">impl </span>core::hash::Hash <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
+            <span class="kw">fn </span><span class="macro-nonterminal">hash</span>&lt;H: core::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+                <span class="kw">let </span>address = alloc::sync::Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self </span>$(<span class="macro-nonterminal">$access</span>)<span class="kw-2">*</span>);
                 address.hash(state)
             }
         }

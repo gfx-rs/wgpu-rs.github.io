@@ -990,8 +990,18 @@
 <a href="#989" id="989">989</a>
 <a href="#990" id="990">990</a>
 <a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
-<span class="kw">use </span>std::sync::Arc;
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::{Cow, ToOwned <span class="kw">as _</span>},
+    boxed::Box,
+    string::String,
+    sync::Arc,
+    vec::Vec,
+};
 
 <span class="kw">use </span>hashbrown::HashMap;
 
@@ -1103,7 +1113,7 @@
         </span>init(hal::api::Noop, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
 
         <span class="self">Self </span>{
-            name: name.to_string(),
+            name: name.to_owned(),
             instance_per_backend,
             flags: instance_desc.flags,
         }
@@ -1195,7 +1205,7 @@
     </span><span class="attr">#[cfg(metal)]
     </span><span class="kw">pub unsafe fn </span>create_surface_metal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        layer: <span class="kw-2">*mut </span>std::ffi::c_void,
+        layer: <span class="kw-2">*mut </span>core::ffi::c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::create_surface_metal"</span>);
 
@@ -1220,7 +1230,7 @@
 
         <span class="kw">let </span>surface = Surface {
             presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
-            surface_per_backend: std::iter::once((Backend::Metal, raw_surface)).collect(),
+            surface_per_backend: core::iter::once((Backend::Metal, raw_surface)).collect(),
         };
 
         <span class="prelude-val">Ok</span>(surface)
@@ -1237,7 +1247,7 @@
 
         <span class="kw">let </span>surface = Surface {
             presentation: Mutex::new(rank::SURFACE_PRESENTATION, <span class="prelude-val">None</span>),
-            surface_per_backend: std::iter::once((Backend::Dx12, surface)).collect(),
+            surface_per_backend: core::iter::once((Backend::Dx12, surface)).collect(),
         };
 
         <span class="prelude-val">Ok</span>(surface)
@@ -1249,7 +1259,7 @@
     /// The visual must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>create_surface_from_visual(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        visual: <span class="kw-2">*mut </span>std::ffi::c_void,
+        visual: <span class="kw-2">*mut </span>core::ffi::c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_visual"</span>);
         <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual) })
@@ -1261,7 +1271,7 @@
     /// The surface_handle must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>create_surface_from_surface_handle(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
+        surface_handle: <span class="kw-2">*mut </span>core::ffi::c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_surface_handle"</span>);
         <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{
@@ -1275,7 +1285,7 @@
     /// The swap_chain_panel must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>create_surface_from_swap_chain_panel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
+        swap_chain_panel: <span class="kw-2">*mut </span>core::ffi::c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::instance_create_surface_from_swap_chain_panel"</span>);
         <span class="self">self</span>.create_surface_dx12(|inst| <span class="kw">unsafe </span>{
@@ -1765,7 +1775,7 @@
     </span><span class="attr">#[cfg(metal)]
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_metal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        layer: <span class="kw-2">*mut </span>std::ffi::c_void,
+        layer: <span class="kw-2">*mut </span>core::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.create_surface_metal(layer) }<span class="question-mark">?</span>;
@@ -1779,7 +1789,7 @@
     /// The visual must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_visual(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        visual: <span class="kw-2">*mut </span>std::ffi::c_void,
+        visual: <span class="kw-2">*mut </span>core::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.instance.create_surface_from_visual(visual) }<span class="question-mark">?</span>;
@@ -1793,7 +1803,7 @@
     /// The surface_handle must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_surface_handle(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
+        surface_handle: <span class="kw-2">*mut </span>core::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
@@ -1810,7 +1820,7 @@
     /// The swap_chain_panel must be valid and able to be used to make a swapchain with.
     </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_swap_chain_panel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
+        swap_chain_panel: <span class="kw-2">*mut </span>core::ffi::c_void,
         id_in: <span class="prelude-ty">Option</span>&lt;SurfaceId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SurfaceId, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{

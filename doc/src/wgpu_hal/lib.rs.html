@@ -2477,7 +2477,16 @@
 <a href="#2476" id="2476">2476</a>
 <a href="#2477" id="2477">2477</a>
 <a href="#2478" id="2478">2478</a>
-<a href="#2479" id="2479">2479</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
+<a href="#2479" id="2479">2479</a>
+<a href="#2480" id="2480">2480</a>
+<a href="#2481" id="2481">2481</a>
+<a href="#2482" id="2482">2482</a>
+<a href="#2483" id="2483">2483</a>
+<a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
+<a href="#2486" id="2486">2486</a>
+<a href="#2487" id="2487">2487</a>
+<a href="#2488" id="2488">2488</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform unsafe graphics abstraction.
 //!
 //! This crate defines a set of traits abstracting over modern graphics APIs,
 //! with implementations ("backends") for Vulkan, Metal, Direct3D, and GL.
@@ -2681,7 +2690,8 @@
 //!
 //! [wiki-debug]: https://github.com/gfx-rs/wgpu/wiki/Debugging-wgpu-Applications
 
-</span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+</span><span class="attr">#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![allow(
     <span class="comment">// this happens on the GL backend, where it is both thread safe and non-thread safe in the same code.
     </span>clippy::arc_with_non_send_sync,
@@ -2705,7 +2715,10 @@
     </span>clippy::pattern_type_mismatch,
 )]
 #![warn(
+    clippy::alloc_instead_of_core,
     clippy::ptr_as_ptr,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
     trivial_casts,
     trivial_numeric_casts,
     unsafe_op_in_unsafe_fn,
@@ -2713,7 +2726,12 @@
     unused_qualifications
 )]
 
-</span><span class="kw">extern crate </span>wgpu_types <span class="kw">as </span>wgt;
+</span><span class="kw">extern crate </span>alloc;
+<span class="kw">extern crate </span>wgpu_types <span class="kw">as </span>wgt;
+<span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/6826): disable std except on noop and gles-WebGL.
+// Requires Rust 1.81 for core::error::Error.
+</span><span class="attr">#[macro_use]
+</span><span class="kw">extern crate </span>std;
 
 <span class="doccomment">/// DirectX12 API internals.
 </span><span class="attr">#[cfg(dx12)]
@@ -2755,16 +2773,19 @@
     DynShaderModule, DynSurface, DynSurfaceTexture, DynTexture, DynTextureView,
 };
 
-<span class="kw">use </span>std::{
-    borrow::{Borrow, Cow},
+<span class="attr">#[allow(unused)]
+</span><span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>alloc::{borrow::Cow, string::String, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{
+    borrow::Borrow,
     fmt,
     num::NonZeroU32,
     ops::{Range, RangeInclusive},
     ptr::NonNull,
-    sync::Arc,
 };
+<span class="kw">use </span>std::error::Error; <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/6826): use core::error after MSRV bump
 
-<span class="kw">use </span>bitflags::bitflags;
+</span><span class="kw">use </span>bitflags::bitflags;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::WasmNotSendSync;
@@ -2784,7 +2805,7 @@
 <span class="kw">pub type </span>Label&lt;<span class="lifetime">'a</span>&gt; = <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;;
 <span class="kw">pub type </span>MemoryRange = Range&lt;wgt::BufferAddress&gt;;
 <span class="kw">pub type </span>FenceValue = u64;
-<span class="kw">pub type </span>AtomicFenceValue = std::sync::atomic::AtomicU64;
+<span class="kw">pub type </span>AtomicFenceValue = core::sync::atomic::AtomicU64;
 
 <span class="doccomment">/// A callback to signal that wgpu is no longer using a resource.
 </span><span class="attr">#[cfg(any(gles, vulkan))]
@@ -2896,7 +2917,7 @@
 
     <span class="doccomment">/// Underlying error value, if any is available.
     </span><span class="attr">#[source]
-    </span>source: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync + <span class="lifetime">'static</span>&gt;&gt;,
+    </span>source: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>Error + Send + Sync + <span class="lifetime">'static</span>&gt;&gt;,
 }
 
 <span class="kw">impl </span>InstanceError {
@@ -2908,10 +2929,7 @@
         }
     }
     <span class="attr">#[allow(dead_code)] </span><span class="comment">// may be unused on some platforms
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_source(
-        message: String,
-        source: <span class="kw">impl </span>std::error::Error + Send + Sync + <span class="lifetime">'static</span>,
-    ) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_source(message: String, source: <span class="kw">impl </span>Error + Send + Sync + <span class="lifetime">'static</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             message,
             source: <span class="prelude-val">Some</span>(Arc::new(source)),
@@ -3064,13 +3082,13 @@
     ///
     /// [`texture`]: AcquiredSurfaceTexture::texture
     /// [`SurfaceTexture`]: Api::SurfaceTexture
-    /// [`borrow`]: std::borrow::Borrow::borrow
+    /// [`borrow`]: alloc::borrow::Borrow::borrow
     /// [`Texture`]: Api::Texture
     /// [`Fence`]: Api::Fence
     /// [`self.discard_texture`]: Surface::discard_texture
     </span><span class="kw">unsafe fn </span>acquire_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        timeout: <span class="prelude-ty">Option</span>&lt;std::time::Duration&gt;,
+        timeout: <span class="prelude-ty">Option</span>&lt;core::time::Duration&gt;,
         fence: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::A <span class="kw">as </span>Api&gt;::Fence,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;AcquiredSurfaceTexture&lt;<span class="self">Self</span>::A&gt;&gt;, SurfaceError&gt;;
 

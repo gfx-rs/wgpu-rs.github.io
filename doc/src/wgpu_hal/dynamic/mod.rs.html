@@ -204,7 +204,11 @@
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a></pre></div><pre class="rust"><code><span class="kw">mod </span>adapter;
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a></pre></div><pre class="rust"><code><span class="kw">mod </span>adapter;
 <span class="kw">mod </span>command;
 <span class="kw">mod </span>device;
 <span class="kw">mod </span>instance;
@@ -218,7 +222,11 @@
 <span class="kw">pub use </span>queue::DynQueue;
 <span class="kw">pub use </span>surface::{DynAcquiredSurfaceTexture, DynSurface};
 
-<span class="kw">use </span>std::any::Any;
+<span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>core::{
+    any::{Any, TypeId},
+    fmt,
+};
 
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
@@ -239,11 +247,11 @@
     ($(<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ty</span>),<span class="kw-2">*</span>) =&gt; {
         $(
             <span class="kw">impl </span><span class="kw">crate</span>::DynResource <span class="kw">for </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{
-                <span class="kw">fn </span><span class="macro-nonterminal">as_any</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>::std::any::Any {
+                <span class="kw">fn </span><span class="macro-nonterminal">as_any</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>::core::any::Any {
                     <span class="self">self
                 </span>}
 
-                <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>::std::any::Any {
+                <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>::core::any::Any {
                     <span class="self">self
                 </span>}
             }
@@ -286,9 +294,9 @@
 
     <span class="kw">unsafe fn </span>unbox&lt;T: DynResource + <span class="lifetime">'static</span>&gt;(<span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;) -&gt; T {
         <span class="macro">debug_assert!</span>(
-            &lt;<span class="self">Self </span><span class="kw">as </span>Any&gt;::type_id(<span class="self">self</span>.as_ref()) == std::any::TypeId::of::&lt;T&gt;(),
+            &lt;<span class="self">Self </span><span class="kw">as </span>Any&gt;::type_id(<span class="self">self</span>.as_ref()) == TypeId::of::&lt;T&gt;(),
             <span class="string">"Resource doesn't have the expected type, expected {:?}, got {:?}"</span>,
-            std::any::TypeId::of::&lt;T&gt;(),
+            TypeId::of::&lt;T&gt;(),
             &lt;<span class="self">Self </span><span class="kw">as </span>Any&gt;::type_id(<span class="self">self</span>.as_ref())
         );
 
@@ -306,25 +314,25 @@
     }
 }
 
-<span class="kw">pub trait </span>DynAccelerationStructure: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynBindGroup: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynBindGroupLayout: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynBuffer: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynCommandBuffer: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynComputePipeline: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynFence: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynPipelineCache: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynPipelineLayout: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynQuerySet: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynRenderPipeline: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynSampler: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynShaderModule: DynResource + std::fmt::Debug {}
+<span class="kw">pub trait </span>DynAccelerationStructure: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynBindGroup: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynBindGroupLayout: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynBuffer: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynCommandBuffer: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynComputePipeline: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynFence: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynPipelineCache: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynPipelineLayout: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynQuerySet: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynRenderPipeline: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynSampler: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynShaderModule: DynResource + fmt::Debug {}
 <span class="kw">pub trait </span>DynSurfaceTexture:
-    DynResource + std::borrow::Borrow&lt;<span class="kw">dyn </span>DynTexture&gt; + std::fmt::Debug
+    DynResource + core::borrow::Borrow&lt;<span class="kw">dyn </span>DynTexture&gt; + fmt::Debug
 {
 }
-<span class="kw">pub trait </span>DynTexture: DynResource + std::fmt::Debug {}
-<span class="kw">pub trait </span>DynTextureView: DynResource + std::fmt::Debug {}
+<span class="kw">pub trait </span>DynTexture: DynResource + fmt::Debug {}
+<span class="kw">pub trait </span>DynTextureView: DynResource + fmt::Debug {}
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BufferBinding&lt;<span class="lifetime">'a</span>, <span class="kw">dyn </span>DynBuffer&gt; {
     <span class="kw">pub fn </span>expect_downcast&lt;B: DynBuffer&gt;(<span class="self">self</span>) -&gt; BufferBinding&lt;<span class="lifetime">'a</span>, B&gt; {

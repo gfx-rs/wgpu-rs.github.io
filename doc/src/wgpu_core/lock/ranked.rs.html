@@ -385,7 +385,8 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a></pre></div><pre class="rust"><code><span class="doccomment">//! Lock types that enforce well-ranked lock acquisition order.
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a></pre></div><pre class="rust"><code><span class="doccomment">//! Lock types that enforce well-ranked lock acquisition order.
 //!
 //! This module's [`Mutex`] and [`RwLock` types are instrumented to check that
 //! `wgpu-core` acquires locks according to their rank, to prevent deadlocks. To
@@ -442,8 +443,9 @@
 //!
 //! [`lock::rank`]: crate::lock::rank
 
-</span><span class="kw">use </span><span class="kw">super</span>::rank::LockRank;
-<span class="kw">use </span>std::{cell::Cell, panic::Location};
+</span><span class="kw">use </span>core::{cell::Cell, fmt, ops, panic::Location};
+
+<span class="kw">use </span><span class="kw">super</span>::rank::LockRank;
 
 <span class="doccomment">/// A `Mutex` instrumented for deadlock prevention.
 ///
@@ -467,7 +469,7 @@
     saved: LockStateGuard,
 }
 
-<span class="macro">thread_local!</span> {
+<span class="macro">std::thread_local!</span> {
     <span class="kw">static </span>LOCK_STATE: Cell&lt;LockState&gt; = <span class="kw">const </span>{ Cell::new(LockState::INITIAL) };
 }
 
@@ -578,7 +580,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; std::ops::Deref <span class="kw">for </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ops::Deref <span class="kw">for </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">type </span>Target = T;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -586,14 +588,14 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; std::ops::DerefMut <span class="kw">for </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ops::DerefMut <span class="kw">for </span>MutexGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.inner.deref_mut()
     }
 }
 
-<span class="kw">impl</span>&lt;T: std::fmt::Debug&gt; std::fmt::Debug <span class="kw">for </span>Mutex&lt;T&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl</span>&lt;T: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Mutex&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="self">self</span>.inner.fmt(f)
     }
 }
@@ -667,13 +669,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T: std::fmt::Debug&gt; std::fmt::Debug <span class="kw">for </span>RwLock&lt;T&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl</span>&lt;T: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>RwLock&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="self">self</span>.inner.fmt(f)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; std::ops::Deref <span class="kw">for </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ops::Deref <span class="kw">for </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">type </span>Target = T;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -681,7 +683,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; std::ops::Deref <span class="kw">for </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ops::Deref <span class="kw">for </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">type </span>Target = T;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -689,7 +691,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; std::ops::DerefMut <span class="kw">for </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; ops::DerefMut <span class="kw">for </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, T&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.inner.deref_mut()
     }
@@ -768,7 +770,7 @@
 
     <span class="comment">// Avoid a double panic from dropping this while unwinding due to the panic
     // we're testing for.
-    </span>std::mem::forget(guard2);
+    </span>core::mem::forget(guard2);
 
     drop(guard1);
 }

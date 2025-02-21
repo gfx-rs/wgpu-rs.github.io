@@ -1292,9 +1292,15 @@
 <a href="#1291" id="1291">1291</a>
 <a href="#1292" id="1292">1292</a>
 <a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a></pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, format, string::String, sync::Arc, vec, vec::Vec};
+<span class="kw">use </span>core::sync::atomic::AtomicU8;
+
+<span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
 <span class="kw">use </span>wgt::AstcChannel;
 
 <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
@@ -1373,7 +1379,7 @@
     /// resulting in an `Err`.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>parse_full_version(src: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(u8, u8), <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">let </span>(version, _vendor_info) = <span class="kw">match </span>src.find(<span class="string">' '</span>) {
-            <span class="prelude-val">Some</span>(i) =&gt; (<span class="kw-2">&amp;</span>src[..i], src[i + <span class="number">1</span>..].to_string()),
+            <span class="prelude-val">Some</span>(i) =&gt; (<span class="kw-2">&amp;</span>src[..i], src[i + <span class="number">1</span>..].to_owned()),
             <span class="prelude-val">None </span>=&gt; (src, String::new()),
         };
 
@@ -2541,7 +2547,9 @@
             <span class="kw">let </span>buffer_mapping =
                 <span class="kw">unsafe </span>{ gl.map_buffer_range(target, offset, length <span class="kw">as _</span>, glow::MAP_READ_BIT) };
 
-            <span class="kw">unsafe </span>{ std::ptr::copy_nonoverlapping(buffer_mapping, dst_data.as_mut_ptr(), length) };
+            <span class="kw">unsafe </span>{
+                core::ptr::copy_nonoverlapping(buffer_mapping, dst_data.as_mut_ptr(), length)
+            };
 
             <span class="kw">unsafe </span>{ gl.unmap_buffer(target) };
         }

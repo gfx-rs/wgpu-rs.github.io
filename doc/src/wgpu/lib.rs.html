@@ -116,7 +116,11 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a></pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
 //!
@@ -132,10 +136,14 @@
 //! - **`naga`** ---- Enabled when any non-wgsl shader input is enabled.
 //!
 
-</span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+</span><span class="attr">#![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![doc(html_logo_url = <span class="string">"https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png"</span>)]
 #![warn(
+    clippy::alloc_instead_of_core,
     clippy::allow_attributes,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
     missing_docs,
     rust_2018_idioms,
     unsafe_op_in_unsafe_fn
@@ -143,7 +151,9 @@
 #![allow(clippy::arc_with_non_send_sync)]
 #![cfg_attr(not(any(wgpu_core, webgpu)), allow(unused))]
 
-#[cfg(wgpu_core)]
+</span><span class="kw">extern crate </span>alloc;
+<span class="kw">extern crate </span>std;
+<span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">pub extern crate </span>wgpu_core <span class="kw">as </span>wgc;
 <span class="attr">#[cfg(wgpu_core)]
 </span><span class="kw">pub extern crate </span>wgpu_hal <span class="kw">as </span>hal;
@@ -230,8 +240,6 @@
 </span><span class="attr">#[cfg(any(webgl, webgpu))]
 </span><span class="kw">pub use </span>web_sys;
 
-<span class="doccomment">/// `web-sys` has a `no_std` mode, and instead refers to the `alloc` crate in its generated code.
-/// Since we vendor the WebGPU bindings we need to explicitly add the `alloc` crate ourselves.
-</span><span class="attr">#[cfg(webgpu)]
-</span><span class="kw">extern crate </span>alloc;
+<span class="attr">#[doc(hidden)]
+</span><span class="kw">pub use </span>macros::helpers <span class="kw">as </span>__macro_helpers;
 </code></pre></div></section></main></body></html>

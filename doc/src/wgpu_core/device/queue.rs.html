@@ -1553,8 +1553,21 @@
 <a href="#1552" id="1552">1552</a>
 <a href="#1553" id="1553">1553</a>
 <a href="#1554" id="1554">1554</a>
-<a href="#1555" id="1555">1555</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#1555" id="1555">1555</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
+<span class="kw">use </span>core::{
+    iter,
+    mem::{<span class="self">self</span>, ManuallyDrop},
+    ptr::NonNull,
+    sync::atomic::Ordering,
+};
+
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use super</span>::{life::LifetimeTracker, Device};
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
+<span class="kw">use </span><span class="kw">crate</span>::scratch::ScratchBuffer;
 <span class="kw">use crate</span>::{
     api_log,
     command::{
@@ -1579,19 +1592,6 @@
     track::{<span class="self">self</span>, Tracker, TrackerIndex},
     FastHashMap, SubmissionIndex,
 };
-
-<span class="kw">use </span>smallvec::SmallVec;
-
-<span class="kw">use </span><span class="kw">crate</span>::scratch::ScratchBuffer;
-<span class="kw">use </span>std::{
-    iter,
-    mem::{<span class="self">self</span>, ManuallyDrop},
-    ptr::NonNull,
-    sync::{atomic::Ordering, Arc},
-};
-<span class="kw">use </span>thiserror::Error;
-
-<span class="kw">use super</span>::{life::LifetimeTracker, Device};
 
 <span class="kw">pub struct </span>Queue {
     raw: Box&lt;<span class="kw">dyn </span>hal::DynQueue&gt;,
@@ -2276,7 +2276,7 @@
             <span class="kw">if </span>has_copy_partial_init_tracker_coverage(size, destination.mip_level, <span class="kw-2">&amp;</span>dst.desc) {
                 <span class="kw">for </span>layer_range <span class="kw">in </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range)
-                    .collect::&lt;Vec&lt;std::ops::Range&lt;u32&gt;&gt;&gt;()
+                    .collect::&lt;Vec&lt;core::ops::Range&lt;u32&gt;&gt;&gt;()
                 {
                     <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
                     <span class="kw">crate</span>::command::clear_texture(
@@ -2529,7 +2529,7 @@
             <span class="kw">if </span>has_copy_partial_init_tracker_coverage(<span class="kw-2">&amp;</span>size, destination.mip_level, <span class="kw-2">&amp;</span>dst.desc) {
                 <span class="kw">for </span>layer_range <span class="kw">in </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range)
-                    .collect::&lt;Vec&lt;std::ops::Range&lt;u32&gt;&gt;&gt;()
+                    .collect::&lt;Vec&lt;core::ops::Range&lt;u32&gt;&gt;&gt;()
                 {
                     <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
                     <span class="kw">crate</span>::command::clear_texture(

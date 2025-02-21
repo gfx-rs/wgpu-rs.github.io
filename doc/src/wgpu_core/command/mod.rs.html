@@ -1074,7 +1074,8 @@
 <a href="#1073" id="1073">1073</a>
 <a href="#1074" id="1074">1074</a>
 <a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a></pre></div><pre class="rust"><code><span class="kw">mod </span>allocator;
 <span class="kw">mod </span>bind;
 <span class="kw">mod </span>bundle;
 <span class="kw">mod </span>clear;
@@ -1090,8 +1091,9 @@
 <span class="kw">mod </span>transfer;
 <span class="kw">mod </span>transition_resources;
 
-<span class="kw">use </span>std::mem::{<span class="self">self</span>, ManuallyDrop};
-<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::mem::{<span class="self">self</span>, ManuallyDrop};
+<span class="kw">use </span>core::ops;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::clear::clear_texture;
 <span class="kw">pub use </span><span class="self">self</span>::{
@@ -1278,7 +1280,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::Deref <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ops::Deref <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Target = CommandBufferMutable;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -1289,7 +1291,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::DerefMut <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ops::DerefMut <span class="kw">for </span>RecordingGuard&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="kw">match </span><span class="self">self</span>.inner {
             CommandEncoderStatus::Recording(command_buffer_mutable) =&gt; command_buffer_mutable,
@@ -1783,7 +1785,7 @@
 <span class="kw">impl</span>&lt;C: Clone&gt; BasePass&lt;C&gt; {
     <span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span>Label) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            label: label.as_ref().map(|cow| cow.to_string()),
+            label: label.as_deref().map(str::to_owned),
             commands: Vec::new(),
             dynamic_offsets: Vec::new(),
             string_data: Vec::new(),
@@ -1859,7 +1861,7 @@
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
-            list.push(TraceCommand::PushDebugGroup(label.to_string()));
+            list.push(TraceCommand::PushDebugGroup(label.to_owned()));
         }
 
         <span class="kw">let </span>cmd_buf_raw = cmd_buf_data.encoder.open()<span class="question-mark">?</span>;
@@ -1894,7 +1896,7 @@
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
-            list.push(TraceCommand::InsertDebugMarker(label.to_string()));
+            list.push(TraceCommand::InsertDebugMarker(label.to_owned()));
         }
 
         <span class="kw">if </span>!cmd_buf

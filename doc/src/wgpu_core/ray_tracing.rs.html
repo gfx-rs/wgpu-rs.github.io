@@ -262,7 +262,10 @@
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
 <a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
 // Major missing optimizations (no api surface changes needed):
 // - use custom tracker to track build state
 // - no forced rebuilt (build mode deduction)
@@ -271,18 +274,21 @@
 // - partial instance buffer uploads (api surface already designed with this in mind)
 // - ([non performance] extract function in build (rust function extraction with guards is a pain))
 
-</span><span class="kw">use crate</span>::{
+</span><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::num::NonZeroU64;
+
+<span class="kw">use </span>thiserror::Error;
+<span class="kw">use </span>wgt::{AccelerationStructureGeometryFlags, BufferAddress, IndexFormat, VertexFormat};
+
+<span class="kw">use crate</span>::{
     command::CommandEncoderError,
     device::{DeviceError, MissingFeatures},
     id::{BlasId, BufferId, TlasId},
-    resource::{DestroyedResourceError, InvalidResourceError, MissingBufferUsageError},
+    resource::{
+        Blas, DestroyedResourceError, InvalidResourceError, MissingBufferUsageError,
+        ResourceErrorIdent, Tlas,
+    },
 };
-<span class="kw">use </span>std::num::NonZeroU64;
-<span class="kw">use </span>std::sync::Arc;
-
-<span class="kw">use </span><span class="kw">crate</span>::resource::{Blas, ResourceErrorIdent, Tlas};
-<span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{AccelerationStructureGeometryFlags, BufferAddress, IndexFormat, VertexFormat};
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>CreateBlasError {

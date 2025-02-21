@@ -1105,7 +1105,26 @@
 <a href="#1104" id="1104">1104</a>
 <a href="#1105" id="1105">1105</a>
 <a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::{Cow, ToOwned},
+    boxed::Box,
+    string::String,
+    sync::{Arc, Weak},
+    vec::Vec,
+};
+<span class="kw">use </span>core::{fmt, mem::ManuallyDrop, ops::Range};
+<span class="kw">use </span>std::sync::OnceLock;
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>thiserror::Error;
+
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+</span><span class="kw">use </span>serde::Deserialize;
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+</span><span class="kw">use </span>serde::Serialize;
+
+<span class="kw">use crate</span>::{
     device::{
         bgl, Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT,
     },
@@ -1114,30 +1133,13 @@
     pipeline::{ComputePipeline, RenderPipeline},
     resource::{
         Buffer, DestroyedResourceError, InvalidResourceError, Labeled, MissingBufferUsageError,
-        MissingTextureUsageError, ResourceErrorIdent, Sampler, TextureView, TrackingData,
+        MissingTextureUsageError, ResourceErrorIdent, Sampler, TextureView, Tlas, TrackingData,
     },
     resource_log,
     snatch::{SnatchGuard, Snatchable},
     track::{BindGroupStates, ResourceUsageCompatibilityError},
     Label,
 };
-
-<span class="kw">use </span>arrayvec::ArrayVec;
-
-<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-</span><span class="kw">use </span>serde::Deserialize;
-<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
-</span><span class="kw">use </span>serde::Serialize;
-
-<span class="kw">use </span>std::{
-    borrow::Cow,
-    mem::ManuallyDrop,
-    ops::Range,
-    sync::{Arc, OnceLock, Weak},
-};
-
-<span class="kw">use </span><span class="kw">crate</span>::resource::Tlas;
-<span class="kw">use </span>thiserror::Error;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
@@ -1584,9 +1586,9 @@
     </span>[BufferBinding&lt;B&gt;]: ToOwned,
     [S]: ToOwned,
     [TV]: ToOwned,
-    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
 {
     <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same
     /// binding index in the [`BindGroupLayoutDescriptor`].
@@ -1617,11 +1619,11 @@
     </span>[BufferBinding&lt;B&gt;]: ToOwned,
     [S]: ToOwned,
     [TV]: ToOwned,
-    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
     [BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;]: ToOwned,
-    &lt;[BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[BindGroupEntry&lt;<span class="lifetime">'a</span>, B, S, TV, TLAS&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
 {
     <span class="doccomment">/// Debug label of the bind group.
     ///
@@ -1671,8 +1673,8 @@
     Compute(Weak&lt;ComputePipeline&gt;),
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ExclusivePipeline {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>ExclusivePipeline {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             ExclusivePipeline::None =&gt; f.write_str(<span class="string">"None"</span>),
             ExclusivePipeline::Render(p) =&gt; {
@@ -1810,7 +1812,7 @@
 </span><span class="kw">pub struct </span>PipelineLayoutDescriptor&lt;<span class="lifetime">'a</span>, BGL = BindGroupLayoutId&gt;
 <span class="kw">where
     </span>[BGL]: ToOwned,
-    &lt;[BGL] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[BGL] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
 {
     <span class="doccomment">/// Debug label of the pipeline layout.
     ///
@@ -1973,9 +1975,9 @@
     </span>[BufferBinding&lt;B&gt;]: ToOwned,
     [S]: ToOwned,
     [TV]: ToOwned,
-    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
-    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: std::fmt::Debug,
+    &lt;[BufferBinding&lt;B&gt;] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[S] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
+    &lt;[TV] <span class="kw">as </span>ToOwned&gt;::Owned: fmt::Debug,
 {
     Buffer(BufferBinding&lt;B&gt;),
     <span class="attr">#[cfg_attr(

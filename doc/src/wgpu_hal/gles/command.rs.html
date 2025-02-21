@@ -1227,12 +1227,19 @@
 <a href="#1226" id="1226">1226</a>
 <a href="#1227" id="1227">1227</a>
 <a href="#1228" id="1228">1228</a>
-<a href="#1229" id="1229">1229</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
-<span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>std::{
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
+<span class="kw">use </span>core::{
     mem::{<span class="self">self</span>, size_of, size_of_val},
     ops::Range,
+    slice,
 };
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+
+<span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 
 <span class="attr">#[derive(Clone, Copy, Debug, Default)]
 </span><span class="kw">struct </span>TextureSlotDesc {
@@ -1313,8 +1320,7 @@
     }
 
     <span class="kw">fn </span>add_push_constant_data(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[u32]) -&gt; Range&lt;u32&gt; {
-        <span class="kw">let </span>data_raw =
-            <span class="kw">unsafe </span>{ std::slice::from_raw_parts(data.as_ptr().cast(), size_of_val(data)) };
+        <span class="kw">let </span>data_raw = <span class="kw">unsafe </span>{ slice::from_raw_parts(data.as_ptr().cast(), size_of_val(data)) };
         <span class="kw">let </span>start = <span class="self">self</span>.data_bytes.len();
         <span class="macro">assert!</span>(start &lt; u32::MAX <span class="kw">as </span>usize);
         <span class="self">self</span>.data_bytes.extend_from_slice(data_raw);
@@ -1491,7 +1497,7 @@
 
     <span class="kw">unsafe fn </span>begin_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">crate</span>::Label) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="self">self</span>.state = State::default();
-        <span class="self">self</span>.cmd_buffer.label = label.map(str::to_string);
+        <span class="self">self</span>.cmd_buffer.label = label.map(String::from);
         <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">unsafe fn </span>discard_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {

@@ -1337,15 +1337,25 @@
 <a href="#1336" id="1336">1336</a>
 <a href="#1337" id="1337">1337</a>
 <a href="#1338" id="1338">1338</a>
-<a href="#1339" id="1339">1339</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
+
+<span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{fmt, mem::size_of, str};
+
+<span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
     },
     command::{
-        bind::Binder,
+        bind::{Binder, BinderError},
         compute_command::ArcComputeCommand,
         end_pipeline_statistics_query,
-        memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
+        memory_init::{
+            fixup_discarded_surfaces, CommandBufferTextureMemoryActions, SurfacesInDiscardState,
+        },
         validate_and_begin_pipeline_statistics_query, ArcPassTimestampWrites, BasePass,
         BindGroupStateChange, CommandBuffer, CommandEncoderError, MapPassErr, PassErrorScope,
         PassTimestampWrites, QueryUseError, StateChange,
@@ -1355,6 +1365,7 @@
     hal_label, id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind},
     pipeline::ComputePipeline,
+    ray_tracing::TlasAction,
     resource::{
         <span class="self">self</span>, Buffer, DestroyedResourceError, InvalidResourceError, Labeled,
         MissingBufferUsageError, ParentDevice,
@@ -1363,13 +1374,6 @@
     track::{ResourceUsageCompatibilityError, Tracker, TrackerIndex, UsageScope},
     Label,
 };
-
-<span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
-
-<span class="kw">use super</span>::{bind::BinderError, memory_init::CommandBufferTextureMemoryActions};
-<span class="kw">use </span><span class="kw">crate</span>::ray_tracing::TlasAction;
-<span class="kw">use </span>std::{fmt, mem::size_of, str, sync::Arc};
 
 <span class="kw">pub struct </span>ComputePass {
     <span class="doccomment">/// All pass data &amp; records is stored here.
@@ -1628,7 +1632,7 @@
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
 
         <span class="kw">let </span><span class="kw-2">mut </span>arc_desc = ArcComputePassDescriptor {
-            label: desc.label.as_deref().map(std::borrow::Cow::Borrowed),
+            label: desc.label.as_deref().map(Cow::Borrowed),
             timestamp_writes: <span class="prelude-val">None</span>, <span class="comment">// Handle only once we resolved the encoder.
         </span>};
 
@@ -1702,7 +1706,7 @@
         <span class="kw">let </span>(<span class="kw-2">mut </span>compute_pass, encoder_error) = <span class="self">self</span>.command_encoder_begin_compute_pass(
             encoder_id,
             <span class="kw-2">&amp;</span>ComputePassDescriptor {
-                label: label.as_deref().map(std::borrow::Cow::Borrowed),
+                label: label.as_deref().map(Cow::Borrowed),
                 timestamp_writes: timestamp_writes.cloned(),
             },
         );

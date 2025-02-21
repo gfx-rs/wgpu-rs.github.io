@@ -3822,7 +3822,34 @@
 <a href="#3821" id="3821">3821</a>
 <a href="#3822" id="3822">3822</a>
 <a href="#3823" id="3823">3823</a>
-<a href="#3824" id="3824">3824</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#3824" id="3824">3824</a>
+<a href="#3825" id="3825">3825</a>
+<a href="#3826" id="3826">3826</a>
+<a href="#3827" id="3827">3827</a>
+<a href="#3828" id="3828">3828</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow,
+    boxed::Box,
+    string::{String, ToString <span class="kw">as _</span>},
+    sync::{Arc, Weak},
+    vec::Vec,
+};
+<span class="kw">use </span>core::{
+    fmt,
+    mem::{<span class="self">self</span>, ManuallyDrop},
+    num::NonZeroU32,
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+};
+<span class="kw">use </span>std::sync::OnceLock;
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>bitflags::Flags;
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>wgt::{
+    math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureSelector,
+    TextureViewDimension,
+};
+
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroup, BindGroupLayout, BindGroupLayoutEntryError},
@@ -3842,8 +3869,8 @@
     pipeline,
     pool::ResourcePool,
     resource::{
-        <span class="self">self</span>, Buffer, Fallible, Labeled, ParentDevice, QuerySet, Sampler, StagingBuffer, Texture,
-        TextureView, TextureViewNotRenderableReason, TrackingData,
+        <span class="self">self</span>, AccelerationStructure, Buffer, Fallible, Labeled, ParentDevice, QuerySet, Sampler,
+        StagingBuffer, Texture, TextureView, TextureViewNotRenderableReason, Tlas, TrackingData,
     },
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
@@ -3851,25 +3878,6 @@
     validation::{<span class="self">self</span>, validate_color_attachment_bytes_per_sample},
     weak_vec::WeakVec,
     FastHashMap, LabelHelpers,
-};
-
-<span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>bitflags::Flags;
-<span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>wgt::{
-    math::align_to, DeviceLostReason, TextureFormat, TextureSampleType, TextureSelector,
-    TextureViewDimension,
-};
-
-<span class="kw">use </span><span class="kw">crate</span>::resource::{AccelerationStructure, Tlas};
-<span class="kw">use </span>std::{
-    borrow::Cow,
-    mem::{<span class="self">self</span>, ManuallyDrop},
-    num::NonZeroU32,
-    sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
-        Arc, OnceLock, Weak,
-    },
 };
 
 <span class="kw">use super</span>::{
@@ -3957,8 +3965,8 @@
     BindGroups(WeakVec&lt;BindGroup&gt;),
 }
 
-<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>Device {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Device {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_struct(<span class="string">"Device"</span>)
             .field(<span class="string">"label"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.label())
             .field(<span class="string">"limits"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.limits)
@@ -4480,7 +4488,7 @@
             </span><span class="kw">let </span>map_size = buffer.size;
             <span class="kw">let </span>mapping = <span class="kw">if </span>map_size == <span class="number">0 </span>{
                 hal::BufferMapping {
-                    ptr: std::ptr::NonNull::dangling(),
+                    ptr: core::ptr::NonNull::dangling(),
                     is_coherent: <span class="bool-val">true</span>,
                 }
             } <span class="kw">else </span>{
@@ -4799,7 +4807,7 @@
             ));
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = Vec::new();
         <span class="kw">for </span>format <span class="kw">in </span>desc.view_formats.iter() {
             <span class="kw">if </span>desc.format == <span class="kw-2">*</span>format {
                 <span class="kw">continue</span>;

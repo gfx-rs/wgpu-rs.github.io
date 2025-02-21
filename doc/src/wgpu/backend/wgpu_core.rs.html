@@ -3610,23 +3610,37 @@
 <a href="#3609" id="3609">3609</a>
 <a href="#3610" id="3610">3610</a>
 <a href="#3611" id="3611">3611</a>
-<a href="#3612" id="3612">3612</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3612" id="3612">3612</a>
+<a href="#3613" id="3613">3613</a>
+<a href="#3614" id="3614">3614</a>
+<a href="#3615" id="3615">3615</a>
+<a href="#3616" id="3616">3616</a>
+<a href="#3617" id="3617">3617</a>
+<a href="#3618" id="3618">3618</a>
+<a href="#3619" id="3619">3619</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow::Borrowed,
+    boxed::Box,
+    format,
+    string::{String, ToString <span class="kw">as _</span>},
+    sync::Arc,
+    vec,
+    vec::Vec,
+};
+<span class="kw">use </span>core::{error::Error, fmt, future::ready, ops::Range, pin::Pin, ptr::NonNull, slice};
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>parking_lot::Mutex;
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>wgc::{command::bundle_ffi::<span class="kw-2">*</span>, error::ContextErrorSource, pipeline::CreateShaderModuleError};
+<span class="kw">use </span>wgt::WasmNotSendSync;
+
+<span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface, InterfaceTypes},
     BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
     CompilationMessageType, ErrorSource, Features, Label, LoadOp, MapMode, Operations,
     ShaderSource, SurfaceTargetUnsafe, TextureDescriptor,
 };
-
-<span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>std::{
-    borrow::Cow::Borrowed, error::Error, fmt, future::ready, ops::Range, pin::Pin, ptr::NonNull,
-    slice, sync::Arc,
-};
-<span class="kw">use </span>wgc::{command::bundle_ffi::<span class="kw-2">*</span>, error::ContextErrorSource, pipeline::CreateShaderModuleError};
-<span class="kw">use </span>wgt::WasmNotSendSync;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>ContextWgpuCore(Arc&lt;wgc::global::Global&gt;);
@@ -3950,7 +3964,7 @@
 
         <span class="kw">fn </span>print_tree(output: <span class="kw-2">&amp;mut </span>String, level: <span class="kw-2">&amp;mut </span>usize, e: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)) {
             <span class="kw">let </span><span class="kw-2">mut </span>print = |e: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Error + <span class="lifetime">'static</span>)| {
-                <span class="kw">use </span>std::fmt::Write;
+                <span class="kw">use </span>core::fmt::Write;
                 <span class="macro">writeln!</span>(output, <span class="string">"{}{}"</span>, <span class="string">" "</span>.repeat(<span class="kw-2">*</span>level * <span class="number">2</span>), e).unwrap();
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = e.source() {
@@ -4254,7 +4268,7 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>ErrorSinkRaw {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"ErrorSink"</span>)
     }
 }
@@ -5916,7 +5930,7 @@
             <span class="kw-2">&amp;</span>wgc::command::RenderPassDescriptor {
                 label: desc.label.map(Borrowed),
                 timestamp_writes: timestamp_writes.as_ref(),
-                color_attachments: std::borrow::Cow::Borrowed(<span class="kw-2">&amp;</span>colors),
+                color_attachments: Borrowed(<span class="kw-2">&amp;</span>colors),
                 depth_stencil_attachment: depth_stencil.as_ref(),
                 occlusion_query_set: desc.occlusion_query_set.map(|qs| qs.inner.as_core().id),
             },

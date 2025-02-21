@@ -1090,7 +1090,10 @@
 <a href="#1089" id="1089">1089</a>
 <a href="#1090" id="1090">1090</a>
 <a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
 Designed to work on Linux and Android, with context provided by EGL.
@@ -1190,8 +1193,6 @@ we don't bother with that combination.
 <span class="kw">mod </span>fence;
 <span class="kw">mod </span>queue;
 
-<span class="kw">use crate</span>::{CopyExtent, TextureDescriptor};
-
 <span class="kw">pub use </span>fence::Fence;
 
 <span class="attr">#[cfg(not(any(windows, webgl)))]
@@ -1209,14 +1210,19 @@ we don't bother with that combination.
 <span class="attr">#[cfg(windows)]
 </span><span class="kw">use </span><span class="self">self</span>::wgl::{Instance, Surface};
 
-<span class="kw">use </span>arrayvec::ArrayVec;
-
-<span class="kw">use </span>glow::HasContext;
-
-<span class="kw">use </span>naga::FastHashMap;
+<span class="kw">use </span>alloc::{boxed::Box, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{
+    fmt,
+    ops::Range,
+    sync::atomic::{AtomicU32, AtomicU8},
+};
 <span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>std::sync::atomic::{AtomicU32, AtomicU8};
-<span class="kw">use </span>std::{fmt, ops::Range, sync::Arc};
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>glow::HasContext;
+<span class="kw">use </span>naga::FastHashMap;
+
+<span class="kw">use crate</span>::{CopyExtent, TextureDescriptor};
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Api;
@@ -1495,7 +1501,7 @@ we don't bother with that combination.
 <span class="kw">impl </span><span class="kw">crate</span>::DynTexture <span class="kw">for </span>Texture {}
 <span class="kw">impl </span><span class="kw">crate</span>::DynSurfaceTexture <span class="kw">for </span>Texture {}
 
-<span class="kw">impl </span>std::borrow::Borrow&lt;<span class="kw">dyn </span><span class="kw">crate</span>::DynTexture&gt; <span class="kw">for </span>Texture {
+<span class="kw">impl </span>core::borrow::Borrow&lt;<span class="kw">dyn </span><span class="kw">crate</span>::DynTexture&gt; <span class="kw">for </span>Texture {
     <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span><span class="kw">crate</span>::DynTexture {
         <span class="self">self
     </span>}

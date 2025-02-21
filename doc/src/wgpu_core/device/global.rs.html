@@ -2267,10 +2267,10 @@
 <a href="#2266" id="2266">2266</a>
 <a href="#2267" id="2267">2267</a>
 <a href="#2268" id="2268">2268</a>
-<a href="#2269" id="2269">2269</a>
-<a href="#2270" id="2270">2270</a>
-<a href="#2271" id="2271">2271</a>
-<a href="#2272" id="2272">2272</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#2269" id="2269">2269</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
+
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     api_log,
@@ -2299,12 +2299,6 @@
 };
 
 <span class="kw">use </span>wgt::{BufferAddress, TextureFormat};
-
-<span class="kw">use </span>std::{
-    borrow::Cow,
-    ptr::NonNull,
-    sync::{atomic::Ordering, Arc},
-};
 
 <span class="kw">use super</span>::{ImplicitPipelineIds, UserClosures};
 
@@ -2384,7 +2378,7 @@
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 <span class="kw">let </span><span class="kw-2">mut </span>desc = desc.clone();
-                <span class="kw">let </span>mapped_at_creation = std::mem::replace(<span class="kw-2">&amp;mut </span>desc.mapped_at_creation, <span class="bool-val">false</span>);
+                <span class="kw">let </span>mapped_at_creation = core::mem::replace(<span class="kw-2">&amp;mut </span>desc.mapped_at_creation, <span class="bool-val">false</span>);
                 <span class="kw">if </span>mapped_at_creation &amp;&amp; !desc.usage.contains(wgt::BufferUsages::MAP_WRITE) {
                     desc.usage |= wgt::BufferUsages::COPY_DST;
                 }
@@ -2511,7 +2505,7 @@
         }
         .map_err(|e| device.handle_hal_error(e))<span class="question-mark">?</span>;
 
-        <span class="kw">unsafe </span>{ std::ptr::copy_nonoverlapping(data.as_ptr(), mapping.ptr.as_ptr(), data.len()) };
+        <span class="kw">unsafe </span>{ core::ptr::copy_nonoverlapping(data.as_ptr(), mapping.ptr.as_ptr(), data.len()) };
 
         <span class="kw">if </span>!mapping.is_coherent {
             <span class="attr">#[allow(clippy::single_range_in_vec_init)]
@@ -3240,7 +3234,7 @@
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                 <span class="kw">let </span>data = trace.make_binary(<span class="string">"spv"</span>, <span class="kw">unsafe </span>{
-                    std::slice::from_raw_parts(source.as_ptr().cast::&lt;u8&gt;(), source.len() * <span class="number">4</span>)
+                    core::slice::from_raw_parts(source.as_ptr().cast::&lt;u8&gt;(), source.len() * <span class="number">4</span>)
                 });
                 trace.add(trace::Action::CreateShaderModule {
                     id: fid.id(),
@@ -4081,7 +4075,7 @@
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>E::UnsupportedQueueFamily,
                 };
 
-                <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = <span class="macro">vec!</span>[];
+                <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = Vec::new();
                 <span class="kw">for </span>format <span class="kw">in </span>config.view_formats.iter() {
                     <span class="kw">if </span><span class="kw-2">*</span>format == config.format {
                         <span class="kw">continue</span>;

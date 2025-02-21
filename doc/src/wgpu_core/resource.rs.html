@@ -2005,8 +2005,21 @@
 <a href="#2004" id="2004">2004</a>
 <a href="#2005" id="2005">2005</a>
 <a href="#2006" id="2006">2006</a>
-<a href="#2007" id="2007">2007</a>
-<a href="#2008" id="2008">2008</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+<a href="#2007" id="2007">2007</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{
+    borrow::Borrow,
+    fmt,
+    mem::{<span class="self">self</span>, ManuallyDrop},
+    num::NonZeroU64,
+    ops::Range,
+    ptr::NonNull,
+};
+
+<span class="kw">use </span>smallvec::SmallVec;
+<span class="kw">use </span>thiserror::Error;
+<span class="kw">use </span>wgt::TextureSelector;
+
+<span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::BindGroup,
@@ -2027,21 +2040,6 @@
     track::{SharedTrackerIndexAllocator, TrackerIndex},
     weak_vec::WeakVec,
     Label, LabelHelpers, SubmissionIndex,
-};
-
-<span class="kw">use </span>wgt::TextureSelector;
-
-<span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>thiserror::Error;
-
-<span class="kw">use </span>std::num::NonZeroU64;
-<span class="kw">use </span>std::{
-    borrow::{Borrow, Cow},
-    fmt::Debug,
-    mem::{<span class="self">self</span>, ManuallyDrop},
-    ops::Range,
-    ptr::NonNull,
-    sync::Arc,
 };
 
 <span class="doccomment">/// Information about the wgpu-core resource.
@@ -2095,8 +2093,8 @@
     label: String,
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ResourceErrorIdent {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), std::fmt::Error&gt; {
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>ResourceErrorIdent {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
         <span class="macro">write!</span>(f, <span class="string">"{} with '{}' label"</span>, <span class="self">self</span>.r#type, <span class="self">self</span>.label)
     }
 }
@@ -2122,7 +2120,7 @@
     }
 
     <span class="kw">fn </span>same_device(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
-        <span class="kw">if </span>std::ptr::eq(<span class="kw-2">&amp;**</span><span class="self">self</span>.device(), device) {
+        <span class="kw">if </span>core::ptr::eq(<span class="kw-2">&amp;**</span><span class="self">self</span>.device(), device) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(DeviceError::DeviceMismatch(Box::new(DeviceMismatch {
@@ -2232,8 +2230,8 @@
     <span class="kw">pub </span>callback: <span class="prelude-ty">Option</span>&lt;BufferMapCallback&gt;,
 }
 
-<span class="kw">impl </span>Debug <span class="kw">for </span>BufferMapOperation {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>BufferMapOperation {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_struct(<span class="string">"BufferMapOperation"</span>)
             .field(<span class="string">"host"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.host)
             .field(<span class="string">"callback"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.callback.as_ref().map(|<span class="kw">_</span>| <span class="string">"?"</span>))
@@ -2691,7 +2689,7 @@
                     </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
                         <span class="kw">let </span>size = range.end - range.start;
                         <span class="kw">let </span>data = trace.make_binary(<span class="string">"bin"</span>, <span class="kw">unsafe </span>{
-                            std::slice::from_raw_parts(mapping.ptr.as_ptr(), size <span class="kw">as </span>usize)
+                            core::slice::from_raw_parts(mapping.ptr.as_ptr(), size <span class="kw">as </span>usize)
                         });
                         trace.add(trace::Action::WriteBuffer {
                             id: buffer_id,
@@ -2801,7 +2799,7 @@
 }
 
 <span class="kw">impl </span>DestroyedBuffer {
-    <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug {
+    <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Debug {
         <span class="kw-2">&amp;</span><span class="self">self</span>.label
     }
 }
@@ -2897,7 +2895,7 @@
 
     <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">unsafe </span>{ std::slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size.get() <span class="kw">as </span>usize) }
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.ptr.as_ptr(), <span class="self">self</span>.size.get() <span class="kw">as </span>usize) }
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write_zeros(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -3429,7 +3427,7 @@
 }
 
 <span class="kw">impl </span>DestroyedTexture {
-    <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Debug {
+    <span class="kw">pub fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Debug {
         <span class="kw-2">&amp;</span><span class="self">self</span>.label
     }
 }
@@ -3816,8 +3814,8 @@
     MipmapFilter,
 }
 
-<span class="kw">impl </span>Debug <span class="kw">for </span>SamplerFilterErrorType {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>SamplerFilterErrorType {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             SamplerFilterErrorType::MagFilter =&gt; <span class="macro">write!</span>(f, <span class="string">"magFilter"</span>),
             SamplerFilterErrorType::MinFilter =&gt; <span class="macro">write!</span>(f, <span class="string">"minFilter"</span>),

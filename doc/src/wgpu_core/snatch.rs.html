@@ -166,18 +166,16 @@
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a></pre></div><pre class="rust"><code><span class="attr">#![allow(unused)]
+<a href="#168" id="168">168</a></pre></div><pre class="rust"><code><span class="attr">#![allow(unused)]
 
-</span><span class="kw">use </span><span class="kw">crate</span>::lock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-<span class="kw">use </span>std::{
-    backtrace::Backtrace,
+</span><span class="kw">use </span>core::{
     cell::{Cell, RefCell, UnsafeCell},
+    fmt,
     panic::{<span class="self">self</span>, Location},
-    thread,
 };
+<span class="kw">use </span>std::{backtrace::Backtrace, thread};
 
-<span class="kw">use </span><span class="kw">crate</span>::lock::rank;
+<span class="kw">use </span><span class="kw">crate</span>::lock::{rank, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 <span class="doccomment">/// A guard that provides read access to snatchable data.
 </span><span class="kw">pub struct </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;(RwLockReadGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
@@ -228,8 +226,8 @@
 
 <span class="comment">// Can't safely print the contents of a snatchable object without holding
 // the lock.
-</span><span class="kw">impl</span>&lt;T&gt; std::fmt::Debug <span class="kw">for </span>Snatchable&lt;T&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter) -&gt; std::fmt::Result {
+</span><span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Snatchable&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"&lt;snatchable&gt;"</span>)
     }
 }
@@ -242,8 +240,8 @@
     backtrace: Backtrace,
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>LockTrace {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>LockTrace {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
             <span class="string">"a {} lock at {}\n{}"</span>,
@@ -286,7 +284,7 @@
     <span class="kw">fn </span>exit() {}
 }
 
-<span class="macro">thread_local!</span> {
+<span class="macro">std::thread_local!</span> {
     <span class="kw">static </span>SNATCH_LOCK_TRACE: Cell&lt;<span class="prelude-ty">Option</span>&lt;LockTrace&gt;&gt; = <span class="kw">const </span>{ Cell::new(<span class="prelude-val">None</span>) };
 }
 

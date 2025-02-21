@@ -665,7 +665,8 @@
 <a href="#664" id="664">664</a>
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Resource State and Lifetime Trackers
 
 These structures are responsible for keeping track of resource state,
 generating barriers where needednd making sure resources are kept
@@ -776,7 +777,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
     snatch::SnatchGuard,
 };
 
-<span class="kw">use </span>std::{fmt, ops, sync::Arc};
+<span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{fmt, mem, ops};
+
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>buffer::{
@@ -1180,10 +1183,9 @@ Device &lt;- CommandBuffer = insert(device.start, device.end, buffer.start, buff
         <span class="comment">// clear vecs and push into pool
         </span><span class="self">self</span>.buffers.clear();
         <span class="self">self</span>.textures.clear();
-        <span class="self">self</span>.pool.lock().push((
-            std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buffers),
-            std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.textures),
-        ));
+        <span class="self">self</span>.pool
+            .lock()
+            .push((mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buffers), mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.textures)));
     }
 }
 

@@ -135,7 +135,9 @@
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<span class="kw">use </span>core::mem;
 
 <span class="kw">use </span><span class="kw">crate</span>::id::{Id, Marker};
 <span class="kw">use </span><span class="kw">crate</span>::resource::ResourceType;
@@ -178,7 +180,7 @@
 
 <span class="doccomment">/// A table of `T` values indexed by the id type `I`.
 ///
-/// `Storage` implements [`std::ops::Index`], accepting `Id` values as
+/// `Storage` implements [`core::ops::Index`], accepting `Id` values as
 /// indices.
 ///
 /// The table is represented as a vector indexed by the ids' index
@@ -215,7 +217,7 @@
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.map.len() {
             <span class="self">self</span>.map.resize_with(index + <span class="number">1</span>, || Element::Vacant);
         }
-        <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index], Element::Occupied(value, epoch)) {
+        <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index], Element::Occupied(value, epoch)) {
             Element::Vacant =&gt; {}
             Element::Occupied(<span class="kw">_</span>, storage_epoch) =&gt; {
                 <span class="macro">assert_ne!</span>(
@@ -230,7 +232,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id&lt;T::Marker&gt;) -&gt; T {
         <span class="kw">let </span>(index, epoch) = id.unzip();
-        <span class="kw">match </span>std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Vacant) {
+        <span class="kw">match </span>mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.map[index <span class="kw">as </span>usize], Element::Vacant) {
             Element::Occupied(value, storage_epoch) =&gt; {
                 <span class="macro">assert_eq!</span>(epoch, storage_epoch);
                 value

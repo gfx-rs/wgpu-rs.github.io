@@ -1615,21 +1615,19 @@
 <a href="#1614" id="1614">1614</a>
 <a href="#1615" id="1615">1615</a>
 <a href="#1616" id="1616">1616</a>
-<a href="#1617" id="1617">1617</a>
-<a href="#1618" id="1618">1618</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
-<span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
+<a href="#1617" id="1617">1617</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::ToOwned, format, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec, vec::Vec,
+};
+<span class="kw">use </span>core::{cmp::max, convert::TryInto, num::NonZeroU32, ptr, sync::atomic::Ordering};
+<span class="kw">use </span>std::sync::Mutex;
+
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>naga::FastHashMap;
-<span class="kw">use </span>std::{
-    cmp::max,
-    convert::TryInto,
-    ptr,
-    sync::{Arc, Mutex},
-};
 
+<span class="kw">use super</span>::{conv, PrivateCapabilities};
+<span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span><span class="kw">crate</span>::TlasInstance;
-<span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>std::sync::atomic::Ordering;
 
 <span class="kw">type </span>ShaderStage&lt;<span class="lifetime">'a</span>&gt; = (
     naga::ShaderStage,
@@ -1642,7 +1640,7 @@
     sampler_map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">super</span>::SamplerBindMap,
     name_binding_map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>NameBindingMap,
     push_constant_items: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;naga::back::glsl::PushConstantItem&gt;,
-    multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
+    multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
 }
 
 <span class="kw">impl </span>CompilationContext&lt;<span class="lifetime">'_</span>&gt; {
@@ -1735,7 +1733,7 @@
     </span><span class="attr">#[cfg(any(native, Emscripten))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        name: std::num::NonZeroU32,
+        name: NonZeroU32,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
         drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
     ) -&gt; <span class="kw">super</span>::Texture {
@@ -1762,7 +1760,7 @@
     </span><span class="attr">#[cfg(any(native, Emscripten))]
     </span><span class="kw">pub unsafe fn </span>texture_from_raw_renderbuffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        name: std::num::NonZeroU32,
+        name: NonZeroU32,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
         drop_callback: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropCallback&gt;,
     ) -&gt; <span class="kw">super</span>::Texture {
@@ -1830,7 +1828,7 @@
         <span class="kw">use </span>naga::back::glsl;
         <span class="kw">let </span>pipeline_options = glsl::PipelineOptions {
             shader_stage: naga_stage,
-            entry_point: stage.entry_point.to_string(),
+            entry_point: stage.entry_point.to_owned(),
             multiview: context.multiview,
         };
 
@@ -1918,7 +1916,7 @@
         shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">'a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
         <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
+        multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">super</span>::PipelineInner&gt;, <span class="kw">crate</span>::PipelineError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>program_stages = ArrayVec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>group_to_binding_to_slot = Vec::with_capacity(layout.group_infos.len());
@@ -1967,7 +1965,7 @@
         shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">'a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
         <span class="attr">#[cfg_attr(target_arch = <span class="string">"wasm32"</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
+        multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
         glsl_version: naga::back::glsl::Version,
         private_caps: PrivateCapabilities,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">super</span>::PipelineInner&gt;, <span class="kw">crate</span>::PipelineError&gt; {

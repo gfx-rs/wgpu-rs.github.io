@@ -307,11 +307,8 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
-    hash::Hash,
-    sync::{Arc, Weak},
-};
+<a href="#309" id="309">309</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::sync::{Arc, Weak};
+<span class="kw">use </span>core::hash::Hash;
 
 <span class="kw">use </span>hashbrown::{hash_map::Entry, HashMap};
 <span class="kw">use </span>once_cell::sync::OnceCell;
@@ -417,10 +414,11 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>std::sync::{
-        atomic::{AtomicU32, Ordering},
-        Barrier,
+    <span class="kw">use </span>core::{
+        sync::atomic::{AtomicU32, Ordering},
+        time::Duration,
     };
+    <span class="kw">use </span>std::{eprintln, sync::Barrier, thread};
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -512,7 +510,7 @@
                     <span class="macro">eprintln!</span>(<span class="string">"{idx}: init"</span>);
 
                     <span class="comment">// Simulate long running constructor, ensuring that both threads will be in get_or_init.
-                    </span>std::thread::sleep(std::time::Duration::from_millis(<span class="number">250</span>));
+                    </span>thread::sleep(Duration::from_millis(<span class="number">250</span>));
 
                     resources.counter.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
 
@@ -525,7 +523,7 @@
             ret
         }
 
-        <span class="kw">let </span>thread1 = std::thread::spawn({
+        <span class="kw">let </span>thread1 = thread::spawn({
             <span class="kw">let </span>resource_clone = Arc::clone(<span class="kw-2">&amp;</span>resources);
             <span class="kw">move </span>|| thread_inner(<span class="number">1</span>, <span class="kw-2">&amp;</span>resource_clone)
         });
@@ -600,7 +598,7 @@
 
             <span class="macro">eprintln!</span>(<span class="string">"1: postwait"</span>);
             <span class="comment">// We wait a little bit, making sure that thread0_inner has started spinning.
-            </span>std::thread::sleep(std::time::Duration::from_millis(<span class="number">250</span>));
+            </span>thread::sleep(Duration::from_millis(<span class="number">250</span>));
             <span class="macro">eprintln!</span>(<span class="string">"1: postsleep"</span>);
 
             <span class="comment">// We remove the entry from the pool, allowing thread0_inner to re-create.
@@ -608,7 +606,7 @@
             <span class="macro">eprintln!</span>(<span class="string">"1: removal"</span>);
         }
 
-        <span class="kw">let </span>thread1 = std::thread::spawn({
+        <span class="kw">let </span>thread1 = thread::spawn({
             <span class="kw">let </span>resource_clone = Arc::clone(<span class="kw-2">&amp;</span>resources);
             <span class="kw">move </span>|| thread1_inner(<span class="kw-2">&amp;</span>resource_clone)
         });

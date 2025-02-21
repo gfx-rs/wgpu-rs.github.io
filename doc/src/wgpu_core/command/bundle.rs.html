@@ -1690,7 +1690,18 @@
 <a href="#1689" id="1689">1689</a>
 <a href="#1690" id="1690">1690</a>
 <a href="#1691" id="1691">1691</a>
-<a href="#1692" id="1692">1692</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
 command encoder with a single call. A single bundle can replayed any number of
@@ -1770,7 +1781,22 @@ index format changes.
 
 </span><span class="attr">#![allow(clippy::reversed_empty_ranges)]
 
-</span><span class="kw">use crate</span>::{
+</span><span class="kw">use </span>alloc::{
+    borrow::{Cow, ToOwned <span class="kw">as _</span>},
+    string::String,
+    sync::Arc,
+    vec::Vec,
+};
+<span class="kw">use </span>core::{
+    mem::size_of,
+    num::{NonZeroU32, NonZeroU64},
+    ops::Range,
+};
+
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use crate</span>::{
     binding_model::{BindError, BindGroup, PipelineLayout},
     command::{
         BasePass, BindGroupStateChange, ColorAttachmentError, DrawError, MapPassErr,
@@ -1793,10 +1819,6 @@ index format changes.
     track::RenderBundleScope,
     Label, LabelHelpers,
 };
-<span class="kw">use </span>arrayvec::ArrayVec;
-
-<span class="kw">use </span>std::{borrow::Cow, mem::size_of, num::NonZeroU32, ops::Range, sync::Arc};
-<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use super</span>::{
     render_command::{ArcRenderCommand, RenderCommand},
@@ -2147,7 +2169,7 @@ index format changes.
 
         <span class="kw">let </span>render_bundle = RenderBundle {
             base: BasePass {
-                label: desc.label.as_ref().map(|cow| cow.to_string()),
+                label: desc.label.as_deref().map(str::to_owned),
                 commands,
                 dynamic_offsets: flat_dynamic_offsets,
                 string_data: <span class="self">self</span>.base.string_data,
@@ -2283,7 +2305,7 @@ index format changes.
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     index_format: wgt::IndexFormat,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU64&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;NonZeroU64&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
@@ -2316,7 +2338,7 @@ index format changes.
     slot: u32,
     buffer_id: id::Id&lt;id::markers::Buffer&gt;,
     offset: u64,
-    size: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU64&gt;,
+    size: <span class="prelude-ty">Option</span>&lt;NonZeroU64&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderBundleErrorInner&gt; {
     <span class="kw">let </span>max_vertex_buffers = state.device.limits.max_vertex_buffers;
     <span class="kw">if </span>slot &gt;= max_vertex_buffers {
@@ -3185,7 +3207,7 @@ index format changes.
 <span class="kw">pub mod </span>bundle_ffi {
     <span class="kw">use super</span>::{RenderBundleEncoder, RenderCommand};
     <span class="kw">use crate</span>::{id, RawString};
-    <span class="kw">use </span>std::{convert::TryInto, slice};
+    <span class="kw">use </span>core::{convert::TryInto, slice};
     <span class="kw">use </span>wgt::{BufferAddress, BufferSize, DynamicOffset, IndexFormat};
 
     <span class="doccomment">/// # Safety

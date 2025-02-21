@@ -228,7 +228,18 @@
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
 <a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library safely implements WebGPU on native platforms.
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library safely implements WebGPU on native platforms.
 //! It is designed for integration into browsers, as well as wrapping
 //! into other language-specific user-friendly libraries.
 //!
@@ -236,6 +247,7 @@
 </span><span class="attr">#![doc = <span class="macro">document_features::document_features!</span>()]
 </span><span class="doccomment">//!
 
+</span><span class="attr">#![no_std]
 </span><span class="comment">// When we have no backends, we end up with a lot of dead or otherwise unreachable code.
 </span><span class="attr">#![cfg_attr(
     all(
@@ -271,7 +283,10 @@
     </span>rustdoc::private_intra_doc_links
 )]
 #![warn(
+    clippy::alloc_instead_of_core,
     clippy::ptr_as_ptr,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
     trivial_casts,
     trivial_numeric_casts,
     unsafe_op_in_unsafe_fn,
@@ -286,7 +301,10 @@
 // (the only reason to use wgpu-core on the web in the first place) that have atomics enabled.
 </span><span class="attr">#![cfg_attr(not(send_sync), allow(clippy::arc_with_non_send_sync))]
 
-</span><span class="kw">extern crate </span>wgpu_hal <span class="kw">as </span>hal;
+</span><span class="kw">extern crate </span>alloc;
+<span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/6826): this should be optional
+</span><span class="kw">extern crate </span>std;
+<span class="kw">extern crate </span>wgpu_hal <span class="kw">as </span>hal;
 <span class="kw">extern crate </span>wgpu_types <span class="kw">as </span>wgt;
 
 <span class="kw">pub mod </span>binding_model;
@@ -328,7 +346,11 @@
 <span class="kw">pub use </span>hal::{api, MAX_BIND_GROUPS, MAX_COLOR_ATTACHMENTS, MAX_VERTEX_BUFFERS};
 <span class="kw">pub use </span>naga;
 
-<span class="kw">use </span>std::{borrow::Cow, os::raw::c_char};
+<span class="kw">use </span>alloc::{
+    borrow::{Cow, ToOwned <span class="kw">as _</span>},
+    string::String,
+};
+<span class="kw">use </span>std::os::raw::c_char;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>hash_utils::<span class="kw-2">*</span>;
 
@@ -353,10 +375,10 @@
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="self">self</span>.as_ref().map(|cow| cow.as_ref())
+        <span class="self">self</span>.as_deref()
     }
     <span class="kw">fn </span>to_string(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="self">self</span>.as_ref().map(|cow| cow.to_string()).unwrap_or_default()
+        <span class="self">self</span>.as_deref().map(str::to_owned).unwrap_or_default()
     }
 }
 

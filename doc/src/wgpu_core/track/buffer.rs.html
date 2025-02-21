@@ -771,13 +771,23 @@
 <a href="#770" id="770">770</a>
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a></pre></div><pre class="rust"><code><span class="doccomment">//! Buffer Trackers
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a></pre></div><pre class="rust"><code><span class="doccomment">//! Buffer Trackers
 //!
 //! Buffers are represented by a single state for the whole resource,
 //! a 16 bit bitflag of buffer usages. Because there is only ever
 //! one subresource, they have no selector.
 
-</span><span class="kw">use </span>std::sync::{Arc, Weak};
+</span><span class="kw">use </span>alloc::{
+    sync::{Arc, Weak},
+    vec::Vec,
+};
+
+<span class="kw">use </span>hal::BufferBarrier;
+<span class="kw">use </span>wgt::{strict_assert, strict_assert_eq, BufferUses};
 
 <span class="kw">use super</span>::{PendingTransition, TrackerIndex};
 <span class="kw">use crate</span>::{
@@ -788,8 +798,6 @@
         ResourceUsageCompatibilityError, ResourceUses,
     },
 };
-<span class="kw">use </span>hal::BufferBarrier;
-<span class="kw">use </span>wgt::{strict_assert, strict_assert_eq, BufferUses};
 
 <span class="kw">impl </span>ResourceUses <span class="kw">for </span>BufferUses {
     <span class="kw">const </span>EXCLUSIVE: <span class="self">Self </span>= <span class="self">Self</span>::EXCLUSIVE;
