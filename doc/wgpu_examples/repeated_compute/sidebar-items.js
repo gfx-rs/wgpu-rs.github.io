@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["OVERFLOW"],"fn":["compute","generate_rand","main","run"],"struct":["WgpuContext"]};
+window.SIDEBAR_ITEMS = {"constant":["OVERFLOW"],"fn":["compute","main","run"],"struct":["WgpuContext"]};
