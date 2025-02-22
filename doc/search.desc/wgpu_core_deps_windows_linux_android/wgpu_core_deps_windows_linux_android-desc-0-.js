@@ -1,0 +1,1 @@
+searchState.loadedDescShard("wgpu_core_deps_windows_linux_android", 0, "This crate exists to allow platform and feature specific …")

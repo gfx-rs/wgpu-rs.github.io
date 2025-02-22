@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["hlsl_snapshots","naga","player","wgpu","wgpu_core","wgpu_examples","wgpu_hal","wgpu_macros","wgpu_test","wgpu_types"];
-//{"start":21,"fragment_lengths":[16,7,9,7,12,16,11,14,12,13]}
+window.ALL_CRATES = ["hlsl_snapshots","naga","player","wgpu","wgpu_core","wgpu_core_deps_apple","wgpu_core_deps_emscripten","wgpu_core_deps_wasm","wgpu_core_deps_windows_linux_android","wgpu_examples","wgpu_hal","wgpu_macros","wgpu_test","wgpu_types"];
+//{"start":21,"fragment_lengths":[16,7,9,7,12,23,28,22,39,16,11,14,12,13]}
