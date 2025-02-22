@@ -700,7 +700,33 @@
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
 <a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [MSL][msl] (Metal Shading Language).
 
 This backend does not support the [`SHADER_INT64_ATOMIC_ALL_OPS`][all-atom]
@@ -764,6 +790,28 @@ holding the result.
     <span class="kw">pub </span>mutable: bool,
 }
 
+<span class="attr">#[cfg_attr(feature = <span class="string">"serialize"</span>, derive(serde::Serialize))]
+#[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
+</span><span class="kw">struct </span>BindingMapSerialization {
+    resource_binding: <span class="kw">crate</span>::ResourceBinding,
+    bind_target: BindTarget,
+}
+
+<span class="attr">#[cfg(feature = <span class="string">"deserialize"</span>)]
+</span><span class="kw">fn </span>deserialize_binding_map&lt;<span class="lifetime">'de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;BindingMap, D::Error&gt;
+<span class="kw">where
+    </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
+{
+    <span class="kw">use </span>serde::Deserialize;
+
+    <span class="kw">let </span>vec = Vec::&lt;BindingMapSerialization&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>map = BindingMap::default();
+    <span class="kw">for </span>item <span class="kw">in </span>vec {
+        map.insert(item.resource_binding, item.bind_target);
+    }
+    <span class="prelude-val">Ok</span>(map)
+}
+
 <span class="comment">// Using `BTreeMap` instead of `HashMap` so that we can hash itself.
 </span><span class="kw">pub type </span>BindingMap = std::collections::BTreeMap&lt;<span class="kw">crate</span>::ResourceBinding, BindTarget&gt;;
 
@@ -772,7 +820,11 @@ holding the result.
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(serde::Deserialize))]
 #[cfg_attr(any(feature = <span class="string">"serialize"</span>, feature = <span class="string">"deserialize"</span>), serde(default))]
 </span><span class="kw">pub struct </span>EntryPointResources {
-    <span class="kw">pub </span>resources: BindingMap,
+    <span class="attr">#[cfg_attr(
+        feature = <span class="string">"deserialize"</span>,
+        serde(deserialize_with = <span class="string">"deserialize_binding_map"</span>)
+    )]
+    </span><span class="kw">pub </span>resources: BindingMap,
 
     <span class="kw">pub </span>push_constant_buffer: <span class="prelude-ty">Option</span>&lt;Slot&gt;,
 
