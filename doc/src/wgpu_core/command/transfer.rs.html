@@ -1182,7 +1182,22 @@
 <a href="#1181" id="1181">1181</a>
 <a href="#1182" id="1182">1182</a>
 <a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>thiserror::Error;
@@ -1329,6 +1344,13 @@
     </span>MissingDownlevelFlags(<span class="attr">#[from] </span>MissingDownlevelFlags),
     <span class="attr">#[error(<span class="string">"Source texture sample count must be 1, got {sample_count}"</span>)]
     </span>InvalidSampleCount { sample_count: u32 },
+    <span class="attr">#[error(
+        <span class="string">"Source sample count ({src_sample_count:?}) and destination sample count ({dst_sample_count:?}) are not equal"
+    </span>)]
+    </span>SampleCountNotEqual {
+        src_sample_count: u32,
+        dst_sample_count: u32,
+    },
     <span class="attr">#[error(<span class="string">"Requested mip level {requested} does no exist (count: {count})"</span>)]
     </span>InvalidMipLevel { requested: u32, count: u32 },
 }
@@ -2283,6 +2305,14 @@
         }
         <span class="kw">if </span>dst_tex_base.aspect != dst_texture_aspects {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyDstMissingAspects.into());
+        }
+
+        <span class="kw">if </span>src_texture.desc.sample_count != dst_texture.desc.sample_count {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::SampleCountNotEqual {
+                src_sample_count: src_texture.desc.sample_count,
+                dst_sample_count: dst_texture.desc.sample_count,
+            }
+            .into());
         }
 
         <span class="comment">// Handle texture init *before* dealing with barrier transitions so we
