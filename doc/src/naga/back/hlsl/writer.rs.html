@@ -4253,7 +4253,23 @@
 <a href="#4252" id="4252">4252</a>
 <a href="#4253" id="4253">4253</a>
 <a href="#4254" id="4254">4254</a>
-<a href="#4255" id="4255">4255</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#4255" id="4255">4255</a>
+<a href="#4256" id="4256">4256</a>
+<a href="#4257" id="4257">4257</a>
+<a href="#4258" id="4258">4258</a>
+<a href="#4259" id="4259">4259</a>
+<a href="#4260" id="4260">4260</a>
+<a href="#4261" id="4261">4261</a>
+<a href="#4262" id="4262">4262</a>
+<a href="#4263" id="4263">4263</a>
+<a href="#4264" id="4264">4264</a>
+<a href="#4265" id="4265">4265</a>
+<a href="#4266" id="4266">4266</a>
+<a href="#4267" id="4267">4267</a>
+<a href="#4268" id="4268">4268</a>
+<a href="#4269" id="4269">4269</a>
+<a href="#4270" id="4270">4270</a>
+<a href="#4271" id="4271">4271</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help,
     help::{
         WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess,
@@ -7468,57 +7484,16 @@
                 array_index,
                 sample,
                 level,
-            } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>wrapping_type = <span class="prelude-val">None</span>;
-                <span class="kw">match </span><span class="kw-2">*</span>func_ctx.resolve_type(image, <span class="kw-2">&amp;</span>module.types) {
-                    TypeInner::Image {
-                        class: <span class="kw">crate</span>::ImageClass::Storage { format, .. },
-                        ..
-                    } =&gt; {
-                        <span class="kw">if </span>format.single_component() {
-                            wrapping_type = <span class="prelude-val">Some</span>(Scalar::from(format));
-                        }
-                    }
-                    <span class="kw">_ </span>=&gt; {}
-                }
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = wrapping_type {
-                    <span class="macro">write!</span>(
-                        <span class="self">self</span>.out,
-                        <span class="string">"{}{}("</span>,
-                        help::IMAGE_STORAGE_LOAD_SCALAR_WRAPPER,
-                        scalar.to_hlsl_str()<span class="question-mark">?
-                    </span>)<span class="question-mark">?</span>;
-                }
-                <span class="comment">// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
-                </span><span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".Load("</span>)<span class="question-mark">?</span>;
-
-                <span class="self">self</span>.write_texture_coordinates(
-                    <span class="string">"int"</span>,
-                    coordinate,
-                    array_index,
-                    level,
-                    module,
-                    func_ctx,
-                )<span class="question-mark">?</span>;
-
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(sample) = sample {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_expr(module, sample, func_ctx)<span class="question-mark">?</span>;
-                }
-
-                <span class="comment">// close bracket for Load function
-                </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-
-                <span class="kw">if </span>wrapping_type.is_some() {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
-                }
-
-                <span class="comment">// return x component if return type is scalar
-                </span><span class="kw">if let </span>TypeInner::Scalar(<span class="kw">_</span>) = <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types) {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".x"</span>)<span class="question-mark">?</span>;
-                }
-            }
+            } =&gt; <span class="self">self</span>.write_image_load(
+                <span class="kw-2">&amp;</span>module,
+                expr,
+                func_ctx,
+                image,
+                coordinate,
+                array_index,
+                sample,
+                level,
+            )<span class="question-mark">?</span>,
             Expression::GlobalVariable(handle) =&gt; {
                 <span class="kw">let </span>global_variable = <span class="kw-2">&amp;</span>module.global_variables[handle];
                 <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>module.types[global_variable.ty].inner;
@@ -8254,6 +8229,63 @@
 
         <span class="kw">if </span>!closing_bracket.is_empty() {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{closing_bracket}"</span>)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="attr">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">fn </span>write_image_load(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: &amp;&amp;Module,
+        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        func_ctx: <span class="kw-2">&amp;</span>back::FunctionCtx,
+        image: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        coordinate: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        array_index: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+        sample: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+        level: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>wrapping_type = <span class="prelude-val">None</span>;
+        <span class="kw">match </span><span class="kw-2">*</span>func_ctx.resolve_type(image, <span class="kw-2">&amp;</span>module.types) {
+            TypeInner::Image {
+                class: <span class="kw">crate</span>::ImageClass::Storage { format, .. },
+                ..
+            } =&gt; {
+                <span class="kw">if </span>format.single_component() {
+                    wrapping_type = <span class="prelude-val">Some</span>(Scalar::from(format));
+                }
+            }
+            <span class="kw">_ </span>=&gt; {}
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = wrapping_type {
+            <span class="macro">write!</span>(
+                <span class="self">self</span>.out,
+                <span class="string">"{}{}("</span>,
+                help::IMAGE_STORAGE_LOAD_SCALAR_WRAPPER,
+                scalar.to_hlsl_str()<span class="question-mark">?
+            </span>)<span class="question-mark">?</span>;
+        }
+        <span class="comment">// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
+        </span><span class="self">self</span>.write_expr(module, image, func_ctx)<span class="question-mark">?</span>;
+        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".Load("</span>)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.write_texture_coordinates(<span class="string">"int"</span>, coordinate, array_index, level, module, func_ctx)<span class="question-mark">?</span>;
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(sample) = sample {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_expr(module, sample, func_ctx)<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// close bracket for Load function
+        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>wrapping_type.is_some() {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// return x component if return type is scalar
+        </span><span class="kw">if let </span>TypeInner::Scalar(<span class="kw">_</span>) = <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types) {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".x"</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }

@@ -1814,7 +1814,25 @@
 <a href="#1813" id="1813">1813</a>
 <a href="#1814" id="1814">1814</a>
 <a href="#1815" id="1815">1815</a>
-<a href="#1816" id="1816">1816</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Helpers for the hlsl backend
 
 Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
@@ -3427,8 +3445,26 @@ int dim_1d = NagaDimensions1D(image_1d);
                 <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
             }
             <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = mip_level {
+                <span class="comment">// Explicit cast if needed
+                </span><span class="kw">let </span>cast_to_int = <span class="macro">matches!</span>(
+                    <span class="kw-2">*</span>func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types),
+                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
+                        kind: ScalarKind::Uint,
+                        ..
+                    })
+                );
+
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>cast_to_int {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int("</span>)<span class="question-mark">?</span>;
+                }
+
                 <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>cast_to_int {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                }
             }
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
         }

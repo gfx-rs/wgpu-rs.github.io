@@ -5007,7 +5007,25 @@
 <a href="#5006" id="5006">5006</a>
 <a href="#5007" id="5007">5007</a>
 <a href="#5008" id="5008">5008</a>
-<a href="#5009" id="5009">5009</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5009" id="5009">5009</a>
+<a href="#5010" id="5010">5010</a>
+<a href="#5011" id="5011">5011</a>
+<a href="#5012" id="5012">5012</a>
+<a href="#5013" id="5013">5013</a>
+<a href="#5014" id="5014">5014</a>
+<a href="#5015" id="5015">5015</a>
+<a href="#5016" id="5016">5016</a>
+<a href="#5017" id="5017">5017</a>
+<a href="#5018" id="5018">5018</a>
+<a href="#5019" id="5019">5019</a>
+<a href="#5020" id="5020">5020</a>
+<a href="#5021" id="5021">5021</a>
+<a href="#5022" id="5022">5022</a>
+<a href="#5023" id="5023">5023</a>
+<a href="#5024" id="5024">5024</a>
+<a href="#5025" id="5025">5025</a>
+<a href="#5026" id="5026">5026</a>
+<a href="#5027" id="5027">5027</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -9458,10 +9476,28 @@ to output a [`Module`](crate::Module) into glsl
                 </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">") - 1)"</span>)<span class="question-mark">?</span>;
             }
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(sample_or_level) = sample.or(level) {
+            <span class="comment">// GLSL only support SInt on this field while WGSL support also UInt
+            </span><span class="kw">let </span>cast_to_int = <span class="macro">matches!</span>(
+                <span class="kw-2">*</span>ctx.resolve_type(sample_or_level, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types),
+                TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
+                    kind: <span class="kw">crate</span>::ScalarKind::Uint,
+                    ..
+                })
+            );
+
             <span class="comment">// If no bounds checking is need just add the sample or level argument
             // after the coordinates
             </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">if </span>cast_to_int {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int("</span>)<span class="question-mark">?</span>;
+            }
+
             <span class="self">self</span>.write_expr(sample_or_level, ctx)<span class="question-mark">?</span>;
+
+            <span class="kw">if </span>cast_to_int {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+            }
         }
 
         <span class="comment">// Close the image load function.

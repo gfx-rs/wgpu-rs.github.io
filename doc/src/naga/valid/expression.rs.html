@@ -1893,7 +1893,11 @@
 <a href="#1892" id="1892">1892</a>
 <a href="#1893" id="1893">1893</a>
 <a href="#1894" id="1894">1894</a>
-<a href="#1895" id="1895">1895</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 
 <span class="kw">use crate</span>::{
@@ -2566,11 +2570,15 @@
 
                         <span class="kw">match </span>(level, class.is_mipmapped()) {
                             (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
-                            (<span class="prelude-val">Some</span>(level), <span class="bool-val">true</span>) =&gt; {
-                                <span class="kw">if </span>resolver[level].scalar_kind() != <span class="prelude-val">Some</span>(Sk::Sint) {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndexType(level));
+                            (<span class="prelude-val">Some</span>(level), <span class="bool-val">true</span>) =&gt; <span class="kw">match </span>resolver[level] {
+                                Ti::Scalar(Sc {
+                                    kind: Sk::Sint | Sk::Uint,
+                                    width: <span class="kw">_</span>,
+                                }) =&gt; {}
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(level))
                                 }
-                            }
+                            },
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndex);
                             }
