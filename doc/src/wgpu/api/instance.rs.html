@@ -393,25 +393,7 @@
 <a href="#392" id="392">392</a>
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(native)]
+<a href="#395" id="395">395</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(native)]
 </span><span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>core::future::Future;
 
@@ -475,45 +457,27 @@
     ///
     /// `InstanceDescriptor::backends` does not need to be a subset of this,
     /// but any backend that is not in this set, will not be picked.
-    ///
-    /// TODO: Right now it's otherwise not possible yet to opt-out of all features on some platforms.
-    /// See &lt;https://github.com/gfx-rs/wgpu/issues/3514&gt;
-    /// * Windows/Linux/Android: always enables Vulkan and GLES with no way to opt out
     </span><span class="kw">pub const fn </span>enabled_backend_features() -&gt; Backends {
         <span class="kw">let </span><span class="kw-2">mut </span>backends = Backends::empty();
-
-        <span class="kw">if </span><span class="macro">cfg!</span>(native) {
-            <span class="kw">if </span><span class="macro">cfg!</span>(metal) {
-                backends = backends.union(Backends::METAL);
-            }
-            <span class="kw">if </span><span class="macro">cfg!</span>(dx12) {
-                backends = backends.union(Backends::DX12);
-            }
-
-            <span class="comment">// Windows, Android, Linux currently always enable Vulkan and OpenGL.
-            // See &lt;https://github.com/gfx-rs/wgpu/issues/3514&gt;
-            </span><span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"windows"</span>) || <span class="macro">cfg!</span>(unix) {
-                backends = backends.union(Backends::VULKAN).union(Backends::GL);
-            }
-
-            <span class="comment">// Vulkan on Mac/iOS is only available through vulkan-portability.
-            </span><span class="kw">if </span><span class="macro">cfg!</span>(target_vendor = <span class="string">"apple"</span>) &amp;&amp; <span class="macro">cfg!</span>(feature = <span class="string">"vulkan-portability"</span>) {
-                backends = backends.union(Backends::VULKAN);
-            }
-
-            <span class="comment">// GL on Mac is only available through angle.
-            </span><span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>) &amp;&amp; <span class="macro">cfg!</span>(feature = <span class="string">"angle"</span>) {
-                backends = backends.union(Backends::GL);
-            }
-        } <span class="kw">else </span>{
-            <span class="kw">if </span><span class="macro">cfg!</span>(webgpu) {
-                backends = backends.union(Backends::BROWSER_WEBGPU);
-            }
-            <span class="kw">if </span><span class="macro">cfg!</span>(webgl) {
-                backends = backends.union(Backends::GL);
-            }
+        <span class="comment">// `.set` and `|=` don't work in a `const` context.
+        </span><span class="kw">if </span><span class="macro">cfg!</span>(noop) {
+            backends = backends.union(Backends::NOOP);
         }
-
+        <span class="kw">if </span><span class="macro">cfg!</span>(vulkan) {
+            backends = backends.union(Backends::VULKAN);
+        }
+        <span class="kw">if </span><span class="macro">cfg!</span>(any(gles, webgl)) {
+            backends = backends.union(Backends::GL);
+        }
+        <span class="kw">if </span><span class="macro">cfg!</span>(metal) {
+            backends = backends.union(Backends::METAL);
+        }
+        <span class="kw">if </span><span class="macro">cfg!</span>(dx12) {
+            backends = backends.union(Backends::DX12);
+        }
+        <span class="kw">if </span><span class="macro">cfg!</span>(webgpu) {
+            backends = backends.union(Backends::BROWSER_WEBGPU);
+        }
         backends
     }
 
