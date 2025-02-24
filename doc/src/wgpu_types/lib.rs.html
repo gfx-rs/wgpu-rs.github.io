@@ -7396,7 +7396,29 @@
 <a href="#7395" id="7395">7395</a>
 <a href="#7396" id="7396">7396</a>
 <a href="#7397" id="7397">7397</a>
-<a href="#7398" id="7398">7398</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7398" id="7398">7398</a>
+<a href="#7399" id="7399">7399</a>
+<a href="#7400" id="7400">7400</a>
+<a href="#7401" id="7401">7401</a>
+<a href="#7402" id="7402">7402</a>
+<a href="#7403" id="7403">7403</a>
+<a href="#7404" id="7404">7404</a>
+<a href="#7405" id="7405">7405</a>
+<a href="#7406" id="7406">7406</a>
+<a href="#7407" id="7407">7407</a>
+<a href="#7408" id="7408">7408</a>
+<a href="#7409" id="7409">7409</a>
+<a href="#7410" id="7410">7410</a>
+<a href="#7411" id="7411">7411</a>
+<a href="#7412" id="7412">7412</a>
+<a href="#7413" id="7413">7413</a>
+<a href="#7414" id="7414">7414</a>
+<a href="#7415" id="7415">7415</a>
+<a href="#7416" id="7416">7416</a>
+<a href="#7417" id="7417">7417</a>
+<a href="#7418" id="7418">7418</a>
+<a href="#7419" id="7419">7419</a>
+<a href="#7420" id="7420">7420</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -12298,74 +12320,96 @@
     }
 }
 
-<span class="doccomment">/// Behavior of the presentation engine based on frame rate.
+<span class="doccomment">/// Timing and queueing with which frames are actually displayed to the user.
+///
+/// Use this as part of a [`SurfaceConfiguration`] to control the behavior of
+/// [`SurfaceTexture::present()`].
+///
+/// Some modes are only supported by some backends.
+/// You can use one of the `Auto*` modes, [`Fifo`](Self::Fifo),
+/// or choose one of the supported modes from [`SurfaceCapabilities::present_modes`].
+///
+/// [presented]: ../wgpu/struct.SurfaceTexture.html#method.present
+/// [`SurfaceTexture::present()`]: ../wgpu/struct.SurfaceTexture.html#method.present
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>PresentMode {
-    <span class="doccomment">/// Chooses `FifoRelaxed` -&gt; `Fifo` based on availability.
+    <span class="doccomment">/// Chooses the first supported mode out of:
     ///
-    /// Because of the fallback behavior, it is supported everywhere.
+    /// 1. [`FifoRelaxed`](Self::FifoRelaxed)
+    /// 2. [`Fifo`](Self::Fifo)
+    ///
+    /// Because of the fallback behavior, this is supported everywhere.
     </span>AutoVsync = <span class="number">0</span>,
-    <span class="doccomment">/// Chooses `Immediate` -&gt; `Mailbox` -&gt; `Fifo` (on web) based on availability.
+
+    <span class="doccomment">/// Chooses the first supported mode out of:
     ///
-    /// Because of the fallback behavior, it is supported everywhere.
+    /// 1. [`Immediate`](Self::Immediate)
+    /// 2. [`Mailbox`](Self::Mailbox)
+    /// 3. [`Fifo`](Self::Fifo)
+    ///
+    /// Because of the fallback behavior, this is supported everywhere.
     </span>AutoNoVsync = <span class="number">1</span>,
+
     <span class="doccomment">/// Presentation frames are kept in a First-In-First-Out queue approximately 3 frames
     /// long. Every vertical blanking period, the presentation engine will pop a frame
     /// off the queue to display. If there is no frame to display, it will present the same
     /// frame again until the next vblank.
     ///
-    /// When a present command is executed on the gpu, the presented image is added on the queue.
+    /// When a present command is executed on the GPU, the presented image is added on the queue.
     ///
-    /// No tearing will be observed.
+    /// Calls to [`Surface::get_current_texture()`] will block until there is a spot in the queue.
     ///
-    /// Calls to `Surface::get_current_texture` will block until there is a spot in the queue.
+    /// * **Tearing:** No tearing will be observed.
+    /// * **Supported on**: All platforms.
+    /// * **Also known as**: "Vsync On"
     ///
-    /// Supported on all platforms.
+    /// This is the [default](Self::default) value for `PresentMode`.
+    /// If you don't know what mode to choose, choose this mode.
     ///
-    /// If you don't know what mode to choose, choose this mode. This is traditionally called "Vsync On".
+    /// [`Surface::get_current_texture()`]: ../wgpu/struct.Surface.html#method.get_current_texture
     </span><span class="attr">#[default]
     </span>Fifo = <span class="number">2</span>,
+
     <span class="doccomment">/// Presentation frames are kept in a First-In-First-Out queue approximately 3 frames
     /// long. Every vertical blanking period, the presentation engine will pop a frame
     /// off the queue to display. If there is no frame to display, it will present the
     /// same frame until there is a frame in the queue. The moment there is a frame in the
     /// queue, it will immediately pop the frame off the queue.
     ///
-    /// When a present command is executed on the gpu, the presented image is added on the queue.
+    /// When a present command is executed on the GPU, the presented image is added on the queue.
     ///
-    /// Tearing will be observed if frames last more than one vblank as the front buffer.
+    /// Calls to [`Surface::get_current_texture()`] will block until there is a spot in the queue.
     ///
-    /// Calls to `Surface::get_current_texture` will block until there is a spot in the queue.
+    /// * **Tearing**:
+    ///   Tearing will be observed if frames last more than one vblank as the front buffer.
+    /// * **Supported on**: AMD on Vulkan.
+    /// * **Also known as**: "Adaptive Vsync"
     ///
-    /// Supported on AMD on Vulkan.
-    ///
-    /// This is traditionally called "Adaptive Vsync"
+    /// [`Surface::get_current_texture()`]: ../wgpu/struct.Surface.html#method.get_current_texture
     </span>FifoRelaxed = <span class="number">3</span>,
+
     <span class="doccomment">/// Presentation frames are not queued at all. The moment a present command
     /// is executed on the GPU, the presented image is swapped onto the front buffer
     /// immediately.
     ///
-    /// Tearing can be observed.
-    ///
-    /// Supported on most platforms except older DX12 and Wayland.
-    ///
-    /// This is traditionally called "Vsync Off".
+    /// * **Tearing**: Tearing can be observed.
+    /// * **Supported on**: Most platforms except older DX12 and Wayland.
+    /// * **Also known as**: "Vsync Off"
     </span>Immediate = <span class="number">4</span>,
+
     <span class="doccomment">/// Presentation frames are kept in a single-frame queue. Every vertical blanking period,
     /// the presentation engine will pop a frame from the queue. If there is no frame to display,
     /// it will present the same frame again until the next vblank.
     ///
-    /// When a present command is executed on the gpu, the frame will be put into the queue.
+    /// When a present command is executed on the GPU, the frame will be put into the queue.
     /// If there was already a frame in the queue, the new frame will _replace_ the old frame
     /// on the queue.
     ///
-    /// No tearing will be observed.
-    ///
-    /// Supported on DX12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
-    ///
-    /// This is traditionally called "Fast Vsync"
+    /// * **Tearing**: No tearing will be observed.
+    /// * **Supported on**: DX12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
+    /// * **Also known as**: "Fast Vsync"
     </span>Mailbox = <span class="number">5</span>,
 }
 
