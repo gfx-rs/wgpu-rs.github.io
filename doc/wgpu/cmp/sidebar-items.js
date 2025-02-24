@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["impl_eq_ord_hash_arc_address","impl_eq_ord_hash_proxy"],"static":["NEXT_ID"],"struct":["Identifier"]};
+window.SIDEBAR_ITEMS = {"macro":["impl_eq_ord_hash_arc_address","impl_eq_ord_hash_proxy"],"static":["NEXT_ID"],"struct":["AtomicU64","Identifier"]};

@@ -105,16 +105,20 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a></pre></div><pre class="rust"><code><span class="doccomment">//! We need to impl PartialEq, Eq, PartialOrd, Ord, and Hash for all handle types in wgpu.
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a></pre></div><pre class="rust"><code><span class="doccomment">//! We need to impl PartialEq, Eq, PartialOrd, Ord, and Hash for all handle types in wgpu.
 //!
 //! For types that have some already-unique property, we can use that property to implement these traits.
 //!
 //! For types (like WebGPU) that don't have such a property, we generate an identifier and use that.
 
-</span><span class="kw">use </span>core::{
-    num::NonZeroU64,
-    sync::atomic::{AtomicU64, Ordering},
-};
+</span><span class="attr">#[cfg(supports_64bit_atomics)]
+</span><span class="kw">pub use </span>core::sync::atomic::AtomicU64;
+<span class="attr">#[cfg(not(supports_64bit_atomics))]
+</span><span class="kw">pub use </span>portable_atomic::AtomicU64;
+
+<span class="kw">use </span>core::{num::NonZeroU64, sync::atomic::Ordering};
 
 <span class="kw">static </span>NEXT_ID: AtomicU64 = AtomicU64::new(<span class="number">1</span>);
 
