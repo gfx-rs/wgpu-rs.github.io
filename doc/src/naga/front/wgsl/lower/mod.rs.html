@@ -3375,7 +3375,12 @@
 <a href="#3374" id="3374">3374</a>
 <a href="#3375" id="3375">3375</a>
 <a href="#3376" id="3376">3376</a>
-<a href="#3377" id="3377">3377</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -3621,7 +3626,8 @@
         }
     }
 
-    <span class="kw">fn </span>as_global(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; GlobalContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">fn </span>as_global(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; GlobalContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
         GlobalContext {
             ast_expressions: <span class="self">self</span>.ast_expressions,
             globals: <span class="self">self</span>.globals,
@@ -3845,29 +3851,28 @@
             .map_err(|e| Error::ConstantEvaluatorError(e.into(), span))
     }
 
-    <span class="kw">fn </span>const_access(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    <span class="kw">fn </span>const_eval_expr_to_u32(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="kw">crate</span>::proc::U32EvalError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx) =&gt; {
                 <span class="kw">if </span>!ctx.local_expression_kind_tracker.is_const(handle) {
-                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst);
                 }
 
                 <span class="self">self</span>.module
                     .to_ctx()
                     .eval_expr_to_u32_from(handle, <span class="kw-2">&amp;</span>ctx.function.expressions)
-                    .ok()
             }
             ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ctx)) =&gt; {
                 <span class="macro">assert!</span>(ctx.local_expression_kind_tracker.is_const(handle));
                 <span class="self">self</span>.module
                     .to_ctx()
                     .eval_expr_to_u32_from(handle, <span class="kw-2">&amp;</span>ctx.function.expressions)
-                    .ok()
             }
-            ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; {
-                <span class="self">self</span>.module.to_ctx().eval_expr_to_u32(handle).ok()
-            }
-            ExpressionContextType::Override =&gt; <span class="prelude-val">None</span>,
+            ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; <span class="self">self</span>.module.to_ctx().eval_expr_to_u32(handle),
+            ExpressionContextType::Override =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst),
         }
     }
 
@@ -4446,7 +4451,7 @@
                 }
                 ast::GlobalDeclKind::Var(<span class="kw-2">ref </span>v) =&gt; {
                     <span class="kw">let </span>explicit_ty =
-                        v.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx))
+                        v.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx.as_const()))
                             .transpose()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>(ty, initializer) =
@@ -4479,7 +4484,7 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_const();
 
                     <span class="kw">let </span>explicit_ty =
-                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_global()))
+                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx))
                             .transpose()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>(ty, init) =
@@ -4500,7 +4505,7 @@
                 }
                 ast::GlobalDeclKind::Override(<span class="kw-2">ref </span>o) =&gt; {
                     <span class="kw">let </span>explicit_ty =
-                        o.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx))
+                        o.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx.as_const()))
                             .transpose()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_override();
@@ -4542,7 +4547,7 @@
                     <span class="kw">let </span>ty = <span class="self">self</span>.resolve_named_ast_type(
                         alias.ty,
                         <span class="prelude-val">Some</span>(alias.name.name.to_string()),
-                        <span class="kw-2">&amp;mut </span>ctx,
+                        <span class="kw-2">&amp;mut </span>ctx.as_const(),
                     )<span class="question-mark">?</span>;
                     ctx.globals
                         .insert(alias.name.name, LoweredGlobalDecl::Type(ty));
@@ -4640,7 +4645,7 @@
             .iter()
             .enumerate()
             .map(|(i, arg)| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
-                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(arg.ty, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(arg.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = expressions
                     .append(<span class="kw">crate</span>::Expression::FunctionArgument(i <span class="kw">as </span>u32), arg.name.span);
                 local_table.insert(arg.handle, Declared::Runtime(Typed::Plain(expr)));
@@ -4659,7 +4664,7 @@
             .result
             .as_ref()
             .map(|res| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
-                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(res.ty, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(res.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::FunctionResult {
                     ty,
                     binding: <span class="self">self</span>.binding(<span class="kw-2">&amp;</span>res.binding, ty, ctx)<span class="question-mark">?</span>,
@@ -4817,9 +4822,10 @@
                     // optimization.
                     </span>ctx.local_expression_kind_tracker.force_non_const(value);
 
-                    <span class="kw">let </span>explicit_ty =
-                        l.ty.map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_global()))
-                            .transpose()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>explicit_ty = l
+                        .ty
+                        .map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter)))
+                        .transpose()<span class="question-mark">?</span>;
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = explicit_ty {
                         <span class="kw">let </span><span class="kw-2">mut </span>ctx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
@@ -4846,12 +4852,15 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
                 ast::LocalDecl::Var(<span class="kw-2">ref </span>v) =&gt; {
-                    <span class="kw">let </span>explicit_ty =
-                        v.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx.as_global()))
-                            .transpose()<span class="question-mark">?</span>;
-
                     <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
+
+                    <span class="kw">let </span>explicit_ty =
+                        v.ty.map(|ast| {
+                            <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter))
+                        })
+                        .transpose()<span class="question-mark">?</span>;
+
                     <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
                     <span class="kw">let </span>(ty, initializer) =
                         <span class="self">self</span>.type_and_init(v.name, v.init, explicit_ty, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
@@ -4910,11 +4919,15 @@
                     <span class="kw">let </span>ectx = <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter);
 
                     <span class="kw">let </span>explicit_ty =
-                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_global()))
+                        c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_const()))
                             .transpose()<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>(_ty, init) =
-                        <span class="self">self</span>.type_and_init(c.name, <span class="prelude-val">Some</span>(c.init), explicit_ty, ectx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>(_ty, init) = <span class="self">self</span>.type_and_init(
+                        c.name,
+                        <span class="prelude-val">Some</span>(c.init),
+                        explicit_ty,
+                        <span class="kw-2">&amp;mut </span>ectx.as_const(),
+                    )<span class="question-mark">?</span>;
                     <span class="kw">let </span>init = init.expect(<span class="string">"Local const must have init"</span>);
 
                     block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
@@ -5369,7 +5382,7 @@
                     }
                 }
 
-                lowered_base.map(|base| <span class="kw">match </span>ctx.const_access(index) {
+                lowered_base.map(|base| <span class="kw">match </span>ctx.const_eval_expr_to_u32(index).ok() {
                     <span class="prelude-val">Some</span>(index) =&gt; <span class="kw">crate</span>::Expression::AccessIndex { base, index },
                     <span class="prelude-val">None </span>=&gt; <span class="kw">crate</span>::Expression::Access { base, index },
                 })
@@ -5446,7 +5459,7 @@
             }
             ast::Expression::Bitcast { expr, to, ty_span } =&gt; {
                 <span class="kw">let </span>expr = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>to_resolved = <span class="self">self</span>.resolve_ast_type(to, <span class="kw-2">&amp;mut </span>ctx.as_global())<span class="question-mark">?</span>;
+                <span class="kw">let </span>to_resolved = <span class="self">self</span>.resolve_ast_type(to, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>element_scalar = <span class="kw">match </span>ctx.module.types[to_resolved].inner {
                     <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
@@ -6428,7 +6441,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>members = Vec::with_capacity(s.members.len());
 
         <span class="kw">for </span>member <span class="kw">in </span>s.members.iter() {
-            <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(member.ty, ctx)<span class="question-mark">?</span>;
+            <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(member.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
 
             ctx.layouter.update(ctx.module.to_ctx()).unwrap();
 
@@ -6515,7 +6528,7 @@
     <span class="kw">fn </span>array_size(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         size: ast::ArraySize&lt;<span class="lifetime">'source</span>&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::ArraySize, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>size {
             ast::ArraySize::Constant(expr) =&gt; {
@@ -6523,17 +6536,14 @@
                 <span class="kw">let </span>const_expr = <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_const());
                 <span class="kw">match </span>const_expr {
                     <span class="prelude-val">Ok</span>(value) =&gt; {
-                        <span class="kw">let </span>len =
-                            ctx.module.to_ctx().eval_expr_to_u32(value).map_err(
-                                |err| <span class="kw">match </span>err {
-                                    <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
-                                        Error::ExpectedConstExprConcreteIntegerScalar(span)
-                                    }
-                                    <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
-                                        Error::ExpectedPositiveArrayLength(span)
-                                    }
-                                },
-                            )<span class="question-mark">?</span>;
+                        <span class="kw">let </span>len = ctx.const_eval_expr_to_u32(value).map_err(|err| <span class="kw">match </span>err {
+                            <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
+                                Error::ExpectedConstExprConcreteIntegerScalar(span)
+                            }
+                            <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
+                                Error::ExpectedPositiveArrayLength(span)
+                            }
+                        })<span class="question-mark">?</span>;
                         <span class="kw">let </span>size =
                             NonZeroU32::new(len).ok_or(Error::ExpectedPositiveArrayLength(span))<span class="question-mark">?</span>;
                         <span class="kw">crate</span>::ArraySize::Constant(size)
@@ -6544,7 +6554,7 @@
                                 <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
                                     <span class="kw">crate</span>::ArraySize::Pending(<span class="self">self</span>.array_size_override(
                                         expr,
-                                        <span class="kw-2">&amp;mut </span>ctx.as_override(),
+                                        <span class="kw-2">&amp;mut </span>ctx.as_global().as_override(),
                                         span,
                                     )<span class="question-mark">?</span>)
                                 }
@@ -6596,7 +6606,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
         name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span>ctx.types[handle] {
             ast::Type::Scalar(scalar) =&gt; scalar.to_inner_scalar(),
@@ -6634,7 +6644,7 @@
                 <span class="kw">crate</span>::TypeInner::Pointer { base, space }
             }
             ast::Type::Array { base, size } =&gt; {
-                <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">let </span>size = <span class="self">self</span>.array_size(size, ctx)<span class="question-mark">?</span>;
 
                 ctx.layouter.update(ctx.module.to_ctx()).unwrap();
@@ -6674,14 +6684,14 @@
             }
         };
 
-        <span class="prelude-val">Ok</span>(ctx.ensure_type_exists(name, inner))
+        <span class="prelude-val">Ok</span>(ctx.as_global().ensure_type_exists(name, inner))
     }
 
     <span class="doccomment">/// Return a Naga `Handle&lt;Type&gt;` representing the front-end type `handle`.
     </span><span class="kw">fn </span>resolve_ast_type(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
-        ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="self">self</span>.resolve_named_ast_type(handle, <span class="prelude-val">None</span>, ctx)
     }
