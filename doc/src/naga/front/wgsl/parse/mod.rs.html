@@ -2932,7 +2932,13 @@
 <a href="#2931" id="2931">2931</a>
 <a href="#2932" id="2932">2932</a>
 <a href="#2933" id="2933">2933</a>
-<a href="#2934" id="2934">2934</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
+<a href="#2934" id="2934">2934</a>
+<a href="#2935" id="2935">2935</a>
+<a href="#2936" id="2936">2936</a>
+<a href="#2937" id="2937">2937</a>
+<a href="#2938" id="2938">2938</a>
+<a href="#2939" id="2939">2939</a>
+<a href="#2940" id="2940">2940</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
     ShouldConflictOnFullDuplicate, StandardFilterableTriggeringRule,
 };
@@ -3510,8 +3516,9 @@
             (Token::Paren(<span class="string">'&lt;'</span>), ast::ConstructorType::PartialArray) =&gt; {
                 lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.end_of_generic_arguments() {
                     <span class="kw">let </span>expr = <span class="self">self</span>.const_generic_expression(lexer, ctx)<span class="question-mark">?</span>;
+                    lexer.skip(Token::Separator(<span class="string">','</span>));
                     ast::ArraySize::Constant(expr)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
@@ -4178,6 +4185,7 @@
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
         <span class="kw">let </span>span = lexer.span_from(start);
+        lexer.skip(Token::Separator(<span class="string">','</span>));
         lexer.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((ty, span))
     }
@@ -4370,9 +4378,11 @@
                 lexer.expect(Token::Separator(<span class="string">','</span>))<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="kw">crate</span>::AddressSpace::Storage { <span class="kw-2">ref mut </span>access } = space {
-                    <span class="kw-2">*</span>access = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
-                        lexer.next_storage_access()<span class="question-mark">?
-                    </span>} <span class="kw">else </span>{
+                    <span class="kw-2">*</span>access = <span class="kw">if </span>lexer.end_of_generic_arguments() {
+                        <span class="kw">let </span>result = lexer.next_storage_access()<span class="question-mark">?</span>;
+                        lexer.skip(Token::Separator(<span class="string">','</span>));
+                        result
+                    } <span class="kw">else </span>{
                         <span class="kw">crate</span>::StorageAccess::LOAD
                     };
                 }
@@ -4382,8 +4392,9 @@
             <span class="string">"array" </span>=&gt; {
                 lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.end_of_generic_arguments() {
                     <span class="kw">let </span>size = <span class="self">self</span>.const_generic_expression(lexer, ctx)<span class="question-mark">?</span>;
+                    lexer.skip(Token::Separator(<span class="string">','</span>));
                     ast::ArraySize::Constant(size)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
@@ -4395,8 +4406,9 @@
             <span class="string">"binding_array" </span>=&gt; {
                 lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>base = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = <span class="kw">if </span>lexer.skip(Token::Separator(<span class="string">','</span>)) {
+                <span class="kw">let </span>size = <span class="kw">if </span>lexer.end_of_generic_arguments() {
                     <span class="kw">let </span>size = <span class="self">self</span>.unary_expression(lexer, ctx)<span class="question-mark">?</span>;
+                    lexer.skip(Token::Separator(<span class="string">','</span>));
                     ast::ArraySize::Constant(size)
                 } <span class="kw">else </span>{
                     ast::ArraySize::Dynamic
