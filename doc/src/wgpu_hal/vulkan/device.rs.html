@@ -2751,7 +2751,11 @@
 <a href="#2750" id="2750">2750</a>
 <a href="#2751" id="2751">2751</a>
 <a href="#2752" id="2752">2752</a>
-<a href="#2753" id="2753">2753</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a>
+<a href="#2756" id="2756">2756</a>
+<a href="#2757" id="2757">2757</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     collections::BTreeMap,
     ffi::{CStr, CString},
@@ -3661,6 +3665,7 @@
                     shader_stage: naga_stage,
                 };
                 <span class="kw">let </span>needs_temp_options = !runtime_checks.bounds_checks
+                    || !runtime_checks.force_loop_bounding
                     || !binding_map.is_empty()
                     || naga_shader.debug_source.is_some()
                     || !stage.zero_initialize_workgroup_memory;
@@ -3674,6 +3679,9 @@
                             image_load: naga::proc::BoundsCheckPolicy::Unchecked,
                             binding_array: naga::proc::BoundsCheckPolicy::Unchecked,
                         };
+                    }
+                    <span class="kw">if </span>!runtime_checks.force_loop_bounding {
+                        temp_options.force_loop_bounding = <span class="bool-val">false</span>;
                     }
                     <span class="kw">if </span>!binding_map.is_empty() {
                         temp_options.binding_map = binding_map.clone();

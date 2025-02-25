@@ -936,7 +936,17 @@
 <a href="#935" id="935">935</a>
 <a href="#936" id="936">936</a>
 <a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 [spv]: https://www.khronos.org/registry/SPIR-V/
@@ -1082,6 +1092,8 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     signature: <span class="prelude-ty">Option</span>&lt;Instruction&gt;,
     parameters: Vec&lt;FunctionArgument&gt;,
     variables: <span class="kw">crate</span>::FastHashMap&lt;Handle&lt;<span class="kw">crate</span>::LocalVariable&gt;, LocalVariable&gt;,
+    <span class="doccomment">/// List of local variables used as a counters to ensure that all loops are bounded.
+    </span>force_loop_bounding_vars: Vec&lt;LocalVariable&gt;,
 
     <span class="doccomment">/// A map taking an expression that yields a composite value (array, matrix)
     /// to the temporary variables we have spilled it to, if any. Spilling
@@ -1664,6 +1676,8 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
     <span class="doccomment">/// Tracks the constness of `Expression`s residing in `self.ir_function.expressions`
     </span>expression_constness: ExpressionConstnessTracker,
+
+    force_loop_bounding: bool,
 }
 
 <span class="kw">impl </span>BlockContext&lt;<span class="lifetime">'_</span>&gt; {
@@ -1717,6 +1731,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     flags: WriterFlags,
     bounds_check_policies: BoundsCheckPolicies,
     zero_initialize_workgroup_memory: ZeroInitializeWorkgroupMemoryMode,
+    force_loop_bounding: bool,
     void_type: Word,
     <span class="comment">//TODO: convert most of these into vectors, addressable by handle indices
     </span>lookup_type: <span class="kw">crate</span>::FastHashMap&lt;LookupType, Word&gt;,
@@ -1820,6 +1835,10 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
     <span class="doccomment">/// Dictates the way workgroup variables should be zero initialized
     </span><span class="kw">pub </span>zero_initialize_workgroup_memory: ZeroInitializeWorkgroupMemoryMode,
 
+    <span class="doccomment">/// If set, loops will have code injected into them, forcing the compiler
+    /// to think the number of iterations is bounded.
+    </span><span class="kw">pub </span>force_loop_bounding: bool,
+
     <span class="kw">pub </span>debug_info: <span class="prelude-ty">Option</span>&lt;DebugInfo&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
@@ -1838,6 +1857,7 @@ Backend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
             capabilities: <span class="prelude-val">None</span>,
             bounds_check_policies: BoundsCheckPolicies::default(),
             zero_initialize_workgroup_memory: ZeroInitializeWorkgroupMemoryMode::Polyfill,
+            force_loop_bounding: <span class="bool-val">true</span>,
             debug_info: <span class="prelude-val">None</span>,
         }
     }
