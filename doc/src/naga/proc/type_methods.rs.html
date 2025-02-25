@@ -282,7 +282,29 @@
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
 <a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
 //!
 //! [`TypeInner`]: crate::TypeInner
 //! [`Scalar`]: crate::Scalar
@@ -563,6 +585,28 @@
             | <span class="kw">crate</span>::TypeInner::AccelerationStructure
             | <span class="kw">crate</span>::TypeInner::RayQuery
             | <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Return true if `self` is an abstract type.
+    ///
+    /// Use `types` to look up type handles. This is necessary to
+    /// recognize abstract arrays.
+    </span><span class="kw">pub fn </span>is_abstract(<span class="kw-2">&amp;</span><span class="self">self</span>, types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar)
+            | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. }
+            | <span class="kw">crate</span>::TypeInner::Matrix { scalar, .. }
+            | <span class="kw">crate</span>::TypeInner::Atomic(scalar) =&gt; scalar.is_abstract(),
+            <span class="kw">crate</span>::TypeInner::Array { base, .. } =&gt; types[base].inner.is_abstract(types),
+            <span class="kw">crate</span>::TypeInner::ValuePointer { .. }
+            | <span class="kw">crate</span>::TypeInner::Pointer { .. }
+            | <span class="kw">crate</span>::TypeInner::Struct { .. }
+            | <span class="kw">crate</span>::TypeInner::Image { .. }
+            | <span class="kw">crate</span>::TypeInner::Sampler { .. }
+            | <span class="kw">crate</span>::TypeInner::AccelerationStructure
+            | <span class="kw">crate</span>::TypeInner::RayQuery
+            | <span class="kw">crate</span>::TypeInner::BindingArray { .. } =&gt; <span class="bool-val">false</span>,
         }
     }
 }

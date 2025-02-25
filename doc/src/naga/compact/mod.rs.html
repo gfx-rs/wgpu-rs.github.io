@@ -1070,7 +1070,10 @@
 <a href="#1069" id="1069">1069</a>
 <a href="#1070" id="1070">1070</a>
 <a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a></pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a></pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>handle_set_map;
 <span class="kw">mod </span>statements;
@@ -1182,15 +1185,18 @@
     </span><span class="macro">log::trace!</span>(<span class="string">"tracing special types"</span>);
     module_tracer.trace_special_types(<span class="kw-2">&amp;</span>module.special_types);
 
-    <span class="comment">// We treat all named constants as used by definition.
+    <span class="comment">// We treat all named constants as used by definition, unless they have an
+    // abstract type as we do not want those reaching the validator.
     </span><span class="macro">log::trace!</span>(<span class="string">"tracing named constants"</span>);
     <span class="kw">for </span>(handle, constant) <span class="kw">in </span>module.constants.iter() {
-        <span class="kw">if </span>constant.name.is_some() {
-            <span class="macro">log::trace!</span>(<span class="string">"tracing constant {:?}"</span>, constant.name.as_ref().unwrap());
-            module_tracer.constants_used.insert(handle);
-            module_tracer.types_used.insert(constant.ty);
-            module_tracer.global_expressions_used.insert(constant.init);
+        <span class="kw">if </span>constant.name.is_none() || module.types[constant.ty].inner.is_abstract(<span class="kw-2">&amp;</span>module.types) {
+            <span class="kw">continue</span>;
         }
+
+        <span class="macro">log::trace!</span>(<span class="string">"tracing constant {:?}"</span>, constant.name.as_ref().unwrap());
+        module_tracer.constants_used.insert(handle);
+        module_tracer.types_used.insert(constant.ty);
+        module_tracer.global_expressions_used.insert(constant.init);
     }
 
     <span class="comment">// We treat all named overrides as used by definition.
