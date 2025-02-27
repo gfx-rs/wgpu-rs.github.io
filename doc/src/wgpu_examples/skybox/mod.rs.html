@@ -523,7 +523,8 @@
 <a href="#522" id="522">522</a>
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>std::f32::consts;
 <span class="kw">use </span>wgpu::{util::DeviceExt, AstcBlock, AstcChannel};
 
@@ -629,7 +630,7 @@
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>entities = Vec::new();
         {
-            <span class="kw">let </span>source = <span class="macro">include_bytes!</span>(<span class="string">"models/teslacyberv3.0.obj"</span>);
+            <span class="kw">let </span>source = <span class="macro">include_bytes!</span>(<span class="string">"models/rustacean-3d.obj"</span>);
             <span class="kw">let </span>data = obj::ObjData::load_buf(<span class="kw-2">&amp;</span>source[..]).unwrap();
             <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::new();
             <span class="kw">for </span>object <span class="kw">in </span>data.objects {
@@ -640,9 +641,10 @@
                             <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span><span class="kw-2">&amp;</span>[<span class="number">0</span>, end_index - <span class="number">1</span>, end_index] {
                                 <span class="kw">let </span>obj::IndexTuple(position_id, _texture_id, normal_id) =
                                     poly.<span class="number">0</span>[index];
+                                <span class="kw">let </span>[x, y, z] = data.position[position_id];
                                 vertices.push(Vertex {
-                                    pos: data.position[position_id],
-                                    normal: data.normal[normal_id.unwrap()],
+                                    pos: [y, z, x], <span class="comment">// model is rotated to face down, so need to rotate it
+                                    </span>normal: data.normal[normal_id.unwrap()],
                                 })
                             }
                         }

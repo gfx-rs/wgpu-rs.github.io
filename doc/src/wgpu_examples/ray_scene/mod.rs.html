@@ -567,7 +567,9 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Quat, Vec3};
 <span class="kw">use </span>std::f32::consts::PI;
 <span class="kw">use </span>std::ops::IndexMut;
@@ -670,7 +672,7 @@
     <span class="kw">let </span>start_vertex_index = scene.vertices.len();
     <span class="kw">let </span>start_geometry_index = scene.geometries.len();
 
-    <span class="kw">let </span><span class="kw-2">mut </span>mapping = std::collections::HashMap::&lt;(usize, usize, usize), usize&gt;::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>mapping = std::collections::HashMap::&lt;(usize, <span class="prelude-ty">Option</span>&lt;usize&gt;, usize), usize&gt;::new();
 
     <span class="kw">let </span><span class="kw-2">mut </span>next_index = <span class="number">0</span>;
 
@@ -681,7 +683,9 @@
                 <span class="kw">for </span>end_index <span class="kw">in </span><span class="number">2</span>..poly.<span class="number">0</span>.len() {
                     <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span><span class="kw-2">&amp;</span>[<span class="number">0</span>, end_index - <span class="number">1</span>, end_index] {
                         <span class="kw">let </span>obj::IndexTuple(position_id, texture_id, normal_id) = poly.<span class="number">0</span>[index];
-                        <span class="kw">let </span>texture_id = texture_id.expect(<span class="string">"uvs required"</span>);
+                        <span class="kw">let </span>uv = texture_id
+                            .map(|texture_id| data.texture[texture_id])
+                            .unwrap_or_default();
                         <span class="kw">let </span>normal_id = normal_id.expect(<span class="string">"normals required"</span>);
 
                         <span class="kw">let </span>index = <span class="kw-2">*</span>mapping
@@ -692,7 +696,7 @@
 
                             scene.vertices.push(Vertex {
                                 pos: data.position[position_id],
-                                uv: data.texture[texture_id],
+                                uv,
                                 normal: data.normal[normal_id],
                                 ..Default::default()
                             })
@@ -865,7 +869,7 @@
 <span class="kw">fn </span>load_scene(device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) -&gt; SceneComponents {
     <span class="kw">let </span><span class="kw-2">mut </span>scene = RawSceneComponents::default();
 
-    load_model(<span class="kw-2">&amp;mut </span>scene, <span class="string">"/skybox/models/teslacyberv3.0.obj"</span>);
+    load_model(<span class="kw-2">&amp;mut </span>scene, <span class="string">"/skybox/models/rustacean-3d.obj"</span>);
     load_model(<span class="kw-2">&amp;mut </span>scene, <span class="string">"/ray_scene/cube.obj"</span>);
 
     upload_scene_components(device, queue, <span class="kw-2">&amp;</span>scene)
