@@ -3249,7 +3249,41 @@
 <a href="#3248" id="3248">3248</a>
 <a href="#3249" id="3249">3249</a>
 <a href="#3250" id="3250">3250</a>
-<a href="#3251" id="3251">3251</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3251" id="3251">3251</a>
+<a href="#3252" id="3252">3252</a>
+<a href="#3253" id="3253">3253</a>
+<a href="#3254" id="3254">3254</a>
+<a href="#3255" id="3255">3255</a>
+<a href="#3256" id="3256">3256</a>
+<a href="#3257" id="3257">3257</a>
+<a href="#3258" id="3258">3258</a>
+<a href="#3259" id="3259">3259</a>
+<a href="#3260" id="3260">3260</a>
+<a href="#3261" id="3261">3261</a>
+<a href="#3262" id="3262">3262</a>
+<a href="#3263" id="3263">3263</a>
+<a href="#3264" id="3264">3264</a>
+<a href="#3265" id="3265">3265</a>
+<a href="#3266" id="3266">3266</a>
+<a href="#3267" id="3267">3267</a>
+<a href="#3268" id="3268">3268</a>
+<a href="#3269" id="3269">3269</a>
+<a href="#3270" id="3270">3270</a>
+<a href="#3271" id="3271">3271</a>
+<a href="#3272" id="3272">3272</a>
+<a href="#3273" id="3273">3273</a>
+<a href="#3274" id="3274">3274</a>
+<a href="#3275" id="3275">3275</a>
+<a href="#3276" id="3276">3276</a>
+<a href="#3277" id="3277">3277</a>
+<a href="#3278" id="3278">3278</a>
+<a href="#3279" id="3279">3279</a>
+<a href="#3280" id="3280">3280</a>
+<a href="#3281" id="3281">3281</a>
+<a href="#3282" id="3282">3282</a>
+<a href="#3283" id="3283">3283</a>
+<a href="#3284" id="3284">3284</a>
+<a href="#3285" id="3285">3285</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -5481,26 +5515,60 @@ Implementations for `BlockContext` methods.
     }
 
     <span class="kw">fn </span>spill_to_internal_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base: Handle&lt;<span class="kw">crate</span>::Expression&gt;, block: <span class="kw-2">&amp;mut </span>Block) {
-        <span class="comment">// Generate an internal variable of the appropriate type for `base`.
-        </span><span class="kw">let </span>variable_id = <span class="self">self</span>.writer.id_gen.next();
-        <span class="kw">let </span>pointer_type_id = <span class="self">self
-            </span>.writer
-            .get_resolution_pointer_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[base].ty, spirv::StorageClass::Function);
-        <span class="kw">let </span>variable = <span class="kw">super</span>::LocalVariable {
-            id: variable_id,
-            instruction: Instruction::variable(
-                pointer_type_id,
-                variable_id,
-                spirv::StorageClass::Function,
-                <span class="prelude-val">None</span>,
-            ),
+        <span class="kw">use </span>indexmap::map::Entry;
+
+        <span class="comment">// Make sure we have an internal variable to spill `base` to.
+        </span><span class="kw">let </span>spill_variable_id = <span class="kw">match </span><span class="self">self</span>.function.spilled_composites.entry(base) {
+            Entry::Occupied(preexisting) =&gt; preexisting.get().id,
+            Entry::Vacant(vacant) =&gt; {
+                <span class="comment">// Generate a new internal variable of the appropriate
+                // type for `base`.
+                </span><span class="kw">let </span>pointer_type_id = <span class="self">self</span>.writer.get_resolution_pointer_id(
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[base].ty,
+                    spirv::StorageClass::Function,
+                );
+                <span class="kw">let </span>id = <span class="self">self</span>.writer.id_gen.next();
+                vacant.insert(<span class="kw">super</span>::LocalVariable {
+                    id,
+                    instruction: Instruction::variable(
+                        pointer_type_id,
+                        id,
+                        spirv::StorageClass::Function,
+                        <span class="prelude-val">None</span>,
+                    ),
+                });
+                id
+            }
         };
 
-        <span class="kw">let </span>base_id = <span class="self">self</span>.cached[base];
+        <span class="comment">// Perform the store even if we already had a spill variable for `base`.
+        // Consider this code:
+        //
+        // var x = ...;
+        // var y = ...;
+        // var z = ...;
+        // for (i = 0; i&lt;2; i++) {
+        //     let a = array(i, i, i);
+        //     if (i == 0) {
+        //         x += a[y];
+        //     } else [
+        //         x += a[z];
+        //     }
+        // }
+        //
+        // The value of `a` needs to be spilled so we can subscript it with `y` and `z`.
+        //
+        // When we generate SPIR-V for `a[y]`, we will create the spill
+        // variable, and store `a`'s value in it.
+        //
+        // When we generate SPIR-V for `a[z]`, we will notice that the spill
+        // variable for `a` has already been declared, but it is still essential
+        // that we store `a` into it, so that `a[z]` sees this iteration's value
+        // of `a`.
+        </span><span class="kw">let </span>base_id = <span class="self">self</span>.cached[base];
         block
             .body
-            .push(Instruction::store(variable.id, base_id, <span class="prelude-val">None</span>));
-        <span class="self">self</span>.function.spilled_composites.insert(base, variable);
+            .push(Instruction::store(spill_variable_id, base_id, <span class="prelude-val">None</span>));
     }
 
     <span class="doccomment">/// Generate an access to a spilled temporary, if necessary.
