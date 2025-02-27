@@ -140,10 +140,12 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="doccomment">//! RenderDoc integration - &lt;https://renderdoc.org/&gt;
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a></pre></div><pre class="rust"><code><span class="doccomment">//! RenderDoc integration - &lt;https://renderdoc.org/&gt;
 </span><span class="attr">#![cfg_attr(not(any(feature = <span class="string">"gles"</span>, feature = <span class="string">"vulkan"</span>)), allow(dead_code))]
 
-</span><span class="kw">use </span>alloc::string::String;
+</span><span class="kw">use </span>alloc::format;
+<span class="kw">use </span>alloc::string::String;
 <span class="kw">use </span>core::{ffi, ptr};
 
 <span class="doccomment">/// The dynamically loaded RenderDoc API function table
@@ -213,7 +215,7 @@
         };
 
         <span class="kw">let </span>get_api: libloading::Symbol&lt;GetApiFn&gt; =
-            <span class="kw">match unsafe </span>{ renderdoc_lib.get(<span class="string">b"RENDERDOC_GetAPI\0"</span>) } {
+            <span class="kw">match unsafe </span>{ renderdoc_lib.get(<span class="string">c"RENDERDOC_GetAPI"</span>.to_bytes()) } {
                 <span class="prelude-val">Ok</span>(api) =&gt; api,
                 <span class="prelude-val">Err</span>(e) =&gt; {
                     <span class="kw">return </span>RenderDoc::NotAvailable {
