@@ -1866,7 +1866,7 @@ int dim_1d = NagaDimensions1D(image_1d);
         ABS_FUNCTION, DIV_FUNCTION, EXTRACT_BITS_FUNCTION, INSERT_BITS_FUNCTION, MOD_FUNCTION,
         NEG_FUNCTION,
     },
-    BackendResult,
+    BackendResult, WrappedType,
 };
 <span class="kw">use crate</span>::{arena::Handle, proc::NameKey, ScalarKind};
 <span class="kw">use </span>std::fmt::Write;
@@ -2771,7 +2771,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                     <span class="kw">match </span>module.types[ty].inner {
                         <span class="kw">crate</span>::TypeInner::Struct { .. } | <span class="kw">crate</span>::TypeInner::Array { .. } =&gt; {
                             <span class="kw">let </span>constructor = WrappedConstructor { ty };
-                            <span class="kw">if </span><span class="self">self</span>.wrapped.constructors.insert(constructor) {
+                            <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::Constructor(constructor)) {
                                 <span class="self">self</span>.write_wrapped_constructor_function(module, constructor)<span class="question-mark">?</span>;
                             }
                         }
@@ -2787,7 +2787,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                         } =&gt; {
                             <span class="kw">if </span>format.single_component() {
                                 <span class="kw">let </span>scalar: <span class="kw">crate</span>::Scalar = format.into();
-                                <span class="kw">if </span><span class="self">self</span>.wrapped.image_load_scalars.insert(scalar) {
+                                <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ImageLoadScalar(scalar)) {
                                     <span class="self">self</span>.write_loaded_scalar_to_storage_loaded_value(scalar)<span class="question-mark">?</span>;
                                 }
                             }
@@ -2823,7 +2823,7 @@ int dim_1d = NagaDimensions1D(image_1d);
         <span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>expressions.iter() {
             <span class="kw">if let </span><span class="kw">crate</span>::Expression::ZeroValue(ty) = expressions[handle] {
                 <span class="kw">let </span>zero_value = WrappedZeroValue { ty };
-                <span class="kw">if </span><span class="self">self</span>.wrapped.zero_values.insert(zero_value) {
+                <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ZeroValue(zero_value)) {
                     <span class="self">self</span>.write_wrapped_zero_value_function(module, zero_value)<span class="question-mark">?</span>;
                 }
             }
@@ -2870,7 +2870,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                             components,
                         };
 
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.math.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::Math(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -2912,7 +2912,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                             components,
                         };
 
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.math.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::Math(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -2981,7 +2981,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                             components,
                         };
 
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.math.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::Math(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -3032,7 +3032,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                 // find another solution for different bit-widths.
                 </span><span class="kw">match </span>(op, scalar) {
                     (<span class="kw">crate</span>::UnaryOperator::Negate, <span class="kw">crate</span>::Scalar::I32) =&gt; {
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.unary_op.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::UnaryOp(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -3093,7 +3093,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                             left_ty: left_wrapped_ty,
                             right_ty: right_wrapped_ty,
                         };
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.binary_op.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::BinaryOp(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -3149,7 +3149,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                             left_ty: left_wrapped_ty,
                             right_ty: right_wrapped_ty,
                         };
-                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.binary_op.insert(wrapped) {
+                        <span class="kw">if </span>!<span class="self">self</span>.wrapped.insert(WrappedType::BinaryOp(wrapped)) {
                             <span class="kw">continue</span>;
                         }
 
@@ -3225,7 +3225,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                         writable: storage_access.contains(<span class="kw">crate</span>::StorageAccess::STORE),
                     };
 
-                    <span class="kw">if </span><span class="self">self</span>.wrapped.array_lengths.insert(wal) {
+                    <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ArrayLength(wal)) {
                         <span class="self">self</span>.write_wrapped_array_length_function(wal)<span class="question-mark">?</span>;
                     }
                 }
@@ -3244,7 +3244,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"we only query images"</span>),
                     };
 
-                    <span class="kw">if </span><span class="self">self</span>.wrapped.image_queries.insert(wiq) {
+                    <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::ImageQuery(wiq)) {
                         <span class="self">self</span>.write_wrapped_image_query_function(module, wiq, handle, func_ctx)<span class="question-mark">?</span>;
                     }
                 }
@@ -3273,7 +3273,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                                 }
 
                                 <span class="kw">let </span>constructor = WrappedConstructor { ty };
-                                <span class="kw">if </span>writer.wrapped.constructors.insert(constructor) {
+                                <span class="kw">if </span>writer.wrapped.insert(WrappedType::Constructor(constructor)) {
                                     writer
                                         .write_wrapped_constructor_function(module, constructor)<span class="question-mark">?</span>;
                                 }
@@ -3282,7 +3282,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                                 write_wrapped_constructor(writer, base, module)<span class="question-mark">?</span>;
 
                                 <span class="kw">let </span>constructor = WrappedConstructor { ty };
-                                <span class="kw">if </span>writer.wrapped.constructors.insert(constructor) {
+                                <span class="kw">if </span>writer.wrapped.insert(WrappedType::Constructor(constructor)) {
                                     writer
                                         .write_wrapped_constructor_function(module, constructor)<span class="question-mark">?</span>;
                                 }
@@ -3318,7 +3318,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                                 <span class="kw">let </span>ty = base_ty_handle.unwrap();
                                 <span class="kw">let </span>access = WrappedStructMatrixAccess { ty, index };
 
-                                <span class="kw">if </span><span class="self">self</span>.wrapped.struct_matrix_access.insert(access) {
+                                <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::StructMatrixAccess(access)) {
                                     <span class="self">self</span>.write_wrapped_struct_matrix_get_function(module, access)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_wrapped_struct_matrix_set_function(module, access)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_wrapped_struct_matrix_set_vec_function(
@@ -3547,7 +3547,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                 }) = <span class="kw">super</span>::writer::get_inner_matrix_data(module, global.ty)
                 {
                     <span class="kw">let </span>entry = WrappedMatCx2 { columns };
-                    <span class="kw">if </span><span class="self">self</span>.wrapped.mat_cx2s.insert(entry) {
+                    <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::MatCx2(entry)) {
                         <span class="self">self</span>.write_mat_cx2_typedef_and_functions(entry)<span class="question-mark">?</span>;
                     }
                 }
@@ -3565,7 +3565,7 @@ int dim_1d = NagaDimensions1D(image_1d);
                         }) = <span class="kw">super</span>::writer::get_inner_matrix_data(module, member.ty)
                         {
                             <span class="kw">let </span>entry = WrappedMatCx2 { columns };
-                            <span class="kw">if </span><span class="self">self</span>.wrapped.mat_cx2s.insert(entry) {
+                            <span class="kw">if </span><span class="self">self</span>.wrapped.insert(WrappedType::MatCx2(entry)) {
                                 <span class="self">self</span>.write_mat_cx2_typedef_and_functions(entry)<span class="question-mark">?</span>;
                             }
                         }

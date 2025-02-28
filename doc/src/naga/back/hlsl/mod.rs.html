@@ -537,7 +537,9 @@
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
-<a href="#539" id="539">539</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [HLSL][hlsl] (High-Level Shading Language).
 
 # Supported shader model versions:
@@ -981,18 +983,23 @@ information.
     </span>Override,
 }
 
+<span class="attr">#[derive(PartialEq, Eq, Hash)]
+</span><span class="kw">enum </span>WrappedType {
+    ZeroValue(help::WrappedZeroValue),
+    ArrayLength(help::WrappedArrayLength),
+    ImageQuery(help::WrappedImageQuery),
+    ImageLoadScalar(<span class="kw">crate</span>::Scalar),
+    Constructor(help::WrappedConstructor),
+    StructMatrixAccess(help::WrappedStructMatrixAccess),
+    MatCx2(help::WrappedMatCx2),
+    Math(help::WrappedMath),
+    UnaryOp(help::WrappedUnaryOp),
+    BinaryOp(help::WrappedBinaryOp),
+}
+
 <span class="attr">#[derive(Default)]
 </span><span class="kw">struct </span>Wrapped {
-    zero_values: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedZeroValue&gt;,
-    array_lengths: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedArrayLength&gt;,
-    image_queries: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedImageQuery&gt;,
-    image_load_scalars: <span class="kw">crate</span>::FastHashSet&lt;<span class="kw">crate</span>::Scalar&gt;,
-    constructors: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedConstructor&gt;,
-    struct_matrix_access: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedStructMatrixAccess&gt;,
-    mat_cx2s: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedMatCx2&gt;,
-    math: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedMath&gt;,
-    unary_op: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedUnaryOp&gt;,
-    binary_op: <span class="kw">crate</span>::FastHashSet&lt;help::WrappedBinaryOp&gt;,
+    types: <span class="kw">crate</span>::FastHashSet&lt;WrappedType&gt;,
     <span class="doccomment">/// If true, the sampler heaps have been written out.
     </span>sampler_heaps: bool,
     <span class="comment">// Mapping from SamplerIndexBufferKey to the name the namer returned.
@@ -1000,15 +1007,12 @@ information.
 }
 
 <span class="kw">impl </span>Wrapped {
+    <span class="kw">fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r#type: WrappedType) -&gt; bool {
+        <span class="self">self</span>.types.insert(r#type)
+    }
+
     <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.array_lengths.clear();
-        <span class="self">self</span>.image_queries.clear();
-        <span class="self">self</span>.constructors.clear();
-        <span class="self">self</span>.struct_matrix_access.clear();
-        <span class="self">self</span>.mat_cx2s.clear();
-        <span class="self">self</span>.math.clear();
-        <span class="self">self</span>.unary_op.clear();
-        <span class="self">self</span>.binary_op.clear();
+        <span class="self">self</span>.types.clear();
     }
 }
 
