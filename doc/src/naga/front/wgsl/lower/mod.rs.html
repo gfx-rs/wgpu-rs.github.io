@@ -3423,7 +3423,15 @@
 <a href="#3422" id="3422">3422</a>
 <a href="#3423" id="3423">3423</a>
 <a href="#3424" id="3424">3424</a>
-<a href="#3425" id="3425">3425</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
+<a href="#3429" id="3429">3429</a>
+<a href="#3430" id="3430">3430</a>
+<a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
@@ -5460,11 +5468,19 @@
                     }
                 }
 
-                lowered_base.map(|base| <span class="kw">match </span>ctx.const_eval_expr_to_u32(index).ok() {
-                    <span class="prelude-val">Some</span>(index) =&gt; <span class="kw">crate</span>::Expression::AccessIndex { base, index },
-                    <span class="prelude-val">None </span>=&gt; <span class="kw">crate</span>::Expression::Access { base, index },
-                })
-            }
+                lowered_base.try_map(|base| <span class="kw">match </span>ctx.const_eval_expr_to_u32(index).ok() {
+                    <span class="prelude-val">Some</span>(index) =&gt; <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Error&gt;(<span class="kw">crate</span>::Expression::AccessIndex { base, index }),
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="comment">// When an abstract array value e is indexed by an expression
+                        // that is not a const-expression, then the array is concretized
+                        // before the index is applied.
+                        // https://www.w3.org/TR/WGSL/#array-access-expr
+                        // Also applies to vectors and matrices.
+                        </span><span class="kw">let </span>base = ctx.concretize(base)<span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Expression::Access { base, index })
+                    }
+                })<span class="question-mark">?
+            </span>}
             ast::Expression::Member { base, <span class="kw-2">ref </span>field } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>lowered_base = <span class="self">self</span>.expression_for_reference(base, ctx)<span class="question-mark">?</span>;
 
