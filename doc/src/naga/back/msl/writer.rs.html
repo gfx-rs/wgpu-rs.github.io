@@ -6822,19 +6822,35 @@
 <a href="#6821" id="6821">6821</a>
 <a href="#6822" id="6822">6822</a>
 <a href="#6823" id="6823">6823</a>
-<a href="#6824" id="6824">6824</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
+<a href="#6824" id="6824">6824</a>
+<a href="#6825" id="6825">6825</a>
+<a href="#6826" id="6826">6826</a>
+<a href="#6827" id="6827">6827</a>
+<a href="#6828" id="6828">6828</a>
+<a href="#6829" id="6829">6829</a>
+<a href="#6830" id="6830">6830</a>
+<a href="#6831" id="6831">6831</a>
+<a href="#6832" id="6832">6832</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    format,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
+<span class="kw">use </span>core::{
+    fmt::{Display, Error <span class="kw">as </span>FmtError, Formatter, Write},
+    iter,
+};
+
+<span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, index, ExpressionKindTracker, NameKey, TypeResolution},
     valid, FastHashMap, FastHashSet,
 };
+
 <span class="attr">#[cfg(test)]
-</span><span class="kw">use </span>std::ptr;
-<span class="kw">use </span>std::{
-    fmt::{Display, Error <span class="kw">as </span>FmtError, Formatter, Write},
-    iter,
-};
+</span><span class="kw">use </span>core::ptr;
 
 <span class="doccomment">/// Shorthand result used internally by the backend
 </span><span class="kw">type </span>BackendResult = <span class="prelude-ty">Result</span>&lt;(), Error&gt;;
@@ -6926,13 +6942,13 @@
 
 <span class="doccomment">/// Wrapper for identifier names for clamped level-of-detail values
 ///
-/// Values of this type implement [`std::fmt::Display`], formatting as
+/// Values of this type implement [`core::fmt::Display`], formatting as
 /// the name of the variable used to hold the cached clamped
 /// level-of-detail value for an `ImageLoad` expression.
 </span><span class="kw">struct </span>ClampedLod(Handle&lt;<span class="kw">crate</span>::Expression&gt;);
 
 <span class="kw">impl </span>Display <span class="kw">for </span>ClampedLod {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, CLAMPED_LOD_LOAD_PREFIX)
     }
 }
@@ -6947,14 +6963,14 @@
 ///
 /// If `global` is a [`Handle`] for a [`GlobalVariable`] that contains a
 /// runtime-sized array, then the value `ArraySize(global)` implements
-/// [`std::fmt::Display`], formatting as the name of the struct member carrying
+/// [`core::fmt::Display`], formatting as the name of the struct member carrying
 /// the number of elements in that runtime-sized array.
 ///
 /// [`GlobalVariable`]: crate::GlobalVariable
 </span><span class="kw">struct </span>ArraySizeMember(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;);
 
 <span class="kw">impl </span>Display <span class="kw">for </span>ArraySizeMember {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="self">self</span>.<span class="number">0</span>.write_prefixed(f, <span class="string">"size"</span>)
     }
 }

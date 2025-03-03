@@ -326,7 +326,8 @@
 <a href="#325" id="325">325</a>
 <a href="#326" id="326">326</a>
 <a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a></pre></div><pre class="rust"><code><span class="doccomment">/*! The [`Arena`], [`UniqueArena`], and [`Handle`] types.
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a></pre></div><pre class="rust"><code><span class="doccomment">/*! The [`Arena`], [`UniqueArena`], and [`Handle`] types.
 
 To improve translator performance and reduce memory usage, most structures are
 stored in an [`Arena`]. An `Arena&lt;T&gt;` stores a series of `T` values, indexed by
@@ -359,11 +360,12 @@ source code span with each element.
 <span class="kw">pub use </span>range::{BadRangeError, Range};
 <span class="kw">pub use </span>unique_arena::UniqueArena;
 
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>core::{fmt, ops};
+
 <span class="kw">use </span><span class="kw">crate</span>::Span;
 
 <span class="kw">use </span>handle::Index;
-
-<span class="kw">use </span>std::{fmt, ops};
 
 <span class="doccomment">/// An arena holding some kind of component (e.g., type, constant,
 /// instruction, etc.) that can be referenced.
@@ -431,7 +433,7 @@ source code span with each element.
 
     <span class="doccomment">/// Drains the arena, returning an iterator over the items stored.
     </span><span class="kw">pub fn </span>drain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = (Handle&lt;T&gt;, T, Span)&gt; {
-        <span class="kw">let </span>arena = std::mem::take(<span class="self">self</span>);
+        <span class="kw">let </span>arena = core::mem::take(<span class="self">self</span>);
         arena
             .data
             .into_iter()
@@ -586,7 +588,7 @@ source code span with each element.
         </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">let </span>data = Vec::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="kw">let </span>span_info = std::iter::repeat(Span::default())
+        <span class="kw">let </span>span_info = core::iter::repeat(Span::default())
             .take(data.len())
             .collect();
 

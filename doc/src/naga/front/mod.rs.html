@@ -328,7 +328,9 @@
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend parsers that consume binary and text shaders and load them into [`Module`](super::Module)s.
 */
 
@@ -344,12 +346,14 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
 <span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
 </span><span class="kw">pub mod </span>wgsl;
 
+<span class="kw">use </span>alloc::{vec, vec::Vec};
+<span class="kw">use </span>core::ops;
+
 <span class="kw">use crate</span>::{
     arena::{Arena, Handle, HandleVec, UniqueArena},
     proc::{ResolveContext, ResolveError, TypeResolution},
     FastHashMap,
 };
-<span class="kw">use </span>std::ops;
 
 <span class="doccomment">/// A table of types for an `Arena&lt;Expression&gt;`.
 ///
@@ -592,7 +596,7 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
 
 <span class="kw">impl</span>&lt;Name, Var&gt; SymbolTable&lt;Name, Var&gt;
 <span class="kw">where
-    </span>Name: std::hash::Hash + Eq,
+    </span>Name: core::hash::Hash + Eq,
 {
     <span class="doccomment">/// Perform a lookup for a variable named `name`.
     ///
@@ -602,8 +606,8 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
     /// scope.
     </span><span class="kw">pub fn </span>lookup&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Var&gt;
     <span class="kw">where
-        </span>Name: std::borrow::Borrow&lt;Q&gt;,
-        Q: std::hash::Hash + Eq + <span class="question-mark">?</span>Sized,
+        </span>Name: core::borrow::Borrow&lt;Q&gt;,
+        Q: core::hash::Hash + Eq + <span class="question-mark">?</span>Sized,
     {
         <span class="comment">// Iterate backwards through the scopes and try to find the variable
         </span><span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes[..<span class="self">self</span>.cursor].iter().rev() {
@@ -648,7 +652,7 @@ Frontend parsers that consume binary and text shaders and load them into [`Modul
     }
 }
 
-<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>core::fmt;
 
 <span class="kw">impl</span>&lt;Name: fmt::Debug, Var: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>SymbolTable&lt;Name, Var&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {

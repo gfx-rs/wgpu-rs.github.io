@@ -5027,7 +5027,16 @@
 <a href="#5026" id="5026">5026</a>
 <a href="#5027" id="5027">5027</a>
 <a href="#5028" id="5028">5028</a>
-<a href="#5029" id="5029">5029</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5029" id="5029">5029</a>
+<a href="#5030" id="5030">5030</a>
+<a href="#5031" id="5031">5031</a>
+<a href="#5032" id="5032">5032</a>
+<a href="#5033" id="5033">5033</a>
+<a href="#5034" id="5034">5034</a>
+<a href="#5035" id="5035">5035</a>
+<a href="#5036" id="5036">5036</a>
+<a href="#5037" id="5037">5037</a>
+<a href="#5038" id="5038">5038</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5074,19 +5083,28 @@ to output a [`Module`](crate::Module) into glsl
 
 </span><span class="kw">pub use </span>features::Features;
 
+<span class="kw">use </span>alloc::{
+    borrow::ToOwned,
+    format,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
+<span class="kw">use </span>core::{
+    cmp::Ordering,
+    fmt::{<span class="self">self</span>, Error <span class="kw">as </span>FmtError, Write},
+    mem,
+};
+
+<span class="kw">use </span>hashbrown::hash_map;
+<span class="kw">use </span>thiserror::Error;
+
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
     proc::{<span class="self">self</span>, ExpressionKindTracker, NameKey},
     valid, Handle, ShaderStage, TypeInner,
 };
 <span class="kw">use </span>features::FeaturesManager;
-<span class="kw">use </span>hashbrown::hash_map;
-<span class="kw">use </span>std::{
-    cmp::Ordering,
-    fmt::{<span class="self">self</span>, Error <span class="kw">as </span>FmtError, Write},
-    mem,
-};
-<span class="kw">use </span>thiserror::Error;
 
 <span class="doccomment">/// Contains the features related code and the features querying method
 </span><span class="kw">mod </span>features;
@@ -5131,7 +5149,7 @@ to output a [`Module`](crate::Module) into glsl
 }
 
 <span class="doccomment">/// Mapping between resources and bindings.
-</span><span class="kw">pub type </span>BindingMap = std::collections::BTreeMap&lt;<span class="kw">crate</span>::ResourceBinding, u8&gt;;
+</span><span class="kw">pub type </span>BindingMap = alloc::collections::BTreeMap&lt;<span class="kw">crate</span>::ResourceBinding, u8&gt;;
 
 <span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
     <span class="kw">const fn </span>to_glsl(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
@@ -5349,7 +5367,7 @@ to output a [`Module`](crate::Module) into glsl
     /// If no entry point that matches is found while creating a [`Writer`], a error will be thrown.
     </span><span class="kw">pub </span>entry_point: String,
     <span class="doccomment">/// How many views to render to, if doing multiview rendering.
-    </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
+    </span><span class="kw">pub </span>multiview: <span class="prelude-ty">Option</span>&lt;core::num::NonZeroU32&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -5611,7 +5629,7 @@ to output a [`Module`](crate::Module) into glsl
     /// transformed to `do {} while(false);` loops.
     </span>continue_ctx: back::continue_forward::ContinueCtx,
     <span class="doccomment">/// How many views to render to, if doing multiview rendering.
-    </span>multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
+    </span>multiview: <span class="prelude-ty">Option</span>&lt;core::num::NonZeroU32&gt;,
     <span class="doccomment">/// Mapping of varying variables to their location. Needed for reflections.
     </span>varying: <span class="kw">crate</span>::FastHashMap&lt;String, VaryingLocation&gt;,
 }

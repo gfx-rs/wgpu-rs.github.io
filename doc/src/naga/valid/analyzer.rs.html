@@ -1483,21 +1483,25 @@
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
 <a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
 //! - control flow uniformity
 //! - texture/sampler pairs
 //! - expression reference counts
 
-</span><span class="kw">use super</span>::{ExpressionError, FunctionError, ModuleInfo, ShaderStages, ValidationFlags};
+</span><span class="kw">use </span>alloc::{boxed::Box, vec};
+<span class="kw">use </span>core::ops;
+
+<span class="kw">use super</span>::{ExpressionError, FunctionError, ModuleInfo, ShaderStages, ValidationFlags};
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{DiagnosticFilterNode, StandardFilterableTriggeringRule};
 <span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, WithSpan};
 <span class="kw">use crate</span>::{
     arena::{Arena, Handle},
     proc::{ResolveContext, TypeResolution},
 };
-<span class="kw">use </span>std::ops;
 
 <span class="kw">pub type </span>NonUniformResult = <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;;
 
@@ -1746,7 +1750,7 @@
     <span class="doccomment">/// How this function and its callees use this module's globals.
     ///
     /// This is indexed by `Handle&lt;GlobalVariable&gt;` indices. However,
-    /// `FunctionInfo` implements `std::ops::Index&lt;Handle&lt;GlobalVariable&gt;&gt;`,
+    /// `FunctionInfo` implements `core::ops::Index&lt;Handle&lt;GlobalVariable&gt;&gt;`,
     /// so you can simply index this struct with a global handle to retrieve
     /// its usage information.
     </span>global_uses: Box&lt;[GlobalUse]&gt;,
@@ -1754,7 +1758,7 @@
     <span class="doccomment">/// Information about each expression in this function's body.
     ///
     /// This is indexed by `Handle&lt;Expression&gt;` indices. However, `FunctionInfo`
-    /// implements `std::ops::Index&lt;Handle&lt;Expression&gt;&gt;`, so you can simply
+    /// implements `core::ops::Index&lt;Handle&lt;Expression&gt;&gt;`, so you can simply
     /// index this struct with an expression handle to retrieve its
     /// `ExpressionInfo`.
     </span>expressions: Box&lt;[ExpressionInfo]&gt;,

@@ -1164,7 +1164,32 @@
 <a href="#1163" id="1163">1163</a>
 <a href="#1164" id="1164">1164</a>
 <a href="#1165" id="1165">1165</a>
-<a href="#1166" id="1166">1166</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow,
+    boxed::Box,
+    format,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
+<span class="kw">use </span>core::ops::Range;
+
+<span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
+<span class="kw">use </span>codespan_reporting::files::SimpleFile;
+<span class="kw">use </span>codespan_reporting::term;
+<span class="kw">use </span>termcolor::{ColorChoice, NoColor, StandardStream};
+<span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
     EnableExtension, UnimplementedEnableExtension,
 };
@@ -1175,13 +1200,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
 <span class="kw">use crate</span>::{SourceLocation, Span};
-<span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
-<span class="kw">use </span>codespan_reporting::files::SimpleFile;
-<span class="kw">use </span>codespan_reporting::term;
-<span class="kw">use </span>std::borrow::Cow;
-<span class="kw">use </span>std::ops::Range;
-<span class="kw">use </span>termcolor::{ColorChoice, NoColor, StandardStream};
-<span class="kw">use </span>thiserror::Error;
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>ParseError {
@@ -1265,14 +1283,14 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ParseError {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>ParseError {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.message)
     }
 }
 
-<span class="kw">impl </span>std::error::Error <span class="kw">for </span>ParseError {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
+<span class="kw">impl </span>core::error::Error <span class="kw">for </span>ParseError {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>core::error::Error + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">None
     </span>}
 }
@@ -1875,7 +1893,7 @@
 
                 ParseError {
                     message: <span class="string">"invalid left-hand side of assignment"</span>.into(),
-                    labels: std::iter::once((span, <span class="string">"cannot assign to this expression"</span>.into()))
+                    labels: core::iter::once((span, <span class="string">"cannot assign to this expression"</span>.into()))
                         .chain(extra_label)
                         .collect(),
                     notes,
@@ -2263,7 +2281,7 @@
                             )
                         })
                         .expect(<span class="string">"internal error: diag. attr. rejection on empty map"</span>);
-                    std::iter::once(first)
+                    core::iter::once(first)
                         .chain(spans.map(|span| (span, <span class="string">""</span>.into())))
                         .collect()
                 },

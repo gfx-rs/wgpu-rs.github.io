@@ -279,9 +279,21 @@
 <a href="#278" id="278">278</a>
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{arena::Handle, FastHashMap, FastHashSet};
-<span class="kw">use </span>std::borrow::Cow;
-<span class="kw">use </span>std::hash::{Hash, Hasher};
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow,
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+<span class="kw">use </span>core::hash::{Hash, Hasher};
+
+<span class="kw">use crate</span>::{arena::Handle, FastHashMap, FastHashSet};
 
 <span class="kw">pub type </span>EntryPointIndex = u16;
 <span class="kw">const </span>SEPARATOR: char = <span class="string">'_'</span>;
@@ -373,7 +385,7 @@
     /// Guarantee uniqueness by applying a numeric suffix when necessary. If `label_raw`
     /// itself ends with digits, separate them from the suffix with an underscore.
     </span><span class="kw">pub fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label_raw: <span class="kw-2">&amp;</span>str) -&gt; String {
-        <span class="kw">use </span>std::fmt::Write <span class="kw">as _</span>; <span class="comment">// for write!-ing to Strings
+        <span class="kw">use </span>core::fmt::Write <span class="kw">as _</span>; <span class="comment">// for write!-ing to Strings
 
         </span><span class="kw">let </span>base = <span class="self">self</span>.sanitize(label_raw);
         <span class="macro">debug_assert!</span>(!base.is_empty() &amp;&amp; !base.ends_with(SEPARATOR));
@@ -424,7 +436,7 @@
     /// context for the duration of the call to `body`.
     </span><span class="kw">fn </span>namespace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, capacity: usize, body: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>)) {
         <span class="kw">let </span>fresh = FastHashMap::with_capacity_and_hasher(capacity, Default::default());
-        <span class="kw">let </span>outer = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.unique, fresh);
+        <span class="kw">let </span>outer = core::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.unique, fresh);
         body(<span class="self">self</span>);
         <span class="self">self</span>.unique = outer;
     }
@@ -511,7 +523,7 @@
             <span class="kw">let </span>label = <span class="kw">match </span>constant.name {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) =&gt; name,
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">use </span>std::fmt::Write;
+                    <span class="kw">use </span>core::fmt::Write;
                     <span class="comment">// Try to be more descriptive about the constant values
                     </span>temp.clear();
                     <span class="macro">write!</span>(temp, <span class="string">"const_{}"</span>, output[<span class="kw-2">&amp;</span>NameKey::Type(constant.ty)]).unwrap();

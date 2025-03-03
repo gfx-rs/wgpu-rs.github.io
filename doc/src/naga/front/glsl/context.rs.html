@@ -1503,7 +1503,12 @@
 <a href="#1502" id="1502">1502</a>
 <a href="#1503" id="1503">1503</a>
 <a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String, vec::Vec};
+<span class="kw">use </span>core::ops::Index;
+
+<span class="kw">use super</span>::{
     ast::{
         GlobalLookup, GlobalLookupKind, HirExpr, HirExprKind, ParameterInfo, ParameterQualifier,
         VariableReference,
@@ -1517,7 +1522,6 @@
     Expression, FastHashMap, FunctionArgument, Handle, Literal, LocalVariable, RelationalFunction,
     Scalar, Span, Statement, Type, TypeInner, VectorSize,
 };
-<span class="kw">use </span>std::ops::Index;
 
 <span class="doccomment">/// The position at which an expression is, used while lowering
 </span><span class="attr">#[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1641,10 +1645,10 @@
         </span>F: FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;R&gt;,
     {
         <span class="self">self</span>.emit_restart();
-        <span class="kw">let </span>old_body = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, Block::new());
+        <span class="kw">let </span>old_body = core::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, Block::new());
         <span class="kw">let </span>res = cb(<span class="self">self</span>);
         <span class="self">self</span>.emit_restart();
-        <span class="kw">let </span>new_body = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, old_body);
+        <span class="kw">let </span>new_body = core::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, old_body);
         res.map(|r| (new_body, r))
     }
 
@@ -1653,10 +1657,10 @@
         </span>F: FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;,
     {
         <span class="self">self</span>.emit_restart();
-        <span class="kw">let </span>old_body = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, body);
+        <span class="kw">let </span>old_body = core::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, body);
         <span class="kw">let </span>res = cb(<span class="self">self</span>);
         <span class="self">self</span>.emit_restart();
-        <span class="kw">let </span>body = std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, old_body);
+        <span class="kw">let </span>body = core::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.body, old_body);
         res.map(|<span class="kw">_</span>| body)
     }
 
@@ -2608,14 +2612,14 @@
                         </span>.and_then(|scalar| <span class="prelude-val">Some</span>((type_power(scalar)<span class="question-mark">?</span>, scalar))),
                 ) {
                     <span class="kw">match </span>accept_power.cmp(<span class="kw-2">&amp;</span>reject_power) {
-                        std::cmp::Ordering::Less =&gt; {
+                        core::cmp::Ordering::Less =&gt; {
                             accept_body = <span class="self">self</span>.with_body(accept_body, |ctx| {
                                 ctx.conversion(<span class="kw-2">&amp;mut </span>accept, accept_meta, reject_scalar)<span class="question-mark">?</span>;
                                 <span class="prelude-val">Ok</span>(())
                             })<span class="question-mark">?</span>;
                         }
-                        std::cmp::Ordering::Equal =&gt; {}
-                        std::cmp::Ordering::Greater =&gt; {
+                        core::cmp::Ordering::Equal =&gt; {}
+                        core::cmp::Ordering::Greater =&gt; {
                             reject_body = <span class="self">self</span>.with_body(reject_body, |ctx| {
                                 ctx.conversion(<span class="kw-2">&amp;mut </span>reject, reject_meta, accept_scalar)<span class="question-mark">?</span>;
                                 <span class="prelude-val">Ok</span>(())
@@ -2761,7 +2765,7 @@
                         right = <span class="self">self</span>.add_expression(
                             Expression::Compose {
                                 ty,
-                                components: std::iter::repeat(right).take(cols <span class="kw">as </span>usize).collect(),
+                                components: core::iter::repeat(right).take(cols <span class="kw">as </span>usize).collect(),
                             },
                             meta,
                         )<span class="question-mark">?</span>;
@@ -2933,11 +2937,11 @@
             right_components.and_then(|scalar| <span class="prelude-val">Some</span>((type_power(scalar)<span class="question-mark">?</span>, scalar))),
         ) {
             <span class="kw">match </span>left_power.cmp(<span class="kw-2">&amp;</span>right_power) {
-                std::cmp::Ordering::Less =&gt; {
+                core::cmp::Ordering::Less =&gt; {
                     <span class="self">self</span>.conversion(left, left_meta, right_scalar)<span class="question-mark">?</span>;
                 }
-                std::cmp::Ordering::Equal =&gt; {}
-                std::cmp::Ordering::Greater =&gt; {
+                core::cmp::Ordering::Equal =&gt; {}
+                core::cmp::Ordering::Greater =&gt; {
                     <span class="self">self</span>.conversion(right, right_meta, left_scalar)<span class="question-mark">?</span>;
                 }
             }

@@ -2406,7 +2406,23 @@
 <a href="#2405" id="2405">2405</a>
 <a href="#2406" id="2406">2406</a>
 <a href="#2407" id="2407">2407</a>
-<a href="#2408" id="2408">2408</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#2408" id="2408">2408</a>
+<a href="#2409" id="2409">2409</a>
+<a href="#2410" id="2410">2410</a>
+<a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
+
+<span class="kw">use </span>hashbrown::hash_map::Entry;
+<span class="kw">use </span>spirv::Word;
+
+<span class="kw">use super</span>::{
     block::DebugInfoInner,
     helpers::{contains_builtin, global_needs_wrapper, map_storage_class},
     Block, BlockContext, CachedConstant, CachedExpressions, DebugInfo, EntryPointContext, Error,
@@ -2420,8 +2436,6 @@
     proc::{Alignment, TypeResolution},
     valid::{FunctionInfo, ModuleInfo},
 };
-<span class="kw">use </span>hashbrown::hash_map::Entry;
-<span class="kw">use </span>spirv::Word;
 
 <span class="kw">struct </span>FunctionInterface&lt;<span class="lifetime">'a</span>&gt; {
     varying_ids: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;Word&gt;,
@@ -2505,12 +2519,12 @@
     /// `Recyclable::recycle` requires ownership of the value, not just
     /// `&amp;mut`; see the trait documentation. But we need to use this method
     /// from functions like `Writer::write`, which only have `&amp;mut Writer`.
-    /// Workarounds include unsafe code (`std::ptr::read`, then `write`, ugh)
+    /// Workarounds include unsafe code (`core::ptr::read`, then `write`, ugh)
     /// or something like a `Default` impl that returns an oddly-initialized
     /// `Writer`, which is worse.
     </span><span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">use </span><span class="kw">super</span>::recyclable::Recyclable;
-        <span class="kw">use </span>std::mem::take;
+        <span class="kw">use </span>core::mem::take;
 
         <span class="kw">let </span><span class="kw-2">mut </span>id_gen = IdGenerator::default();
         <span class="kw">let </span>gl450_ext_inst_id = id_gen.next();
@@ -3275,10 +3289,10 @@
             fun_info: info,
             function: <span class="kw-2">&amp;mut </span>function,
             <span class="comment">// Re-use the cached expression table from prior functions.
-            </span>cached: std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached),
+            </span>cached: core::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.saved_cached),
 
             <span class="comment">// Steal the Writer's temp list for a bit.
-            </span>temp_list: std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list),
+            </span>temp_list: core::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_list),
             force_loop_bounding: <span class="self">self</span>.force_loop_bounding,
             writer: <span class="self">self</span>,
             expression_constness: <span class="kw">super</span>::ExpressionConstnessTracker::from_arena(

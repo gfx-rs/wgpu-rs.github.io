@@ -197,16 +197,30 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::token::TokenValue;
-<span class="kw">use </span><span class="kw">crate</span>::SourceLocation;
-<span class="kw">use crate</span>::{proc::ConstantEvaluatorError, Span};
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
+
 <span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
 <span class="kw">use </span>codespan_reporting::files::SimpleFile;
 <span class="kw">use </span>codespan_reporting::term;
 <span class="kw">use </span>pp_rs::token::PreprocessorError;
-<span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>termcolor::{NoColor, WriteColor};
 <span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span><span class="kw">super</span>::token::TokenValue;
+<span class="kw">use </span><span class="kw">crate</span>::SourceLocation;
+<span class="kw">use crate</span>::{proc::ConstantEvaluatorError, Span};
 
 <span class="kw">fn </span>join_with_comma(list: <span class="kw-2">&amp;</span>[ExpectedToken]) -&gt; String {
     <span class="kw">let </span><span class="kw-2">mut </span>string = <span class="string">""</span>.to_string();
@@ -244,8 +258,8 @@
         ExpectedToken::Token(token)
     }
 }
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ExpectedToken {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>ExpectedToken {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             ExpectedToken::Token(<span class="kw-2">ref </span>token) =&gt; <span class="macro">write!</span>(f, <span class="string">"{token:?}"</span>),
             ExpectedToken::TypeName =&gt; <span class="macro">write!</span>(f, <span class="string">"a type"</span>),
@@ -379,14 +393,14 @@
     }
 }
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>ParseErrors {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter) -&gt; std::fmt::Result {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>ParseErrors {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter) -&gt; core::fmt::Result {
         <span class="self">self</span>.errors.iter().try_for_each(|e| <span class="macro">write!</span>(f, <span class="string">"{e:?}"</span>))
     }
 }
 
-<span class="kw">impl </span>std::error::Error <span class="kw">for </span>ParseErrors {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
+<span class="kw">impl </span>core::error::Error <span class="kw">for </span>ParseErrors {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>core::error::Error + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">None
     </span>}
 }

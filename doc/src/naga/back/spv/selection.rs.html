@@ -255,7 +255,10 @@
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generate SPIR-V conditional structures.
 
 Builders for `if` structures with `and`s.
@@ -314,8 +317,11 @@ pointer for the duration of its lifetime. To obtain the block for generating
 code in the selection's body, call the `Selection::block` method.
 */
 
-</span><span class="kw">use super</span>::{Block, BlockContext, Instruction};
+</span><span class="kw">use </span>alloc::{vec, vec::Vec};
+
 <span class="kw">use </span>spirv::Word;
+
+<span class="kw">use super</span>::{Block, BlockContext, Instruction};
 
 <span class="doccomment">/// A private struct recording what we know about the selection construct so far.
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Selection&lt;<span class="lifetime">'b</span>, M: MergeTuple&gt; {
@@ -382,7 +388,7 @@ code in the selection's body, call the `Selection::block` method.
         <span class="kw">let </span>merge_label = <span class="self">self</span>.make_merge_label(ctx);
         <span class="kw">let </span>next_label = ctx.gen_id();
         ctx.function.consume(
-            std::mem::replace(<span class="self">self</span>.block, Block::new(next_label)),
+            core::mem::replace(<span class="self">self</span>.block, Block::new(next_label)),
             Instruction::branch_conditional(cond, next_label, merge_label),
         );
     }
@@ -417,7 +423,7 @@ code in the selection's body, call the `Selection::block` method.
                 <span class="comment">// Emit the final branch and transition to the merge block.
                 </span>values.push((final_values, block.label_id));
                 ctx.function.consume(
-                    std::mem::replace(block, Block::new(merge_label)),
+                    core::mem::replace(block, Block::new(merge_label)),
                     Instruction::branch(merge_label),
                 );
 

@@ -269,7 +269,9 @@
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a></pre></div><pre class="rust"><code><span class="doccomment">//! Upgrade the types of scalars observed to be accessed as atomics to [`Atomic`] types.
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a></pre></div><pre class="rust"><code><span class="doccomment">//! Upgrade the types of scalars observed to be accessed as atomics to [`Atomic`] types.
 //!
 //! In SPIR-V, atomic operations can be applied to any scalar value, but in Naga
 //! IR atomic operations can only be applied to values of type [`Atomic`]. Naga
@@ -301,7 +303,9 @@
 //! [`Struct`]: TypeInner::Struct
 //! [`Load`]: crate::Expression::Load
 //! [`Store`]: crate::Statement::Store
-</span><span class="kw">use </span>std::sync::{atomic::AtomicUsize, Arc};
+
+</span><span class="kw">use </span>alloc::{format, sync::Arc};
+<span class="kw">use </span>core::sync::atomic::AtomicUsize;
 
 <span class="kw">use crate</span>::{GlobalVariable, Handle, Module, Type, TypeInner};
 
@@ -322,9 +326,9 @@
 <span class="attr">#[derive(Clone, Default)]
 </span><span class="kw">struct </span>Padding(Arc&lt;AtomicUsize&gt;);
 
-<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Padding {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.<span class="number">0</span>.load(std::sync::atomic::Ordering::Relaxed) {
+<span class="kw">impl </span>core::fmt::Display <span class="kw">for </span>Padding {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.<span class="number">0</span>.load(core::sync::atomic::Ordering::Relaxed) {
             f.write_str(<span class="string">"  "</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
@@ -333,25 +337,25 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Padding {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let _ </span>= <span class="self">self</span>.<span class="number">0</span>.fetch_sub(<span class="number">1</span>, std::sync::atomic::Ordering::Relaxed);
+        <span class="kw">let _ </span>= <span class="self">self</span>.<span class="number">0</span>.fetch_sub(<span class="number">1</span>, core::sync::atomic::Ordering::Relaxed);
     }
 }
 
 <span class="kw">impl </span>Padding {
-    <span class="kw">fn </span>trace(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw">impl </span>std::fmt::Display, t: <span class="kw">impl </span>std::fmt::Debug) {
+    <span class="kw">fn </span>trace(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw">impl </span>core::fmt::Display, t: <span class="kw">impl </span>core::fmt::Debug) {
         <span class="macro">format!</span>(<span class="string">"{msg} {t:#?}"</span>)
             .split(<span class="string">'\n'</span>)
             .for_each(|ln| <span class="macro">log::trace!</span>(<span class="string">"{self}{ln}"</span>));
     }
 
-    <span class="kw">fn </span>debug(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw">impl </span>std::fmt::Display, t: <span class="kw">impl </span>std::fmt::Debug) {
+    <span class="kw">fn </span>debug(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw">impl </span>core::fmt::Display, t: <span class="kw">impl </span>core::fmt::Debug) {
         <span class="macro">format!</span>(<span class="string">"{msg} {t:#?}"</span>)
             .split(<span class="string">'\n'</span>)
             .for_each(|ln| <span class="macro">log::debug!</span>(<span class="string">"{self}{ln}"</span>));
     }
 
     <span class="kw">fn </span>inc_padding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Padding {
-        <span class="kw">let _ </span>= <span class="self">self</span>.<span class="number">0</span>.fetch_add(<span class="number">1</span>, std::sync::atomic::Ordering::Relaxed);
+        <span class="kw">let _ </span>= <span class="self">self</span>.<span class="number">0</span>.fetch_add(<span class="number">1</span>, core::sync::atomic::Ordering::Relaxed);
         <span class="self">self</span>.clone()
     }
 }
