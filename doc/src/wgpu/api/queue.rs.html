@@ -261,7 +261,29 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>core::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -522,6 +544,28 @@
     /// and used to set flags, send messages, etc.
     </span><span class="kw">pub fn </span>on_submitted_work_done(<span class="kw-2">&amp;</span><span class="self">self</span>, callback: <span class="kw">impl </span>FnOnce() + Send + <span class="lifetime">'static</span>) {
         <span class="self">self</span>.inner.on_submitted_work_done(Box::new(callback));
+    }
+
+    <span class="doccomment">/// Returns the inner hal Queue using a callback. The hal queue will be `None` if the
+    /// backend type argument does not match with this wgpu Queue
+    ///
+    /// # Safety
+    ///
+    /// - The raw handle obtained from the hal Queue must not be manually destroyed
+    </span><span class="attr">#[cfg(wgpu_core)]
+    </span><span class="kw">pub unsafe fn </span>as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Queue&gt;) -&gt; R, R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hal_queue_callback: F,
+    ) -&gt; R {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(core_queue) = <span class="self">self</span>.inner.as_core_opt() {
+            <span class="kw">unsafe </span>{
+                core_queue
+                    .context
+                    .queue_as_hal::&lt;A, F, R&gt;(core_queue, hal_queue_callback)
+            }
+        } <span class="kw">else </span>{
+            hal_queue_callback(<span class="prelude-val">None</span>)
+        }
     }
 }
 </code></pre></div></section></main></body></html>
