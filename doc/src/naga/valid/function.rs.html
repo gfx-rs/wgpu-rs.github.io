@@ -1759,7 +1759,18 @@
 <a href="#1758" id="1758">1758</a>
 <a href="#1759" id="1759">1759</a>
 <a href="#1760" id="1760">1760</a>
-<a href="#1761" id="1761">1761</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
 
 <span class="kw">use </span><span class="kw">super</span>::validate_atomic_compare_exchange_struct;
 <span class="kw">use super</span>::{
@@ -1934,6 +1945,12 @@
     </span>InvalidRayQueryExpression(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Acceleration structure {0:?} is not a matching expression"</span>)]
     </span>InvalidAccelerationStructure(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
+    <span class="attr">#[error(
+        <span class="string">"Acceleration structure {0:?} is missing flag vertex_return while Ray Query {1:?} does"
+    </span>)]
+    </span>MissingAccelerationStructureVertexReturn(Handle&lt;<span class="kw">crate</span>::Expression&gt;, Handle&lt;<span class="kw">crate</span>::Expression&gt;),
+    <span class="attr">#[error(<span class="string">"Ray Query {0:?} is missing flag vertex_return"</span>)]
+    </span>MissingRayQueryVertexReturn(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Ray descriptor {0:?} is not a matching expression"</span>)]
     </span>InvalidRayDescriptor(Handle&lt;<span class="kw">crate</span>::Expression&gt;),
     <span class="attr">#[error(<span class="string">"Ray Query {0:?} does not have a matching type"</span>)]
@@ -2526,7 +2543,8 @@
                             | Ex::Math { .. }
                             | Ex::As { .. }
                             | Ex::ArrayLength(<span class="kw">_</span>)
-                            | Ex::RayQueryGetIntersection { .. } =&gt; {
+                            | Ex::RayQueryGetIntersection { .. }
+                            | Ex::RayQueryVertexPositions { .. } =&gt; {
                                 <span class="self">self</span>.emit_expression(handle, context)<span class="question-mark">?
                             </span>}
                             Ex::CallResult(<span class="kw">_</span>)
@@ -3212,14 +3230,14 @@
                                 .with_span_static(span, <span class="string">"invalid query expression"</span>));
                         }
                     };
-                    <span class="kw">match </span>context.types[query_var.ty].inner {
-                        Ti::RayQuery =&gt; {}
+                    <span class="kw">let </span>rq_vertex_return = <span class="kw">match </span>context.types[query_var.ty].inner {
+                        Ti::RayQuery { vertex_return } =&gt; vertex_return,
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">"Unexpected ray query type {other:?}"</span>);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidRayQueryType(query_var.ty)
                                 .with_span_static(span, <span class="string">"invalid query type"</span>));
                         }
-                    }
+                    };
                     <span class="kw">match </span><span class="kw-2">*</span>fun {
                         <span class="kw">crate</span>::RayQueryFunction::Initialize {
                             acceleration_structure,
@@ -3228,7 +3246,11 @@
                             <span class="kw">match </span><span class="kw-2">*</span>context
                                 .resolve_type(acceleration_structure, <span class="kw-2">&amp;</span><span class="self">self</span>.valid_expression_set)<span class="question-mark">?
                             </span>{
-                                Ti::AccelerationStructure =&gt; {}
+                                Ti::AccelerationStructure { vertex_return } =&gt; {
+                                    <span class="kw">if </span>(!vertex_return) &amp;&amp; rq_vertex_return {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::MissingAccelerationStructureVertexReturn(acceleration_structure, query).with_span_static(span, <span class="string">"invalid acceleration structure"</span>));
+                                    }
+                                }
                                 <span class="kw">_ </span>=&gt; {
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidAccelerationStructure(
                                         acceleration_structure,

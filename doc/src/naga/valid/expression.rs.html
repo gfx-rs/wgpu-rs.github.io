@@ -1896,7 +1896,28 @@
 <a href="#1895" id="1895">1895</a>
 <a href="#1896" id="1896">1896</a>
 <a href="#1897" id="1897">1897</a>
-<a href="#1898" id="1898">1898</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -3624,7 +3645,28 @@
                     base,
                     space: <span class="kw">crate</span>::AddressSpace::Function,
                 } =&gt; <span class="kw">match </span>resolver.types[base].inner {
-                    Ti::RayQuery =&gt; ShaderStages::all(),
+                    Ti::RayQuery { .. } =&gt; ShaderStages::all(),
+                    <span class="kw-2">ref </span>other =&gt; {
+                        <span class="macro">log::error!</span>(<span class="string">"Intersection result of a pointer to {:?}"</span>, other);
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidRayQueryType(query));
+                    }
+                },
+                <span class="kw-2">ref </span>other =&gt; {
+                    <span class="macro">log::error!</span>(<span class="string">"Intersection result of {:?}"</span>, other);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidRayQueryType(query));
+                }
+            },
+            E::RayQueryVertexPositions {
+                query,
+                committed: <span class="kw">_</span>,
+            } =&gt; <span class="kw">match </span>resolver[query] {
+                Ti::Pointer {
+                    base,
+                    space: <span class="kw">crate</span>::AddressSpace::Function,
+                } =&gt; <span class="kw">match </span>resolver.types[base].inner {
+                    Ti::RayQuery {
+                        vertex_return: <span class="bool-val">true</span>,
+                    } =&gt; ShaderStages::all(),
                     <span class="kw-2">ref </span>other =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">"Intersection result of a pointer to {:?}"</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidRayQueryType(query));

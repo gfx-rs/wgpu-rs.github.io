@@ -3831,7 +3831,15 @@
 <a href="#3830" id="3830">3830</a>
 <a href="#3831" id="3831">3831</a>
 <a href="#3832" id="3832">3832</a>
-<a href="#3833" id="3833">3833</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3833" id="3833">3833</a>
+<a href="#3834" id="3834">3834</a>
+<a href="#3835" id="3835">3835</a>
+<a href="#3836" id="3836">3836</a>
+<a href="#3837" id="3837">3837</a>
+<a href="#3838" id="3838">3838</a>
+<a href="#3839" id="3839">3839</a>
+<a href="#3840" id="3840">3840</a>
+<a href="#3841" id="3841">3841</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -5738,7 +5746,7 @@
                         },
                     )
                 }
-                Bt::AccelerationStructure =&gt; (<span class="prelude-val">None</span>, WritableStorage::No),
+                Bt::AccelerationStructure { .. } =&gt; (<span class="prelude-val">None</span>, WritableStorage::No),
             };
 
             <span class="comment">// Validate the count parameter
@@ -6082,7 +6090,15 @@
         tlas.same_device(<span class="self">self</span>)<span class="question-mark">?</span>;
 
         <span class="kw">match </span>decl.ty {
-            wgt::BindingType::AccelerationStructure =&gt; (),
+            wgt::BindingType::AccelerationStructure { vertex_return } =&gt; {
+                <span class="kw">if </span>vertex_return
+                    &amp;&amp; !tlas.flags.contains(
+                        wgpu_types::AccelerationStructureFlags::ALLOW_RAY_HIT_VERTEX_RETURN,
+                    )
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingTLASVertexReturn { binding });
+                }
+            }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::WrongBindingType {
                     binding,

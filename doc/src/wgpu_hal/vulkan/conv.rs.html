@@ -1010,7 +1010,13 @@
 <a href="#1009" id="1009">1009</a>
 <a href="#1010" id="1010">1010</a>
 <a href="#1011" id="1011">1011</a>
-<a href="#1012" id="1012">1012</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
 
 <span class="kw">use </span>ash::vk;
 
@@ -1783,7 +1789,9 @@
         wgt::BindingType::Sampler { .. } =&gt; vk::DescriptorType::SAMPLER,
         wgt::BindingType::Texture { .. } =&gt; vk::DescriptorType::SAMPLED_IMAGE,
         wgt::BindingType::StorageTexture { .. } =&gt; vk::DescriptorType::STORAGE_IMAGE,
-        wgt::BindingType::AccelerationStructure =&gt; vk::DescriptorType::ACCELERATION_STRUCTURE_KHR,
+        wgt::BindingType::AccelerationStructure { .. } =&gt; {
+            vk::DescriptorType::ACCELERATION_STRUCTURE_KHR
+        }
     }
 }
 
@@ -1963,6 +1971,10 @@
 
     <span class="kw">if </span>flags.contains(<span class="kw">crate</span>::AccelerationStructureBuildFlags::ALLOW_COMPACTION) {
         vk_flags |= vk::BuildAccelerationStructureFlagsKHR::ALLOW_COMPACTION
+    }
+
+    <span class="kw">if </span>flags.contains(<span class="kw">crate</span>::AccelerationStructureBuildFlags::ALLOW_RAY_HIT_VERTEX_RETURN) {
+        vk_flags |= vk::BuildAccelerationStructureFlagsKHR::ALLOW_DATA_ACCESS
     }
 
     vk_flags

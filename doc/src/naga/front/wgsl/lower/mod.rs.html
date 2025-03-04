@@ -3436,7 +3436,33 @@
 <a href="#3435" id="3435">3435</a>
 <a href="#3436" id="3436">3436</a>
 <a href="#3437" id="3437">3437</a>
-<a href="#3438" id="3438">3438</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3438" id="3438">3438</a>
+<a href="#3439" id="3439">3439</a>
+<a href="#3440" id="3440">3440</a>
+<a href="#3441" id="3441">3441</a>
+<a href="#3442" id="3442">3442</a>
+<a href="#3443" id="3443">3443</a>
+<a href="#3444" id="3444">3444</a>
+<a href="#3445" id="3445">3445</a>
+<a href="#3446" id="3446">3446</a>
+<a href="#3447" id="3447">3447</a>
+<a href="#3448" id="3448">3448</a>
+<a href="#3449" id="3449">3449</a>
+<a href="#3450" id="3450">3450</a>
+<a href="#3451" id="3451">3451</a>
+<a href="#3452" id="3452">3452</a>
+<a href="#3453" id="3453">3453</a>
+<a href="#3454" id="3454">3454</a>
+<a href="#3455" id="3455">3455</a>
+<a href="#3456" id="3456">3456</a>
+<a href="#3457" id="3457">3457</a>
+<a href="#3458" id="3458">3458</a>
+<a href="#3459" id="3459">3459</a>
+<a href="#3460" id="3460">3460</a>
+<a href="#3461" id="3461">3461</a>
+<a href="#3462" id="3462">3462</a>
+<a href="#3463" id="3463">3463</a>
+<a href="#3464" id="3464">3464</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     string::{String, ToString},
     vec::Vec,
@@ -6162,6 +6188,30 @@
                                 .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
+                        <span class="string">"getCommittedHitVertexPositions" </span>=&gt; {
+                            <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
+                            <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            args.finish()<span class="question-mark">?</span>;
+
+                            <span class="kw">let _ </span>= ctx.module.generate_vertex_return_type();
+
+                            <span class="kw">crate</span>::Expression::RayQueryVertexPositions {
+                                query,
+                                committed: <span class="bool-val">true</span>,
+                            }
+                        }
+                        <span class="string">"getCandidateHitVertexPositions" </span>=&gt; {
+                            <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
+                            <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            args.finish()<span class="question-mark">?</span>;
+
+                            <span class="kw">let _ </span>= ctx.module.generate_vertex_return_type();
+
+                            <span class="kw">crate</span>::Expression::RayQueryVertexPositions {
+                                query,
+                                committed: <span class="bool-val">false</span>,
+                            }
+                        }
                         <span class="string">"rayQueryProceed" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
                             <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -6774,8 +6824,10 @@
                 class,
             },
             ast::Type::Sampler { comparison } =&gt; <span class="kw">crate</span>::TypeInner::Sampler { comparison },
-            ast::Type::AccelerationStructure =&gt; <span class="kw">crate</span>::TypeInner::AccelerationStructure,
-            ast::Type::RayQuery =&gt; <span class="kw">crate</span>::TypeInner::RayQuery,
+            ast::Type::AccelerationStructure { vertex_return } =&gt; {
+                <span class="kw">crate</span>::TypeInner::AccelerationStructure { vertex_return }
+            }
+            ast::Type::RayQuery { vertex_return } =&gt; <span class="kw">crate</span>::TypeInner::RayQuery { vertex_return },
             ast::Type::BindingArray { base, size } =&gt; {
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>size = <span class="self">self</span>.array_size(size, ctx)<span class="question-mark">?</span>;
@@ -6845,7 +6897,7 @@
 
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, pointer) {
             <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
-                <span class="kw">crate</span>::TypeInner::RayQuery =&gt; <span class="prelude-val">Ok</span>(pointer),
+                <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to ray query op"</span>, other);
                     <span class="prelude-val">Err</span>(Error::InvalidRayQueryPointer(span))

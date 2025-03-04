@@ -7417,7 +7417,21 @@
 <a href="#7416" id="7416">7416</a>
 <a href="#7417" id="7417">7417</a>
 <a href="#7418" id="7418">7418</a>
-<a href="#7419" id="7419">7419</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7419" id="7419">7419</a>
+<a href="#7420" id="7420">7420</a>
+<a href="#7421" id="7421">7421</a>
+<a href="#7422" id="7422">7422</a>
+<a href="#7423" id="7423">7423</a>
+<a href="#7424" id="7424">7424</a>
+<a href="#7425" id="7425">7425</a>
+<a href="#7426" id="7426">7426</a>
+<a href="#7427" id="7427">7427</a>
+<a href="#7428" id="7428">7428</a>
+<a href="#7429" id="7429">7429</a>
+<a href="#7430" id="7430">7430</a>
+<a href="#7431" id="7431">7431</a>
+<a href="#7432" id="7432">7432</a>
+<a href="#7433" id="7433">7433</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -13914,12 +13928,24 @@
     /// var as: acceleration_structure;
     /// ```
     ///
+    /// or with vertex return enabled
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var as: acceleration_structure&lt;vertex_return&gt;;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(binding = 0)
     /// uniform accelerationStructureEXT as;
     /// ```
-    </span>AccelerationStructure,
+    </span>AccelerationStructure {
+        <span class="doccomment">/// Whether this acceleration structure can be used to
+        /// create a ray query that has flag vertex return in the shader
+        ///
+        /// If enabled requires [`Features::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN`]
+        </span>vertex_return: bool,
+    },
 }
 
 <span class="kw">impl </span>BindingType {
@@ -14702,6 +14728,8 @@
         <span class="doccomment">/// Use `BlasTriangleGeometry::transform_buffer` when building a BLAS (only allowed in
         /// BLAS creation)
         </span><span class="kw">const </span>USE_TRANSFORM = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="doccomment">/// Allow retrieval of the vertices of the triangle hit by a ray.
+        </span><span class="kw">const </span>ALLOW_RAY_HIT_VERTEX_RETURN = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
     }
 );
 

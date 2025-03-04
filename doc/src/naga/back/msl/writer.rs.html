@@ -6830,7 +6830,16 @@
 <a href="#6829" id="6829">6829</a>
 <a href="#6830" id="6830">6830</a>
 <a href="#6831" id="6831">6831</a>
-<a href="#6832" id="6832">6832</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#6832" id="6832">6832</a>
+<a href="#6833" id="6833">6833</a>
+<a href="#6834" id="6834">6834</a>
+<a href="#6835" id="6835">6835</a>
+<a href="#6836" id="6836">6836</a>
+<a href="#6837" id="6837">6837</a>
+<a href="#6838" id="6838">6838</a>
+<a href="#6839" id="6839">6839</a>
+<a href="#6840" id="6840">6840</a>
+<a href="#6841" id="6841">6841</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -7121,10 +7130,16 @@
             <span class="kw">crate</span>::TypeInner::Sampler { comparison: <span class="kw">_ </span>} =&gt; {
                 <span class="macro">write!</span>(out, <span class="string">"{NAMESPACE}::sampler"</span>)
             }
-            <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; {
+            <span class="kw">crate</span>::TypeInner::AccelerationStructure { vertex_return } =&gt; {
+                <span class="kw">if </span>vertex_return {
+                    <span class="macro">unimplemented!</span>(<span class="string">"metal does not support vertex ray hit return"</span>)
+                }
                 <span class="macro">write!</span>(out, <span class="string">"{RT_NAMESPACE}::instance_acceleration_structure"</span>)
             }
-            <span class="kw">crate</span>::TypeInner::RayQuery =&gt; {
+            <span class="kw">crate</span>::TypeInner::RayQuery { vertex_return } =&gt; {
+                <span class="kw">if </span>vertex_return {
+                    <span class="macro">unimplemented!</span>(<span class="string">"metal does not support vertex ray hit return"</span>)
+                }
                 <span class="macro">write!</span>(out, <span class="string">"{RAY_QUERY_TYPE}"</span>)
             }
             <span class="kw">crate</span>::TypeInner::BindingArray { base, .. } =&gt; {
@@ -7401,8 +7416,8 @@
             <span class="comment">// handle types may be different, depending on the global var access, so we always inline them
             </span>Ti::Image { .. }
             | Ti::Sampler { .. }
-            | Ti::AccelerationStructure
-            | Ti::RayQuery
+            | Ti::AccelerationStructure { .. }
+            | Ti::RayQuery { .. }
             | Ti::BindingArray { .. } =&gt; <span class="bool-val">false</span>,
         }
     }
@@ -9190,6 +9205,9 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
             }
+            <span class="kw">crate</span>::Expression::RayQueryVertexPositions { .. } =&gt; {
+                <span class="macro">unimplemented!</span>()
+            }
             <span class="kw">crate</span>::Expression::RayQueryGetIntersection {
                 query,
                 committed: <span class="kw">_</span>,
@@ -10647,12 +10665,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>uses_ray_query = <span class="bool-val">false</span>;
         <span class="kw">for </span>(<span class="kw">_</span>, ty) <span class="kw">in </span>module.types.iter() {
             <span class="kw">match </span>ty.inner {
-                <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; {
+                <span class="kw">crate</span>::TypeInner::AccelerationStructure { .. } =&gt; {
                     <span class="kw">if </span>options.lang_version &lt; (<span class="number">2</span>, <span class="number">4</span>) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedRayTracing);
                     }
                 }
-                <span class="kw">crate</span>::TypeInner::RayQuery =&gt; {
+                <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; {
                     <span class="kw">if </span>options.lang_version &lt; (<span class="number">2</span>, <span class="number">4</span>) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedRayTracing);
                     }

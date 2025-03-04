@@ -1336,7 +1336,15 @@
 <a href="#1335" id="1335">1335</a>
 <a href="#1336" id="1336">1336</a>
 <a href="#1337" id="1337">1337</a>
-<a href="#1338" id="1338">1338</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
     vec::Vec,
@@ -1363,7 +1371,9 @@
     Sampler {
         comparison: bool,
     },
-    AccelerationStructure,
+    AccelerationStructure {
+        vertex_return: bool,
+    },
 }
 
 <span class="attr">#[derive(Clone, Debug)]
@@ -1380,7 +1390,7 @@
             ResourceType::Buffer { .. } =&gt; BindingTypeName::Buffer,
             ResourceType::Texture { .. } =&gt; BindingTypeName::Texture,
             ResourceType::Sampler { .. } =&gt; BindingTypeName::Sampler,
-            ResourceType::AccelerationStructure =&gt; BindingTypeName::AccelerationStructure,
+            ResourceType::AccelerationStructure { .. } =&gt; BindingTypeName::AccelerationStructure,
         }
     }
 }
@@ -1392,7 +1402,7 @@
             BindingType::Texture { .. } =&gt; BindingTypeName::Texture,
             BindingType::StorageTexture { .. } =&gt; BindingTypeName::Texture,
             BindingType::Sampler { .. } =&gt; BindingTypeName::Sampler,
-            BindingType::AccelerationStructure =&gt; BindingTypeName::AccelerationStructure,
+            BindingType::AccelerationStructure { .. } =&gt; BindingTypeName::AccelerationStructure,
         }
     }
 }
@@ -1895,8 +1905,10 @@
                     });
                 }
             }
-            ResourceType::AccelerationStructure =&gt; <span class="kw">match </span>entry.ty {
-                BindingType::AccelerationStructure =&gt; (),
+            ResourceType::AccelerationStructure { vertex_return } =&gt; <span class="kw">match </span>entry.ty {
+                BindingType::AccelerationStructure {
+                    vertex_return: entry_vertex_return,
+                } <span class="kw">if </span>vertex_return == entry_vertex_return =&gt; (),
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(BindingError::WrongType {
                         binding: (<span class="kw-2">&amp;</span>entry.ty).into(),
@@ -1988,7 +2000,9 @@
                     },
                 }
             }
-            ResourceType::AccelerationStructure =&gt; BindingType::AccelerationStructure,
+            ResourceType::AccelerationStructure { vertex_return } =&gt; {
+                BindingType::AccelerationStructure { vertex_return }
+            }
         })
     }
 }
@@ -2287,7 +2301,9 @@
                     class,
                 },
                 naga::TypeInner::Sampler { comparison } =&gt; ResourceType::Sampler { comparison },
-                naga::TypeInner::AccelerationStructure =&gt; ResourceType::AccelerationStructure,
+                naga::TypeInner::AccelerationStructure { vertex_return } =&gt; {
+                    ResourceType::AccelerationStructure { vertex_return }
+                }
                 <span class="kw-2">ref </span>other =&gt; ResourceType::Buffer {
                     size: wgt::BufferSize::new(other.size(module.to_ctx()) <span class="kw">as </span>u64).unwrap(),
                 },

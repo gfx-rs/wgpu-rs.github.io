@@ -293,7 +293,13 @@
 <a href="#292" id="292">292</a>
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a></pre></div><pre class="rust"><code><span class="doccomment">//! Producing the WGSL forms of types, for use in error messages.
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a></pre></div><pre class="rust"><code><span class="doccomment">//! Producing the WGSL forms of types, for use in error messages.
 
 </span><span class="kw">use </span>alloc::{
     format,
@@ -417,8 +423,14 @@
                 <span class="macro">format!</span>(<span class="string">"texture{class_suffix}{dim_suffix}{array_suffix}{type_in_brackets}"</span>)
             }
             Ti::Sampler { .. } =&gt; <span class="string">"sampler"</span>.to_string(),
-            Ti::AccelerationStructure =&gt; <span class="string">"acceleration_structure"</span>.to_string(),
-            Ti::RayQuery =&gt; <span class="string">"ray_query"</span>.to_string(),
+            Ti::AccelerationStructure { vertex_return } =&gt; {
+                <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+                <span class="macro">format!</span>(<span class="string">"acceleration_structure{}"</span>, caps)
+            }
+            Ti::RayQuery { vertex_return } =&gt; {
+                <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+                <span class="macro">format!</span>(<span class="string">"ray_query{}"</span>, caps)
+            }
             Ti::BindingArray { base, size, .. } =&gt; {
                 <span class="kw">let </span>member_type = <span class="kw-2">&amp;</span>gctx.types[base];
                 <span class="kw">let </span>base = member_type.name.as_deref().unwrap_or(<span class="string">"unknown"</span>);

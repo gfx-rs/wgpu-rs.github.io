@@ -4278,7 +4278,9 @@
 <a href="#4277" id="4277">4277</a>
 <a href="#4278" id="4278">4278</a>
 <a href="#4279" id="4279">4279</a>
-<a href="#4280" id="4280">4280</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4280" id="4280">4280</a>
+<a href="#4281" id="4281">4281</a>
+<a href="#4282" id="4282">4282</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -5642,10 +5644,10 @@
             </span>TypeInner::Array { base, size, .. } | TypeInner::BindingArray { base, size } =&gt; {
                 <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
             }
-            TypeInner::AccelerationStructure =&gt; {
+            TypeInner::AccelerationStructure { .. } =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"RaytracingAccelerationStructure"</span>)<span class="question-mark">?</span>;
             }
-            TypeInner::RayQuery =&gt; {
+            TypeInner::RayQuery { .. } =&gt; {
                 <span class="comment">// these are constant flags, there are dynamic flags also but constant flags are not supported by naga
                 </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"RayQuery&lt;RAY_FLAG_NONE&gt;"</span>)<span class="question-mark">?</span>;
             }
@@ -5820,7 +5822,7 @@
 
             <span class="kw">match </span>module.types[local.ty].inner {
                 <span class="comment">// from https://microsoft.github.io/DirectX-Specs/d3d/Raytracing.html#tracerayinline-example-1 it seems that ray queries shouldn't be zeroed
-                </span>TypeInner::RayQuery =&gt; {}
+                </span>TypeInner::RayQuery { .. } =&gt; {}
                 <span class="kw">_ </span>=&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
                     <span class="comment">// Write the local initializer if needed
@@ -8233,6 +8235,8 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
             }
+            <span class="comment">// Not supported yet
+            </span>Expression::RayQueryVertexPositions { .. } =&gt; <span class="macro">unreachable!</span>(),
             <span class="comment">// Nothing to do here, since call expression already cached
             </span>Expression::CallResult(<span class="kw">_</span>)
             | Expression::AtomicResult { .. }

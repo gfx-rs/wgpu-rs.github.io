@@ -751,7 +751,13 @@
 <a href="#750" id="750">750</a>
 <a href="#751" id="751">751</a>
 <a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
 
 <span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
@@ -1457,15 +1463,21 @@
                 TypeFlags::ARGUMENT | TypeFlags::CREATION_RESOLVED,
                 Alignment::ONE,
             ),
-            Ti::AccelerationStructure =&gt; {
+            Ti::AccelerationStructure { vertex_return } =&gt; {
                 <span class="self">self</span>.require_type_capability(Capabilities::RAY_QUERY)<span class="question-mark">?</span>;
+                <span class="kw">if </span>vertex_return {
+                    <span class="self">self</span>.require_type_capability(Capabilities::RAY_HIT_VERTEX_POSITION)<span class="question-mark">?</span>;
+                }
                 TypeInfo::new(
                     TypeFlags::ARGUMENT | TypeFlags::CREATION_RESOLVED,
                     Alignment::ONE,
                 )
             }
-            Ti::RayQuery =&gt; {
+            Ti::RayQuery { vertex_return } =&gt; {
                 <span class="self">self</span>.require_type_capability(Capabilities::RAY_QUERY)<span class="question-mark">?</span>;
+                <span class="kw">if </span>vertex_return {
+                    <span class="self">self</span>.require_type_capability(Capabilities::RAY_HIT_VERTEX_POSITION)<span class="question-mark">?</span>;
+                }
                 TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::CONSTRUCTIBLE

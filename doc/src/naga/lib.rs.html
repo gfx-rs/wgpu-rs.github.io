@@ -2487,7 +2487,20 @@
 <a href="#2486" id="2486">2486</a>
 <a href="#2487" id="2487">2487</a>
 <a href="#2488" id="2488">2488</a>
-<a href="#2489" id="2489">2489</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
+<a href="#2489" id="2489">2489</a>
+<a href="#2490" id="2490">2490</a>
+<a href="#2491" id="2491">2491</a>
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
+<a href="#2494" id="2494">2494</a>
+<a href="#2495" id="2495">2495</a>
+<a href="#2496" id="2496">2496</a>
+<a href="#2497" id="2497">2497</a>
+<a href="#2498" id="2498">2498</a>
+<a href="#2499" id="2499">2499</a>
+<a href="#2500" id="2500">2500</a>
+<a href="#2501" id="2501">2501</a>
+<a href="#2502" id="2502">2502</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
 
@@ -3336,10 +3349,10 @@ An override expression can be evaluated at pipeline creation time.
     </span>Sampler { comparison: bool },
 
     <span class="doccomment">/// Opaque object representing an acceleration structure of geometry.
-    </span>AccelerationStructure,
+    </span>AccelerationStructure { vertex_return: bool },
 
     <span class="doccomment">/// Locally used handle for ray queries.
-    </span>RayQuery,
+    </span>RayQuery { vertex_return: bool },
 
     <span class="doccomment">/// Array of bindings.
     ///
@@ -4186,6 +4199,14 @@ An override expression can be evaluated at pipeline creation time.
     /// a pointer to a structure containing a runtime array in its' last field.
     </span>ArrayLength(Handle&lt;Expression&gt;),
 
+    <span class="doccomment">/// Get the Positions of the triangle hit by the [`RayQuery`]
+    ///
+    /// [`RayQuery`]: Statement::RayQuery
+    </span>RayQueryVertexPositions {
+        query: Handle&lt;Expression&gt;,
+        committed: bool,
+    },
+
     <span class="doccomment">/// Result of a [`Proceed`] [`RayQuery`] statement.
     ///
     /// [`Proceed`]: RayQueryFunction::Proceed
@@ -4829,6 +4850,11 @@ An override expression can be evaluated at pipeline creation time.
     /// Call [`Module::generate_ray_intersection_type`] to populate
     /// this if needed and return the handle.
     </span><span class="kw">pub </span>ray_intersection: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&gt;&gt;,
+
+    <span class="doccomment">/// Type for `RayVertexReturn
+    ///
+    /// Call [`Module::generate_vertex_return_type`]
+    </span><span class="kw">pub </span>ray_vertex_return: <span class="prelude-ty">Option</span>&lt;Handle&lt;Type&gt;&gt;,
 
     <span class="doccomment">/// Types for predeclared wgsl types instantiated on demand.
     ///

@@ -298,7 +298,21 @@
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
 <a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{string::ToString <span class="kw">as _</span>, sync::Arc, vec::Vec};
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{string::ToString <span class="kw">as _</span>, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::mem::ManuallyDrop;
 
 <span class="kw">use </span><span class="kw">crate</span>::api_log;
@@ -326,6 +340,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;resource::Blas&gt;, CreateBlasError&gt; {
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
         <span class="self">self</span>.require_features(Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>blas_desc
+            .flags
+            .contains(wgt::AccelerationStructureFlags::ALLOW_RAY_HIT_VERTEX_RETURN)
+        {
+            <span class="self">self</span>.require_features(Features::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN)<span class="question-mark">?</span>;
+        }
 
         <span class="kw">let </span>size_info = <span class="kw">match </span><span class="kw-2">&amp;</span>sizes {
             wgt::BlasGeometrySizeDescriptors::Triangles { descriptors } =&gt; {
@@ -437,6 +458,13 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTlasError::DisallowedFlag(
                 wgt::AccelerationStructureFlags::USE_TRANSFORM,
             ));
+        }
+
+        <span class="kw">if </span>desc
+            .flags
+            .contains(wgt::AccelerationStructureFlags::ALLOW_RAY_HIT_VERTEX_RETURN)
+        {
+            <span class="self">self</span>.require_features(Features::EXPERIMENTAL_RAY_HIT_VERTEX_RETURN)<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span>size_info = <span class="kw">unsafe </span>{

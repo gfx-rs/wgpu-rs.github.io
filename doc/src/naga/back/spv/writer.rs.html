@@ -2413,7 +2413,39 @@
 <a href="#2412" id="2412">2412</a>
 <a href="#2413" id="2413">2413</a>
 <a href="#2414" id="2414">2414</a>
-<a href="#2415" id="2415">2415</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a>
+<a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     string::{String, ToString},
     vec,
     vec::Vec,
@@ -2663,6 +2695,30 @@
         <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Pointer {
             base: handle,
             class,
+        }))
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_ray_query_pointer_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module) -&gt; Word {
+        <span class="kw">let </span>rq_ty = module
+            .types
+            .get(<span class="kw-2">&amp;</span><span class="kw">crate</span>::Type {
+                name: <span class="prelude-val">None</span>,
+                inner: <span class="kw">crate</span>::TypeInner::RayQuery {
+                    vertex_return: <span class="bool-val">false</span>,
+                },
+            })
+            .or_else(|| {
+                module.types.get(<span class="kw-2">&amp;</span><span class="kw">crate</span>::Type {
+                    name: <span class="prelude-val">None</span>,
+                    inner: <span class="kw">crate</span>::TypeInner::RayQuery {
+                        vertex_return: <span class="bool-val">true</span>,
+                    },
+                })
+            })
+            .expect(<span class="string">"ray_query type should have been populated by the variable passed into this!"</span>);
+        <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Pointer {
+            base: rq_ty,
+            class: spirv::StorageClass::Function,
         }))
     }
 
@@ -3328,7 +3384,7 @@
                 id,
                 spirv::StorageClass::Function,
                 init_word.or_else(|| <span class="kw">match </span>ir_module.types[variable.ty].inner {
-                    <span class="kw">crate</span>::TypeInner::RayQuery =&gt; <span class="prelude-val">None</span>,
+                    <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">None</span>,
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">let </span>type_id = context.get_type_id(LookupType::Handle(variable.ty));
                         <span class="prelude-val">Some</span>(context.writer.write_constant_null(type_id))
@@ -3553,10 +3609,10 @@
                     <span class="kw">_ </span>=&gt; {}
                 }
             }
-            <span class="kw">crate</span>::TypeInner::AccelerationStructure =&gt; {
+            <span class="kw">crate</span>::TypeInner::AccelerationStructure { .. } =&gt; {
                 <span class="self">self</span>.require_any(<span class="string">"Acceleration Structure"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
             }
-            <span class="kw">crate</span>::TypeInner::RayQuery =&gt; {
+            <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; {
                 <span class="self">self</span>.require_any(<span class="string">"Ray Query"</span>, <span class="kw-2">&amp;</span>[spirv::Capability::RayQueryKHR])<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::TypeInner::Atomic(<span class="kw">crate</span>::Scalar { width: <span class="number">8</span>, kind: <span class="kw">_ </span>}) =&gt; {
@@ -3739,8 +3795,8 @@
                 | <span class="kw">crate</span>::TypeInner::ValuePointer { .. }
                 | <span class="kw">crate</span>::TypeInner::Image { .. }
                 | <span class="kw">crate</span>::TypeInner::Sampler { .. }
-                | <span class="kw">crate</span>::TypeInner::AccelerationStructure
-                | <span class="kw">crate</span>::TypeInner::RayQuery =&gt; <span class="macro">unreachable!</span>(),
+                | <span class="kw">crate</span>::TypeInner::AccelerationStructure { .. }
+                | <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="macro">unreachable!</span>(),
             };
 
             instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
@@ -4614,9 +4670,13 @@
             .any(|arg| has_view_index_check(ir_module, arg.binding.as_ref(), arg.ty));
         <span class="kw">let </span><span class="kw-2">mut </span>has_ray_query = ir_module.special_types.ray_desc.is_some()
             | ir_module.special_types.ray_intersection.is_some();
+        <span class="kw">let </span>has_vertex_return = ir_module.special_types.ray_vertex_return.is_some();
 
         <span class="kw">for </span>(<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">crate</span>::Type { <span class="kw-2">ref </span>inner, .. }) <span class="kw">in </span>ir_module.types.iter() {
-            <span class="kw">if let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::AccelerationStructure | <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::RayQuery = inner {
+            <span class="comment">// spirv does not know whether these have vertex return - that is done by us
+            </span><span class="kw">if let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::AccelerationStructure { .. }
+            | <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::RayQuery { .. } = inner
+            {
                 has_ray_query = <span class="bool-val">true
             </span>}
         }
@@ -4633,6 +4693,10 @@
         <span class="kw">if </span>has_ray_query {
             Instruction::extension(<span class="string">"SPV_KHR_ray_query"</span>)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions)
+        }
+        <span class="kw">if </span>has_vertex_return {
+            Instruction::extension(<span class="string">"SPV_KHR_ray_tracing_position_fetch"</span>)
+                .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.extensions);
         }
         Instruction::type_void(<span class="self">self</span>.void_type).to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
         Instruction::ext_inst_import(<span class="self">self</span>.gl450_ext_inst_id, <span class="string">"GLSL.std.450"</span>)

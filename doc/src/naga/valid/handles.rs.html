@@ -1036,7 +1036,14 @@
 <a href="#1035" id="1035">1035</a>
 <a href="#1036" id="1036">1036</a>
 <a href="#1037" id="1037">1037</a>
-<a href="#1038" id="1038">1038</a></pre></div><pre class="rust"><code><span class="doccomment">//! Implementation of `Validator::validate_module_handles`.
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a></pre></div><pre class="rust"><code><span class="doccomment">//! Implementation of `Validator::validate_module_handles`.
 
 </span><span class="kw">use </span>core::{convert::TryInto, hash::Hash};
 
@@ -1284,6 +1291,9 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = special_types.ray_intersection {
             validate_type(ty)<span class="question-mark">?</span>;
         }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = special_types.ray_vertex_return {
+            validate_type(ty)<span class="question-mark">?</span>;
+        }
 
         <span class="kw">for </span>(handle, _node) <span class="kw">in </span>diagnostic_filters.iter() {
             <span class="kw">let </span>DiagnosticFilterNode { inner: <span class="kw">_</span>, parent } = diagnostic_filters[handle];
@@ -1348,8 +1358,8 @@
             | <span class="kw">crate</span>::TypeInner::Atomic { .. }
             | <span class="kw">crate</span>::TypeInner::Image { .. }
             | <span class="kw">crate</span>::TypeInner::Sampler { .. }
-            | <span class="kw">crate</span>::TypeInner::AccelerationStructure
-            | <span class="kw">crate</span>::TypeInner::RayQuery =&gt; <span class="prelude-val">None</span>,
+            | <span class="kw">crate</span>::TypeInner::AccelerationStructure { .. }
+            | <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">None</span>,
             <span class="kw">crate</span>::TypeInner::Pointer { base, space: <span class="kw">_ </span>} =&gt; {
                 handle.check_dep(base)<span class="question-mark">?</span>;
                 <span class="prelude-val">None
@@ -1595,6 +1605,10 @@
                 handle.check_dep(array)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Expression::RayQueryGetIntersection {
+                query,
+                committed: <span class="kw">_</span>,
+            }
+            | <span class="kw">crate</span>::Expression::RayQueryVertexPositions {
                 query,
                 committed: <span class="kw">_</span>,
             } =&gt; {
