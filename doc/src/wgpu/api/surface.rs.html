@@ -395,7 +395,32 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec, vec::Vec};
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, vec, vec::Vec};
 <span class="kw">use </span>core::{error, fmt};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -684,6 +709,31 @@
 
         <span class="doccomment">/// Raw display handle, underlying window must outlive the surface created from this.
         </span>raw_window_handle: raw_window_handle::RawWindowHandle,
+    },
+
+    <span class="doccomment">/// Surface from a DRM device.
+    ///
+    /// If the specified DRM configuration is not supported by any of the backends, then the surface
+    /// will not be supported by any adapters.
+    ///
+    /// # Safety
+    ///
+    /// - All parameters must point to valid DRM values and remain valid for as long as the resulting [`Surface`] exists.
+    /// - The file descriptor (`fd`), plane, connector, and mode configuration must be valid and compatible.
+    </span><span class="attr">#[cfg(all(unix, not(target_vendor = <span class="string">"apple"</span>), not(target_family = <span class="string">"wasm"</span>)))]
+    </span>Drm {
+        <span class="doccomment">/// The file descriptor of the DRM device.
+        </span>fd: i32,
+        <span class="doccomment">/// The plane index on which to create the surface.
+        </span>plane: u32,
+        <span class="doccomment">/// The ID of the connector associated with the selected mode.
+        </span>connector_id: u32,
+        <span class="doccomment">/// The display width of the selected mode.
+        </span>width: u32,
+        <span class="doccomment">/// The display height of the selected mode.
+        </span>height: u32,
+        <span class="doccomment">/// The display refresh rate of the selected mode multiplied by 1000 (e.g., 60Hz → 60000).
+        </span>refresh_rate: u32,
     },
 
     <span class="doccomment">/// Surface from `CoreAnimationLayer`.

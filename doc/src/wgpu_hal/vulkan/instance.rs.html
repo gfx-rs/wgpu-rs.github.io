@@ -1123,7 +1123,16 @@
 <a href="#1122" id="1122">1122</a>
 <a href="#1123" id="1123">1123</a>
 <a href="#1124" id="1124">1124</a>
-<a href="#1125" id="1125">1125</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     borrow::ToOwned <span class="kw">as _</span>,
     boxed::Box,
     ffi::{c_void, CStr, CString},
@@ -1381,6 +1390,12 @@
 
         <span class="comment">// VK_KHR_surface
         </span>extensions.push(khr::surface::NAME);
+
+        <span class="comment">// Extensions needed for drm support
+        </span>extensions.push(khr::display::NAME);
+        extensions.push(ext::physical_device_drm::NAME);
+        extensions.push(khr::get_display_properties2::NAME);
+        extensions.push(ext::acquire_drm_display::NAME);
 
         <span class="comment">// Platform-specific WSI extensions
         </span><span class="kw">if </span><span class="macro">cfg!</span>(all(
@@ -1675,7 +1690,10 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
-    <span class="kw">fn </span>create_surface_from_vk_surface_khr(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: vk::SurfaceKHR) -&gt; <span class="kw">super</span>::Surface {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>create_surface_from_vk_surface_khr(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface: vk::SurfaceKHR,
+    ) -&gt; <span class="kw">super</span>::Surface {
         <span class="kw">let </span>functor = khr::surface::Instance::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
         <span class="kw">super</span>::Surface {
             raw: surface,
