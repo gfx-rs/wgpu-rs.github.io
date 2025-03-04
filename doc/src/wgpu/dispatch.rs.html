@@ -816,39 +816,7 @@
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
 <a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
-<a href="#830" id="830">830</a>
-<a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
-<a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
-<a href="#837" id="837">837</a>
-<a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a></pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
+<a href="#818" id="818">818</a></pre></div><pre class="rust"><code><span class="doccomment">//! Infrastructure for dispatching calls to the appropriate "backend". The "backends" are:
 //!
 //! - `wgpu_core`: An implementation of the the wgpu api on top of various native graphics APIs.
 //! - `webgpu`: An implementation of the wgpu api which calls WebGPU directly.
@@ -860,13 +828,19 @@
 
 </span><span class="attr">#![allow(drop_bounds)] </span><span class="comment">// This exists to remind implementors to impl drop.
 </span><span class="attr">#![allow(clippy::too_many_arguments)] </span><span class="comment">// It's fine.
+</span><span class="attr">#![allow(missing_docs, clippy::missing_safety_doc)] </span><span class="comment">// Interfaces are not documented
 
 </span><span class="kw">use crate</span>::{WasmNotSend, WasmNotSendSync};
 
 <span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{any::Any, fmt::Debug, future::Future, hash::Hash, ops::Range, pin::Pin};
 
-<span class="kw">use </span><span class="kw">crate</span>::backend;
+<span class="attr">#[cfg(custom)]
+</span><span class="kw">use </span><span class="kw">crate</span>::backend::custom::<span class="kw-2">*</span>;
+<span class="attr">#[cfg(webgpu)]
+</span><span class="kw">use </span><span class="kw">crate</span>::backend::webgpu::<span class="kw-2">*</span>;
+<span class="attr">#[cfg(wgpu_core)]
+</span><span class="kw">use </span><span class="kw">crate</span>::backend::wgpu_core::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Create a single trait with the given supertraits and a blanket impl for all types that implement them.
 ///
@@ -900,43 +874,9 @@
 
 <span class="comment">// Common traits on all the interface traits
 </span><span class="macro">trait_alias!</span>(CommonTraits: Any + Debug + WasmNotSendSync);
-<span class="comment">// Non-object-safe traits that are added as a bound on InterfaceTypes.
-</span><span class="macro">trait_alias!</span>(ComparisonTraits: PartialEq + Eq + PartialOrd + Ord + Hash);
-
-<span class="doccomment">/// Types that represent a "Backend" for the wgpu API.
-</span><span class="kw">pub trait </span>InterfaceTypes {
-    <span class="kw">type </span>Instance: InstanceInterface + ComparisonTraits;
-    <span class="kw">type </span>Adapter: AdapterInterface + ComparisonTraits;
-    <span class="kw">type </span>Device: DeviceInterface + ComparisonTraits;
-    <span class="kw">type </span>Queue: QueueInterface + ComparisonTraits;
-    <span class="kw">type </span>ShaderModule: ShaderModuleInterface + ComparisonTraits;
-    <span class="kw">type </span>BindGroupLayout: BindGroupLayoutInterface + ComparisonTraits;
-    <span class="kw">type </span>BindGroup: BindGroupInterface + ComparisonTraits;
-    <span class="kw">type </span>TextureView: TextureViewInterface + ComparisonTraits;
-    <span class="kw">type </span>Sampler: SamplerInterface + ComparisonTraits;
-    <span class="kw">type </span>Buffer: BufferInterface + ComparisonTraits;
-    <span class="kw">type </span>Texture: TextureInterface + ComparisonTraits;
-    <span class="kw">type </span>Blas: BlasInterface + ComparisonTraits;
-    <span class="kw">type </span>Tlas: TlasInterface + ComparisonTraits;
-    <span class="kw">type </span>QuerySet: QuerySetInterface + ComparisonTraits;
-    <span class="kw">type </span>PipelineLayout: PipelineLayoutInterface + ComparisonTraits;
-    <span class="kw">type </span>RenderPipeline: RenderPipelineInterface + ComparisonTraits;
-    <span class="kw">type </span>ComputePipeline: ComputePipelineInterface + ComparisonTraits;
-    <span class="kw">type </span>PipelineCache: PipelineCacheInterface + ComparisonTraits;
-    <span class="kw">type </span>CommandEncoder: CommandEncoderInterface + ComparisonTraits;
-    <span class="kw">type </span>ComputePass: ComputePassInterface + ComparisonTraits;
-    <span class="kw">type </span>RenderPass: RenderPassInterface + ComparisonTraits;
-    <span class="kw">type </span>CommandBuffer: CommandBufferInterface + ComparisonTraits;
-    <span class="kw">type </span>RenderBundleEncoder: RenderBundleEncoderInterface + ComparisonTraits;
-    <span class="kw">type </span>RenderBundle: RenderBundleInterface + ComparisonTraits;
-    <span class="kw">type </span>Surface: SurfaceInterface + ComparisonTraits;
-    <span class="kw">type </span>SurfaceOutputDetail: SurfaceOutputDetailInterface + ComparisonTraits;
-    <span class="kw">type </span>QueueWriteBuffer: QueueWriteBufferInterface + ComparisonTraits;
-    <span class="kw">type </span>BufferMappedRange: BufferMappedRangeInterface + ComparisonTraits;
-}
 
 <span class="kw">pub trait </span>InstanceInterface: CommonTraits {
-    <span class="kw">fn </span>new(desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) -&gt; <span class="self">Self
+    <span class="kw">fn </span>new(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span><span class="self">Self</span>: Sized;
 
@@ -988,7 +928,7 @@
     <span class="kw">fn </span>create_shader_module(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw">crate</span>::ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-        shader_bound_checks: wgt::ShaderRuntimeChecks,
+        shader_bound_checks: <span class="kw">crate</span>::ShaderRuntimeChecks,
     ) -&gt; DispatchShaderModule;
     <span class="kw">unsafe fn </span>create_shader_module_spirv(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1046,7 +986,7 @@
     <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, poll_type: <span class="kw">crate</span>::PollType) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::PollStatus, <span class="kw">crate</span>::PollError&gt;;
 
     <span class="kw">fn </span>get_internal_counters(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::InternalCounters;
-    <span class="kw">fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::AllocatorReport&gt;;
+    <span class="kw">fn </span>generate_allocator_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::AllocatorReport&gt;;
 
     <span class="kw">fn </span>destroy(<span class="kw-2">&amp;</span><span class="self">self</span>);
 }
@@ -1058,8 +998,8 @@
     <span class="kw">fn </span>validate_write_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>DispatchBuffer,
-        offset: wgt::BufferAddress,
-        size: wgt::BufferSize,
+        offset: <span class="kw">crate</span>::BufferAddress,
+        size: <span class="kw">crate</span>::BufferSize,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt;;
     <span class="kw">fn </span>write_staging_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1108,7 +1048,7 @@
     <span class="attr">#[cfg(webgpu)]
     </span><span class="kw">fn </span>get_mapped_range_as_array_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        sub_range: Range&lt;wgt::BufferAddress&gt;,
+        sub_range: Range&lt;<span class="kw">crate</span>::BufferAddress&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;js_sys::ArrayBuffer&gt;;
 
     <span class="kw">fn </span>unmap(<span class="kw-2">&amp;</span><span class="self">self</span>);
@@ -1373,7 +1313,7 @@
 <span class="kw">pub trait </span>RenderBundleInterface: CommonTraits {}
 
 <span class="kw">pub trait </span>SurfaceInterface: CommonTraits {
-    <span class="kw">fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>DispatchAdapter) -&gt; wgt::SurfaceCapabilities;
+    <span class="kw">fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>DispatchAdapter) -&gt; <span class="kw">crate</span>::SurfaceCapabilities;
 
     <span class="kw">fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>DispatchDevice, config: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SurfaceConfiguration);
     <span class="kw">fn </span>get_current_texture(
@@ -1411,25 +1351,26 @@
 /// arguments. These are similarly free when there is only one backend.
 ///
 /// In the future, we may want a truly generic backend, which could be extended from this enum.
-</span><span class="macro">macro_rules!</span> dispatch_types_inner {
+</span><span class="macro">macro_rules!</span> dispatch_types {
     (
-        wgpu_core = <span class="macro-nonterminal">$wgpu_core_context</span>:ty;
-        webgpu = <span class="macro-nonterminal">$webgpu_context</span>:ty;
-        {<span class="kw-2">ref </span><span class="kw">type </span><span class="macro-nonterminal">$name</span>:ident = InterfaceTypes::<span class="macro-nonterminal">$subtype</span>:ident: <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span>};
+        <span class="kw-2">ref </span><span class="kw">type </span><span class="macro-nonterminal">$name</span>:ident: <span class="macro-nonterminal">$interface</span>:ident = <span class="macro-nonterminal">$core_type</span>:ident,<span class="macro-nonterminal">$webgpu_type</span>:ident,<span class="macro-nonterminal">$custom_type</span>:ident
     ) =&gt; {
         <span class="attr">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
         </span><span class="kw">pub enum </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
-            </span>Core(Arc&lt;&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt;),
+            </span>Core(Arc&lt;<span class="macro-nonterminal">$core_type</span>&gt;),
             <span class="attr">#[cfg(webgpu)]
-            </span>WebGPU(Arc&lt;&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt;),
+            </span>WebGPU(Arc&lt;<span class="macro-nonterminal">$webgpu_type</span>&gt;),
+            <span class="attr">#[allow(clippy::allow_attributes, private_interfaces)]
+            #[cfg(custom)]
+            </span>Custom(<span class="macro-nonterminal">$custom_type</span>),
         }
 
         <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="macro-nonterminal">$core_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not core"</span>)),
@@ -1439,7 +1380,7 @@
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="macro-nonterminal">$core_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -1449,7 +1390,7 @@
             <span class="attr">#[cfg(webgpu)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="macro-nonterminal">$webgpu_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not webgpu"</span>)),
@@ -1459,40 +1400,48 @@
             <span class="attr">#[cfg(webgpu)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="macro-nonterminal">$webgpu_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 }
             }
+
+            <span class="attr">#[cfg(custom)]
+            #[inline]
+            </span><span class="kw">pub fn </span>custom&lt;T: <span class="macro-nonterminal">$interface</span>&gt;(t: T) -&gt; <span class="self">Self </span>{
+                <span class="self">Self</span>::Custom(<span class="macro-nonterminal">$custom_type::new</span>(t))
+            }
         }
 
         <span class="attr">#[cfg(wgpu_core)]
-        </span><span class="kw">impl </span>From&lt;&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
+        </span><span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$core_type</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from(value: &lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>) -&gt; <span class="self">Self </span>{
+            </span><span class="kw">fn </span>from(value: <span class="macro-nonterminal">$core_type</span>) -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::Core(Arc::new(value))
             }
         }
 
         <span class="attr">#[cfg(webgpu)]
-        </span><span class="kw">impl </span>From&lt;&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
+        </span><span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$webgpu_type</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from(value: &lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>) -&gt; <span class="self">Self </span>{
+            </span><span class="kw">fn </span>from(value: <span class="macro-nonterminal">$webgpu_type</span>) -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::WebGPU(Arc::new(value))
             }
         }
 
         <span class="kw">impl </span>core::ops::Deref <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
-            <span class="kw">type </span>Target = <span class="kw">dyn </span><span class="macro-nonterminal">$</span><span class="kw">trait</span>;
+            <span class="kw">type </span>Target = <span class="kw">dyn </span><span class="macro-nonterminal">$interface</span>;
 
-            <span class="attr">#[<span class="macro-nonterminal">inline</span>]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="attr">#[cfg(wgpu_core)]
                     </span><span class="self">Self</span>::Core(value) =&gt; value.as_ref(),
                     <span class="attr">#[cfg(webgpu)]
                     </span><span class="self">Self</span>::WebGPU(value) =&gt; value.as_ref(),
+                    <span class="attr">#[cfg(custom)]
+                    </span><span class="self">Self</span>::Custom(value) =&gt; value.deref(),
                     <span class="attr">#[cfg(not(any(wgpu_core, webgpu)))]
                     </span><span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No context available. You need to enable one of wgpu's backend feature build flags."</span>),
                 }
@@ -1500,23 +1449,24 @@
         }
     };
     (
-        wgpu_core = <span class="macro-nonterminal">$wgpu_core_context</span>:ty;
-        webgpu = <span class="macro-nonterminal">$webgpu_context</span>:ty;
-        {<span class="kw-2">mut </span><span class="kw">type </span><span class="macro-nonterminal">$name</span>:ident = InterfaceTypes::<span class="macro-nonterminal">$subtype</span>:ident: <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span>};
+        <span class="kw-2">mut </span><span class="kw">type </span><span class="macro-nonterminal">$name</span>:ident: <span class="macro-nonterminal">$interface</span>:ident = <span class="macro-nonterminal">$core_type</span>:ident,<span class="macro-nonterminal">$webgpu_type</span>:ident,<span class="macro-nonterminal">$custom_type</span>:ident
     ) =&gt; {
         <span class="attr">#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
         </span><span class="kw">pub enum </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
-            </span>Core(&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>),
+            </span>Core(<span class="macro-nonterminal">$core_type</span>),
             <span class="attr">#[cfg(webgpu)]
-            </span>WebGPU(&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>),
+            </span>WebGPU(<span class="macro-nonterminal">$webgpu_type</span>),
+            <span class="attr">#[allow(clippy::allow_attributes, private_interfaces)]
+            #[cfg(custom)]
+            </span>Custom(<span class="macro-nonterminal">$custom_type</span>),
         }
 
         <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_core(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="macro-nonterminal">$core_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not core"</span>)),
@@ -1526,7 +1476,7 @@
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_core_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_core_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$core_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not core"</span>)),
@@ -1536,7 +1486,7 @@
             <span class="attr">#[cfg(wgpu_core)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            </span><span class="kw">pub fn </span>as_core_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="macro-nonterminal">$core_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -1548,7 +1498,7 @@
             #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_core_mut_opt(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$core_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::Core(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -1558,7 +1508,7 @@
             <span class="attr">#[cfg(webgpu)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_webgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="macro-nonterminal">$webgpu_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not webgpu"</span>)),
@@ -1568,7 +1518,7 @@
             <span class="attr">#[cfg(webgpu)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_webgpu_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype </span>{
+            </span><span class="kw">pub fn </span>as_webgpu_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$webgpu_type </span>{
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; value,
                     <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="macro">concat!</span>(<span class="macro">stringify!</span>(<span class="macro-nonterminal">$name</span>), <span class="string">" is not webgpu"</span>)),
@@ -1578,7 +1528,7 @@
             <span class="attr">#[cfg(webgpu)]
             #[inline]
             #[allow(clippy::allow_attributes, unused)]
-            </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            </span><span class="kw">pub fn </span>as_webgpu_opt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="macro-nonterminal">$webgpu_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -1590,40 +1540,48 @@
             #[allow(clippy::allow_attributes, unused)]
             </span><span class="kw">pub fn </span>as_webgpu_mut_opt(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; {
+            ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$webgpu_type</span>&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="self">Self</span>::WebGPU(value) =&gt; <span class="prelude-val">Some</span>(value),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 }
             }
+
+            <span class="attr">#[cfg(custom)]
+            #[inline]
+            </span><span class="kw">pub fn </span>custom&lt;T: <span class="macro-nonterminal">$interface</span>&gt;(t: T) -&gt; <span class="self">Self </span>{
+                <span class="self">Self</span>::Custom(<span class="macro-nonterminal">$custom_type::new</span>(t))
+            }
         }
 
         <span class="attr">#[cfg(wgpu_core)]
-        </span><span class="kw">impl </span>From&lt;&lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
+        </span><span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$core_type</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from(value: &lt;<span class="macro-nonterminal">$wgpu_core_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>) -&gt; <span class="self">Self </span>{
+            </span><span class="kw">fn </span>from(value: <span class="macro-nonterminal">$core_type</span>) -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::Core(value)
             }
         }
 
         <span class="attr">#[cfg(webgpu)]
-        </span><span class="kw">impl </span>From&lt;&lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
+        </span><span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$webgpu_type</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from(value: &lt;<span class="macro-nonterminal">$webgpu_context </span><span class="kw">as </span>InterfaceTypes&gt;::<span class="macro-nonterminal">$subtype</span>) -&gt; <span class="self">Self </span>{
+            </span><span class="kw">fn </span>from(value: <span class="macro-nonterminal">$webgpu_type</span>) -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::WebGPU(value)
             }
         }
 
         <span class="kw">impl </span>core::ops::Deref <span class="kw">for </span><span class="macro-nonterminal">$name </span>{
-            <span class="kw">type </span>Target = <span class="kw">dyn </span><span class="macro-nonterminal">$</span><span class="kw">trait</span>;
+            <span class="kw">type </span>Target = <span class="kw">dyn </span><span class="macro-nonterminal">$interface</span>;
 
-            <span class="attr">#[<span class="macro-nonterminal">inline</span>]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
                 <span class="kw">match </span><span class="self">self </span>{
                     <span class="attr">#[cfg(wgpu_core)]
                     </span><span class="self">Self</span>::Core(value) =&gt; value,
                     <span class="attr">#[cfg(webgpu)]
                     </span><span class="self">Self</span>::WebGPU(value) =&gt; value,
+                    <span class="attr">#[cfg(custom)]
+                    </span><span class="self">Self</span>::Custom(value) =&gt; value.deref(),
                     <span class="attr">#[cfg(not(any(wgpu_core, webgpu)))]
                     </span><span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No context available. You need to enable one of wgpu's backend feature build flags."</span>),
                 }
@@ -1638,6 +1596,8 @@
                     </span><span class="self">Self</span>::Core(value) =&gt; value,
                     <span class="attr">#[cfg(webgpu)]
                     </span><span class="self">Self</span>::WebGPU(value) =&gt; value,
+                    <span class="attr">#[cfg(custom)]
+                    </span><span class="self">Self</span>::Custom(value) =&gt; value.deref_mut(),
                     <span class="attr">#[cfg(not(any(wgpu_core, webgpu)))]
                     </span><span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"No context available. You need to enable one of wgpu's backend feature build flags."</span>),
                 }
@@ -1646,56 +1606,32 @@
     };
 }
 
-<span class="macro">macro_rules!</span> dispatch_types {
-    (
-        wgpu_core = <span class="macro-nonterminal">$wgpu_core_context</span>:ty;
-        webgpu = <span class="macro-nonterminal">$webgpu_context</span>:ty;
-        {$(
-            <span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">tt</span>;
-        )<span class="kw-2">*</span>}
-    ) =&gt; {
-        $(
-            <span class="macro">dispatch_types_inner!</span>{
-                wgpu_core = backend::ContextWgpuCore;
-                webgpu = backend::ContextWebGpu;
-                <span class="macro-nonterminal">$</span><span class="kw">type</span>;
-            }
-        )*
-    };
-}
-
-<span class="macro">dispatch_types!</span> {
-    <span class="macro-nonterminal">wgpu_core </span>= backend::ContextWgpuCore;
-    webgpu = backend::ContextWebGpu;
-    {
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchInstance = InterfaceTypes::Instance: InstanceInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchAdapter = InterfaceTypes::Adapter: AdapterInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchDevice = InterfaceTypes::Device: DeviceInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchQueue = InterfaceTypes::Queue: QueueInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchShaderModule = InterfaceTypes::ShaderModule: ShaderModuleInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBindGroupLayout = InterfaceTypes::BindGroupLayout: BindGroupLayoutInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBindGroup = InterfaceTypes::BindGroup: BindGroupInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTextureView = InterfaceTypes::TextureView: TextureViewInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSampler = InterfaceTypes::Sampler: SamplerInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBuffer = InterfaceTypes::Buffer: BufferInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTexture = InterfaceTypes::Texture: TextureInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBlas = InterfaceTypes::Blas: BlasInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTlas = InterfaceTypes::Tlas: TlasInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchQuerySet = InterfaceTypes::QuerySet: QuerySetInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchPipelineLayout = InterfaceTypes::PipelineLayout: PipelineLayoutInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchRenderPipeline = InterfaceTypes::RenderPipeline: RenderPipelineInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchComputePipeline = InterfaceTypes::ComputePipeline: ComputePipelineInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchPipelineCache = InterfaceTypes::PipelineCache: PipelineCacheInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchCommandEncoder = InterfaceTypes::CommandEncoder: CommandEncoderInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchComputePass = InterfaceTypes::ComputePass: ComputePassInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchRenderPass = InterfaceTypes::RenderPass: RenderPassInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchCommandBuffer = InterfaceTypes::CommandBuffer: CommandBufferInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchRenderBundleEncoder = InterfaceTypes::RenderBundleEncoder: RenderBundleEncoderInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchRenderBundle = InterfaceTypes::RenderBundle: RenderBundleInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSurface = InterfaceTypes::Surface: SurfaceInterface};
-        {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSurfaceOutputDetail = InterfaceTypes::SurfaceOutputDetail: SurfaceOutputDetailInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchQueueWriteBuffer = InterfaceTypes::QueueWriteBuffer: QueueWriteBufferInterface};
-        {<span class="kw-2">mut </span><span class="kw">type </span>DispatchBufferMappedRange = InterfaceTypes::BufferMappedRange: BufferMappedRangeInterface};
-    }
-}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchInstance: InstanceInterface = ContextWgpuCore, ContextWebGpu, DynContext}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchAdapter: AdapterInterface = CoreAdapter, WebAdapter, DynAdapter}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchDevice: DeviceInterface = CoreDevice, WebDevice, DynDevice}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchQueue: QueueInterface = CoreQueue, WebQueue, DynQueue}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchShaderModule: ShaderModuleInterface = CoreShaderModule, WebShaderModule, DynShaderModule}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBindGroupLayout: BindGroupLayoutInterface = CoreBindGroupLayout, WebBindGroupLayout, DynBindGroupLayout}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBindGroup: BindGroupInterface = CoreBindGroup, WebBindGroup, DynBindGroup}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTextureView: TextureViewInterface = CoreTextureView, WebTextureView, DynTextureView}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSampler: SamplerInterface = CoreSampler, WebSampler, DynSampler}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBuffer: BufferInterface = CoreBuffer, WebBuffer, DynBuffer}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTexture: TextureInterface = CoreTexture, WebTexture, DynTexture}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchBlas: BlasInterface = CoreBlas, WebBlas, DynBlas}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchTlas: TlasInterface = CoreTlas, WebTlas, DynTlas}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchQuerySet: QuerySetInterface = CoreQuerySet, WebQuerySet, DynQuerySet}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchPipelineLayout: PipelineLayoutInterface = CorePipelineLayout, WebPipelineLayout, DynPipelineLayout}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchRenderPipeline: RenderPipelineInterface = CoreRenderPipeline, WebRenderPipeline, DynRenderPipeline}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchComputePipeline: ComputePipelineInterface = CoreComputePipeline, WebComputePipeline, DynComputePipeline}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchPipelineCache: PipelineCacheInterface = CorePipelineCache, WebPipelineCache, DynPipelineCache}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchCommandEncoder: CommandEncoderInterface = CoreCommandEncoder, WebCommandEncoder, DynCommandEncoder}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchComputePass: ComputePassInterface = CoreComputePass, WebComputePassEncoder, DynComputePass}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchRenderPass: RenderPassInterface = CoreRenderPass, WebRenderPassEncoder, DynRenderPass}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchCommandBuffer: CommandBufferInterface = CoreCommandBuffer, WebCommandBuffer, DynCommandBuffer}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchRenderBundleEncoder: RenderBundleEncoderInterface = CoreRenderBundleEncoder, WebRenderBundleEncoder, DynRenderBundleEncoder}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchRenderBundle: RenderBundleInterface = CoreRenderBundle, WebRenderBundle, DynRenderBundle}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSurface: SurfaceInterface = CoreSurface, WebSurface, DynSurface}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">ref </span><span class="kw">type </span>DispatchSurfaceOutputDetail: SurfaceOutputDetailInterface = CoreSurfaceOutputDetail, WebSurfaceOutputDetail, DynSurfaceOutputDetail}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchQueueWriteBuffer: QueueWriteBufferInterface = CoreQueueWriteBuffer, WebQueueWriteBuffer, DynQueueWriteBuffer}
+<span class="macro">dispatch_types!</span> {<span class="kw-2">mut </span><span class="kw">type </span>DispatchBufferMappedRange: BufferMappedRangeInterface = CoreBufferMappedRange, WebBufferMappedRange, DynBufferMappedRange}
 </code></pre></div></section></main></body></html>

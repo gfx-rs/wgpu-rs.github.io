@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["wgpu_core"]};
+window.SIDEBAR_ITEMS = {"mod":["custom","wgpu_core"]};
