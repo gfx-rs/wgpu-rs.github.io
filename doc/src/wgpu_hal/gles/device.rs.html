@@ -1623,19 +1623,16 @@
 <a href="#1622" id="1622">1622</a>
 <a href="#1623" id="1623">1623</a>
 <a href="#1624" id="1624">1624</a>
-<a href="#1625" id="1625">1625</a>
-<a href="#1626" id="1626">1626</a>
-<a href="#1627" id="1627">1627</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1625" id="1625">1625</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned, format, string::String, string::ToString <span class="kw">as _</span>, sync::Arc, vec, vec::Vec,
 };
 <span class="kw">use </span>core::{cmp::max, convert::TryInto, num::NonZeroU32, ptr, sync::atomic::Ordering};
-<span class="kw">use </span>std::sync::Mutex;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>naga::FastHashMap;
 
-<span class="kw">use super</span>::{conv, PrivateCapabilities};
+<span class="kw">use super</span>::{conv, lock, MaybeMutex, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span><span class="kw">crate</span>::TlasInstance;
 
@@ -2153,8 +2150,8 @@
                 target,
                 size: desc.size,
                 map_flags: <span class="number">0</span>,
-                data: <span class="prelude-val">Some</span>(Arc::new(Mutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize]))),
-                offset_of_current_mapping: Arc::new(Mutex::new(<span class="number">0</span>)),
+                data: <span class="prelude-val">Some</span>(Arc::new(MaybeMutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize]))),
+                offset_of_current_mapping: Arc::new(MaybeMutex::new(<span class="number">0</span>)),
             });
         }
 
@@ -2241,7 +2238,7 @@
         }
 
         <span class="kw">let </span>data = <span class="kw">if </span>emulate_map &amp;&amp; desc.usage.contains(wgt::BufferUses::MAP_READ) {
-            <span class="prelude-val">Some</span>(Arc::new(Mutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize])))
+            <span class="prelude-val">Some</span>(Arc::new(MaybeMutex::new(<span class="macro">vec!</span>[<span class="number">0</span>; desc.size <span class="kw">as </span>usize])))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -2254,7 +2251,7 @@
             size: desc.size,
             map_flags,
             data,
-            offset_of_current_mapping: Arc::new(Mutex::new(<span class="number">0</span>)),
+            offset_of_current_mapping: Arc::new(MaybeMutex::new(<span class="number">0</span>)),
         })
     }
 
@@ -2279,7 +2276,7 @@
         <span class="kw">let </span>is_coherent = buffer.map_flags &amp; glow::MAP_COHERENT_BIT != <span class="number">0</span>;
         <span class="kw">let </span>ptr = <span class="kw">match </span>buffer.raw {
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>vec = buffer.data.as_ref().unwrap().lock().unwrap();
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = lock(buffer.data.as_ref().unwrap());
                 <span class="kw">let </span>slice = <span class="kw-2">&amp;mut </span>vec.as_mut_slice()[range.start <span class="kw">as </span>usize..range.end <span class="kw">as </span>usize];
                 slice.as_mut_ptr()
             }
@@ -2287,12 +2284,12 @@
                 <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
                 <span class="kw">let </span>ptr = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>map_read_allocation) = buffer.data {
-                    <span class="kw">let </span><span class="kw-2">mut </span>guard = map_read_allocation.lock().unwrap();
+                    <span class="kw">let </span><span class="kw-2">mut </span>guard = lock(map_read_allocation);
                     <span class="kw">let </span>slice = guard.as_mut_slice();
                     <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.get_buffer_sub_data(gl, buffer.target, <span class="number">0</span>, slice) };
                     slice.as_mut_ptr()
                 } <span class="kw">else </span>{
-                    <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap() = range.start;
+                    <span class="kw-2">*</span>lock(<span class="kw-2">&amp;</span>buffer.offset_of_current_mapping) = range.start;
                     <span class="kw">unsafe </span>{
                         gl.map_buffer_range(
                             buffer.target,
@@ -2318,7 +2315,7 @@
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
                 <span class="kw">unsafe </span>{ gl.unmap_buffer(buffer.target) };
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">None</span>) };
-                <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap() = <span class="number">0</span>;
+                <span class="kw-2">*</span>lock(<span class="kw-2">&amp;</span>buffer.offset_of_current_mapping) = <span class="number">0</span>;
             }
         }
     }
@@ -2331,8 +2328,7 @@
                 <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
                 <span class="kw">unsafe </span>{ gl.bind_buffer(buffer.target, <span class="prelude-val">Some</span>(raw)) };
                 <span class="kw">for </span>range <span class="kw">in </span>ranges {
-                    <span class="kw">let </span>offset_of_current_mapping =
-                        <span class="kw-2">*</span>buffer.offset_of_current_mapping.lock().unwrap();
+                    <span class="kw">let </span>offset_of_current_mapping = <span class="kw-2">*</span>lock(<span class="kw-2">&amp;</span>buffer.offset_of_current_mapping);
                     <span class="kw">unsafe </span>{
                         gl.flush_mapped_buffer_range(
                             buffer.target,
