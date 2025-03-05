@@ -5037,7 +5037,8 @@
 <a href="#5036" id="5036">5036</a>
 <a href="#5037" id="5037">5037</a>
 <a href="#5038" id="5038">5038</a>
-<a href="#5039" id="5039">5039</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5039" id="5039">5039</a>
+<a href="#5040" id="5040">5040</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5102,6 +5103,7 @@ to output a [`Module`](crate::Module) into glsl
 
 <span class="kw">use crate</span>::{
     back::{<span class="self">self</span>, Baked},
+    common,
     proc::{<span class="self">self</span>, ExpressionKindTracker, NameKey},
     valid, Handle, ShaderStage, TypeInner,
 };
@@ -8485,7 +8487,7 @@ to output a [`Module`](crate::Module) into glsl
                             TypeInner::Vector { size, .. } =&gt; <span class="macro">write!</span>(
                                 <span class="self">self</span>.out,
                                 <span class="string">", vec{}(0.0), vec{0}(1.0)"</span>,
-                                back::vector_size_str(size)
+                                common::vector_size_str(size)
                             )<span class="question-mark">?</span>,
                             <span class="kw">_ </span>=&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", 0.0, 1.0"</span>)<span class="question-mark">?</span>,
                         }
@@ -8632,7 +8634,7 @@ to output a [`Module`](crate::Module) into glsl
                     </span>Mf::CountTrailingZeros =&gt; {
                         <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
                             TypeInner::Vector { size, scalar, .. } =&gt; {
-                                <span class="kw">let </span>s = back::vector_size_str(size);
+                                <span class="kw">let </span>s = common::vector_size_str(size);
                                 <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"min(uvec{s}(findLSB("</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
@@ -8662,7 +8664,7 @@ to output a [`Module`](crate::Module) into glsl
                         <span class="kw">if </span><span class="self">self</span>.options.version.supports_integer_functions() {
                             <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
                                 TypeInner::Vector { size, scalar } =&gt; {
-                                    <span class="kw">let </span>s = back::vector_size_str(size);
+                                    <span class="kw">let </span>s = common::vector_size_str(size);
 
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uvec{s}(ivec{s}(31) - findMSB("</span>)<span class="question-mark">?</span>;
@@ -8693,7 +8695,7 @@ to output a [`Module`](crate::Module) into glsl
                         } <span class="kw">else </span>{
                             <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(arg, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types) {
                                 TypeInner::Vector { size, scalar } =&gt; {
-                                    <span class="kw">let </span>s = back::vector_size_str(size);
+                                    <span class="kw">let </span>s = common::vector_size_str(size);
 
                                     <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Uint = scalar.kind {
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uvec{s}("</span>)<span class="question-mark">?</span>;

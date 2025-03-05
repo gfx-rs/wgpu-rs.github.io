@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["wgsl"]};
+window.SIDEBAR_ITEMS = {"fn":["vector_size_str"],"mod":["wgsl"]};

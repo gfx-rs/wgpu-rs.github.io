@@ -53,7 +53,42 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [WGSL][wgsl] (WebGPU Shading Language).
 
 [wgsl]: https://gpuweb.github.io/gpuweb/wgsl.html
@@ -62,11 +97,14 @@ Backend for [WGSL][wgsl] (WebGPU Shading Language).
 </span><span class="kw">mod </span>polyfill;
 <span class="kw">mod </span>writer;
 
+<span class="kw">use </span>alloc::format;
 <span class="kw">use </span>alloc::string::String;
 
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">pub use </span>writer::{Writer, WriterFlags};
+
+<span class="kw">use </span><span class="kw">crate</span>::common::wgsl;
 
 <span class="attr">#[derive(Error, Debug)]
 </span><span class="kw">pub enum </span>Error {
@@ -76,10 +114,42 @@ Backend for [WGSL][wgsl] (WebGPU Shading Language).
     </span>Custom(String),
     <span class="attr">#[error(<span class="string">"{0}"</span>)]
     </span>Unimplemented(String), <span class="comment">// TODO: Error used only during development
-    </span><span class="attr">#[error(<span class="string">"Unsupported math function: {0:?}"</span>)]
-    </span>UnsupportedMathFunction(<span class="kw">crate</span>::MathFunction),
-    <span class="attr">#[error(<span class="string">"Unsupported relational function: {0:?}"</span>)]
+    </span><span class="attr">#[error(<span class="string">"Unsupported relational function: {0:?}"</span>)]
     </span>UnsupportedRelationalFunction(<span class="kw">crate</span>::RelationalFunction),
+    <span class="attr">#[error(<span class="string">"Unsupported {kind}: {value}"</span>)]
+    </span>Unsupported {
+        <span class="doccomment">/// What kind of unsupported thing this is: interpolation, builtin, etc.
+        </span>kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+
+        <span class="doccomment">/// The debug form of the Naga IR value that this backend can't express.
+        </span>value: String,
+    },
+}
+
+<span class="kw">impl </span>Error {
+    <span class="doccomment">/// Produce an [`Unsupported`] error for `value`.
+    ///
+    /// [`Unsupported`]: Error::Unsupported
+    </span><span class="kw">fn </span>unsupported&lt;T: core::fmt::Debug&gt;(kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, value: T) -&gt; Error {
+        Error::Unsupported {
+            kind,
+            value: <span class="macro">format!</span>(<span class="string">"{value:?}"</span>),
+        }
+    }
+}
+
+<span class="kw">trait </span>ToWgslIfImplemented {
+    <span class="kw">fn </span>to_wgsl_if_implemented(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt;;
+}
+
+<span class="kw">impl</span>&lt;T&gt; ToWgslIfImplemented <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: wgsl::TryToWgsl + core::fmt::Debug + Copy,
+{
+    <span class="kw">fn </span>to_wgsl_if_implemented(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Error&gt; {
+        <span class="self">self</span>.try_to_wgsl()
+            .ok_or_else(|| Error::unsupported(T::DESCRIPTION, <span class="self">self</span>))
+    }
 }
 
 <span class="kw">pub fn </span>write_string(
