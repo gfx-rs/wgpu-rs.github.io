@@ -3486,7 +3486,11 @@
 <a href="#3485" id="3485">3485</a>
 <a href="#3486" id="3486">3486</a>
 <a href="#3487" id="3487">3487</a>
-<a href="#3488" id="3488">3488</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3488" id="3488">3488</a>
+<a href="#3489" id="3489">3489</a>
+<a href="#3490" id="3490">3490</a>
+<a href="#3491" id="3491">3491</a>
+<a href="#3492" id="3492">3492</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     string::{String, ToString},
     vec::Vec,
@@ -5067,11 +5071,11 @@
                         c.ty.map(|ast| <span class="self">self</span>.resolve_ast_type(ast, <span class="kw-2">&amp;mut </span>ectx.as_const()))
                             .transpose()<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>(_ty, init) = <span class="self">self</span>.type_and_init(
+                    <span class="kw">let </span>(ty, init) = <span class="self">self</span>.type_and_init(
                         c.name,
                         <span class="prelude-val">Some</span>(c.init),
                         explicit_ty,
-                        AbstractRule::Concretize,
+                        AbstractRule::Allow,
                         <span class="kw-2">&amp;mut </span>ectx.as_const(),
                     )<span class="question-mark">?</span>;
                     <span class="kw">let </span>init = init.expect(<span class="string">"Local const must have init"</span>);
@@ -5079,9 +5083,13 @@
                     block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
                     ctx.local_table
                         .insert(c.handle, Declared::Const(Typed::Plain(init)));
-                    ctx.named_expressions
-                        .insert(init, (c.name.name.to_string(), c.name.span));
-
+                    <span class="comment">// Only add constants of non-abstract types to the named expressions
+                    // to prevent abstract types ending up in the IR.
+                    </span><span class="kw">let </span>is_abstract = ctx.module.types[ty].inner.is_abstract(<span class="kw-2">&amp;</span>ctx.module.types);
+                    <span class="kw">if </span>!is_abstract {
+                        ctx.named_expressions
+                            .insert(init, (c.name.name.to_string(), c.name.span));
+                    }
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
             },
