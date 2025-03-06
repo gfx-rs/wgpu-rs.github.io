@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SNATCH_LOCK_TRACE"],"struct":["ExclusiveSnatchGuard","LockTrace","SnatchGuard","SnatchLock","Snatchable"]};
+window.SIDEBAR_ITEMS = {"mod":["trace"],"struct":["ExclusiveSnatchGuard","SnatchGuard","SnatchLock","Snatchable"]};

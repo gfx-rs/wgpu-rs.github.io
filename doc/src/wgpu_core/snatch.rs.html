@@ -166,21 +166,19 @@
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a></pre></div><pre class="rust"><code><span class="attr">#![allow(unused)]
-
-</span><span class="kw">use </span>core::{
-    cell::{Cell, RefCell, UnsafeCell},
-    fmt,
-    panic::{<span class="self">self</span>, Location},
-};
-<span class="kw">use </span>std::{backtrace::Backtrace, thread};
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::{cell::UnsafeCell, fmt};
 
 <span class="kw">use </span><span class="kw">crate</span>::lock::{rank, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 <span class="doccomment">/// A guard that provides read access to snatchable data.
-</span><span class="kw">pub struct </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;(RwLockReadGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
+</span><span class="kw">pub struct </span>SnatchGuard&lt;<span class="lifetime">'a</span>&gt;(<span class="attr">#[expect(dead_code)] </span>RwLockReadGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
 <span class="doccomment">/// A guard that allows snatching the snatchable data.
-</span><span class="kw">pub struct </span>ExclusiveSnatchGuard&lt;<span class="lifetime">'a</span>&gt;(RwLockWriteGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
+</span><span class="kw">pub struct </span>ExclusiveSnatchGuard&lt;<span class="lifetime">'a</span>&gt;(<span class="attr">#[expect(dead_code)] </span>RwLockWriteGuard&lt;<span class="lifetime">'a</span>, ()&gt;);
 
 <span class="doccomment">/// A value that is mostly immutable but can be "snatched" if we need to destroy
 /// it early.
@@ -199,7 +197,8 @@
         }
     }
 
-    <span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
         Snatchable {
             value: UnsafeCell::new(<span class="prelude-val">None</span>),
         }
@@ -234,58 +233,69 @@
 
 <span class="kw">unsafe impl</span>&lt;T&gt; Sync <span class="kw">for </span>Snatchable&lt;T&gt; {}
 
-<span class="kw">struct </span>LockTrace {
-    purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-    caller: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Location&lt;<span class="lifetime">'static</span>&gt;,
-    backtrace: Backtrace,
-}
+<span class="kw">use </span>trace::LockTrace;
+<span class="attr">#[cfg(all(debug_assertions, feature = <span class="string">"std"</span>))]
+</span><span class="kw">mod </span>trace {
+    <span class="kw">use </span>core::{cell::Cell, fmt, panic::Location};
+    <span class="kw">use </span>std::{backtrace::Backtrace, thread};
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>LockTrace {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(
-            f,
-            <span class="string">"a {} lock at {}\n{}"</span>,
-            <span class="self">self</span>.purpose, <span class="self">self</span>.caller, <span class="self">self</span>.backtrace
-        )
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>LockTrace {
+        purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        caller: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Location&lt;<span class="lifetime">'static</span>&gt;,
+        backtrace: Backtrace,
     }
-}
 
-<span class="attr">#[cfg(debug_assertions)]
-</span><span class="kw">impl </span>LockTrace {
-    <span class="attr">#[track_caller]
-    </span><span class="kw">fn </span>enter(purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
-        <span class="kw">let </span>new = LockTrace {
-            purpose,
-            caller: Location::caller(),
-            backtrace: Backtrace::capture(),
-        };
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(prev) = SNATCH_LOCK_TRACE.take() {
-            <span class="kw">let </span>current = thread::current();
-            <span class="kw">let </span>name = current.name().unwrap_or(<span class="string">"&lt;unnamed&gt;"</span>);
-            <span class="macro">panic!</span>(
-                <span class="string">"thread '{name}' attempted to acquire a snatch lock recursively.\n\
-                 - Currently trying to acquire {new}\n\
-                 - Previously acquired {prev}"</span>,
-            );
-        } <span class="kw">else </span>{
-            SNATCH_LOCK_TRACE.set(<span class="prelude-val">Some</span>(new));
+    <span class="kw">impl </span>fmt::Display <span class="kw">for </span>LockTrace {
+        <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+            <span class="macro">write!</span>(
+                f,
+                <span class="string">"a {} lock at {}\n{}"</span>,
+                <span class="self">self</span>.purpose, <span class="self">self</span>.caller, <span class="self">self</span>.backtrace
+            )
         }
     }
 
-    <span class="kw">fn </span>exit() {
-        SNATCH_LOCK_TRACE.take();
+    <span class="kw">impl </span>LockTrace {
+        <span class="attr">#[track_caller]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>enter(purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {
+            <span class="kw">let </span>new = LockTrace {
+                purpose,
+                caller: Location::caller(),
+                backtrace: Backtrace::capture(),
+            };
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(prev) = SNATCH_LOCK_TRACE.take() {
+                <span class="kw">let </span>current = thread::current();
+                <span class="kw">let </span>name = current.name().unwrap_or(<span class="string">"&lt;unnamed&gt;"</span>);
+                <span class="macro">panic!</span>(
+                    <span class="string">"thread '{name}' attempted to acquire a snatch lock recursively.\n\
+                 - Currently trying to acquire {new}\n\
+                 - Previously acquired {prev}"</span>,
+                );
+            } <span class="kw">else </span>{
+                SNATCH_LOCK_TRACE.set(<span class="prelude-val">Some</span>(new));
+            }
+        }
+
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>exit() {
+            SNATCH_LOCK_TRACE.take();
+        }
+    }
+
+    <span class="macro">std::thread_local!</span> {
+        <span class="kw">static </span>SNATCH_LOCK_TRACE: Cell&lt;<span class="prelude-ty">Option</span>&lt;LockTrace&gt;&gt; = <span class="kw">const </span>{ Cell::new(<span class="prelude-val">None</span>) };
     }
 }
+<span class="attr">#[cfg(not(all(debug_assertions, feature = <span class="string">"std"</span>)))]
+</span><span class="kw">mod </span>trace {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>LockTrace {
+        _private: (),
+    }
 
-<span class="attr">#[cfg(not(debug_assertions))]
-</span><span class="kw">impl </span>LockTrace {
-    <span class="kw">fn </span>enter(purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {}
-    <span class="kw">fn </span>exit() {}
-}
-
-<span class="macro">std::thread_local!</span> {
-    <span class="kw">static </span>SNATCH_LOCK_TRACE: Cell&lt;<span class="prelude-ty">Option</span>&lt;LockTrace&gt;&gt; = <span class="kw">const </span>{ Cell::new(<span class="prelude-val">None</span>) };
+    <span class="kw">impl </span>LockTrace {
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>enter(_purpose: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) {}
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>exit() {}
+    }
 }
 
 <span class="doccomment">/// A Device-global lock for all snatchable data.
