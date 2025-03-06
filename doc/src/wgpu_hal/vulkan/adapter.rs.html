@@ -2634,7 +2634,14 @@
 <a href="#2633" id="2633">2633</a>
 <a href="#2634" id="2634">2634</a>
 <a href="#2635" id="2635">2635</a>
-<a href="#2636" id="2636">2636</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, ffi::CStr, sync::Arc, vec::Vec};
+<a href="#2636" id="2636">2636</a>
+<a href="#2637" id="2637">2637</a>
+<a href="#2638" id="2638">2638</a>
+<a href="#2639" id="2639">2639</a>
+<a href="#2640" id="2640">2640</a>
+<a href="#2641" id="2641">2641</a>
+<a href="#2642" id="2642">2642</a>
+<a href="#2643" id="2643">2643</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, ffi::CStr, sync::Arc, vec::Vec};
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -3131,19 +3138,20 @@
                 <span class="prelude-val">None
             </span>},
             mesh_shader: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>ext::mesh_shader::NAME) {
-                <span class="kw">let </span>needed = requested_features.contains(wgt::Features::MESH_SHADER);
+                <span class="kw">let </span>needed = requested_features.contains(wgt::Features::EXPERIMENTAL_MESH_SHADER);
+                <span class="kw">let </span>multiview_needed =
+                    requested_features.contains(wgt::Features::EXPERIMENTAL_MESH_SHADER_MULTIVIEW);
                 <span class="prelude-val">Some</span>(
                     vk::PhysicalDeviceMeshShaderFeaturesEXT::default()
                         .mesh_shader(needed)
                         .task_shader(needed)
-                        <span class="comment">// Multiview needs some special work https://github.com/gfx-rs/wgpu/issues/7262
-                        </span>.multiview_mesh_shader(<span class="bool-val">false</span>),
+                        .multiview_mesh_shader(multiview_needed),
                 )
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
             maintenance4: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>khr::maintenance4::NAME) {
-                <span class="kw">let </span>needed = requested_features.contains(wgt::Features::MESH_SHADER);
+                <span class="kw">let </span>needed = requested_features.contains(wgt::Features::EXPERIMENTAL_MESH_SHADER);
                 <span class="prelude-val">Some</span>(vk::PhysicalDeviceMaintenance4FeaturesKHR::default().maintenance4(needed))
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
@@ -3472,9 +3480,15 @@
             caps.supports_extension(khr::external_memory_win32::NAME),
         );
         features.set(
-            F::MESH_SHADER,
+            F::EXPERIMENTAL_MESH_SHADER,
             caps.supports_extension(ext::mesh_shader::NAME),
         );
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>mesh_shader) = <span class="self">self</span>.mesh_shader {
+            features.set(
+                F::EXPERIMENTAL_MESH_SHADER_MULTIVIEW,
+                mesh_shader.multiview_mesh_shader != <span class="number">0</span>,
+            );
+        }
         (features, dl_flags)
     }
 }
@@ -3641,7 +3655,7 @@
                 }
             }
 
-            <span class="kw">if </span>requested_features.intersects(wgt::Features::MESH_SHADER) {
+            <span class="kw">if </span>requested_features.intersects(wgt::Features::EXPERIMENTAL_MESH_SHADER) {
                 extensions.push(khr::spirv_1_4::NAME);
             }
 
@@ -3660,7 +3674,7 @@
                 extensions.push(ext::subgroup_size_control::NAME);
             }
 
-            <span class="kw">if </span>requested_features.intersects(wgt::Features::MESH_SHADER) {
+            <span class="kw">if </span>requested_features.intersects(wgt::Features::EXPERIMENTAL_MESH_SHADER) {
                 extensions.push(khr::maintenance4::NAME);
             }
         }
@@ -3741,7 +3755,7 @@
             extensions.push(google::display_timing::NAME);
         }
 
-        <span class="kw">if </span>requested_features.contains(wgt::Features::MESH_SHADER) {
+        <span class="kw">if </span>requested_features.contains(wgt::Features::EXPERIMENTAL_MESH_SHADER) {
             extensions.push(ext::mesh_shader::NAME);
         }
 
