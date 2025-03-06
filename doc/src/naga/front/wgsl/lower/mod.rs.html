@@ -3490,7 +3490,16 @@
 <a href="#3489" id="3489">3489</a>
 <a href="#3490" id="3490">3490</a>
 <a href="#3491" id="3491">3491</a>
-<a href="#3492" id="3492">3492</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3492" id="3492">3492</a>
+<a href="#3493" id="3493">3493</a>
+<a href="#3494" id="3494">3494</a>
+<a href="#3495" id="3495">3495</a>
+<a href="#3496" id="3496">3496</a>
+<a href="#3497" id="3497">3497</a>
+<a href="#3498" id="3498">3498</a>
+<a href="#3499" id="3499">3499</a>
+<a href="#3500" id="3500">3500</a>
+<a href="#3501" id="3501">3501</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     string::{String, ToString},
     vec::Vec,
@@ -6797,14 +6806,23 @@
         size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::PendingArraySize, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Override&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>({
                 <span class="kw">if let </span><span class="kw">crate</span>::Expression::Override(handle) = ctx.module.global_expressions[expr] {
-                    <span class="kw">crate</span>::PendingArraySize::Override(handle)
+                    handle
                 } <span class="kw">else </span>{
-                    <span class="kw">crate</span>::PendingArraySize::Expression(expr)
+                    <span class="kw">let </span>ty = ctx.register_type(expr)<span class="question-mark">?</span>;
+                    ctx.module.overrides.append(
+                        <span class="kw">crate</span>::Override {
+                            name: <span class="prelude-val">None</span>,
+                            id: <span class="prelude-val">None</span>,
+                            ty,
+                            init: <span class="prelude-val">Some</span>(expr),
+                        },
+                        span,
+                    )
                 }
             }),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::ExpectedConstExprConcreteIntegerScalar(span)),

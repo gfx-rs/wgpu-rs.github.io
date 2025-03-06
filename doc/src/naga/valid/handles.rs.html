@@ -1043,7 +1043,13 @@
 <a href="#1042" id="1042">1042</a>
 <a href="#1043" id="1043">1043</a>
 <a href="#1044" id="1044">1044</a>
-<a href="#1045" id="1045">1045</a></pre></div><pre class="rust"><code><span class="doccomment">//! Implementation of `Validator::validate_module_handles`.
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a></pre></div><pre class="rust"><code><span class="doccomment">//! Implementation of `Validator::validate_module_handles`.
 
 </span><span class="kw">use </span>core::{convert::TryInto, hash::Hash};
 
@@ -1368,15 +1374,12 @@
             | <span class="kw">crate</span>::TypeInner::BindingArray { base, size, .. } =&gt; {
                 handle.check_dep(base)<span class="question-mark">?</span>;
                 <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Pending(pending) =&gt; <span class="kw">match </span>pending {
-                        <span class="kw">crate</span>::PendingArraySize::Expression(expr) =&gt; <span class="prelude-val">Some</span>(expr),
-                        <span class="kw">crate</span>::PendingArraySize::Override(h) =&gt; {
-                            <span class="self">Self</span>::validate_override_handle(h, overrides)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>r#override = <span class="kw-2">&amp;</span>overrides[h];
-                            handle.check_dep(r#override.ty)<span class="question-mark">?</span>;
-                            r#override.init
-                        }
-                    },
+                    <span class="kw">crate</span>::ArraySize::Pending(h) =&gt; {
+                        <span class="self">Self</span>::validate_override_handle(h, overrides)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>r#override = <span class="kw-2">&amp;</span>overrides[h];
+                        handle.check_dep(r#override.ty)<span class="question-mark">?</span>;
+                        r#override.init
+                    }
                     <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>) | <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="prelude-val">None</span>,
                 }
             }
@@ -1968,7 +1971,7 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>array_size_deps() {
     <span class="kw">use </span><span class="kw">super</span>::Validator;
-    <span class="kw">use crate</span>::{ArraySize, Expression, PendingArraySize, Scalar, Span, Type, TypeInner};
+    <span class="kw">use crate</span>::{ArraySize, Expression, Override, Scalar, Span, Type, TypeInner};
 
     <span class="kw">let </span>nowhere = Span::default();
 
@@ -1984,12 +1987,21 @@
     <span class="kw">let </span>ex_zero = m
         .global_expressions
         .append(Expression::ZeroValue(ty_u32), nowhere);
+    <span class="kw">let </span>ty_handle = m.overrides.append(
+        Override {
+            name: <span class="prelude-val">None</span>,
+            id: <span class="prelude-val">None</span>,
+            ty: ty_u32,
+            init: <span class="prelude-val">Some</span>(ex_zero),
+        },
+        nowhere,
+    );
     <span class="kw">let </span>ty_arr = m.types.insert(
         Type {
             name: <span class="prelude-val">Some</span>(<span class="string">"bad_array"</span>.to_string()),
             inner: TypeInner::Array {
                 base: ty_u32,
-                size: ArraySize::Pending(PendingArraySize::Expression(ex_zero)),
+                size: ArraySize::Pending(ty_handle),
                 stride: <span class="number">4</span>,
             },
         },
@@ -2008,7 +2020,7 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>array_size_override() {
     <span class="kw">use </span><span class="kw">super</span>::Validator;
-    <span class="kw">use crate</span>::{ArraySize, Override, PendingArraySize, Scalar, Span, Type, TypeInner};
+    <span class="kw">use crate</span>::{ArraySize, Override, Scalar, Span, Type, TypeInner};
 
     <span class="kw">let </span>nowhere = Span::default();
 
@@ -2028,7 +2040,7 @@
             name: <span class="prelude-val">Some</span>(<span class="string">"bad_array"</span>.to_string()),
             inner: TypeInner::Array {
                 base: ty_u32,
-                size: ArraySize::Pending(PendingArraySize::Override(bad_override)),
+                size: ArraySize::Pending(bad_override),
                 stride: <span class="number">4</span>,
             },
         },
@@ -2041,7 +2053,7 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>override_init_deps() {
     <span class="kw">use </span><span class="kw">super</span>::Validator;
-    <span class="kw">use crate</span>::{ArraySize, Expression, Override, PendingArraySize, Scalar, Span, Type, TypeInner};
+    <span class="kw">use crate</span>::{ArraySize, Expression, Override, Scalar, Span, Type, TypeInner};
 
     <span class="kw">let </span>nowhere = Span::default();
 
@@ -2071,7 +2083,7 @@
             name: <span class="prelude-val">Some</span>(<span class="string">"bad_array"</span>.to_string()),
             inner: TypeInner::Array {
                 base: ty_u32,
-                size: ArraySize::Pending(PendingArraySize::Override(r#override)),
+                size: ArraySize::Pending(r#override),
                 stride: <span class="number">4</span>,
             },
         },

@@ -769,13 +769,7 @@
 <a href="#768" id="768">768</a>
 <a href="#769" id="769">769</a>
 <a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#771" id="771">771</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
 
@@ -1058,7 +1052,10 @@ Shader validator.
     valid_expression_list: Vec&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
     valid_expression_set: HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
     override_ids: FastHashSet&lt;u16&gt;,
-    allow_overrides: bool,
+
+    <span class="doccomment">/// Treat overrides whose initializers are not fully-evaluated
+    /// constant expressions as errors.
+    </span>overrides_resolved: bool,
 
     <span class="doccomment">/// A checklist of expressions that must be visited by a specific kind of
     /// statement.
@@ -1109,6 +1106,13 @@ Shader validator.
     </span>TypeNotScalar,
     <span class="attr">#[error(<span class="string">"Override declarations are not allowed"</span>)]
     </span>NotAllowed,
+    <span class="attr">#[error(<span class="string">"Override is uninitialized"</span>)]
+    </span>UninitializedOverride,
+    <span class="attr">#[error(<span class="string">"Constant expression {handle:?} is invalid"</span>)]
+    </span>ConstExpression {
+        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        source: ConstExpressionError,
+    },
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -1249,7 +1253,7 @@ Shader validator.
             valid_expression_list: Vec::new(),
             valid_expression_set: HandleSet::new(),
             override_ids: FastHashSet::default(),
-            allow_overrides: <span class="bool-val">true</span>,
+            overrides_resolved: <span class="bool-val">false</span>,
             needs_visit: HandleSet::new(),
         }
     }
@@ -1309,15 +1313,7 @@ Shader validator.
         gctx: <span class="kw">crate</span>::proc::GlobalCtx,
         mod_info: <span class="kw-2">&amp;</span>ModuleInfo,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), OverrideError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.allow_overrides {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::NotAllowed);
-        }
-
         <span class="kw">let </span>o = <span class="kw-2">&amp;</span>gctx.overrides[handle];
-
-        <span class="kw">if </span>o.name.is_none() &amp;&amp; o.id.is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::MissingNameAndID);
-        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = o.id {
             <span class="kw">if </span>!<span class="self">self</span>.override_ids.insert(id) {
@@ -1347,6 +1343,8 @@ Shader validator.
             <span class="kw">if </span>!decl_ty.equivalent(init_ty, gctx.types) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::InvalidType);
             }
+        } <span class="kw">else if </span><span class="self">self</span>.overrides_resolved {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::UninitializedOverride);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1357,18 +1355,22 @@ Shader validator.
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, WithSpan&lt;ValidationError&gt;&gt; {
-        <span class="self">self</span>.allow_overrides = <span class="bool-val">true</span>;
+        <span class="self">self</span>.overrides_resolved = <span class="bool-val">false</span>;
         <span class="self">self</span>.validate_impl(module)
     }
 
-    <span class="doccomment">/// Check the given module to be valid.
+    <span class="doccomment">/// Check the given module to be valid, requiring overrides to be resolved.
     ///
-    /// With the additional restriction that overrides are not present.
-    </span><span class="kw">pub fn </span>validate_no_overrides(
+    /// This is the same as [`validate`], except that any override
+    /// whose value is not a fully-evaluated constant expression is
+    /// treated as an error.
+    ///
+    /// [`validate`]: Validator::validate
+    </span><span class="kw">pub fn </span>validate_resolved_overrides(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ModuleInfo, WithSpan&lt;ValidationError&gt;&gt; {
-        <span class="self">self</span>.allow_overrides = <span class="bool-val">false</span>;
+        <span class="self">self</span>.overrides_resolved = <span class="bool-val">true</span>;
         <span class="self">self</span>.validate_impl(module)
     }
 
@@ -1411,20 +1413,6 @@ Shader validator.
                     }
                     .with_span_handle(handle, <span class="kw-2">&amp;</span>module.types)
                 })<span class="question-mark">?</span>;
-            <span class="kw">if </span>!<span class="self">self</span>.allow_overrides {
-                <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Array {
-                    size: <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>),
-                    ..
-                } = ty.inner
-                {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>((ValidationError::Type {
-                        handle,
-                        name: ty.name.clone().unwrap_or_default(),
-                        source: TypeError::UnresolvedOverride(handle),
-                    })
-                    .with_span_handle(handle, <span class="kw-2">&amp;</span>module.types));
-                }
-            }
             mod_info.type_flags.push(ty_info.flags);
             <span class="self">self</span>.types[handle.index()] = ty_info;
         }
@@ -1479,8 +1467,8 @@ Shader validator.
                             source,
                         }
                         .with_span_handle(handle, <span class="kw-2">&amp;</span>module.overrides)
-                    })<span class="question-mark">?
-            </span>}
+                    })<span class="question-mark">?</span>;
+            }
         }
 
         <span class="kw">for </span>(var_handle, var) <span class="kw">in </span>module.global_variables.iter() {

@@ -1917,7 +1917,10 @@
 <a href="#1916" id="1916">1916</a>
 <a href="#1917" id="1917">1917</a>
 <a href="#1918" id="1918">1918</a>
-<a href="#1919" id="1919">1919</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -2142,7 +2145,7 @@
                 <span class="kw">crate</span>::TypeInner::Scalar { .. } =&gt; {}
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstExpressionError::InvalidSplatType(value)),
             },
-            <span class="kw">_ if </span>global_expr_kind.is_const(handle) || !<span class="self">self</span>.allow_overrides =&gt; {
+            <span class="kw">_ if </span>global_expr_kind.is_const(handle) || <span class="self">self</span>.overrides_resolved =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ConstExpressionError::NonFullyEvaluatedConst)
             }
             <span class="comment">// the constant evaluator will report errors about override-expressions
@@ -2204,11 +2207,14 @@
                     .eval_expr_to_u32_from(index, <span class="kw-2">&amp;</span>function.expressions)
                 {
                     <span class="prelude-val">Ok</span>(value) =&gt; {
+                        <span class="kw">let </span>length = <span class="kw">if </span><span class="self">self</span>.overrides_resolved {
+                            base_type.indexable_length_resolved(module)
+                        } <span class="kw">else </span>{
+                            base_type.indexable_length_pending(module)
+                        }<span class="question-mark">?</span>;
                         <span class="comment">// If we know both the length and the index, we can do the
                         // bounds check now.
-                        </span><span class="kw">if let </span><span class="kw">crate</span>::proc::IndexableLength::Known(known_length) =
-                            base_type.indexable_length(module)<span class="question-mark">?
-                        </span>{
+                        </span><span class="kw">if let </span><span class="kw">crate</span>::proc::IndexableLength::Known(known_length) = length {
                             <span class="kw">if </span>value &gt;= known_length {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::IndexOutOfBounds(base, value));
                             }

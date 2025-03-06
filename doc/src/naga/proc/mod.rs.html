@@ -574,7 +574,49 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 [`Module`](super::Module) processing functionality.
 */
 
@@ -595,6 +637,7 @@
 <span class="kw">pub use </span>layouter::{Alignment, LayoutError, LayoutErrorInner, Layouter, TypeLayout};
 <span class="kw">pub use </span>namer::{EntryPointIndex, NameKey, Namer};
 <span class="kw">pub use </span>terminator::ensure_block_returns;
+<span class="kw">use </span>thiserror::Error;
 <span class="kw">pub use </span>typifier::{ResolveContext, ResolveError, TypeResolution};
 
 <span class="kw">impl </span>From&lt;<span class="kw">super</span>::StorageFormat&gt; <span class="kw">for </span><span class="kw">super</span>::Scalar {
@@ -1055,6 +1098,47 @@
                 get(<span class="kw-2">*</span><span class="self">self</span>, <span class="self">self</span>.constants[c].init, <span class="self">self</span>.global_expressions)
             }
             <span class="kw">_ </span>=&gt; get(<span class="kw-2">*</span><span class="self">self</span>, handle, arena),
+        }
+    }
+}
+
+<span class="attr">#[derive(Error, Debug, Clone, Copy, PartialEq)]
+</span><span class="kw">pub enum </span>ResolveArraySizeError {
+    <span class="attr">#[error(<span class="string">"array element count must be positive (&gt; 0)"</span>)]
+    </span>ExpectedPositiveArrayLength,
+    <span class="attr">#[error(<span class="string">"internal: array size override has not been resolved"</span>)]
+    </span>NonConstArrayLength,
+}
+
+<span class="kw">impl </span><span class="kw">crate</span>::ArraySize {
+    <span class="doccomment">/// Return the number of elements that `size` represents, if known at code generation time.
+    ///
+    /// If `size` is override-based, return an error unless the override's
+    /// initializer is a fully evaluated constant expression. You can call
+    /// [`pipeline_constants::process_overrides`] to supply values for a
+    /// module's overrides and ensure their initializers are fully evaluated, as
+    /// this function expects.
+    ///
+    /// [`pipeline_constants::process_overrides`]: crate::back::pipeline_constants::process_overrides
+    </span><span class="kw">pub fn </span>resolve(<span class="kw-2">&amp;</span><span class="self">self</span>, gctx: GlobalCtx) -&gt; <span class="prelude-ty">Result</span>&lt;IndexableLength, ResolveArraySizeError&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="kw">crate</span>::ArraySize::Constant(length) =&gt; <span class="prelude-val">Ok</span>(IndexableLength::Known(length.get())),
+            <span class="kw">crate</span>::ArraySize::Pending(handle) =&gt; {
+                <span class="kw">let </span><span class="prelude-val">Some</span>(expr) = gctx.overrides[handle].init <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveArraySizeError::NonConstArrayLength);
+                };
+                <span class="kw">let </span>length = gctx.eval_expr_to_u32(expr).map_err(|err| <span class="kw">match </span>err {
+                    U32EvalError::NonConst =&gt; ResolveArraySizeError::NonConstArrayLength,
+                    U32EvalError::Negative =&gt; ResolveArraySizeError::ExpectedPositiveArrayLength,
+                })<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>length == <span class="number">0 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveArraySizeError::ExpectedPositiveArrayLength);
+                }
+
+                <span class="prelude-val">Ok</span>(IndexableLength::Known(length))
+            }
+            <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="prelude-val">Ok</span>(IndexableLength::Dynamic),
         }
     }
 }

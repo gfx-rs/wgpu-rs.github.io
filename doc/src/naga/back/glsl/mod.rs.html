@@ -5033,12 +5033,7 @@
 <a href="#5032" id="5032">5032</a>
 <a href="#5033" id="5033">5033</a>
 <a href="#5034" id="5034">5034</a>
-<a href="#5035" id="5035">5035</a>
-<a href="#5036" id="5036">5036</a>
-<a href="#5037" id="5037">5037</a>
-<a href="#5038" id="5038">5038</a>
-<a href="#5039" id="5039">5039</a>
-<a href="#5040" id="5040">5040</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5035" id="5035">5035</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5579,6 +5574,8 @@ to output a [`Module`](crate::Module) into glsl
     <span class="doccomment">/// [`crate::Sampling::First`] is unsupported.
     </span><span class="attr">#[error(<span class="string">"`{:?}` sampling is unsupported"</span>, <span class="kw">crate</span>::Sampling::First)]
     </span>FirstSamplingNotSupported,
+    <span class="attr">#[error(transparent)]
+    </span>ResolveArraySizeError(<span class="attr">#[from] </span>proc::ResolveArraySizeError),
 }
 
 <span class="doccomment">/// Binary operation with a different logic on the GLSL side.
@@ -5652,10 +5649,6 @@ to output a [`Module`](crate::Module) into glsl
         pipeline_options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PipelineOptions,
         policies: proc::BoundsCheckPolicies,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="kw">if </span>!module.overrides.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
-        }
-
         <span class="comment">// Check if the requested version is supported
         </span><span class="kw">if </span>!options.version.is_supported() {
             <span class="macro">log::error!</span>(<span class="string">"Version {}"</span>, options.version);
@@ -6053,13 +6046,12 @@ to output a [`Module`](crate::Module) into glsl
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"["</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Write the array size
-        // Writes nothing if `ArraySize::Dynamic`
-        </span><span class="kw">match </span>size {
-            <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; {
+        // Writes nothing if `IndexableLength::Dynamic`
+        </span><span class="kw">match </span>size.resolve(<span class="self">self</span>.module.to_ctx())<span class="question-mark">? </span>{
+            proc::IndexableLength::Known(size) =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{size}"</span>)<span class="question-mark">?</span>;
             }
-            <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-            <span class="kw">crate</span>::ArraySize::Dynamic =&gt; (),
+            proc::IndexableLength::Dynamic =&gt; (),
         }
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
@@ -7799,7 +7791,9 @@ to output a [`Module`](crate::Module) into glsl
                 write_expression(<span class="self">self</span>, value)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?
             </span>}
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -9614,12 +9608,8 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
             }
             TypeInner::Array { base, size, .. } =&gt; {
-                <span class="kw">let </span>count = <span class="kw">match </span>size
-                    .to_indexable_length(<span class="self">self</span>.module)
-                    .expect(<span class="string">"Bad array size"</span>)
-                {
+                <span class="kw">let </span>count = <span class="kw">match </span>size.resolve(<span class="self">self</span>.module.to_ctx())<span class="question-mark">? </span>{
                     proc::IndexableLength::Known(count) =&gt; count,
-                    proc::IndexableLength::Pending =&gt; <span class="macro">unreachable!</span>(),
                     proc::IndexableLength::Dynamic =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
                 };
                 <span class="self">self</span>.write_type(base)<span class="question-mark">?</span>;

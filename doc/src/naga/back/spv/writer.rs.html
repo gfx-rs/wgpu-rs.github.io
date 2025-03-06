@@ -3748,10 +3748,10 @@
 
     <span class="kw">fn </span>write_type_declaration_arena(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        arena: <span class="kw-2">&amp;</span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
+        module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
         handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
-        <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>arena[handle];
+        <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>module.types[handle];
         <span class="comment">// If it's a type that needs SPIR-V capabilities, request them now.
         // This needs to happen regardless of the LocalType lookup succeeding,
         // because some types which map to the same LocalType have different
@@ -3784,24 +3784,26 @@
                     <span class="self">self</span>.decorate(id, Decoration::ArrayStride, <span class="kw-2">&amp;</span>[stride]);
 
                     <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(base);
-                    <span class="kw">match </span>size {
-                        <span class="kw">crate</span>::ArraySize::Constant(length) =&gt; {
-                            <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length.get());
+                    <span class="kw">match </span>size.resolve(module.to_ctx())<span class="question-mark">? </span>{
+                        <span class="kw">crate</span>::proc::IndexableLength::Known(length) =&gt; {
+                            <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length);
                             Instruction::type_array(id, type_id, length_id)
                         }
-                        <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-                        <span class="kw">crate</span>::ArraySize::Dynamic =&gt; Instruction::type_runtime_array(id, type_id),
+                        <span class="kw">crate</span>::proc::IndexableLength::Dynamic =&gt; {
+                            Instruction::type_runtime_array(id, type_id)
+                        }
                     }
                 }
                 <span class="kw">crate</span>::TypeInner::BindingArray { base, size } =&gt; {
                     <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(base);
-                    <span class="kw">match </span>size {
-                        <span class="kw">crate</span>::ArraySize::Constant(length) =&gt; {
-                            <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length.get());
+                    <span class="kw">match </span>size.resolve(module.to_ctx())<span class="question-mark">? </span>{
+                        <span class="kw">crate</span>::proc::IndexableLength::Known(length) =&gt; {
+                            <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length);
                             Instruction::type_array(id, type_id, length_id)
                         }
-                        <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-                        <span class="kw">crate</span>::ArraySize::Dynamic =&gt; Instruction::type_runtime_array(id, type_id),
+                        <span class="kw">crate</span>::proc::IndexableLength::Dynamic =&gt; {
+                            Instruction::type_runtime_array(id, type_id)
+                        }
                     }
                 }
                 <span class="kw">crate</span>::TypeInner::Struct {
@@ -3811,7 +3813,7 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>has_runtime_array = <span class="bool-val">false</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>member_ids = Vec::with_capacity(members.len());
                     <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
-                        <span class="kw">let </span>member_ty = <span class="kw-2">&amp;</span>arena[member.ty];
+                        <span class="kw">let </span>member_ty = <span class="kw-2">&amp;</span>module.types[member.ty];
                         <span class="kw">match </span>member_ty.inner {
                             <span class="kw">crate</span>::TypeInner::Array {
                                 base: <span class="kw">_</span>,
@@ -3822,7 +3824,7 @@
                             }
                             <span class="kw">_ </span>=&gt; (),
                         }
-                        <span class="self">self</span>.decorate_struct_member(id, index, member, arena)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.decorate_struct_member(id, index, member, <span class="kw-2">&amp;</span>module.types)<span class="question-mark">?</span>;
                         <span class="kw">let </span>member_id = <span class="self">self</span>.get_handle_type_id(member.ty);
                         member_ids.push(member_id);
                     }
@@ -4071,7 +4073,9 @@
 
                 <span class="self">self</span>.get_constant_composite(ty, component_ids)
             }
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+            }
         };
 
         <span class="self">self</span>.constant_ids[handle] = id;
@@ -4773,7 +4777,7 @@
 
         <span class="comment">// write all types
         </span><span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>ir_module.types.iter() {
-            <span class="self">self</span>.write_type_declaration_arena(<span class="kw-2">&amp;</span>ir_module.types, handle)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_type_declaration_arena(ir_module, handle)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// write all const-expressions as constants
@@ -4893,10 +4897,6 @@
         debug_info: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;DebugInfo&gt;,
         words: <span class="kw-2">&amp;mut </span>Vec&lt;Word&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">if </span>!ir_module.overrides.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
-        }
-
         <span class="self">self</span>.reset();
 
         <span class="comment">// Try to find the entry point and corresponding index

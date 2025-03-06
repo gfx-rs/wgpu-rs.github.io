@@ -226,8 +226,7 @@
 <a href="#225" id="225">225</a>
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::common;
+<a href="#228" id="228">228</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::common;
 
 <span class="kw">use </span>alloc::{borrow::Cow, format, string::String};
 
@@ -283,7 +282,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>size_hlsl(<span class="kw-2">&amp;</span><span class="self">self</span>, gctx: <span class="kw">crate</span>::proc::GlobalCtx) -&gt; u32 {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>size_hlsl(<span class="kw-2">&amp;</span><span class="self">self</span>, gctx: <span class="kw">crate</span>::proc::GlobalCtx) -&gt; <span class="prelude-ty">Result</span>&lt;u32, Error&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Matrix {
                 columns,
@@ -292,19 +291,18 @@
             } =&gt; {
                 <span class="kw">let </span>stride = Alignment::from(rows) * scalar.width <span class="kw">as </span>u32;
                 <span class="kw">let </span>last_row_size = rows <span class="kw">as </span>u32 * scalar.width <span class="kw">as </span>u32;
-                ((columns <span class="kw">as </span>u32 - <span class="number">1</span>) * stride) + last_row_size
+                <span class="prelude-val">Ok</span>(((columns <span class="kw">as </span>u32 - <span class="number">1</span>) * stride) + last_row_size)
             }
             <span class="self">Self</span>::Array { base, size, stride } =&gt; {
-                <span class="kw">let </span>count = <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; size.get(),
+                <span class="kw">let </span>count = <span class="kw">match </span>size.resolve(gctx)<span class="question-mark">? </span>{
+                    <span class="kw">crate</span>::proc::IndexableLength::Known(size) =&gt; size,
                     <span class="comment">// A dynamically-sized array has to have at least one element
-                    </span><span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="number">1</span>,
+                    </span><span class="kw">crate</span>::proc::IndexableLength::Dynamic =&gt; <span class="number">1</span>,
                 };
-                <span class="kw">let </span>last_el_size = gctx.types[base].inner.size_hlsl(gctx);
-                ((count - <span class="number">1</span>) * stride) + last_el_size
+                <span class="kw">let </span>last_el_size = gctx.types[base].inner.size_hlsl(gctx)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(((count - <span class="number">1</span>) * stride) + last_el_size)
             }
-            <span class="kw">_ </span>=&gt; <span class="self">self</span>.size(gctx),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.size(gctx)),
         }
     }
 

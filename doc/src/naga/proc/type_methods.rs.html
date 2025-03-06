@@ -441,7 +441,7 @@
     }
 
     <span class="doccomment">/// Get the size of this type.
-    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>, _gctx: <span class="kw">super</span>::GlobalCtx) -&gt; u32 {
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>, gctx: <span class="kw">super</span>::GlobalCtx) -&gt; u32 {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Scalar(scalar) | <span class="self">Self</span>::Atomic(scalar) =&gt; scalar.width <span class="kw">as </span>u32,
             <span class="self">Self</span>::Vector { size, scalar } =&gt; size <span class="kw">as </span>u32 * scalar.width <span class="kw">as </span>u32,
@@ -457,13 +457,13 @@
                 size,
                 stride,
             } =&gt; {
-                <span class="kw">let </span>count = <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(count) =&gt; count.get(),
+                <span class="kw">let </span>count = <span class="kw">match </span>size.resolve(gctx) {
+                    <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::proc::IndexableLength::Known(count)) =&gt; count,
                     <span class="comment">// any struct member or array element needing a size at pipeline-creation time
                     // must have a creation-fixed footprint
-                    </span><span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="number">0</span>,
+                    </span><span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="number">0</span>,
                     <span class="comment">// A dynamically-sized array has to have at least one element
-                    </span><span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="number">1</span>,
+                    </span><span class="prelude-val">Ok</span>(<span class="kw">crate</span>::proc::IndexableLength::Dynamic) =&gt; <span class="number">1</span>,
                 };
                 count * stride
             }

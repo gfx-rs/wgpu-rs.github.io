@@ -4277,11 +4277,7 @@
 <a href="#4276" id="4276">4276</a>
 <a href="#4277" id="4277">4277</a>
 <a href="#4278" id="4278">4278</a>
-<a href="#4279" id="4279">4279</a>
-<a href="#4280" id="4280">4280</a>
-<a href="#4281" id="4281">4281</a>
-<a href="#4282" id="4282">4282</a>
-<a href="#4283" id="4283">4283</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4279" id="4279">4279</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4551,10 +4547,6 @@
         module_info: <span class="kw-2">&amp;</span>valid::ModuleInfo,
         fragment_entry_point: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>FragmentEntryPoint&lt;<span class="lifetime">'_</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ReflectionInfo, Error&gt; {
-        <span class="kw">if </span>!module.overrides.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
-        }
-
         <span class="self">self</span>.reset(module);
 
         <span class="comment">// Write special constants, if needed
@@ -5412,12 +5404,11 @@
     ) -&gt; BackendResult {
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"["</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">match </span>size {
-            <span class="kw">crate</span>::ArraySize::Constant(size) =&gt; {
+        <span class="kw">match </span>size.resolve(module.to_ctx())<span class="question-mark">? </span>{
+            proc::IndexableLength::Known(size) =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{size}"</span>)<span class="question-mark">?</span>;
             }
-            <span class="kw">crate</span>::ArraySize::Pending(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-            <span class="kw">crate</span>::ArraySize::Dynamic =&gt; <span class="macro">unreachable!</span>(),
+            proc::IndexableLength::Dynamic =&gt; <span class="macro">unreachable!</span>(),
         }
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"]"</span>)<span class="question-mark">?</span>;
@@ -5462,7 +5453,7 @@
                 }
             }
             <span class="kw">let </span>ty_inner = <span class="kw-2">&amp;</span>module.types[member.ty].inner;
-            last_offset = member.offset + ty_inner.size_hlsl(module.to_ctx());
+            last_offset = member.offset + ty_inner.size_hlsl(module.to_ctx())<span class="question-mark">?</span>;
 
             <span class="comment">// The indentation is only for readability
             </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, back::INDENT)<span class="question-mark">?</span>;
@@ -6984,7 +6975,9 @@
                 write_expression(<span class="self">self</span>, value)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">").{number_of_components}"</span>)<span class="question-mark">?
             </span>}
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Override);
+            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -7254,7 +7247,6 @@
                             index::IndexableLength::Known(limit) =&gt; {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}u"</span>, limit - <span class="number">1</span>)<span class="question-mark">?</span>;
                             }
-                            index::IndexableLength::Pending =&gt; <span class="macro">unreachable!</span>(),
                             index::IndexableLength::Dynamic =&gt; <span class="macro">unreachable!</span>(),
                         }
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
