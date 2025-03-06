@@ -657,7 +657,11 @@
 <a href="#656" id="656">656</a>
 <a href="#657" id="657">657</a>
 <a href="#658" id="658">658</a>
-<a href="#659" id="659">659</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc};
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc};
 <span class="kw">use </span>core::{error, fmt, future::Future};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -1244,7 +1248,7 @@
 </span><span class="kw">pub trait </span>UncapturedErrorHandler: Fn(Error) + Send + <span class="lifetime">'static </span>{}
 <span class="kw">impl</span>&lt;T&gt; UncapturedErrorHandler <span class="kw">for </span>T <span class="kw">where </span>T: Fn(Error) + Send + <span class="lifetime">'static </span>{}
 
-<span class="doccomment">/// Filter for error scopes.
+<span class="doccomment">/// Kinds of [`Error`]s a [`Device::push_error_scope()`] may be configured to catch.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
 </span><span class="kw">pub enum </span>ErrorFilter {
     <span class="doccomment">/// Catch only out-of-memory errors.
@@ -1269,15 +1273,19 @@
 #[cfg_attr(docsrs, doc(cfg(all())))]
 </span><span class="kw">pub type </span>ErrorSource = Box&lt;<span class="kw">dyn </span>error::Error + <span class="lifetime">'static</span>&gt;;
 
-<span class="doccomment">/// Error type
+<span class="doccomment">/// Errors resulting from usage of GPU APIs.
+///
+/// By default, errors translate into panics. Depending on the backend and circumstances,
+/// errors may occur synchronously or asynchronously. When errors need to be handled, use
+/// [`Device::push_error_scope()`] or [`Device::on_uncaptured_error()`].
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>Error {
-    <span class="doccomment">/// Out of memory error
+    <span class="doccomment">/// Out of memory.
     </span>OutOfMemory {
         <span class="doccomment">/// Lower level source of the error.
         </span>source: ErrorSource,
     },
-    <span class="doccomment">/// Validation error, signifying a bug in code or data
+    <span class="doccomment">/// Validation error, signifying a bug in code or data provided to `wgpu`.
     </span>Validation {
         <span class="doccomment">/// Lower level source of the error.
         </span>source: ErrorSource,

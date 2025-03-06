@@ -7431,7 +7431,74 @@
 <a href="#7430" id="7430">7430</a>
 <a href="#7431" id="7431">7431</a>
 <a href="#7432" id="7432">7432</a>
-<a href="#7433" id="7433">7433</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7433" id="7433">7433</a>
+<a href="#7434" id="7434">7434</a>
+<a href="#7435" id="7435">7435</a>
+<a href="#7436" id="7436">7436</a>
+<a href="#7437" id="7437">7437</a>
+<a href="#7438" id="7438">7438</a>
+<a href="#7439" id="7439">7439</a>
+<a href="#7440" id="7440">7440</a>
+<a href="#7441" id="7441">7441</a>
+<a href="#7442" id="7442">7442</a>
+<a href="#7443" id="7443">7443</a>
+<a href="#7444" id="7444">7444</a>
+<a href="#7445" id="7445">7445</a>
+<a href="#7446" id="7446">7446</a>
+<a href="#7447" id="7447">7447</a>
+<a href="#7448" id="7448">7448</a>
+<a href="#7449" id="7449">7449</a>
+<a href="#7450" id="7450">7450</a>
+<a href="#7451" id="7451">7451</a>
+<a href="#7452" id="7452">7452</a>
+<a href="#7453" id="7453">7453</a>
+<a href="#7454" id="7454">7454</a>
+<a href="#7455" id="7455">7455</a>
+<a href="#7456" id="7456">7456</a>
+<a href="#7457" id="7457">7457</a>
+<a href="#7458" id="7458">7458</a>
+<a href="#7459" id="7459">7459</a>
+<a href="#7460" id="7460">7460</a>
+<a href="#7461" id="7461">7461</a>
+<a href="#7462" id="7462">7462</a>
+<a href="#7463" id="7463">7463</a>
+<a href="#7464" id="7464">7464</a>
+<a href="#7465" id="7465">7465</a>
+<a href="#7466" id="7466">7466</a>
+<a href="#7467" id="7467">7467</a>
+<a href="#7468" id="7468">7468</a>
+<a href="#7469" id="7469">7469</a>
+<a href="#7470" id="7470">7470</a>
+<a href="#7471" id="7471">7471</a>
+<a href="#7472" id="7472">7472</a>
+<a href="#7473" id="7473">7473</a>
+<a href="#7474" id="7474">7474</a>
+<a href="#7475" id="7475">7475</a>
+<a href="#7476" id="7476">7476</a>
+<a href="#7477" id="7477">7477</a>
+<a href="#7478" id="7478">7478</a>
+<a href="#7479" id="7479">7479</a>
+<a href="#7480" id="7480">7480</a>
+<a href="#7481" id="7481">7481</a>
+<a href="#7482" id="7482">7482</a>
+<a href="#7483" id="7483">7483</a>
+<a href="#7484" id="7484">7484</a>
+<a href="#7485" id="7485">7485</a>
+<a href="#7486" id="7486">7486</a>
+<a href="#7487" id="7487">7487</a>
+<a href="#7488" id="7488">7488</a>
+<a href="#7489" id="7489">7489</a>
+<a href="#7490" id="7490">7490</a>
+<a href="#7491" id="7491">7491</a>
+<a href="#7492" id="7492">7492</a>
+<a href="#7493" id="7493">7493</a>
+<a href="#7494" id="7494">7494</a>
+<a href="#7495" id="7495">7495</a>
+<a href="#7496" id="7496">7496</a>
+<a href="#7497" id="7497">7497</a>
+<a href="#7498" id="7498">7498</a>
+<a href="#7499" id="7499">7499</a>
+<a href="#7500" id="7500">7500</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -7471,35 +7538,71 @@
 <span class="kw">pub use </span>features::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>instance::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Integral type used for buffer offsets.
+<span class="doccomment">/// Integral type used for [`Buffer`] offsets and sizes.
+///
+/// [`Buffer`]: ../wgpu/struct.Buffer.html
 </span><span class="kw">pub type </span>BufferAddress = u64;
-<span class="doccomment">/// Integral type used for buffer slice sizes.
+
+<span class="doccomment">/// Integral type used for [`BufferSlice`] sizes.
+///
+/// Note that while this type is non-zero, a [`Buffer`] *per se* can have a size of zero,
+/// but no slice or mapping can be created from it.
+///
+/// [`Buffer`]: ../wgpu/struct.Buffer.html
+/// [`BufferSlice`]: ../wgpu/struct.BufferSlice.html
 </span><span class="kw">pub type </span>BufferSize = core::num::NonZeroU64;
+
 <span class="doccomment">/// Integral type used for binding locations in shaders.
+///
+/// Used in [`VertexAttribute`]s and errors.
+///
+/// [`VertexAttribute`]: ../wgpu/struct.VertexAttribute.html
 </span><span class="kw">pub type </span>ShaderLocation = u32;
-<span class="doccomment">/// Integral type used for dynamic bind group offsets.
+
+<span class="doccomment">/// Integral type used for
+/// [dynamic bind group offsets](../wgpu/struct.RenderPass.html#method.set_bind_group).
 </span><span class="kw">pub type </span>DynamicOffset = u32;
 
-<span class="doccomment">/// Buffer-Texture copies must have [`bytes_per_row`] aligned to this number.
+<span class="doccomment">/// Buffer-to-texture copies must have [`bytes_per_row`] aligned to this number.
 ///
-/// This doesn't apply to [`Queue::write_texture`][Qwt].
+/// This doesn't apply to [`Queue::write_texture`][Qwt], only to [`copy_buffer_to_texture()`].
 ///
 /// [`bytes_per_row`]: TexelCopyBufferLayout::bytes_per_row
+/// [`copy_buffer_to_texture()`]: ../wgpu/struct.Queue.html#method.copy_buffer_to_texture
 /// [Qwt]: ../wgpu/struct.Queue.html#method.write_texture
 </span><span class="kw">pub const </span>COPY_BYTES_PER_ROW_ALIGNMENT: u32 = <span class="number">256</span>;
-<span class="doccomment">/// An offset into the query resolve buffer has to be aligned to this.
+
+<span class="doccomment">/// An [offset into the query resolve buffer] has to be aligned to this.
+///
+/// [offset into the query resolve buffer]: ../wgpu/struct.CommandEncoder.html#method.resolve_query_set
 </span><span class="kw">pub const </span>QUERY_RESOLVE_BUFFER_ALIGNMENT: BufferAddress = <span class="number">256</span>;
+
 <span class="doccomment">/// Buffer to buffer copy as well as buffer clear offsets and sizes must be aligned to this number.
 </span><span class="kw">pub const </span>COPY_BUFFER_ALIGNMENT: BufferAddress = <span class="number">4</span>;
-<span class="doccomment">/// Size to align mappings.
+
+<span class="doccomment">/// Minimum alignment of buffer mappings.
+///
+/// The range passed to [`map_async()`] or [`get_mapped_range()`] must be at least this aligned.
+///
+/// [`map_async()`]: ../wgpu/struct.Buffer.html#method.map_async
+/// [`get_mapped_range()`]: ../wgpu/struct.Buffer.html#method.get_mapped_range
 </span><span class="kw">pub const </span>MAP_ALIGNMENT: BufferAddress = <span class="number">8</span>;
-<span class="doccomment">/// Vertex buffer strides have to be aligned to this number.
+
+<span class="doccomment">/// [Vertex buffer strides] have to be a multiple of this number.
+///
+/// [Vertex buffer strides]: ../wgpu/struct.VertexBufferLayout.html#structfield.array_stride
 </span><span class="kw">pub const </span>VERTEX_STRIDE_ALIGNMENT: BufferAddress = <span class="number">4</span>;
-<span class="doccomment">/// Alignment all push constants need
+<span class="doccomment">/// Ranges of [writes to push constant storage] must be at least this aligned.
+///
+/// [writes to push constant storage]: ../wgpu/struct.RenderPass.html#method.set_push_constants
 </span><span class="kw">pub const </span>PUSH_CONSTANT_ALIGNMENT: u32 = <span class="number">4</span>;
-<span class="doccomment">/// Maximum queries in a query set
+
+<span class="doccomment">/// Maximum queries in a [`QuerySetDescriptor`].
 </span><span class="kw">pub const </span>QUERY_SET_MAX_QUERIES: u32 = <span class="number">4096</span>;
-<span class="doccomment">/// Size of a single piece of query data.
+
+<span class="doccomment">/// Size in bytes of a single piece of [query] data.
+///
+/// [query]: ../wgpu/struct.QuerySet.html
 </span><span class="kw">pub const </span>QUERY_SIZE: u32 = <span class="number">8</span>;
 
 <span class="doccomment">/// Backends supported by wgpu.
@@ -9172,20 +9275,35 @@
     </span>Hdr,
 }
 
-<span class="doccomment">/// Underlying texture data format.
+<span class="doccomment">/// Format in which a texture’s texels are stored in GPU memory.
 ///
-/// If there is a conversion in the format (such as srgb -&gt; linear), the conversion listed here is for
-/// loading from texture in a shader. When writing to the texture, the opposite conversion takes place.
+/// Certain formats additionally specify a conversion.
+/// When these formats are used in a shader, the conversion automatically takes place when loading
+/// from or storing to the texture.
+///
+/// * `Unorm` formats linearly scale the integer range of the storage format to a floating-point
+///   range of 0 to 1, inclusive.
+/// * `Snorm` formats linearly scale the integer range of the storage format to a floating-point
+///   range of &amp;minus;1 to 1, inclusive, except that the most negative value
+///   (&amp;minus;128 for 8-bit, &amp;minus;32768 for 16-bit) is excluded; on conversion,
+///   it is treated as identical to the second most negative
+///   (&amp;minus;127 for 8-bit, &amp;minus;32767 for 16-bit),
+///   so that the positive and negative ranges are symmetric.
+/// * `UnormSrgb` formats apply the [sRGB transfer function] so that the storage is sRGB encoded
+///   while the shader works with linear intensity values.
+/// * `Uint`, `Sint`, and `Float` formats perform no conversion.
 ///
 /// Corresponds to [WebGPU `GPUTextureFormat`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gputextureformat).
+///
+/// [sRGB transfer function]: https://en.wikipedia.org/wiki/SRGB#Transfer_function_(%22gamma%22)
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>TextureFormat {
     <span class="comment">// Normal 8 bit formats
     </span><span class="doccomment">/// Red channel only. 8 bit integer per channel. [0, 255] converted to/from float [0, 1] in shader.
     </span>R8Unorm,
-    <span class="doccomment">/// Red channel only. 8 bit integer per channel. [-127, 127] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red channel only. 8 bit integer per channel. [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     </span>R8Snorm,
     <span class="doccomment">/// Red channel only. 8 bit integer per channel. Unsigned in shader.
     </span>R8Uint,
@@ -9201,7 +9319,7 @@
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>R16Unorm,
-    <span class="doccomment">/// Red channel only. 16 bit integer per channel. [0, 65535] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red channel only. 16 bit integer per channel. [&amp;minus;32767, 32767] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>R16Snorm,
@@ -9209,7 +9327,7 @@
     </span>R16Float,
     <span class="doccomment">/// Red and green channels. 8 bit integer per channel. [0, 255] converted to/from float [0, 1] in shader.
     </span>Rg8Unorm,
-    <span class="doccomment">/// Red and green channels. 8 bit integer per channel. [-127, 127] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red and green channels. 8 bit integer per channel. [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     </span>Rg8Snorm,
     <span class="doccomment">/// Red and green channels. 8 bit integer per channel. Unsigned in shader.
     </span>Rg8Uint,
@@ -9231,7 +9349,7 @@
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>Rg16Unorm,
-    <span class="doccomment">/// Red and green channels. 16 bit integer per channel. [0, 65535] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red and green channels. 16 bit integer per channel. [&amp;minus;32767, 32767] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>Rg16Snorm,
@@ -9241,7 +9359,7 @@
     </span>Rgba8Unorm,
     <span class="doccomment">/// Red, green, blue, and alpha channels. 8 bit integer per channel. Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.
     </span>Rgba8UnormSrgb,
-    <span class="doccomment">/// Red, green, blue, and alpha channels. 8 bit integer per channel. [-127, 127] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red, green, blue, and alpha channels. 8 bit integer per channel. [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     </span>Rgba8Snorm,
     <span class="doccomment">/// Red, green, blue, and alpha channels. 8 bit integer per channel. Unsigned in shader.
     </span>Rgba8Uint,
@@ -9281,7 +9399,7 @@
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>Rgba16Unorm,
-    <span class="doccomment">/// Red, green, blue, and alpha. 16 bit integer per channel. [0, 65535] converted to/from float [-1, 1] in shader.
+    <span class="doccomment">/// Red, green, blue, and alpha. 16 bit integer per channel. [&amp;minus;32767, 32767] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// [`Features::TEXTURE_FORMAT_16BIT_NORM`] must be enabled to use this texture format.
     </span>Rgba16Snorm,
@@ -9385,7 +9503,7 @@
     /// [`Features::TEXTURE_COMPRESSION_BC_SLICED_3D`] must be enabled to use this texture format with 3D dimension.
     </span>Bc4RUnorm,
     <span class="doccomment">/// 4x4 block compressed texture. 8 bytes per block (4 bit/px). 8 color pallet. 8 bit R.
-    /// [-127, 127] converted to/from float [-1, 1] in shader.
+    /// [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// Also known as RGTC1.
     ///
@@ -9401,7 +9519,7 @@
     /// [`Features::TEXTURE_COMPRESSION_BC_SLICED_3D`] must be enabled to use this texture format with 3D dimension.
     </span>Bc5RgUnorm,
     <span class="doccomment">/// 4x4 block compressed texture. 16 bytes per block (8 bit/px). 8 color red pallet + 8 color green pallet. 8 bit RG.
-    /// [-127, 127] converted to/from float [-1, 1] in shader.
+    /// [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// Also known as RGTC2.
     ///
@@ -9474,7 +9592,7 @@
     /// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.
     </span>EacR11Unorm,
     <span class="doccomment">/// 4x4 block compressed texture. 8 bytes per block (4 bit/px). Complex pallet. 11 bit integer R.
-    /// [-127, 127] converted to/from float [-1, 1] in shader.
+    /// [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.
     </span>EacR11Snorm,
@@ -9484,7 +9602,7 @@
     /// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.
     </span>EacRg11Unorm,
     <span class="doccomment">/// 4x4 block compressed texture. 16 bytes per block (8 bit/px). Complex pallet. 11 bit integer R + 11 bit integer G.
-    /// [-127, 127] converted to/from float [-1, 1] in shader.
+    /// [&amp;minus;127, 127] converted to/from float [&amp;minus;1, 1] in shader.
     ///
     /// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.
     </span>EacRg11Snorm,
@@ -12036,11 +12154,11 @@
     </span>Unorm8x2 = <span class="number">7</span>,
     <span class="doccomment">/// Four unsigned bytes (u8). [0, 255] converted to float [0, 1] `vec4&lt;f32&gt;` in shaders.
     </span>Unorm8x4 = <span class="number">8</span>,
-    <span class="doccomment">/// One signed byte (i8). [-127, 127] converted to float [-1, 1] `f32` in shaders.
+    <span class="doccomment">/// One signed byte (i8). [&amp;minus;127, 127] converted to float [&amp;minus;1, 1] `f32` in shaders.
     </span>Snorm8 = <span class="number">9</span>,
-    <span class="doccomment">/// Two signed bytes (i8). [-127, 127] converted to float [-1, 1] `vec2&lt;f32&gt;` in shaders.
+    <span class="doccomment">/// Two signed bytes (i8). [&amp;minus;127, 127] converted to float [&amp;minus;1, 1] `vec2&lt;f32&gt;` in shaders.
     </span>Snorm8x2 = <span class="number">10</span>,
-    <span class="doccomment">/// Four signed bytes (i8). [-127, 127] converted to float [-1, 1] `vec4&lt;f32&gt;` in shaders.
+    <span class="doccomment">/// Four signed bytes (i8). [&amp;minus;127, 127] converted to float [&amp;minus;1, 1] `vec4&lt;f32&gt;` in shaders.
     </span>Snorm8x4 = <span class="number">11</span>,
     <span class="doccomment">/// One unsigned short (u16). `u32` in shaders.
     </span>Uint16 = <span class="number">12</span>,
@@ -12060,11 +12178,11 @@
     </span>Unorm16x2 = <span class="number">19</span>,
     <span class="doccomment">/// Four unsigned shorts (u16). [0, 65535] converted to float [0, 1] `vec4&lt;f32&gt;` in shaders.
     </span>Unorm16x4 = <span class="number">20</span>,
-    <span class="doccomment">/// One signed short (i16). [-32767, 32767] converted to float [-1, 1] `f32` in shaders.
+    <span class="doccomment">/// One signed short (i16). [&amp;minus;32767, 32767] converted to float [&amp;minus;1, 1] `f32` in shaders.
     </span>Snorm16 = <span class="number">21</span>,
-    <span class="doccomment">/// Two signed shorts (i16). [-32767, 32767] converted to float [-1, 1] `vec2&lt;f32&gt;` in shaders.
+    <span class="doccomment">/// Two signed shorts (i16). [&amp;minus;32767, 32767] converted to float [&amp;minus;1, 1] `vec2&lt;f32&gt;` in shaders.
     </span>Snorm16x2 = <span class="number">22</span>,
-    <span class="doccomment">/// Four signed shorts (i16). [-32767, 32767] converted to float [-1, 1] `vec4&lt;f32&gt;` in shaders.
+    <span class="doccomment">/// Four signed shorts (i16). [&amp;minus;32767, 32767] converted to float [&amp;minus;1, 1] `vec4&lt;f32&gt;` in shaders.
     </span>Snorm16x4 = <span class="number">23</span>,
     <span class="doccomment">/// One half-precision float (no Rust equiv). `f32` in shaders.
     </span>Float16 = <span class="number">24</span>,
@@ -13109,12 +13227,15 @@
     </span>);
 }
 
-<span class="doccomment">/// Describes a `TextureView`.
+<span class="doccomment">/// Describes a [`TextureView`].
 ///
-/// For use with `Texture::create_view`.
+/// For use with [`Texture::create_view()`].
 ///
 /// Corresponds to [WebGPU `GPUTextureViewDescriptor`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gputextureviewdescriptor).
+///
+/// [`TextureView`]: ../wgpu/struct.TextureView.html
+/// [`Texture::create_view()`]: ../wgpu/struct.Texture.html#method.create_view
 </span><span class="attr">#[derive(Clone, Debug, Default, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>TextureViewDescriptor&lt;L&gt; {
     <span class="doccomment">/// Debug label of the texture view. This will show up in graphics debuggers for easy identification.
@@ -13334,10 +13455,15 @@
     }
 }
 
-<span class="doccomment">/// Kind of data the texture holds.
+<span class="doccomment">/// Selects a subset of the data a [`Texture`] holds.
+///
+/// Used in [texture views](TextureViewDescriptor) and
+/// [texture copy operations](TexelCopyTextureInfo).
 ///
 /// Corresponds to [WebGPU `GPUTextureAspect`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gputextureaspect).
+///
+/// [`Texture`]: ../wgpu/struct.Texture.html
 </span><span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug, Default, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -13796,12 +13922,16 @@
     </span>Comparison,
 }
 
-<span class="doccomment">/// Specific type of a binding.
+<span class="doccomment">/// Type of a binding in a [bind group layout][`BindGroupLayoutEntry`].
 ///
-/// For use in [`BindGroupLayoutEntry`].
+/// For each binding in a layout, a [`BindGroup`] must provide a [`BindingResource`] of the
+/// corresponding type.
 ///
 /// Corresponds to WebGPU's mutually exclusive fields within [`GPUBindGroupLayoutEntry`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpubindgrouplayoutentry).
+///
+/// [`BindingResource`]: ../wgpu/enum.BindingResource.html
+/// [`BindGroup`]: ../wgpu/struct.BindGroup.html
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>BindingType {
@@ -14386,10 +14516,12 @@
     }
 }
 
-<span class="doccomment">/// Type of query contained in a `QuerySet`.
+<span class="doccomment">/// Type of query contained in a [`QuerySet`].
 ///
 /// Corresponds to [WebGPU `GPUQueryType`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gpuquerytype).
+///
+/// [`QuerySet`]: ../wgpu/struct.QuerySet.html
 </span><span class="attr">#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub enum </span>QueryType {
@@ -14417,14 +14549,16 @@
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Flags for which pipeline data should be recorded.
+    <span class="doccomment">/// Flags for which pipeline data should be recorded in a query.
+    ///
+    /// Used in [`QueryType`].
     ///
     /// The amount of values written when resolved depends
-    /// on the amount of flags. If 3 flags are enabled, 3
-    /// 64-bit values will be written per-query.
+    /// on the amount of flags set. For example, if 3 flags are set, 3
+    /// 64-bit values will be written per query.
     ///
     /// The order they are written is the order they are declared
-    /// in this bitflags. If you enabled `CLIPPER_PRIMITIVES_OUT`
+    /// in these bitflags. For example, if you enabled `CLIPPER_PRIMITIVES_OUT`
     /// and `COMPUTE_SHADER_INVOCATIONS`, it would write 16 bytes,
     /// the first 8 bytes being the primitive out value, the last 8
     /// bytes being the compute shader invocation count.
