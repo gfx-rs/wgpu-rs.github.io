@@ -3272,28 +3272,7 @@
 <a href="#3271" id="3271">3271</a>
 <a href="#3272" id="3272">3272</a>
 <a href="#3273" id="3273">3273</a>
-<a href="#3274" id="3274">3274</a>
-<a href="#3275" id="3275">3275</a>
-<a href="#3276" id="3276">3276</a>
-<a href="#3277" id="3277">3277</a>
-<a href="#3278" id="3278">3278</a>
-<a href="#3279" id="3279">3279</a>
-<a href="#3280" id="3280">3280</a>
-<a href="#3281" id="3281">3281</a>
-<a href="#3282" id="3282">3282</a>
-<a href="#3283" id="3283">3283</a>
-<a href="#3284" id="3284">3284</a>
-<a href="#3285" id="3285">3285</a>
-<a href="#3286" id="3286">3286</a>
-<a href="#3287" id="3287">3287</a>
-<a href="#3288" id="3288">3288</a>
-<a href="#3289" id="3289">3289</a>
-<a href="#3290" id="3290">3290</a>
-<a href="#3291" id="3291">3291</a>
-<a href="#3292" id="3292">3292</a>
-<a href="#3293" id="3293">3293</a>
-<a href="#3294" id="3294">3294</a>
-<a href="#3295" id="3295">3295</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3274" id="3274">3274</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -3452,10 +3431,7 @@ Implementations for `BlockContext` methods.
         position_id: Word,
         body: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">let </span>float_ptr_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::LocalPointer {
-            base: NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
-            class: spirv::StorageClass::Output,
-        }));
+        <span class="kw">let </span>float_ptr_type_id = <span class="self">self</span>.get_f32_pointer_type_id(spirv::StorageClass::Output);
         <span class="kw">let </span>index_y_id = <span class="self">self</span>.get_index_constant(<span class="number">1</span>);
         <span class="kw">let </span>access_id = <span class="self">self</span>.id_gen.next();
         body.push(Instruction::access_chain(
@@ -3465,9 +3441,7 @@ Implementations for `BlockContext` methods.
             <span class="kw-2">&amp;</span>[index_y_id],
         ));
 
-        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-            NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
-        )));
+        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_f32_type_id();
         <span class="kw">let </span>load_id = <span class="self">self</span>.id_gen.next();
         body.push(Instruction::load(float_type_id, load_id, access_id, <span class="prelude-val">None</span>));
 
@@ -3489,9 +3463,7 @@ Implementations for `BlockContext` methods.
         frag_depth_id: Word,
         body: <span class="kw-2">&amp;mut </span>Vec&lt;Instruction&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-            NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
-        )));
+        <span class="kw">let </span>float_type_id = <span class="self">self</span>.get_f32_type_id();
         <span class="kw">let </span>zero_scalar_id = <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::F32(<span class="number">0.0</span>));
         <span class="kw">let </span>one_scalar_id = <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::F32(<span class="number">1.0</span>));
 
@@ -3572,13 +3544,13 @@ Implementations for `BlockContext` methods.
     /// See [`crate::back::msl::Writer::gen_force_bounded_loop_statements`] for details
     /// of why this is required.
     </span><span class="kw">fn </span>write_force_bounded_loop_instructions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>block: Block, merge_id: Word) -&gt; Block {
-        <span class="kw">let </span>uint_type_id = <span class="self">self</span>.writer.get_uint_type_id();
-        <span class="kw">let </span>uint2_type_id = <span class="self">self</span>.writer.get_uint2_type_id();
+        <span class="kw">let </span>uint_type_id = <span class="self">self</span>.writer.get_u32_type_id();
+        <span class="kw">let </span>uint2_type_id = <span class="self">self</span>.writer.get_vec2u_type_id();
         <span class="kw">let </span>uint2_ptr_type_id = <span class="self">self
             </span>.writer
-            .get_uint2_pointer_type_id(spirv::StorageClass::Function);
+            .get_vec2u_pointer_type_id(spirv::StorageClass::Function);
         <span class="kw">let </span>bool_type_id = <span class="self">self</span>.writer.get_bool_type_id();
-        <span class="kw">let </span>bool2_type_id = <span class="self">self</span>.writer.get_bool2_type_id();
+        <span class="kw">let </span>bool2_type_id = <span class="self">self</span>.writer.get_vec2_bool_type_id();
         <span class="kw">let </span>zero_uint_const_id = <span class="self">self</span>.writer.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(<span class="number">0</span>));
         <span class="kw">let </span>zero_uint2_const_id = <span class="self">self</span>.writer.get_constant_composite(
             LookupType::Local(LocalType::Numeric(NumericType::Vector {
@@ -3870,7 +3842,7 @@ Implementations for `BlockContext` methods.
                             }
                         };
 
-                        <span class="kw">let </span>binding_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(binding_type));
+                        <span class="kw">let </span>binding_type_id = <span class="self">self</span>.get_handle_type_id(binding_type);
 
                         <span class="kw">let </span>load_id = <span class="self">self</span>.gen_id();
                         block.body.push(Instruction::load(
@@ -3961,7 +3933,7 @@ Implementations for `BlockContext` methods.
                             }
                         };
 
-                        <span class="kw">let </span>binding_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(binding_type));
+                        <span class="kw">let </span>binding_type_id = <span class="self">self</span>.get_handle_type_id(binding_type);
 
                         <span class="kw">let </span>load_id = <span class="self">self</span>.gen_id();
                         block.body.push(Instruction::load(
@@ -4470,9 +4442,8 @@ Implementations for `BlockContext` methods.
                                 <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Vector { size, .. },
                                 <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(scalar),
                             ) =&gt; {
-                                <span class="kw">let </span>selector_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
-                                    LocalType::Numeric(NumericType::Vector { size, scalar }),
-                                ));
+                                <span class="kw">let </span>selector_type_id =
+                                    <span class="self">self</span>.get_numeric_type_id(NumericType::Vector { size, scalar });
                                 <span class="self">self</span>.temp_list.clear();
                                 <span class="self">self</span>.temp_list.resize(size <span class="kw">as </span>usize, arg2_id);
 
@@ -4576,9 +4547,7 @@ Implementations for `BlockContext` methods.
                                 )
                             }
                             <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (
-                                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                                    NumericType::Scalar(scalar),
-                                ))),
+                                <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(scalar)),
                                 <span class="self">self</span>.writer
                                     .get_constant_scalar_with(scalar.width * <span class="number">8 </span>- <span class="number">1</span>, scalar)<span class="question-mark">?</span>,
                                 scalar.width,
@@ -4643,9 +4612,8 @@ Implementations for `BlockContext` methods.
                             </span>.writer
                             .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(bit_width <span class="kw">as </span>u32));
 
-                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
-                        )));
+                        <span class="kw">let </span>u32_type =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
 
                         <span class="comment">// o = min(offset, w)
                         </span><span class="kw">let </span>offset_id = <span class="self">self</span>.gen_id();
@@ -4694,9 +4662,8 @@ Implementations for `BlockContext` methods.
                             </span>.writer
                             .get_constant_scalar(<span class="kw">crate</span>::Literal::U32(bit_width <span class="kw">as </span>u32));
 
-                        <span class="kw">let </span>u32_type = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
-                        )));
+                        <span class="kw">let </span>u32_type =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
 
                         <span class="comment">// o = min(offset, w)
                         </span><span class="kw">let </span>offset_id = <span class="self">self</span>.gen_id();
@@ -4762,16 +4729,14 @@ Implementations for `BlockContext` methods.
                             Mf::Pack4xU8 =&gt; (<span class="kw">crate</span>::ScalarKind::Uint, <span class="bool-val">false</span>),
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
-                        <span class="kw">let </span>uint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
-                        )));
+                        <span class="kw">let </span>uint_type_id =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
 
-                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar {
+                        <span class="kw">let </span>int_type_id =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar {
                                 kind: int_type,
                                 width: <span class="number">4</span>,
-                            }),
-                        )));
+                            }));
 
                         <span class="kw">let </span><span class="kw-2">mut </span>last_instruction = Instruction::new(spirv::Op::Nop);
 
@@ -4848,17 +4813,15 @@ Implementations for `BlockContext` methods.
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
 
-                        <span class="kw">let </span>sint_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
-                        )));
+                        <span class="kw">let </span>sint_type_id =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32));
 
                         <span class="kw">let </span>eight = <span class="self">self</span>.writer.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(<span class="number">8</span>));
-                        <span class="kw">let </span>int_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                            NumericType::Scalar(<span class="kw">crate</span>::Scalar {
+                        <span class="kw">let </span>int_type_id =
+                            <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar {
                                 kind: int_type,
                                 width: <span class="number">4</span>,
-                            }),
-                        )));
+                            }));
                         block
                             .body
                             .reserve(usize::from(VEC_LENGTH) * <span class="number">2 </span>+ usize::from(is_signed));
@@ -5140,12 +5103,10 @@ Implementations for `BlockContext` methods.
                     <span class="self">self</span>.temp_list.clear();
                     <span class="self">self</span>.temp_list.resize(size <span class="kw">as </span>usize, condition_id);
 
-                    <span class="kw">let </span>bool_vector_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
-                        LocalType::Numeric(NumericType::Vector {
-                            size,
-                            scalar: condition_scalar,
-                        }),
-                    ));
+                    <span class="kw">let </span>bool_vector_type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
+                        size,
+                        scalar: condition_scalar,
+                    });
 
                     <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                     block.body.push(Instruction::composite_construct(
@@ -5215,7 +5176,7 @@ Implementations for `BlockContext` methods.
                     </span>.writer
                     .write_ray_query_get_intersection_function(committed, <span class="self">self</span>.ir_module);
                 <span class="kw">let </span>ray_intersection = <span class="self">self</span>.ir_module.special_types.ray_intersection.unwrap();
-                <span class="kw">let </span>intersection_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(ray_intersection));
+                <span class="kw">let </span>intersection_type_id = <span class="self">self</span>.get_handle_type_id(ray_intersection);
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                 block.body.push(Instruction::function_call(
                     intersection_type_id,
@@ -5649,11 +5610,10 @@ Implementations for `BlockContext` methods.
     ) {
         <span class="self">self</span>.temp_list.clear();
 
-        <span class="kw">let </span>vector_type_id =
-            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
-                size: rows,
-                scalar: <span class="kw">crate</span>::Scalar::float(width),
-            })));
+        <span class="kw">let </span>vector_type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
+            size: rows,
+            scalar: <span class="kw">crate</span>::Scalar::float(width),
+        });
 
         <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u32 {
             <span class="kw">let </span>column_id_left = <span class="self">self</span>.gen_id();
@@ -6411,12 +6371,10 @@ Implementations for `BlockContext` methods.
                             )
                         }
                         <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">Some</span>(cmp) } =&gt; {
-                            <span class="kw">let </span>scalar_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
-                                LocalType::Numeric(NumericType::Scalar(scalar)),
-                            ));
-                            <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(
-                                LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL)),
-                            ));
+                            <span class="kw">let </span>scalar_type_id =
+                                <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(scalar));
+                            <span class="kw">let </span>bool_type_id =
+                                <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL));
 
                             <span class="kw">let </span>cas_result_id = <span class="self">self</span>.gen_id();
                             <span class="kw">let </span>equality_result_id = <span class="self">self</span>.gen_id();
@@ -6545,7 +6503,7 @@ Implementations for `BlockContext` methods.
             // need to end it with some kind of return instruction.
             </span>BlockExit::Return =&gt; <span class="kw">match </span><span class="self">self</span>.ir_function.result {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) <span class="kw">if </span><span class="self">self</span>.function.entry_point_context.is_none() =&gt; {
-                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(result.ty));
+                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(result.ty);
                     <span class="kw">let </span>null_id = <span class="self">self</span>.writer.get_constant_null(type_id);
                     Instruction::return_value(null_id)
                 }

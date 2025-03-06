@@ -1291,20 +1291,7 @@
 <a href="#1290" id="1290">1290</a>
 <a href="#1291" id="1291">1291</a>
 <a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a>
-<a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a>
-<a href="#1301" id="1301">1301</a>
-<a href="#1302" id="1302">1302</a>
-<a href="#1303" id="1303">1303</a>
-<a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a>
-<a href="#1306" id="1306">1306</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1293" id="1293">1293</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generating SPIR-V for image operations.
 */
 
@@ -1432,12 +1419,10 @@ Generating SPIR-V for image operations.
         // image produces a scalar `f32`, so in that case we need to find
         // the right SPIR-V type for the access instruction here.
         </span><span class="kw">let </span>type_id = <span class="kw">match </span>image_class {
-            <span class="kw">crate</span>::ImageClass::Depth { .. } =&gt; {
-                ctx.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
-                    size: <span class="kw">crate</span>::VectorSize::Quad,
-                    scalar: <span class="kw">crate</span>::Scalar::F32,
-                })))
-            }
+            <span class="kw">crate</span>::ImageClass::Depth { .. } =&gt; ctx.get_numeric_type_id(NumericType::Vector {
+                size: <span class="kw">crate</span>::VectorSize::Quad,
+                scalar: <span class="kw">crate</span>::Scalar::F32,
+            }),
             <span class="kw">_ </span>=&gt; result_type_id,
         };
 
@@ -1646,9 +1631,7 @@ Generating SPIR-V for image operations.
             }
         };
         <span class="kw">let </span>reconciled_array_index_id = <span class="kw">if let </span><span class="prelude-val">Some</span>(cast) = cast {
-            <span class="kw">let </span>component_ty_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                NumericType::Scalar(component_scalar),
-            )));
+            <span class="kw">let </span>component_ty_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(component_scalar));
             <span class="kw">let </span>reconciled_id = <span class="self">self</span>.gen_id();
             block.body.push(Instruction::unary(
                 cast,
@@ -1662,11 +1645,10 @@ Generating SPIR-V for image operations.
         };
 
         <span class="comment">// Find the SPIR-V type for the combined coordinates/index vector.
-        </span><span class="kw">let </span>type_id =
-            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
-                size,
-                scalar: component_scalar,
-            })));
+        </span><span class="kw">let </span>type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
+            size,
+            scalar: component_scalar,
+        });
 
         <span class="comment">// Schmear the coordinates and index together.
         </span><span class="kw">let </span>value_id = <span class="self">self</span>.gen_id();
@@ -1833,9 +1815,7 @@ Generating SPIR-V for image operations.
             <span class="kw-2">&amp;</span>[spirv::Capability::ImageQuery],
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
-        )));
+        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32));
 
         <span class="comment">// If `level` is `Some`, clamp it to fall within bounds. This must
         // happen first, because we'll use it to query the image size for
@@ -1918,9 +1898,7 @@ Generating SPIR-V for image operations.
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>bool_type_id = <span class="self">self</span>.writer.get_bool_type_id();
-        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-            NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32),
-        )));
+        <span class="kw">let </span>i32_type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::I32));
 
         <span class="kw">let </span>null_id = access.out_of_bounds_value(<span class="self">self</span>);
 
@@ -1990,8 +1968,7 @@ Generating SPIR-V for image operations.
             },
             <span class="prelude-val">None </span>=&gt; NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL),
         };
-        <span class="kw">let </span>coords_bool_type_id =
-            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(coords_numeric_type)));
+        <span class="kw">let </span>coords_bool_type_id = <span class="self">self</span>.get_numeric_type_id(coords_numeric_type);
         <span class="kw">let </span>coords_conds_id = <span class="self">self</span>.gen_id();
         selection.block().body.push(Instruction::binary(
             spirv::Op::ULessThan,
@@ -2142,16 +2119,16 @@ Generating SPIR-V for image operations.
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
         <span class="kw">let </span>sample_result_type_id = <span class="kw">if </span>needs_sub_access {
-            <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+            <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Quad,
                 scalar: <span class="kw">crate</span>::Scalar::F32,
-            })))
+            })
         } <span class="kw">else </span>{
             result_type_id
         };
 
         <span class="comment">// OpTypeSampledImage
-        </span><span class="kw">let </span>image_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(image_type));
+        </span><span class="kw">let </span>image_type_id = <span class="self">self</span>.get_handle_type_id(image_type);
         <span class="kw">let </span>sampled_image_type_id =
             <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::SampledImage { image_type_id }));
 
@@ -2243,9 +2220,8 @@ Generating SPIR-V for image operations.
                     }
                 ) {
                     <span class="kw">let </span>lod_f32_id = <span class="self">self</span>.gen_id();
-                    <span class="kw">let </span>f32_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                        NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
-                    )));
+                    <span class="kw">let </span>f32_type_id =
+                        <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32));
                     <span class="kw">let </span>convert_op = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.fun_info[lod_handle]
                         .ty
                         .inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types)
@@ -2385,8 +2361,7 @@ Generating SPIR-V for image operations.
                     <span class="prelude-val">None </span>=&gt; NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32),
                 };
 
-                <span class="kw">let </span>extended_size_type_id =
-                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(vector_numeric_type)));
+                <span class="kw">let </span>extended_size_type_id = <span class="self">self</span>.get_numeric_type_id(vector_numeric_type);
 
                 <span class="kw">let </span>(query_op, level_id) = <span class="kw">match </span>class {
                     Ic::Sampled { multi: <span class="bool-val">true</span>, .. }
@@ -2452,11 +2427,10 @@ Generating SPIR-V for image operations.
                     Id::D2 | Id::Cube =&gt; <span class="kw">crate</span>::VectorSize::Tri,
                     Id::D3 =&gt; <span class="kw">crate</span>::VectorSize::Quad,
                 };
-                <span class="kw">let </span>extended_size_type_id =
-                    <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
-                        size: vec_size,
-                        scalar: <span class="kw">crate</span>::Scalar::U32,
-                    })));
+                <span class="kw">let </span>extended_size_type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
+                    size: vec_size,
+                    scalar: <span class="kw">crate</span>::Scalar::U32,
+                });
                 <span class="kw">let </span>id_extended = <span class="self">self</span>.gen_id();
                 <span class="kw">let </span><span class="kw-2">mut </span>inst = Instruction::image_query(
                     spirv::Op::ImageQuerySizeLod,

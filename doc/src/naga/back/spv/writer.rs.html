@@ -2440,12 +2440,7 @@
 <a href="#2439" id="2439">2439</a>
 <a href="#2440" id="2440">2440</a>
 <a href="#2441" id="2441">2441</a>
-<a href="#2442" id="2442">2442</a>
-<a href="#2443" id="2443">2443</a>
-<a href="#2444" id="2444">2444</a>
-<a href="#2445" id="2445">2445</a>
-<a href="#2446" id="2446">2446</a>
-<a href="#2447" id="2447">2447</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#2442" id="2442">2442</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     string::{String, ToString},
     vec,
     vec::Vec,
@@ -2669,6 +2664,10 @@
         }
     }
 
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_handle_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; Word {
+        <span class="self">self</span>.get_type_id(LookupType::Handle(handle))
+    }
+
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_expression_lookup_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tr: <span class="kw-2">&amp;</span>TypeResolution) -&gt; LookupType {
         <span class="kw">match </span><span class="kw-2">*</span>tr {
             TypeResolution::Handle(ty_handle) =&gt; LookupType::Handle(ty_handle),
@@ -2687,7 +2686,7 @@
         <span class="self">self</span>.get_type_id(LookupType::Local(local))
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_pointer_id(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_pointer_type_id(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         class: spirv::StorageClass,
@@ -2732,7 +2731,7 @@
         class: spirv::StorageClass,
     ) -&gt; Word {
         <span class="kw">match </span><span class="kw-2">*</span>resolution {
-            TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.get_pointer_id(handle, class),
+            TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.get_pointer_type_id(handle, class),
             TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
                 <span class="kw">let </span>base = NumericType::from_inner(inner).unwrap();
                 <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::LocalPointer { base, class }))
@@ -2740,33 +2739,33 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
-        <span class="self">self</span>.get_type_id(local_type.into())
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_numeric_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, numeric: NumericType) -&gt; Word {
+        <span class="self">self</span>.get_type_id(LocalType::Numeric(numeric).into())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_float_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32));
-        <span class="self">self</span>.get_type_id(local_type.into())
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_u32_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32))
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint2_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_f32_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32))
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec2u_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
             size: <span class="kw">crate</span>::VectorSize::Bi,
             scalar: <span class="kw">crate</span>::Scalar::U32,
-        });
-        <span class="self">self</span>.get_type_id(local_type.into())
+        })
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint3_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec3u_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
             size: <span class="kw">crate</span>::VectorSize::Tri,
             scalar: <span class="kw">crate</span>::Scalar::U32,
-        });
-        <span class="self">self</span>.get_type_id(local_type.into())
+        })
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_float_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_f32_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
         <span class="kw">let </span>local_type = LocalType::LocalPointer {
             base: NumericType::Scalar(<span class="kw">crate</span>::Scalar::F32),
             class,
@@ -2774,7 +2773,7 @@
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint2_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec2u_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
         <span class="kw">let </span>local_type = LocalType::LocalPointer {
             base: NumericType::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Bi,
@@ -2785,7 +2784,7 @@
         <span class="self">self</span>.get_type_id(local_type.into())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_uint3_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec3u_pointer_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, class: spirv::StorageClass) -&gt; Word {
         <span class="kw">let </span>local_type = LocalType::LocalPointer {
             base: NumericType::Vector {
                 size: <span class="kw">crate</span>::VectorSize::Tri,
@@ -2797,24 +2796,21 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL));
-        <span class="self">self</span>.get_type_id(local_type.into())
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::BOOL))
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool2_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec2_bool_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
             size: <span class="kw">crate</span>::VectorSize::Bi,
             scalar: <span class="kw">crate</span>::Scalar::BOOL,
-        });
-        <span class="self">self</span>.get_type_id(local_type.into())
+        })
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_bool3_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
-        <span class="kw">let </span>local_type = LocalType::Numeric(NumericType::Vector {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vec3_bool_type_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Word {
+        <span class="self">self</span>.get_numeric_type_id(NumericType::Vector {
             size: <span class="kw">crate</span>::VectorSize::Tri,
             scalar: <span class="kw">crate</span>::Scalar::BOOL,
-        });
-        <span class="self">self</span>.get_type_id(local_type.into())
+        })
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>decorate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word, decoration: spirv::Decoration, operands: <span class="kw-2">&amp;</span>[Word]) {
@@ -2949,7 +2945,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>block = Block::new(label_id);
 
         <span class="kw">let </span>bool_type = return_type.with_scalar(<span class="kw">crate</span>::Scalar::BOOL);
-        <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(bool_type)));
+        <span class="kw">let </span>bool_type_id = <span class="self">self</span>.get_numeric_type_id(bool_type);
 
         <span class="kw">let </span>maybe_splat_const = |writer: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, const_id| <span class="kw">match </span>return_type {
             NumericType::Scalar(<span class="kw">_</span>) =&gt; const_id,
@@ -3085,8 +3081,8 @@
             <span class="kw">let </span>class = spirv::StorageClass::Input;
             <span class="kw">let </span>handle_ty = ir_module.types[argument.ty].inner.is_handle();
             <span class="kw">let </span>argument_type_id = <span class="kw">match </span>handle_ty {
-                <span class="bool-val">true </span>=&gt; <span class="self">self</span>.get_pointer_id(argument.ty, spirv::StorageClass::UniformConstant),
-                <span class="bool-val">false </span>=&gt; <span class="self">self</span>.get_type_id(LookupType::Handle(argument.ty)),
+                <span class="bool-val">true </span>=&gt; <span class="self">self</span>.get_pointer_type_id(argument.ty, spirv::StorageClass::UniformConstant),
+                <span class="bool-val">false </span>=&gt; <span class="self">self</span>.get_handle_type_id(argument.ty),
             };
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>iface) = interface {
@@ -3118,7 +3114,7 @@
                     <span class="kw">let </span>struct_id = <span class="self">self</span>.id_gen.next();
                     <span class="kw">let </span><span class="kw-2">mut </span>constituent_ids = Vec::with_capacity(members.len());
                     <span class="kw">for </span>member <span class="kw">in </span>members {
-                        <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(member.ty));
+                        <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(member.ty);
                         <span class="kw">let </span>name = member.name.as_deref();
                         <span class="kw">let </span>binding = member.binding.as_ref().unwrap();
                         <span class="kw">let </span>varying_id = <span class="self">self</span>.write_varying(
@@ -3163,7 +3159,7 @@
                     handle_id: <span class="kw">if </span>handle_ty {
                         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
                         prelude.body.push(Instruction::load(
-                            <span class="self">self</span>.get_type_id(LookupType::Handle(argument.ty)),
+                            <span class="self">self</span>.get_handle_type_id(argument.ty),
                             id,
                             argument_id,
                             <span class="prelude-val">None</span>,
@@ -3185,7 +3181,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) = result.binding {
                         has_point_size |=
                             <span class="kw-2">*</span>binding == <span class="kw">crate</span>::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::PointSize);
-                        <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(result.ty));
+                        <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(result.ty);
                         <span class="kw">let </span>varying_id = <span class="self">self</span>.write_varying(
                             ir_module,
                             iface.stage,
@@ -3204,7 +3200,7 @@
                         ir_module.types[result.ty].inner
                     {
                         <span class="kw">for </span>member <span class="kw">in </span>members {
-                            <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(member.ty));
+                            <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(member.ty);
                             <span class="kw">let </span>name = member.name.as_deref();
                             <span class="kw">let </span>binding = member.binding.as_ref().unwrap();
                             has_point_size |=
@@ -3234,7 +3230,7 @@
                     {
                         <span class="comment">// add point size artificially
                         </span><span class="kw">let </span>varying_id = <span class="self">self</span>.id_gen.next();
-                        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_float_pointer_type_id(class);
+                        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_f32_pointer_type_id(class);
                         Instruction::variable(pointer_type_id, varying_id, class, <span class="prelude-val">None</span>)
                             .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
                         <span class="self">self</span>.decorate(
@@ -3251,7 +3247,7 @@
                     }
                     <span class="self">self</span>.void_type
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.get_type_id(LookupType::Handle(result.ty))
+                    <span class="self">self</span>.get_handle_type_id(result.ty)
                 }
             }
             <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.void_type,
@@ -3307,7 +3303,7 @@
                 }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">if </span>var.space == <span class="kw">crate</span>::AddressSpace::Handle {
-                        <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
+                        <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_handle_type_id(var.ty);
                         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
                         prelude
                             .body
@@ -3316,7 +3312,7 @@
                         gv.handle_id = id;
                     } <span class="kw">else if </span>global_needs_wrapper(ir_module, var) {
                         <span class="kw">let </span>class = map_storage_class(var.space);
-                        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(var.ty, class);
+                        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_type_id(var.ty, class);
                         <span class="kw">let </span>index_id = <span class="self">self</span>.get_index_constant(<span class="number">0</span>);
                         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
                         prelude.body.push(Instruction::access_chain(
@@ -3378,7 +3374,7 @@
             <span class="kw">let </span>init_word = variable.init.map(|constant| context.cached[constant]);
             <span class="kw">let </span>pointer_type_id = context
                 .writer
-                .get_pointer_id(variable.ty, spirv::StorageClass::Function);
+                .get_pointer_type_id(variable.ty, spirv::StorageClass::Function);
             <span class="kw">let </span>instruction = Instruction::variable(
                 pointer_type_id,
                 id,
@@ -3386,7 +3382,7 @@
                 init_word.or_else(|| <span class="kw">match </span>ir_module.types[variable.ty].inner {
                     <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">None</span>,
                     <span class="kw">_ </span>=&gt; {
-                        <span class="kw">let </span>type_id = context.get_type_id(LookupType::Handle(variable.ty));
+                        <span class="kw">let </span>type_id = context.get_handle_type_id(variable.ty);
                         <span class="prelude-val">Some</span>(context.writer.write_constant_null(type_id))
                     }
                 }),
@@ -3634,26 +3630,22 @@
     }
 
     <span class="kw">fn </span>write_numeric_type_declaration_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Word, numeric: NumericType) {
-        <span class="kw">let </span>instruction =
-            <span class="kw">match </span>numeric {
-                NumericType::Scalar(scalar) =&gt; <span class="self">self</span>.make_scalar(id, scalar),
-                NumericType::Vector { size, scalar } =&gt; {
-                    <span class="kw">let </span>scalar_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                        NumericType::Scalar(scalar),
-                    )));
-                    Instruction::type_vector(id, scalar_id, size)
-                }
-                NumericType::Matrix {
-                    columns,
-                    rows,
-                    scalar,
-                } =&gt; {
-                    <span class="kw">let </span>column_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(
-                        NumericType::Vector { size: rows, scalar },
-                    )));
-                    Instruction::type_matrix(id, column_id, columns)
-                }
-            };
+        <span class="kw">let </span>instruction = <span class="kw">match </span>numeric {
+            NumericType::Scalar(scalar) =&gt; <span class="self">self</span>.make_scalar(id, scalar),
+            NumericType::Vector { size, scalar } =&gt; {
+                <span class="kw">let </span>scalar_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(scalar));
+                Instruction::type_vector(id, scalar_id, size)
+            }
+            NumericType::Matrix {
+                columns,
+                rows,
+                scalar,
+            } =&gt; {
+                <span class="kw">let </span>column_id =
+                    <span class="self">self</span>.get_numeric_type_id(NumericType::Vector { size: rows, scalar });
+                Instruction::type_matrix(id, column_id, columns)
+            }
+        };
 
         instruction.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
     }
@@ -3669,7 +3661,7 @@
                 Instruction::type_pointer(id, class, base_id)
             }
             LocalType::Pointer { base, class } =&gt; {
-                <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
+                <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(base);
                 Instruction::type_pointer(id, class, type_id)
             }
             LocalType::Image(image) =&gt; {
@@ -3682,7 +3674,7 @@
                 Instruction::type_sampled_image(id, image_type_id)
             }
             LocalType::BindingArray { base, size } =&gt; {
-                <span class="kw">let </span>inner_ty = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
+                <span class="kw">let </span>inner_ty = <span class="self">self</span>.get_handle_type_id(base);
                 <span class="kw">let </span>scalar_id = <span class="self">self</span>.get_constant_scalar(<span class="kw">crate</span>::Literal::U32(size));
                 Instruction::type_array(id, inner_ty, scalar_id)
             }
@@ -3736,7 +3728,7 @@
                 <span class="kw">crate</span>::TypeInner::Array { base, size, stride } =&gt; {
                     <span class="self">self</span>.decorate(id, Decoration::ArrayStride, <span class="kw-2">&amp;</span>[stride]);
 
-                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
+                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(base);
                     <span class="kw">match </span>size {
                         <span class="kw">crate</span>::ArraySize::Constant(length) =&gt; {
                             <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length.get());
@@ -3747,7 +3739,7 @@
                     }
                 }
                 <span class="kw">crate</span>::TypeInner::BindingArray { base, size } =&gt; {
-                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
+                    <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(base);
                     <span class="kw">match </span>size {
                         <span class="kw">crate</span>::ArraySize::Constant(length) =&gt; {
                             <span class="kw">let </span>length_id = <span class="self">self</span>.get_index_constant(length.get());
@@ -3776,7 +3768,7 @@
                             <span class="kw">_ </span>=&gt; (),
                         }
                         <span class="self">self</span>.decorate_struct_member(id, index, member, arena)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>member_id = <span class="self">self</span>.get_type_id(LookupType::Handle(member.ty));
+                        <span class="kw">let </span>member_id = <span class="self">self</span>.get_handle_type_id(member.ty);
                         member_ids.push(member_id);
                     }
                     <span class="kw">if </span>has_runtime_array {
@@ -3912,9 +3904,7 @@
                 <span class="self">self</span>.debugs.push(Instruction::name(id, name));
             }
         }
-        <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Scalar(
-            value.scalar(),
-        ))));
+        <span class="kw">let </span>type_id = <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(value.scalar()));
         <span class="kw">let </span>instruction = <span class="kw">match </span><span class="kw-2">*</span>value {
             <span class="kw">crate</span>::Literal::F64(value) =&gt; {
                 <span class="kw">let </span>bits = value.to_bits();
@@ -4004,7 +3994,7 @@
                 <span class="self">self</span>.constant_ids[constant.init]
             }
             <span class="kw">crate</span>::Expression::ZeroValue(ty) =&gt; {
-                <span class="kw">let </span>type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(ty));
+                <span class="kw">let </span>type_id = <span class="self">self</span>.get_handle_type_id(ty);
                 <span class="self">self</span>.get_constant_null(type_id)
             }
             <span class="kw">crate</span>::Expression::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
@@ -4087,7 +4077,7 @@
                 // variables in the `Uniform` and `StorageBuffer` address spaces
                 // get wrapped, and we're initializing `WorkGroup` variables.
                 </span><span class="kw">let </span>var_id = <span class="self">self</span>.global_variables[handle].var_id;
-                <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_type_id(LookupType::Handle(var.ty));
+                <span class="kw">let </span>var_type_id = <span class="self">self</span>.get_handle_type_id(var.ty);
                 <span class="kw">let </span>init_word = <span class="self">self</span>.get_constant_null(var_type_id);
                 Instruction::store(var_id, init_word, <span class="prelude-val">None</span>)
             })
@@ -4097,7 +4087,7 @@
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let </span>uint3_type_id = <span class="self">self</span>.get_uint3_type_id();
+        <span class="kw">let </span>uint3_type_id = <span class="self">self</span>.get_vec3u_type_id();
 
         <span class="kw">let </span><span class="kw-2">mut </span>pre_if_block = Block::new(entry_id);
 
@@ -4106,7 +4096,7 @@
         } <span class="kw">else </span>{
             <span class="kw">let </span>varying_id = <span class="self">self</span>.id_gen.next();
             <span class="kw">let </span>class = spirv::StorageClass::Input;
-            <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_uint3_pointer_type_id(class);
+            <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_vec3u_pointer_type_id(class);
 
             Instruction::variable(pointer_type_id, varying_id, class, <span class="prelude-val">None</span>)
                 .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
@@ -4127,7 +4117,7 @@
         };
 
         <span class="kw">let </span>zero_id = <span class="self">self</span>.get_constant_null(uint3_type_id);
-        <span class="kw">let </span>bool3_type_id = <span class="self">self</span>.get_bool3_type_id();
+        <span class="kw">let </span>bool3_type_id = <span class="self">self</span>.get_vec3_bool_type_id();
 
         <span class="kw">let </span>eq_id = <span class="self">self</span>.id_gen.next();
         pre_if_block.body.push(Instruction::binary(
@@ -4203,7 +4193,7 @@
         binding: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Word, Error&gt; {
         <span class="kw">let </span>id = <span class="self">self</span>.id_gen.next();
-        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_id(ty, class);
+        <span class="kw">let </span>pointer_type_id = <span class="self">self</span>.get_pointer_type_id(ty, class);
         Instruction::variable(pointer_type_id, id, class, <span class="prelude-val">None</span>)
             .to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.declarations);
 
@@ -4526,7 +4516,7 @@
                             }
                         }
                         <span class="kw">if </span>should_decorate {
-                            <span class="kw">let </span>decorated_id = <span class="self">self</span>.get_type_id(LookupType::Handle(base));
+                            <span class="kw">let </span>decorated_id = <span class="self">self</span>.get_handle_type_id(base);
                             <span class="self">self</span>.decorate(decorated_id, Decoration::Block, <span class="kw-2">&amp;</span>[]);
                         }
                     }
@@ -4536,7 +4526,7 @@
             <span class="kw">if </span>substitute_inner_type_lookup.is_some() {
                 inner_type_id
             } <span class="kw">else </span>{
-                <span class="self">self</span>.get_pointer_id(global_variable.ty, class)
+                <span class="self">self</span>.get_pointer_type_id(global_variable.ty, class)
             }
         };
 

@@ -827,7 +827,7 @@ Bounds-checking for SPIR-V output.
                 <span class="kw">let </span>element_type_id = <span class="kw">match </span><span class="self">self</span>.ir_module.types[global.ty].inner {
                     <span class="kw">crate</span>::TypeInner::BindingArray { base, size: <span class="kw">_ </span>} =&gt; {
                         <span class="kw">let </span>class = map_storage_class(global.space);
-                        <span class="self">self</span>.get_pointer_id(base, class)
+                        <span class="self">self</span>.get_pointer_type_id(base, class)
                     }
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"array length expression case-5"</span>)),
                 };
@@ -844,7 +844,7 @@ Bounds-checking for SPIR-V output.
         };
         <span class="kw">let </span>length_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::array_length(
-            <span class="self">self</span>.writer.get_uint_type_id(),
+            <span class="self">self</span>.writer.get_u32_type_id(),
             length_id,
             structure_id,
             last_member_index,
@@ -915,7 +915,7 @@ Bounds-checking for SPIR-V output.
                 <span class="kw">let </span>max_index_id = <span class="self">self</span>.gen_id();
                 block.body.push(Instruction::binary(
                     spirv::Op::ISub,
-                    <span class="self">self</span>.writer.get_uint_type_id(),
+                    <span class="self">self</span>.writer.get_u32_type_id(),
                     max_index_id,
                     length_id,
                     const_one_id,
@@ -972,7 +972,7 @@ Bounds-checking for SPIR-V output.
         block.body.push(Instruction::ext_inst(
             <span class="self">self</span>.writer.gl450_ext_inst_id,
             spirv::GLOp::UMin,
-            <span class="self">self</span>.writer.get_uint_type_id(),
+            <span class="self">self</span>.writer.get_u32_type_id(),
             restricted_index_id,
             <span class="kw-2">&amp;</span>[index_id, max_index_id],
         ));
