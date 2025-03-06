@@ -194,18 +194,18 @@
 
 <span class="doccomment">/// Entry for a top level acceleration structure build.
 /// Used with raw instance buffers for an unvalidated builds.
-/// See [TlasPackage] for the safe version.
+/// See [`TlasPackage`] for the safe version.
 </span><span class="kw">pub struct </span>TlasBuildEntry&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Reference to the acceleration structure.
     </span><span class="kw">pub </span>tlas: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas,
-    <span class="doccomment">/// Reference to the raw instance buffer, each instance is similar to [TlasInstance] but contains a handle to the BLAS.
+    <span class="doccomment">/// Reference to the raw instance buffer, each instance is similar to [`TlasInstance`] but contains a handle to the BLAS.
     </span><span class="kw">pub </span>instance_buffer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Buffer,
     <span class="doccomment">/// Number of instances in the instance buffer.
     </span><span class="kw">pub </span>instance_count: u32,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(TlasBuildEntry&lt;<span class="lifetime">'_</span>&gt;: WasmNotSendSync);
 
-<span class="doccomment">/// The safe version of TlasEntry, containing TlasInstances instead of a raw buffer.
+<span class="doccomment">/// The safe version of [`TlasBuildEntry`], containing [`TlasInstance`]s instead of a raw buffer.
 </span><span class="kw">pub struct </span>TlasPackage {
     <span class="kw">pub</span>(<span class="kw">crate</span>) tlas: Tlas,
     <span class="kw">pub</span>(<span class="kw">crate</span>) instances: Vec&lt;<span class="prelude-ty">Option</span>&lt;TlasInstance&gt;&gt;,
@@ -214,13 +214,13 @@
 <span class="macro">static_assertions::assert_impl_all!</span>(TlasPackage: WasmNotSendSync);
 
 <span class="kw">impl </span>TlasPackage {
-    <span class="doccomment">/// Construct [TlasPackage] consuming the [Tlas] (prevents modification of the [Tlas] without using this package).
+    <span class="doccomment">/// Construct [`TlasPackage`] consuming the [`Tlas`] (prevents modification of the [`Tlas`] without using this package).
     </span><span class="kw">pub fn </span>new(tlas: Tlas) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>max_instances = tlas.shared.max_instances;
         <span class="self">Self</span>::new_with_instances(tlas, <span class="macro">vec!</span>[<span class="prelude-val">None</span>; max_instances <span class="kw">as </span>usize])
     }
 
-    <span class="doccomment">/// Construct [TlasPackage] consuming the [Tlas] (prevents modification of the Tlas without using this package).
+    <span class="doccomment">/// Construct [`TlasPackage`] consuming the [`Tlas`] (prevents modification of the [`Tlas`] without using this package).
     /// This constructor moves the instances into the package (the number of instances needs to fit into tlas,
     /// otherwise when building a validation error will be raised).
     </span><span class="kw">pub fn </span>new_with_instances(tlas: Tlas, instances: Vec&lt;<span class="prelude-ty">Option</span>&lt;TlasInstance&gt;&gt;) -&gt; <span class="self">Self </span>{
@@ -242,7 +242,7 @@
     </span><span class="comment">// this recommendation is not useful yet, but is likely to be when ability to update arrives or possible optimisations for building get implemented.
     </span><span class="doccomment">/// For best performance it is recommended to prefer access to low elements and modify higher elements as little as possible.
     /// This can be done by ordering instances from the most to the least used. It is recommended
-    /// to use [Self::index_mut] unless the option if out of bounds is required
+    /// to use [`Self::index_mut`] unless the option if out of bounds is required
     </span><span class="kw">pub fn </span>get_mut_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: Range&lt;usize&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[<span class="prelude-ty">Option</span>&lt;TlasInstance&gt;]&gt; {
         <span class="kw">if </span>range.end &gt; <span class="self">self</span>.instances.len() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -259,7 +259,7 @@
     </span><span class="comment">// this recommendation is not useful yet, but is likely to be when ability to update arrives or possible optimisations for building get implemented.
     </span><span class="doccomment">/// For best performance it is recommended to prefer access to low elements and modify higher elements as little as possible.
     /// This can be done by ordering instances from the most to the least used. It is recommended
-    /// to use [Self::index_mut] unless the option if out of bounds is required
+    /// to use [`Self::index_mut`] unless the option if out of bounds is required
     </span><span class="kw">pub fn </span>get_mut_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;TlasInstance&gt;&gt; {
         <span class="kw">if </span>index &gt;= <span class="self">self</span>.instances.len() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -270,14 +270,14 @@
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.instances[index])
     }
 
-    <span class="doccomment">/// Get the binding resource for the underling acceleration structure, to be used when creating a [BindGroup]
+    <span class="doccomment">/// Get the binding resource for the underling acceleration structure, to be used when creating a [`BindGroup`]
     ///
-    /// [BindGroup]: super::BindGroup
+    /// [`BindGroup`]: super::BindGroup
     </span><span class="kw">pub fn </span>as_binding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BindingResource&lt;<span class="lifetime">'_</span>&gt; {
         BindingResource::AccelerationStructure(<span class="kw-2">&amp;</span><span class="self">self</span>.tlas)
     }
 
-    <span class="doccomment">/// Get a reference to the underling [Tlas].
+    <span class="doccomment">/// Get a reference to the underling [`Tlas`].
     </span><span class="kw">pub fn </span>tlas(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Tlas {
         <span class="kw-2">&amp;</span><span class="self">self</span>.tlas
     }
