@@ -139,7 +139,13 @@
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a></pre></div><pre class="rust"><code><span class="attr">#![cfg(all(unix, not(target_vendor = <span class="string">"apple"</span>), not(target_family = <span class="string">"wasm"</span>)))]
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a></pre></div><pre class="rust"><code><span class="attr">#![cfg(all(unix, not(target_vendor = <span class="string">"apple"</span>), not(target_family = <span class="string">"wasm"</span>)))]
 
 </span><span class="kw">use </span>core::mem::MaybeUninit;
 <span class="kw">use </span>std::{string::ToString, vec::Vec};
@@ -214,7 +220,13 @@
             <span class="kw">let </span>render_devid =
                 libc::makedev(drm_props.render_major <span class="kw">as _</span>, drm_props.render_minor <span class="kw">as _</span>);
 
-            <span class="kw">if </span>primary_devid == drm_stat.st_rdev || render_devid == drm_stat.st_rdev {
+            <span class="comment">// Various platforms use different widths between `dev_t` and `c_int`, so just
+            // force-convert to `u64` to keep things portable.
+            </span><span class="attr">#[allow(clippy::useless_conversion)]
+            </span><span class="kw">if </span>[primary_devid, render_devid]
+                .map(u64::from)
+                .contains(<span class="kw-2">&amp;</span>drm_stat.st_rdev)
+            {
                 physical_device = <span class="prelude-val">Some</span>(device)
             }
         }
