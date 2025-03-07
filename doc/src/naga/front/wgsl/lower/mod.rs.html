@@ -3499,7 +3499,53 @@
 <a href="#3498" id="3498">3498</a>
 <a href="#3499" id="3499">3499</a>
 <a href="#3500" id="3500">3500</a>
-<a href="#3501" id="3501">3501</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3501" id="3501">3501</a>
+<a href="#3502" id="3502">3502</a>
+<a href="#3503" id="3503">3503</a>
+<a href="#3504" id="3504">3504</a>
+<a href="#3505" id="3505">3505</a>
+<a href="#3506" id="3506">3506</a>
+<a href="#3507" id="3507">3507</a>
+<a href="#3508" id="3508">3508</a>
+<a href="#3509" id="3509">3509</a>
+<a href="#3510" id="3510">3510</a>
+<a href="#3511" id="3511">3511</a>
+<a href="#3512" id="3512">3512</a>
+<a href="#3513" id="3513">3513</a>
+<a href="#3514" id="3514">3514</a>
+<a href="#3515" id="3515">3515</a>
+<a href="#3516" id="3516">3516</a>
+<a href="#3517" id="3517">3517</a>
+<a href="#3518" id="3518">3518</a>
+<a href="#3519" id="3519">3519</a>
+<a href="#3520" id="3520">3520</a>
+<a href="#3521" id="3521">3521</a>
+<a href="#3522" id="3522">3522</a>
+<a href="#3523" id="3523">3523</a>
+<a href="#3524" id="3524">3524</a>
+<a href="#3525" id="3525">3525</a>
+<a href="#3526" id="3526">3526</a>
+<a href="#3527" id="3527">3527</a>
+<a href="#3528" id="3528">3528</a>
+<a href="#3529" id="3529">3529</a>
+<a href="#3530" id="3530">3530</a>
+<a href="#3531" id="3531">3531</a>
+<a href="#3532" id="3532">3532</a>
+<a href="#3533" id="3533">3533</a>
+<a href="#3534" id="3534">3534</a>
+<a href="#3535" id="3535">3535</a>
+<a href="#3536" id="3536">3536</a>
+<a href="#3537" id="3537">3537</a>
+<a href="#3538" id="3538">3538</a>
+<a href="#3539" id="3539">3539</a>
+<a href="#3540" id="3540">3540</a>
+<a href="#3541" id="3541">3541</a>
+<a href="#3542" id="3542">3542</a>
+<a href="#3543" id="3543">3543</a>
+<a href="#3544" id="3544">3544</a>
+<a href="#3545" id="3545">3545</a>
+<a href="#3546" id="3546">3546</a>
+<a href="#3547" id="3547">3547</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     string::{String, ToString},
     vec::Vec,
@@ -5131,11 +5177,52 @@
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
-                <span class="kw">let </span>selector = <span class="self">self</span>.expression(selector, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>uint =
-                    <span class="macro">resolve_inner!</span>(ectx, selector).scalar_kind() == <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ScalarKind::Uint);
+                <span class="comment">// Determine the scalar type of the selector and case expressions, find the
+                // consensus type for automatic conversion, then convert them.
+                </span><span class="kw">let </span>(<span class="kw-2">mut </span>exprs, spans) = core::iter::once(selector)
+                    .chain(cases.iter().filter_map(|case| <span class="kw">match </span>case.value {
+                        ast::SwitchValue::Expr(expr) =&gt; <span class="prelude-val">Some</span>(expr),
+                        ast::SwitchValue::Default =&gt; <span class="prelude-val">None</span>,
+                    }))
+                    .enumerate()
+                    .map(|(i, expr)| {
+                        <span class="kw">let </span>span = ectx.ast_expressions.get_span(expr);
+                        <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>ty = <span class="macro">resolve_inner!</span>(ectx, expr);
+                        <span class="kw">match </span><span class="kw-2">*</span>ty {
+                            <span class="kw">crate</span>::TypeInner::Scalar(
+                                <span class="kw">crate</span>::Scalar::I32
+                                | <span class="kw">crate</span>::Scalar::U32
+                                | <span class="kw">crate</span>::Scalar::ABSTRACT_INT,
+                            ) =&gt; <span class="prelude-val">Ok</span>((expr, span)),
+                            <span class="kw">_ </span>=&gt; <span class="kw">match </span>i {
+                                <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidSwitchSelector { span }),
+                                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidSwitchCase { span }),
+                            },
+                        }
+                    })
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;), <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+
+                <span class="kw">let </span><span class="kw-2">mut </span>consensus =
+                    ectx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>exprs)
+                        .map_err(|span_idx| Error::SwitchCaseTypeMismatch {
+                            span: spans[span_idx],
+                        })<span class="question-mark">?</span>;
+                <span class="comment">// Concretize to I32 if the selector and all cases were abstract
+                </span><span class="kw">if </span>consensus == <span class="kw">crate</span>::Scalar::ABSTRACT_INT {
+                    consensus = <span class="kw">crate</span>::Scalar::I32;
+                }
+                <span class="kw">for </span>expr <span class="kw">in </span><span class="kw-2">&amp;mut </span>exprs {
+                    ectx.convert_to_leaf_scalar(expr, consensus)<span class="question-mark">?</span>;
+                }
+
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
+
+                <span class="kw">let </span><span class="kw-2">mut </span>exprs = exprs.into_iter();
+                <span class="kw">let </span>selector = exprs
+                    .next()
+                    .expect(<span class="string">"First element should be selector expression"</span>);
 
                 <span class="kw">let </span>cases = cases
                     .iter()
@@ -5144,17 +5231,22 @@
                             value: <span class="kw">match </span>case.value {
                                 ast::SwitchValue::Expr(expr) =&gt; {
                                     <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
-                                    <span class="kw">let </span>expr =
-                                        <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_global().as_const())<span class="question-mark">?</span>;
-                                    <span class="kw">match </span>ctx.module.to_ctx().eval_expr_to_literal(expr) {
-                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::I32(value)) <span class="kw">if </span>!uint =&gt; {
+                                    <span class="kw">let </span>expr = exprs.next().expect(
+                                        <span class="string">"Should yield expression for each SwitchValue::Expr case"</span>,
+                                    );
+                                    <span class="kw">match </span>ctx
+                                        .module
+                                        .to_ctx()
+                                        .eval_expr_to_literal_from(expr, <span class="kw-2">&amp;</span>ctx.function.expressions)
+                                    {
+                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::I32(value)) =&gt; {
                                             <span class="kw">crate</span>::SwitchValue::I32(value)
                                         }
-                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::U32(value)) <span class="kw">if </span>uint =&gt; {
+                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::U32(value)) =&gt; {
                                             <span class="kw">crate</span>::SwitchValue::U32(value)
                                         }
                                         <span class="kw">_ </span>=&gt; {
-                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidSwitchValue { uint, span });
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidSwitchCase { span });
                                         }
                                     }
                                 }
