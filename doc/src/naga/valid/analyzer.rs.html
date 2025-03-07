@@ -1492,7 +1492,9 @@
 <a href="#1491" id="1491">1491</a>
 <a href="#1492" id="1492">1492</a>
 <a href="#1493" id="1493">1493</a>
-<a href="#1494" id="1494">1494</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a></pre></div><pre class="rust"><code><span class="doccomment">//! Module analyzer.
 //!
 //! Figures out the following properties:
 //! - control flow uniformity
@@ -2152,7 +2154,7 @@
                 gather: <span class="kw">_</span>,
                 coordinate,
                 array_index,
-                offset: <span class="kw">_</span>,
+                offset,
                 level,
                 depth_ref,
             } =&gt; {
@@ -2179,6 +2181,7 @@
                     Sl::Gradient { x, y } =&gt; <span class="self">self</span>.add_ref(x).or(<span class="self">self</span>.add_ref(y)),
                 };
                 <span class="kw">let </span>dref_nur = depth_ref.and_then(|h| <span class="self">self</span>.add_ref(h));
+                <span class="kw">let </span>offset_nur = offset.and_then(|h| <span class="self">self</span>.add_ref(h));
                 Uniformity {
                     non_uniform_result: <span class="self">self
                         </span>.add_ref(image)
@@ -2186,7 +2189,8 @@
                         .or(<span class="self">self</span>.add_ref(coordinate))
                         .or(array_nur)
                         .or(level_nur)
-                        .or(dref_nur),
+                        .or(dref_nur)
+                        .or(offset_nur),
                     requirements: <span class="kw">if </span>level.implicit_derivatives() {
                         UniformityRequirements::IMPLICIT_LEVEL
                     } <span class="kw">else </span>{

@@ -1905,9 +1905,7 @@
 <a href="#1904" id="1904">1904</a>
 <a href="#1905" id="1905">1905</a>
 <a href="#1906" id="1906">1906</a>
-<a href="#1907" id="1907">1907</a>
-<a href="#1908" id="1908">1908</a>
-<a href="#1909" id="1909">1909</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1907" id="1907">1907</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -3134,13 +3132,11 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span>Module,
         expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        arena: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     ) -&gt; BackendResult {
-        <span class="self">self</span>.write_possibly_const_expression(
-            module,
-            expr,
-            <span class="kw-2">&amp;</span>module.global_expressions,
-            |writer, expr| writer.write_const_expression(module, expr),
-        )
+        <span class="self">self</span>.write_possibly_const_expression(module, expr, arena, |writer, expr| {
+            writer.write_const_expression(module, expr, arena)
+        })
     }
 
     <span class="kw">fn </span>write_possibly_const_expression&lt;E&gt;(
@@ -3193,7 +3189,7 @@
                 <span class="kw">if </span>constant.name.is_some() {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Constant(handle)])<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.write_const_expression(module, constant.init)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expression(module, constant.init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
                 }
             }
             Expression::ZeroValue(ty) =&gt; {
@@ -3389,7 +3385,7 @@
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(offset) = offset {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_const_expression(module, offset)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expression(module, offset, func_ctx.expressions)<span class="question-mark">?</span>;
                 }
 
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -3438,7 +3434,7 @@
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(offset) = offset {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_const_expression(module, offset)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expression(module, offset, func_ctx.expressions)<span class="question-mark">?</span>;
                 }
 
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -3749,7 +3745,7 @@
         <span class="comment">// Write initializer
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(init) = global.init {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.write_const_expression(module, init)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_const_expression(module, init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// End with semicolon
@@ -3773,7 +3769,7 @@
         <span class="self">self</span>.write_type(module, module.constants[handle].ty)<span class="question-mark">?</span>;
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>init = module.constants[handle].init;
-        <span class="self">self</span>.write_const_expression(module, init)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_const_expression(module, init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())

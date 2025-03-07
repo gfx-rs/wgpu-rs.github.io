@@ -5033,7 +5033,11 @@
 <a href="#5032" id="5032">5032</a>
 <a href="#5033" id="5033">5033</a>
 <a href="#5034" id="5034">5034</a>
-<a href="#5035" id="5035">5035</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5035" id="5035">5035</a>
+<a href="#5036" id="5036">5036</a>
+<a href="#5037" id="5037">5037</a>
+<a href="#5038" id="5038">5038</a>
+<a href="#5039" id="5039">5039</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -6294,7 +6298,7 @@ to output a [`Module`](crate::Module) into glsl
         <span class="kw">if </span>global.space.initializable() &amp;&amp; is_value_init_supported(<span class="self">self</span>.module, global.ty) {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = global.init {
-                <span class="self">self</span>.write_const_expr(init)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_const_expr(init, <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 <span class="self">self</span>.write_zero_init_value(global.ty)<span class="question-mark">?</span>;
             }
@@ -6939,7 +6943,7 @@ to output a [`Module`](crate::Module) into glsl
             <span class="self">self</span>.write_array_size(base, size)<span class="question-mark">?</span>;
         }
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.write_const_expr(constant.init)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_const_expr(constant.init, <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -7689,12 +7693,16 @@ to output a [`Module`](crate::Module) into glsl
     ///
     /// [`Expression`]: crate::Expression
     /// [`Module`]: crate::Module
-    </span><span class="kw">fn </span>write_const_expr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; BackendResult {
+    </span><span class="kw">fn </span>write_const_expr(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        arena: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; BackendResult {
         <span class="self">self</span>.write_possibly_const_expr(
             expr,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions,
+            arena,
             |expr| <span class="kw-2">&amp;</span><span class="self">self</span>.info[expr],
-            |writer, expr| writer.write_const_expr(expr),
+            |writer, expr| writer.write_const_expr(expr, arena),
         )
     }
 
@@ -7761,7 +7769,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="kw">if </span>constant.name.is_some() {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Constant(handle)])<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.write_const_expr(constant.init)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expr(constant.init, <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions)<span class="question-mark">?</span>;
                 }
             }
             Expression::ZeroValue(ty) =&gt; {
@@ -8068,7 +8076,7 @@ to output a [`Module`](crate::Module) into glsl
                     <span class="kw">if </span>tex_1d_hack {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"ivec2("</span>)<span class="question-mark">?</span>;
                     }
-                    <span class="self">self</span>.write_const_expr(constant)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expr(constant, ctx.expressions)<span class="question-mark">?</span>;
                     <span class="kw">if </span>tex_1d_hack {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", 0)"</span>)<span class="question-mark">?</span>;
                     }

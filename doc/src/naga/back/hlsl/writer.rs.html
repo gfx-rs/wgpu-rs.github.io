@@ -4275,9 +4275,7 @@
 <a href="#4274" id="4274">4274</a>
 <a href="#4275" id="4275">4275</a>
 <a href="#4276" id="4276">4276</a>
-<a href="#4277" id="4277">4277</a>
-<a href="#4278" id="4278">4278</a>
-<a href="#4279" id="4279">4279</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4277" id="4277">4277</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -5281,7 +5279,7 @@
             <span class="kw">if </span>global.space == <span class="kw">crate</span>::AddressSpace::Private {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = global.init {
-                    <span class="self">self</span>.write_const_expression(module, init)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expression(module, init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="self">self</span>.write_default_init(module, global.ty)<span class="question-mark">?</span>;
                 }
@@ -5391,7 +5389,7 @@
             <span class="self">self</span>.write_array_size(module, base, size)<span class="question-mark">?</span>;
         }
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.write_const_expression(module, constant.init)<span class="question-mark">?</span>;
+        <span class="self">self</span>.write_const_expression(module, constant.init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -6888,13 +6886,11 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span>Module,
         expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        arena: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Expression&gt;,
     ) -&gt; BackendResult {
-        <span class="self">self</span>.write_possibly_const_expression(
-            module,
-            expr,
-            <span class="kw-2">&amp;</span>module.global_expressions,
-            |writer, expr| writer.write_const_expression(module, expr),
-        )
+        <span class="self">self</span>.write_possibly_const_expression(module, expr, arena, |writer, expr| {
+            writer.write_const_expression(module, expr, arena)
+        })
     }
 
     <span class="kw">fn </span>write_possibly_const_expression&lt;E&gt;(
@@ -6934,7 +6930,7 @@
                 <span class="kw">if </span>constant.name.is_some() {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}"</span>, <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Constant(handle)])<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.write_const_expression(module, constant.init)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_const_expression(module, constant.init, <span class="kw-2">&amp;</span>module.global_expressions)<span class="question-mark">?</span>;
                 }
             }
             Expression::ZeroValue(ty) =&gt; {
@@ -7457,7 +7453,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(offset) = offset {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int2("</span>)<span class="question-mark">?</span>; <span class="comment">// work around https://github.com/microsoft/DirectXShaderCompiler/issues/5082#issuecomment-1540147807
-                    </span><span class="self">self</span>.write_const_expression(module, offset)<span class="question-mark">?</span>;
+                    </span><span class="self">self</span>.write_const_expression(module, offset, func_ctx.expressions)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
 
