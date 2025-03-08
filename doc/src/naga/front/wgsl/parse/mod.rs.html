@@ -2994,7 +2994,26 @@
 <a href="#2993" id="2993">2993</a>
 <a href="#2994" id="2994">2994</a>
 <a href="#2995" id="2995">2995</a>
-<a href="#2996" id="2996">2996</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#2996" id="2996">2996</a>
+<a href="#2997" id="2997">2997</a>
+<a href="#2998" id="2998">2998</a>
+<a href="#2999" id="2999">2999</a>
+<a href="#3000" id="3000">3000</a>
+<a href="#3001" id="3001">3001</a>
+<a href="#3002" id="3002">3002</a>
+<a href="#3003" id="3003">3003</a>
+<a href="#3004" id="3004">3004</a>
+<a href="#3005" id="3005">3005</a>
+<a href="#3006" id="3006">3006</a>
+<a href="#3007" id="3007">3007</a>
+<a href="#3008" id="3008">3008</a>
+<a href="#3009" id="3009">3009</a>
+<a href="#3010" id="3010">3010</a>
+<a href="#3011" id="3011">3011</a>
+<a href="#3012" id="3012">3012</a>
+<a href="#3013" id="3013">3013</a>
+<a href="#3014" id="3014">3014</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<span class="kw">use </span>directive::enable_extension::ImplementedEnableExtension;
 
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
     <span class="self">self</span>, DiagnosticFilter, DiagnosticFilterMap, DiagnosticFilterNode, FilterableTriggeringRule,
@@ -3173,11 +3192,11 @@
 <span class="attr">#[derive(Default)]
 </span><span class="kw">struct </span>BindingParser&lt;<span class="lifetime">'a</span>&gt; {
     location: ParsedAttribute&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
-    second_blend_source: ParsedAttribute&lt;bool&gt;,
     built_in: ParsedAttribute&lt;<span class="kw">crate</span>::BuiltIn&gt;,
     interpolation: ParsedAttribute&lt;<span class="kw">crate</span>::Interpolation&gt;,
     sampling: ParsedAttribute&lt;<span class="kw">crate</span>::Sampling&gt;,
     invariant: ParsedAttribute&lt;bool&gt;,
+    blend_src: ParsedAttribute&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BindingParser&lt;<span class="lifetime">'a</span>&gt; {
@@ -3215,11 +3234,25 @@
                 }
                 lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
-            <span class="string">"second_blend_source" </span>=&gt; {
-                <span class="self">self</span>.second_blend_source.set(<span class="bool-val">true</span>, name_span)<span class="question-mark">?</span>;
-            }
+
             <span class="string">"invariant" </span>=&gt; {
                 <span class="self">self</span>.invariant.set(<span class="bool-val">true</span>, name_span)<span class="question-mark">?</span>;
+            }
+            <span class="string">"blend_src" </span>=&gt; {
+                <span class="kw">if </span>!lexer
+                    .enable_extensions
+                    .contains(ImplementedEnableExtension::DualSourceBlending)
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::EnableExtensionNotEnabled {
+                        span: name_span,
+                        kind: ImplementedEnableExtension::DualSourceBlending.into(),
+                    });
+                }
+
+                lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
+                <span class="self">self</span>.blend_src
+                    .set(parser.general_expression(lexer, ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
+                lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
         }
@@ -3233,9 +3266,10 @@
             <span class="self">self</span>.interpolation.value,
             <span class="self">self</span>.sampling.value,
             <span class="self">self</span>.invariant.value.unwrap_or_default(),
+            <span class="self">self</span>.blend_src.value,
         ) {
-            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            (<span class="prelude-val">Some</span>(location), <span class="prelude-val">None</span>, interpolation, sampling, <span class="bool-val">false</span>) =&gt; {
+            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>, <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            (<span class="prelude-val">Some</span>(location), <span class="prelude-val">None</span>, interpolation, sampling, <span class="bool-val">false</span>, blend_src) =&gt; {
                 <span class="comment">// Before handing over the completed `Module`, we call
                 // `apply_default_interpolation` to ensure that the interpolation and
                 // sampling have been explicitly specified on all vertex shader output and fragment
@@ -3244,16 +3278,18 @@
                     location,
                     interpolation,
                     sampling,
-                    second_blend_source: <span class="self">self</span>.second_blend_source.value.unwrap_or(<span class="bool-val">false</span>),
+                    blend_src,
                 }))
             }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BuiltIn::Position { .. }), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, invariant) =&gt; {
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BuiltIn::Position { .. }), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, invariant, <span class="prelude-val">None</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Binding::BuiltIn(<span class="kw">crate</span>::BuiltIn::Position {
                     invariant,
                 })))
             }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(built_in), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Binding::BuiltIn(built_in))),
-            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::InconsistentBinding(span)),
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(built_in), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>, <span class="prelude-val">None</span>) =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Binding::BuiltIn(built_in)))
+            }
+            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::InconsistentBinding(span)),
         }
     }
 }

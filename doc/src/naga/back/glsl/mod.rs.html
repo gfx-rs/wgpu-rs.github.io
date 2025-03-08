@@ -5037,7 +5037,9 @@
 <a href="#5036" id="5036">5036</a>
 <a href="#5037" id="5037">5037</a>
 <a href="#5038" id="5038">5038</a>
-<a href="#5039" id="5039">5039</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5039" id="5039">5039</a>
+<a href="#5040" id="5040">5040</a>
+<a href="#5041" id="5041">5041</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -5504,8 +5506,7 @@ to output a [`Module`](crate::Module) into glsl
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.binding {
             <span class="kw">crate</span>::Binding::Location {
-                second_blend_source: <span class="bool-val">true</span>,
-                ..
+                blend_src: <span class="prelude-val">Some</span>(<span class="number">1</span>), ..
             } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"_fs2p_location1"</span>,)
             }
@@ -6537,13 +6538,13 @@ to output a [`Module`](crate::Module) into glsl
             <span class="prelude-val">Some</span>(binding) =&gt; binding,
         };
 
-        <span class="kw">let </span>(location, interpolation, sampling, second_blend_source) = <span class="kw">match </span><span class="kw-2">*</span>binding {
+        <span class="kw">let </span>(location, interpolation, sampling, blend_src) = <span class="kw">match </span><span class="kw-2">*</span>binding {
             <span class="kw">crate</span>::Binding::Location {
                 location,
                 interpolation,
                 sampling,
-                second_blend_source,
-            } =&gt; (location, interpolation, sampling, second_blend_source),
+                blend_src,
+            } =&gt; (location, interpolation, sampling, blend_src),
             <span class="kw">crate</span>::Binding::BuiltIn(built_in) =&gt; {
                 <span class="kw">if let </span><span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">true </span>} = built_in {
                     <span class="kw">match </span>(<span class="self">self</span>.options.version, <span class="self">self</span>.entry_point.stage) {
@@ -6590,8 +6591,11 @@ to output a [`Module`](crate::Module) into glsl
             || !emit_interpolation_and_auxiliary
         {
             <span class="kw">if </span><span class="self">self</span>.options.version.supports_io_locations() {
-                <span class="kw">if </span>second_blend_source {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout(location = {location}, index = 1) "</span>)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
+                    <span class="macro">write!</span>(
+                        <span class="self">self</span>.out,
+                        <span class="string">"layout(location = {location}, index = {blend_src}) "
+                    </span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"layout(location = {location}) "</span>)<span class="question-mark">?</span>;
                 }
@@ -6599,7 +6603,7 @@ to output a [`Module`](crate::Module) into glsl
             </span>} <span class="kw">else </span>{
                 <span class="prelude-val">Some</span>(VaryingLocation {
                     location,
-                    index: second_blend_source <span class="kw">as </span>u32,
+                    index: blend_src.unwrap_or(<span class="number">0</span>),
                 })
             }
         } <span class="kw">else </span>{
@@ -6640,7 +6644,7 @@ to output a [`Module`](crate::Module) into glsl
                 location,
                 interpolation: <span class="prelude-val">None</span>,
                 sampling: <span class="prelude-val">None</span>,
-                second_blend_source,
+                blend_src,
             },
             stage: <span class="self">self</span>.entry_point.stage,
             options: VaryingOptions::from_writer_options(<span class="self">self</span>.options, output),

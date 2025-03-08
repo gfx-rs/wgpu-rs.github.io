@@ -117,7 +117,15 @@
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`EnableExtension`] API.
 
@@ -125,24 +133,30 @@
 
 <span class="doccomment">/// Tracks the status of every enable-extension known to Naga.
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq)]
-</span><span class="kw">pub struct </span>EnableExtensions {}
+</span><span class="kw">pub struct </span>EnableExtensions {
+    dual_source_blending: bool,
+}
 
 <span class="kw">impl </span>EnableExtensions {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{}
+        <span class="self">Self </span>{
+            dual_source_blending: <span class="bool-val">false</span>,
+        }
     }
 
     <span class="doccomment">/// Add an enable-extension to the set requested by a module.
-    </span><span class="attr">#[allow(unreachable_code)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ext: ImplementedEnableExtension) {
-        <span class="kw">let </span>_field: <span class="kw-2">&amp;mut </span>bool = <span class="kw">match </span>ext {};
-        <span class="kw-2">*</span>_field = <span class="bool-val">true</span>;
+        <span class="kw">let </span>field: <span class="kw-2">&amp;mut </span>bool = <span class="kw">match </span>ext {
+            ImplementedEnableExtension::DualSourceBlending =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.dual_source_blending,
+        };
+        <span class="kw-2">*</span>field = <span class="bool-val">true</span>;
     }
 
     <span class="doccomment">/// Query whether an enable-extension tracked here has been requested.
-    </span><span class="attr">#[allow(unused)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, ext: ImplementedEnableExtension) -&gt; bool {
-        <span class="kw">match </span>ext {}
+        <span class="kw">match </span>ext {
+            ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">self</span>.dual_source_blending,
+        }
     }
 }
 
@@ -181,7 +195,7 @@
                 <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::ClipDistances)
             }
             <span class="self">Self</span>::DUAL_SOURCE_BLENDING =&gt; {
-                <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::DualSourceBlending)
+                <span class="self">Self</span>::Implemented(ImplementedEnableExtension::DualSourceBlending)
             }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownEnableExtension(span, word)),
         })
@@ -190,11 +204,13 @@
     <span class="doccomment">/// Maps this [`EnableExtension`] into the sentinel word associated with it in WGSL.
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Implemented(kind) =&gt; <span class="kw">match </span>kind {},
+            <span class="self">Self</span>::Implemented(kind) =&gt; <span class="kw">match </span>kind {
+                ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">Self</span>::DUAL_SOURCE_BLENDING,
+            },
+
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
                 UnimplementedEnableExtension::F16 =&gt; <span class="self">Self</span>::F16,
                 UnimplementedEnableExtension::ClipDistances =&gt; <span class="self">Self</span>::CLIP_DISTANCES,
-                UnimplementedEnableExtension::DualSourceBlending =&gt; <span class="self">Self</span>::DUAL_SOURCE_BLENDING,
             },
         }
     }
@@ -202,7 +218,14 @@
 
 <span class="doccomment">/// A variant of [`EnableExtension::Implemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-</span><span class="kw">pub enum </span>ImplementedEnableExtension {}
+</span><span class="kw">pub enum </span>ImplementedEnableExtension {
+    <span class="doccomment">/// Enables the `blend_src` attribute in WGSL.
+    ///
+    /// In the WGSL standard, this corresponds to [`enable dual_source_blending;`].
+    ///
+    /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
+    </span>DualSourceBlending,
+}
 
 <span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
@@ -219,12 +242,6 @@
     ///
     /// [`enable clip_distances;`]: https://www.w3.org/TR/WGSL/#extension-clip_distances
     </span>ClipDistances,
-    <span class="doccomment">/// Enables the `blend_src` attribute in WGSL.
-    ///
-    /// In the WGSL standard, this corresponds to [`enable dual_source_blending;`].
-    ///
-    /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
-    </span>DualSourceBlending,
 }
 
 <span class="kw">impl </span>UnimplementedEnableExtension {
@@ -232,7 +249,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::F16 =&gt; <span class="number">4384</span>,
             <span class="self">Self</span>::ClipDistances =&gt; <span class="number">6236</span>,
-            <span class="self">Self</span>::DualSourceBlending =&gt; <span class="number">6402</span>,
         }
     }
 }

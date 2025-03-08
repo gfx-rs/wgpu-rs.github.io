@@ -791,7 +791,19 @@
 <a href="#790" id="790">790</a>
 <a href="#791" id="791">791</a>
 <a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
 
 <span class="kw">use </span>bit_set::BitSet;
 
@@ -862,6 +874,8 @@
     </span>MemberMissingBinding(u32),
     <span class="attr">#[error(<span class="string">"Multiple bindings at location {location} are present"</span>)]
     </span>BindingCollision { location: u32 },
+    <span class="attr">#[error(<span class="string">"Multiple bindings use the same `blend_src` {blend_src}"</span>)]
+    </span>BindingCollisionBlendSrc { blend_src: u32 },
     <span class="attr">#[error(<span class="string">"Built-in {0:?} is present more than once"</span>)]
     </span>DuplicateBuiltIn(<span class="kw">crate</span>::BuiltIn),
     <span class="attr">#[error(<span class="string">"Capability {0:?} is not supported"</span>)]
@@ -870,14 +884,16 @@
     </span>InvalidInputAttributeInStage(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, <span class="kw">crate</span>::ShaderStage),
     <span class="attr">#[error(<span class="string">"The attribute {0:?} is not valid for stage {1:?}"</span>)]
     </span>InvalidAttributeInStage(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, <span class="kw">crate</span>::ShaderStage),
-    <span class="attr">#[error(
-        <span class="string">"The location index {location} cannot be used together with the attribute {attribute:?}"
-    </span>)]
-    </span>InvalidLocationAttributeCombination {
-        location: u32,
-        attribute: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+    <span class="attr">#[error(<span class="string">"The `blend_src` attribute can only be used on location 0, only indices 0 and 1 are valid. Location was {location}, index was {blend_src}."</span>)]
+    </span>InvalidBlendSrcIndex { location: u32, blend_src: u32 },
+    <span class="attr">#[error(<span class="string">"If `blend_src` is used, there must be exactly two outputs both with location 0, one with `blend_src(0)` and the other with `blend_src(1)`."</span>)]
+    </span>IncompleteBlendSrcUsage,
+    <span class="attr">#[error(<span class="string">"If `blend_src` is used, both outputs must have the same type. `blend_src(0)` has type {blend_src_0_type:?} and `blend_src(1)` has type {blend_src_1_type:?}."</span>)]
+    </span>BlendSrcOutputTypeMismatch {
+        blend_src_0_type: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+        blend_src_1_type: Handle&lt;<span class="kw">crate</span>::Type&gt;,
     },
-    <span class="attr">#[error(<span class="string">"Workgroup size is multi dimensional, @builtin(subgroup_id) and @builtin(subgroup_invocation_id) are not supported."</span>)]
+    <span class="attr">#[error(<span class="string">"Workgroup size is multi dimensional, `@builtin(subgroup_id)` and `@builtin(subgroup_invocation_id)` are not supported."</span>)]
     </span>InvalidMultiDimensionalSubgroupBuiltIn,
 }
 
@@ -910,10 +926,6 @@
     </span>InvalidIntegerInterpolation { location: u32 },
     <span class="attr">#[error(transparent)]
     </span>Function(<span class="attr">#[from] </span>FunctionError),
-    <span class="attr">#[error(
-        <span class="string">"Invalid locations {location_mask:?} are set while dual source blending. Only location 0 may be set."
-    </span>)]
-    </span>InvalidLocationsWhileDualSourceBlending { location_mask: BitSet },
 }
 
 <span class="kw">fn </span>storage_usage(access: <span class="kw">crate</span>::StorageAccess) -&gt; GlobalUse {
@@ -933,10 +945,10 @@
 <span class="kw">struct </span>VaryingContext&lt;<span class="lifetime">'a</span>&gt; {
     stage: <span class="kw">crate</span>::ShaderStage,
     output: bool,
-    second_blend_source: bool,
     types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     type_info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Vec&lt;<span class="kw">super</span>::r#type::TypeInfo&gt;,
     location_mask: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>BitSet,
+    blend_src_mask: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>BitSet,
     built_ins: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">crate</span>::FastHashSet&lt;<span class="kw">crate</span>::BuiltIn&gt;,
     capabilities: Capabilities,
     flags: <span class="kw">super</span>::ValidationFlags,
@@ -1101,7 +1113,7 @@
                 location,
                 interpolation,
                 sampling,
-                second_blend_source,
+                blend_src,
             } =&gt; {
                 <span class="comment">// Only IO-shareable types may be stored in locations.
                 </span><span class="kw">if </span>!<span class="self">self</span>.type_info[ty.index()]
@@ -1111,8 +1123,10 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::NotIOShareableType(ty));
                 }
 
-                <span class="kw">if </span>second_blend_source {
-                    <span class="kw">if </span>!<span class="self">self
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
+                    <span class="comment">// `blend_src` is only valid if dual source blending was explicitly enabled,
+                    // see https://www.w3.org/TR/WGSL/#extension-dual_source_blending
+                    </span><span class="kw">if </span>!<span class="self">self
                         </span>.capabilities
                         .contains(Capabilities::DUAL_SOURCE_BLENDING)
                     {
@@ -1122,28 +1136,29 @@
                     }
                     <span class="kw">if </span><span class="self">self</span>.stage != <span class="kw">crate</span>::ShaderStage::Fragment {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidAttributeInStage(
-                            <span class="string">"second_blend_source"</span>,
+                            <span class="string">"blend_src"</span>,
                             <span class="self">self</span>.stage,
                         ));
                     }
                     <span class="kw">if </span>!<span class="self">self</span>.output {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidInputAttributeInStage(
-                            <span class="string">"second_blend_source"</span>,
+                            <span class="string">"blend_src"</span>,
                             <span class="self">self</span>.stage,
                         ));
                     }
-                    <span class="kw">if </span>location != <span class="number">0 </span>{
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidLocationAttributeCombination {
+                    <span class="kw">if </span>(blend_src != <span class="number">0 </span>&amp;&amp; blend_src != <span class="number">1</span>) || location != <span class="number">0 </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::InvalidBlendSrcIndex {
                             location,
-                            attribute: <span class="string">"second_blend_source"</span>,
+                            blend_src,
                         });
                     }
-
-                    <span class="self">self</span>.second_blend_source = <span class="bool-val">true</span>;
-                } <span class="kw">else if </span>!<span class="self">self</span>.location_mask.insert(location <span class="kw">as </span>usize) {
-                    <span class="kw">if </span><span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::BINDINGS) {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::BindingCollision { location });
+                    <span class="kw">if </span>!<span class="self">self</span>.blend_src_mask.insert(blend_src <span class="kw">as </span>usize) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::BindingCollisionBlendSrc { blend_src });
                     }
+                } <span class="kw">else if </span>!<span class="self">self</span>.location_mask.insert(location <span class="kw">as </span>usize)
+                    &amp;&amp; <span class="self">self</span>.flags.contains(<span class="kw">super</span>::ValidationFlags::BINDINGS)
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::BindingCollision { location });
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation) = interpolation {
@@ -1238,6 +1253,24 @@
                                 <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) =&gt; <span class="self">self
                                     </span>.validate_impl(ep, member.ty, binding)
                                     .map_err(|e| e.with_span_context(span_context))<span class="question-mark">?</span>,
+                            }
+                        }
+
+                        <span class="kw">if </span>!<span class="self">self</span>.blend_src_mask.is_empty() {
+                            <span class="kw">let </span>span_context = <span class="self">self</span>.types.get_span_context(ty);
+
+                            <span class="comment">// If there's any blend_src usage, it must apply to all members of which there must be exactly 2.
+                            </span><span class="kw">if </span>members.len() != <span class="number">2 </span>|| <span class="self">self</span>.blend_src_mask.len() != <span class="number">2 </span>{
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::IncompleteBlendSrcUsage
+                                    .with_span_context(span_context));
+                            }
+                            <span class="comment">// Also, all members must have the same type.
+                            </span><span class="kw">if </span>members[<span class="number">0</span>].ty != members[<span class="number">1</span>].ty {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(VaryingError::BlendSrcOutputTypeMismatch {
+                                    blend_src_0_type: members[<span class="number">0</span>].ty,
+                                    blend_src_1_type: members[<span class="number">1</span>].ty,
+                                }
+                                .with_span_context(span_context));
                             }
                         }
                     }
@@ -1466,10 +1499,10 @@
             <span class="kw">let </span><span class="kw-2">mut </span>ctx = VaryingContext {
                 stage: ep.stage,
                 output: <span class="bool-val">false</span>,
-                second_blend_source: <span class="bool-val">false</span>,
                 types: <span class="kw-2">&amp;</span>module.types,
                 type_info: <span class="kw-2">&amp;</span><span class="self">self</span>.types,
                 location_mask: <span class="kw-2">&amp;mut </span><span class="self">self</span>.location_mask,
+                blend_src_mask: <span class="kw-2">&amp;mut </span><span class="self">self</span>.blend_src_mask,
                 built_ins: <span class="kw-2">&amp;mut </span>argument_built_ins,
                 capabilities: <span class="self">self</span>.capabilities,
                 flags: <span class="self">self</span>.flags,
@@ -1484,32 +1517,23 @@
             <span class="kw">let </span><span class="kw-2">mut </span>ctx = VaryingContext {
                 stage: ep.stage,
                 output: <span class="bool-val">true</span>,
-                second_blend_source: <span class="bool-val">false</span>,
                 types: <span class="kw-2">&amp;</span>module.types,
                 type_info: <span class="kw-2">&amp;</span><span class="self">self</span>.types,
                 location_mask: <span class="kw-2">&amp;mut </span><span class="self">self</span>.location_mask,
+                blend_src_mask: <span class="kw-2">&amp;mut </span><span class="self">self</span>.blend_src_mask,
                 built_ins: <span class="kw-2">&amp;mut </span>result_built_ins,
                 capabilities: <span class="self">self</span>.capabilities,
                 flags: <span class="self">self</span>.flags,
             };
             ctx.validate(ep, fr.ty, fr.binding.as_ref())
                 .map_err_inner(|e| EntryPointError::Result(e).with_span())<span class="question-mark">?</span>;
-            <span class="kw">if </span>ctx.second_blend_source {
-                <span class="comment">// Only the first location may be used when dual source blending
-                </span><span class="kw">if </span>ctx.location_mask.len() == <span class="number">1 </span>&amp;&amp; ctx.location_mask.contains(<span class="number">0</span>) {
-                    info.dual_source_blending = <span class="bool-val">true</span>;
-                } <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(EntryPointError::InvalidLocationsWhileDualSourceBlending {
-                        location_mask: <span class="self">self</span>.location_mask.clone(),
-                    }
-                    .with_span());
-                }
-            }
-
             <span class="kw">if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex
                 &amp;&amp; !result_built_ins.contains(<span class="kw-2">&amp;</span><span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">false </span>})
             {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(EntryPointError::MissingVertexOutputPosition.with_span());
+            }
+            <span class="kw">if </span>!<span class="self">self</span>.blend_src_mask.is_empty() {
+                info.dual_source_blending = <span class="bool-val">true</span>;
             }
         } <span class="kw">else if </span>ep.stage == <span class="kw">crate</span>::ShaderStage::Vertex {
             <span class="kw">return </span><span class="prelude-val">Err</span>(EntryPointError::MissingVertexOutputPosition.with_span());

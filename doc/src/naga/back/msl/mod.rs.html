@@ -731,9 +731,7 @@
 <a href="#730" id="730">730</a>
 <a href="#731" id="731">731</a>
 <a href="#732" id="732">732</a>
-<a href="#733" id="733">733</a>
-<a href="#734" id="734">734</a>
-<a href="#735" id="735">735</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#733" id="733">733</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [MSL][msl] (Metal Shading Language).
 
 This backend does not support the [`SHADER_INT64_ATOMIC_ALL_OPS`][all-atom]
@@ -854,7 +852,7 @@ holding the result.
     Attribute(u32),
     Color {
         location: u32,
-        second_blend_source: bool,
+        blend_src: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     },
     User {
         prefix: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
@@ -1202,18 +1200,16 @@ holding the result.
                 location,
                 interpolation,
                 sampling,
-                second_blend_source,
+                blend_src,
             } =&gt; <span class="kw">match </span>mode {
                 LocationMode::VertexInput =&gt; <span class="prelude-val">Ok</span>(ResolvedBinding::Attribute(location)),
                 LocationMode::FragmentOutput =&gt; {
-                    <span class="kw">if </span>second_blend_source &amp;&amp; <span class="self">self</span>.lang_version &lt; (<span class="number">1</span>, <span class="number">2</span>) {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedAttribute(
-                            <span class="string">"second_blend_source"</span>.to_string(),
-                        ));
+                    <span class="kw">if </span>blend_src.is_some() &amp;&amp; <span class="self">self</span>.lang_version &lt; (<span class="number">1</span>, <span class="number">2</span>) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedAttribute(<span class="string">"blend_src"</span>.to_string()));
                     }
                     <span class="prelude-val">Ok</span>(ResolvedBinding::Color {
                         location,
-                        second_blend_source,
+                        blend_src,
                     })
                 }
                 LocationMode::VertexOutput | LocationMode::FragmentInput =&gt; {
@@ -1375,10 +1371,10 @@ holding the result.
             <span class="self">Self</span>::Attribute(index) =&gt; <span class="macro">write!</span>(out, <span class="string">"attribute({index})"</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span>::Color {
                 location,
-                second_blend_source,
+                blend_src,
             } =&gt; {
-                <span class="kw">if </span>second_blend_source {
-                    <span class="macro">write!</span>(out, <span class="string">"color({location}) index(1)"</span>)<span class="question-mark">?
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
+                    <span class="macro">write!</span>(out, <span class="string">"color({location}) index({blend_src})"</span>)<span class="question-mark">?
                 </span>} <span class="kw">else </span>{
                     <span class="macro">write!</span>(out, <span class="string">"color({location})"</span>)<span class="question-mark">?
                 </span>}

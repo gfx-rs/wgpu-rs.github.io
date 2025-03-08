@@ -3545,7 +3545,13 @@
 <a href="#3544" id="3544">3544</a>
 <a href="#3545" id="3545">3545</a>
 <a href="#3546" id="3546">3546</a>
-<a href="#3547" id="3547">3547</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3547" id="3547">3547</a>
+<a href="#3548" id="3548">3548</a>
+<a href="#3549" id="3549">3549</a>
+<a href="#3550" id="3550">3550</a>
+<a href="#3551" id="3551">3551</a>
+<a href="#3552" id="3552">3552</a>
+<a href="#3553" id="3553">3553</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     string::{String, ToString},
     vec::Vec,
@@ -7036,15 +7042,21 @@
             <span class="prelude-val">Some</span>(ast::Binding::BuiltIn(b)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(b)),
             <span class="prelude-val">Some</span>(ast::Binding::Location {
                 location,
-                second_blend_source,
                 interpolation,
                 sampling,
+                blend_src,
             }) =&gt; {
+                <span class="kw">let </span>blend_src = <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_src) = blend_src {
+                    <span class="prelude-val">Some</span>(<span class="self">self</span>.const_u32(blend_src, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>.<span class="number">0</span>)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
                 <span class="kw">let </span><span class="kw-2">mut </span>binding = <span class="kw">crate</span>::Binding::Location {
                     location: <span class="self">self</span>.const_u32(location, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>.<span class="number">0</span>,
-                    second_blend_source,
                     interpolation,
                     sampling,
+                    blend_src,
                 };
                 binding.apply_default_interpolation(<span class="kw-2">&amp;</span>ctx.module.types[ty].inner);
                 <span class="prelude-val">Some</span>(binding)

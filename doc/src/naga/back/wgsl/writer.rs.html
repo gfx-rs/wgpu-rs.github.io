@@ -1905,7 +1905,36 @@
 <a href="#1904" id="1904">1904</a>
 <a href="#1905" id="1905">1905</a>
 <a href="#1906" id="1906">1906</a>
-<a href="#1907" id="1907">1907</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -1937,7 +1966,7 @@
     Invariant,
     Interpolate(<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Interpolation&gt;, <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Sampling&gt;),
     Location(u32),
-    SecondBlendSource,
+    BlendSrc(u32),
     Stage(ShaderStage),
     WorkGroupSize([u32; <span class="number">3</span>]),
 }
@@ -2033,6 +2062,9 @@
         }
 
         <span class="self">self</span>.reset(module);
+
+        <span class="comment">// Write all needed directives.
+        </span><span class="self">self</span>.write_enable_dual_source_blending_if_needed(module)<span class="question-mark">?</span>;
 
         <span class="comment">// Write all structs
         </span><span class="kw">for </span>(handle, ty) <span class="kw">in </span>module.types.iter() {
@@ -2226,7 +2258,7 @@
         <span class="kw">for </span>attribute <span class="kw">in </span>attributes {
             <span class="kw">match </span><span class="kw-2">*</span>attribute {
                 Attribute::Location(id) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"@location({id}) "</span>)<span class="question-mark">?</span>,
-                Attribute::SecondBlendSource =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"@second_blend_source "</span>)<span class="question-mark">?</span>,
+                Attribute::BlendSrc(blend_src) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"@blend_src({blend_src}) "</span>)<span class="question-mark">?</span>,
                 Attribute::BuiltIn(builtin_attrib) =&gt; {
                     <span class="kw">let </span>builtin = builtin_attrib.to_wgsl_if_implemented()<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"@builtin({builtin}) "</span>)<span class="question-mark">?</span>;
@@ -2267,6 +2299,32 @@
                 }
             };
         }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Writes all the necessary directives out
+    </span><span class="kw">fn </span>write_enable_dual_source_blending_if_needed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module) -&gt; BackendResult {
+        <span class="comment">// Check for dual source blending.
+        </span><span class="kw">if </span>module.types.iter().any(|(_handle, ty)| {
+            <span class="kw">if let </span>TypeInner::Struct { <span class="kw-2">ref </span>members, .. } = ty.inner {
+                members.iter().any(|member| {
+                    member.binding.as_ref().is_some_and(|binding| {
+                        <span class="macro">matches!</span>(
+                            binding,
+                            <span class="kw-2">&amp;</span><span class="kw">crate</span>::Binding::Location {
+                                blend_src: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                                ..
+                            }
+                        )
+                    })
+                })
+            } <span class="kw">else </span>{
+                <span class="bool-val">false
+            </span>}
+        }) {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"enable dual_source_blending;"</span>)<span class="question-mark">?</span>;
+        }
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -3795,7 +3853,7 @@
             location,
             interpolation,
             sampling,
-            second_blend_source: <span class="bool-val">false</span>,
+            blend_src: <span class="prelude-val">None</span>,
         } =&gt; <span class="macro">vec!</span>[
             Attribute::Location(location),
             Attribute::Interpolate(interpolation, sampling),
@@ -3804,10 +3862,10 @@
             location,
             interpolation,
             sampling,
-            second_blend_source: <span class="bool-val">true</span>,
+            blend_src: <span class="prelude-val">Some</span>(blend_src),
         } =&gt; <span class="macro">vec!</span>[
             Attribute::Location(location),
-            Attribute::SecondBlendSource,
+            Attribute::BlendSrc(blend_src),
             Attribute::Interpolate(interpolation, sampling),
         ],
     }
