@@ -1082,22 +1082,7 @@
 <a href="#1081" id="1081">1081</a>
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a>
-<a href="#1085" id="1085">1085</a>
-<a href="#1086" id="1086">1086</a>
-<a href="#1087" id="1087">1087</a>
-<a href="#1088" id="1088">1088</a>
-<a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a>
-<a href="#1093" id="1093">1093</a>
-<a href="#1094" id="1094">1094</a>
-<a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a>
-<a href="#1097" id="1097">1097</a>
-<a href="#1098" id="1098">1098</a>
-<a href="#1099" id="1099">1099</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1084" id="1084">1084</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     boxed::Box,
     string::String,
@@ -1789,17 +1774,10 @@
         hal_device: hal::DynOpenDevice,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         instance_flags: wgt::InstanceFlags,
-        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;Device&gt;, Arc&lt;Queue&gt;), RequestDeviceError&gt; {
         <span class="macro">api_log!</span>(<span class="string">"Adapter::create_device"</span>);
 
-        <span class="kw">let </span>device = Device::new(
-            hal_device.device,
-            <span class="self">self</span>,
-            desc,
-            trace_dir_name,
-            instance_flags,
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>device = Device::new(hal_device.device, <span class="self">self</span>, desc, instance_flags)<span class="question-mark">?</span>;
         <span class="kw">let </span>device = Arc::new(device);
 
         <span class="kw">let </span>queue = Queue::new(device.clone(), hal_device.queue)<span class="question-mark">?</span>;
@@ -1814,7 +1792,6 @@
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         instance_flags: wgt::InstanceFlags,
-        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;Device&gt;, Arc&lt;Queue&gt;), RequestDeviceError&gt; {
         <span class="comment">// Verify all features were exposed by the adapter
         </span><span class="kw">if </span>!<span class="self">self</span>.raw.features.contains(desc.required_features) {
@@ -1861,7 +1838,7 @@
         }
         .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.create_device_and_queue_from_hal(open, desc, instance_flags, trace_dir_name)
+        <span class="self">self</span>.create_device_and_queue_from_hal(open, desc, instance_flags)
     }
 }
 
@@ -2138,7 +2115,6 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter_id: AdapterId,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
-        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         device_id_in: <span class="prelude-ty">Option</span>&lt;DeviceId&gt;,
         queue_id_in: <span class="prelude-ty">Option</span>&lt;QueueId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(DeviceId, QueueId), RequestDeviceError&gt; {
@@ -2149,8 +2125,7 @@
         <span class="kw">let </span>queue_fid = <span class="self">self</span>.hub.queues.prepare(queue_id_in);
 
         <span class="kw">let </span>adapter = <span class="self">self</span>.hub.adapters.get(adapter_id);
-        <span class="kw">let </span>(device, queue) =
-            adapter.create_device_and_queue(desc, <span class="self">self</span>.instance.flags, trace_dir_name)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(device, queue) = adapter.create_device_and_queue(desc, <span class="self">self</span>.instance.flags)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device_id = device_fid.assign(device);
         <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);
@@ -2170,7 +2145,6 @@
         adapter_id: AdapterId,
         hal_device: hal::DynOpenDevice,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
-        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         device_id_in: <span class="prelude-ty">Option</span>&lt;DeviceId&gt;,
         queue_id_in: <span class="prelude-ty">Option</span>&lt;QueueId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(DeviceId, QueueId), RequestDeviceError&gt; {
@@ -2180,12 +2154,8 @@
         <span class="kw">let </span>queues_fid = <span class="self">self</span>.hub.queues.prepare(queue_id_in);
 
         <span class="kw">let </span>adapter = <span class="self">self</span>.hub.adapters.get(adapter_id);
-        <span class="kw">let </span>(device, queue) = adapter.create_device_and_queue_from_hal(
-            hal_device,
-            desc,
-            <span class="self">self</span>.instance.flags,
-            trace_dir_name,
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>(device, queue) =
+            adapter.create_device_and_queue_from_hal(hal_device, desc, <span class="self">self</span>.instance.flags)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device_id = devices_fid.assign(device);
         <span class="macro">resource_log!</span>(<span class="string">"Created Device {:?}"</span>, device_id);

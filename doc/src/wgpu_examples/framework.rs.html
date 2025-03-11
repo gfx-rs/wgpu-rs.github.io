@@ -894,18 +894,18 @@
         <span class="comment">// Make sure we use the texture resolution limits from the adapter, so we can support images the size of the surface.
         </span><span class="kw">let </span>needed_limits = E::required_limits().using_resolution(adapter.limits());
 
-        <span class="kw">let </span>trace_dir = std::env::var(<span class="string">"WGPU_TRACE"</span>);
         <span class="kw">let </span>(device, queue) = adapter
-            .request_device(
-                <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
-                    label: <span class="prelude-val">None</span>,
-                    required_features: (E::optional_features() &amp; adapter.features())
-                        | E::required_features(),
-                    required_limits: needed_limits,
-                    memory_hints: wgpu::MemoryHints::MemoryUsage,
+            .request_device(<span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
+                label: <span class="prelude-val">None</span>,
+                required_features: (E::optional_features() &amp; adapter.features())
+                    | E::required_features(),
+                required_limits: needed_limits,
+                memory_hints: wgpu::MemoryHints::MemoryUsage,
+                trace: <span class="kw">match </span>std::env::var_os(<span class="string">"WGPU_TRACE"</span>) {
+                    <span class="prelude-val">Some</span>(path) =&gt; wgpu::Trace::Directory(path.into()),
+                    <span class="prelude-val">None </span>=&gt; wgpu::Trace::Off,
                 },
-                trace_dir.ok().as_ref().map(std::path::Path::new),
-            )
+            })
             .<span class="kw">await
             </span>.expect(<span class="string">"Unable to find a suitable GPU adapter!"</span>);
 

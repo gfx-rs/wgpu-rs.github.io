@@ -3614,7 +3614,15 @@
 <a href="#3613" id="3613">3613</a>
 <a href="#3614" id="3614">3614</a>
 <a href="#3615" id="3615">3615</a>
-<a href="#3616" id="3616">3616</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3616" id="3616">3616</a>
+<a href="#3617" id="3617">3617</a>
+<a href="#3618" id="3618">3618</a>
+<a href="#3619" id="3619">3619</a>
+<a href="#3620" id="3620">3620</a>
+<a href="#3621" id="3621">3621</a>
+<a href="#3622" id="3622">3622</a>
+<a href="#3623" id="3623">3623</a>
+<a href="#3624" id="3624">3624</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::Borrowed,
     boxed::Box,
     format,
@@ -3720,17 +3728,21 @@
         adapter: <span class="kw-2">&amp;</span>CoreAdapter,
         hal_device: hal::OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::DeviceDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-        trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(CoreDevice, CoreQueue), <span class="kw">crate</span>::RequestDeviceError&gt; {
-        <span class="kw">if </span>trace_dir.is_some() {
-            <span class="macro">log::error!</span>(<span class="string">"Feature 'trace' has been removed temporarily, see https://github.com/gfx-rs/wgpu/issues/5974"</span>);
+        <span class="kw">if </span>!<span class="macro">matches!</span>(desc.trace, wgt::Trace::Off) {
+            <span class="macro">log::error!</span>(
+                <span class="string">"
+                Feature 'trace' has been removed temporarily; \
+                see https://github.com/gfx-rs/wgpu/issues/5974. \
+                The `trace` parameter will have no effect."
+            </span>);
         }
+
         <span class="kw">let </span>(device_id, queue_id) = <span class="kw">unsafe </span>{
             <span class="self">self</span>.<span class="number">0</span>.create_device_from_hal(
                 adapter.id,
                 hal_device.into(),
                 <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-                <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
             )
@@ -4492,15 +4504,19 @@
     <span class="kw">fn </span>request_device(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::DeviceDescriptor&lt;<span class="lifetime">'_</span>&gt;,
-        trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>dispatch::RequestDeviceFuture&gt;&gt; {
-        <span class="kw">if </span>trace_dir.is_some() {
-            <span class="macro">log::error!</span>(<span class="string">"Feature 'trace' has been removed temporarily, see https://github.com/gfx-rs/wgpu/issues/5974"</span>);
+        <span class="kw">if </span>!<span class="macro">matches!</span>(desc.trace, wgt::Trace::Off) {
+            <span class="macro">log::error!</span>(
+                <span class="string">"
+                Feature 'trace' has been removed temporarily; \
+                see https://github.com/gfx-rs/wgpu/issues/5974. \
+                The `trace` parameter will have no effect."
+            </span>);
         }
+
         <span class="kw">let </span>res = <span class="self">self</span>.context.<span class="number">0</span>.adapter_request_device(
             <span class="self">self</span>.id,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-            <span class="prelude-val">None</span>,
             <span class="prelude-val">None</span>,
             <span class="prelude-val">None</span>,
         );

@@ -7498,7 +7498,31 @@
 <a href="#7497" id="7497">7497</a>
 <a href="#7498" id="7498">7498</a>
 <a href="#7499" id="7499">7499</a>
-<a href="#7500" id="7500">7500</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7500" id="7500">7500</a>
+<a href="#7501" id="7501">7501</a>
+<a href="#7502" id="7502">7502</a>
+<a href="#7503" id="7503">7503</a>
+<a href="#7504" id="7504">7504</a>
+<a href="#7505" id="7505">7505</a>
+<a href="#7506" id="7506">7506</a>
+<a href="#7507" id="7507">7507</a>
+<a href="#7508" id="7508">7508</a>
+<a href="#7509" id="7509">7509</a>
+<a href="#7510" id="7510">7510</a>
+<a href="#7511" id="7511">7511</a>
+<a href="#7512" id="7512">7512</a>
+<a href="#7513" id="7513">7513</a>
+<a href="#7514" id="7514">7514</a>
+<a href="#7515" id="7515">7515</a>
+<a href="#7516" id="7516">7516</a>
+<a href="#7517" id="7517">7517</a>
+<a href="#7518" id="7518">7518</a>
+<a href="#7519" id="7519">7519</a>
+<a href="#7520" id="7520">7520</a>
+<a href="#7521" id="7521">7521</a>
+<a href="#7522" id="7522">7522</a>
+<a href="#7523" id="7523">7523</a>
+<a href="#7524" id="7524">7524</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -8648,6 +8672,9 @@
     </span><span class="kw">pub </span>required_limits: Limits,
     <span class="doccomment">/// Hints for memory allocation strategies.
     </span><span class="kw">pub </span>memory_hints: MemoryHints,
+    <span class="doccomment">/// Whether API tracing for debugging is enabled,
+    /// and where the trace is written if so.
+    </span><span class="kw">pub </span>trace: Trace,
 }
 
 <span class="kw">impl</span>&lt;L&gt; DeviceDescriptor&lt;L&gt; {
@@ -8659,8 +8686,29 @@
             required_features: <span class="self">self</span>.required_features,
             required_limits: <span class="self">self</span>.required_limits.clone(),
             memory_hints: <span class="self">self</span>.memory_hints.clone(),
+            trace: <span class="self">self</span>.trace.clone(),
         }
     }
+}
+
+<span class="doccomment">/// Controls API call tracing and specifies where the trace is written.
+///
+/// **Note:** Tracing is currently unavailable.
+/// See [issue 5974](https://github.com/gfx-rs/wgpu/issues/5974) for updates.
+</span><span class="attr">#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+</span><span class="comment">// This enum must be non-exhaustive so that enabling the "trace" feature is not a semver break.
+</span><span class="attr">#[non_exhaustive]
+</span><span class="kw">pub enum </span>Trace {
+    <span class="doccomment">/// Tracing disabled.
+    </span><span class="attr">#[default]
+    </span>Off,
+
+    <span class="doccomment">/// Tracing enabled.
+    </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+    </span><span class="comment">// This must be owned rather than `&amp;'a Path`, because if it were that, then the lifetime
+    // parameter would be unused when the "trace" feature is disabled, which is prohibited.
+    </span>Directory(std::path::PathBuf),
 }
 
 <span class="macro">bitflags::bitflags!</span> {

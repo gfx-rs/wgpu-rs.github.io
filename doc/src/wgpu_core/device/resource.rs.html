@@ -3838,7 +3838,24 @@
 <a href="#3837" id="3837">3837</a>
 <a href="#3838" id="3838">3838</a>
 <a href="#3839" id="3839">3839</a>
-<a href="#3840" id="3840">3840</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3840" id="3840">3840</a>
+<a href="#3841" id="3841">3841</a>
+<a href="#3842" id="3842">3842</a>
+<a href="#3843" id="3843">3843</a>
+<a href="#3844" id="3844">3844</a>
+<a href="#3845" id="3845">3845</a>
+<a href="#3846" id="3846">3846</a>
+<a href="#3847" id="3847">3847</a>
+<a href="#3848" id="3848">3848</a>
+<a href="#3849" id="3849">3849</a>
+<a href="#3850" id="3850">3850</a>
+<a href="#3851" id="3851">3851</a>
+<a href="#3852" id="3852">3852</a>
+<a href="#3853" id="3853">3853</a>
+<a href="#3854" id="3854">3854</a>
+<a href="#3855" id="3855">3855</a>
+<a href="#3856" id="3856">3856</a>
+<a href="#3857" id="3857">3857</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -4040,13 +4057,27 @@
         raw_device: Box&lt;<span class="kw">dyn </span>hal::DynDevice&gt;,
         adapter: <span class="kw-2">&amp;</span>Arc&lt;Adapter&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
-        trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         instance_flags: wgt::InstanceFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DeviceError&gt; {
         <span class="attr">#[cfg(not(feature = <span class="string">"trace"</span>))]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = trace_dir_name {
-            <span class="macro">log::error!</span>(<span class="string">"Feature 'trace' is not enabled"</span>);
-        }
+        </span><span class="kw">match </span><span class="kw-2">&amp;</span>desc.trace {
+            wgt::Trace::Off =&gt; {}
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">log::error!</span>(<span class="string">"wgpu-core feature 'trace' is not enabled"</span>);
+            }
+        };
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+        </span><span class="kw">let </span>trace_dir_name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::PathBuf&gt; = <span class="kw">match </span><span class="kw-2">&amp;</span>desc.trace {
+            wgt::Trace::Off =&gt; <span class="prelude-val">None</span>,
+            wgt::Trace::Directory(d) =&gt; <span class="prelude-val">Some</span>(d),
+            <span class="comment">// The enum is non_exhaustive, so we must have a fallback arm (that should be
+            // unreachable in practice).
+            </span>t =&gt; {
+                <span class="macro">log::error!</span>(<span class="string">"unimplemented wgpu_types::Trace variant {t:?}"</span>);
+                <span class="prelude-val">None
+            </span>}
+        };
+
         <span class="kw">let </span>fence = <span class="kw">unsafe </span>{ raw_device.create_fence() }.map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>command_allocator = command::CommandAllocator::new();
@@ -4112,16 +4143,19 @@
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span>trace: Mutex::new(
                 rank::DEVICE_TRACE,
-                trace_dir_name.and_then(|dir_path_name| <span class="kw">match </span>trace::Trace::new(dir_path_name) {
+                trace_dir_name.and_then(|path| <span class="kw">match </span>trace::Trace::new(path.clone()) {
                     <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>trace) =&gt; {
                         trace.add(trace::Action::Init {
-                            desc: desc.clone(),
+                            desc: wgt::DeviceDescriptor {
+                                trace: wgt::Trace::Off,
+                                ..desc.clone()
+                            },
                             backend: adapter.backend(),
                         });
                         <span class="prelude-val">Some</span>(trace)
                     }
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">log::error!</span>(<span class="string">"Unable to start a trace in '{dir_path_name:?}': {e}"</span>);
+                        <span class="macro">log::error!</span>(<span class="string">"Unable to start a trace in '{path:?}': {e}"</span>);
                         <span class="prelude-val">None
                     </span>}
                 }),
