@@ -3855,7 +3855,11 @@
 <a href="#3854" id="3854">3854</a>
 <a href="#3855" id="3855">3855</a>
 <a href="#3856" id="3856">3856</a>
-<a href="#3857" id="3857">3857</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3857" id="3857">3857</a>
+<a href="#3858" id="3858">3858</a>
+<a href="#3859" id="3859">3859</a>
+<a href="#3860" id="3860">3860</a>
+<a href="#3861" id="3861">3861</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -5043,9 +5047,8 @@
             }
         };
 
-        <span class="kw">let </span>allowed_format_usages = <span class="self">self
-            </span>.describe_format_features(resolved_format)<span class="question-mark">?
-            </span>.allowed_usages;
+        <span class="kw">let </span>format_features = <span class="self">self</span>.describe_format_features(resolved_format)<span class="question-mark">?</span>;
+        <span class="kw">let </span>allowed_format_usages = format_features.allowed_usages;
         <span class="kw">if </span>resolved_usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT)
             &amp;&amp; !allowed_format_usages.contains(wgt::TextureUsages::RENDER_ATTACHMENT)
         {
@@ -5221,6 +5224,11 @@
 
         <span class="comment">// filter the usages based on the other criteria
         </span><span class="kw">let </span>usage = {
+            <span class="kw">let </span>resolved_hal_usage = conv::map_texture_usage(
+                resolved_usage,
+                resolved_format.into(),
+                format_features.flags,
+            );
             <span class="kw">let </span>mask_copy = !(wgt::TextureUses::COPY_SRC | wgt::TextureUses::COPY_DST);
             <span class="kw">let </span>mask_dimension = <span class="kw">match </span>resolved_dimension {
                 TextureViewDimension::Cube | TextureViewDimension::CubeArray =&gt; {
@@ -5239,7 +5247,7 @@
             } <span class="kw">else </span>{
                 wgt::TextureUses::RESOURCE
             };
-            texture.hal_usage &amp; mask_copy &amp; mask_dimension &amp; mask_mip_level
+            resolved_hal_usage &amp; mask_copy &amp; mask_dimension &amp; mask_mip_level
         };
 
         <span class="comment">// use the combined depth-stencil format for the view
