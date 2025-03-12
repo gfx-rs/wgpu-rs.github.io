@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Attribute","Indirection"],"fn":["map_binding_to_attribute"],"struct":["Writer","WriterFlags"],"type":["BackendResult"]};
+window.SIDEBAR_ITEMS = {"enum":["Attribute","Indirection"],"fn":["map_binding_to_attribute"],"struct":["Writer","WriterFlags","WriterTypeContext"],"type":["BackendResult"]};
