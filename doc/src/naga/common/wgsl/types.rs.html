@@ -350,21 +350,25 @@
 
                 <span class="kw">let </span>dim_str = dim.to_wgsl();
                 <span class="kw">let </span>arrayed_str = <span class="kw">if </span>arrayed { <span class="string">"_array" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                <span class="kw">let </span>(class_str, multisampled_str, format_str, storage_str) = <span class="kw">match </span>class {
-                    Ic::Sampled { kind, multi } =&gt; (
-                        <span class="string">""</span>,
-                        <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>},
-                        unwrap_to_wgsl(<span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>}),
-                        <span class="string">""</span>,
-                    ),
-                    Ic::Depth { multi } =&gt; {
-                        (<span class="string">"depth_"</span>, <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>}, <span class="string">""</span>, <span class="string">""</span>)
+                <span class="kw">match </span>class {
+                    Ic::Sampled { kind, multi } =&gt; {
+                        <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+                        <span class="kw">let </span>type_str = unwrap_to_wgsl(<span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>});
+                        <span class="macro">write!</span>(
+                            out,
+                            <span class="string">"texture_{multisampled_str}{dim_str}{arrayed_str}&lt;{type_str}&gt;"
+                        </span>)<span class="question-mark">?</span>;
                     }
-                    Ic::Storage { format, access } =&gt; (
-                        <span class="string">"storage_"</span>,
-                        <span class="string">""</span>,
-                        format.to_wgsl(),
-                        <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
+                    Ic::Depth { multi } =&gt; {
+                        <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+                        <span class="macro">write!</span>(
+                            out,
+                            <span class="string">"texture_depth_{multisampled_str}{dim_str}{arrayed_str}"
+                        </span>)<span class="question-mark">?</span>;
+                    }
+                    Ic::Storage { format, access } =&gt; {
+                        <span class="kw">let </span>format_str = format.to_wgsl();
+                        <span class="kw">let </span>access_str = <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
                             <span class="string">",atomic"
                         </span>} <span class="kw">else if </span>access
                             .contains(<span class="kw">crate</span>::StorageAccess::LOAD | <span class="kw">crate</span>::StorageAccess::STORE)
@@ -374,16 +378,12 @@
                             <span class="string">",read"
                         </span>} <span class="kw">else </span>{
                             <span class="string">",write"
-                        </span>},
-                    ),
-                };
-                <span class="macro">write!</span>(
-                    out,
-                    <span class="string">"texture_{class_str}{multisampled_str}{dim_str}{arrayed_str}"
-                </span>)<span class="question-mark">?</span>;
-
-                <span class="kw">if </span>!format_str.is_empty() {
-                    <span class="macro">write!</span>(out, <span class="string">"&lt;{format_str}{storage_str}&gt;"</span>)<span class="question-mark">?</span>;
+                        </span>};
+                        <span class="macro">write!</span>(
+                            out,
+                            <span class="string">"texture_storage_{dim_str}{arrayed_str}&lt;{format_str}{access_str}&gt;"
+                        </span>)<span class="question-mark">?</span>;
+                    }
                 }
             }
             TypeInner::Scalar(scalar) =&gt; {
