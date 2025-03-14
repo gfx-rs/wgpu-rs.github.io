@@ -258,7 +258,7 @@
 <span class="kw">mod </span>init;
 <span class="kw">mod </span>texture_blitter;
 
-<span class="kw">use </span>alloc::{borrow::Cow, format, string::String, sync::Arc, vec};
+<span class="kw">use </span>alloc::{borrow::Cow, format, string::String, vec};
 <span class="kw">use </span>core::ptr::copy_nonoverlapping;
 
 <span class="kw">pub use </span>belt::StagingBelt;
@@ -335,7 +335,7 @@
 
 <span class="doccomment">/// CPU accessible buffer used to download data back from the GPU.
 </span><span class="kw">pub struct </span>DownloadBuffer {
-    _gpu_buffer: Arc&lt;<span class="kw">super</span>::Buffer&gt;,
+    _gpu_buffer: <span class="kw">super</span>::Buffer,
     mapped_range: dispatch::DispatchBufferMappedRange,
 }
 
@@ -352,12 +352,12 @@
             <span class="prelude-val">None </span>=&gt; buffer.buffer.map_context.lock().total_size - buffer.offset,
         };
 
-        <span class="kw">let </span>download = Arc::new(device.create_buffer(<span class="kw-2">&amp;</span><span class="kw">super</span>::BufferDescriptor {
+        <span class="kw">let </span>download = device.create_buffer(<span class="kw-2">&amp;</span><span class="kw">super</span>::BufferDescriptor {
             size,
             usage: <span class="kw">super</span>::BufferUsages::COPY_DST | <span class="kw">super</span>::BufferUsages::MAP_READ,
             mapped_at_creation: <span class="bool-val">false</span>,
             label: <span class="prelude-val">None</span>,
-        }));
+        });
 
         <span class="kw">let </span><span class="kw-2">mut </span>encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span><span class="kw">super</span>::CommandEncoderDescriptor { label: <span class="prelude-val">None </span>});
