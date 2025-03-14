@@ -153,7 +153,41 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::num::NonZeroU32;
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::num::NonZeroU32;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -185,12 +219,42 @@
     }
 }
 
-<span class="doccomment">/// Describes how the vertex buffer is interpreted.
+<span class="doccomment">/// Specifies an interpretation of the bytes of a vertex buffer as vertex attributes.
 ///
-/// For use in [`VertexState`].
+/// Use this in a [`RenderPipelineDescriptor`] to describe the format of the vertex buffers that
+/// are passed to [`RenderPass::set_vertex_buffer()`].
 ///
 /// Corresponds to [WebGPU `GPUVertexBufferLayout`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuvertexbufferlayout).
+///
+/// # Example
+///
+/// The following example defines a `struct` with three fields,
+/// and a [`VertexBufferLayout`] that contains [`VertexAttribute`]s for each field,
+/// using the [`vertex_attr_array!`] macro to compute attribute offsets:
+///
+/// ```
+/// #[repr(C, packed)]
+/// struct Vertex {
+///     foo: [f32; 2],
+///     bar: f32,
+///     baz: [u16; 4],
+/// }
+///
+/// impl Vertex {
+///     /// Layout to use with a buffer whose contents are a `[Vertex]`.
+///     pub const LAYOUT: wgpu::VertexBufferLayout&lt;'static&gt; = wgpu::VertexBufferLayout {
+///         array_stride: size_of::&lt;Self&gt;() as wgpu::BufferAddress,
+///         step_mode: wgpu::VertexStepMode::Vertex,
+///         attributes: &amp;wgpu::vertex_attr_array![
+///             0 =&gt; Float32x2,
+///             1 =&gt; Float32,
+///             2 =&gt; Uint16x4,
+///         ],
+///     };
+/// }
+///
+/// # assert_eq!(Vertex::LAYOUT.attributes[2].offset, Vertex::LAYOUT.array_stride - 2 * 4);
 </span><span class="attr">#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The stride, in bytes, between elements of this buffer (between vertices).
@@ -226,7 +290,11 @@
     ///
     /// This implements `Default`, and for most users can be set to `Default::default()`
     </span><span class="kw">pub </span>compilation_options: PipelineCompilationOptions&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// The format of any vertex buffers used with this pipeline.
+    <span class="doccomment">/// The format of any vertex buffers used with this pipeline via
+    /// [`RenderPass::set_vertex_buffer()`].
+    ///
+    /// The attribute locations and types specified in this layout must match the
+    /// locations and types of the inputs to the `entry_point` function.`
     </span><span class="kw">pub </span>buffers: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[VertexBufferLayout&lt;<span class="lifetime">'a</span>&gt;],
 }
 <span class="attr">#[cfg(send_sync)]
