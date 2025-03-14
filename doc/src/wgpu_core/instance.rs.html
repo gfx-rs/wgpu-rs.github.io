@@ -1082,15 +1082,75 @@
 <a href="#1081" id="1081">1081</a>
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     boxed::Box,
     string::String,
     sync::Arc,
+    vec,
     vec::Vec,
 };
 
 <span class="kw">use </span>hashbrown::HashMap;
+<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
     api_log, api_log_debug,
@@ -1105,8 +1165,6 @@
 };
 
 <span class="kw">use </span>wgt::{Backend, Backends, PowerPreference};
-
-<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">pub type </span>RequestAdapterOptions = wgt::RequestAdapterOptions&lt;SurfaceId&gt;;
 
@@ -1145,64 +1203,96 @@
 <span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Instance {
     <span class="attr">#[allow(dead_code)]
-    </span><span class="kw">pub </span>name: String,
-    <span class="doccomment">/// List of instances per backend.
+    </span>name: String,
+
+    <span class="doccomment">/// List of instances per `wgpu-hal` backend.
     ///
     /// The ordering in this list implies prioritization and needs to be preserved.
-    </span><span class="kw">pub </span>instance_per_backend: Vec&lt;(Backend, Box&lt;<span class="kw">dyn </span>hal::DynInstance&gt;)&gt;,
-    <span class="kw">pub </span>flags: wgt::InstanceFlags,
+    </span>instance_per_backend: Vec&lt;(Backend, Box&lt;<span class="kw">dyn </span>hal::DynInstance&gt;)&gt;,
+
+    <span class="doccomment">/// The backends that were requested by the user.
+    </span>requested_backends: Backends,
+
+    <span class="doccomment">/// The backends that we could have attempted to obtain from `wgpu-hal` —
+    /// those for which support is compiled in, currently.
+    ///
+    /// The union of this and `requested_backends` is the set of backends that would be used,
+    /// independent of whether accessing the drivers/hardware for them succeeds.
+    /// To obtain the set of backends actually in use by this instance, check
+    /// `instance_per_backend` instead.
+    </span>supported_backends: Backends,
+
+    flags: wgt::InstanceFlags,
 }
 
 <span class="kw">impl </span>Instance {
     <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span>str, instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
-        <span class="kw">fn </span>init&lt;A: HalApi&gt;(
-            <span class="kw">_</span>: A,
-            instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor,
-            instance_per_backend: <span class="kw-2">&amp;mut </span>Vec&lt;(Backend, Box&lt;<span class="kw">dyn </span>hal::DynInstance&gt;)&gt;,
-        ) {
-            <span class="kw">if </span>instance_desc.backends.contains(A::VARIANT.into()) {
-                <span class="kw">let </span>hal_desc = hal::InstanceDescriptor {
-                    name: <span class="string">"wgpu"</span>,
-                    flags: instance_desc.flags,
-                    backend_options: instance_desc.backend_options.clone(),
-                };
-
-                <span class="kw">use </span>hal::Instance <span class="kw">as _</span>;
-                <span class="kw">match unsafe </span>{ A::Instance::init(<span class="kw-2">&amp;</span>hal_desc) } {
-                    <span class="prelude-val">Ok</span>(instance) =&gt; {
-                        <span class="macro">log::debug!</span>(<span class="string">"Instance::new: created {:?} backend"</span>, A::VARIANT);
-                        instance_per_backend.push((A::VARIANT, Box::new(instance)));
-                    }
-                    <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="macro">log::debug!</span>(
-                            <span class="string">"Instance::new: failed to create {:?} backend: {:?}"</span>,
-                            A::VARIANT,
-                            err
-                        );
-                    }
-                }
-            } <span class="kw">else </span>{
-                <span class="macro">log::trace!</span>(<span class="string">"Instance::new: backend {:?} not requested"</span>, A::VARIANT);
-            }
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>instance_per_backend = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
+            name: name.to_owned(),
+            instance_per_backend: Vec::new(),
+            requested_backends: instance_desc.backends,
+            supported_backends: Backends::empty(),
+            flags: instance_desc.flags,
+        };
 
         <span class="attr">#[cfg(vulkan)]
-        </span>init(hal::api::Vulkan, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
+        </span>this.try_add_hal(hal::api::Vulkan, instance_desc);
         <span class="attr">#[cfg(metal)]
-        </span>init(hal::api::Metal, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
+        </span>this.try_add_hal(hal::api::Metal, instance_desc);
         <span class="attr">#[cfg(dx12)]
-        </span>init(hal::api::Dx12, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
+        </span>this.try_add_hal(hal::api::Dx12, instance_desc);
         <span class="attr">#[cfg(gles)]
-        </span>init(hal::api::Gles, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
+        </span>this.try_add_hal(hal::api::Gles, instance_desc);
         <span class="attr">#[cfg(feature = <span class="string">"noop"</span>)]
-        </span>init(hal::api::Noop, instance_desc, <span class="kw-2">&amp;mut </span>instance_per_backend);
+        </span>this.try_add_hal(hal::api::Noop, instance_desc);
 
+        this
+    }
+
+    <span class="doccomment">/// Helper for `Instance::new()`; attempts to add a single `wgpu-hal` backend to this instance.
+    </span><span class="kw">fn </span>try_add_hal&lt;A: HalApi&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: A, instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) {
+        <span class="comment">// Whether or not the backend was requested, and whether or not it succeeds,
+        // note that we *could* try it.
+        </span><span class="self">self</span>.supported_backends |= A::VARIANT.into();
+
+        <span class="kw">if </span>!instance_desc.backends.contains(A::VARIANT.into()) {
+            <span class="macro">log::trace!</span>(<span class="string">"Instance::new: backend {:?} not requested"</span>, A::VARIANT);
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let </span>hal_desc = hal::InstanceDescriptor {
+            name: <span class="string">"wgpu"</span>,
+            flags: <span class="self">self</span>.flags,
+            backend_options: instance_desc.backend_options.clone(),
+        };
+
+        <span class="kw">use </span>hal::Instance <span class="kw">as _</span>;
+        <span class="kw">match unsafe </span>{ A::Instance::init(<span class="kw-2">&amp;</span>hal_desc) } {
+            <span class="prelude-val">Ok</span>(instance) =&gt; {
+                <span class="macro">log::debug!</span>(<span class="string">"Instance::new: created {:?} backend"</span>, A::VARIANT);
+                <span class="self">self</span>.instance_per_backend
+                    .push((A::VARIANT, Box::new(instance)));
+            }
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="macro">log::debug!</span>(
+                    <span class="string">"Instance::new: failed to create {:?} backend: {:?}"</span>,
+                    A::VARIANT,
+                    err
+                );
+            }
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_hal_instance&lt;A: HalApi&gt;(
+        name: String,
+        hal_instance: &lt;A <span class="kw">as </span>hal::Api&gt;::Instance,
+    ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            name: name.to_owned(),
-            instance_per_backend,
-            flags: instance_desc.flags,
+            name,
+            instance_per_backend: <span class="macro">vec!</span>[(A::VARIANT, Box::new(hal_instance))],
+            requested_backends: A::VARIANT.into(),
+            supported_backends: A::VARIANT.into(),
+            flags: wgt::InstanceFlags::default(),
         }
     }
 
@@ -1474,25 +1564,40 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span>wgt::RequestAdapterOptions&lt;<span class="kw-2">&amp;</span>Surface&gt;,
         backends: Backends,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, RequestAdapterError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, wgt::RequestAdapterError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Instance::request_adapter"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Instance::request_adapter"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>adapters = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>incompatible_surface_backends = Backends::empty();
+        <span class="kw">let </span><span class="kw-2">mut </span>no_fallback_backends = Backends::empty();
+        <span class="kw">let </span><span class="kw-2">mut </span>no_adapter_backends = Backends::empty();
 
-        <span class="kw">for </span>(backend, instance) <span class="kw">in </span><span class="self">self
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(backend, <span class="kw-2">ref </span>instance) <span class="kw">in </span><span class="self">self
             </span>.instance_per_backend
             .iter()
-            .filter(|(backend, <span class="kw">_</span>)| backends.contains(Backends::from(<span class="kw-2">*</span>backend)))
+            .filter(|&amp;&amp;(backend, <span class="kw">_</span>)| backends.contains(Backends::from(backend)))
         {
             <span class="kw">let </span>compatible_hal_surface = desc
                 .compatible_surface
-                .and_then(|surface| surface.raw(<span class="kw-2">*</span>backend));
+                .and_then(|surface| surface.raw(backend));
+
             <span class="kw">let </span><span class="kw-2">mut </span>backend_adapters =
                 <span class="kw">unsafe </span>{ instance.enumerate_adapters(compatible_hal_surface) };
+            <span class="kw">if </span>backend_adapters.is_empty() {
+                no_adapter_backends |= Backends::from(backend);
+                <span class="comment">// by continuing, we avoid setting the further error bits below
+                </span><span class="kw">continue</span>;
+            }
+
             <span class="kw">if </span>desc.force_fallback_adapter {
                 backend_adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
+                <span class="kw">if </span>backend_adapters.is_empty() {
+                    no_fallback_backends |= Backends::from(backend);
+                    <span class="kw">continue</span>;
+                }
             }
+
             <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = desc.compatible_surface {
                 backend_adapters.retain(|exposed| {
                     <span class="kw">let </span>capabilities = surface.get_capabilities_with_raw(exposed);
@@ -1502,11 +1607,16 @@
                             exposed.info,
                             err
                         );
+                        incompatible_surface_backends |= Backends::from(backend);
                         <span class="bool-val">false
                     </span>} <span class="kw">else </span>{
                         <span class="bool-val">true
                     </span>}
                 });
+                <span class="kw">if </span>backend_adapters.is_empty() {
+                    incompatible_surface_backends |= Backends::from(backend);
+                    <span class="kw">continue</span>;
+                }
             }
             adapters.extend(backend_adapters);
         }
@@ -1566,8 +1676,22 @@
             <span class="kw">let </span>adapter = Adapter::new(adapter);
             <span class="prelude-val">Ok</span>(adapter)
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(RequestAdapterError::NotFound)
+            <span class="prelude-val">Err</span>(wgt::RequestAdapterError::NotFound {
+                supported_backends: <span class="self">self</span>.supported_backends,
+                requested_backends: <span class="self">self</span>.requested_backends,
+                active_backends: <span class="self">self</span>.active_backends(),
+                no_fallback_backends,
+                no_adapter_backends,
+                incompatible_surface_backends,
+            })
         }
+    }
+
+    <span class="kw">fn </span>active_backends(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Backends {
+        <span class="self">self</span>.instance_per_backend
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>(backend, <span class="kw">_</span>)| Backends::from(backend))
+            .collect()
     }
 }
 
@@ -1868,14 +1992,6 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
-#[non_exhaustive]
-</span><span class="kw">pub enum </span>RequestAdapterError {
-    <span class="attr">#[error(<span class="string">"No suitable adapter found"</span>)]
-    </span>NotFound,
-}
-
-<span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>CreateSurfaceError {
     <span class="attr">#[error(<span class="string">"The backend {0} was not enabled on the instance."</span>)]
@@ -2033,7 +2149,7 @@
         desc: <span class="kw-2">&amp;</span>RequestAdapterOptions,
         backends: Backends,
         id_in: <span class="prelude-ty">Option</span>&lt;AdapterId&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;AdapterId, RequestAdapterError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;AdapterId, wgt::RequestAdapterError&gt; {
         <span class="kw">let </span>compatible_surface = desc.compatible_surface.map(|id| <span class="self">self</span>.surfaces.get(id));
         <span class="kw">let </span>desc = wgt::RequestAdapterOptions {
             power_preference: desc.power_preference,

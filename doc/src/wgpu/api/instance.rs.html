@@ -401,7 +401,8 @@
 <a href="#400" id="400">400</a>
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(native)]
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(native)]
 </span><span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>core::future::Future;
 
@@ -639,13 +640,14 @@
     ///
     /// Some options are "soft", so treated as non-mandatory. Others are "hard".
     ///
-    /// If no adapters are found that suffice all the "hard" options, `None` is returned.
+    /// If no adapters are found that satisfy all the "hard" options, an error is returned.
     ///
-    /// A `compatible_surface` is required when targeting WebGL2.
+    /// When targeting WebGL2, a [`compatible_surface`](RequestAdapterOptions::compatible_surface)
+    /// must be specified; using `RequestAdapterOptions::default()` will not succeed.
     </span><span class="kw">pub fn </span>request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Adapter&gt;&gt; + WasmNotSend {
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;Adapter, RequestAdapterError&gt;&gt; + WasmNotSend {
         <span class="kw">let </span>future = <span class="self">self</span>.inner.request_adapter(options);
         <span class="kw">async move </span>{ future.<span class="kw">await</span>.map(|adapter| Adapter { inner: adapter }) }
     }

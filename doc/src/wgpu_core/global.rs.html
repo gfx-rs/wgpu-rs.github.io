@@ -99,13 +99,8 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, boxed::Box, sync::Arc};
-<span class="kw">use </span>core::{fmt, iter};
+<a href="#101" id="101">101</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::ToOwned <span class="kw">as _</span>, sync::Arc};
+<span class="kw">use </span>core::fmt;
 
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
@@ -153,13 +148,8 @@
     </span><span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: HalApi&gt;(name: <span class="kw-2">&amp;</span>str, hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">"Global::new"</span>);
 
-        <span class="kw">let </span>dyn_instance: Box&lt;<span class="kw">dyn </span>hal::DynInstance&gt; = Box::new(hal_instance);
         <span class="self">Self </span>{
-            instance: Instance {
-                name: name.to_owned(),
-                instance_per_backend: iter::once((A::VARIANT, dyn_instance)).collect(),
-                ..Default::default()
-            },
+            instance: Instance::from_hal_instance::&lt;A&gt;(name.to_owned(), hal_instance),
             surfaces: Registry::new(),
             hub: Hub::new(),
         }

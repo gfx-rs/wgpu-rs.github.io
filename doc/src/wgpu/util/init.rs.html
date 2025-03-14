@@ -128,11 +128,11 @@
 </span><span class="kw">pub fn </span>initialize_adapter_from_env(
     instance: <span class="kw-2">&amp;</span>Instance,
     compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
-) -&gt; <span class="prelude-ty">Option</span>&lt;Adapter&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, wgt::RequestAdapterError&gt; {
     <span class="kw">let </span>desired_adapter_name = std::env::var(<span class="string">"WGPU_ADAPTER_NAME"</span>)
         .as_deref()
         .map(str::to_lowercase)
-        .ok()<span class="question-mark">?</span>;
+        .map_err(|<span class="kw">_</span>| wgt::RequestAdapterError::EnvNotSet)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>adapters = instance.enumerate_adapters(<span class="kw">crate</span>::Backends::all());
 
@@ -152,7 +152,7 @@
         }
     }
 
-    <span class="prelude-val">Some</span>(chosen_adapter.expect(<span class="string">"WGPU_ADAPTER_NAME set but no matching adapter found!"</span>))
+    <span class="prelude-val">Ok</span>(chosen_adapter.expect(<span class="string">"WGPU_ADAPTER_NAME set but no matching adapter found!"</span>))
 }
 
 <span class="doccomment">/// Initialize the adapter obeying the `WGPU_ADAPTER_NAME` environment variable.
@@ -160,18 +160,18 @@
 </span><span class="kw">pub fn </span>initialize_adapter_from_env(
     _instance: <span class="kw-2">&amp;</span>Instance,
     _compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
-) -&gt; <span class="prelude-ty">Option</span>&lt;Adapter&gt; {
-    <span class="prelude-val">None
-</span>}
+) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, wgt::RequestAdapterError&gt; {
+    <span class="prelude-val">Err</span>(wgt::RequestAdapterError::EnvNotSet)
+}
 
 <span class="doccomment">/// Initialize the adapter obeying the `WGPU_ADAPTER_NAME` environment variable and if it doesn't exist fall back on a default adapter.
 </span><span class="kw">pub async fn </span>initialize_adapter_from_env_or_default(
     instance: <span class="kw-2">&amp;</span>Instance,
     compatible_surface: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Surface&lt;<span class="lifetime">'_</span>&gt;&gt;,
-) -&gt; <span class="prelude-ty">Option</span>&lt;Adapter&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Adapter, wgt::RequestAdapterError&gt; {
     <span class="kw">match </span>initialize_adapter_from_env(instance, compatible_surface) {
-        <span class="prelude-val">Some</span>(a) =&gt; <span class="prelude-val">Some</span>(a),
-        <span class="prelude-val">None </span>=&gt; {
+        <span class="prelude-val">Ok</span>(a) =&gt; <span class="prelude-val">Ok</span>(a),
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
             instance
                 .request_adapter(<span class="kw-2">&amp;</span>RequestAdapterOptions {
                     power_preference: <span class="kw">crate</span>::PowerPreference::from_env().unwrap_or_default(),
