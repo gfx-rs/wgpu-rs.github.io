@@ -5,59 +5,91 @@
 for writing to <a href="../../struct.Queue.html#method.write_buffer" title="method wgpu::Queue::write_buffer">buffers</a> and <a href="../../struct.Queue.html#method.write_texture" title="method wgpu::Queue::write_texture">textures</a>.
 It can be created along with a <a href="../../struct.Device.html" title="struct wgpu::Device"><code>Device</code></a> by calling <a href="../../struct.Adapter.html#method.request_device" title="method wgpu::Adapter::request_device"><code>Adapter::request_device</code></a>.</p>
 <p>Corresponds to <a href="https://gpuweb.github.io/gpuweb/#gpu-queue">WebGPU <code>GPUQueue</code></a>.</p>
-</div></details><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.inner" class="structfield section-header"><a href="#structfield.inner" class="anchor field">§</a><code>inner: <a class="enum" href="../../dispatch/enum.DispatchQueue.html" title="enum wgpu::dispatch::DispatchQueue">DispatchQueue</a></code></span><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Queue" class="impl"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#92-285">Source</a><a href="#impl-Queue" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="../../struct.Queue.html" title="struct wgpu::Queue">Queue</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.from_custom" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#95-99">Source</a><h4 class="code-header">pub fn <a href="#method.from_custom" class="fn">from_custom</a>&lt;T: <a class="trait" href="../../dispatch/trait.QueueInterface.html" title="trait wgpu::dispatch::QueueInterface">QueueInterface</a>&gt;(queue: T) -&gt; Self</h4></section><span class="item-info"><div class="stab portability">Available on <strong><code>custom</code></strong> only.</div></span></summary><div class="docblock"><p>Creates Queue from custom implementation</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.write_buffer" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#126-128">Source</a><h4 class="code-header">pub fn <a href="#method.write_buffer" class="fn">write_buffer</a>(&amp;self, buffer: &amp;<a class="struct" href="../../struct.Buffer.html" title="struct wgpu::Buffer">Buffer</a>, offset: <a class="type" href="../../type.BufferAddress.html" title="type wgpu::BufferAddress">BufferAddress</a>, data: &amp;[<a class="primitive" href="https://doc.rust-lang.org/1.85.0/std/primitive.u8.html">u8</a>])</h4></section></summary><div class="docblock"><p>Schedule a data write into <code>buffer</code> starting at <code>offset</code>.</p>
-<p>This method fails if <code>data</code> overruns the size of <code>buffer</code> starting at <code>offset</code>.</p>
-<p>This does <em>not</em> submit the transfer to the GPU immediately. Calls to
-<code>write_buffer</code> begin execution only on the next call to
-<a href="../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit</code></a>. To get a set of scheduled transfers started
-immediately, it’s fine to call <code>submit</code> with no command buffers at all:</p>
+</div></details><h2 id="fields" class="fields section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.inner" class="structfield section-header"><a href="#structfield.inner" class="anchor field">§</a><code>inner: <a class="enum" href="../../dispatch/enum.DispatchQueue.html" title="enum wgpu::dispatch::DispatchQueue">DispatchQueue</a></code></span><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Queue" class="impl"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#92-297">Source</a><a href="#impl-Queue" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="../../struct.Queue.html" title="struct wgpu::Queue">Queue</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.from_custom" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#95-99">Source</a><h4 class="code-header">pub fn <a href="#method.from_custom" class="fn">from_custom</a>&lt;T: <a class="trait" href="../../dispatch/trait.QueueInterface.html" title="trait wgpu::dispatch::QueueInterface">QueueInterface</a>&gt;(queue: T) -&gt; Self</h4></section><span class="item-info"><div class="stab portability">Available on <strong><code>custom</code></strong> only.</div></span></summary><div class="docblock"><p>Creates Queue from custom implementation</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.write_buffer" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#140-142">Source</a><h4 class="code-header">pub fn <a href="#method.write_buffer" class="fn">write_buffer</a>(&amp;self, buffer: &amp;<a class="struct" href="../../struct.Buffer.html" title="struct wgpu::Buffer">Buffer</a>, offset: <a class="type" href="../../type.BufferAddress.html" title="type wgpu::BufferAddress">BufferAddress</a>, data: &amp;[<a class="primitive" href="https://doc.rust-lang.org/1.85.0/std/primitive.u8.html">u8</a>])</h4></section></summary><div class="docblock"><p>Copies the bytes of <code>data</code> into <code>buffer</code> starting at <code>offset</code>.</p>
+<p>The data must be written fully in-bounds, that is, <code>offset + data.len() &lt;= buffer.len()</code>.</p>
+<h5 id="performance-considerations"><a class="doc-anchor" href="#performance-considerations">§</a>Performance considerations</h5>
+<ul>
+<li>
+<p>Calls to <code>write_buffer()</code> do <em>not</em> submit the transfer to the GPU
+immediately. They begin GPU execution only on the next call to
+<a href="../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit()</code></a>, just before the explicitly submitted commands.
+To get a set of scheduled transfers started immediately,
+it’s fine to call <code>submit</code> with no command buffers at all:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code>queue.submit([]);</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code>queue.write_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>, <span class="kw-2">&amp;</span>data);
+queue.submit([]);</code></pre></div>
 <p>However, <code>data</code> will be immediately copied into staging memory, so the
 caller may discard it any time after this call completes.</p>
-<p>If possible, consider using <a href="../../struct.Queue.html#method.write_buffer_with" title="method wgpu::Queue::write_buffer_with"><code>Queue::write_buffer_with</code></a> instead. That
-method avoids an intermediate copy and is often able to transfer data
-more efficiently than this one.</p>
-<p>Currently on native platforms, for both of these methods the staging
+</li>
+<li>
+<p>Consider using <a href="../../struct.Queue.html#method.write_buffer_with" title="method wgpu::Queue::write_buffer_with"><code>Queue::write_buffer_with()</code></a> instead.
+That method allows you to prepare your data directly within the staging
+memory, rather than first placing it in a separate <code>[u8]</code> to be copied.
+That is, <code>queue.write_buffer(b, offset, data)</code> is approximately equivalent
+to <code>queue.write_buffer_with(b, offset, data.len()).copy_from_slice(data)</code>,
+so use <code>write_buffer_with()</code> if you can do something smarter than that
+<a href="https://doc.rust-lang.org/1.85.0/std/primitive.slice.html#method.copy_from_slice" title="method slice::copy_from_slice"><code>copy_from_slice()</code></a>. However, for small values
+(e.g. a typical uniform buffer whose contents come from a <code>struct</code>),
+there will likely be no difference, since the compiler will be able to
+optimize out unnecessary copies regardless.</p>
+</li>
+<li>
+<p>Currently on native platforms, for both of these methods, the staging
 memory will be a new allocation. This will then be released after the
 next submission finishes. To entirely avoid short-lived allocations, you might
-be able to use <a href="../../util/struct.StagingBelt.html" title="struct wgpu::util::StagingBelt"><code>StagingBelt</code></a>.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.write_buffer_with" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#163-179">Source</a><h4 class="code-header">pub fn <a href="#method.write_buffer_with" class="fn">write_buffer_with</a>&lt;'a&gt;(
+be able to use <a href="../../util/struct.StagingBelt.html" title="struct wgpu::util::StagingBelt"><code>StagingBelt</code></a>,
+or buffers you explicitly create, map, and unmap yourself.</p>
+</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.write_buffer_with" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#178-194">Source</a><h4 class="code-header">pub fn <a href="#method.write_buffer_with" class="fn">write_buffer_with</a>&lt;'a&gt;(
     &amp;'a self,
     buffer: &amp;'a <a class="struct" href="../../struct.Buffer.html" title="struct wgpu::Buffer">Buffer</a>,
     offset: <a class="type" href="../../type.BufferAddress.html" title="type wgpu::BufferAddress">BufferAddress</a>,
     size: <a class="type" href="../../type.BufferSize.html" title="type wgpu::BufferSize">BufferSize</a>,
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.85.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView">QueueWriteBufferView</a>&lt;'a&gt;&gt;</h4></section></summary><div class="docblock"><p>Write to a buffer via a directly mapped staging buffer.</p>
-<p>Return a <a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a> which, when dropped, schedules a copy
-of its contents into <code>buffer</code> at <code>offset</code>. The returned view
-dereferences to a <code>size</code>-byte long <code>&amp;mut [u8]</code>, in which you should
-store the data you would like written to <code>buffer</code>.</p>
-<p>This method may perform transfers faster than <a href="../../struct.Queue.html#method.write_buffer" title="method wgpu::Queue::write_buffer"><code>Queue::write_buffer</code></a>,
-because the returned <a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a> is actually the staging
-buffer for the write, mapped into the caller’s address space. Writing
-your data directly into this staging buffer avoids the temporary
-CPU-side buffer needed by <code>write_buffer</code>.</p>
-<p>Reading from the returned view is slow, and will not yield the current
-contents of <code>buffer</code>.</p>
-<p>Note that dropping the <a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a> does <em>not</em> submit the
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.85.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView">QueueWriteBufferView</a>&lt;'a&gt;&gt;</h4></section></summary><div class="docblock"><p>Prepares to write data to a buffer via a mapped staging buffer.</p>
+<p>This operation allocates a temporary buffer and then returns a
+<a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a>, which</p>
+<ul>
+<li>dereferences to a <code>[u8]</code> of length <code>size</code>, and</li>
+<li>when dropped, schedules a copy of its contents into <code>buffer</code> at <code>offset</code>.</li>
+</ul>
+<p>Therefore, this obtains the same result as <a href="../../struct.Queue.html#method.write_buffer" title="method wgpu::Queue::write_buffer"><code>Queue::write_buffer()</code></a>, but may
+allow you to skip one allocation and one copy of your data, if you are able to
+assemble your data directly into the returned <a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a> instead of
+into a separate allocation like a <a href="https://doc.rust-lang.org/1.85.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec"><code>Vec</code></a> first.</p>
+<p>The data must be written fully in-bounds, that is, <code>offset + size &lt;= buffer.len()</code>.</p>
+<h5 id="performance-considerations-1"><a class="doc-anchor" href="#performance-considerations-1">§</a>Performance considerations</h5>
+<ul>
+<li>
+<p>For small data not separately heap-allocated, there is no advantage of this
+over <a href="../../struct.Queue.html#method.write_buffer" title="method wgpu::Queue::write_buffer"><code>Queue::write_buffer()</code></a>.</p>
+</li>
+<li>
+<p>Reading from the returned view may be slow, and will not yield the current
+contents of <code>buffer</code>. You should treat it as “write-only”.</p>
+</li>
+<li>
+<p>Dropping the <a href="../../struct.QueueWriteBufferView.html" title="struct wgpu::QueueWriteBufferView"><code>QueueWriteBufferView</code></a> does <em>not</em> submit the
 transfer to the GPU immediately. The transfer begins only on the next
-call to <a href="../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit</code></a> after the view is dropped. To get a set of
-scheduled transfers started immediately, it’s fine to call <code>submit</code> with
-no command buffers at all:</p>
-
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code>queue.submit([]);</code></pre></div>
-<p>This method fails if <code>size</code> is greater than the size of <code>buffer</code> starting at <code>offset</code>.</p>
+call to <a href="../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit()</code></a> after the view is dropped, just before the
+explicitly submitted commands. To get a set of scheduled transfers started
+immediately, it’s fine to call <code>queue.submit([])</code> with no command buffers at all.</p>
+</li>
+<li>
 <p>Currently on native platforms, the staging memory will be a new allocation, which will
 then be released after the next submission finishes. To entirely avoid short-lived
-allocations, you might be able to use <a href="../../util/struct.StagingBelt.html" title="struct wgpu::util::StagingBelt"><code>StagingBelt</code></a>.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.write_texture" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#205-213">Source</a><h4 class="code-header">pub fn <a href="#method.write_texture" class="fn">write_texture</a>(
+allocations, you might be able to use <a href="../../util/struct.StagingBelt.html" title="struct wgpu::util::StagingBelt"><code>StagingBelt</code></a>,
+or buffers you explicitly create, map, and unmap yourself.</p>
+</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.write_texture" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#217-225">Source</a><h4 class="code-header">pub fn <a href="#method.write_texture" class="fn">write_texture</a>(
     &amp;self,
     texture: <a class="type" href="../../type.TexelCopyTextureInfo.html" title="type wgpu::TexelCopyTextureInfo">TexelCopyTextureInfo</a>&lt;'_&gt;,
     data: &amp;[<a class="primitive" href="https://doc.rust-lang.org/1.85.0/std/primitive.u8.html">u8</a>],
     data_layout: <a class="struct" href="../../struct.TexelCopyBufferLayout.html" title="struct wgpu::TexelCopyBufferLayout">TexelCopyBufferLayout</a>,
     size: <a class="struct" href="../../struct.Extent3d.html" title="struct wgpu::Extent3d">Extent3d</a>,
-)</h4></section></summary><div class="docblock"><p>Schedule a write of some data into a texture.</p>
+)</h4></section></summary><div class="docblock"><p>Copies the bytes of <code>data</code> into into a texture.</p>
 <ul>
 <li><code>data</code> contains the texels to be written, which must be in
 <a href="../../enum.TextureFormat.html" title="enum wgpu::TextureFormat">the same format as the texture</a>.</li>
@@ -68,23 +100,22 @@ texture (coordinate offset, mip level) that will be overwritten.</li>
 <li><code>size</code> is the size, in texels, of the region to be written.</li>
 </ul>
 <p>This method fails if <code>size</code> overruns the size of <code>texture</code>, or if <code>data</code> is too short.</p>
-<p>This does <em>not</em> submit the transfer to the GPU immediately. Calls to
-<code>write_texture</code> begin execution only on the next call to
-<a href="../../struct.Queue.html#method.submit" title="method wgpu::Queue::submit"><code>Queue::submit</code></a>. To get a set of scheduled transfers started
-immediately, it’s fine to call <code>submit</code> with no command buffers at all:</p>
-
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code>queue.submit([]);</code></pre></div>
-<p>However, <code>data</code> will be immediately copied into staging memory, so the
-caller may discard it any time after this call completes.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.submit" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#228-237">Source</a><h4 class="code-header">pub fn <a href="#method.submit" class="fn">submit</a>&lt;I: <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = <a class="struct" href="../../struct.CommandBuffer.html" title="struct wgpu::CommandBuffer">CommandBuffer</a>&gt;&gt;(
+<h5 id="performance-considerations-2"><a class="doc-anchor" href="#performance-considerations-2">§</a>Performance considerations</h5>
+<p>This operation has the same performance considerations as <a href="../../struct.Queue.html#method.write_buffer" title="method wgpu::Queue::write_buffer"><code>Queue::write_buffer()</code></a>;
+see its documentation for details.</p>
+<p>However, since there is no “mapped texture” like a mapped buffer,
+alternate techniques for writing to textures will generally consist of first copying
+the data to a buffer, then using <a href="../../struct.CommandEncoder.html#method.copy_buffer_to_texture" title="method wgpu::CommandEncoder::copy_buffer_to_texture"><code>CommandEncoder::copy_buffer_to_texture()</code></a>, or in
+some cases a compute shader, to copy texels from that buffer to the texture.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.submit" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#240-249">Source</a><h4 class="code-header">pub fn <a href="#method.submit" class="fn">submit</a>&lt;I: <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = <a class="struct" href="../../struct.CommandBuffer.html" title="struct wgpu::CommandBuffer">CommandBuffer</a>&gt;&gt;(
     &amp;self,
     command_buffers: I,
 ) -&gt; <a class="struct" href="../../struct.SubmissionIndex.html" title="struct wgpu::SubmissionIndex">SubmissionIndex</a></h4></section></summary><div class="docblock"><p>Submits a series of finished command buffers for execution.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_timestamp_period" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#245-247">Source</a><h4 class="code-header">pub fn <a href="#method.get_timestamp_period" class="fn">get_timestamp_period</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.85.0/std/primitive.f32.html">f32</a></h4></section></summary><div class="docblock"><p>Gets the amount of nanoseconds each tick of a timestamp query represents.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_timestamp_period" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#257-259">Source</a><h4 class="code-header">pub fn <a href="#method.get_timestamp_period" class="fn">get_timestamp_period</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.85.0/std/primitive.f32.html">f32</a></h4></section></summary><div class="docblock"><p>Gets the amount of nanoseconds each tick of a timestamp query represents.</p>
 <p>Returns zero if timestamp queries are unsupported.</p>
 <p>Timestamp values are represented in nanosecond values on WebGPU, see <code>&lt;https://gpuweb.github.io/gpuweb/#timestamp&gt;</code>
 Therefore, this is always 1.0 on the web, but on wgpu-core a manual conversion is required.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.on_submitted_work_done" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#260-262">Source</a><h4 class="code-header">pub fn <a href="#method.on_submitted_work_done" class="fn">on_submitted_work_done</a>(&amp;self, callback: impl <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/ops/function/trait.FnOnce.html" title="trait core::ops::function::FnOnce">FnOnce</a>() + <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static)</h4></section></summary><div class="docblock"><p>Registers a callback when the previous call to submit finishes running on the gpu. This callback
+</div></details><details class="toggle method-toggle" open><summary><section id="method.on_submitted_work_done" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#272-274">Source</a><h4 class="code-header">pub fn <a href="#method.on_submitted_work_done" class="fn">on_submitted_work_done</a>(&amp;self, callback: impl <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/ops/function/trait.FnOnce.html" title="trait core::ops::function::FnOnce">FnOnce</a>() + <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static)</h4></section></summary><div class="docblock"><p>Registers a callback when the previous call to submit finishes running on the gpu. This callback
 being called implies that all mapped buffer callbacks which were registered before this call will
 have been called.</p>
 <p>For the callback to complete, either <code>queue.submit(..)</code>, <code>instance.poll_all(..)</code>, or <code>device.poll(..)</code>
@@ -93,7 +124,7 @@ must be called elsewhere in the runtime, possibly integrated into an event loop 
 has completed. There are no restrictions on the code you can run in the callback, however on native the
 call to the function will not complete until the callback returns, so prefer keeping callbacks short
 and used to set flags, send messages, etc.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.as_hal" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#271-284">Source</a><h4 class="code-header">pub unsafe fn <a href="#method.as_hal" class="fn">as_hal</a>&lt;A: <a class="trait" href="../../../wgpu_core/hal_api/trait.HalApi.html" title="trait wgpu_core::hal_api::HalApi">HalApi</a>, F: <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/ops/function/trait.FnOnce.html" title="trait core::ops::function::FnOnce">FnOnce</a>(<a class="enum" href="https://doc.rust-lang.org/1.85.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;A::<a class="associatedtype" href="../../../wgpu_hal/trait.Api.html#associatedtype.Queue" title="type wgpu_hal::Api::Queue">Queue</a>&gt;) -&gt; R, R&gt;(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.as_hal" class="method"><a class="src rightside" href="../../../src/wgpu/api/queue.rs.html#283-296">Source</a><h4 class="code-header">pub unsafe fn <a href="#method.as_hal" class="fn">as_hal</a>&lt;A: <a class="trait" href="../../../wgpu_core/hal_api/trait.HalApi.html" title="trait wgpu_core::hal_api::HalApi">HalApi</a>, F: <a class="trait" href="https://doc.rust-lang.org/1.85.0/core/ops/function/trait.FnOnce.html" title="trait core::ops::function::FnOnce">FnOnce</a>(<a class="enum" href="https://doc.rust-lang.org/1.85.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;A::<a class="associatedtype" href="../../../wgpu_hal/trait.Api.html#associatedtype.Queue" title="type wgpu_hal::Api::Queue">Queue</a>&gt;) -&gt; R, R&gt;(
     &amp;self,
     hal_queue_callback: F,
 ) -&gt; R</h4></section><span class="item-info"><div class="stab portability">Available on <strong><code>wgpu_core</code></strong> only.</div></span></summary><div class="docblock"><p>Returns the inner hal Queue using a callback. The hal queue will be <code>None</code> if the
