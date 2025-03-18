@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["RESERVED_KEYWORDS"]};
+window.SIDEBAR_ITEMS = {"constant":["RESERVED_KEYWORDS"],"static":["RESERVED_KEYWORD_SET"]};
