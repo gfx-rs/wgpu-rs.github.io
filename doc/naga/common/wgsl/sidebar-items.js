@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["address_space_str"],"mod":["types"],"struct":["DisplayFilterableTriggeringRule"],"trait":["ToWgsl","TryToWgsl","TypeContext"]};
+window.SIDEBAR_ITEMS = {"fn":["address_space_str"],"mod":["diagnostics","to_wgsl","types"],"struct":["DisplayFilterableTriggeringRule"],"trait":["ToWgsl","TryToWgsl","TypeContext"]};

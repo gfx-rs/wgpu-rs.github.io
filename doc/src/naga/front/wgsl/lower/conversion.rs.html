@@ -550,6 +550,7 @@
 
 </span><span class="kw">use </span>alloc::{boxed::Box, string::String, vec::Vec};
 
+<span class="kw">use </span><span class="kw">crate</span>::common::wgsl::{TryToWgsl, TypeContext};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{
     AutoConversionError, AutoConversionLeafScalarError, ConcretizationFailedError,
 };
@@ -601,9 +602,8 @@
             <span class="kw">match </span>expr_inner.automatically_converts_to(goal_inner, types) {
                 <span class="prelude-val">Some</span>(scalars) =&gt; scalars,
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx();
-                    <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx);
-                    <span class="kw">let </span>dest_type = goal_ty.to_wgsl(gctx);
+                    <span class="kw">let </span>source_type = <span class="self">self</span>.type_resolution_to_string(expr_resolution);
+                    <span class="kw">let </span>dest_type = <span class="self">self</span>.type_resolution_to_string(goal_ty);
 
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(<span class="kw">super</span>::Error::AutoConversion(Box::new(
                         AutoConversionError {
@@ -643,11 +643,10 @@
         <span class="kw">let </span>expr_inner = expr_resolution.inner_with(types);
 
         <span class="kw">let </span>make_error = || {
-            <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx();
-            <span class="kw">let </span>source_type = expr_resolution.to_wgsl(gctx);
+            <span class="kw">let </span>source_type = <span class="self">self</span>.type_resolution_to_string(expr_resolution);
             <span class="kw">super</span>::Error::AutoConversionLeafScalar(Box::new(AutoConversionLeafScalarError {
                 dest_span: goal_span,
-                dest_scalar: goal_scalar.to_wgsl(),
+                dest_scalar: goal_scalar.to_wgsl_for_diagnostics(),
                 source_span: expr_span,
                 source_type,
             }))
@@ -823,8 +822,8 @@
                         </span><span class="kw">let </span>expr_type = <span class="kw-2">&amp;</span><span class="self">self</span>.typifier()[expr];
                         <span class="kw">super</span>::Error::ConcretizationFailed(Box::new(ConcretizationFailedError {
                             expr_span,
-                            expr_type: expr_type.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx()),
-                            scalar: concretized.to_wgsl(),
+                            expr_type: <span class="self">self</span>.type_resolution_to_string(expr_type),
+                            scalar: concretized.to_wgsl_for_diagnostics(),
                             inner: err,
                         }))
                     })<span class="question-mark">?</span>;
@@ -864,11 +863,12 @@
             .into_iter()
             .map(|<span class="kw-2">&amp;</span>c| <span class="self">self</span>.typifier()[c].inner_with(types));
         <span class="macro">log::debug!</span>(
-            <span class="string">"wgsl automatic_conversion_consensus: {:?}"</span>,
+            <span class="string">"wgsl automatic_conversion_consensus: {}"</span>,
             inners
                 .clone()
-                .map(|inner| inner.to_wgsl(<span class="kw-2">&amp;</span><span class="self">self</span>.module.to_ctx()))
+                .map(|inner| <span class="self">self</span>.type_inner_to_string(inner))
                 .collect::&lt;Vec&lt;String&gt;&gt;()
+                .join(<span class="string">", "</span>)
         );
         <span class="kw">let </span><span class="kw-2">mut </span>best = inners.next().unwrap().scalar().ok_or(<span class="number">0_usize</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>(inner, i) <span class="kw">in </span>inners.zip(<span class="number">1</span>..) {
@@ -881,7 +881,7 @@
             }
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">"    consensus: {:?}"</span>, best.to_wgsl());
+        <span class="macro">log::debug!</span>(<span class="string">"    consensus: {}"</span>, best.to_wgsl_for_diagnostics());
         <span class="prelude-val">Ok</span>(best)
     }
 }

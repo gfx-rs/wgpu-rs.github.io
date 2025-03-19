@@ -257,12 +257,113 @@
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a></pre></div><pre class="rust"><code><span class="doccomment">//! Code for formatting Naga IR types as WGSL source code.
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a></pre></div><pre class="rust"><code><span class="doccomment">//! Code for formatting Naga IR types as WGSL source code.
 
 </span><span class="kw">use super</span>::{address_space_str, ToWgsl, TryToWgsl};
 <span class="kw">use </span><span class="kw">crate</span>::common;
-<span class="kw">use crate</span>::{Handle, TypeInner};
+<span class="kw">use </span><span class="kw">crate</span>::proc::TypeResolution;
+<span class="kw">use crate</span>::{Handle, Scalar, TypeInner};
 
+<span class="kw">use </span>alloc::string::String;
 <span class="kw">use </span>core::fmt::Write;
 
 <span class="doccomment">/// A context for printing Naga IR types as WGSL.
@@ -279,7 +380,7 @@
 /// [`write_type`]: TypeContext::write_type
 /// [`write_type_inner`]: TypeContext::write_type_inner
 /// [`type_name`]: TypeContext::type_name
-</span><span class="kw">pub trait </span>TypeContext&lt;W: Write&gt; {
+</span><span class="kw">pub trait </span>TypeContext {
     <span class="doccomment">/// Return the [`Type`] referred to by `handle`.
     ///
     /// [`Type`]: crate::Type
@@ -290,14 +391,59 @@
     </span><span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str;
 
     <span class="doccomment">/// Write the WGSL form of `override` to `out`.
-    </span><span class="kw">fn </span>write_override(<span class="kw-2">&amp;</span><span class="self">self</span>, r#override: Handle&lt;<span class="kw">crate</span>::Override&gt;, out: <span class="kw-2">&amp;mut </span>W)
-        -&gt; core::fmt::Result;
+    </span><span class="kw">fn </span>write_override&lt;W: Write&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        r#override: Handle&lt;<span class="kw">crate</span>::Override&gt;,
+        out: <span class="kw-2">&amp;mut </span>W,
+    ) -&gt; core::fmt::Result;
+
+    <span class="doccomment">/// Write a [`TypeInner`] that has no representation as WGSL source,
+    /// even including Naga extensions.
+    ///
+    /// A backend might implement this with a call to the [`unreachable!`]
+    /// macro, since backends are allowed to assume that the module has passed
+    /// validation.
+    ///
+    /// The default implementation is appropriate for generating type names to
+    /// appear in error messages. It punts to `TypeInner`'s [`core::fmt::Debug`]
+    /// implementation, since it's probably best to show the user something they
+    /// can act on.
+    </span><span class="kw">fn </span>write_non_wgsl_inner&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="macro">write!</span>(out, <span class="string">"{{non-WGSL Naga type {inner:?}}}"</span>)
+    }
+
+    <span class="doccomment">/// Write a [`Scalar`] that has no representation as WGSL source,
+    /// even including Naga extensions.
+    ///
+    /// A backend might implement this with a call to the [`unreachable!`]
+    /// macro, since backends are allowed to assume that the module has passed
+    /// validation.
+    ///
+    /// The default implementation is appropriate for generating type names to
+    /// appear in error messages. It punts to `Scalar`'s [`core::fmt::Debug`]
+    /// implementation, since it's probably best to show the user something they
+    /// can act on.
+    </span><span class="kw">fn </span>write_non_wgsl_scalar&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, scalar: Scalar, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="kw">match </span>scalar.kind {
+            <span class="kw">crate</span>::ScalarKind::Sint
+            | <span class="kw">crate</span>::ScalarKind::Uint
+            | <span class="kw">crate</span>::ScalarKind::Float
+            | <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="macro">write!</span>(out, <span class="string">"{{non-WGSL Naga scalar {scalar:?}}}"</span>),
+
+            <span class="comment">// The abstract types are kind of an odd quasi-WGSL category:
+            // they are definitely part of the spec, but they are not expressible
+            // in WGSL itself. So we want to call them out by name in error messages,
+            // but the WGSL backend should never generate these.
+            </span><span class="kw">crate</span>::ScalarKind::AbstractInt =&gt; out.write_str(<span class="string">"{AbstractInt}"</span>),
+            <span class="kw">crate</span>::ScalarKind::AbstractFloat =&gt; out.write_str(<span class="string">"{AbstractFloat}"</span>),
+        }
+    }
 
     <span class="doccomment">/// Write the type `ty` as it would appear in a value's declaration.
     ///
     /// Write the type referred to by `ty` in `module` as it would appear in
     /// a `var`, `let`, etc. declaration, or in a function's argument list.
-    </span><span class="kw">fn </span>write_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+    </span><span class="kw">fn </span>write_type&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
         <span class="kw">let </span>ty = <span class="self">self</span>.lookup_type(handle);
         <span class="kw">match </span>ty.inner {
             TypeInner::Struct { .. } =&gt; out.write_str(<span class="self">self</span>.type_name(handle))<span class="question-mark">?</span>,
@@ -317,203 +463,255 @@
     /// [`TypeInner`].
     ///
     /// [`Struct`]: TypeInner::Struct
-    </span><span class="kw">fn </span>write_type_inner(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
-        <span class="kw">fn </span>unwrap_to_wgsl&lt;T: TryToWgsl + Copy + core::fmt::Debug&gt;(value: T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-            value.try_to_wgsl().unwrap_or_else(|| {
-                <span class="macro">unreachable!</span>(
-                    <span class="string">"validation should have forbidden {}: {value:?}"</span>,
-                    T::DESCRIPTION
-                );
-            })
+    </span><span class="kw">fn </span>write_type_inner&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="kw">match </span>try_write_type_inner(<span class="self">self</span>, inner, out) {
+            <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="prelude-val">Err</span>(WriteTypeError::Format(err)) =&gt; <span class="prelude-val">Err</span>(err),
+            <span class="prelude-val">Err</span>(WriteTypeError::NonWgsl) =&gt; <span class="self">self</span>.write_non_wgsl_inner(inner, out),
         }
+    }
 
-        <span class="kw">match </span><span class="kw-2">*</span>inner {
-            TypeInner::Vector { size, scalar } =&gt; <span class="macro">write!</span>(
-                out,
-                <span class="string">"vec{}&lt;{}&gt;"</span>,
-                common::vector_size_str(size),
-                unwrap_to_wgsl(scalar),
-            )<span class="question-mark">?</span>,
-            TypeInner::Sampler { comparison: <span class="bool-val">false </span>} =&gt; {
-                <span class="macro">write!</span>(out, <span class="string">"sampler"</span>)<span class="question-mark">?</span>;
-            }
-            TypeInner::Sampler { comparison: <span class="bool-val">true </span>} =&gt; {
-                <span class="macro">write!</span>(out, <span class="string">"sampler_comparison"</span>)<span class="question-mark">?</span>;
-            }
-            TypeInner::Image {
-                dim,
-                arrayed,
-                class,
-            } =&gt; {
-                <span class="comment">// More about texture types: https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
-                </span><span class="kw">use </span><span class="kw">crate</span>::ImageClass <span class="kw">as </span>Ic;
+    <span class="doccomment">/// Write the [`Scalar`] `scalar` as a WGSL type.
+    </span><span class="kw">fn </span>write_scalar&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, scalar: Scalar, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="kw">match </span>scalar.try_to_wgsl() {
+            <span class="prelude-val">Some</span>(string) =&gt; out.write_str(string),
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.write_non_wgsl_scalar(scalar, out),
+        }
+    }
 
-                <span class="kw">let </span>dim_str = dim.to_wgsl();
-                <span class="kw">let </span>arrayed_str = <span class="kw">if </span>arrayed { <span class="string">"_array" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                <span class="kw">match </span>class {
-                    Ic::Sampled { kind, multi } =&gt; {
-                        <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                        <span class="kw">let </span>type_str = unwrap_to_wgsl(<span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>});
-                        <span class="macro">write!</span>(
-                            out,
-                            <span class="string">"texture_{multisampled_str}{dim_str}{arrayed_str}&lt;{type_str}&gt;"
-                        </span>)<span class="question-mark">?</span>;
-                    }
-                    Ic::Depth { multi } =&gt; {
-                        <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                        <span class="macro">write!</span>(
-                            out,
-                            <span class="string">"texture_depth_{multisampled_str}{dim_str}{arrayed_str}"
-                        </span>)<span class="question-mark">?</span>;
-                    }
-                    Ic::Storage { format, access } =&gt; {
-                        <span class="kw">let </span>format_str = format.to_wgsl();
-                        <span class="kw">let </span>access_str = <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
-                            <span class="string">",atomic"
-                        </span>} <span class="kw">else if </span>access
-                            .contains(<span class="kw">crate</span>::StorageAccess::LOAD | <span class="kw">crate</span>::StorageAccess::STORE)
-                        {
-                            <span class="string">",read_write"
-                        </span>} <span class="kw">else if </span>access.contains(<span class="kw">crate</span>::StorageAccess::LOAD) {
-                            <span class="string">",read"
-                        </span>} <span class="kw">else </span>{
-                            <span class="string">",write"
-                        </span>};
-                        <span class="macro">write!</span>(
-                            out,
-                            <span class="string">"texture_storage_{dim_str}{arrayed_str}&lt;{format_str}{access_str}&gt;"
-                        </span>)<span class="question-mark">?</span>;
-                    }
+    <span class="doccomment">/// Write the [`TypeResolution`] `resolution` as a WGSL type.
+    </span><span class="kw">fn </span>write_type_resolution&lt;W: Write&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        resolution: <span class="kw-2">&amp;</span>TypeResolution,
+        out: <span class="kw-2">&amp;mut </span>W,
+    ) -&gt; core::fmt::Result {
+        <span class="kw">match </span><span class="kw-2">*</span>resolution {
+            TypeResolution::Handle(handle) =&gt; <span class="self">self</span>.write_type(handle, out),
+            TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; <span class="self">self</span>.write_type_inner(inner, out),
+        }
+    }
+
+    <span class="kw">fn </span>type_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; String {
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
+        <span class="self">self</span>.write_type(handle, <span class="kw-2">&amp;mut </span>buf).unwrap();
+        buf
+    }
+
+    <span class="kw">fn </span>type_inner_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner) -&gt; String {
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
+        <span class="self">self</span>.write_type_inner(inner, <span class="kw-2">&amp;mut </span>buf).unwrap();
+        buf
+    }
+
+    <span class="kw">fn </span>type_resolution_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, resolution: <span class="kw-2">&amp;</span>TypeResolution) -&gt; String {
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
+        <span class="self">self</span>.write_type_resolution(resolution, <span class="kw-2">&amp;mut </span>buf).unwrap();
+        buf
+    }
+}
+
+<span class="kw">fn </span>try_write_type_inner&lt;C, W&gt;(ctx: <span class="kw-2">&amp;</span>C, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; <span class="prelude-ty">Result</span>&lt;(), WriteTypeError&gt;
+<span class="kw">where
+    </span>C: TypeContext + <span class="question-mark">?</span>Sized,
+    W: Write,
+{
+    <span class="kw">match </span><span class="kw-2">*</span>inner {
+        TypeInner::Vector { size, scalar } =&gt; {
+            <span class="macro">write!</span>(out, <span class="string">"vec{}&lt;"</span>, common::vector_size_str(size))<span class="question-mark">?</span>;
+            ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+            out.write_str(<span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Sampler { comparison: <span class="bool-val">false </span>} =&gt; {
+            <span class="macro">write!</span>(out, <span class="string">"sampler"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Sampler { comparison: <span class="bool-val">true </span>} =&gt; {
+            <span class="macro">write!</span>(out, <span class="string">"sampler_comparison"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Image {
+            dim,
+            arrayed,
+            class,
+        } =&gt; {
+            <span class="comment">// More about texture types: https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
+            </span><span class="kw">use </span><span class="kw">crate</span>::ImageClass <span class="kw">as </span>Ic;
+
+            <span class="kw">let </span>dim_str = dim.to_wgsl();
+            <span class="kw">let </span>arrayed_str = <span class="kw">if </span>arrayed { <span class="string">"_array" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+            <span class="kw">match </span>class {
+                Ic::Sampled { kind, multi } =&gt; {
+                    <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+                    <span class="macro">write!</span>(out, <span class="string">"texture_{multisampled_str}{dim_str}{arrayed_str}&lt;"</span>)<span class="question-mark">?</span>;
+                    ctx.write_scalar(Scalar { kind, width: <span class="number">4 </span>}, out)<span class="question-mark">?</span>;
+                    out.write_str(<span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
                 }
-            }
-            TypeInner::Scalar(scalar) =&gt; {
-                <span class="macro">write!</span>(out, <span class="string">"{}"</span>, unwrap_to_wgsl(scalar))<span class="question-mark">?</span>;
-            }
-            TypeInner::Atomic(scalar) =&gt; {
-                <span class="macro">write!</span>(out, <span class="string">"atomic&lt;{}&gt;"</span>, unwrap_to_wgsl(scalar))<span class="question-mark">?</span>;
-            }
-            TypeInner::Array {
-                base,
-                size,
-                stride: <span class="kw">_</span>,
-            } =&gt; {
-                <span class="comment">// More info https://gpuweb.github.io/gpuweb/wgsl/#array-types
-                // array&lt;A, 3&gt; -- Constant array
-                // array&lt;A&gt; -- Dynamic array
-                </span><span class="macro">write!</span>(out, <span class="string">"array&lt;"</span>)<span class="question-mark">?</span>;
-                <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(len) =&gt; {
-                        <span class="self">self</span>.write_type(base, out)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(out, <span class="string">", {len}"</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="kw">crate</span>::ArraySize::Pending(r#override) =&gt; {
-                        <span class="self">self</span>.write_override(r#override, out)<span class="question-mark">?</span>;
-                    }
-                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
-                        <span class="self">self</span>.write_type(base, out)<span class="question-mark">?</span>;
-                    }
-                }
-                <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
-            }
-            TypeInner::BindingArray { base, size } =&gt; {
-                <span class="comment">// More info https://github.com/gpuweb/gpuweb/issues/2105
-                </span><span class="macro">write!</span>(out, <span class="string">"binding_array&lt;"</span>)<span class="question-mark">?</span>;
-                <span class="kw">match </span>size {
-                    <span class="kw">crate</span>::ArraySize::Constant(len) =&gt; {
-                        <span class="self">self</span>.write_type(base, out)<span class="question-mark">?</span>;
-                        <span class="macro">write!</span>(out, <span class="string">", {len}"</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="kw">crate</span>::ArraySize::Pending(r#override) =&gt; {
-                        <span class="self">self</span>.write_override(r#override, out)<span class="question-mark">?</span>;
-                    }
-                    <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
-                        <span class="self">self</span>.write_type(base, out)<span class="question-mark">?</span>;
-                    }
-                }
-                <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
-            }
-            TypeInner::Matrix {
-                columns,
-                rows,
-                scalar,
-            } =&gt; {
-                <span class="macro">write!</span>(
-                    out,
-                    <span class="string">"mat{}x{}&lt;{}&gt;"</span>,
-                    common::vector_size_str(columns),
-                    common::vector_size_str(rows),
-                    unwrap_to_wgsl(scalar)
-                )<span class="question-mark">?</span>;
-            }
-            TypeInner::Pointer { base, space } =&gt; {
-                <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
-                <span class="comment">// Everything but `AddressSpace::Handle` gives us a `address` name, but
-                // Naga IR never produces pointers to handles, so it doesn't matter much
-                // how we write such a type. Just write it as the base type alone.
-                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
-                    <span class="macro">write!</span>(out, <span class="string">"ptr&lt;{space}, "</span>)<span class="question-mark">?</span>;
-                }
-                <span class="self">self</span>.write_type(base, out)<span class="question-mark">?</span>;
-                <span class="kw">if </span>address.is_some() {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
-                        <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
-                }
-            }
-            TypeInner::ValuePointer {
-                size: <span class="prelude-val">None</span>,
-                scalar,
-                space,
-            } =&gt; {
-                <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
-                    <span class="macro">write!</span>(out, <span class="string">"ptr&lt;{}, {}"</span>, space, unwrap_to_wgsl(scalar))<span class="question-mark">?</span>;
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
-                        <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">unreachable!</span>(<span class="string">"ValuePointer to AddressSpace::Handle {inner:?}"</span>);
-                }
-            }
-            TypeInner::ValuePointer {
-                size: <span class="prelude-val">Some</span>(size),
-                scalar,
-                space,
-            } =&gt; {
-                <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
+                Ic::Depth { multi } =&gt; {
+                    <span class="kw">let </span>multisampled_str = <span class="kw">if </span>multi { <span class="string">"multisampled_" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
                     <span class="macro">write!</span>(
                         out,
-                        <span class="string">"ptr&lt;{}, vec{}&lt;{}&gt;"</span>,
-                        space,
-                        common::vector_size_str(size),
-                        unwrap_to_wgsl(scalar)
-                    )<span class="question-mark">?</span>;
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
-                        <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">unreachable!</span>(<span class="string">"ValuePointer to AddressSpace::Handle {inner:?}"</span>);
+                        <span class="string">"texture_depth_{multisampled_str}{dim_str}{arrayed_str}"
+                    </span>)<span class="question-mark">?</span>;
+                }
+                Ic::Storage { format, access } =&gt; {
+                    <span class="kw">let </span>format_str = format.to_wgsl();
+                    <span class="kw">let </span>access_str = <span class="kw">if </span>access.contains(<span class="kw">crate</span>::StorageAccess::ATOMIC) {
+                        <span class="string">",atomic"
+                    </span>} <span class="kw">else if </span>access
+                        .contains(<span class="kw">crate</span>::StorageAccess::LOAD | <span class="kw">crate</span>::StorageAccess::STORE)
+                    {
+                        <span class="string">",read_write"
+                    </span>} <span class="kw">else if </span>access.contains(<span class="kw">crate</span>::StorageAccess::LOAD) {
+                        <span class="string">",read"
+                    </span>} <span class="kw">else </span>{
+                        <span class="string">",write"
+                    </span>};
+                    <span class="macro">write!</span>(
+                        out,
+                        <span class="string">"texture_storage_{dim_str}{arrayed_str}&lt;{format_str}{access_str}&gt;"
+                    </span>)<span class="question-mark">?</span>;
+                }
+            }
+        }
+        TypeInner::Scalar(scalar) =&gt; {
+            ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+        }
+        TypeInner::Atomic(scalar) =&gt; {
+            out.write_str(<span class="string">"atomic&lt;"</span>)<span class="question-mark">?</span>;
+            ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+            out.write_str(<span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Array {
+            base,
+            size,
+            stride: <span class="kw">_</span>,
+        } =&gt; {
+            <span class="comment">// More info https://gpuweb.github.io/gpuweb/wgsl/#array-types
+            // array&lt;A, 3&gt; -- Constant array
+            // array&lt;A&gt; -- Dynamic array
+            </span><span class="macro">write!</span>(out, <span class="string">"array&lt;"</span>)<span class="question-mark">?</span>;
+            <span class="kw">match </span>size {
+                <span class="kw">crate</span>::ArraySize::Constant(len) =&gt; {
+                    ctx.write_type(base, out)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(out, <span class="string">", {len}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::ArraySize::Pending(r#override) =&gt; {
+                    ctx.write_override(r#override, out)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
+                    ctx.write_type(base, out)<span class="question-mark">?</span>;
+                }
+            }
+            <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::BindingArray { base, size } =&gt; {
+            <span class="comment">// More info https://github.com/gpuweb/gpuweb/issues/2105
+            </span><span class="macro">write!</span>(out, <span class="string">"binding_array&lt;"</span>)<span class="question-mark">?</span>;
+            <span class="kw">match </span>size {
+                <span class="kw">crate</span>::ArraySize::Constant(len) =&gt; {
+                    ctx.write_type(base, out)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(out, <span class="string">", {len}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::ArraySize::Pending(r#override) =&gt; {
+                    ctx.write_override(r#override, out)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::ArraySize::Dynamic =&gt; {
+                    ctx.write_type(base, out)<span class="question-mark">?</span>;
+                }
+            }
+            <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Matrix {
+            columns,
+            rows,
+            scalar,
+        } =&gt; {
+            <span class="macro">write!</span>(
+                out,
+                <span class="string">"mat{}x{}&lt;"</span>,
+                common::vector_size_str(columns),
+                common::vector_size_str(rows),
+            )<span class="question-mark">?</span>;
+            ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+            out.write_str(<span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::Pointer { base, space } =&gt; {
+            <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
+            <span class="comment">// Everything but `AddressSpace::Handle` gives us a `address` name, but
+            // Naga IR never produces pointers to handles, so it doesn't matter much
+            // how we write such a type. Just write it as the base type alone.
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
+                <span class="macro">write!</span>(out, <span class="string">"ptr&lt;{space}, "</span>)<span class="question-mark">?</span>;
+            }
+            ctx.write_type(base, out)<span class="question-mark">?</span>;
+            <span class="kw">if </span>address.is_some() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
+                    <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
             }
-            TypeInner::AccelerationStructure { vertex_return } =&gt; {
-                <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                <span class="macro">write!</span>(out, <span class="string">"acceleration_structure{}"</span>, caps)<span class="question-mark">?
-            </span>}
-            TypeInner::Struct { .. } =&gt; {
-                <span class="macro">unreachable!</span>(<span class="string">"structs can only be referenced by name in WGSL"</span>);
-            }
-            TypeInner::RayQuery { vertex_return } =&gt; {
-                <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
-                <span class="macro">write!</span>(out, <span class="string">"ray_query{}"</span>, caps)<span class="question-mark">?
-            </span>}
         }
+        TypeInner::ValuePointer {
+            size: <span class="prelude-val">None</span>,
+            scalar,
+            space,
+        } =&gt; {
+            <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
+                <span class="macro">write!</span>(out, <span class="string">"ptr&lt;{}, "</span>, space)<span class="question-mark">?</span>;
+                ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
+                    <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WriteTypeError::NonWgsl);
+            }
+        }
+        TypeInner::ValuePointer {
+            size: <span class="prelude-val">Some</span>(size),
+            scalar,
+            space,
+        } =&gt; {
+            <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
+                <span class="macro">write!</span>(out, <span class="string">"ptr&lt;{}, vec{}&lt;"</span>, space, common::vector_size_str(size),)<span class="question-mark">?</span>;
+                ctx.write_scalar(scalar, out)<span class="question-mark">?</span>;
+                out.write_str(<span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
+                    <span class="macro">write!</span>(out, <span class="string">", {access}"</span>)<span class="question-mark">?</span>;
+                }
+                <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(WriteTypeError::NonWgsl);
+            }
+            <span class="macro">write!</span>(out, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+        TypeInner::AccelerationStructure { vertex_return } =&gt; {
+            <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+            <span class="macro">write!</span>(out, <span class="string">"acceleration_structure{}"</span>, caps)<span class="question-mark">?
+        </span>}
+        TypeInner::Struct { .. } =&gt; {
+            <span class="macro">unreachable!</span>(<span class="string">"structs can only be referenced by name in WGSL"</span>);
+        }
+        TypeInner::RayQuery { vertex_return } =&gt; {
+            <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
+            <span class="macro">write!</span>(out, <span class="string">"ray_query{}"</span>, caps)<span class="question-mark">?
+        </span>}
+    }
 
-        <span class="prelude-val">Ok</span>(())
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Error type returned by `try_write_type_inner`.
+///
+/// This type is private to the module.
+</span><span class="kw">enum </span>WriteTypeError {
+    Format(core::fmt::Error),
+    NonWgsl,
+}
+
+<span class="kw">impl </span>From&lt;core::fmt::Error&gt; <span class="kw">for </span>WriteTypeError {
+    <span class="kw">fn </span>from(err: core::fmt::Error) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Format(err)
     }
 }
 </code></pre></div></section></main></body></html>

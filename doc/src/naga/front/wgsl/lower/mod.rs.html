@@ -3577,7 +3577,30 @@
 <a href="#3576" id="3576">3576</a>
 <a href="#3577" id="3577">3577</a>
 <a href="#3578" id="3578">3578</a>
-<a href="#3579" id="3579">3579</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3579" id="3579">3579</a>
+<a href="#3580" id="3580">3580</a>
+<a href="#3581" id="3581">3581</a>
+<a href="#3582" id="3582">3582</a>
+<a href="#3583" id="3583">3583</a>
+<a href="#3584" id="3584">3584</a>
+<a href="#3585" id="3585">3585</a>
+<a href="#3586" id="3586">3586</a>
+<a href="#3587" id="3587">3587</a>
+<a href="#3588" id="3588">3588</a>
+<a href="#3589" id="3589">3589</a>
+<a href="#3590" id="3590">3590</a>
+<a href="#3591" id="3591">3591</a>
+<a href="#3592" id="3592">3592</a>
+<a href="#3593" id="3593">3593</a>
+<a href="#3594" id="3594">3594</a>
+<a href="#3595" id="3595">3595</a>
+<a href="#3596" id="3596">3596</a>
+<a href="#3597" id="3597">3597</a>
+<a href="#3598" id="3598">3598</a>
+<a href="#3599" id="3599">3599</a>
+<a href="#3600" id="3600">3600</a>
+<a href="#3601" id="3601">3601</a>
+<a href="#3602" id="3602">3602</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -3585,6 +3608,7 @@
 };
 <span class="kw">use </span>core::num::NonZeroU32;
 
+<span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TypeContext;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -3965,6 +3989,30 @@
     <span class="doccomment">/// Whether we are lowering a constant expression or a general
     /// runtime expression, and the data needed in each case.
     </span>expr_type: ExpressionContextType&lt;<span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt;,
+}
+
+<span class="kw">impl </span>TypeContext <span class="kw">for </span>ExpressionContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
+    <span class="kw">fn </span>lookup_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span><span class="kw">crate</span>::Type {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.module.types[handle]
+    }
+
+    <span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="self">self</span>.module.types[handle]
+            .name
+            .as_deref()
+            .unwrap_or(<span class="string">"{anonymous type}"</span>)
+    }
+
+    <span class="kw">fn </span>write_override&lt;W: core::fmt::Write&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        handle: Handle&lt;<span class="kw">crate</span>::Override&gt;,
+        out: <span class="kw-2">&amp;mut </span>W,
+    ) -&gt; core::fmt::Result {
+        <span class="kw">match </span><span class="self">self</span>.module.overrides[handle].name {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) =&gt; out.write_str(name),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">write!</span>(out, <span class="string">"{{anonymous override {handle:?}}}"</span>),
+        }
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
@@ -4835,8 +4883,8 @@
                 <span class="kw">if </span>!explicit_inner.equivalent(init_inner, <span class="kw-2">&amp;</span>ectx.module.types) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                         name: name.span,
-                        expected: explicit_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()),
-                        got: init_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()),
+                        expected: ectx.type_inner_to_string(explicit_inner),
+                        got: ectx.type_inner_to_string(init_inner),
                     }));
                 }
                 ty = explicit_ty;
@@ -5066,11 +5114,10 @@
                             .inner
                             .equivalent(<span class="kw-2">&amp;</span>ctx.module.types[init_ty].inner, <span class="kw-2">&amp;</span>ctx.module.types)
                         {
-                            <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span>ctx.module.to_ctx();
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                                 name: l.name.span,
-                                expected: ty.to_wgsl(gctx),
-                                got: init_ty.to_wgsl(gctx),
+                                expected: ctx.type_to_string(ty),
+                                got: ctx.type_to_string(init_ty),
                             }));
                         }
                     }
@@ -5771,11 +5818,10 @@
                     <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; scalar,
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">let </span>ty = <span class="macro">resolve!</span>(ctx, expr);
-                        <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span>ctx.module.to_ctx();
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadTypeCast {
-                            from_type: ty.to_wgsl(gctx),
+                            from_type: ctx.type_resolution_to_string(ty),
                             span: ty_span,
-                            to_type: to_resolved.to_wgsl(gctx),
+                            to_type: ctx.type_to_string(to_resolved),
                         }));
                     }
                 };

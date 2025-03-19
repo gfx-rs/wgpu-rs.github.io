@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["address_space_str"],"trait":["ToWgsl","TryToWgsl"]};

@@ -1179,7 +1179,27 @@
 <a href="#1178" id="1178">1178</a>
 <a href="#1179" id="1179">1179</a>
 <a href="#1180" id="1180">1180</a>
-<a href="#1181" id="1181">1181</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
+
+</span><span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TryToWgsl;
+<span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
+<span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
+<span class="kw">use crate</span>::{Scalar, SourceLocation, Span};
+
+<span class="kw">use </span><span class="kw">super</span>::parse::directive::enable_extension::{EnableExtension, UnimplementedEnableExtension};
+<span class="kw">use </span><span class="kw">super</span>::parse::directive::language_extension::{
+    LanguageExtension, UnimplementedLanguageExtension,
+};
+<span class="kw">use </span><span class="kw">super</span>::parse::lexer::Token;
+
+<span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
+<span class="kw">use </span>codespan_reporting::files::SimpleFile;
+<span class="kw">use </span>codespan_reporting::term;
+<span class="kw">use </span>termcolor::{ColorChoice, NoColor, StandardStream};
+<span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     format,
@@ -1188,24 +1208,6 @@
     vec::Vec,
 };
 <span class="kw">use </span>core::ops::Range;
-
-<span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
-<span class="kw">use </span>codespan_reporting::files::SimpleFile;
-<span class="kw">use </span>codespan_reporting::term;
-<span class="kw">use </span>termcolor::{ColorChoice, NoColor, StandardStream};
-<span class="kw">use </span>thiserror::Error;
-
-<span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::{
-    EnableExtension, UnimplementedEnableExtension,
-};
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::language_extension::{
-    LanguageExtension, UnimplementedLanguageExtension,
-};
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::Token;
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
-<span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
-<span class="kw">use crate</span>::{SourceLocation, Span};
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>ParseError {
@@ -1627,7 +1629,7 @@
             Error::BadMatrixScalarKind(span, scalar) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
                     <span class="string">"matrix scalar type must be floating-point, but found `{}`"</span>,
-                    scalar.to_wgsl()
+                    scalar.to_wgsl_for_diagnostics()
                 ),
                 labels: <span class="macro">vec!</span>[(span, <span class="string">"must be floating-point (e.g. `f32`)"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
@@ -1650,7 +1652,7 @@
             Error::BadTextureSampleType { span, scalar } =&gt; ParseError {
                 message: <span class="macro">format!</span>(
                     <span class="string">"texture sample type must be one of f32, i32 or u32, but found {}"</span>,
-                    scalar.to_wgsl()
+                    scalar.to_wgsl_for_diagnostics()
                 ),
                 labels: <span class="macro">vec!</span>[(span, <span class="string">"must be one of f32, i32 or u32"</span>.into())],
                 notes: <span class="macro">vec!</span>[],

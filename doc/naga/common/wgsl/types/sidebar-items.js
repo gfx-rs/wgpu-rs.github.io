@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["TypeContext"]};
+window.SIDEBAR_ITEMS = {"enum":["WriteTypeError"],"fn":["try_write_type_inner"],"trait":["TypeContext"]};
