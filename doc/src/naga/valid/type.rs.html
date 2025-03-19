@@ -757,7 +757,44 @@
 <a href="#756" id="756">756</a>
 <a href="#757" id="757">757</a>
 <a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::string::String;
 
 <span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
@@ -928,8 +965,16 @@
     </span>Abstract,
 }
 
+<span class="attr">#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
+</span><span class="kw">pub enum </span>PushConstantError {
+    <span class="attr">#[error(<span class="string">"The scalar type {0:?} is not supported in push constants"</span>)]
+    </span>InvalidScalar(<span class="kw">crate</span>::Scalar),
+}
+
 <span class="comment">// Only makes sense if `flags.contains(HOST_SHAREABLE)`
 </span><span class="kw">type </span>LayoutCompatibility = <span class="prelude-ty">Result</span>&lt;Alignment, (Handle&lt;<span class="kw">crate</span>::Type&gt;, Disalignment)&gt;;
+<span class="kw">type </span>PushConstantCompatibility = <span class="prelude-ty">Result</span>&lt;(), PushConstantError&gt;;
 
 <span class="kw">fn </span>check_member_layout(
     accum: <span class="kw-2">&amp;mut </span>LayoutCompatibility,
@@ -980,6 +1025,7 @@
     <span class="kw">pub </span>flags: TypeFlags,
     <span class="kw">pub </span>uniform_layout: LayoutCompatibility,
     <span class="kw">pub </span>storage_layout: LayoutCompatibility,
+    <span class="kw">pub </span>push_constant_compatibility: PushConstantCompatibility,
 }
 
 <span class="kw">impl </span>TypeInfo {
@@ -988,6 +1034,7 @@
             flags: TypeFlags::empty(),
             uniform_layout: <span class="prelude-val">Ok</span>(Alignment::ONE),
             storage_layout: <span class="prelude-val">Ok</span>(Alignment::ONE),
+            push_constant_compatibility: <span class="prelude-val">Ok</span>(()),
         }
     }
 
@@ -996,6 +1043,7 @@
             flags,
             uniform_layout: <span class="prelude-val">Ok</span>(alignment),
             storage_layout: <span class="prelude-val">Ok</span>(alignment),
+            push_constant_compatibility: <span class="prelude-val">Ok</span>(()),
         }
     }
 }
@@ -1009,11 +1057,15 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>check_width(<span class="kw-2">&amp;</span><span class="self">self</span>, scalar: <span class="kw">crate</span>::Scalar) -&gt; <span class="prelude-ty">Result</span>&lt;(), WidthError&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>check_width(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        scalar: <span class="kw">crate</span>::Scalar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PushConstantCompatibility, WidthError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>push_constant_compatibility = <span class="prelude-val">Ok</span>(());
         <span class="kw">let </span>good = <span class="kw">match </span>scalar.kind {
             <span class="kw">crate</span>::ScalarKind::Bool =&gt; scalar.width == <span class="kw">crate</span>::BOOL_WIDTH,
-            <span class="kw">crate</span>::ScalarKind::Float =&gt; {
-                <span class="kw">if </span>scalar.width == <span class="number">8 </span>{
+            <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="kw">match </span>scalar.width {
+                <span class="number">8 </span>=&gt; {
                     <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::FLOAT64) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(WidthError::MissingCapability {
                             name: <span class="string">"f64"</span>,
@@ -1021,10 +1073,21 @@
                         });
                     }
                     <span class="bool-val">true
-                </span>} <span class="kw">else </span>{
-                    scalar.width == <span class="number">4
                 </span>}
-            }
+                <span class="number">2 </span>=&gt; {
+                    <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::SHADER_FLOAT16) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(WidthError::MissingCapability {
+                            name: <span class="string">"f16"</span>,
+                            flag: <span class="string">"FLOAT16"</span>,
+                        });
+                    }
+
+                    push_constant_compatibility = <span class="prelude-val">Err</span>(PushConstantError::InvalidScalar(scalar));
+
+                    <span class="bool-val">true
+                </span>}
+                <span class="kw">_ </span>=&gt; scalar.width == <span class="number">4</span>,
+            },
             <span class="kw">crate</span>::ScalarKind::Sint =&gt; {
                 <span class="kw">if </span>scalar.width == <span class="number">8 </span>{
                     <span class="kw">if </span>!<span class="self">self</span>.capabilities.contains(Capabilities::SHADER_INT64) {
@@ -1056,7 +1119,7 @@
             }
         };
         <span class="kw">if </span>good {
-            <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(push_constant_compatibility)
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(WidthError::Invalid(scalar.kind, scalar.width))
         }
@@ -1076,13 +1139,13 @@
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>gctx.types[handle].inner {
             Ti::Scalar(scalar) =&gt; {
-                <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span>push_constant_compatibility = <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
                 <span class="kw">let </span>shareable = <span class="kw">if </span>scalar.kind.is_numeric() {
                     TypeFlags::IO_SHAREABLE | TypeFlags::HOST_SHAREABLE
                 } <span class="kw">else </span>{
                     TypeFlags::empty()
                 };
-                TypeInfo::new(
+                <span class="kw">let </span><span class="kw-2">mut </span>type_info = TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
@@ -1091,16 +1154,18 @@
                         | TypeFlags::CREATION_RESOLVED
                         | shareable,
                     Alignment::from_width(scalar.width),
-                )
+                );
+                type_info.push_constant_compatibility = push_constant_compatibility;
+                type_info
             }
             Ti::Vector { size, scalar } =&gt; {
-                <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span>push_constant_compatibility = <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
                 <span class="kw">let </span>shareable = <span class="kw">if </span>scalar.kind.is_numeric() {
                     TypeFlags::IO_SHAREABLE | TypeFlags::HOST_SHAREABLE
                 } <span class="kw">else </span>{
                     TypeFlags::empty()
                 };
-                TypeInfo::new(
+                <span class="kw">let </span><span class="kw-2">mut </span>type_info = TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
@@ -1109,7 +1174,9 @@
                         | TypeFlags::CREATION_RESOLVED
                         | shareable,
                     Alignment::from(size) * Alignment::from_width(scalar.width),
-                )
+                );
+                type_info.push_constant_compatibility = push_constant_compatibility;
+                type_info
             }
             Ti::Matrix {
                 columns: <span class="kw">_</span>,
@@ -1119,8 +1186,8 @@
                 <span class="kw">if </span>scalar.kind != <span class="kw">crate</span>::ScalarKind::Float {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MatrixElementNotFloat);
                 }
-                <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
-                TypeInfo::new(
+                <span class="kw">let </span>push_constant_compatibility = <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>type_info = TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
                         | TypeFlags::COPY
@@ -1129,7 +1196,9 @@
                         | TypeFlags::CONSTRUCTIBLE
                         | TypeFlags::CREATION_RESOLVED,
                     Alignment::from(rows) * Alignment::from_width(scalar.width),
-                )
+                );
+                type_info.push_constant_compatibility = push_constant_compatibility;
+                type_info
             }
             Ti::Atomic(scalar) =&gt; {
                 <span class="kw">match </span>scalar {
@@ -1224,7 +1293,7 @@
                 // However, some cases are trivial: All our implicit base types
                 // are DATA and SIZED, so we can never return
                 // `InvalidPointerBase` or `InvalidPointerToUnsized`.
-                </span><span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
+                </span><span class="kw">let _ </span>= <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
 
                 <span class="comment">// `Validator::validate_function` actually checks the address
                 // space of pointer arguments explicitly before checking the
@@ -1310,6 +1379,7 @@
                     flags: base_info.flags &amp; type_info_mask,
                     uniform_layout,
                     storage_layout,
+                    push_constant_compatibility: base_info.push_constant_compatibility.clone(),
                 }
             }
             Ti::Struct { <span class="kw-2">ref </span>members, span } =&gt; {
@@ -1390,6 +1460,10 @@
                         base_info.storage_layout,
                         handle,
                     );
+                    <span class="kw">if </span>base_info.push_constant_compatibility.is_err() {
+                        ti.push_constant_compatibility =
+                            base_info.push_constant_compatibility.clone();
+                    }
 
                     <span class="comment">// Validate rule: If a structure member itself has a structure type S,
                     // then the number of bytes between the start of that member and

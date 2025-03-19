@@ -6084,7 +6084,12 @@
 <a href="#6083" id="6083">6083</a>
 <a href="#6084" id="6084">6084</a>
 <a href="#6085" id="6085">6085</a>
-<a href="#6086" id="6086">6086</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#6086" id="6086">6086</a>
+<a href="#6087" id="6087">6087</a>
+<a href="#6088" id="6088">6088</a>
+<a href="#6089" id="6089">6089</a>
+<a href="#6090" id="6090">6090</a>
+<a href="#6091" id="6091">6091</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [SPIR-V][spv] (Standard Portable Intermediate Representation).
 
 ## ID lookups
@@ -6125,6 +6130,7 @@ This value then gets used instead of `OpLoad` result later on.
 <span class="kw">use </span>core::{convert::TryInto, mem, num::NonZeroU32};
 <span class="kw">use </span>std::path::PathBuf;
 
+<span class="kw">use </span>half::f16;
 <span class="kw">use </span>petgraph::graphmap::GraphMap;
 
 <span class="kw">use </span><span class="kw">super</span>::atomic_upgrade::Upgrades;
@@ -6168,6 +6174,7 @@ This value then gets used instead of `OpLoad` result later on.
     <span class="string">"SPV_KHR_vulkan_memory_model"</span>,
     <span class="string">"SPV_KHR_multiview"</span>,
     <span class="string">"SPV_EXT_shader_atomic_float_add"</span>,
+    <span class="string">"SPV_KHR_16bit_storage"</span>,
 ];
 <span class="kw">pub const </span>SUPPORTED_EXT_SETS: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str] = <span class="kw-2">&amp;</span>[<span class="string">"GLSL.std.450"</span>];
 
@@ -11690,6 +11697,9 @@ This value then gets used instead of `OpLoad` result later on.
             }) =&gt; {
                 <span class="kw">let </span>low = <span class="self">self</span>.next()<span class="question-mark">?</span>;
                 <span class="kw">match </span>width {
+                    <span class="comment">// https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html#Literal
+                    // If a numeric type’s bit width is less than 32-bits, the value appears in the low-order bits of the word.
+                    </span><span class="number">2 </span>=&gt; <span class="kw">crate</span>::Literal::F16(f16::from_bits(low <span class="kw">as </span>u16)),
                     <span class="number">4 </span>=&gt; <span class="kw">crate</span>::Literal::F32(f32::from_bits(low)),
                     <span class="number">8 </span>=&gt; {
                         inst.expect(<span class="number">5</span>)<span class="question-mark">?</span>;

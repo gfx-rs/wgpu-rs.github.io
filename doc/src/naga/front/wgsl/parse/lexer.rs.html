@@ -797,7 +797,17 @@
 <a href="#796" id="796">796</a>
 <a href="#797" id="797">797</a>
 <a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken, <span class="prelude-ty">Result</span>};
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::EnableExtensions;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
@@ -1212,14 +1222,17 @@
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
     </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Scalar&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
+        <span class="kw">let </span>(scalar, _span) = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; {
-                conv::get_scalar_type(word).ok_or(Error::UnknownScalarType(span))
-            }
-            (<span class="kw">_</span>, span) =&gt; <span class="prelude-val">Err</span>(Error::UnknownScalarType(span)),
-        }<span class="question-mark">?</span>;
+                conv::get_scalar_type(<span class="kw-2">&amp;</span><span class="self">self</span>.enable_extensions, span, word)<span class="question-mark">?
+                    </span>.map(|scalar| (scalar, span))
+                    .ok_or(Error::UnknownScalarType(span))<span class="question-mark">?
+            </span>}
+            (<span class="kw">_</span>, span) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(span))),
+        };
+
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(pair)
+        <span class="prelude-val">Ok</span>(scalar)
     }
 
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
@@ -1229,14 +1242,18 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (Scalar, Span)&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
-            (Token::Word(word), span) =&gt; conv::get_scalar_type(word)
-                .map(|scalar| (scalar, span))
-                .ok_or(Error::UnknownScalarType(span)),
-            (<span class="kw">_</span>, span) =&gt; <span class="prelude-val">Err</span>(Error::UnknownScalarType(span)),
-        }<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>(scalar, span) = <span class="kw">match </span><span class="self">self</span>.next() {
+            (Token::Word(word), span) =&gt; {
+                conv::get_scalar_type(<span class="kw-2">&amp;</span><span class="self">self</span>.enable_extensions, span, word)<span class="question-mark">?
+                    </span>.map(|scalar| (scalar, span))
+                    .ok_or(Error::UnknownScalarType(span))<span class="question-mark">?
+            </span>}
+            (<span class="kw">_</span>, span) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(span))),
+        };
+
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&gt;'</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(pair)
+        <span class="prelude-val">Ok</span>((scalar, span))
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_storage_access(
@@ -1317,6 +1334,7 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>test_numbers() {
+    <span class="kw">use </span>half::f16;
     <span class="comment">// WGSL spec examples //
 
     // decimal integer
@@ -1341,15 +1359,17 @@
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.01</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">12.34</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">0.</span>))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F16(f16::from_f32(<span class="number">0.</span>)))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.001</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">43.75</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">16.</span>))),
             Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.1875</span>))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
-            Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.12109375</span>))),
-            Token::Number(<span class="prelude-val">Err</span>(NumberError::UnimplementedF16)),
-        ],
+            <span class="comment">// https://github.com/gfx-rs/wgpu/issues/7046
+            </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// Should be 0.75
+            </span>Token::Number(<span class="prelude-val">Ok</span>(Number::AbstractFloat(<span class="number">0.12109375</span>))),
+            <span class="comment">// https://github.com/gfx-rs/wgpu/issues/7046
+            </span>Token::Number(<span class="prelude-val">Err</span>(NumberError::NotRepresentable)), <span class="comment">// Should be 12.5
+        </span>],
     );
 
     <span class="comment">// MIN / MAX //

@@ -808,13 +808,18 @@
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
 <a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::vec::Vec;
 
 <span class="kw">use </span>bit_set::BitSet;
 
 <span class="kw">use super</span>::{
     analyzer::{FunctionInfo, GlobalUse},
-    Capabilities, Disalignment, FunctionError, ModuleInfo,
+    Capabilities, Disalignment, FunctionError, ModuleInfo, PushConstantError,
 };
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, UniqueArena};
 <span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, MapErrWithSpan <span class="kw">as _</span>, SpanProvider <span class="kw">as _</span>, WithSpan};
@@ -851,6 +856,8 @@
     </span>InitializerNotAllowed(<span class="kw">crate</span>::AddressSpace),
     <span class="attr">#[error(<span class="string">"Storage address space doesn't support write-only access"</span>)]
     </span>StorageAddressSpaceWriteOnlyNotSupported,
+    <span class="attr">#[error(<span class="string">"Type is not valid for use as a push constant"</span>)]
+    </span>InvalidPushConstantType(<span class="attr">#[source] </span>PushConstantError),
 }
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -1405,6 +1412,9 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::UnsupportedCapability(
                         Capabilities::PUSH_CONSTANT,
                     ));
+                }
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = type_info.push_constant_compatibility {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(GlobalVariableError::InvalidPushConstantType(err.clone()));
                 }
                 (
                     TypeFlags::DATA

@@ -3272,12 +3272,93 @@
 <a href="#3271" id="3271">3271</a>
 <a href="#3272" id="3272">3272</a>
 <a href="#3273" id="3273">3273</a>
-<a href="#3274" id="3274">3274</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3274" id="3274">3274</a>
+<a href="#3275" id="3275">3275</a>
+<a href="#3276" id="3276">3276</a>
+<a href="#3277" id="3277">3277</a>
+<a href="#3278" id="3278">3278</a>
+<a href="#3279" id="3279">3279</a>
+<a href="#3280" id="3280">3280</a>
+<a href="#3281" id="3281">3281</a>
+<a href="#3282" id="3282">3282</a>
+<a href="#3283" id="3283">3283</a>
+<a href="#3284" id="3284">3284</a>
+<a href="#3285" id="3285">3285</a>
+<a href="#3286" id="3286">3286</a>
+<a href="#3287" id="3287">3287</a>
+<a href="#3288" id="3288">3288</a>
+<a href="#3289" id="3289">3289</a>
+<a href="#3290" id="3290">3290</a>
+<a href="#3291" id="3291">3291</a>
+<a href="#3292" id="3292">3292</a>
+<a href="#3293" id="3293">3293</a>
+<a href="#3294" id="3294">3294</a>
+<a href="#3295" id="3295">3295</a>
+<a href="#3296" id="3296">3296</a>
+<a href="#3297" id="3297">3297</a>
+<a href="#3298" id="3298">3298</a>
+<a href="#3299" id="3299">3299</a>
+<a href="#3300" id="3300">3300</a>
+<a href="#3301" id="3301">3301</a>
+<a href="#3302" id="3302">3302</a>
+<a href="#3303" id="3303">3303</a>
+<a href="#3304" id="3304">3304</a>
+<a href="#3305" id="3305">3305</a>
+<a href="#3306" id="3306">3306</a>
+<a href="#3307" id="3307">3307</a>
+<a href="#3308" id="3308">3308</a>
+<a href="#3309" id="3309">3309</a>
+<a href="#3310" id="3310">3310</a>
+<a href="#3311" id="3311">3311</a>
+<a href="#3312" id="3312">3312</a>
+<a href="#3313" id="3313">3313</a>
+<a href="#3314" id="3314">3314</a>
+<a href="#3315" id="3315">3315</a>
+<a href="#3316" id="3316">3316</a>
+<a href="#3317" id="3317">3317</a>
+<a href="#3318" id="3318">3318</a>
+<a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
 </span><span class="kw">use </span>alloc::vec::Vec;
 
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>spirv::Word;
 
 <span class="kw">use super</span>::{
@@ -4886,159 +4967,7 @@ Implementations for `BlockContext` methods.
                 expr,
                 kind,
                 convert,
-            } =&gt; {
-                <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
-
-                <span class="kw">let </span>expr_id = <span class="self">self</span>.cached[expr];
-                <span class="kw">let </span>(src_scalar, src_size, is_matrix) =
-                    <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.fun_info[expr].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types) {
-                        <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (scalar, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
-                        <span class="kw">crate</span>::TypeInner::Vector { scalar, size } =&gt; (scalar, <span class="prelude-val">Some</span>(size), <span class="bool-val">false</span>),
-                        <span class="kw">crate</span>::TypeInner::Matrix { scalar, .. } =&gt; (scalar, <span class="prelude-val">None</span>, <span class="bool-val">true</span>),
-                        <span class="kw-2">ref </span>other =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">"As source {:?}"</span>, other);
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Unexpected Expression::As source"</span>));
-                        }
-                    };
-
-                <span class="kw">enum </span>Cast {
-                    Identity,
-                    Unary(spirv::Op),
-                    Binary(spirv::Op, Word),
-                    Ternary(spirv::Op, Word, Word),
-                }
-
-                <span class="kw">let </span>cast = <span class="kw">if </span>is_matrix {
-                    <span class="comment">// we only support identity casts for matrices
-                    </span>Cast::Unary(spirv::Op::CopyObject)
-                } <span class="kw">else </span>{
-                    <span class="kw">match </span>(src_scalar.kind, kind, convert) {
-                        <span class="comment">// Filter out identity casts. Some Adreno drivers are
-                        // confused by no-op OpBitCast instructions.
-                        </span>(src_kind, kind, convert)
-                            <span class="kw">if </span>src_kind == kind
-                                &amp;&amp; convert.filter(|<span class="kw-2">&amp;</span>width| width != src_scalar.width).is_none() =&gt;
-                        {
-                            Cast::Identity
-                        }
-                        (Sk::Bool, Sk::Bool, <span class="kw">_</span>) =&gt; Cast::Unary(spirv::Op::CopyObject),
-                        (<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; Cast::Unary(spirv::Op::Bitcast),
-                        <span class="comment">// casting to a bool - generate `OpXxxNotEqual`
-                        </span>(<span class="kw">_</span>, Sk::Bool, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
-                            <span class="kw">let </span>op = <span class="kw">match </span>src_scalar.kind {
-                                Sk::Sint | Sk::Uint =&gt; spirv::Op::INotEqual,
-                                Sk::Float =&gt; spirv::Op::FUnordNotEqual,
-                                Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="macro">unreachable!</span>(),
-                            };
-                            <span class="kw">let </span>zero_scalar_id =
-                                <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, src_scalar)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>zero_id = <span class="kw">match </span>src_size {
-                                <span class="prelude-val">Some</span>(size) =&gt; {
-                                    <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
-                                        size,
-                                        scalar: src_scalar,
-                                    })
-                                    .into();
-
-                                    <span class="self">self</span>.temp_list.clear();
-                                    <span class="self">self</span>.temp_list.resize(size <span class="kw">as _</span>, zero_scalar_id);
-
-                                    <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list)
-                                }
-                                <span class="prelude-val">None </span>=&gt; zero_scalar_id,
-                            };
-
-                            Cast::Binary(op, zero_id)
-                        }
-                        <span class="comment">// casting from a bool - generate `OpSelect`
-                        </span>(Sk::Bool, <span class="kw">_</span>, <span class="prelude-val">Some</span>(dst_width)) =&gt; {
-                            <span class="kw">let </span>dst_scalar = <span class="kw">crate</span>::Scalar {
-                                kind,
-                                width: dst_width,
-                            };
-                            <span class="kw">let </span>zero_scalar_id =
-                                <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, dst_scalar)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>one_scalar_id =
-                                <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">1</span>, dst_scalar)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>(accept_id, reject_id) = <span class="kw">match </span>src_size {
-                                <span class="prelude-val">Some</span>(size) =&gt; {
-                                    <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
-                                        size,
-                                        scalar: dst_scalar,
-                                    })
-                                    .into();
-
-                                    <span class="self">self</span>.temp_list.clear();
-                                    <span class="self">self</span>.temp_list.resize(size <span class="kw">as _</span>, zero_scalar_id);
-
-                                    <span class="kw">let </span>vec0_id =
-                                        <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list);
-
-                                    <span class="self">self</span>.temp_list.fill(one_scalar_id);
-
-                                    <span class="kw">let </span>vec1_id =
-                                        <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list);
-
-                                    (vec1_id, vec0_id)
-                                }
-                                <span class="prelude-val">None </span>=&gt; (one_scalar_id, zero_scalar_id),
-                            };
-
-                            Cast::Ternary(spirv::Op::Select, accept_id, reject_id)
-                        }
-                        (Sk::Float, Sk::Uint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToU),
-                        (Sk::Float, Sk::Sint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToS),
-                        (Sk::Float, Sk::Float, <span class="prelude-val">Some</span>(dst_width))
-                            <span class="kw">if </span>src_scalar.width != dst_width =&gt;
-                        {
-                            Cast::Unary(spirv::Op::FConvert)
-                        }
-                        (Sk::Sint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertSToF),
-                        (Sk::Sint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                            Cast::Unary(spirv::Op::SConvert)
-                        }
-                        (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF),
-                        (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                            Cast::Unary(spirv::Op::UConvert)
-                        }
-                        (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                            Cast::Unary(spirv::Op::SConvert)
-                        }
-                        (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                            Cast::Unary(spirv::Op::UConvert)
-                        }
-                        <span class="comment">// We assume it's either an identity cast, or int-uint.
-                        </span><span class="kw">_ </span>=&gt; Cast::Unary(spirv::Op::Bitcast),
-                    }
-                };
-
-                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
-                <span class="kw">let </span>instruction = <span class="kw">match </span>cast {
-                    Cast::Identity =&gt; <span class="prelude-val">None</span>,
-                    Cast::Unary(op) =&gt; <span class="prelude-val">Some</span>(Instruction::unary(op, result_type_id, id, expr_id)),
-                    Cast::Binary(op, operand) =&gt; <span class="prelude-val">Some</span>(Instruction::binary(
-                        op,
-                        result_type_id,
-                        id,
-                        expr_id,
-                        operand,
-                    )),
-                    Cast::Ternary(op, op1, op2) =&gt; <span class="prelude-val">Some</span>(Instruction::ternary(
-                        op,
-                        result_type_id,
-                        id,
-                        expr_id,
-                        op1,
-                        op2,
-                    )),
-                };
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(instruction) = instruction {
-                    block.body.push(instruction);
-                    id
-                } <span class="kw">else </span>{
-                    expr_id
-                }
-            }
+            } =&gt; <span class="self">self</span>.write_as_expression(expr, convert, kind, block, result_type_id)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Expression::ImageLoad {
                 image,
                 coordinate,
@@ -5197,6 +5126,237 @@ Implementations for `BlockContext` methods.
 
         <span class="self">self</span>.cached[expr_handle] = id;
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Helper which focuses on generating the `As` expressions and the various conversions
+    /// that need to happen because of that.
+    </span><span class="kw">fn </span>write_as_expression(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        convert: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+        kind: <span class="kw">crate</span>::ScalarKind,
+
+        block: <span class="kw-2">&amp;mut </span>Block,
+        result_type_id: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;u32, Error&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
+        <span class="kw">let </span>expr_id = <span class="self">self</span>.cached[expr];
+        <span class="kw">let </span>ty = <span class="self">self</span>.fun_info[expr].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types);
+
+        <span class="comment">// Matrix casts needs special treatment in SPIR-V, as the cast functions
+        // can take vectors or scalars, but not matrices. In order to cast a matrix
+        // we need to cast each column of the matrix individually and construct a new
+        // matrix from the converted columns.
+        </span><span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Matrix {
+            columns,
+            rows,
+            scalar,
+        } = <span class="kw-2">*</span>ty
+        {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(convert) = convert <span class="kw">else </span>{
+                <span class="comment">// No conversion needs to be done, passes through.
+                </span><span class="kw">return </span><span class="prelude-val">Ok</span>(expr_id);
+            };
+
+            <span class="kw">if </span>convert == scalar.width {
+                <span class="comment">// No conversion needs to be done, passes through.
+                </span><span class="kw">return </span><span class="prelude-val">Ok</span>(expr_id);
+            }
+
+            <span class="kw">if </span>kind != Sk::Float {
+                <span class="comment">// Only float conversions are supported for matrices.
+                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Matrices must be floats"</span>));
+            }
+
+            <span class="comment">// Type of each extracted column
+            </span><span class="kw">let </span>column_src_ty =
+                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                    size: rows,
+                    scalar,
+                })));
+
+            <span class="comment">// Type of the column after conversion
+            </span><span class="kw">let </span>column_dst_ty =
+                <span class="self">self</span>.get_type_id(LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                    size: rows,
+                    scalar: <span class="kw">crate</span>::Scalar {
+                        kind,
+                        width: convert,
+                    },
+                })));
+
+            <span class="kw">let </span><span class="kw-2">mut </span>components = ArrayVec::&lt;Word, <span class="number">4</span>&gt;::new();
+
+            <span class="kw">for </span>column <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>usize {
+                <span class="kw">let </span>column_id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::composite_extract(
+                    column_src_ty,
+                    column_id,
+                    expr_id,
+                    <span class="kw-2">&amp;</span>[column <span class="kw">as </span>u32],
+                ));
+
+                <span class="kw">let </span>column_conv_id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::unary(
+                    spirv::Op::FConvert,
+                    column_dst_ty,
+                    column_conv_id,
+                    column_id,
+                ));
+
+                components.push(column_conv_id);
+            }
+
+            <span class="kw">let </span>construct_id = <span class="self">self</span>.gen_id();
+
+            block.body.push(Instruction::composite_construct(
+                result_type_id,
+                construct_id,
+                <span class="kw-2">&amp;</span>components,
+            ));
+
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(construct_id);
+        }
+
+        <span class="kw">let </span>(src_scalar, src_size) = <span class="kw">match </span><span class="kw-2">*</span>ty {
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (scalar, <span class="prelude-val">None</span>),
+            <span class="kw">crate</span>::TypeInner::Vector { scalar, size } =&gt; (scalar, <span class="prelude-val">Some</span>(size)),
+            <span class="kw-2">ref </span>other =&gt; {
+                <span class="macro">log::error!</span>(<span class="string">"As source {:?}"</span>, other);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">"Unexpected Expression::As source"</span>));
+            }
+        };
+
+        <span class="kw">enum </span>Cast {
+            Identity,
+            Unary(spirv::Op),
+            Binary(spirv::Op, Word),
+            Ternary(spirv::Op, Word, Word),
+        }
+        <span class="kw">let </span>cast = <span class="kw">match </span>(src_scalar.kind, kind, convert) {
+            <span class="comment">// Filter out identity casts. Some Adreno drivers are
+            // confused by no-op OpBitCast instructions.
+            </span>(src_kind, kind, convert)
+                <span class="kw">if </span>src_kind == kind
+                    &amp;&amp; convert.filter(|<span class="kw-2">&amp;</span>width| width != src_scalar.width).is_none() =&gt;
+            {
+                Cast::Identity
+            }
+            (Sk::Bool, Sk::Bool, <span class="kw">_</span>) =&gt; Cast::Unary(spirv::Op::CopyObject),
+            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; Cast::Unary(spirv::Op::Bitcast),
+            <span class="comment">// casting to a bool - generate `OpXxxNotEqual`
+            </span>(<span class="kw">_</span>, Sk::Bool, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
+                <span class="kw">let </span>op = <span class="kw">match </span>src_scalar.kind {
+                    Sk::Sint | Sk::Uint =&gt; spirv::Op::INotEqual,
+                    Sk::Float =&gt; spirv::Op::FUnordNotEqual,
+                    Sk::Bool | Sk::AbstractInt | Sk::AbstractFloat =&gt; <span class="macro">unreachable!</span>(),
+                };
+                <span class="kw">let </span>zero_scalar_id = <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, src_scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span>zero_id = <span class="kw">match </span>src_size {
+                    <span class="prelude-val">Some</span>(size) =&gt; {
+                        <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
+                            size,
+                            scalar: src_scalar,
+                        })
+                        .into();
+
+                        <span class="self">self</span>.temp_list.clear();
+                        <span class="self">self</span>.temp_list.resize(size <span class="kw">as _</span>, zero_scalar_id);
+
+                        <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list)
+                    }
+                    <span class="prelude-val">None </span>=&gt; zero_scalar_id,
+                };
+
+                Cast::Binary(op, zero_id)
+            }
+            <span class="comment">// casting from a bool - generate `OpSelect`
+            </span>(Sk::Bool, <span class="kw">_</span>, <span class="prelude-val">Some</span>(dst_width)) =&gt; {
+                <span class="kw">let </span>dst_scalar = <span class="kw">crate</span>::Scalar {
+                    kind,
+                    width: dst_width,
+                };
+                <span class="kw">let </span>zero_scalar_id = <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">0</span>, dst_scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span>one_scalar_id = <span class="self">self</span>.writer.get_constant_scalar_with(<span class="number">1</span>, dst_scalar)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(accept_id, reject_id) = <span class="kw">match </span>src_size {
+                    <span class="prelude-val">Some</span>(size) =&gt; {
+                        <span class="kw">let </span>ty = LocalType::Numeric(NumericType::Vector {
+                            size,
+                            scalar: dst_scalar,
+                        })
+                        .into();
+
+                        <span class="self">self</span>.temp_list.clear();
+                        <span class="self">self</span>.temp_list.resize(size <span class="kw">as _</span>, zero_scalar_id);
+
+                        <span class="kw">let </span>vec0_id = <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list);
+
+                        <span class="self">self</span>.temp_list.fill(one_scalar_id);
+
+                        <span class="kw">let </span>vec1_id = <span class="self">self</span>.writer.get_constant_composite(ty, <span class="kw-2">&amp;</span><span class="self">self</span>.temp_list);
+
+                        (vec1_id, vec0_id)
+                    }
+                    <span class="prelude-val">None </span>=&gt; (one_scalar_id, zero_scalar_id),
+                };
+
+                Cast::Ternary(spirv::Op::Select, accept_id, reject_id)
+            }
+            (Sk::Float, Sk::Uint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToU),
+            (Sk::Float, Sk::Sint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToS),
+            (Sk::Float, Sk::Float, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                Cast::Unary(spirv::Op::FConvert)
+            }
+            (Sk::Sint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertSToF),
+            (Sk::Sint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                Cast::Unary(spirv::Op::SConvert)
+            }
+            (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF),
+            (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                Cast::Unary(spirv::Op::UConvert)
+            }
+            (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                Cast::Unary(spirv::Op::SConvert)
+            }
+            (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
+                Cast::Unary(spirv::Op::UConvert)
+            }
+            <span class="comment">// We assume it's either an identity cast, or int-uint.
+            </span><span class="kw">_ </span>=&gt; Cast::Unary(spirv::Op::Bitcast),
+        };
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>cast {
+            Cast::Identity =&gt; expr_id,
+            Cast::Unary(op) =&gt; {
+                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+                block
+                    .body
+                    .push(Instruction::unary(op, result_type_id, id, expr_id));
+                id
+            }
+            Cast::Binary(op, operand) =&gt; {
+                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::binary(
+                    op,
+                    result_type_id,
+                    id,
+                    expr_id,
+                    operand,
+                ));
+                id
+            }
+            Cast::Ternary(op, op1, op2) =&gt; {
+                <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::ternary(
+                    op,
+                    result_type_id,
+                    id,
+                    expr_id,
+                    op1,
+                    op2,
+                ));
+                id
+            }
+        })
     }
 
     <span class="doccomment">/// Build an `OpAccessChain` instruction.

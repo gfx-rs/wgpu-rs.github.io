@@ -1180,7 +1180,9 @@
 <a href="#1179" id="1179">1179</a>
 <a href="#1180" id="1180">1180</a>
 <a href="#1181" id="1181">1181</a>
-<a href="#1182" id="1182">1182</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TryToWgsl;
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
@@ -1335,8 +1337,6 @@
     </span>Invalid,
     <span class="attr">#[error(<span class="string">"numeric literal not representable by target type"</span>)]
     </span>NotRepresentable,
-    <span class="attr">#[error(<span class="string">"unimplemented f16 type"</span>)]
-    </span>UnimplementedF16,
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
@@ -2208,23 +2208,22 @@
                 )],
             },
             Error::EnableExtensionNotEnabled { kind, span } =&gt; ParseError {
-                message: <span class="macro">format!</span>(<span class="string">"`{}` enable-extension is not enabled"</span>, kind.to_ident()),
+                message: <span class="macro">format!</span>(<span class="string">"the `{}` enable extension is not enabled"</span>, kind.to_ident()),
                 labels: <span class="macro">vec!</span>[(
                     span,
                     <span class="macro">format!</span>(
                         <span class="macro">concat!</span>(
-                            <span class="string">"the `{}` enable-extension is needed for this functionality, "</span>,
-                            <span class="string">"but it is not currently enabled"
+                            <span class="string">"the `{}` \"Enable Extension\" is needed for this functionality, "</span>,
+                            <span class="string">"but it is not currently enabled."
                         </span>),
                         kind.to_ident()
                     )
                     .into(),
                 )],
-                <span class="attr">#[allow(irrefutable_let_patterns)]
-                </span>notes: <span class="kw">if let </span>EnableExtension::Unimplemented(kind) = kind {
+                notes: <span class="kw">if let </span>EnableExtension::Unimplemented(kind) = kind {
                     <span class="macro">vec!</span>[<span class="macro">format!</span>(
                         <span class="macro">concat!</span>(
-                            <span class="string">"This enable-extension is not yet implemented. "</span>,
+                            <span class="string">"This \"Enable Extension\" is not yet implemented. "</span>,
                             <span class="string">"Let Naga maintainers know that you ran into this at "</span>,
                             <span class="string">"&lt;https://github.com/gfx-rs/wgpu/issues/{}&gt;, "</span>,
                             <span class="string">"so they can prioritize it!"
@@ -2232,7 +2231,12 @@
                         kind.tracking_issue_num()
                     )]
                 } <span class="kw">else </span>{
-                    <span class="macro">vec!</span>[]
+                    <span class="macro">vec!</span>[
+                        <span class="macro">format!</span>(
+                            <span class="string">"You can enable this extension by adding `enable {};` at the top of the shader, before any other items."</span>,
+                            kind.to_ident()
+                        ),
+                    ]
                 },
             },
             Error::LanguageExtensionNotYetImplemented { kind, span } =&gt; ParseError {

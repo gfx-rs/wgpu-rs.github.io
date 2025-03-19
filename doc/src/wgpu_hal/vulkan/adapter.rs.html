@@ -2651,7 +2651,13 @@
 <a href="#2650" id="2650">2650</a>
 <a href="#2651" id="2651">2651</a>
 <a href="#2652" id="2652">2652</a>
-<a href="#2653" id="2653">2653</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, ffi::CStr, sync::Arc, vec::Vec};
+<a href="#2653" id="2653">2653</a>
+<a href="#2654" id="2654">2654</a>
+<a href="#2655" id="2655">2655</a>
+<a href="#2656" id="2656">2656</a>
+<a href="#2657" id="2657">2657</a>
+<a href="#2658" id="2658">2658</a>
+<a href="#2659" id="2659">2659</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::ToOwned <span class="kw">as _</span>, collections::BTreeMap, ffi::CStr, sync::Arc, vec::Vec};
 
 <span class="kw">use </span>ash::{amd, ext, google, khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
@@ -3052,6 +3058,7 @@
                     vk::PhysicalDeviceShaderFloat16Int8Features::default().shader_float16(<span class="bool-val">true</span>),
                     vk::PhysicalDevice16BitStorageFeatures::default()
                         .storage_buffer16_bit_access(<span class="bool-val">true</span>)
+                        .storage_input_output16(<span class="bool-val">true</span>)
                         .uniform_and_storage_buffer16_bit_access(<span class="bool-val">true</span>),
                 ))
             } <span class="kw">else </span>{
@@ -3373,7 +3380,8 @@
                 F::SHADER_F16,
                 f16_i8.shader_float16 != <span class="number">0
                     </span>&amp;&amp; bit16.storage_buffer16_bit_access != <span class="number">0
-                    </span>&amp;&amp; bit16.uniform_and_storage_buffer16_bit_access != <span class="number">0</span>,
+                    </span>&amp;&amp; bit16.uniform_and_storage_buffer16_bit_access != <span class="number">0
+                    </span>&amp;&amp; bit16.storage_input_output16 != <span class="number">0</span>,
             );
         }
 
@@ -4619,6 +4627,10 @@
 
             <span class="kw">if </span>features.contains(wgt::Features::SHADER_INT64) {
                 capabilities.push(spv::Capability::Int64);
+            }
+
+            <span class="kw">if </span>features.contains(wgt::Features::SHADER_F16) {
+                capabilities.push(spv::Capability::Float16);
             }
 
             <span class="kw">if </span>features.intersects(

@@ -128,7 +128,9 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`EnableExtension`] API.
 
@@ -141,19 +143,23 @@
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>EnableExtensions {
     dual_source_blending: bool,
+    <span class="doccomment">/// Whether `enable f16;` was written earlier in the shader module.
+    </span>f16: bool,
 }
 
 <span class="kw">impl </span>EnableExtensions {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>empty() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            f16: <span class="bool-val">false</span>,
             dual_source_blending: <span class="bool-val">false</span>,
         }
     }
 
     <span class="doccomment">/// Add an enable-extension to the set requested by a module.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ext: ImplementedEnableExtension) {
-        <span class="kw">let </span>field: <span class="kw-2">&amp;mut </span>bool = <span class="kw">match </span>ext {
+        <span class="kw">let </span>field = <span class="kw">match </span>ext {
             ImplementedEnableExtension::DualSourceBlending =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.dual_source_blending,
+            ImplementedEnableExtension::F16 =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.f16,
         };
         <span class="kw-2">*</span>field = <span class="bool-val">true</span>;
     }
@@ -162,6 +168,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, ext: ImplementedEnableExtension) -&gt; bool {
         <span class="kw">match </span>ext {
             ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">self</span>.dual_source_blending,
+            ImplementedEnableExtension::F16 =&gt; <span class="self">self</span>.f16,
         }
     }
 }
@@ -177,8 +184,7 @@
 /// WGSL spec.: &lt;https://www.w3.org/TR/WGSL/#enable-extensions-sec&gt;
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>EnableExtension {
-    <span class="attr">#[allow(unused)]
-    </span>Implemented(ImplementedEnableExtension),
+    Implemented(ImplementedEnableExtension),
     Unimplemented(UnimplementedEnableExtension),
 }
 
@@ -196,7 +202,7 @@
     <span class="doccomment">/// Convert from a sentinel word in WGSL into its associated [`EnableExtension`], if possible.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_ident(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
-            <span class="self">Self</span>::F16 =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::F16),
+            <span class="self">Self</span>::F16 =&gt; <span class="self">Self</span>::Implemented(ImplementedEnableExtension::F16),
             <span class="self">Self</span>::CLIP_DISTANCES =&gt; {
                 <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::ClipDistances)
             }
@@ -212,10 +218,9 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Implemented(kind) =&gt; <span class="kw">match </span>kind {
                 ImplementedEnableExtension::DualSourceBlending =&gt; <span class="self">Self</span>::DUAL_SOURCE_BLENDING,
+                ImplementedEnableExtension::F16 =&gt; <span class="self">Self</span>::F16,
             },
-
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
-                UnimplementedEnableExtension::F16 =&gt; <span class="self">Self</span>::F16,
                 UnimplementedEnableExtension::ClipDistances =&gt; <span class="self">Self</span>::CLIP_DISTANCES,
             },
         }
@@ -231,17 +236,17 @@
     ///
     /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
     </span>DualSourceBlending,
-}
-
-<span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
-</span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-</span><span class="kw">pub enum </span>UnimplementedEnableExtension {
     <span class="doccomment">/// Enables `f16`/`half` primitive support in all shader languages.
     ///
     /// In the WGSL standard, this corresponds to [`enable f16;`].
     ///
     /// [`enable f16;`]: https://www.w3.org/TR/WGSL/#extension-f16
     </span>F16,
+}
+
+<span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
+</span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+</span><span class="kw">pub enum </span>UnimplementedEnableExtension {
     <span class="doccomment">/// Enables the `clip_distances` variable in WGSL.
     ///
     /// In the WGSL standard, this corresponds to [`enable clip_distances;`].
@@ -253,7 +258,6 @@
 <span class="kw">impl </span>UnimplementedEnableExtension {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::F16 =&gt; <span class="number">4384</span>,
             <span class="self">Self</span>::ClipDistances =&gt; <span class="number">6236</span>,
         }
     }
