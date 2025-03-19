@@ -3121,30 +3121,7 @@
 <a href="#3120" id="3120">3120</a>
 <a href="#3121" id="3121">3121</a>
 <a href="#3122" id="3122">3122</a>
-<a href="#3123" id="3123">3123</a>
-<a href="#3124" id="3124">3124</a>
-<a href="#3125" id="3125">3125</a>
-<a href="#3126" id="3126">3126</a>
-<a href="#3127" id="3127">3127</a>
-<a href="#3128" id="3128">3128</a>
-<a href="#3129" id="3129">3129</a>
-<a href="#3130" id="3130">3130</a>
-<a href="#3131" id="3131">3131</a>
-<a href="#3132" id="3132">3132</a>
-<a href="#3133" id="3133">3133</a>
-<a href="#3134" id="3134">3134</a>
-<a href="#3135" id="3135">3135</a>
-<a href="#3136" id="3136">3136</a>
-<a href="#3137" id="3137">3137</a>
-<a href="#3138" id="3138">3138</a>
-<a href="#3139" id="3139">3139</a>
-<a href="#3140" id="3140">3140</a>
-<a href="#3141" id="3141">3141</a>
-<a href="#3142" id="3142">3142</a>
-<a href="#3143" id="3143">3143</a>
-<a href="#3144" id="3144">3144</a>
-<a href="#3145" id="3145">3145</a>
-<a href="#3146" id="3146">3146</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3123" id="3123">3123</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -4347,30 +4324,7 @@
                 <span class="macro">component_wise_float!</span>(<span class="self">self</span>, span, [arg], |e| { <span class="prelude-val">Ok</span>([e.floor()]) })
             }
             <span class="kw">crate</span>::MathFunction::Round =&gt; {
-                <span class="comment">// TODO: this hit stable on 1.77, but MSRV hasn't caught up yet
-                // This polyfill is shamelessly [~~stolen from~~ inspired by `ndarray-image`][polyfill source],
-                // which has licensing compatible with ours. See also
-                // &lt;https://github.com/rust-lang/rust/issues/96710&gt;.
-                //
-                // [polyfill source]: https://github.com/imeka/ndarray-ndimage/blob/8b14b4d6ecfbc96a8a052f802e342a7049c68d8f/src/lib.rs#L98
-                </span><span class="kw">fn </span>round_ties_even(x: f64) -&gt; f64 {
-                    <span class="kw">let </span>i = x <span class="kw">as </span>i64;
-                    <span class="kw">let </span>f = (x - i <span class="kw">as </span>f64).abs();
-                    <span class="kw">if </span>f == <span class="number">0.5 </span>{
-                        <span class="kw">if </span>i &amp; <span class="number">1 </span>== <span class="number">1 </span>{
-                            <span class="comment">// -1.5, 1.5, 3.5, ...
-                            </span>(x.abs() + <span class="number">0.5</span>).copysign(x)
-                        } <span class="kw">else </span>{
-                            (x.abs() - <span class="number">0.5</span>).copysign(x)
-                        }
-                    } <span class="kw">else </span>{
-                        x.round()
-                    }
-                }
-                component_wise_float(<span class="self">self</span>, span, [arg], |e| <span class="kw">match </span>e {
-                    Float::Abstract([e]) =&gt; <span class="prelude-val">Ok</span>(Float::Abstract([round_ties_even(e)])),
-                    Float::F32([e]) =&gt; <span class="prelude-val">Ok</span>(Float::F32([(round_ties_even(e <span class="kw">as </span>f64) <span class="kw">as </span>f32)])),
-                })
+                <span class="macro">component_wise_float!</span>(<span class="self">self</span>, span, [arg], |e| { <span class="prelude-val">Ok</span>([e.round_ties_even()]) })
             }
             <span class="kw">crate</span>::MathFunction::Fract =&gt; {
                 <span class="macro">component_wise_float!</span>(<span class="self">self</span>, span, [arg], |e| {
