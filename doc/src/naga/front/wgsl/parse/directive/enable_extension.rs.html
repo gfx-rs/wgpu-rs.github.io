@@ -125,11 +125,17 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`EnableExtension`] API.
 
-</span><span class="kw">use crate</span>::{front::wgsl::error::Error, Span};
+</span><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::{Error, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span><span class="kw">crate</span>::Span;
+
+<span class="kw">use </span>alloc::boxed::Box;
 
 <span class="doccomment">/// Tracks the status of every enable-extension known to Naga.
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq)]
@@ -188,7 +194,7 @@
     <span class="kw">const </span>DUAL_SOURCE_BLENDING: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"dual_source_blending"</span>;
 
     <span class="doccomment">/// Convert from a sentinel word in WGSL into its associated [`EnableExtension`], if possible.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_ident(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_ident(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
             <span class="self">Self</span>::F16 =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::F16),
             <span class="self">Self</span>::CLIP_DISTANCES =&gt; {
@@ -197,7 +203,7 @@
             <span class="self">Self</span>::DUAL_SOURCE_BLENDING =&gt; {
                 <span class="self">Self</span>::Implemented(ImplementedEnableExtension::DualSourceBlending)
             }
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownEnableExtension(span, word)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownEnableExtension(span, word))),
         })
     }
 

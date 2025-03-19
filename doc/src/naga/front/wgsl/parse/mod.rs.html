@@ -3012,7 +3012,28 @@
 <a href="#3011" id="3011">3011</a>
 <a href="#3012" id="3012">3012</a>
 <a href="#3013" id="3013">3013</a>
-<a href="#3014" id="3014">3014</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
+<a href="#3014" id="3014">3014</a>
+<a href="#3015" id="3015">3015</a>
+<a href="#3016" id="3016">3016</a>
+<a href="#3017" id="3017">3017</a>
+<a href="#3018" id="3018">3018</a>
+<a href="#3019" id="3019">3019</a>
+<a href="#3020" id="3020">3020</a>
+<a href="#3021" id="3021">3021</a>
+<a href="#3022" id="3022">3022</a>
+<a href="#3023" id="3023">3023</a>
+<a href="#3024" id="3024">3024</a>
+<a href="#3025" id="3025">3025</a>
+<a href="#3026" id="3026">3026</a>
+<a href="#3027" id="3027">3027</a>
+<a href="#3028" id="3028">3028</a>
+<a href="#3029" id="3029">3029</a>
+<a href="#3030" id="3030">3030</a>
+<a href="#3031" id="3031">3031</a>
+<a href="#3032" id="3032">3032</a>
+<a href="#3033" id="3033">3033</a>
+<a href="#3034" id="3034">3034</a>
+<a href="#3035" id="3035">3035</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec::Vec};
 <span class="kw">use </span>directive::enable_extension::ImplementedEnableExtension;
 
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::{
@@ -3027,7 +3048,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::DirectiveKind;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::{Lexer, Token};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::{<span class="prelude-ty">Result</span>, Scalar};
 <span class="kw">use </span><span class="kw">crate</span>::front::SymbolTable;
 <span class="kw">use crate</span>::{Arena, FastHashSet, FastIndexSet, Handle, ShaderStage, Span};
 
@@ -3109,11 +3130,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         classifier: <span class="kw">impl </span>Fn(Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::BinaryOperator&gt;,
-        <span class="kw-2">mut </span>parser: <span class="kw">impl </span>FnMut(
-            <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
-            <span class="kw-2">&amp;mut </span><span class="self">Self</span>,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        <span class="kw-2">mut </span>parser: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;, <span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span><span class="kw-2">mut </span>accumulator = parser(lexer, <span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(op) = classifier(lexer.peek().<span class="number">0</span>) {
@@ -3128,13 +3146,13 @@
         <span class="prelude-val">Ok</span>(accumulator)
     }
 
-    <span class="kw">fn </span>declare_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: ast::Ident&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Local&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>declare_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: ast::Ident&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Local&gt;&gt; {
         <span class="kw">let </span>handle = <span class="self">self</span>.locals.append(ast::Local, name.span);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = <span class="self">self</span>.local_table.add(name.name, handle) {
-            <span class="prelude-val">Err</span>(Error::Redefinition {
+            <span class="prelude-val">Err</span>(Box::new(Error::Redefinition {
                 previous: <span class="self">self</span>.locals.get_span(old),
                 current: name.span,
-            })
+            }))
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(handle)
         }
@@ -3180,9 +3198,9 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; ParsedAttribute&lt;T&gt; {
-    <span class="kw">fn </span>set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'static</span>&gt;&gt; {
+    <span class="kw">fn </span>set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'static</span>, ()&gt; {
         <span class="kw">if </span><span class="self">self</span>.value.is_some() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::RepeatedAttribute(name_span));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::RepeatedAttribute(name_span)));
         }
         <span class="self">self</span>.value = <span class="prelude-val">Some</span>(value);
         <span class="prelude-val">Ok</span>(())
@@ -3207,7 +3225,7 @@
         name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         name_span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">match </span>name {
             <span class="string">"location" </span>=&gt; {
                 lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
@@ -3243,10 +3261,10 @@
                     .enable_extensions
                     .contains(ImplementedEnableExtension::DualSourceBlending)
                 {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::EnableExtensionNotEnabled {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::EnableExtensionNotEnabled {
                         span: name_span,
                         kind: ImplementedEnableExtension::DualSourceBlending.into(),
-                    });
+                    }));
                 }
 
                 lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
@@ -3254,12 +3272,12 @@
                     .set(parser.general_expression(lexer, ctx)<span class="question-mark">?</span>, name_span)<span class="question-mark">?</span>;
                 lexer.expect(Token::Paren(<span class="string">')'</span>))<span class="question-mark">?</span>;
             }
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownAttribute(name_span))),
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>finish(<span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>finish(<span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">match </span>(
             <span class="self">self</span>.location.value,
             <span class="self">self</span>.built_in.value,
@@ -3289,7 +3307,7 @@
             (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(built_in), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>, <span class="prelude-val">None</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Binding::BuiltIn(built_in)))
             }
-            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::InconsistentBinding(span)),
+            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Box::new(Error::InconsistentBinding(span))),
         }
     }
 }
@@ -3336,13 +3354,13 @@
         )
     }
 
-    <span class="kw">fn </span>track_recursion&lt;<span class="lifetime">'a</span>, F, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) -&gt; <span class="prelude-ty">Result</span>&lt;R, Error&lt;<span class="lifetime">'a</span>&gt;&gt;
+    <span class="kw">fn </span>track_recursion&lt;<span class="lifetime">'a</span>, F, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, R&gt;
     <span class="kw">where
-        </span>F: FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;R, Error&lt;<span class="lifetime">'a</span>&gt;&gt;,
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, R&gt;,
     {
         <span class="self">self</span>.recursion_depth += <span class="number">1</span>;
         <span class="kw">if </span><span class="self">self</span>.recursion_depth &gt;= <span class="number">256 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Internal(<span class="string">"Parser recursion limit exceeded"</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Internal(<span class="string">"Parser recursion limit exceeded"</span>)));
         }
         <span class="kw">let </span>ret = f(<span class="self">self</span>);
         <span class="self">self</span>.recursion_depth -= <span class="number">1</span>;
@@ -3353,7 +3371,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::SwitchValue&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::SwitchValue&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">if let </span>Token::Word(<span class="string">"default"</span>) = lexer.peek().<span class="number">0 </span>{
             <span class="kw">let _ </span>= lexer.next();
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ast::SwitchValue::Default);
@@ -3380,7 +3398,7 @@
         word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::ConstructorType&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;ast::ConstructorType&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = conv::get_scalar_type(word) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::ConstructorType::Scalar(scalar)));
         }
@@ -3589,7 +3607,7 @@
             </span>| <span class="string">"texture_storage_1d_array"
             </span>| <span class="string">"texture_storage_2d"
             </span>| <span class="string">"texture_storage_2d_array"
-            </span>| <span class="string">"texture_storage_3d" </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TypeNotConstructible(span)),
+            </span>| <span class="string">"texture_storage_3d" </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::TypeNotConstructible(span))),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         };
 
@@ -3631,7 +3649,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Vec&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::EnclosedExpr, lexer);
         lexer.open_arguments()<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>arguments = Vec::new();
@@ -3655,7 +3673,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::EnclosedExpr, lexer);
         <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
         <span class="self">self</span>.pop_rule_span(lexer);
@@ -3670,7 +3688,7 @@
         name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         name_span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="macro">assert!</span>(<span class="self">self</span>.rules.last().is_some());
 
         <span class="kw">let </span>expr = <span class="kw">match </span>name {
@@ -3732,7 +3750,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::PrimaryExpr, lexer);
         <span class="kw">const fn </span>literal_ray_flag&lt;<span class="lifetime">'b</span>&gt;(flag: <span class="kw">crate</span>::RayFlag) -&gt; ast::Expression&lt;<span class="lifetime">'b</span>&gt; {
             ast::Expression::Literal(ast::Literal::Number(Number::U32(flag.bits())))
@@ -3855,7 +3873,12 @@
                     ast::Expression::Ident(ident)
                 }
             }
-            other =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::PrimaryExpression)),
+            other =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                    other.<span class="number">1</span>,
+                    ExpectedToken::PrimaryExpression,
+                )))
+            }
         };
 
         <span class="kw">let </span>span = <span class="self">self</span>.pop_rule_span(lexer);
@@ -3869,7 +3892,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>expr = expr;
 
         <span class="kw">loop </span>{
@@ -3901,7 +3924,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::GenericExpr, lexer);
         <span class="kw">let </span>expr = <span class="self">self</span>.general_expression(lexer, ctx)<span class="question-mark">?</span>;
         <span class="self">self</span>.pop_rule_span(lexer);
@@ -3913,7 +3936,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.track_recursion(|this| {
             this.push_rule_span(Rule::UnaryExpr, lexer);
             <span class="comment">//TODO: refactor this to avoid backing up
@@ -3978,7 +4001,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.track_recursion(|this| {
             this.push_rule_span(Rule::LhsExpr, lexer);
             <span class="kw">let </span>start = lexer.start_byte_offset();
@@ -4022,7 +4045,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="self">self</span>.push_rule_span(Rule::SingularExpr, lexer);
         <span class="kw">let </span>primary_expr = <span class="self">self</span>.primary_expression(lexer, ctx)<span class="question-mark">?</span>;
@@ -4036,7 +4059,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="comment">// equality_expression
         </span>context.parse_binary_op(
             lexer,
@@ -4129,7 +4152,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.general_expression_with_span(lexer, ctx)
             .map(|(expr, <span class="kw">_</span>)| expr)
     }
@@ -4138,7 +4161,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;, Span)&gt; {
         <span class="self">self</span>.push_rule_span(Rule::GeneralExpr, lexer);
         <span class="comment">// logical_or_expression
         </span><span class="kw">let </span>handle = context.parse_binary_op(
@@ -4202,7 +4225,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::GlobalVariable&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::GlobalVariable&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::VariableDecl, lexer);
         <span class="kw">let </span><span class="kw-2">mut </span>space = <span class="kw">crate</span>::AddressSpace::Handle;
 
@@ -4252,7 +4275,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ast::StructMember&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Vec&lt;ast::StructMember&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>members = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>member_names = FastHashSet::default();
 
@@ -4260,10 +4283,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ready = <span class="bool-val">true</span>;
         <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">'}'</span>)) {
             <span class="kw">if </span>!ready {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                     lexer.next().<span class="number">1</span>,
                     ExpectedToken::Token(Token::Separator(<span class="string">','</span>)),
-                ));
+                )));
             }
             <span class="kw">let </span>(<span class="kw-2">mut </span>size, <span class="kw-2">mut </span>align) = (ParsedAttribute::default(), ParsedAttribute::default());
             <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
@@ -4303,14 +4326,14 @@
             });
 
             <span class="kw">if </span>!member_names.insert(name.name) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Redefinition {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Redefinition {
                     previous: members
                         .iter()
                         .find(|x| x.name.name == name.name)
                         .map(|x| x.name.span)
                         .unwrap(),
                     current: name.span,
-                });
+                }));
             }
         }
 
@@ -4322,7 +4345,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Span)&gt; {
         lexer.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>start = lexer.start_byte_offset();
         <span class="kw">let </span>ty = <span class="self">self</span>.type_decl(lexer, ctx)<span class="question-mark">?</span>;
@@ -4338,7 +4361,7 @@
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         columns: <span class="kw">crate</span>::VectorSize,
         rows: <span class="kw">crate</span>::VectorSize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let </span>(ty, ty_span) = <span class="self">self</span>.singular_generic(lexer, ctx)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(ast::Type::Matrix {
             columns,
@@ -4353,7 +4376,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = conv::get_scalar_type(word) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Type::Scalar(scalar)));
         }
@@ -4748,7 +4771,7 @@
         }))
     }
 
-    <span class="kw">const fn </span>check_texture_sample_type(scalar: Scalar, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'static</span>&gt;&gt; {
+    <span class="kw">fn </span>check_texture_sample_type(scalar: Scalar, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'static</span>, ()&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::ScalarKind::<span class="kw-2">*</span>;
         <span class="comment">// Validate according to https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
         </span><span class="kw">match </span>scalar {
@@ -4760,7 +4783,7 @@
                 kind: Uint,
                 width: <span class="number">8</span>,
             } =&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::BadTextureSampleType { span, scalar }),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::BadTextureSampleType { span, scalar })),
         }
     }
 
@@ -4769,7 +4792,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Handle&lt;ast::Type&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="self">self</span>.track_recursion(|this| {
             this.push_rule_span(Rule::TypeDecl, lexer);
 
@@ -4800,7 +4823,7 @@
         block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
         target: Handle&lt;ast::Expression&lt;<span class="lifetime">'a</span>&gt;&gt;,
         span_start: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::BinaryOperator <span class="kw">as </span>Bo;
 
         <span class="kw">let </span>op = lexer.next();
@@ -4842,7 +4865,7 @@
                 });
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(op.<span class="number">1</span>, ExpectedToken::Assignment)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(op.<span class="number">1</span>, ExpectedToken::Assignment))),
         };
 
         <span class="kw">let </span>span = lexer.span_from(span_start);
@@ -4859,7 +4882,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let </span>span_start = lexer.start_byte_offset();
         <span class="kw">let </span>target = <span class="self">self</span>.lhs_expression(lexer, ctx)<span class="question-mark">?</span>;
         <span class="self">self</span>.assignment_op_and_rhs(lexer, ctx, block, target, span_start)
@@ -4875,7 +4898,7 @@
         span_start: usize,
         context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="self">self</span>.push_rule_span(Rule::SingularExpr, lexer);
 
         context.unresolved.insert(ast::Dependency {
@@ -4906,7 +4929,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         context: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let </span>span_start = lexer.start_byte_offset();
         <span class="kw">match </span>lexer.peek() {
             (Token::Word(name), span) =&gt; {
@@ -4933,7 +4956,7 @@
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         block: <span class="kw-2">&amp;mut </span>ast::Block&lt;<span class="lifetime">'a</span>&gt;,
         brace_nesting_level: u8,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="self">self</span>.track_recursion(|this| {
             this.push_rule_span(Rule::Statement, lexer);
             <span class="kw">match </span>lexer.peek() {
@@ -5140,10 +5163,10 @@
                                     }
                                     (Token::Paren(<span class="string">'}'</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
                                     (<span class="kw">_</span>, span) =&gt; {
-                                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                                             span,
                                             ExpectedToken::SwitchItem,
-                                        ))
+                                        )))
                                     }
                                 }
                             }
@@ -5205,7 +5228,11 @@
                                         ast::StatementKind::Call { .. }
                                         | ast::StatementKind::Assign { .. }
                                         | ast::StatementKind::LocalDecl(<span class="kw">_</span>) =&gt; {}
-                                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidForInitializer(span)),
+                                        <span class="kw">_ </span>=&gt; {
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidForInitializer(
+                                                span,
+                                            )))
+                                        }
                                     }
                                 }
                             };
@@ -5213,7 +5240,7 @@
                             <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
                             <span class="kw">if </span>!lexer.skip(Token::Separator(<span class="string">';'</span>)) {
                                 <span class="kw">let </span>(condition, span) =
-                                    lexer.capture_span(|lexer| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+                                    lexer.capture_span(|lexer| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">_</span>&gt; {
                                         <span class="kw">let </span>condition = this.general_expression(lexer, ctx)<span class="question-mark">?</span>;
                                         lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                                         <span class="prelude-val">Ok</span>(condition)
@@ -5265,7 +5292,7 @@
                             </span><span class="kw">let </span>(peeked_token, peeked_span) = lexer.peek();
                             <span class="kw">if let </span>Token::Word(<span class="string">"if"</span>) = peeked_token {
                                 <span class="kw">let </span>span = span.until(<span class="kw-2">&amp;</span>peeked_span);
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidBreakIf(span));
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidBreakIf(span)));
                             }
                             lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                             ast::StatementKind::Break
@@ -5321,7 +5348,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         brace_nesting_level: u8,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::StatementKind&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::StatementKind&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">let _ </span>= lexer.next();
         <span class="kw">let </span><span class="kw-2">mut </span>body = ast::Block::default();
         <span class="kw">let </span><span class="kw-2">mut </span>continuing = ast::Block::default();
@@ -5401,7 +5428,7 @@
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         brace_nesting_level: u8,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ast::Block&lt;<span class="lifetime">'a</span>&gt;, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (ast::Block&lt;<span class="lifetime">'a</span>&gt;, Span)&gt; {
         <span class="self">self</span>.push_rule_span(Rule::Block, lexer);
 
         ctx.local_table.push_scope();
@@ -5414,21 +5441,25 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
                 <span class="kw">let </span>filter = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">?</span>;
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
+                diagnostic_filters
+                    .add(filter, span, ShouldConflictOnFullDuplicate::Yes)
+                    .map_err(|e| Box::new(e.into()))<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                     name_span,
                     ExpectedToken::DiagnosticAttribute,
-                ));
+                )));
             }
         }
         <span class="self">self</span>.pop_rule_span(lexer);
 
         <span class="kw">if </span>!diagnostic_filters.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotYetImplementedAtParseSite {
-                site_name_plural: <span class="string">"compound statements"</span>,
-                spans: diagnostic_filters.spans().collect(),
-            });
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(
+                Error::DiagnosticAttributeNotYetImplementedAtParseSite {
+                    site_name_plural: <span class="string">"compound statements"</span>,
+                    spans: diagnostic_filters.spans().collect(),
+                },
+            ));
         }
 
         <span class="kw">let </span>brace_span = lexer.expect_span(Token::Paren(<span class="string">'{'</span>))<span class="question-mark">?</span>;
@@ -5448,7 +5479,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'a</span>&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>bind_parser = BindingParser::default();
         <span class="self">self</span>.push_rule_span(Rule::Attribute, lexer);
 
@@ -5468,7 +5499,7 @@
         must_use: <span class="prelude-ty">Option</span>&lt;Span&gt;,
         out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
         dependencies: <span class="kw-2">&amp;mut </span>FastIndexSet&lt;ast::Dependency&lt;<span class="lifetime">'a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ast::Function&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::Function&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.push_rule_span(Rule::FunctionDecl, lexer);
         <span class="comment">// read function name
         </span><span class="kw">let </span>fun_name = lexer.next_ident()<span class="question-mark">?</span>;
@@ -5492,10 +5523,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ready = <span class="bool-val">true</span>;
         <span class="kw">while </span>!lexer.skip(Token::Paren(<span class="string">')'</span>)) {
             <span class="kw">if </span>!ready {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                     lexer.next().<span class="number">1</span>,
                     ExpectedToken::Token(Token::Separator(<span class="string">','</span>)),
-                ));
+                )));
             }
             <span class="kw">let </span>binding = <span class="self">self</span>.varying_binding(lexer, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
 
@@ -5524,10 +5555,10 @@
                 must_use,
             })
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(must_use) = must_use {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FunctionMustUseReturnsVoid(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::FunctionMustUseReturnsVoid(
                 must_use,
                 <span class="self">self</span>.peek_rule_span(lexer),
-            ));
+            )));
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -5560,8 +5591,8 @@
     <span class="kw">fn </span>directive_ident_list&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
-        handler: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+        handler: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>handler = handler;
         <span class="lifetime">'next_arg</span>: <span class="kw">loop </span>{
             <span class="kw">let </span>(ident, span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
@@ -5579,7 +5610,7 @@
             };
 
             <span class="kw">if </span>!<span class="macro">matches!</span>(lexer.next().<span class="number">0</span>, Token::Separator(<span class="string">';'</span>)) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(span, expected_token));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(span, expected_token)));
             }
 
             <span class="kw">break </span><span class="prelude-val">Ok</span>(());
@@ -5590,7 +5621,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;,
         out: <span class="kw-2">&amp;mut </span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="comment">// read attributes
         </span><span class="kw">let </span><span class="kw-2">mut </span>binding = <span class="prelude-val">None</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>stage = ParsedAttribute::default();
@@ -5612,14 +5643,14 @@
             unresolved: <span class="kw-2">&amp;mut </span>dependencies,
         };
         <span class="kw">let </span><span class="kw-2">mut </span>diagnostic_filters = DiagnosticFilterMap::new();
-        <span class="kw">let </span>ensure_no_diag_attrs = |on_what, filters: DiagnosticFilterMap| -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span>ensure_no_diag_attrs = |on_what, filters: DiagnosticFilterMap| -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
             <span class="kw">if </span>filters.is_empty() {
                 <span class="prelude-val">Ok</span>(())
             } <span class="kw">else </span>{
-                <span class="prelude-val">Err</span>(Error::DiagnosticAttributeNotSupported {
+                <span class="prelude-val">Err</span>(Box::new(Error::DiagnosticAttributeNotSupported {
                     on_what,
                     spans: filters.spans().collect(),
-                })
+                }))
             }
         };
 
@@ -5629,7 +5660,9 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(DirectiveKind::Diagnostic) = DirectiveKind::from_ident(name) {
                 <span class="kw">let </span>filter = <span class="self">self</span>.diagnostic_filter(lexer)<span class="question-mark">?</span>;
                 <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(lexer);
-                diagnostic_filters.add(filter, span, ShouldConflictOnFullDuplicate::Yes)<span class="question-mark">?</span>;
+                diagnostic_filters
+                    .add(filter, span, ShouldConflictOnFullDuplicate::Yes)
+                    .map_err(|e| Box::new(e.into()))<span class="question-mark">?</span>;
                 <span class="kw">continue</span>;
             }
             <span class="kw">match </span>name {
@@ -5667,10 +5700,10 @@
                             (Token::Paren(<span class="string">')'</span>), <span class="kw">_</span>) =&gt; <span class="kw">break</span>,
                             (Token::Separator(<span class="string">','</span>), <span class="kw">_</span>) <span class="kw">if </span>i != <span class="number">2 </span>=&gt; (),
                             other =&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                                     other.<span class="number">1</span>,
                                     ExpectedToken::WorkgroupSizeSeparator,
-                                ))
+                                )))
                             }
                         }
                     }
@@ -5690,7 +5723,7 @@
                 <span class="string">"must_use" </span>=&gt; {
                     must_use.set(name_span, name_span)<span class="question-mark">?</span>;
                 }
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(name_span)),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownAttribute(name_span))),
             }
         }
 
@@ -5702,8 +5735,10 @@
                     binding: index,
                 });
             }
-            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">"binding"</span>, attrib_span)),
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingAttribute(<span class="string">"group"</span>, attrib_span)),
+            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::MissingAttribute(<span class="string">"binding"</span>, attrib_span)))
+            }
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::MissingAttribute(<span class="string">"group"</span>, attrib_span))),
             (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; {}
         }
 
@@ -5718,7 +5753,9 @@
                 <span class="prelude-val">None
             </span>}
             (Token::Word(word), directive_span) <span class="kw">if </span>DirectiveKind::from_ident(word).is_some() =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DirectiveAfterFirstGlobalDecl { directive_span });
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::DirectiveAfterFirstGlobalDecl {
+                    directive_span,
+                }));
             }
             (Token::Word(<span class="string">"struct"</span>), <span class="kw">_</span>) =&gt; {
                 ensure_no_diag_attrs(<span class="string">"`struct`s"</span>.into(), diagnostic_filters)<span class="question-mark">?</span>;
@@ -5806,7 +5843,7 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::Fn(ast::Function {
                     entry_point: <span class="kw">if let </span><span class="prelude-val">Some</span>(stage) = stage.value {
                         <span class="kw">if </span>stage == ShaderStage::Compute &amp;&amp; workgroup_size.value.is_none() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::MissingWorkgroupSize(compute_span));
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::MissingWorkgroupSize(compute_span)));
                         }
                         <span class="prelude-val">Some</span>(ast::EntryPoint {
                             stage,
@@ -5834,7 +5871,12 @@
                 <span class="prelude-val">Some</span>(ast::GlobalDeclKind::ConstAssert(condition))
             }
             (Token::End, <span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
-            other =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::GlobalItem)),
+            other =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                    other.<span class="number">1</span>,
+                    ExpectedToken::GlobalItem,
+                )))
+            }
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(kind) = kind {
@@ -5847,16 +5889,18 @@
         <span class="kw">if </span>!<span class="self">self</span>.rules.is_empty() {
             <span class="macro">log::error!</span>(<span class="string">"Reached the end of global decl, but rule stack is not empty"</span>);
             <span class="macro">log::error!</span>(<span class="string">"Rules: {:?}"</span>, <span class="self">self</span>.rules);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Internal(<span class="string">"rule stack is not empty"</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Internal(<span class="string">"rule stack is not empty"</span>)));
         };
 
         <span class="kw">match </span>binding {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::Internal(<span class="string">"we had the attribute but no var?"</span>)),
+            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Box::new(Error::Internal(
+                <span class="string">"we had the attribute but no var?"</span>,
+            ))),
         }
     }
 
-    <span class="kw">pub fn </span>parse&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub fn </span>parse&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.reset();
 
         <span class="kw">let </span><span class="kw-2">mut </span>lexer = Lexer::new(source);
@@ -5873,11 +5917,9 @@
                     DirectiveKind::Diagnostic =&gt; {
                         <span class="kw">let </span>diagnostic_filter = <span class="self">self</span>.diagnostic_filter(<span class="kw-2">&amp;mut </span>lexer)<span class="question-mark">?</span>;
                         <span class="kw">let </span>span = <span class="self">self</span>.peek_rule_span(<span class="kw-2">&amp;</span>lexer);
-                        diagnostic_filters.add(
-                            diagnostic_filter,
-                            span,
-                            ShouldConflictOnFullDuplicate::No,
-                        )<span class="question-mark">?</span>;
+                        diagnostic_filters
+                            .add(diagnostic_filter, span, ShouldConflictOnFullDuplicate::No)
+                            .map_err(|e| Box::new(e.into()))<span class="question-mark">?</span>;
                         lexer.expect(Token::Separator(<span class="string">';'</span>))<span class="question-mark">?</span>;
                     }
                     DirectiveKind::Enable =&gt; {
@@ -5886,10 +5928,10 @@
                             <span class="kw">let </span>extension = <span class="kw">match </span>kind {
                                 EnableExtension::Implemented(kind) =&gt; kind,
                                 EnableExtension::Unimplemented(kind) =&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::EnableExtensionNotYetImplemented {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::EnableExtensionNotYetImplemented {
                                         kind,
                                         span,
-                                    })
+                                    }))
                                 }
                             };
                             enable_extensions.add(extension);
@@ -5907,9 +5949,12 @@
                                     </span><span class="prelude-val">Ok</span>(())
                                 }
                                 <span class="prelude-val">Some</span>(LanguageExtension::Unimplemented(kind)) =&gt; {
-                                    <span class="prelude-val">Err</span>(Error::LanguageExtensionNotYetImplemented { kind, span })
+                                    <span class="prelude-val">Err</span>(Box::new(Error::LanguageExtensionNotYetImplemented {
+                                        kind,
+                                        span,
+                                    }))
                                 }
-                                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownLanguageExtension(span, ident)),
+                                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownLanguageExtension(span, ident))),
                             }
                         })<span class="question-mark">?</span>;
                     }
@@ -5939,10 +5984,7 @@
         <span class="prelude-val">Ok</span>(tu)
     }
 
-    <span class="kw">const fn </span>increase_brace_nesting(
-        brace_nesting_level: u8,
-        brace_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;u8, Error&lt;<span class="lifetime">'static</span>&gt;&gt; {
+    <span class="kw">fn </span>increase_brace_nesting(brace_nesting_level: u8, brace_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'static</span>, u8&gt; {
         <span class="comment">// From [spec.](https://gpuweb.github.io/gpuweb/wgsl/#limits):
         //
         // &gt; § 2.4. Limits
@@ -5957,15 +5999,15 @@
         // &lt;https://github.com/gpuweb/cts/pull/3389#discussion_r1543742701&gt;
         </span><span class="kw">const </span>BRACE_NESTING_MAXIMUM: u8 = <span class="number">64</span>;
         <span class="kw">if </span>brace_nesting_level + <span class="number">1 </span>&gt; BRACE_NESTING_MAXIMUM {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ExceededLimitForNestedBraces {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::ExceededLimitForNestedBraces {
                 span: brace_span,
                 limit: BRACE_NESTING_MAXIMUM,
-            });
+            }));
         }
         <span class="prelude-val">Ok</span>(brace_nesting_level + <span class="number">1</span>)
     }
 
-    <span class="kw">fn </span>diagnostic_filter&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;DiagnosticFilter, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>diagnostic_filter&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, lexer: <span class="kw-2">&amp;mut </span>Lexer&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, DiagnosticFilter&gt; {
         lexer.expect(Token::Paren(<span class="string">'('</span>))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(severity_control_name, severity_control_name_span) = lexer.next_ident_with_span()<span class="question-mark">?</span>;
@@ -5989,7 +6031,7 @@
                 FilterableTriggeringRule::Standard(triggering_rule)
             } <span class="kw">else </span>{
                 diagnostic_filter::Severity::Warning.report_wgsl_parse_diag(
-                    Error::UnknownDiagnosticRuleName(diagnostic_rule_name_span),
+                    Box::new(Error::UnknownDiagnosticRuleName(diagnostic_rule_name_span)),
                     lexer.source,
                 )<span class="question-mark">?</span>;
                 FilterableTriggeringRule::Unknown(diagnostic_rule_name.into())

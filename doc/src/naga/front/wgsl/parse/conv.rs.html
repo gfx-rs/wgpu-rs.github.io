@@ -294,13 +294,12 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
+<a href="#296" id="296">296</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::{Error, <span class="prelude-ty">Result</span>, Scalar};
 <span class="kw">use </span><span class="kw">crate</span>::Span;
 
-<span class="kw">pub fn </span>map_address_space(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::AddressSpace, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">use </span>alloc::boxed::Box;
+
+<span class="kw">pub fn </span>map_address_space(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::AddressSpace&gt; {
     <span class="kw">match </span>word {
         <span class="string">"private" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Private),
         <span class="string">"workgroup" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::WorkGroup),
@@ -310,11 +309,11 @@
         }),
         <span class="string">"push_constant" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::PushConstant),
         <span class="string">"function" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::AddressSpace::Function),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAddressSpace(span)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownAddressSpace(span))),
     }
 }
 
-<span class="kw">pub fn </span>map_built_in(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::BuiltIn, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_built_in(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::BuiltIn&gt; {
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
         <span class="string">"position" </span>=&gt; <span class="kw">crate</span>::BuiltIn::Position { invariant: <span class="bool-val">false </span>},
         <span class="comment">// vertex
@@ -338,31 +337,31 @@
         <span class="string">"subgroup_id" </span>=&gt; <span class="kw">crate</span>::BuiltIn::SubgroupId,
         <span class="string">"subgroup_size" </span>=&gt; <span class="kw">crate</span>::BuiltIn::SubgroupSize,
         <span class="string">"subgroup_invocation_id" </span>=&gt; <span class="kw">crate</span>::BuiltIn::SubgroupInvocationId,
-        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownBuiltin(span)),
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownBuiltin(span))),
     })
 }
 
-<span class="kw">pub fn </span>map_interpolation(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Interpolation, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_interpolation(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::Interpolation&gt; {
     <span class="kw">match </span>word {
         <span class="string">"linear" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Linear),
         <span class="string">"flat" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Flat),
         <span class="string">"perspective" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Interpolation::Perspective),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAttribute(span)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownAttribute(span))),
     }
 }
 
-<span class="kw">pub fn </span>map_sampling(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Sampling, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_sampling(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::Sampling&gt; {
     <span class="kw">match </span>word {
         <span class="string">"center" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Center),
         <span class="string">"centroid" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Centroid),
         <span class="string">"sample" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Sample),
         <span class="string">"first" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::First),
         <span class="string">"either" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Sampling::Either),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAttribute(span)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownAttribute(span))),
     }
 }
 
-<span class="kw">pub fn </span>map_storage_format(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageFormat, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_storage_format(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::StorageFormat&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::StorageFormat <span class="kw">as </span>Sf;
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>word {
         <span class="string">"r8unorm" </span>=&gt; Sf::R8Unorm,
@@ -406,7 +405,7 @@
         <span class="string">"rgba32sint" </span>=&gt; Sf::Rgba32Sint,
         <span class="string">"rgba32float" </span>=&gt; Sf::Rgba32Float,
         <span class="string">"bgra8unorm" </span>=&gt; Sf::Bgra8Unorm,
-        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownStorageFormat(span)),
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownStorageFormat(span))),
     })
 }
 
@@ -559,16 +558,13 @@
     })
 }
 
-<span class="kw">pub fn </span>map_conservative_depth(
-    word: <span class="kw-2">&amp;</span>str,
-    span: Span,
-) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::ConservativeDepth, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+<span class="kw">pub fn </span>map_conservative_depth(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">crate</span>::ConservativeDepth&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::ConservativeDepth <span class="kw">as </span>Cd;
     <span class="kw">match </span>word {
         <span class="string">"greater_equal" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::GreaterEqual),
         <span class="string">"less_equal" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::LessEqual),
         <span class="string">"unchanged" </span>=&gt; <span class="prelude-val">Ok</span>(Cd::Unchanged),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownConservativeDepth(span)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownConservativeDepth(span))),
     }
 }
 

@@ -797,12 +797,14 @@
 <a href="#796" id="796">796</a>
 <a href="#797" id="797">797</a>
 <a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
+<a href="#799" id="799">799</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::directive::enable_extension::EnableExtensions;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::Span;
+
+<span class="kw">use </span>alloc::boxed::Box;
 
 <span class="kw">type </span>TokenSpan&lt;<span class="lifetime">'a</span>&gt; = (Token&lt;<span class="lifetime">'a</span>&gt;, Span);
 
@@ -811,7 +813,7 @@
     Separator(char),
     Paren(char),
     Attribute,
-    Number(<span class="prelude-ty">Result</span>&lt;Number, NumberError&gt;),
+    Number(core::result::Result&lt;Number, NumberError&gt;),
     Word(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str),
     Operation(char),
     LogicalOperation(char),
@@ -1041,8 +1043,8 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>capture_span&lt;T, E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        inner: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(T, Span), E&gt; {
+        inner: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; core::result::Result&lt;T, E&gt;,
+    ) -&gt; core::result::Result&lt;(T, Span), E&gt; {
         <span class="kw">let </span>start = <span class="self">self</span>.current_byte_offset();
         <span class="kw">let </span>res = inner(<span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>end = <span class="self">self</span>.current_byte_offset();
@@ -1118,19 +1120,19 @@
         token
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect_span(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expected: Token&lt;<span class="lifetime">'a</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Span, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Span&gt; {
         <span class="kw">let </span>next = <span class="self">self</span>.next();
         <span class="kw">if </span>next.<span class="number">0 </span>== expected {
             <span class="prelude-val">Ok</span>(next.<span class="number">1</span>)
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(Error::Unexpected(next.<span class="number">1</span>, ExpectedToken::Token(expected)))
+            <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                next.<span class="number">1</span>,
+                ExpectedToken::Token(expected),
+            )))
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: Token&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="self">self</span>.expect_span(expected)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -1138,15 +1140,15 @@
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>expect_generic_paren(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expected: char,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let </span>next = <span class="self">self</span>.next_generic();
         <span class="kw">if </span>next.<span class="number">0 </span>== Token::Paren(expected) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(Error::Unexpected(
+            <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
                 next.<span class="number">1</span>,
                 ExpectedToken::Token(Token::Paren(expected)),
-            ))
+            )))
         }
     }
 
@@ -1165,50 +1167,50 @@
         </span>}
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident_with_span(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident_with_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span)&gt; {
         <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; <span class="self">Self</span>::word_as_ident_with_span(word, span),
-            other =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::Identifier)),
+            other =&gt; <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                other.<span class="number">1</span>,
+                ExpectedToken::Identifier,
+            ))),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>peek_ident_with_span(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>peek_ident_with_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span)&gt; {
         <span class="kw">match </span><span class="self">self</span>.peek() {
             (Token::Word(word), span) =&gt; <span class="self">Self</span>::word_as_ident_with_span(word, span),
-            other =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(other.<span class="number">1</span>, ExpectedToken::Identifier)),
+            other =&gt; <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                other.<span class="number">1</span>,
+                ExpectedToken::Identifier,
+            ))),
         }
     }
 
-    <span class="kw">fn </span>word_as_ident_with_span(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>word_as_ident_with_span(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span)&gt; {
         <span class="kw">match </span>word {
-            <span class="string">"_" </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidIdentifierUnderscore(span)),
-            word <span class="kw">if </span>word.starts_with(<span class="string">"__"</span>) =&gt; <span class="prelude-val">Err</span>(Error::ReservedIdentifierPrefix(span)),
+            <span class="string">"_" </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::InvalidIdentifierUnderscore(span))),
+            word <span class="kw">if </span>word.starts_with(<span class="string">"__"</span>) =&gt; <span class="prelude-val">Err</span>(Box::new(Error::ReservedIdentifierPrefix(span))),
             word =&gt; <span class="prelude-val">Ok</span>((word, span)),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::ast::Ident&lt;<span class="lifetime">'a</span>&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="kw">super</span>::ast::Ident&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="self">self</span>.next_ident_with_span()
             .and_then(|(word, span)| <span class="self">Self</span>::word_as_ident(word, span))
             .map(|(name, span)| <span class="kw">super</span>::ast::Ident { name, span })
     }
 
-    <span class="kw">fn </span>word_as_ident(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">fn </span>word_as_ident(word: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span)&gt; {
         <span class="kw">if </span><span class="kw">crate</span>::keywords::wgsl::RESERVED.contains(<span class="kw-2">&amp;</span>word) {
-            <span class="prelude-val">Err</span>(Error::ReservedKeyword(span))
+            <span class="prelude-val">Err</span>(Box::new(Error::ReservedKeyword(span)))
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>((word, span))
         }
     }
 
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Scalar, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Scalar&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; {
@@ -1225,7 +1227,7 @@
     /// Returns the span covering the inner type, excluding the brackets.
     </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic_with_span(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Scalar, Span), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (Scalar, Span)&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">'&lt;'</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; conv::get_scalar_type(word)
@@ -1239,7 +1241,7 @@
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_storage_access(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::StorageAccess, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="kw">crate</span>::StorageAccess&gt; {
         <span class="kw">let </span>(ident, span) = <span class="self">self</span>.next_ident_with_span()<span class="question-mark">?</span>;
         <span class="kw">match </span>ident {
             <span class="string">"read" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::LOAD),
@@ -1248,13 +1250,13 @@
             <span class="string">"atomic" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::StorageAccess::ATOMIC
                 | <span class="kw">crate</span>::StorageAccess::LOAD
                 | <span class="kw">crate</span>::StorageAccess::STORE),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownAccess(span)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownAccess(span))),
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_format_generic(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::StorageFormat, <span class="kw">crate</span>::StorageAccess), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, (<span class="kw">crate</span>::StorageFormat, <span class="kw">crate</span>::StorageAccess)&gt; {
         <span class="self">self</span>.expect(Token::Paren(<span class="string">'&lt;'</span>))<span class="question-mark">?</span>;
         <span class="kw">let </span>(ident, ident_span) = <span class="self">self</span>.next_ident_with_span()<span class="question-mark">?</span>;
         <span class="kw">let </span>format = conv::map_storage_format(ident, ident_span)<span class="question-mark">?</span>;
@@ -1264,16 +1266,14 @@
         <span class="prelude-val">Ok</span>((format, access))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_acceleration_structure_flags(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_acceleration_structure_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, bool&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">if </span><span class="self">self</span>.skip(Token::Paren(<span class="string">'&lt;'</span>)) {
             <span class="kw">if </span>!<span class="self">self</span>.skip(Token::Paren(<span class="string">'&gt;'</span>)) {
                 <span class="kw">let </span>(name, span) = <span class="self">self</span>.next_ident_with_span()<span class="question-mark">?</span>;
                 <span class="kw">let </span>ret = <span class="kw">if </span>name == <span class="string">"vertex_return" </span>{
                     <span class="bool-val">true
                 </span>} <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownAttribute(span));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownAttribute(span)));
                 };
                 <span class="self">self</span>.skip(Token::Separator(<span class="string">','</span>));
                 <span class="self">self</span>.expect(Token::Paren(<span class="string">'&gt;'</span>))<span class="question-mark">?</span>;
@@ -1286,16 +1286,16 @@
         </span>})
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>open_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>open_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="self">self</span>.expect(Token::Paren(<span class="string">'('</span>))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>close_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>close_arguments(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let _ </span>= <span class="self">self</span>.skip(Token::Separator(<span class="string">','</span>));
         <span class="self">self</span>.expect(Token::Paren(<span class="string">')'</span>))
     }
 
-    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_argument(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    <span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_argument(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, bool&gt; {
         <span class="kw">let </span>paren = Token::Paren(<span class="string">')'</span>);
         <span class="kw">if </span><span class="self">self</span>.skip(Token::Separator(<span class="string">','</span>)) {
             <span class="prelude-val">Ok</span>(!<span class="self">self</span>.skip(paren))

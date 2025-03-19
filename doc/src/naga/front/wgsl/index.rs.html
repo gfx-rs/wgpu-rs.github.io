@@ -203,9 +203,9 @@
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{vec, vec::Vec};
+<a href="#205" id="205">205</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, vec, vec::Vec};
 
-<span class="kw">use </span><span class="kw">super</span>::Error;
+<span class="kw">use super</span>::{Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::ast;
 <span class="kw">use crate</span>::{FastHashMap, Handle, Span};
 
@@ -222,7 +222,7 @@
     ///
     /// Return an error if the graph of references between declarations contains
     /// any cycles.
-    </span><span class="kw">pub fn </span>generate(tu: <span class="kw-2">&amp;</span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    </span><span class="kw">pub fn </span>generate(tu: <span class="kw-2">&amp;</span>ast::TranslationUnit&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, <span class="self">Self</span>&gt; {
         <span class="comment">// Produce a map from global definitions' names to their `Handle&lt;GlobalDecl&gt;`s.
         // While doing so, reject conflicting definitions.
         </span><span class="kw">let </span><span class="kw-2">mut </span>globals = FastHashMap::with_capacity_and_hasher(tu.decls.len(), Default::default());
@@ -230,12 +230,12 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(ident) = decl_ident(decl) {
                 <span class="kw">let </span>name = ident.name;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = globals.insert(name, handle) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Redefinition {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Redefinition {
                         previous: decl_ident(<span class="kw-2">&amp;</span>tu.decls[old])
                             .expect(<span class="string">"decl should have ident for redefinition"</span>)
                             .span,
                         current: ident.span,
-                    });
+                    }));
                 }
             }
         }
@@ -308,7 +308,7 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; DependencySolver&lt;<span class="lifetime">'a</span>, <span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Produce the sorted list of declaration handles, and check for cycles.
-    </span><span class="kw">fn </span>solve(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Handle&lt;ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;, Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    </span><span class="kw">fn </span>solve(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, Vec&lt;Handle&lt;ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;&gt;&gt;&gt; {
         <span class="kw">for </span>(id, <span class="kw">_</span>) <span class="kw">in </span><span class="self">self</span>.module.decls.iter() {
             <span class="kw">if </span><span class="self">self</span>.visited[id.index()] {
                 <span class="kw">continue</span>;
@@ -322,7 +322,7 @@
 
     <span class="doccomment">/// Ensure that all declarations used by `id` have been added to the
     /// ordering, and then append `id` itself.
-    </span><span class="kw">fn </span>dfs(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Handle&lt;ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    </span><span class="kw">fn </span>dfs(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Handle&lt;ast::GlobalDecl&lt;<span class="lifetime">'a</span>&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="kw">let </span>decl = <span class="kw-2">&amp;</span><span class="self">self</span>.module.decls[id];
         <span class="kw">let </span>id_usize = id.index();
 
@@ -339,10 +339,10 @@
                     <span class="comment">// Found a cycle.
                     </span><span class="kw">return if </span>dep_id == id {
                         <span class="comment">// A declaration refers to itself directly.
-                        </span><span class="prelude-val">Err</span>(Error::RecursiveDeclaration {
+                        </span><span class="prelude-val">Err</span>(Box::new(Error::RecursiveDeclaration {
                             ident: decl_ident(decl).expect(<span class="string">"decl should have ident"</span>).span,
                             usage: dep.usage,
-                        })
+                        }))
                     } <span class="kw">else </span>{
                         <span class="comment">// A declaration refers to itself indirectly, through
                         // one or more other definitions. Report the entire path
@@ -355,7 +355,7 @@
                             .find_map(|(i, dep)| (dep.decl == dep_id).then_some(i))
                             .unwrap_or(<span class="number">0</span>);
 
-                        <span class="prelude-val">Err</span>(Error::CyclicDeclaration {
+                        <span class="prelude-val">Err</span>(Box::new(Error::CyclicDeclaration {
                             ident: decl_ident(<span class="kw-2">&amp;</span><span class="self">self</span>.module.decls[dep_id])
                                 .expect(<span class="string">"decl should have ident"</span>)
                                 .span,
@@ -371,7 +371,7 @@
                                     )
                                 })
                                 .collect(),
-                        })
+                        }))
                     };
                 } <span class="kw">else if </span>!<span class="self">self</span>.visited[dep_id_usize] {
                     <span class="self">self</span>.dfs(dep_id)<span class="question-mark">?</span>;

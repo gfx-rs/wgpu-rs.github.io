@@ -633,7 +633,9 @@
 <a href="#632" id="632">632</a>
 <a href="#633" id="633">633</a>
 <a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    boxed::Box,
     format,
     string::{String, ToString},
     vec,
@@ -641,9 +643,9 @@
 };
 <span class="kw">use </span>core::num::NonZeroU32;
 
-<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::Error;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::lower::{ExpressionContext, Lowerer};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::ast;
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::{Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use crate</span>::{Handle, Span};
 
 <span class="doccomment">/// A cooked form of `ast::ConstructorType` that uses Naga types whenever
@@ -754,7 +756,7 @@
         ty_span: Span,
         components: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::proc::TypeResolution <span class="kw">as </span>Tr;
 
         <span class="kw">let </span>constructor_h = <span class="self">self</span>.constructor(constructor, ctx)<span class="question-mark">?</span>;
@@ -776,7 +778,7 @@
                 <span class="kw">let </span>components = ast_components
                     .iter()
                     .map(|<span class="kw-2">&amp;</span>expr| <span class="self">self</span>.expression_for_abstract(expr, ctx))
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
                 <span class="kw">let </span>spans = ast_components
                     .iter()
                     .map(|<span class="kw-2">&amp;</span>expr| ctx.ast_expressions.get_span(expr))
@@ -807,7 +809,7 @@
                 | Constructor::PartialArray =&gt; {
                     <span class="comment">// We have no arguments from which to infer the result type, so
                     // partial constructors aren't acceptable here.
-                    </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::TypeNotInferable(ty_span));
+                    </span><span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::TypeNotInferable(ty_span)));
                 }
             },
 
@@ -1008,7 +1010,7 @@
                             Default::default(),
                         )
                     })
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
                     columns,
@@ -1045,7 +1047,7 @@
                             Default::default(),
                         )
                     })
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
                     columns,
@@ -1170,12 +1172,12 @@
 
             // Bad conversion (type cast)
             </span>(Components::One { span, ty_inner, .. }, constructor) =&gt; {
-                <span class="kw">let </span>from_type = ty_inner.to_wgsl(<span class="kw-2">&amp;</span>ctx.module.to_ctx()).into();
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadTypeCast {
+                <span class="kw">let </span>from_type = ty_inner.to_wgsl(<span class="kw-2">&amp;</span>ctx.module.to_ctx());
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadTypeCast {
                     span,
                     from_type,
-                    to_type: constructor.to_error_string(ctx).into(),
-                });
+                    to_type: constructor.to_error_string(ctx),
+                }));
             }
 
             <span class="comment">// Too many parameters for scalar constructor
@@ -1184,11 +1186,11 @@
                 Constructor::Type((<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar { .. })),
             ) =&gt; {
                 <span class="kw">let </span>span = spans[<span class="number">1</span>].until(spans.last().unwrap());
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnexpectedComponents(span));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnexpectedComponents(span)));
             }
 
             <span class="comment">// Other types can't be constructed
-            </span><span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::TypeNotConstructible(ty_span)),
+            </span><span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::TypeNotConstructible(ty_span))),
         }
 
         <span class="kw">let </span>expr = ctx.append_expression(expr, span)<span class="question-mark">?</span>;
@@ -1211,7 +1213,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         constructor: <span class="kw-2">&amp;</span>ast::ConstructorType&lt;<span class="lifetime">'source</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'out</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Constructor&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Constructor&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;&gt; {
         <span class="kw">let </span>handle = <span class="kw">match </span><span class="kw-2">*</span>constructor {
             ast::ConstructorType::Scalar(scalar) =&gt; {
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(scalar.to_inner_scalar());
@@ -1222,7 +1224,7 @@
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
                     <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
                 <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Vector { size, scalar });
                 Constructor::Type(ty)
@@ -1239,7 +1241,7 @@
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
                     <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
                 <span class="kw">let </span>ty = <span class="kw">match </span>scalar.kind {
                     <span class="kw">crate</span>::ScalarKind::Float =&gt; ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Matrix {
@@ -1247,7 +1249,7 @@
                         rows,
                         scalar,
                     }),
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(ty_span, scalar)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadMatrixScalarKind(ty_span, scalar))),
                 };
                 Constructor::Type(ty)
             }

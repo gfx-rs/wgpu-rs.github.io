@@ -113,12 +113,16 @@
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a></pre></div><pre class="rust"><code><span class="doccomment">//! WGSL directives. The focal point of this API is [`DirectiveKind`].
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a></pre></div><pre class="rust"><code><span class="doccomment">//! WGSL directives. The focal point of this API is [`DirectiveKind`].
 //!
 //! See also &lt;https://www.w3.org/TR/WGSL/#directives&gt;.
 
 </span><span class="kw">pub mod </span>enable_extension;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>language_extension;
+
+<span class="kw">use </span>alloc::boxed::Box;
 
 <span class="doccomment">/// A parsed sentinel word indicating the type of directive to be parsed next.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
@@ -152,9 +156,9 @@
     <span class="attr">#[cfg(feature = <span class="string">"wgsl-in"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>report_wgsl_parse_diag&lt;<span class="lifetime">'a</span>&gt;(
         <span class="self">self</span>,
-        err: <span class="kw">crate</span>::front::wgsl::error::Error&lt;<span class="lifetime">'a</span>&gt;,
+        err: Box&lt;<span class="kw">crate</span>::front::wgsl::error::Error&lt;<span class="lifetime">'a</span>&gt;&gt;,
         source: <span class="kw-2">&amp;</span>str,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::front::wgsl::error::Error&lt;<span class="lifetime">'a</span>&gt;&gt; {
+    ) -&gt; <span class="kw">crate</span>::front::wgsl::Result&lt;<span class="lifetime">'a</span>, ()&gt; {
         <span class="self">self</span>.report_diag(err, |e, level| {
             <span class="kw">let </span>e = e.as_parse_error(source);
             <span class="macro">log::log!</span>(level, <span class="string">"{}"</span>, e.emit_to_string(source));

@@ -3551,8 +3551,35 @@
 <a href="#3550" id="3550">3550</a>
 <a href="#3551" id="3551">3551</a>
 <a href="#3552" id="3552">3552</a>
-<a href="#3553" id="3553">3553</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3553" id="3553">3553</a>
+<a href="#3554" id="3554">3554</a>
+<a href="#3555" id="3555">3555</a>
+<a href="#3556" id="3556">3556</a>
+<a href="#3557" id="3557">3557</a>
+<a href="#3558" id="3558">3558</a>
+<a href="#3559" id="3559">3559</a>
+<a href="#3560" id="3560">3560</a>
+<a href="#3561" id="3561">3561</a>
+<a href="#3562" id="3562">3562</a>
+<a href="#3563" id="3563">3563</a>
+<a href="#3564" id="3564">3564</a>
+<a href="#3565" id="3565">3565</a>
+<a href="#3566" id="3566">3566</a>
+<a href="#3567" id="3567">3567</a>
+<a href="#3568" id="3568">3568</a>
+<a href="#3569" id="3569">3569</a>
+<a href="#3570" id="3570">3570</a>
+<a href="#3571" id="3571">3571</a>
+<a href="#3572" id="3572">3572</a>
+<a href="#3573" id="3573">3573</a>
+<a href="#3574" id="3574">3574</a>
+<a href="#3575" id="3575">3575</a>
+<a href="#3576" id="3576">3576</a>
+<a href="#3577" id="3577">3577</a>
+<a href="#3578" id="3578">3578</a>
+<a href="#3579" id="3579">3579</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
+    boxed::Box,
     string::{String, ToString},
     vec::Vec,
 };
@@ -3562,6 +3589,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{ast, conv};
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Result;
 <span class="kw">use </span><span class="kw">crate</span>::front::Typifier;
 <span class="kw">use </span><span class="kw">crate</span>::proc::{
     ensure_block_returns, Alignment, ConstantEvaluator, Emitter, Layouter, ResolveContext,
@@ -4021,16 +4049,16 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: <span class="kw">crate</span>::Expression,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>eval = <span class="self">self</span>.as_const_evaluator();
         eval.try_eval_and_append(expr, span)
-            .map_err(|e| Error::ConstantEvaluatorError(e.into(), span))
+            .map_err(|e| Box::new(Error::ConstantEvaluatorError(e.into(), span)))
     }
 
     <span class="kw">fn </span>const_eval_expr_to_u32(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="kw">crate</span>::proc::U32EvalError&gt; {
+    ) -&gt; core::result::Result&lt;u32, <span class="kw">crate</span>::proc::U32EvalError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx) =&gt; {
                 <span class="kw">if </span>!ctx.local_expression_kind_tracker.is_const(handle) {
@@ -4078,24 +4106,24 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         local: <span class="kw-2">&amp;</span>Handle&lt;ast::Local&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx) =&gt; <span class="prelude-val">Ok</span>(ctx.local_table[local].runtime()),
             ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ctx)) =&gt; ctx.local_table[local]
                 .const_time()
-                .ok_or(Error::UnexpectedOperationInConstContext(span)),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnexpectedOperationInConstContext(span)),
+                .ok_or(Box::new(Error::UnexpectedOperationInConstContext(span))),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnexpectedOperationInConstContext(span))),
         }
     }
 
     <span class="kw">fn </span>runtime_expression_ctx(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>LocalExpressionContext&lt;<span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw-2">&amp;mut </span>LocalExpressionContext&lt;<span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>ctx) =&gt; <span class="prelude-val">Ok</span>(ctx),
             ExpressionContextType::Constant(<span class="kw">_</span>) | ExpressionContextType::Override =&gt; {
-                <span class="prelude-val">Err</span>(Error::UnexpectedOperationInConstContext(span))
+                <span class="prelude-val">Err</span>(Box::new(Error::UnexpectedOperationInConstContext(span)))
             }
         }
     }
@@ -4105,13 +4133,13 @@
         expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         component_span: Span,
         gather_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::SwizzleComponent, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::SwizzleComponent&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>rctx) =&gt; {
                 <span class="kw">if </span>!rctx.local_expression_kind_tracker.is_const(expr) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ExpectedConstExprConcreteIntegerScalar(
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::ExpectedConstExprConcreteIntegerScalar(
                         component_span,
-                    ));
+                    )));
                 }
 
                 <span class="kw">let </span>index = <span class="self">self
@@ -4129,13 +4157,13 @@
                 <span class="kw">crate</span>::SwizzleComponent::XYZW
                     .get(index <span class="kw">as </span>usize)
                     .copied()
-                    .ok_or(Error::InvalidGatherComponent(component_span))
+                    .ok_or(Box::new(Error::InvalidGatherComponent(component_span)))
             }
             <span class="comment">// This means a `gather` operation appeared in a constant expression.
             // This error refers to the `gather` itself, not its "component" argument.
-            </span>ExpressionContextType::Constant(<span class="kw">_</span>) | ExpressionContextType::Override =&gt; {
-                <span class="prelude-val">Err</span>(Error::UnexpectedOperationInConstContext(gather_span))
-            }
+            </span>ExpressionContextType::Constant(<span class="kw">_</span>) | ExpressionContextType::Override =&gt; <span class="prelude-val">Err</span>(Box::new(
+                Error::UnexpectedOperationInConstContext(gather_span),
+            )),
         }
     }
 
@@ -4152,7 +4180,7 @@
     </span><span class="kw">fn </span>register_type(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
         <span class="self">self</span>.grow_types(handle)<span class="question-mark">?</span>;
         <span class="comment">// This is equivalent to calling ExpressionContext::typifier(),
         // except that this lets the borrow checker see that it's okay
@@ -4187,10 +4215,7 @@
     /// [`TypeResolution`]: crate::proc::TypeResolution
     /// [`register_type`]: Self::register_type
     /// [`Typifier`]: Typifier
-    </span><span class="kw">fn </span>grow_types(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    </span><span class="kw">fn </span>grow_types(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt; {
         <span class="kw">let </span>empty_arena = Arena::new();
         <span class="kw">let </span>resolve_ctx;
         <span class="kw">let </span>typifier;
@@ -4223,10 +4248,10 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         image: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::ImageClass, bool), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (<span class="kw">crate</span>::ImageClass, bool)&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(<span class="self">self</span>, image) {
             <span class="kw">crate</span>::TypeInner::Image { class, arrayed, .. } =&gt; <span class="prelude-val">Ok</span>((class, arrayed)),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::BadTexture(span)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::BadTexture(span))),
         }
     }
 
@@ -4257,7 +4282,7 @@
         op: <span class="kw">crate</span>::BinaryOperator,
         left: <span class="kw-2">&amp;mut </span>Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         right: <span class="kw-2">&amp;mut </span>Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(
             op,
             <span class="kw">crate</span>::BinaryOperator::Add
@@ -4296,7 +4321,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expression: <span class="kw">crate</span>::Expression,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>rctx)
             | ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>rctx)) =&gt; {
@@ -4323,7 +4348,7 @@
     </span><span class="kw">fn </span>apply_load_rule(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">match </span>expr {
             Typed::Reference(pointer) =&gt; {
                 <span class="kw">let </span>load = <span class="kw">crate</span>::Expression::Load { pointer };
@@ -4348,29 +4373,29 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>&gt; ArgumentContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'source</span>&gt; {
-    <span class="kw">pub fn </span>finish(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    <span class="kw">pub fn </span>finish(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">if </span><span class="self">self</span>.args.len() == <span class="number">0 </span>{
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(Error::WrongArgumentCount {
+            <span class="prelude-val">Err</span>(Box::new(Error::WrongArgumentCount {
                 found: <span class="self">self</span>.total_args,
                 expected: <span class="self">self</span>.min_args..<span class="self">self</span>.args_used + <span class="number">1</span>,
                 span: <span class="self">self</span>.span,
-            })
+            }))
         }
     }
 
-    <span class="kw">pub fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    <span class="kw">pub fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.args.next().copied() {
             <span class="prelude-val">Some</span>(arg) =&gt; {
                 <span class="self">self</span>.args_used += <span class="number">1</span>;
                 <span class="prelude-val">Ok</span>(arg)
             }
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::WrongArgumentCount {
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::WrongArgumentCount {
                 found: <span class="self">self</span>.total_args,
                 expected: <span class="self">self</span>.min_args..<span class="self">self</span>.args_used + <span class="number">1</span>,
                 span: <span class="self">self</span>.span,
-            }),
+            })),
         }
     }
 }
@@ -4437,7 +4462,10 @@
         }
     }
 
-    <span class="kw">fn </span>try_map&lt;U, E&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>f: <span class="kw">impl </span>FnMut(T) -&gt; <span class="prelude-ty">Result</span>&lt;U, E&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Typed&lt;U&gt;, E&gt; {
+    <span class="kw">fn </span>try_map&lt;U, E&gt;(
+        <span class="self">self</span>,
+        <span class="kw-2">mut </span>f: <span class="kw">impl </span>FnMut(T) -&gt; core::result::Result&lt;U, E&gt;,
+    ) -&gt; core::result::Result&lt;Typed&lt;U&gt;, E&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Reference(expr) =&gt; Typed::Reference(f(expr)<span class="question-mark">?</span>),
             <span class="self">Self</span>::Plain(expr) =&gt; Typed::Plain(f(expr)<span class="question-mark">?</span>),
@@ -4470,24 +4498,24 @@
         }
     }
 
-    <span class="kw">fn </span>single_component(name: <span class="kw-2">&amp;</span>str, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;u32, Error&gt; {
+    <span class="kw">fn </span>single_component(name: <span class="kw-2">&amp;</span>str, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
         <span class="kw">let </span>ch = name.chars().next().ok_or(Error::BadAccessor(name_span))<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="self">Self</span>::letter_component(ch) {
             <span class="prelude-val">Some</span>(sc) =&gt; <span class="prelude-val">Ok</span>(sc <span class="kw">as </span>u32),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::BadAccessor(name_span)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(name_span))),
         }
     }
 
     <span class="doccomment">/// Construct a `Components` value from a 'member' name, like `"wzy"` or `"x"`.
     ///
     /// Use `name_span` for reporting errors in parsing the component string.
-    </span><span class="kw">fn </span>new(name: <span class="kw-2">&amp;</span>str, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+    </span><span class="kw">fn </span>new(name: <span class="kw-2">&amp;</span>str, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>size = <span class="kw">match </span>name.len() {
             <span class="number">1 </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(Components::Single(<span class="self">Self</span>::single_component(name, name_span)<span class="question-mark">?</span>)),
             <span class="number">2 </span>=&gt; <span class="kw">crate</span>::VectorSize::Bi,
             <span class="number">3 </span>=&gt; <span class="kw">crate</span>::VectorSize::Tri,
             <span class="number">4 </span>=&gt; <span class="kw">crate</span>::VectorSize::Quad,
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadAccessor(name_span)),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(name_span))),
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>pattern = [<span class="kw">crate</span>::SwizzleComponent::X; <span class="number">4</span>];
@@ -4500,7 +4528,7 @@
         {
             <span class="prelude-val">Ok</span>(Components::Swizzle { size, pattern })
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(Error::BadAccessor(name_span))
+            <span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(name_span)))
         }
     }
 }
@@ -4605,10 +4633,7 @@
         <span class="self">Self </span>{ index }
     }
 
-    <span class="kw">pub fn </span>lower(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        tu: ast::TranslationUnit&lt;<span class="lifetime">'source</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Module, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    <span class="kw">pub fn </span>lower(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tu: ast::TranslationUnit&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Module&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>module = <span class="kw">crate</span>::Module {
             diagnostic_filters: tu.diagnostic_filters,
             diagnostic_filter_leaf: tu.diagnostic_filter_leaf,
@@ -4786,7 +4811,7 @@
         explicit_ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;,
         abstract_rule: AbstractRule,
         ectx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;<span class="kw">crate</span>::Type&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;)&gt; {
         <span class="kw">let </span>ty;
         <span class="kw">let </span>initializer;
         <span class="kw">match </span>(init, explicit_ty) {
@@ -4795,24 +4820,24 @@
                 <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
                 <span class="kw">let </span>init = ectx
                     .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, name.span)
-                    .map_err(|error| <span class="kw">match </span>error {
-                        Error::AutoConversion(e) =&gt; Error::InitializationTypeMismatch {
+                    .map_err(|error| <span class="kw">match </span><span class="kw-2">*</span>error {
+                        Error::AutoConversion(e) =&gt; Box::new(Error::InitializationTypeMismatch {
                             name: name.span,
                             expected: e.dest_type,
                             got: e.source_type,
-                        },
-                        other =&gt; other,
+                        }),
+                        <span class="kw">_ </span>=&gt; error,
                     })<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>init_ty = ectx.register_type(init)<span class="question-mark">?</span>;
                 <span class="kw">let </span>explicit_inner = <span class="kw-2">&amp;</span>ectx.module.types[explicit_ty].inner;
                 <span class="kw">let </span>init_inner = <span class="kw-2">&amp;</span>ectx.module.types[init_ty].inner;
                 <span class="kw">if </span>!explicit_inner.equivalent(init_inner, <span class="kw-2">&amp;</span>ectx.module.types) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InitializationTypeMismatch {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                         name: name.span,
-                        expected: explicit_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()).into(),
-                        got: init_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()).into(),
-                    });
+                        expected: explicit_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()),
+                        got: init_inner.to_wgsl(<span class="kw-2">&amp;</span>ectx.module.to_ctx()),
+                    }));
                 }
                 ty = explicit_ty;
                 initializer = <span class="prelude-val">Some</span>(init);
@@ -4829,7 +4854,7 @@
                 ty = explicit_ty;
                 initializer = <span class="prelude-val">None</span>;
             }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::DeclMissingTypeAndInit(name.span)),
+            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::DeclMissingTypeAndInit(name.span))),
         }
         <span class="prelude-val">Ok</span>((ty, initializer))
     }
@@ -4839,7 +4864,7 @@
         f: <span class="kw-2">&amp;</span>ast::Function&lt;<span class="lifetime">'source</span>&gt;,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;LoweredGlobalDecl, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, LoweredGlobalDecl&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>local_table = FastHashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>expressions = Arena::new();
         <span class="kw">let </span><span class="kw-2">mut </span>named_expressions = FastIndexMap::default();
@@ -4849,7 +4874,7 @@
             .arguments
             .iter()
             .enumerate()
-            .map(|(i, arg)| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+            .map(|(i, arg)| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">_</span>&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(arg.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = expressions
                     .append(<span class="kw">crate</span>::Expression::FunctionArgument(i <span class="kw">as </span>u32), arg.name.span);
@@ -4863,12 +4888,12 @@
                     binding: <span class="self">self</span>.binding(<span class="kw-2">&amp;</span>arg.binding, ty, ctx)<span class="question-mark">?</span>,
                 })
             })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>result = f
             .result
             .as_ref()
-            .map(|res| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, Error&lt;<span class="lifetime">'_</span>&gt;&gt; {
+            .map(|res| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">_</span>&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(res.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::FunctionResult {
                     ty,
@@ -4923,8 +4948,8 @@
                             <span class="prelude-val">Ok</span>(value) =&gt; {
                                 workgroup_size_out[i] = value.<span class="number">0</span>;
                             }
-                            err =&gt; {
-                                <span class="kw">if let </span><span class="prelude-val">Err</span>(Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>)) = err {
+                            <span class="prelude-val">Err</span>(err) =&gt; {
+                                <span class="kw">if let </span>Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>) = <span class="kw-2">*</span>err {
                                     <span class="kw">match </span><span class="kw-2">**</span>ty {
                                         <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
                                             workgroup_size_overrides_out[i] =
@@ -4934,11 +4959,11 @@
                                                 )<span class="question-mark">?</span>);
                                         }
                                         <span class="kw">_ </span>=&gt; {
-                                            err<span class="question-mark">?</span>;
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                                         }
                                     }
                                 } <span class="kw">else </span>{
-                                    err<span class="question-mark">?</span>;
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                                 }
                             }
                         }
@@ -4976,12 +5001,14 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(size_expr);
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>(expr),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::ExpectedConstExprConcreteIntegerScalar(span)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::ExpectedConstExprConcreteIntegerScalar(
+                span,
+            ))),
         }
     }
 
@@ -4990,7 +5017,7 @@
         b: <span class="kw-2">&amp;</span>ast::Block&lt;<span class="lifetime">'source</span>&gt;,
         is_inside_loop: bool,
         ctx: <span class="kw-2">&amp;mut </span>StatementContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Block, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Block&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>block = <span class="kw">crate</span>::Block::default();
 
         <span class="kw">for </span>stmt <span class="kw">in </span>b.stmts.iter() {
@@ -5006,7 +5033,7 @@
         block: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Block,
         is_inside_loop: bool,
         ctx: <span class="kw-2">&amp;mut </span>StatementContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">let </span>out = <span class="kw">match </span>stmt.kind {
             ast::StatementKind::Block(<span class="kw-2">ref </span>block) =&gt; {
                 <span class="kw">let </span>block = <span class="self">self</span>.block(block, is_inside_loop, ctx)<span class="question-mark">?</span>;
@@ -5040,11 +5067,11 @@
                             .equivalent(<span class="kw-2">&amp;</span>ctx.module.types[init_ty].inner, <span class="kw-2">&amp;</span>ctx.module.types)
                         {
                             <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span>ctx.module.to_ctx();
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InitializationTypeMismatch {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                                 name: l.name.span,
-                                expected: ty.to_wgsl(gctx).into(),
-                                got: init_ty.to_wgsl(gctx).into(),
-                            });
+                                expected: ty.to_wgsl(gctx),
+                                got: init_ty.to_wgsl(gctx),
+                            }));
                         }
                     }
 
@@ -5203,12 +5230,12 @@
                                 | <span class="kw">crate</span>::Scalar::ABSTRACT_INT,
                             ) =&gt; <span class="prelude-val">Ok</span>((expr, span)),
                             <span class="kw">_ </span>=&gt; <span class="kw">match </span>i {
-                                <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidSwitchSelector { span }),
-                                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::InvalidSwitchCase { span }),
+                                <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::InvalidSwitchSelector { span })),
+                                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::InvalidSwitchCase { span })),
                             },
                         }
                     })
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;), <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;)&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span><span class="kw-2">mut </span>consensus =
                     ectx.automatic_conversion_consensus(<span class="kw-2">&amp;</span>exprs)
@@ -5252,7 +5279,9 @@
                                             <span class="kw">crate</span>::SwitchValue::U32(value)
                                         }
                                         <span class="kw">_ </span>=&gt; {
-                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidSwitchCase { span });
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidSwitchCase {
+                                                span,
+                                            }));
                                         }
                                     }
                                 }
@@ -5262,7 +5291,7 @@
                             fall_through: case.fall_through,
                         })
                     })
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">crate</span>::Statement::Switch { selector, cases }
             }
@@ -5350,10 +5379,10 @@
                     Typed::Reference(handle) =&gt; handle,
                     Typed::Plain(handle) =&gt; {
                         <span class="kw">let </span>ty = ctx.invalid_assignment_type(handle);
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidAssignment {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidAssignment {
                             span: target_span,
                             ty,
-                        });
+                        }));
                     }
                 };
 
@@ -5416,7 +5445,9 @@
                     </span>.expression_for_reference(value, <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter))<span class="question-mark">?</span>;
                 <span class="kw">let </span>target_handle = <span class="kw">match </span>target {
                     Typed::Reference(handle) =&gt; handle,
-                    Typed::Plain(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadIncrDecrReferenceType(value_span)),
+                    Typed::Plain(<span class="kw">_</span>) =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span)))
+                    }
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
@@ -5426,16 +5457,16 @@
                     } =&gt; scalar,
                     <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ectx.module.types[base].inner {
                         <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadIncrDecrReferenceType(value_span)),
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                     },
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadIncrDecrReferenceType(value_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                 };
                 <span class="kw">let </span>literal = <span class="kw">match </span>scalar.kind {
                     <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
                         <span class="kw">crate</span>::Literal::one(scalar)
                             .ok_or(Error::BadIncrDecrReferenceType(value_span))<span class="question-mark">?
                     </span>}
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadIncrDecrReferenceType(value_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                 };
 
                 <span class="kw">let </span>right =
@@ -5512,7 +5543,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, ctx)<span class="question-mark">?</span>;
         ctx.concretize(expr)
     }
@@ -5521,7 +5552,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_reference(expr, ctx)<span class="question-mark">?</span>;
         ctx.apply_load_rule(expr)
     }
@@ -5530,7 +5561,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>expr = <span class="kw-2">&amp;</span>ctx.ast_expressions[expr];
 
@@ -5577,7 +5608,7 @@
                     LoweredGlobalDecl::Function { .. }
                     | LoweredGlobalDecl::Type(<span class="kw">_</span>)
                     | LoweredGlobalDecl::EntryPoint =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unexpected(span, ExpectedToken::Variable));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::Unexpected(span, ExpectedToken::Variable)));
                     }
                 };
 
@@ -5604,7 +5635,10 @@
                         </span><span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Plain(handle));
                     }
                     Typed::Plain(<span class="kw">_</span>) =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::NotReference(<span class="string">"the operand of the `&amp;` operator"</span>, span));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::NotReference(
+                            <span class="string">"the operand of the `&amp;` operator"</span>,
+                            span,
+                        )));
                     }
                 }
             }
@@ -5613,7 +5647,7 @@
                 </span><span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
                 <span class="kw">if </span><span class="macro">resolve_inner!</span>(ctx, pointer).pointer_space().is_none() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::NotPointer(span));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::NotPointer(span)));
                 }
 
                 <span class="comment">// No code is generated. We just declare the pointer a reference now.
@@ -5644,7 +5678,9 @@
                 }
 
                 lowered_base.try_map(|base| <span class="kw">match </span>ctx.const_eval_expr_to_u32(index).ok() {
-                    <span class="prelude-val">Some</span>(index) =&gt; <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Error&gt;(<span class="kw">crate</span>::Expression::AccessIndex { base, index }),
+                    <span class="prelude-val">Some</span>(index) =&gt; {
+                        <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Box&lt;Error&gt;&gt;(<span class="kw">crate</span>::Expression::AccessIndex { base, index })
+                    }
                     <span class="prelude-val">None </span>=&gt; {
                         <span class="comment">// When an abstract array value e is indexed by an expression
                         // that is not a const-expression, then the array is concretized
@@ -5721,7 +5757,7 @@
                                 .map(|base| <span class="kw">crate</span>::Expression::AccessIndex { base, index }),
                         }
                     }
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadAccessor(field.span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(field.span))),
                 };
 
                 access
@@ -5736,11 +5772,11 @@
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">let </span>ty = <span class="macro">resolve!</span>(ctx, expr);
                         <span class="kw">let </span>gctx = <span class="kw-2">&amp;</span>ctx.module.to_ctx();
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadTypeCast {
-                            from_type: ty.to_wgsl(gctx).into(),
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadTypeCast {
+                            from_type: ty.to_wgsl(gctx),
                             span: ty_span,
-                            to_type: to_resolved.to_wgsl(gctx).into(),
-                        });
+                            to_type: to_resolved.to_wgsl(gctx),
+                        }));
                     }
                 };
 
@@ -5762,7 +5798,7 @@
         right: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Typed&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="comment">// Load both operands.
         </span><span class="kw">let </span><span class="kw-2">mut </span>left = <span class="self">self</span>.expression_for_abstract(left, ctx)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>right = <span class="self">self</span>.expression_for_abstract(right, ctx)<span class="question-mark">?</span>;
@@ -5850,7 +5886,7 @@
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         is_statement: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
         <span class="kw">let </span>function_span = function.span;
         <span class="kw">match </span>ctx.globals.get(function.name) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Type(ty)) =&gt; {
@@ -5867,8 +5903,13 @@
                 <span class="kw-2">&amp;</span>LoweredGlobalDecl::Const(<span class="kw">_</span>)
                 | <span class="kw-2">&amp;</span>LoweredGlobalDecl::Override(<span class="kw">_</span>)
                 | <span class="kw-2">&amp;</span>LoweredGlobalDecl::Var(<span class="kw">_</span>),
-            ) =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(function_span, ExpectedToken::Function)),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::EntryPoint) =&gt; <span class="prelude-val">Err</span>(Error::CalledEntryPoint(function_span)),
+            ) =&gt; <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(
+                function_span,
+                ExpectedToken::Function,
+            ))),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::EntryPoint) =&gt; {
+                <span class="prelude-val">Err</span>(Box::new(Error::CalledEntryPoint(function_span)))
+            }
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Function {
                 handle: function,
                 must_use,
@@ -5894,12 +5935,12 @@
                             ctx.ast_expressions.get_span(arg),
                         )
                     })
-                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>has_result = ctx.module.functions[function].result.is_some();
 
                 <span class="kw">if </span>must_use &amp;&amp; is_statement {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FunctionMustUseUnused(function_span));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::FunctionMustUseUnused(function_span)));
                 }
 
                 <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
@@ -6088,7 +6129,11 @@
                                         comparison: <span class="bool-val">true</span>,
                                     }
                                 }
-                                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidAtomicOperandType(value_span)),
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicOperandType(
+                                        value_span,
+                                    )))
+                                }
                             };
 
                             <span class="kw">let </span>result = ctx.interrupt_emitter(expression, span)<span class="question-mark">?</span>;
@@ -6196,7 +6241,7 @@
                                 <span class="kw-2">ref </span>other =&gt; {
                                     <span class="macro">log::error!</span>(<span class="string">"Type {other:?} passed to workgroupUniformLoad"</span>);
                                     <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidWorkGroupUniformLoad(span));
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidWorkGroupUniformLoad(span)));
                                 }
                             };
                             <span class="kw">let </span>result = ctx.interrupt_emitter(
@@ -6473,7 +6518,9 @@
                                 .push(<span class="kw">crate</span>::Statement::SubgroupBallot { result, predicate }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(result));
                         }
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownIdent(function.span, function.name)),
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownIdent(function.span, function.name)))
+                        }
                     }
                 };
 
@@ -6487,7 +6534,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
@@ -6496,12 +6543,12 @@
                 <span class="kw">crate</span>::TypeInner::Atomic { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to atomic op"</span>, other);
-                    <span class="prelude-val">Err</span>(Error::InvalidAtomicPointer(span))
+                    <span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicPointer(span)))
                 }
             },
             <span class="kw-2">ref </span>other =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">"Type {:?} passed to atomic op"</span>, other);
-                <span class="prelude-val">Err</span>(Error::InvalidAtomicPointer(span))
+                <span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicPointer(span)))
             }
         }
     }
@@ -6513,7 +6560,7 @@
         args: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         is_statement: bool,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, <span class="number">2</span>, span);
 
         <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -6566,14 +6613,14 @@
         args: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Expression, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Expression&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, fun.min_argument_count(), span);
 
         <span class="kw">fn </span>get_image_and_span&lt;<span class="lifetime">'source</span>&gt;(
             lowerer: <span class="kw-2">&amp;mut </span>Lowerer&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>&gt;,
             args: <span class="kw-2">&amp;mut </span>ArgumentContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'source</span>&gt;,
             ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;(Handle&lt;<span class="kw">crate</span>::Expression&gt;, Span), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;<span class="kw">crate</span>::Expression&gt;, Span)&gt; {
             <span class="kw">let </span>image = args.next()<span class="question-mark">?</span>;
             <span class="kw">let </span>image_span = ctx.ast_expressions.get_span(image);
             <span class="kw">let </span>image = lowerer.expression(image, ctx)<span class="question-mark">?</span>;
@@ -6688,7 +6735,7 @@
         collective_op: <span class="kw">crate</span>::CollectiveOperation,
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
 
         <span class="kw">let </span>argument = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -6717,7 +6764,7 @@
         mode: SubgroupGather,
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">2</span>, span);
 
         <span class="kw">let </span>argument = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -6760,7 +6807,7 @@
         s: <span class="kw-2">&amp;</span>ast::Struct&lt;<span class="lifetime">'source</span>&gt;,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="number">0</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>struct_alignment = Alignment::ONE;
         <span class="kw">let </span><span class="kw-2">mut </span>members = Vec::with_capacity(s.members.len());
@@ -6776,7 +6823,7 @@
             <span class="kw">let </span>member_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size_expr) = member.size {
                 <span class="kw">let </span>(size, span) = <span class="self">self</span>.const_u32(size_expr, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">if </span>size &lt; member_min_size {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::SizeAttributeTooLow(span, member_min_size));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::SizeAttributeTooLow(span, member_min_size)));
                 } <span class="kw">else </span>{
                     size
                 }
@@ -6788,12 +6835,15 @@
                 <span class="kw">let </span>(align, span) = <span class="self">self</span>.const_u32(align_expr, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(alignment) = Alignment::new(align) {
                     <span class="kw">if </span>alignment &lt; member_min_alignment {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::AlignAttributeTooLow(span, member_min_alignment));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::AlignAttributeTooLow(
+                            span,
+                            member_min_alignment,
+                        )));
                     } <span class="kw">else </span>{
                         alignment
                     }
                 } <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::NonPowerOfTwoAlignAttribute(span));
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::NonPowerOfTwoAlignAttribute(span)));
                 }
             } <span class="kw">else </span>{
                 member_min_alignment
@@ -6834,7 +6884,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, Span), Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (u32, Span)&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">let </span>value = ctx
@@ -6854,27 +6904,29 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         size: ast::ArraySize&lt;<span class="lifetime">'source</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::ArraySize, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::ArraySize&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>size {
             ast::ArraySize::Constant(expr) =&gt; {
                 <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
                 <span class="kw">let </span>const_expr = <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_const());
                 <span class="kw">match </span>const_expr {
                     <span class="prelude-val">Ok</span>(value) =&gt; {
-                        <span class="kw">let </span>len = ctx.const_eval_expr_to_u32(value).map_err(|err| <span class="kw">match </span>err {
-                            <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
-                                Error::ExpectedConstExprConcreteIntegerScalar(span)
-                            }
-                            <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
-                                Error::ExpectedPositiveArrayLength(span)
-                            }
+                        <span class="kw">let </span>len = ctx.const_eval_expr_to_u32(value).map_err(|err| {
+                            Box::new(<span class="kw">match </span>err {
+                                <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
+                                    Error::ExpectedConstExprConcreteIntegerScalar(span)
+                                }
+                                <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
+                                    Error::ExpectedPositiveArrayLength(span)
+                                }
+                            })
                         })<span class="question-mark">?</span>;
                         <span class="kw">let </span>size =
                             NonZeroU32::new(len).ok_or(Error::ExpectedPositiveArrayLength(span))<span class="question-mark">?</span>;
                         <span class="kw">crate</span>::ArraySize::Constant(size)
                     }
-                    err =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Err</span>(Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>)) = err {
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="kw">if let </span>Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>) = <span class="kw-2">*</span>err {
                             <span class="kw">match </span><span class="kw-2">**</span>ty {
                                 <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
                                     <span class="kw">crate</span>::ArraySize::Pending(<span class="self">self</span>.array_size_override(
@@ -6884,13 +6936,11 @@
                                     )<span class="question-mark">?</span>)
                                 }
                                 <span class="kw">_ </span>=&gt; {
-                                    err<span class="question-mark">?</span>;
-                                    <span class="macro">unreachable!</span>()
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                                 }
                             }
                         } <span class="kw">else </span>{
-                            err<span class="question-mark">?</span>;
-                            <span class="macro">unreachable!</span>()
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                         }
                     }
                 }
@@ -6904,7 +6954,7 @@
         size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Override&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Override&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>({
@@ -6923,7 +6973,9 @@
                     )
                 }
             }),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::ExpectedConstExprConcreteIntegerScalar(span)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::ExpectedConstExprConcreteIntegerScalar(
+                span,
+            ))),
         }
     }
 
@@ -6941,14 +6993,14 @@
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
         name: <span class="prelude-ty">Option</span>&lt;String&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span>ctx.types[handle] {
             ast::Type::Scalar(scalar) =&gt; scalar.to_inner_scalar(),
             ast::Type::Vector { size, ty, ty_span } =&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
                     <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
                 <span class="kw">crate</span>::TypeInner::Vector { size, scalar }
             }
@@ -6961,7 +7013,7 @@
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
                     <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownScalarType(ty_span)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
                 <span class="kw">match </span>scalar.kind {
                     <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="kw">crate</span>::TypeInner::Matrix {
@@ -6969,7 +7021,7 @@
                         rows,
                         scalar,
                     },
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BadMatrixScalarKind(ty_span, scalar)),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadMatrixScalarKind(ty_span, scalar))),
                 }
             }
             ast::Type::Atomic(scalar) =&gt; scalar.to_inner_atomic(),
@@ -7014,8 +7066,8 @@
             ast::Type::User(<span class="kw-2">ref </span>ident) =&gt; {
                 <span class="kw">return match </span>ctx.globals.get(ident.name) {
                     <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Type(handle)) =&gt; <span class="prelude-val">Ok</span>(handle),
-                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::Unexpected(ident.span, ExpectedToken::Type)),
-                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownType(ident.span)),
+                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Box::new(Error::Unexpected(ident.span, ExpectedToken::Type))),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::UnknownType(ident.span))),
                 }
             }
         };
@@ -7028,7 +7080,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
         <span class="self">self</span>.resolve_named_ast_type(handle, <span class="prelude-val">None</span>, ctx)
     }
 
@@ -7037,7 +7089,7 @@
         binding: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Binding&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Binding&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">*</span>binding {
             <span class="prelude-val">Some</span>(ast::Binding::BuiltIn(b)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(b)),
             <span class="prelude-val">Some</span>(ast::Binding::Location {
@@ -7069,7 +7121,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, Error&lt;<span class="lifetime">'source</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
@@ -7078,12 +7130,12 @@
                 <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to ray query op"</span>, other);
-                    <span class="prelude-val">Err</span>(Error::InvalidRayQueryPointer(span))
+                    <span class="prelude-val">Err</span>(Box::new(Error::InvalidRayQueryPointer(span)))
                 }
             },
             <span class="kw-2">ref </span>other =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">"Type {:?} passed to ray query op"</span>, other);
-                <span class="prelude-val">Err</span>(Error::InvalidRayQueryPointer(span))
+                <span class="prelude-val">Err</span>(Box::new(Error::InvalidRayQueryPointer(span)))
             }
         }
     }
