@@ -1878,14 +1878,9 @@
 <a href="#1877" id="1877">1877</a>
 <a href="#1878" id="1878">1878</a>
 <a href="#1879" id="1879">1879</a>
-<a href="#1880" id="1880">1880</a>
-<a href="#1881" id="1881">1881</a>
-<a href="#1882" id="1882">1882</a>
-<a href="#1883" id="1883">1883</a>
-<a href="#1884" id="1884">1884</a>
-<a href="#1885" id="1885">1885</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::sync::Arc;
+<a href="#1880" id="1880">1880</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::vec;
-<span class="kw">use </span>core::{slice, sync::atomic::Ordering};
+<span class="kw">use </span>core::sync::atomic::Ordering;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -2924,12 +2919,7 @@
                         };
                         temp_query_results.push(result);
                     }
-                    <span class="kw">let </span>query_data = <span class="kw">unsafe </span>{
-                        slice::from_raw_parts(
-                            temp_query_results.as_ptr().cast::&lt;u8&gt;(),
-                            temp_query_results.len() * size_of::&lt;u64&gt;(),
-                        )
-                    };
+                    <span class="kw">let </span>query_data = bytemuck::cast_slice(<span class="kw-2">&amp;</span>temp_query_results);
                     <span class="kw">match </span>dst.raw {
                         <span class="prelude-val">Some</span>(buffer) =&gt; {
                             <span class="kw">unsafe </span>{ gl.bind_buffer(dst_target, <span class="prelude-val">Some</span>(buffer)) };

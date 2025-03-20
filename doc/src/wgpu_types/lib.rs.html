@@ -7611,19 +7611,7 @@
 <a href="#7610" id="7610">7610</a>
 <a href="#7611" id="7611">7611</a>
 <a href="#7612" id="7612">7612</a>
-<a href="#7613" id="7613">7613</a>
-<a href="#7614" id="7614">7614</a>
-<a href="#7615" id="7615">7615</a>
-<a href="#7616" id="7616">7616</a>
-<a href="#7617" id="7617">7617</a>
-<a href="#7618" id="7618">7618</a>
-<a href="#7619" id="7619">7619</a>
-<a href="#7620" id="7620">7620</a>
-<a href="#7621" id="7621">7621</a>
-<a href="#7622" id="7622">7622</a>
-<a href="#7623" id="7623">7623</a>
-<a href="#7624" id="7624">7624</a>
-<a href="#7625" id="7625">7625</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
+<a href="#7613" id="7613">7613</a></pre></div><pre class="rust"><code><span class="doccomment">//! This library describes the API surface of WebGPU that is agnostic of the backend.
 //! This API is used for targeting both Web and Native.
 
 </span><span class="attr">#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
@@ -7648,6 +7636,8 @@
     ops::Range,
 };
 
+<span class="kw">use </span>bytemuck::{Pod, Zeroable};
+
 <span class="attr">#[cfg(any(feature = <span class="string">"serde"</span>, test))]
 </span><span class="kw">use </span>{
     alloc::format,
@@ -7655,6 +7645,7 @@
 };
 
 <span class="kw">pub mod </span>assertions;
+<span class="kw">mod </span>cast_utils;
 <span class="kw">mod </span>counters;
 <span class="kw">mod </span>env;
 <span class="kw">mod </span>features;
@@ -14839,7 +14830,7 @@
 
 <span class="doccomment">/// Argument buffer layout for `draw_indirect` commands.
 </span><span class="attr">#[repr(C)]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, Pod, Zeroable)]
 </span><span class="kw">pub struct </span>DrawIndirectArgs {
     <span class="doccomment">/// The number of vertices to draw.
     </span><span class="kw">pub </span>vertex_count: u32,
@@ -14857,18 +14848,13 @@
     <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a buffer.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">unsafe </span>{
-            core::mem::transmute(core::slice::from_raw_parts(
-                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
-                size_of::&lt;<span class="self">Self</span>&gt;(),
-            ))
-        }
+        bytemuck::bytes_of(<span class="self">self</span>)
     }
 }
 
 <span class="doccomment">/// Argument buffer layout for `draw_indexed_indirect` commands.
 </span><span class="attr">#[repr(C)]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, Pod, Zeroable)]
 </span><span class="kw">pub struct </span>DrawIndexedIndirectArgs {
     <span class="doccomment">/// The number of indices to draw.
     </span><span class="kw">pub </span>index_count: u32,
@@ -14888,18 +14874,13 @@
     <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a buffer.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">unsafe </span>{
-            core::mem::transmute(core::slice::from_raw_parts(
-                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
-                size_of::&lt;<span class="self">Self</span>&gt;(),
-            ))
-        }
+        bytemuck::bytes_of(<span class="self">self</span>)
     }
 }
 
 <span class="doccomment">/// Argument buffer layout for `dispatch_indirect` commands.
 </span><span class="attr">#[repr(C)]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, Pod, Zeroable)]
 </span><span class="kw">pub struct </span>DispatchIndirectArgs {
     <span class="doccomment">/// The number of work groups in X dimension.
     </span><span class="kw">pub </span>x: u32,
@@ -14913,12 +14894,7 @@
     <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written into a buffer.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">unsafe </span>{
-            core::mem::transmute(core::slice::from_raw_parts(
-                core::ptr::from_ref(<span class="self">self</span>).cast::&lt;u8&gt;(),
-                size_of::&lt;<span class="self">Self</span>&gt;(),
-            ))
-        }
+        bytemuck::bytes_of(<span class="self">self</span>)
     }
 }
 
