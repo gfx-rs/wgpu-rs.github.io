@@ -3225,7 +3225,48 @@
 <a href="#3224" id="3224">3224</a>
 <a href="#3225" id="3225">3225</a>
 <a href="#3226" id="3226">3226</a>
-<a href="#3227" id="3227">3227</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3227" id="3227">3227</a>
+<a href="#3228" id="3228">3228</a>
+<a href="#3229" id="3229">3229</a>
+<a href="#3230" id="3230">3230</a>
+<a href="#3231" id="3231">3231</a>
+<a href="#3232" id="3232">3232</a>
+<a href="#3233" id="3233">3233</a>
+<a href="#3234" id="3234">3234</a>
+<a href="#3235" id="3235">3235</a>
+<a href="#3236" id="3236">3236</a>
+<a href="#3237" id="3237">3237</a>
+<a href="#3238" id="3238">3238</a>
+<a href="#3239" id="3239">3239</a>
+<a href="#3240" id="3240">3240</a>
+<a href="#3241" id="3241">3241</a>
+<a href="#3242" id="3242">3242</a>
+<a href="#3243" id="3243">3243</a>
+<a href="#3244" id="3244">3244</a>
+<a href="#3245" id="3245">3245</a>
+<a href="#3246" id="3246">3246</a>
+<a href="#3247" id="3247">3247</a>
+<a href="#3248" id="3248">3248</a>
+<a href="#3249" id="3249">3249</a>
+<a href="#3250" id="3250">3250</a>
+<a href="#3251" id="3251">3251</a>
+<a href="#3252" id="3252">3252</a>
+<a href="#3253" id="3253">3253</a>
+<a href="#3254" id="3254">3254</a>
+<a href="#3255" id="3255">3255</a>
+<a href="#3256" id="3256">3256</a>
+<a href="#3257" id="3257">3257</a>
+<a href="#3258" id="3258">3258</a>
+<a href="#3259" id="3259">3259</a>
+<a href="#3260" id="3260">3260</a>
+<a href="#3261" id="3261">3261</a>
+<a href="#3262" id="3262">3262</a>
+<a href="#3263" id="3263">3263</a>
+<a href="#3264" id="3264">3264</a>
+<a href="#3265" id="3265">3265</a>
+<a href="#3266" id="3266">3266</a>
+<a href="#3267" id="3267">3267</a>
+<a href="#3268" id="3268">3268</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -3792,6 +3833,10 @@
     </span>InvalidRelationalArg(RelationalFunction),
     <span class="attr">#[error(<span class="string">"value of `low` is greater than `high` for clamp built-in function"</span>)]
     </span>InvalidClamp,
+    <span class="attr">#[error(<span class="string">"Constructor expects {expected} components, found {actual}"</span>)]
+    </span>InvalidVectorComposeLength { expected: usize, actual: usize },
+    <span class="attr">#[error(<span class="string">"Constructor must only contain vector or scalar arguments"</span>)]
+    </span>InvalidVectorComposeComponent,
     <span class="attr">#[error(<span class="string">"Splat is defined only on scalar values"</span>)]
     </span>SplatScalarOnly,
     <span class="attr">#[error(<span class="string">"Can only swizzle vector constants"</span>)]
@@ -5471,16 +5516,53 @@
         }
     }
 
+    <span class="doccomment">/// Returns the total number of components, after flattening, of a vector compose expression.
+    </span><span class="kw">fn </span>vector_compose_flattened_size(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        components: <span class="kw-2">&amp;</span>[Handle&lt;Expression&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;usize, ConstantEvaluatorError&gt; {
+        components
+            .iter()
+            .try_fold(<span class="number">0</span>, |acc, c| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, ConstantEvaluatorError&gt; {
+                <span class="kw">let </span>size = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.resolve_type(<span class="kw-2">*</span>c)<span class="question-mark">?</span>.inner_with(<span class="self">self</span>.types) {
+                    TypeInner::Scalar(<span class="kw">_</span>) =&gt; <span class="number">1</span>,
+                    <span class="comment">// We trust that the vector size of `component` is correct,
+                    // as it will have already been validated when `component`
+                    // was registered.
+                    </span>TypeInner::Vector { size, .. } =&gt; size <span class="kw">as </span>usize,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidVectorComposeComponent),
+                };
+                <span class="prelude-val">Ok</span>(acc + size)
+            })
+    }
+
     <span class="kw">fn </span>register_evaluated_expr(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Expression,
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
-        <span class="comment">// It suffices to only check literals, since we only register one
-        // expression at a time, `Compose` expressions can only refer to other
-        // expressions, and `ZeroValue` expressions are always okay.
+        <span class="comment">// It suffices to only check_literal_value() for `Literal` expressions,
+        // since we only register one expression at a time, `Compose`
+        // expressions can only refer to other expressions, and `ZeroValue`
+        // expressions are always okay.
         </span><span class="kw">if let </span>Expression::Literal(literal) = expr {
             <span class="kw">crate</span>::valid::check_literal_value(literal)<span class="question-mark">?</span>;
+        }
+
+        <span class="comment">// Ensure vector composes contain the correct number of components. We
+        // do so here when each compose is registered to avoid having to deal
+        // with the mess each time the compose is used in another expression.
+        </span><span class="kw">if let </span>Expression::Compose { ty, <span class="kw-2">ref </span>components } = expr {
+            <span class="kw">if let </span>TypeInner::Vector { size, scalar: <span class="kw">_ </span>} = <span class="self">self</span>.types[ty].inner {
+                <span class="kw">let </span>expected = size <span class="kw">as </span>usize;
+                <span class="kw">let </span>actual = <span class="self">self</span>.vector_compose_flattened_size(components)<span class="question-mark">?</span>;
+                <span class="kw">if </span>expected != actual {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidVectorComposeLength {
+                        expected,
+                        actual,
+                    });
+                }
+            }
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.append_expr(expr, span, ExpressionKind::Const))
