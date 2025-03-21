@@ -6848,7 +6848,8 @@
 <a href="#6847" id="6847">6847</a>
 <a href="#6848" id="6848">6848</a>
 <a href="#6849" id="6849">6849</a>
-<a href="#6850" id="6850">6850</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#6850" id="6850">6850</a>
+<a href="#6851" id="6851">6851</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -7700,12 +7701,13 @@
         }
 
         <span class="kw">let </span>loop_bound_name = <span class="self">self</span>.namer.call(<span class="string">"loop_bound"</span>);
-        <span class="kw">let </span>decl = <span class="macro">format!</span>(<span class="string">"{level}uint2 {loop_bound_name} = uint2(0u);"</span>);
+        <span class="comment">// Count down from u32::MAX rather than up from 0 to avoid hang on
+        // certain Intel drivers. See &lt;https://github.com/gfx-rs/wgpu/issues/7319&gt;.
+        </span><span class="kw">let </span>decl = <span class="macro">format!</span>(<span class="string">"{level}uint2 {loop_bound_name} = uint2({}u);"</span>, u32::MAX);
         <span class="kw">let </span>level = level.next();
-        <span class="kw">let </span>max = u32::MAX;
         <span class="kw">let </span>break_and_inc = <span class="macro">format!</span>(
-            <span class="string">"{level}if ({NAMESPACE}::all({loop_bound_name} == uint2({max}u))) {{ break; }}
-{level}{loop_bound_name} += uint2({loop_bound_name}.y == {max}u, 1u);"
+            <span class="string">"{level}if ({NAMESPACE}::all({loop_bound_name} == uint2(0u))) {{ break; }}
+{level}{loop_bound_name} -= uint2({loop_bound_name}.y == 0u, 1u);"
         </span>);
 
         <span class="prelude-val">Some</span>((decl, break_and_inc))

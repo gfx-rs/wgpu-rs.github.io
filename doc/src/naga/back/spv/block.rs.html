@@ -3352,7 +3352,9 @@
 <a href="#3351" id="3351">3351</a>
 <a href="#3352" id="3352">3352</a>
 <a href="#3353" id="3353">3353</a>
-<a href="#3354" id="3354">3354</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3354" id="3354">3354</a>
+<a href="#3355" id="3355">3355</a>
+<a href="#3356" id="3356">3356</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -3664,7 +3666,7 @@ Implementations for `BlockContext` methods.
                 uint2_ptr_type_id,
                 loop_counter_var_id,
                 spirv::StorageClass::Function,
-                <span class="prelude-val">Some</span>(zero_uint2_const_id),
+                <span class="prelude-val">Some</span>(max_uint2_const_id),
             ),
         };
         <span class="self">self</span>.function.force_loop_bounding_vars.push(var);
@@ -3685,14 +3687,14 @@ Implementations for `BlockContext` methods.
             <span class="prelude-val">None</span>,
         ));
 
-        <span class="comment">// If both the high and low u32s have reached u32::MAX then break. ie
-        // if (all(eq(loop_counter, vec2(u32::MAX)))) { break; }
+        <span class="comment">// If both the high and low u32s have reached 0 then break. ie
+        // if (all(eq(loop_counter, vec2(0)))) { break; }
         </span><span class="kw">let </span>eq_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::binary(
             spirv::Op::IEqual,
             bool2_type_id,
             eq_id,
-            max_uint2_const_id,
+            zero_uint2_const_id,
             load_id,
         ));
         <span class="kw">let </span>all_eq_id = <span class="self">self</span>.gen_id();
@@ -3714,9 +3716,11 @@ Implementations for `BlockContext` methods.
         );
         block = Block::new(inc_counter_block_id);
 
-        <span class="comment">// To simulate a 64-bit counter we always increment the low u32, and increment
+        <span class="comment">// To simulate a 64-bit counter we always decrement the low u32, and decrement
         // the high u32 when the low u32 overflows. ie
-        // counter += vec2(select(0u, 1u, counter.y == u32::MAX), 1u);
+        // counter -= vec2(select(0u, 1u, counter.y == 0), 1u);
+        // Count down from u32::MAX rather than up from 0 to avoid hang on
+        // certain Intel drivers. See &lt;https://github.com/gfx-rs/wgpu/issues/7319&gt;.
         </span><span class="kw">let </span>low_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::composite_extract(
             uint_type_id,
@@ -3730,7 +3734,7 @@ Implementations for `BlockContext` methods.
             bool_type_id,
             low_overflow_id,
             low_id,
-            max_uint_const_id,
+            zero_uint_const_id,
         ));
         <span class="kw">let </span>carry_bit_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::select(
@@ -3740,19 +3744,19 @@ Implementations for `BlockContext` methods.
             one_uint_const_id,
             zero_uint_const_id,
         ));
-        <span class="kw">let </span>increment_id = <span class="self">self</span>.gen_id();
+        <span class="kw">let </span>decrement_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::composite_construct(
             uint2_type_id,
-            increment_id,
+            decrement_id,
             <span class="kw-2">&amp;</span>[carry_bit_id, one_uint_const_id],
         ));
         <span class="kw">let </span>result_id = <span class="self">self</span>.gen_id();
         block.body.push(Instruction::binary(
-            spirv::Op::IAdd,
+            spirv::Op::ISub,
             uint2_type_id,
             result_id,
             load_id,
-            increment_id,
+            decrement_id,
         ));
         block
             .body
