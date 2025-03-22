@@ -103,7 +103,9 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{InitTracker, MemoryInitKind};
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{InitTracker, MemoryInitKind};
 <span class="kw">use </span><span class="kw">crate</span>::resource::Texture;
 <span class="kw">use </span>alloc::{sync::Arc, vec::Vec};
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -158,9 +160,11 @@
 <span class="kw">impl </span>TextureInitTracker {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(mip_level_count: u32, depth_or_array_layers: u32) -&gt; <span class="self">Self </span>{
         TextureInitTracker {
-            mips: core::iter::repeat(TextureLayerInitTracker::new(depth_or_array_layers))
-                .take(mip_level_count <span class="kw">as </span>usize)
-                .collect(),
+            mips: core::iter::repeat_n(
+                TextureLayerInitTracker::new(depth_or_array_layers),
+                mip_level_count <span class="kw">as </span>usize,
+            )
+            .collect(),
         }
     }
 
