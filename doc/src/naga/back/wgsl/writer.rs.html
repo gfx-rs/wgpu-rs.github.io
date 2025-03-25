@@ -1818,7 +1818,8 @@
 <a href="#1817" id="1817">1817</a>
 <a href="#1818" id="1818">1818</a>
 <a href="#1819" id="1819">1819</a>
-<a href="#1820" id="1820">1820</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -2967,11 +2968,12 @@
                 <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::F64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}lf"</span>)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::I64(value) =&gt; {
-                    <span class="comment">// `-9223372036854775808li` is not valid WGSL. The most negative `i64`
-                    // value can only be expressed in WGSL using AbstractInt and
-                    // a unary negation operator.
+                    <span class="comment">// `-9223372036854775808li` is not valid WGSL. Nor can we use the AbstractInt
+                    // trick above, as AbstractInt also cannot represent `9223372036854775808`.
+                    // The most negative `i64` value can only be expressed in WGSL using
+                    // subtracting 1 from the second most negative value.
                     </span><span class="kw">if </span>value == i64::MIN {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"i64({value})"</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}li - 1li"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}li"</span>)<span class="question-mark">?</span>;
                     }
