@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_src_buffer_binding_size"],"struct":["Dispatch","Params"]};

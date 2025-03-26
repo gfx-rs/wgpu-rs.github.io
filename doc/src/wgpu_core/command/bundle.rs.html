@@ -1700,7 +1700,38 @@
 <a href="#1699" id="1699">1699</a>
 <a href="#1700" id="1700">1700</a>
 <a href="#1701" id="1701">1701</a>
-<a href="#1702" id="1702">1702</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
+<a href="#1731" id="1731">1731</a>
+<a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a></pre></div><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 A render bundle is a prerecorded sequence of commands that can be replayed on a
 command encoder with a single call. A single bundle can replayed any number of
@@ -2486,29 +2517,39 @@ index format changes.
 
     <span class="kw">let </span>buffer = buffer_guard.get(buffer_id).get()<span class="question-mark">?</span>;
 
-    state
-        .trackers
-        .buffers
-        .merge_single(<span class="kw-2">&amp;</span>buffer, wgt::BufferUses::INDIRECT)<span class="question-mark">?</span>;
-
     buffer.same_device(<span class="kw-2">&amp;</span>state.device)<span class="question-mark">?</span>;
     buffer.check_usage(wgt::BufferUsages::INDIRECT)<span class="question-mark">?</span>;
 
+    <span class="kw">let </span>vertex_limits = <span class="kw">super</span>::VertexLimits::new(state.vertex_buffer_sizes(), <span class="kw-2">&amp;</span>pipeline.steps);
+
+    <span class="kw">let </span>stride = <span class="kw">super</span>::get_stride_of_indirect_args(indexed);
     state
         .buffer_memory_init_actions
         .extend(buffer.initialization_status.read().create_action(
             <span class="kw-2">&amp;</span>buffer,
-            offset..(offset + size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>u64),
+            offset..(offset + stride),
             MemoryInitKind::NeedsInitializedMemory,
         ));
 
-    <span class="kw">if </span>indexed {
+    <span class="kw">let </span>vertex_or_index_limit = <span class="kw">if </span>indexed {
         <span class="kw">let </span>index = <span class="kw">match </span>state.index {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>index) =&gt; index,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DrawError::MissingIndexBuffer.into()),
         };
         state.commands.extend(index.flush());
-    }
+        index.limit()
+    } <span class="kw">else </span>{
+        vertex_limits.vertex_limit
+    };
+    <span class="kw">let </span>instance_limit = vertex_limits.instance_limit;
+
+    <span class="kw">let </span>buffer_uses = <span class="kw">if </span>state.device.indirect_validation.is_some() {
+        wgt::BufferUses::STORAGE_READ_ONLY
+    } <span class="kw">else </span>{
+        wgt::BufferUses::INDIRECT
+    };
+
+    state.trackers.buffers.merge_single(<span class="kw-2">&amp;</span>buffer, buffer_uses)<span class="question-mark">?</span>;
 
     state.flush_vertices();
     state.flush_binds(used_bind_groups, dynamic_offsets);
@@ -2517,6 +2558,9 @@ index format changes.
         offset,
         count: <span class="number">1</span>,
         indexed,
+
+        vertex_or_index_limit,
+        instance_limit,
     });
     <span class="prelude-val">Ok</span>(())
 }
@@ -2535,6 +2579,8 @@ index format changes.
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ExecutionError {
+    <span class="attr">#[error(transparent)]
+    </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
     <span class="attr">#[error(<span class="string">"Using {0} in a render bundle is not implemented"</span>)]
@@ -2588,6 +2634,8 @@ index format changes.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>execute(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         raw: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>hal::DynCommandEncoder,
+        indirect_draw_validation_resources: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::indirect_validation::DrawResources,
+        indirect_draw_validation_batcher: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::indirect_validation::DrawBatcher,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ExecutionError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>offsets = <span class="self">self</span>.base.dynamic_offsets.as_slice();
@@ -2730,19 +2778,33 @@ index format changes.
                     buffer,
                     offset,
                     count: <span class="number">1</span>,
-                    indexed: <span class="bool-val">false</span>,
+                    indexed,
+
+                    vertex_or_index_limit,
+                    instance_limit,
                 } =&gt; {
-                    <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
-                    <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
-                }
-                Cmd::DrawIndirect {
-                    buffer,
-                    offset,
-                    count: <span class="number">1</span>,
-                    indexed: <span class="bool-val">true</span>,
-                } =&gt; {
-                    <span class="kw">let </span>buffer = buffer.try_raw(snatch_guard)<span class="question-mark">?</span>;
-                    <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, <span class="kw-2">*</span>offset, <span class="number">1</span>) };
+                    <span class="kw">let </span>(buffer, offset) = <span class="kw">if </span><span class="self">self</span>.device.indirect_validation.is_some() {
+                        <span class="kw">let </span>(dst_resource_index, offset) = indirect_draw_validation_batcher.add(
+                            indirect_draw_validation_resources,
+                            <span class="kw-2">&amp;</span><span class="self">self</span>.device,
+                            buffer,
+                            <span class="kw-2">*</span>offset,
+                            <span class="kw-2">*</span>indexed,
+                            <span class="kw-2">*</span>vertex_or_index_limit,
+                            <span class="kw-2">*</span>instance_limit,
+                        )<span class="question-mark">?</span>;
+
+                        <span class="kw">let </span>dst_buffer =
+                            indirect_draw_validation_resources.get_dst_buffer(dst_resource_index);
+                        (dst_buffer, offset)
+                    } <span class="kw">else </span>{
+                        (buffer.try_raw(snatch_guard)<span class="question-mark">?</span>, <span class="kw-2">*</span>offset)
+                    };
+                    <span class="kw">if </span><span class="kw-2">*</span>indexed {
+                        <span class="kw">unsafe </span>{ raw.draw_indexed_indirect(buffer, offset, <span class="number">1</span>) };
+                    } <span class="kw">else </span>{
+                        <span class="kw">unsafe </span>{ raw.draw_indirect(buffer, offset, <span class="number">1</span>) };
+                    }
                 }
                 Cmd::DrawIndirect { .. } | Cmd::MultiDrawIndirectCount { .. } =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::Unimplemented(<span class="string">"multi-draw-indirect"</span>))

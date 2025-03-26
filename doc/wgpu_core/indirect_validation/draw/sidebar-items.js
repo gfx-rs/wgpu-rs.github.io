@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BUFFER_SIZE"],"fn":["calculate_src_buffer_binding_size","calculate_src_offsets","create_bind_group_layout","create_buffer_and_bind_group","create_validation_module","create_validation_pipeline"],"struct":["BufferPoolEntry","CurrentEntry","Draw","DrawBatcher","DrawIndirectValidationBatch","DrawResources","MetadataEntry"]};

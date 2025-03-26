@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["BufferBarrierScratch","BufferBarriers","UniqueIndex","UniqueIndexScratch"],"trait":["UniqueIndexExt"],"type":["BufferBarrier"]};

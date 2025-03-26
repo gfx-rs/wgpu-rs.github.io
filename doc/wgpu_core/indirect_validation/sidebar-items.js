@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CreateDispatchIndirectValidationPipelineError"],"fn":["calculate_src_buffer_binding_size"],"struct":["IndirectValidation","Params"]};
+window.SIDEBAR_ITEMS = {"enum":["CreateIndirectValidationPipelineError"],"mod":["dispatch","draw","utils"],"struct":["BindGroups","IndirectValidation"]};
