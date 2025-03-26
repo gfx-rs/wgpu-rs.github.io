@@ -1920,7 +1920,17 @@
 <a href="#1919" id="1919">1919</a>
 <a href="#1920" id="1920">1920</a>
 <a href="#1921" id="1921">1921</a>
-<a href="#1922" id="1922">1922</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -2620,8 +2630,18 @@
                         <span class="kw">let </span>good = <span class="kw">match </span>query {
                             <span class="kw">crate</span>::ImageQuery::NumLayers =&gt; arrayed,
                             <span class="kw">crate</span>::ImageQuery::Size { level: <span class="prelude-val">None </span>} =&gt; <span class="bool-val">true</span>,
-                            <span class="kw">crate</span>::ImageQuery::Size { level: <span class="prelude-val">Some</span>(<span class="kw">_</span>) }
-                            | <span class="kw">crate</span>::ImageQuery::NumLevels =&gt; class.is_mipmapped(),
+                            <span class="kw">crate</span>::ImageQuery::Size { level: <span class="prelude-val">Some</span>(level) } =&gt; {
+                                <span class="kw">match </span>resolver[level] {
+                                    Ti::Scalar(Sc::I32 | Sc::U32) =&gt; {}
+                                    <span class="kw">_ </span>=&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndexType(
+                                            level,
+                                        ))
+                                    }
+                                }
+                                class.is_mipmapped()
+                            }
+                            <span class="kw">crate</span>::ImageQuery::NumLevels =&gt; class.is_mipmapped(),
                             <span class="kw">crate</span>::ImageQuery::NumSamples =&gt; class.is_multisampled(),
                         };
                         <span class="kw">if </span>!good {
