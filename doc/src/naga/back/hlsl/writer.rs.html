@@ -4272,7 +4272,35 @@
 <a href="#4271" id="4271">4271</a>
 <a href="#4272" id="4272">4272</a>
 <a href="#4273" id="4273">4273</a>
-<a href="#4274" id="4274">4274</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4274" id="4274">4274</a>
+<a href="#4275" id="4275">4275</a>
+<a href="#4276" id="4276">4276</a>
+<a href="#4277" id="4277">4277</a>
+<a href="#4278" id="4278">4278</a>
+<a href="#4279" id="4279">4279</a>
+<a href="#4280" id="4280">4280</a>
+<a href="#4281" id="4281">4281</a>
+<a href="#4282" id="4282">4282</a>
+<a href="#4283" id="4283">4283</a>
+<a href="#4284" id="4284">4284</a>
+<a href="#4285" id="4285">4285</a>
+<a href="#4286" id="4286">4286</a>
+<a href="#4287" id="4287">4287</a>
+<a href="#4288" id="4288">4288</a>
+<a href="#4289" id="4289">4289</a>
+<a href="#4290" id="4290">4290</a>
+<a href="#4291" id="4291">4291</a>
+<a href="#4292" id="4292">4292</a>
+<a href="#4293" id="4293">4293</a>
+<a href="#4294" id="4294">4294</a>
+<a href="#4295" id="4295">4295</a>
+<a href="#4296" id="4296">4296</a>
+<a href="#4297" id="4297">4297</a>
+<a href="#4298" id="4298">4298</a>
+<a href="#4299" id="4299">4299</a>
+<a href="#4300" id="4300">4300</a>
+<a href="#4301" id="4301">4301</a>
+<a href="#4302" id="4302">4302</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4312,6 +4340,10 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>DIV_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_div"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MOD_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_mod"</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>NEG_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_neg"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2I32_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2i32"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U32_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u32"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2I64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2i64"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>F2U64_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">"naga_f2u64"</span>;
 
 <span class="kw">struct </span>EpStructMember {
     name: String,
@@ -6886,6 +6918,28 @@
         })
     }
 
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_literal(<span class="kw-2">&amp;mut </span><span class="self">self</span>, literal: <span class="kw">crate</span>::Literal) -&gt; BackendResult {
+        <span class="kw">match </span>literal {
+            <span class="kw">crate</span>::Literal::F64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}L"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::F32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::F16(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}h"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::U32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}u"</span>)<span class="question-mark">?</span>,
+            <span class="comment">// HLSL has no suffix for explicit i32 literals, but not using any suffix
+            // makes the type ambiguous which prevents overload resolution from
+            // working. So we explicitly use the int() constructor syntax.
+            </span><span class="kw">crate</span>::Literal::I32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int({value})"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::U64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}uL"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::I64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
+            <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
+                    <span class="string">"Abstract types should not appear in IR presented to backends"</span>.into(),
+                ));
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">fn </span>write_possibly_const_expression&lt;E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span>Module,
@@ -6899,26 +6953,9 @@
         <span class="kw">use </span><span class="kw">crate</span>::Expression;
 
         <span class="kw">match </span>expressions[expr] {
-            Expression::Literal(literal) =&gt; <span class="kw">match </span>literal {
-                <span class="comment">// Floats are written using `Debug` instead of `Display` because it always appends the
-                // decimal part even it's zero
-                </span><span class="kw">crate</span>::Literal::F64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}L"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::F32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::F16(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}h"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::U32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}u"</span>)<span class="question-mark">?</span>,
-                <span class="comment">// HLSL has no suffix for explicit i32 literals, but not using any suffix
-                // makes the type ambiguous which prevents overload resolution from
-                // working. So we explicitly use the int() constructor syntax.
-                </span><span class="kw">crate</span>::Literal::I32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int({value})"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::U64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}uL"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::I64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
-                <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Custom(
-                        <span class="string">"Abstract types should not appear in IR presented to backends"</span>.into(),
-                    ));
-                }
-            },
+            Expression::Literal(literal) =&gt; {
+                <span class="self">self</span>.write_literal(literal)<span class="question-mark">?</span>;
+            }
             Expression::Constant(handle) =&gt; {
                 <span class="kw">let </span>constant = <span class="kw-2">&amp;</span>module.constants[handle];
                 <span class="kw">if </span>constant.name.is_some() {
@@ -7594,53 +7631,72 @@
                 convert,
             } =&gt; {
                 <span class="kw">let </span>inner = func_ctx.resolve_type(expr, <span class="kw-2">&amp;</span>module.types);
-                <span class="kw">let </span>close_paren = <span class="kw">match </span>convert {
-                    <span class="prelude-val">Some</span>(dst_width) =&gt; {
-                        <span class="kw">let </span>scalar = Scalar {
-                            kind,
-                            width: dst_width,
-                        };
-                        <span class="kw">match </span><span class="kw-2">*</span>inner {
-                            TypeInner::Vector { size, .. } =&gt; {
-                                <span class="macro">write!</span>(
-                                    <span class="self">self</span>.out,
-                                    <span class="string">"{}{}("</span>,
-                                    scalar.to_hlsl_str()<span class="question-mark">?</span>,
-                                    common::vector_size_str(size)
-                                )<span class="question-mark">?</span>;
-                            }
-                            TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
-                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, scalar.to_hlsl_str()<span class="question-mark">?</span>,)<span class="question-mark">?</span>;
-                            }
-                            TypeInner::Matrix { columns, rows, .. } =&gt; {
-                                <span class="macro">write!</span>(
-                                    <span class="self">self</span>.out,
-                                    <span class="string">"{}{}x{}("</span>,
-                                    scalar.to_hlsl_str()<span class="question-mark">?</span>,
-                                    common::vector_size_str(columns),
-                                    common::vector_size_str(rows)
-                                )<span class="question-mark">?</span>;
-                            }
-                            <span class="kw">_ </span>=&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(
-                                    <span class="string">"write_expr expression::as {inner:?}"
-                                </span>)));
-                            }
-                        };
-                        <span class="bool-val">true
-                    </span>}
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">if </span>inner.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
-                            <span class="bool-val">false
-                        </span>} <span class="kw">else </span>{
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, kind.to_hlsl_cast(),)<span class="question-mark">?</span>;
+                <span class="kw">if </span>inner.scalar_kind() == <span class="prelude-val">Some</span>(ScalarKind::Float)
+                    &amp;&amp; (kind == ScalarKind::Sint || kind == ScalarKind::Uint)
+                    &amp;&amp; convert.is_some()
+                {
+                    <span class="comment">// Use helper functions for float to int casts in order to
+                    // avoid undefined behaviour when value is out of range for
+                    // the target type.
+                    </span><span class="kw">let </span>fun_name = <span class="kw">match </span>(kind, convert) {
+                        (ScalarKind::Sint, <span class="prelude-val">Some</span>(<span class="number">4</span>)) =&gt; F2I32_FUNCTION,
+                        (ScalarKind::Uint, <span class="prelude-val">Some</span>(<span class="number">4</span>)) =&gt; F2U32_FUNCTION,
+                        (ScalarKind::Sint, <span class="prelude-val">Some</span>(<span class="number">8</span>)) =&gt; F2I64_FUNCTION,
+                        (ScalarKind::Uint, <span class="prelude-val">Some</span>(<span class="number">8</span>)) =&gt; F2U64_FUNCTION,
+                        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                    };
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}("</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>close_paren = <span class="kw">match </span>convert {
+                        <span class="prelude-val">Some</span>(dst_width) =&gt; {
+                            <span class="kw">let </span>scalar = Scalar {
+                                kind,
+                                width: dst_width,
+                            };
+                            <span class="kw">match </span><span class="kw-2">*</span>inner {
+                                TypeInner::Vector { size, .. } =&gt; {
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"{}{}("</span>,
+                                        scalar.to_hlsl_str()<span class="question-mark">?</span>,
+                                        common::vector_size_str(size)
+                                    )<span class="question-mark">?</span>;
+                                }
+                                TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, scalar.to_hlsl_str()<span class="question-mark">?</span>,)<span class="question-mark">?</span>;
+                                }
+                                TypeInner::Matrix { columns, rows, .. } =&gt; {
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"{}{}x{}("</span>,
+                                        scalar.to_hlsl_str()<span class="question-mark">?</span>,
+                                        common::vector_size_str(columns),
+                                        common::vector_size_str(rows)
+                                    )<span class="question-mark">?</span>;
+                                }
+                                <span class="kw">_ </span>=&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Unimplemented(<span class="macro">format!</span>(
+                                        <span class="string">"write_expr expression::as {inner:?}"
+                                    </span>)));
+                                }
+                            };
                             <span class="bool-val">true
                         </span>}
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="kw">if </span>inner.scalar_width() == <span class="prelude-val">Some</span>(<span class="number">8</span>) {
+                                <span class="bool-val">false
+                            </span>} <span class="kw">else </span>{
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}("</span>, kind.to_hlsl_cast(),)<span class="question-mark">?</span>;
+                                <span class="bool-val">true
+                            </span>}
+                        }
+                    };
+                    <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
+                    <span class="kw">if </span>close_paren {
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                     }
-                };
-                <span class="self">self</span>.write_expr(module, expr, func_ctx)<span class="question-mark">?</span>;
-                <span class="kw">if </span>close_paren {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
                 }
             }
             Expression::Math {

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["IMAGE_STORAGE_LOAD_SCALAR_WRAPPER"],"enum":["ImageQuery"],"struct":["WrappedArrayLength","WrappedBinaryOp","WrappedConstructor","WrappedImageQuery","WrappedMatCx2","WrappedMath","WrappedStructMatrixAccess","WrappedUnaryOp","WrappedZeroValue"]};
+window.SIDEBAR_ITEMS = {"constant":["IMAGE_STORAGE_LOAD_SCALAR_WRAPPER"],"enum":["ImageQuery"],"struct":["WrappedArrayLength","WrappedBinaryOp","WrappedCast","WrappedConstructor","WrappedImageQuery","WrappedMatCx2","WrappedMath","WrappedStructMatrixAccess","WrappedUnaryOp","WrappedZeroValue"]};

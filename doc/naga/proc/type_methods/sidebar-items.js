@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["POINTER_SPAN"]};
+window.SIDEBAR_ITEMS = {"constant":["POINTER_SPAN"],"fn":["min_max_float_representable_by"],"macro":["define_int_float_limits"],"trait":["IntFloatLimits"]};

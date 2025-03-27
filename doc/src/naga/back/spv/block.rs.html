@@ -3354,7 +3354,46 @@
 <a href="#3353" id="3353">3353</a>
 <a href="#3354" id="3354">3354</a>
 <a href="#3355" id="3355">3355</a>
-<a href="#3356" id="3356">3356</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3356" id="3356">3356</a>
+<a href="#3357" id="3357">3357</a>
+<a href="#3358" id="3358">3358</a>
+<a href="#3359" id="3359">3359</a>
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a>
+<a href="#3363" id="3363">3363</a>
+<a href="#3364" id="3364">3364</a>
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
+<a href="#3391" id="3391">3391</a>
+<a href="#3392" id="3392">3392</a>
+<a href="#3393" id="3393">3393</a>
+<a href="#3394" id="3394">3394</a>
+<a href="#3395" id="3395">3395</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -5232,10 +5271,10 @@ Implementations for `BlockContext` methods.
         };
 
         <span class="kw">enum </span>Cast {
-            Identity,
-            Unary(spirv::Op),
-            Binary(spirv::Op, Word),
-            Ternary(spirv::Op, Word, Word),
+            Identity(Word),
+            Unary(spirv::Op, Word),
+            Binary(spirv::Op, Word, Word),
+            Ternary(spirv::Op, Word, Word, Word),
         }
         <span class="kw">let </span>cast = <span class="kw">match </span>(src_scalar.kind, kind, convert) {
             <span class="comment">// Filter out identity casts. Some Adreno drivers are
@@ -5244,10 +5283,10 @@ Implementations for `BlockContext` methods.
                 <span class="kw">if </span>src_kind == kind
                     &amp;&amp; convert.filter(|<span class="kw-2">&amp;</span>width| width != src_scalar.width).is_none() =&gt;
             {
-                Cast::Identity
+                Cast::Identity(expr_id)
             }
-            (Sk::Bool, Sk::Bool, <span class="kw">_</span>) =&gt; Cast::Unary(spirv::Op::CopyObject),
-            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; Cast::Unary(spirv::Op::Bitcast),
+            (Sk::Bool, Sk::Bool, <span class="kw">_</span>) =&gt; Cast::Unary(spirv::Op::CopyObject, expr_id),
+            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; Cast::Unary(spirv::Op::Bitcast, expr_id),
             <span class="comment">// casting to a bool - generate `OpXxxNotEqual`
             </span>(<span class="kw">_</span>, Sk::Bool, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; {
                 <span class="kw">let </span>op = <span class="kw">match </span>src_scalar.kind {
@@ -5272,7 +5311,7 @@ Implementations for `BlockContext` methods.
                     <span class="prelude-val">None </span>=&gt; zero_scalar_id,
                 };
 
-                Cast::Binary(op, zero_id)
+                Cast::Binary(op, expr_id, zero_id)
             }
             <span class="comment">// casting from a bool - generate `OpSelect`
             </span>(Sk::Bool, <span class="kw">_</span>, <span class="prelude-val">Some</span>(dst_width)) =&gt; {
@@ -5304,60 +5343,99 @@ Implementations for `BlockContext` methods.
                     <span class="prelude-val">None </span>=&gt; (one_scalar_id, zero_scalar_id),
                 };
 
-                Cast::Ternary(spirv::Op::Select, accept_id, reject_id)
+                Cast::Ternary(spirv::Op::Select, expr_id, accept_id, reject_id)
             }
-            (Sk::Float, Sk::Uint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToU),
-            (Sk::Float, Sk::Sint, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertFToS),
+            <span class="comment">// Avoid undefined behaviour when casting from a float to integer
+            // when the value is out of range for the target type. Additionally
+            // ensure we clamp to the correct value as per the WGSL spec.
+            //
+            // https://www.w3.org/TR/WGSL/#floating-point-conversion:
+            // * If X is exactly representable in the target type T, then the
+            //   result is that value.
+            // * Otherwise, the result is the value in T closest to
+            //   truncate(X) and also exactly representable in the original
+            //   floating point type.
+            </span>(Sk::Float, Sk::Sint | Sk::Uint, <span class="prelude-val">Some</span>(width)) =&gt; {
+                <span class="kw">let </span>dst_scalar = <span class="kw">crate</span>::Scalar { kind, width };
+                <span class="kw">let </span>(min, max) =
+                    <span class="kw">crate</span>::proc::min_max_float_representable_by(src_scalar, dst_scalar);
+                <span class="kw">let </span>expr_type_id = <span class="self">self</span>.get_expression_type_id(<span class="kw-2">&amp;</span><span class="self">self</span>.fun_info[expr].ty);
+
+                <span class="kw">let </span>maybe_splat_const = |writer: <span class="kw-2">&amp;mut </span>Writer, const_id| <span class="kw">match </span>src_size {
+                    <span class="prelude-val">None </span>=&gt; const_id,
+                    <span class="prelude-val">Some</span>(size) =&gt; {
+                        <span class="kw">let </span>constituent_ids = [const_id; <span class="kw">crate</span>::VectorSize::MAX];
+                        writer.get_constant_composite(
+                            LookupType::Local(LocalType::Numeric(NumericType::Vector {
+                                size,
+                                scalar: src_scalar,
+                            })),
+                            <span class="kw-2">&amp;</span>constituent_ids[..size <span class="kw">as </span>usize],
+                        )
+                    }
+                };
+                <span class="kw">let </span>min_const_id = <span class="self">self</span>.writer.get_constant_scalar(min);
+                <span class="kw">let </span>min_const_id = maybe_splat_const(<span class="self">self</span>.writer, min_const_id);
+                <span class="kw">let </span>max_const_id = <span class="self">self</span>.writer.get_constant_scalar(max);
+                <span class="kw">let </span>max_const_id = maybe_splat_const(<span class="self">self</span>.writer, max_const_id);
+
+                <span class="kw">let </span>clamp_id = <span class="self">self</span>.gen_id();
+                block.body.push(Instruction::ext_inst(
+                    <span class="self">self</span>.writer.gl450_ext_inst_id,
+                    spirv::GLOp::FClamp,
+                    expr_type_id,
+                    clamp_id,
+                    <span class="kw-2">&amp;</span>[expr_id, min_const_id, max_const_id],
+                ));
+
+                <span class="kw">let </span>op = <span class="kw">match </span>dst_scalar.kind {
+                    <span class="kw">crate</span>::ScalarKind::Sint =&gt; spirv::Op::ConvertFToS,
+                    <span class="kw">crate</span>::ScalarKind::Uint =&gt; spirv::Op::ConvertFToU,
+                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                };
+                Cast::Unary(op, clamp_id)
+            }
             (Sk::Float, Sk::Float, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                Cast::Unary(spirv::Op::FConvert)
+                Cast::Unary(spirv::Op::FConvert, expr_id)
             }
-            (Sk::Sint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertSToF),
+            (Sk::Sint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertSToF, expr_id),
             (Sk::Sint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                Cast::Unary(spirv::Op::SConvert)
+                Cast::Unary(spirv::Op::SConvert, expr_id)
             }
-            (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF),
+            (Sk::Uint, Sk::Float, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; Cast::Unary(spirv::Op::ConvertUToF, expr_id),
             (Sk::Uint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                Cast::Unary(spirv::Op::UConvert)
+                Cast::Unary(spirv::Op::UConvert, expr_id)
             }
             (Sk::Uint, Sk::Sint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                Cast::Unary(spirv::Op::SConvert)
+                Cast::Unary(spirv::Op::SConvert, expr_id)
             }
             (Sk::Sint, Sk::Uint, <span class="prelude-val">Some</span>(dst_width)) <span class="kw">if </span>src_scalar.width != dst_width =&gt; {
-                Cast::Unary(spirv::Op::UConvert)
+                Cast::Unary(spirv::Op::UConvert, expr_id)
             }
             <span class="comment">// We assume it's either an identity cast, or int-uint.
-            </span><span class="kw">_ </span>=&gt; Cast::Unary(spirv::Op::Bitcast),
+            </span><span class="kw">_ </span>=&gt; Cast::Unary(spirv::Op::Bitcast, expr_id),
         };
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>cast {
-            Cast::Identity =&gt; expr_id,
-            Cast::Unary(op) =&gt; {
+            Cast::Identity(expr) =&gt; expr,
+            Cast::Unary(op, op1) =&gt; {
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
                 block
                     .body
-                    .push(Instruction::unary(op, result_type_id, id, expr_id));
+                    .push(Instruction::unary(op, result_type_id, id, op1));
                 id
             }
-            Cast::Binary(op, operand) =&gt; {
+            Cast::Binary(op, op1, op2) =&gt; {
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
-                block.body.push(Instruction::binary(
-                    op,
-                    result_type_id,
-                    id,
-                    expr_id,
-                    operand,
-                ));
+                block
+                    .body
+                    .push(Instruction::binary(op, result_type_id, id, op1, op2));
                 id
             }
-            Cast::Ternary(op, op1, op2) =&gt; {
+            Cast::Ternary(op, op1, op2, op3) =&gt; {
                 <span class="kw">let </span>id = <span class="self">self</span>.gen_id();
-                block.body.push(Instruction::ternary(
-                    op,
-                    result_type_id,
-                    id,
-                    expr_id,
-                    op1,
-                    op2,
-                ));
+                block
+                    .body
+                    .push(Instruction::ternary(op, result_type_id, id, op1, op2, op3));
                 id
             }
         })
