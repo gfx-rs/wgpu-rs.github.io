@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_BUFFER_SIZE","MAX_DISPATCH_SIZE"],"fn":["calculate_chunks","create_staging_buffers","create_storage_buffers","execute_gpu","execute_gpu_inner","main","run","setup","setup_binds","setup_pipeline"]};
