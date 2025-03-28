@@ -1766,10 +1766,7 @@
 <a href="#1765" id="1765">1765</a>
 <a href="#1766" id="1766">1766</a>
 <a href="#1767" id="1767">1767</a>
-<a href="#1768" id="1768">1768</a>
-<a href="#1769" id="1769">1769</a>
-<a href="#1770" id="1770">1770</a>
-<a href="#1771" id="1771">1771</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
+<a href="#1768" id="1768">1768</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{format, string::String};
 
 <span class="kw">use </span><span class="kw">super</span>::validate_atomic_compare_exchange_struct;
 <span class="kw">use super</span>::{
@@ -1778,6 +1775,7 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, UniqueArena};
 <span class="kw">use </span><span class="kw">crate</span>::arena::{Handle, HandleSet};
+<span class="kw">use </span><span class="kw">crate</span>::proc::TypeResolution;
 <span class="kw">use </span><span class="kw">crate</span>::span::WithSpan;
 <span class="kw">use </span><span class="kw">crate</span>::span::{AddSpan <span class="kw">as _</span>, MapErrWithSpan <span class="kw">as _</span>};
 
@@ -2069,6 +2067,10 @@
 
     <span class="kw">fn </span>resolve_pointer_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner {
         <span class="self">self</span>.info[handle].ty.inner_with(<span class="self">self</span>.types)
+    }
+
+    <span class="kw">fn </span>inner_type&lt;<span class="lifetime">'t</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="self">self</span>, ty: <span class="kw-2">&amp;</span><span class="lifetime">'t </span>TypeResolution) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw">crate</span>::TypeInner {
+        ty.inner_with(<span class="self">self</span>.types)
     }
 }
 
@@ -2810,23 +2812,15 @@
                     }
 
                     <span class="kw">let </span>pointer_ty = context.resolve_pointer_type(pointer);
-
-                    <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>pointer_ty {
-                        Ti::Pointer { base, space: <span class="kw">_ </span>} =&gt; <span class="kw">match </span>context.types[base].inner {
-                            Ti::Atomic(scalar) =&gt; <span class="kw-2">*</span>value_ty == Ti::Scalar(scalar),
-                            <span class="kw-2">ref </span>other =&gt; value_ty == other,
-                        },
-                        Ti::ValuePointer {
-                            size: <span class="prelude-val">Some</span>(size),
-                            scalar,
-                            space: <span class="kw">_</span>,
-                        } =&gt; <span class="kw-2">*</span>value_ty == Ti::Vector { size, scalar },
-                        Ti::ValuePointer {
-                            size: <span class="prelude-val">None</span>,
-                            scalar,
-                            space: <span class="kw">_</span>,
-                        } =&gt; <span class="kw-2">*</span>value_ty == Ti::Scalar(scalar),
-                        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                    <span class="kw">let </span>good = <span class="kw">match </span>pointer_ty
+                        .pointer_base_type()
+                        .as_ref()
+                        .map(|ty| context.inner_type(ty))
+                    {
+                        <span class="comment">// The Naga IR allows storing a scalar to an atomic.
+                        </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Ti::Atomic(<span class="kw-2">ref </span>scalar)) =&gt; <span class="kw-2">*</span>value_ty == Ti::Scalar(<span class="kw-2">*</span>scalar),
+                        <span class="prelude-val">Some</span>(other) =&gt; <span class="kw-2">*</span>value_ty == <span class="kw-2">*</span>other,
+                        <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
                     };
                     <span class="kw">if </span>!good {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(FunctionError::InvalidStoreTypes { pointer, value }

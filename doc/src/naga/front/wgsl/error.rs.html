@@ -1182,7 +1182,13 @@
 <a href="#1181" id="1181">1181</a>
 <a href="#1182" id="1182">1182</a>
 <a href="#1183" id="1183">1183</a>
-<a href="#1184" id="1184">1184</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TryToWgsl;
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
@@ -1399,6 +1405,7 @@
     },
     DeclMissingTypeAndInit(Span),
     MissingAttribute(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Span),
+    InvalidAddrOfOperand(Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
     InvalidRayQueryPointer(Span),
@@ -1858,6 +1865,11 @@
                     name_span,
                     <span class="macro">format!</span>(<span class="string">"definition of `{}`"</span>, <span class="kw-2">&amp;</span>source[name_span]).into(),
                 )],
+                notes: <span class="macro">vec!</span>[],
+            },
+            Error::InvalidAddrOfOperand(span) =&gt; ParseError {
+                message: <span class="string">"cannot take the address of a vector component"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(span, <span class="string">"invalid operand for address-of"</span>.into())],
                 notes: <span class="macro">vec!</span>[],
             },
             Error::InvalidAtomicPointer(span) =&gt; ParseError {

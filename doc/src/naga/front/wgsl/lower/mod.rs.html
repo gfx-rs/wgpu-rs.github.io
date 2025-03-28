@@ -3599,9 +3599,7 @@
 <a href="#3598" id="3598">3598</a>
 <a href="#3599" id="3599">3599</a>
 <a href="#3600" id="3600">3600</a>
-<a href="#3601" id="3601">3601</a>
-<a href="#3602" id="3602">3602</a>
-<a href="#3603" id="3603">3603</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3601" id="3601">3601</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -5680,6 +5678,21 @@
                 // reference is required, the Load Rule is not applied.
                 </span><span class="kw">match </span><span class="self">self</span>.expression_for_reference(expr, ctx)<span class="question-mark">? </span>{
                     Typed::Reference(handle) =&gt; {
+                        <span class="kw">let </span>expr = <span class="kw-2">&amp;</span>ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>.function.expressions[handle];
+                        <span class="kw">if let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, .. }
+                        | <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, .. } = expr
+                        {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = <span class="macro">resolve_inner!</span>(ctx, base).pointer_base_type() {
+                                <span class="kw">if </span><span class="macro">matches!</span>(
+                                    <span class="kw-2">*</span>ty.inner_with(<span class="kw-2">&amp;</span>ctx.module.types),
+                                    <span class="kw">crate</span>::TypeInner::Vector { .. },
+                                ) {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidAddrOfOperand(
+                                        ctx.get_expression_span(handle),
+                                    )));
+                                }
+                            }
+                        }
                         <span class="comment">// No code is generated. We just declare the reference a pointer now.
                         </span><span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Plain(handle));
                     }
@@ -5752,30 +5765,13 @@
                     }
                 }
 
-                <span class="kw">let </span>temp_inner;
+                <span class="kw">let </span>temp_ty;
                 <span class="kw">let </span>composite_type: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner = <span class="kw">match </span>lowered_base {
                     Typed::Reference(handle) =&gt; {
-                        <span class="kw">let </span>inner = <span class="macro">resolve_inner!</span>(ctx, handle);
-                        <span class="kw">match </span><span class="kw-2">*</span>inner {
-                            <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw-2">&amp;</span>ctx.module.types[base].inner,
-                            <span class="kw">crate</span>::TypeInner::ValuePointer {
-                                size: <span class="prelude-val">None</span>, scalar, ..
-                            } =&gt; {
-                                temp_inner = <span class="kw">crate</span>::TypeInner::Scalar(scalar);
-                                <span class="kw-2">&amp;</span>temp_inner
-                            }
-                            <span class="kw">crate</span>::TypeInner::ValuePointer {
-                                size: <span class="prelude-val">Some</span>(size),
-                                scalar,
-                                ..
-                            } =&gt; {
-                                temp_inner = <span class="kw">crate</span>::TypeInner::Vector { size, scalar };
-                                <span class="kw-2">&amp;</span>temp_inner
-                            }
-                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(
-                                <span class="string">"In Typed::Reference(handle), handle must be a Naga pointer"
-                            </span>),
-                        }
+                        temp_ty = <span class="macro">resolve_inner!</span>(ctx, handle)
+                            .pointer_base_type()
+                            .expect(<span class="string">"In Typed::Reference(handle), handle must be a Naga pointer"</span>);
+                        temp_ty.inner_with(<span class="kw-2">&amp;</span>ctx.module.types)
                     }
 
                     Typed::Plain(handle) =&gt; {
