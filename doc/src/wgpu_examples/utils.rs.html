@@ -258,19 +258,31 @@
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
 <a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a></pre></div><pre class="rust"><code><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">use </span>std::io::Write;
 <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 </span><span class="kw">use </span>wasm_bindgen::prelude::<span class="kw-2">*</span>;
 
+<span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
+</span><span class="kw">fn </span>get_content_div() -&gt; web_sys::Element {
+    web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.get_element_by_id(<span class="string">"content"</span>))
+        .expect(<span class="string">"Could not get document / content."</span>)
+}
+
 <span class="doccomment">/// Replaces the site body with a message telling the user to open the console and use that.
 </span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 </span><span class="kw">pub fn </span>add_web_nothing_to_see_msg() {
-    web_sys::window()
-        .and_then(|window| window.document())
-        .and_then(|document| document.body())
-        .expect(<span class="string">"Could not get document / body."</span>)
-        .set_inner_html(<span class="string">"&lt;h1&gt;Nothing to see here! Open the console!&lt;/h1&gt;"</span>);
+    get_content_div().set_inner_html(
+        <span class="string">"&lt;h1&gt;This is a compute example, so there's nothing to see here. Open the console!&lt;/h1&gt;"</span>,
+    );
 }
 
 <span class="doccomment">/// Outputs a vector of RGBA bytes as a png image with the given dimensions on the given path.
@@ -303,7 +315,7 @@
 </span><span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 </span><span class="kw">pub fn </span>output_image_wasm(image_data: Vec&lt;u8&gt;, texture_dims: (usize, usize)) {
     <span class="kw">let </span>document = web_sys::window().unwrap().document().unwrap();
-    <span class="kw">let </span>body = document.body().unwrap();
+    <span class="kw">let </span>content_div = get_content_div();
 
     <span class="kw">let </span>canvas = <span class="kw">if let </span><span class="prelude-val">Some</span>(found_canvas) = document.get_element_by_id(<span class="string">"staging-canvas"</span>) {
         <span class="kw">match </span>found_canvas.dyn_into::&lt;web_sys::HtmlCanvasElement&gt;() {
@@ -381,14 +393,15 @@
         You can drag it to your desktop to download."</span>,
         ));
         p.set_id(<span class="string">"image-for-you-text"</span>);
-        body.append_child(<span class="kw-2">&amp;</span>p)
-            .expect(<span class="string">"Failed to append \"image for you text\" to document body."</span>);
+        content_div
+            .append_child(<span class="kw-2">&amp;</span>p)
+            .expect(<span class="string">"Failed to append \"image for you text\" to document."</span>);
     }
 }
 
 <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 </span><span class="kw">fn </span>create_staging_canvas(document: <span class="kw-2">&amp;</span>web_sys::Document) -&gt; web_sys::HtmlCanvasElement {
-    <span class="kw">let </span>body = document.body().expect(<span class="string">"Failed to get document body."</span>);
+    <span class="kw">let </span>content_div = get_content_div();
     <span class="kw">let </span>new_canvas = document
         .create_element(<span class="string">"canvas"</span>)
         .expect(<span class="string">"Failed to create staging canvas."</span>)
@@ -397,22 +410,21 @@
     <span class="comment">// We don't want to show the canvas, we just want it to exist in the background.
     </span>new_canvas.set_attribute(<span class="string">"hidden"</span>, <span class="string">"true"</span>).unwrap();
     new_canvas.set_attribute(<span class="string">"background-color"</span>, <span class="string">"red"</span>).unwrap();
-    body.append_child(<span class="kw-2">&amp;</span>new_canvas).unwrap();
+    content_div.append_child(<span class="kw-2">&amp;</span>new_canvas).unwrap();
     <span class="macro">log::info!</span>(<span class="string">"Created new staging canvas: {:?}"</span>, <span class="kw-2">&amp;</span>new_canvas);
     new_canvas
 }
 
 <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
 </span><span class="kw">fn </span>create_output_image_element(document: <span class="kw-2">&amp;</span>web_sys::Document) -&gt; web_sys::HtmlImageElement {
-    <span class="kw">let </span>body = document.body().expect(<span class="string">"Failed to get document body."</span>);
+    <span class="kw">let </span>content_div = get_content_div();
     <span class="kw">let </span>new_image = document
         .create_element(<span class="string">"img"</span>)
         .expect(<span class="string">"Failed to create output image element."</span>)
         .dyn_into::&lt;web_sys::HtmlImageElement&gt;()
         .unwrap();
     new_image.set_id(<span class="string">"output-image-target"</span>);
-    body.append_child(<span class="kw-2">&amp;</span>new_image)
-        .expect(<span class="string">"Failed to append output image target to document body."</span>);
+    content_div.replace_children_with_node_1(<span class="kw-2">&amp;</span>new_image);
     <span class="macro">log::info!</span>(<span class="string">"Created new output target image: {:?}"</span>, <span class="kw-2">&amp;</span>new_image);
     new_image
 }

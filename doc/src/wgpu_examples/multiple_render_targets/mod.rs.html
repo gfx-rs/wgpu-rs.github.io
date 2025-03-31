@@ -543,7 +543,8 @@
 <a href="#542" id="542">542</a>
 <a href="#543" id="543">543</a>
 <a href="#544" id="544">544</a>
-<a href="#545" id="545">545</a></pre></div><pre class="rust"><code><span class="kw">const </span>EXAMPLE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"multiple_render_targets"</span>;
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a></pre></div><pre class="rust"><code><span class="kw">const </span>EXAMPLE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"multiple_render_targets"</span>;
 
 <span class="doccomment">/// Renderer that draws its outputs to two output texture targets at the same time.
 </span><span class="kw">struct </span>MultiTargetRenderer {
@@ -999,12 +1000,12 @@
             // output textures:
             </span><span class="kw-2">&amp;</span>[
                 <span class="prelude-val">Some</span>(wgpu::ColorTargetState {
-                    format: config.format,
+                    format: config.view_formats[<span class="number">0</span>],
                     blend: <span class="prelude-val">None</span>,
                     write_mask: Default::default(),
                 }),
                 <span class="prelude-val">Some</span>(wgpu::ColorTargetState {
-                    format: config.format,
+                    format: config.view_formats[<span class="number">0</span>],
                     blend: <span class="prelude-val">None</span>,
                     write_mask: Default::default(),
                 }),
@@ -1013,10 +1014,11 @@
 
         <span class="comment">// create our target textures that will receive the simultaneous rendering:
         </span><span class="kw">let </span>texture_targets =
-            TextureTargets::new(device, config.format, config.width, config.height);
+            TextureTargets::new(device, config.view_formats[<span class="number">0</span>], config.width, config.height);
 
         <span class="comment">// helper renderer that displays the results in 2 separate viewports:
-        </span><span class="kw">let </span>drawer = TargetRenderer::init(device, <span class="kw-2">&amp;</span>shader, config.format, <span class="kw-2">&amp;</span>texture_targets);
+        </span><span class="kw">let </span>drawer =
+            TargetRenderer::init(device, <span class="kw-2">&amp;</span>shader, config.view_formats[<span class="number">0</span>], <span class="kw-2">&amp;</span>texture_targets);
 
         <span class="self">Self </span>{
             texture_targets,
@@ -1036,7 +1038,7 @@
         <span class="self">self</span>.screen_width = config.width;
         <span class="self">self</span>.screen_height = config.height;
         <span class="self">self</span>.texture_targets =
-            TextureTargets::new(device, config.format, config.width, config.height);
+            TextureTargets::new(device, config.view_formats[<span class="number">0</span>], config.width, config.height);
         <span class="self">self</span>.drawer.rebuild_resources(device, <span class="kw-2">&amp;</span><span class="self">self</span>.texture_targets);
     }
 
