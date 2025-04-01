@@ -3544,7 +3544,9 @@
 <a href="#3543" id="3543">3543</a>
 <a href="#3544" id="3544">3544</a>
 <a href="#3545" id="3545">3545</a>
-<a href="#3546" id="3546">3546</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
+<a href="#3546" id="3546">3546</a>
+<a href="#3547" id="3547">3547</a>
+<a href="#3548" id="3548">3548</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, num::NonZeroU32, ops::Range, str};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -5954,7 +5956,9 @@
 <span class="kw">fn </span>set_scissor(state: <span class="kw-2">&amp;mut </span>State, rect: Rect&lt;u32&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassErrorInner&gt; {
     <span class="macro">api_log!</span>(<span class="string">"RenderPass::set_scissor_rect {rect:?}"</span>);
 
-    <span class="kw">if </span>rect.x + rect.w &gt; state.info.extent.width || rect.y + rect.h &gt; state.info.extent.height {
+    <span class="kw">if </span>rect.x.saturating_add(rect.w) &gt; state.info.extent.width
+        || rect.y.saturating_add(rect.h) &gt; state.info.extent.height
+    {
         <span class="kw">return </span><span class="prelude-val">Err</span>(RenderCommandError::InvalidScissorRect(rect, state.info.extent).into());
     }
     <span class="kw">let </span>r = hal::Rect {
