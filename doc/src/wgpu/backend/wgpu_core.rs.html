@@ -3622,7 +3622,8 @@
 <a href="#3621" id="3621">3621</a>
 <a href="#3622" id="3622">3622</a>
 <a href="#3623" id="3623">3623</a>
-<a href="#3624" id="3624">3624</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3624" id="3624">3624</a>
+<a href="#3625" id="3625">3625</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::Borrowed,
     boxed::Box,
     format,
@@ -4023,10 +4024,7 @@
     }
 }
 
-<span class="attr">#[cfg_attr(
-    any(not(target_arch = <span class="string">"wasm32"</span>), target_os = <span class="string">"emscripten"</span>),
-    expect(unused)
-)]
+<span class="attr">#[cfg_attr(not(webgl), expect(unused))]
 </span><span class="kw">fn </span>map_texture_tagged_copy_view(
     view: <span class="kw">crate</span>::CopyExternalImageDestInfo&lt;<span class="kw-2">&amp;</span>api::Texture&gt;,
 ) -&gt; wgc::command::CopyExternalImageDestInfo {
@@ -5439,14 +5437,18 @@
         }
     }
 
-    <span class="attr">#[cfg(any(webgpu, webgl))]
+    <span class="comment">// This method needs to exist if either webgpu or webgl is enabled,
+    // but we only actually have an implementation if webgl is enabled.
+    </span><span class="attr">#[cfg(any(webgpu, webgl))]
+    #[cfg_attr(not(webgl), expect(unused_variables))]
     </span><span class="kw">fn </span>copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         source: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExternalImageSourceInfo,
         dest: <span class="kw">crate</span>::CopyExternalImageDestInfo&lt;<span class="kw-2">&amp;</span><span class="kw">crate</span>::api::Texture&gt;,
         size: <span class="kw">crate</span>::Extent3d,
     ) {
-        <span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.queue_copy_external_image_to_texture(
+        <span class="attr">#[cfg(webgl)]
+        </span><span class="kw">match </span><span class="self">self</span>.context.<span class="number">0</span>.queue_copy_external_image_to_texture(
             <span class="self">self</span>.id,
             source,
             map_texture_tagged_copy_view(dest),

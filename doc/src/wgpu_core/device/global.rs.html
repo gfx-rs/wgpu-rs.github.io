@@ -2263,7 +2263,12 @@
 <a href="#2262" id="2262">2262</a>
 <a href="#2263" id="2263">2263</a>
 <a href="#2264" id="2264">2264</a>
-<a href="#2265" id="2265">2265</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2265" id="2265">2265</a>
+<a href="#2266" id="2266">2266</a>
+<a href="#2267" id="2267">2267</a>
+<a href="#2268" id="2268">2268</a>
+<a href="#2269" id="2269">2269</a>
+<a href="#2270" id="2270">2270</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4145,6 +4150,11 @@
                     <span class="prelude-val">Ok</span>(wgt::PollStatus::Poll) =&gt; {
                         <span class="macro">unreachable!</span>(<span class="string">"Cannot get a Poll result from a Wait action."</span>)
                     }
+                    <span class="prelude-val">Err</span>(WaitIdleError::Timeout) <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">"wasm32"</span>) =&gt; {
+                        <span class="comment">// On wasm, you cannot actually successfully wait for the surface.
+                        // However WebGL does not actually require you do this, so ignoring
+                        // the failure is totally fine. See https://github.com/gfx-rs/wgpu/issues/7363
+                    </span>}
                     <span class="prelude-val">Err</span>(e) =&gt; {
                         <span class="kw">break </span><span class="lifetime">'error </span>e.into();
                     }
