@@ -3590,9 +3590,7 @@
 <a href="#3589" id="3589">3589</a>
 <a href="#3590" id="3590">3590</a>
 <a href="#3591" id="3591">3591</a>
-<a href="#3592" id="3592">3592</a>
-<a href="#3593" id="3593">3593</a>
-<a href="#3594" id="3594">3594</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3592" id="3592">3592</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -5084,41 +5082,39 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
-                    <span class="kw">let </span>value =
-                        <span class="self">self</span>.expression(l.init, <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>explicit_ty = l
+                        .ty
+                        .map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter)))
+                        .transpose()<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
+
+                    <span class="kw">let </span>(_ty, initializer) = <span class="self">self</span>.type_and_init(
+                        l.name,
+                        <span class="prelude-val">Some</span>(l.init),
+                        explicit_ty,
+                        AbstractRule::Concretize,
+                        <span class="kw-2">&amp;mut </span>ectx,
+                    )<span class="question-mark">?</span>;
+
+                    <span class="comment">// We passed `Some()` to `type_and_init`, so we
+                    // will get a lowered initializer expression back.
+                    </span><span class="kw">let </span>initializer =
+                        initializer.expect(<span class="string">"type_and_init did not return an initializer"</span>);
 
                     <span class="comment">// The WGSL spec says that any expression that refers to a
                     // `let`-bound variable is not a const expression. This
                     // affects when errors must be reported, so we can't even
                     // treat suitable `let` bindings as constant as an
                     // optimization.
-                    </span>ctx.local_expression_kind_tracker.force_non_const(value);
-
-                    <span class="kw">let </span>explicit_ty = l
-                        .ty
-                        .map(|ty| <span class="self">self</span>.resolve_ast_type(ty, <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter)))
-                        .transpose()<span class="question-mark">?</span>;
-
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = explicit_ty {
-                        <span class="kw">let </span><span class="kw-2">mut </span>ctx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
-                        <span class="kw">let </span>init_ty = ctx.register_type(value)<span class="question-mark">?</span>;
-                        <span class="kw">if </span>!ctx.module.types[ty]
-                            .inner
-                            .equivalent(<span class="kw-2">&amp;</span>ctx.module.types[init_ty].inner, <span class="kw-2">&amp;</span>ctx.module.types)
-                        {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
-                                name: l.name.span,
-                                expected: ctx.type_to_string(ty),
-                                got: ctx.type_to_string(init_ty),
-                            }));
-                        }
-                    }
+                    </span>ctx.local_expression_kind_tracker
+                        .force_non_const(initializer);
 
                     block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
                     ctx.local_table
-                        .insert(l.handle, Declared::Runtime(Typed::Plain(value)));
+                        .insert(l.handle, Declared::Runtime(Typed::Plain(initializer)));
                     ctx.named_expressions
-                        .insert(value, (l.name.name.to_string(), l.name.span));
+                        .insert(initializer, (l.name.name.to_string(), l.name.span));
 
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
