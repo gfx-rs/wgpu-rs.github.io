@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ConstructorSize"],"macro":["constructor_set"],"struct":["ConstructorSet"]};

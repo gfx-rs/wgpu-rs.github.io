@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["extract_bits","insert_bits","ldexp","mix","outer","refract","transpose"]};

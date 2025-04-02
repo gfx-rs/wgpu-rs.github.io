@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ConclusionRule"],"fn":["make_rule"],"macro":["regular"],"struct":["Regular"]};

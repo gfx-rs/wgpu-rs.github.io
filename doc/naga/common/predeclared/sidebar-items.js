@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["frexp_mod_name"]};
