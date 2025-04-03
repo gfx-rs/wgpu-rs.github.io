@@ -1138,7 +1138,11 @@
 <a href="#1137" id="1137">1137</a>
 <a href="#1138" id="1138">1138</a>
 <a href="#1139" id="1139">1139</a>
-<a href="#1140" id="1140">1140</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::{Cow, ToOwned <span class="kw">as _</span>},
     boxed::Box,
     string::String,
@@ -1159,7 +1163,9 @@
     lock::{rank, Mutex},
     present::Presentation,
     resource::ResourceType,
-    resource_log, DOWNLEVEL_WARNING_MESSAGE,
+    resource_log,
+    timestamp_normalization::TimestampNormalizerInitError,
+    DOWNLEVEL_WARNING_MESSAGE,
 };
 
 <span class="kw">use </span>wgt::{Backend, Backends, PowerPreference};
@@ -1220,7 +1226,7 @@
     /// `instance_per_backend` instead.
     </span>supported_backends: Backends,
 
-    flags: wgt::InstanceFlags,
+    <span class="kw">pub </span>flags: wgt::InstanceFlags,
 }
 
 <span class="kw">impl </span>Instance {
@@ -1904,6 +1910,7 @@
         <span class="kw">let </span>queue = Arc::new(queue);
 
         device.set_queue(<span class="kw-2">&amp;</span>queue);
+        device.late_init_resources_with_queue()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((device, queue))
     }
@@ -1975,7 +1982,6 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="doccomment">/// Error when requesting a device from the adapter
 </span><span class="attr">#[non_exhaustive]
 </span><span class="kw">pub enum </span>RequestDeviceError {
@@ -1983,6 +1989,8 @@
     </span>Device(<span class="attr">#[from] </span>DeviceError),
     <span class="attr">#[error(transparent)]
     </span>LimitsExceeded(<span class="attr">#[from] </span>FailedLimit),
+    <span class="attr">#[error(<span class="string">"Failed to initialize Timestamp Normalizer"</span>)]
+    </span>TimestampNormalizerInitFailed(<span class="attr">#[from] </span>TimestampNormalizerInitError),
     <span class="attr">#[error(<span class="string">"Unsupported features were requested: {0:?}"</span>)]
     </span>UnsupportedFeature(wgt::Features),
 }

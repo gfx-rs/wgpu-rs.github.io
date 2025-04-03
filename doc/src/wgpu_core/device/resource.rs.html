@@ -3858,7 +3858,69 @@
 <a href="#3857" id="3857">3857</a>
 <a href="#3858" id="3858">3858</a>
 <a href="#3859" id="3859">3859</a>
-<a href="#3860" id="3860">3860</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3860" id="3860">3860</a>
+<a href="#3861" id="3861">3861</a>
+<a href="#3862" id="3862">3862</a>
+<a href="#3863" id="3863">3863</a>
+<a href="#3864" id="3864">3864</a>
+<a href="#3865" id="3865">3865</a>
+<a href="#3866" id="3866">3866</a>
+<a href="#3867" id="3867">3867</a>
+<a href="#3868" id="3868">3868</a>
+<a href="#3869" id="3869">3869</a>
+<a href="#3870" id="3870">3870</a>
+<a href="#3871" id="3871">3871</a>
+<a href="#3872" id="3872">3872</a>
+<a href="#3873" id="3873">3873</a>
+<a href="#3874" id="3874">3874</a>
+<a href="#3875" id="3875">3875</a>
+<a href="#3876" id="3876">3876</a>
+<a href="#3877" id="3877">3877</a>
+<a href="#3878" id="3878">3878</a>
+<a href="#3879" id="3879">3879</a>
+<a href="#3880" id="3880">3880</a>
+<a href="#3881" id="3881">3881</a>
+<a href="#3882" id="3882">3882</a>
+<a href="#3883" id="3883">3883</a>
+<a href="#3884" id="3884">3884</a>
+<a href="#3885" id="3885">3885</a>
+<a href="#3886" id="3886">3886</a>
+<a href="#3887" id="3887">3887</a>
+<a href="#3888" id="3888">3888</a>
+<a href="#3889" id="3889">3889</a>
+<a href="#3890" id="3890">3890</a>
+<a href="#3891" id="3891">3891</a>
+<a href="#3892" id="3892">3892</a>
+<a href="#3893" id="3893">3893</a>
+<a href="#3894" id="3894">3894</a>
+<a href="#3895" id="3895">3895</a>
+<a href="#3896" id="3896">3896</a>
+<a href="#3897" id="3897">3897</a>
+<a href="#3898" id="3898">3898</a>
+<a href="#3899" id="3899">3899</a>
+<a href="#3900" id="3900">3900</a>
+<a href="#3901" id="3901">3901</a>
+<a href="#3902" id="3902">3902</a>
+<a href="#3903" id="3903">3903</a>
+<a href="#3904" id="3904">3904</a>
+<a href="#3905" id="3905">3905</a>
+<a href="#3906" id="3906">3906</a>
+<a href="#3907" id="3907">3907</a>
+<a href="#3908" id="3908">3908</a>
+<a href="#3909" id="3909">3909</a>
+<a href="#3910" id="3910">3910</a>
+<a href="#3911" id="3911">3911</a>
+<a href="#3912" id="3912">3912</a>
+<a href="#3913" id="3913">3913</a>
+<a href="#3914" id="3914">3914</a>
+<a href="#3915" id="3915">3915</a>
+<a href="#3916" id="3916">3916</a>
+<a href="#3917" id="3917">3917</a>
+<a href="#3918" id="3918">3918</a>
+<a href="#3919" id="3919">3919</a>
+<a href="#3920" id="3920">3920</a>
+<a href="#3921" id="3921">3921</a>
+<a href="#3922" id="3922">3922</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -3895,7 +3957,7 @@
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTrackerAction,
     },
-    instance::Adapter,
+    instance::{Adapter, RequestDeviceError},
     lock::{rank, Mutex, RwLock},
     pipeline,
     pool::ResourcePool,
@@ -3905,6 +3967,7 @@
     },
     resource_log,
     snatch::{SnatchGuard, SnatchLock, Snatchable},
+    timestamp_normalization::TIMESTAMP_NORMALIZATION_BUFFER_USES,
     track::{BindGroupStates, DeviceTracker, TrackerIndexAllocators, UsageScope, UsageScopePool},
     validation::{<span class="self">self</span>, validate_color_attachment_bytes_per_sample},
     weak_vec::WeakVec,
@@ -3990,6 +4053,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) usage_scopes: UsageScopePool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) last_acceleration_structure_build_command_index: AtomicU64,
     <span class="kw">pub</span>(<span class="kw">crate</span>) indirect_validation: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::indirect_validation::IndirectValidation&gt;,
+    <span class="comment">// Optional so that we can late-initialize this after the queue is created.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) timestamp_normalizer:
+        OnceCellOrLock&lt;<span class="kw">crate</span>::timestamp_normalization::TimestampNormalizer&gt;,
     <span class="comment">// needs to be dropped last
     </span><span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: Mutex&lt;<span class="prelude-ty">Option</span>&lt;trace::Trace&gt;&gt;,
@@ -4021,6 +4087,9 @@
         </span><span class="kw">let </span>fence = <span class="kw">unsafe </span>{ ManuallyDrop::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fence.write()) };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(indirect_validation) = <span class="self">self</span>.indirect_validation.take() {
             indirect_validation.dispose(<span class="self">self</span>.raw.as_ref());
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(timestamp_normalizer) = <span class="self">self</span>.timestamp_normalizer.take() {
+            timestamp_normalizer.dispose(<span class="self">self</span>.raw.as_ref());
         }
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.raw.destroy_buffer(zero_buffer);
@@ -4167,8 +4236,24 @@
             usage_scopes: Mutex::new(rank::DEVICE_USAGE_SCOPES, Default::default()),
             <span class="comment">// By starting at one, we can put the result in a NonZeroU64.
             </span>last_acceleration_structure_build_command_index: AtomicU64::new(<span class="number">1</span>),
+            timestamp_normalizer: OnceCellOrLock::new(),
             indirect_validation,
         })
+    }
+
+    <span class="kw">pub fn </span>late_init_resources_with_queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), RequestDeviceError&gt; {
+        <span class="kw">let </span>queue = <span class="self">self</span>.get_queue().unwrap();
+
+        <span class="kw">let </span>timestamp_normalizer = <span class="kw">crate</span>::timestamp_normalization::TimestampNormalizer::new(
+            <span class="self">self</span>,
+            queue.get_timestamp_period(),
+        )<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.timestamp_normalizer
+            .set(timestamp_normalizer)
+            .unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">"Called late_init_resources_with_queue twice"</span>));
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Returns the backend this device is using.
@@ -4466,6 +4551,10 @@
             </span>usage |= wgt::BufferUses::STORAGE_READ_ONLY | wgt::BufferUses::STORAGE_READ_WRITE;
         }
 
+        <span class="kw">if </span>desc.usage.contains(wgt::BufferUsages::QUERY_RESOLVE) {
+            usage |= TIMESTAMP_NORMALIZATION_BUFFER_USES;
+        }
+
         <span class="kw">if </span>desc.mapped_at_creation {
             <span class="kw">if </span>desc.size % wgt::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(resource::CreateBufferError::UnalignedSize);
@@ -4505,6 +4594,19 @@
         <span class="kw">let </span>buffer =
             <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }.map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>timestamp_normalization_bind_group = Snatchable::new(
+            <span class="self">self</span>.timestamp_normalizer
+                .get()
+                .unwrap()
+                .create_normalization_bind_group(
+                    <span class="self">self</span>,
+                    <span class="kw-2">&amp;*</span>buffer,
+                    desc.label.as_deref(),
+                    desc.size,
+                    desc.usage,
+                )<span class="question-mark">?</span>,
+        );
+
         <span class="kw">let </span>indirect_validation_bind_groups =
             <span class="self">self</span>.create_indirect_validation_bind_groups(buffer.as_ref(), desc.size, desc.usage)<span class="question-mark">?</span>;
 
@@ -4521,6 +4623,7 @@
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.buffers.clone()),
             bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, WeakVec::new()),
+            timestamp_normalization_bind_group,
             indirect_validation_bind_groups,
         };
 
@@ -4603,6 +4706,26 @@
         hal_buffer: Box&lt;<span class="kw">dyn </span>hal::DynBuffer&gt;,
         desc: <span class="kw-2">&amp;</span>resource::BufferDescriptor,
     ) -&gt; (Fallible&lt;Buffer&gt;, <span class="prelude-ty">Option</span>&lt;resource::CreateBufferError&gt;) {
+        <span class="kw">let </span>timestamp_normalization_bind_group = <span class="kw">match </span><span class="self">self
+            </span>.timestamp_normalizer
+            .get()
+            .unwrap()
+            .create_normalization_bind_group(
+                <span class="self">self</span>,
+                <span class="kw-2">&amp;*</span>hal_buffer,
+                desc.label.as_deref(),
+                desc.size,
+                desc.usage,
+            ) {
+            <span class="prelude-val">Ok</span>(bg) =&gt; Snatchable::new(bg),
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">return </span>(
+                    Fallible::Invalid(Arc::new(desc.label.to_string())),
+                    <span class="prelude-val">Some</span>(e.into()),
+                )
+            }
+        };
+
         <span class="kw">let </span>indirect_validation_bind_groups = <span class="kw">match </span><span class="self">self</span>.create_indirect_validation_bind_groups(
             hal_buffer.as_ref(),
             desc.size,
@@ -4627,6 +4750,7 @@
             label: desc.label.to_string(),
             tracking_data: TrackingData::new(<span class="self">self</span>.tracker_indices.buffers.clone()),
             bind_groups: Mutex::new(rank::BUFFER_BIND_GROUPS, WeakVec::new()),
+            timestamp_normalization_bind_group,
             indirect_validation_bind_groups,
         };
 

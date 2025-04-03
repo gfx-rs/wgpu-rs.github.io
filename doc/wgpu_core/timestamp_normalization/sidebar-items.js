@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["TIMESTAMP_NORMALIZATION_BUFFER_USES"],"enum":["TimestampNormalizerInitError"],"fn":["compute_timestamp_period"],"struct":["InternalState","TimestampNormalizationBindGroup","TimestampNormalizer"]};

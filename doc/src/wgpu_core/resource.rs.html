@@ -1993,7 +1993,24 @@
 <a href="#1992" id="1992">1992</a>
 <a href="#1993" id="1993">1993</a>
 <a href="#1994" id="1994">1994</a>
-<a href="#1995" id="1995">1995</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
+<a href="#1999" id="1999">1999</a>
+<a href="#2000" id="2000">2000</a>
+<a href="#2001" id="2001">2001</a>
+<a href="#2002" id="2002">2002</a>
+<a href="#2003" id="2003">2003</a>
+<a href="#2004" id="2004">2004</a>
+<a href="#2005" id="2005">2005</a>
+<a href="#2006" id="2006">2006</a>
+<a href="#2007" id="2007">2007</a>
+<a href="#2008" id="2008">2008</a>
+<a href="#2009" id="2009">2009</a>
+<a href="#2010" id="2010">2010</a>
+<a href="#2011" id="2011">2011</a>
+<a href="#2012" id="2012">2012</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, borrow::ToOwned <span class="kw">as _</span>, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     borrow::Borrow,
     fmt,
@@ -2025,6 +2042,7 @@
     lock::{rank, Mutex, RwLock},
     resource_log,
     snatch::{SnatchGuard, Snatchable},
+    timestamp_normalization::TimestampNormalizationBindGroup,
     track::{SharedTrackerIndexAllocator, TrackerIndex},
     weak_vec::WeakVec,
     Label, LabelHelpers, SubmissionIndex,
@@ -2361,14 +2379,20 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) tracking_data: TrackingData,
     <span class="kw">pub</span>(<span class="kw">crate</span>) map_state: Mutex&lt;BufferMapState&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) bind_groups: Mutex&lt;WeakVec&lt;BindGroup&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) timestamp_normalization_bind_group: Snatchable&lt;TimestampNormalizationBindGroup&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) indirect_validation_bind_groups: Snatchable&lt;<span class="kw">crate</span>::indirect_validation::BindGroups&gt;,
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Buffer {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.timestamp_normalization_bind_group.take() {
+            raw.dispose(<span class="self">self</span>.device.raw());
+        }
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.indirect_validation_bind_groups.take() {
             raw.dispose(<span class="self">self</span>.device.raw());
         }
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
             <span class="macro">resource_log!</span>(<span class="string">"Destroy raw {}"</span>, <span class="self">self</span>.error_ident());
             <span class="kw">unsafe </span>{
@@ -2703,6 +2727,10 @@
                 }
             };
 
+            <span class="kw">let </span>timestamp_normalization_bind_group = <span class="self">self
+                </span>.timestamp_normalization_bind_group
+                .snatch(<span class="kw-2">&amp;mut </span>snatch_guard);
+
             <span class="kw">let </span>indirect_validation_bind_groups = <span class="self">self
                 </span>.indirect_validation_bind_groups
                 .snatch(<span class="kw-2">&amp;mut </span>snatch_guard);
@@ -2719,6 +2747,7 @@
                 device: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.device),
                 label: <span class="self">self</span>.label().to_owned(),
                 bind_groups,
+                timestamp_normalization_bind_group,
                 indirect_validation_bind_groups,
             })
         };
@@ -2774,6 +2803,7 @@
     device: Arc&lt;Device&gt;,
     label: String,
     bind_groups: WeakVec&lt;BindGroup&gt;,
+    timestamp_normalization_bind_group: <span class="prelude-ty">Option</span>&lt;TimestampNormalizationBindGroup&gt;,
     indirect_validation_bind_groups: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::indirect_validation::BindGroups&gt;,
 }
 
@@ -2790,6 +2820,10 @@
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.bind_groups,
         )));
         drop(deferred);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.timestamp_normalization_bind_group.take() {
+            raw.dispose(<span class="self">self</span>.device.raw());
+        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.indirect_validation_bind_groups.take() {
             raw.dispose(<span class="self">self</span>.device.raw());
