@@ -6952,13 +6952,39 @@
 <a href="#6951" id="6951">6951</a>
 <a href="#6952" id="6952">6952</a>
 <a href="#6953" id="6953">6953</a>
-<a href="#6954" id="6954">6954</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#6954" id="6954">6954</a>
+<a href="#6955" id="6955">6955</a>
+<a href="#6956" id="6956">6956</a>
+<a href="#6957" id="6957">6957</a>
+<a href="#6958" id="6958">6958</a>
+<a href="#6959" id="6959">6959</a>
+<a href="#6960" id="6960">6960</a>
+<a href="#6961" id="6961">6961</a>
+<a href="#6962" id="6962">6962</a>
+<a href="#6963" id="6963">6963</a>
+<a href="#6964" id="6964">6964</a>
+<a href="#6965" id="6965">6965</a>
+<a href="#6966" id="6966">6966</a>
+<a href="#6967" id="6967">6967</a>
+<a href="#6968" id="6968">6968</a>
+<a href="#6969" id="6969">6969</a>
+<a href="#6970" id="6970">6970</a>
+<a href="#6971" id="6971">6971</a>
+<a href="#6972" id="6972">6972</a>
+<a href="#6973" id="6973">6973</a>
+<a href="#6974" id="6974">6974</a>
+<a href="#6975" id="6975">6975</a>
+<a href="#6976" id="6976">6976</a>
+<a href="#6977" id="6977">6977</a>
+<a href="#6978" id="6978">6978</a>
+<a href="#6979" id="6979">6979</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
     vec::Vec,
 };
 <span class="kw">use </span>core::{
+    cmp::Ordering,
     fmt::{Display, Error <span class="kw">as </span>FmtError, Formatter, Write},
     iter,
 };
@@ -13338,14 +13364,12 @@ template &lt;typename A&gt;
                     // from the buffer elements.
                     </span><span class="kw">for </span>attribute <span class="kw">in </span>vbm.attributes {
                         <span class="kw">let </span>location = attribute.shader_location;
-                        <span class="kw">let </span>am_option = am_resolved.get(<span class="kw-2">&amp;</span>location);
-                        <span class="kw">if </span>am_option.is_none() {
+                        <span class="kw">let </span><span class="prelude-val">Some</span>(am) = am_resolved.get(<span class="kw-2">&amp;</span>location) <span class="kw">else </span>{
                             <span class="comment">// This bound attribute isn't used in this entry point, so
                             // don't bother extracting the data. Too bad we emitted the
                             // unpacking function earlier -- it might not get used.
                             </span><span class="kw">continue</span>;
-                        }
-                        <span class="kw">let </span>am = am_option.unwrap();
+                        };
                         <span class="kw">let </span>attribute_name = <span class="kw-2">&amp;</span>am.name;
                         <span class="kw">let </span>attribute_ty_name = <span class="kw-2">&amp;</span>am.ty_name;
 
@@ -13355,36 +13379,62 @@ template &lt;typename A&gt;
                             .expect(<span class="string">"Should have generated this unpacking function earlier."</span>);
                         <span class="kw">let </span>func_name = <span class="kw-2">&amp;</span>func.name;
 
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{attribute_name} = "</span>, back::Level(<span class="number">2</span>),)<span class="question-mark">?</span>;
-
                         <span class="comment">// Check dimensionality of the attribute compared to the unpacking
-                        // function. If attribute dimension is &lt; unpack dimension, then
-                        // we need to explicitly cast down the result. Otherwise, if attribute
-                        // dimension &gt; unpack dimension, we have to pad out the unpack value
-                        // from a vec4(0, 0, 0, 1) of matching scalar type.
+                        // function. If attribute dimension &gt; unpack dimension, we have to
+                        // pad out the unpack value from a vec4(0, 0, 0, 1) of matching
+                        // scalar type. Otherwise, if attribute dimension is &lt; unpack
+                        // dimension, then we need to explicitly truncate the result.
 
-                        </span><span class="kw">let </span>needs_truncate_or_padding = am.dimension != func.dimension;
-                        <span class="kw">if </span>needs_truncate_or_padding {
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{attribute_ty_name}("</span>)<span class="question-mark">?</span>;
+                        </span><span class="kw">let </span>needs_padding_or_truncation = am.dimension.cmp(<span class="kw-2">&amp;</span>func.dimension);
+
+                        <span class="kw">if </span>needs_padding_or_truncation != Ordering::Equal {
+                            <span class="comment">// Emit a comment flagging that a conversion is happening,
+                            // since the actual logic can be at the end of a long line.
+                            </span><span class="macro">writeln!</span>(
+                                <span class="self">self</span>.out,
+                                <span class="string">"{}// {attribute_ty_name} &lt;- {:?}"</span>,
+                                back::Level(<span class="number">2</span>),
+                                attribute.format
+                            )<span class="question-mark">?</span>;
                         }
 
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{func_name}({elem_name}.data[{offset}]"</span>,)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{attribute_name} = "</span>, back::Level(<span class="number">2</span>),)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>needs_padding_or_truncation == Ordering::Greater {
+                            <span class="comment">// Needs padding: emit constructor call for wider type
+                            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{attribute_ty_name}("</span>)<span class="question-mark">?</span>;
+                        }
+
+                        <span class="comment">// Emit call to unpacking function
+                        </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{func_name}({elem_name}.data[{offset}]"</span>,)<span class="question-mark">?</span>;
                         <span class="kw">for </span>i <span class="kw">in </span>(offset + <span class="number">1</span>)..(offset + func.byte_count) {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", {elem_name}.data[{i}]"</span>)<span class="question-mark">?</span>;
                         }
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>needs_truncate_or_padding {
-                            <span class="kw">let </span>zero_value = <span class="kw">if </span>am.ty_is_int { <span class="string">"0" </span>} <span class="kw">else </span>{ <span class="string">"0.0" </span>};
-                            <span class="kw">let </span>one_value = <span class="kw">if </span>am.ty_is_int { <span class="string">"1" </span>} <span class="kw">else </span>{ <span class="string">"1.0" </span>};
-                            <span class="kw">for </span>i <span class="kw">in </span>func.dimension..am.dimension {
-                                <span class="macro">write!</span>(
+                        <span class="kw">match </span>needs_padding_or_truncation {
+                            Ordering::Greater =&gt; {
+                                <span class="comment">// Padding
+                                </span><span class="kw">let </span>zero_value = <span class="kw">if </span>am.ty_is_int { <span class="string">"0" </span>} <span class="kw">else </span>{ <span class="string">"0.0" </span>};
+                                <span class="kw">let </span>one_value = <span class="kw">if </span>am.ty_is_int { <span class="string">"1" </span>} <span class="kw">else </span>{ <span class="string">"1.0" </span>};
+                                <span class="kw">for </span>i <span class="kw">in </span>func.dimension..am.dimension {
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">", {}"</span>,
+                                        <span class="kw">if </span>i == <span class="number">3 </span>{ one_value } <span class="kw">else </span>{ zero_value }
+                                    )<span class="question-mark">?</span>;
+                                }
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                            }
+                            Ordering::Less =&gt; {
+                                <span class="comment">// Truncate to the first `am.dimension` components
+                                </span><span class="macro">write!</span>(
                                     <span class="self">self</span>.out,
-                                    <span class="string">", {}"</span>,
-                                    <span class="kw">if </span>i == <span class="number">3 </span>{ one_value } <span class="kw">else </span>{ zero_value }
+                                    <span class="string">".{}"</span>,
+                                    <span class="kw-2">&amp;</span><span class="string">"xyzw"</span>[<span class="number">0</span>..usize::try_from(am.dimension).unwrap()]
                                 )<span class="question-mark">?</span>;
                             }
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+                            Ordering::Equal =&gt; {}
                         }
 
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
