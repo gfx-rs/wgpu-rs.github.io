@@ -2268,7 +2268,17 @@
 <a href="#2267" id="2267">2267</a>
 <a href="#2268" id="2268">2268</a>
 <a href="#2269" id="2269">2269</a>
-<a href="#2270" id="2270">2270</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2270" id="2270">2270</a>
+<a href="#2271" id="2271">2271</a>
+<a href="#2272" id="2272">2272</a>
+<a href="#2273" id="2273">2273</a>
+<a href="#2274" id="2274">2274</a>
+<a href="#2275" id="2275">2275</a>
+<a href="#2276" id="2276">2276</a>
+<a href="#2277" id="2277">2277</a>
+<a href="#2278" id="2278">2278</a>
+<a href="#2279" id="2279">2279</a>
+<a href="#2280" id="2280">2280</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -4295,26 +4305,36 @@
         <span class="prelude-val">Ok</span>(all_queue_empty)
     }
 
-    <span class="kw">pub fn </span>device_start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
-        <span class="macro">api_log!</span>(<span class="string">"Device::start_capture"</span>);
+    <span class="doccomment">/// # Safety
+    ///
+    /// - See [wgpu::Device::start_graphics_debugger_capture][api] for details the safety.
+    ///
+    /// [api]: ../../wgpu/struct.Device.html#method.start_graphics_debugger_capture
+    </span><span class="kw">pub unsafe fn </span>device_start_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
+        <span class="macro">api_log!</span>(<span class="string">"Device::start_graphics_debugger_capture"</span>);
 
         <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return</span>;
         }
-        <span class="kw">unsafe </span>{ device.raw().start_capture() };
+        <span class="kw">unsafe </span>{ device.raw().start_graphics_debugger_capture() };
     }
 
-    <span class="kw">pub fn </span>device_stop_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
-        <span class="macro">api_log!</span>(<span class="string">"Device::stop_capture"</span>);
+    <span class="doccomment">/// # Safety
+    ///
+    /// - See [wgpu::Device::stop_graphics_debugger_capture][api] for details the safety.
+    ///
+    /// [api]: ../../wgpu/struct.Device.html#method.stop_graphics_debugger_capture
+    </span><span class="kw">pub unsafe fn </span>device_stop_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
+        <span class="macro">api_log!</span>(<span class="string">"Device::stop_graphics_debugger_capture"</span>);
 
         <span class="kw">let </span>device = <span class="self">self</span>.hub.devices.get(device_id);
 
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return</span>;
         }
-        <span class="kw">unsafe </span>{ device.raw().stop_capture() };
+        <span class="kw">unsafe </span>{ device.raw().stop_graphics_debugger_capture() };
     }
 
     <span class="kw">pub fn </span>pipeline_cache_get_data(<span class="kw-2">&amp;</span><span class="self">self</span>, id: id::PipelineCacheId) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; {

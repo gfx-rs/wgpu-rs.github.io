@@ -728,7 +728,58 @@
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
 <a href="#729" id="729">729</a>
-<a href="#730" id="730">730</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc};
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, string::String, sync::Arc};
 <span class="kw">use </span>core::{error, fmt, future::Future};
 
 <span class="kw">use </span>parking_lot::Mutex;
@@ -1107,14 +1158,65 @@
         <span class="self">self</span>.inner.pop_error_scope()
     }
 
-    <span class="doccomment">/// Starts frame capture.
-    </span><span class="kw">pub fn </span>start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.start_capture()
+    <span class="doccomment">/// Starts a capture in the attached graphics debugger.
+    ///
+    /// This behaves differently depending on which graphics debugger is attached:
+    ///
+    /// - Renderdoc: Calls [`StartFrameCapture(device, NULL)`][rd].
+    /// - Xcode: Creates a capture with [`MTLCaptureManager`][xcode].
+    /// - None: No action is taken.
+    ///
+    /// # Safety
+    ///
+    /// - There should not be any other captures currently active.
+    /// - All other safety rules are defined by the graphics debugger, see the
+    ///   documentation for the specific debugger.
+    /// - In general, graphics debuggers can easily cause crashes, so this isn't
+    ///   ever guaranteed to be sound.
+    ///
+    /// # Tips
+    ///
+    /// - Debuggers need to capture both the recording of the commands and the
+    ///   submission of the commands to the GPU. Try to wrap all of your
+    ///   gpu work in a capture.
+    /// - If you encounter issues, try waiting for the GPU to finish all work
+    ///   before stopping the capture.
+    ///
+    /// [rd]: https://renderdoc.org/docs/in_application_api.html#_CPPv417StartFrameCapture23RENDERDOC_DevicePointer22RENDERDOC_WindowHandle
+    /// [xcode]: https://developer.apple.com/documentation/metal/mtlcapturemanager
+    </span><span class="attr">#[doc(alias = <span class="string">"start_renderdoc_capture"</span>)]
+    #[doc(alias = <span class="string">"start_xcode_capture"</span>)]
+    </span><span class="kw">pub unsafe fn </span>start_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.inner.start_graphics_debugger_capture() }
     }
 
-    <span class="doccomment">/// Stops frame capture.
-    </span><span class="kw">pub fn </span>stop_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.stop_capture()
+    <span class="doccomment">/// Stops the current capture in the attached graphics debugger.
+    ///
+    /// This behaves differently depending on which graphics debugger is attached:
+    ///
+    /// - Renderdoc: Calls [`EndFrameCapture(device, NULL)`][rd].
+    /// - Xcode: Stops the capture with [`MTLCaptureManager`][xcode].
+    /// - None: No action is taken.
+    ///
+    /// # Safety
+    ///
+    /// - There should be a capture currently active.
+    /// - All other safety rules are defined by the graphics debugger, see the
+    ///   documentation for the specific debugger.
+    /// - In general, graphics debuggers can easily cause crashes, so this isn't
+    ///   ever guaranteed to be sound.
+    ///
+    /// # Tips
+    ///
+    /// - If you encounter issues, try to submit all work to the GPU, and waiting
+    ///   for that work to finish before stopping the capture.
+    ///
+    /// [rd]: https://renderdoc.org/docs/in_application_api.html#_CPPv415EndFrameCapture23RENDERDOC_DevicePointer22RENDERDOC_WindowHandle
+    /// [xcode]: https://developer.apple.com/documentation/metal/mtlcapturemanager
+    </span><span class="attr">#[doc(alias = <span class="string">"stop_renderdoc_capture"</span>)]
+    #[doc(alias = <span class="string">"stop_xcode_capture"</span>)]
+    </span><span class="kw">pub unsafe fn </span>stop_graphics_debugger_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.inner.stop_graphics_debugger_capture() }
     }
 
     <span class="doccomment">/// Query internal counters from the native backend for debugging purposes.
