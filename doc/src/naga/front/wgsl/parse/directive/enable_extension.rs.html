@@ -130,7 +130,17 @@
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="doccomment">//! `enable …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`EnableExtension`] API.
 
@@ -198,6 +208,7 @@
     <span class="kw">const </span>F16: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"f16"</span>;
     <span class="kw">const </span>CLIP_DISTANCES: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"clip_distances"</span>;
     <span class="kw">const </span>DUAL_SOURCE_BLENDING: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"dual_source_blending"</span>;
+    <span class="kw">const </span>SUBGROUPS: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"subgroups"</span>;
 
     <span class="doccomment">/// Convert from a sentinel word in WGSL into its associated [`EnableExtension`], if possible.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_ident(word: <span class="kw-2">&amp;</span>str, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
@@ -209,6 +220,7 @@
             <span class="self">Self</span>::DUAL_SOURCE_BLENDING =&gt; {
                 <span class="self">Self</span>::Implemented(ImplementedEnableExtension::DualSourceBlending)
             }
+            <span class="self">Self</span>::SUBGROUPS =&gt; <span class="self">Self</span>::Unimplemented(UnimplementedEnableExtension::Subgroups),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownEnableExtension(span, word))),
         })
     }
@@ -222,6 +234,7 @@
             },
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
                 UnimplementedEnableExtension::ClipDistances =&gt; <span class="self">Self</span>::CLIP_DISTANCES,
+                UnimplementedEnableExtension::Subgroups =&gt; <span class="self">Self</span>::SUBGROUPS,
             },
         }
     }
@@ -230,18 +243,18 @@
 <span class="doccomment">/// A variant of [`EnableExtension::Implemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>ImplementedEnableExtension {
-    <span class="doccomment">/// Enables the `blend_src` attribute in WGSL.
-    ///
-    /// In the WGSL standard, this corresponds to [`enable dual_source_blending;`].
-    ///
-    /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
-    </span>DualSourceBlending,
     <span class="doccomment">/// Enables `f16`/`half` primitive support in all shader languages.
     ///
     /// In the WGSL standard, this corresponds to [`enable f16;`].
     ///
     /// [`enable f16;`]: https://www.w3.org/TR/WGSL/#extension-f16
     </span>F16,
+    <span class="doccomment">/// Enables the `blend_src` attribute in WGSL.
+    ///
+    /// In the WGSL standard, this corresponds to [`enable dual_source_blending;`].
+    ///
+    /// [`enable dual_source_blending;`]: https://www.w3.org/TR/WGSL/#extension-dual_source_blending
+    </span>DualSourceBlending,
 }
 
 <span class="doccomment">/// A variant of [`EnableExtension::Unimplemented`].
@@ -253,12 +266,19 @@
     ///
     /// [`enable clip_distances;`]: https://www.w3.org/TR/WGSL/#extension-clip_distances
     </span>ClipDistances,
+    <span class="doccomment">/// Enables subgroup built-ins in all languages.
+    ///
+    /// In the WGSL standard, this corresponds to [`enable subgroups;`].
+    ///
+    /// [`enable subgroups;`]: https://www.w3.org/TR/WGSL/#extension-subgroups
+    </span>Subgroups,
 }
 
 <span class="kw">impl </span>UnimplementedEnableExtension {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::ClipDistances =&gt; <span class="number">6236</span>,
+            <span class="self">Self</span>::Subgroups =&gt; <span class="number">5555</span>,
         }
     }
 }
