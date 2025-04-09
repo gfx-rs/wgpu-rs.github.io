@@ -6995,7 +6995,62 @@
 <a href="#6994" id="6994">6994</a>
 <a href="#6995" id="6995">6995</a>
 <a href="#6996" id="6996">6996</a>
-<a href="#6997" id="6997">6997</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#6997" id="6997">6997</a>
+<a href="#6998" id="6998">6998</a>
+<a href="#6999" id="6999">6999</a>
+<a href="#7000" id="7000">7000</a>
+<a href="#7001" id="7001">7001</a>
+<a href="#7002" id="7002">7002</a>
+<a href="#7003" id="7003">7003</a>
+<a href="#7004" id="7004">7004</a>
+<a href="#7005" id="7005">7005</a>
+<a href="#7006" id="7006">7006</a>
+<a href="#7007" id="7007">7007</a>
+<a href="#7008" id="7008">7008</a>
+<a href="#7009" id="7009">7009</a>
+<a href="#7010" id="7010">7010</a>
+<a href="#7011" id="7011">7011</a>
+<a href="#7012" id="7012">7012</a>
+<a href="#7013" id="7013">7013</a>
+<a href="#7014" id="7014">7014</a>
+<a href="#7015" id="7015">7015</a>
+<a href="#7016" id="7016">7016</a>
+<a href="#7017" id="7017">7017</a>
+<a href="#7018" id="7018">7018</a>
+<a href="#7019" id="7019">7019</a>
+<a href="#7020" id="7020">7020</a>
+<a href="#7021" id="7021">7021</a>
+<a href="#7022" id="7022">7022</a>
+<a href="#7023" id="7023">7023</a>
+<a href="#7024" id="7024">7024</a>
+<a href="#7025" id="7025">7025</a>
+<a href="#7026" id="7026">7026</a>
+<a href="#7027" id="7027">7027</a>
+<a href="#7028" id="7028">7028</a>
+<a href="#7029" id="7029">7029</a>
+<a href="#7030" id="7030">7030</a>
+<a href="#7031" id="7031">7031</a>
+<a href="#7032" id="7032">7032</a>
+<a href="#7033" id="7033">7033</a>
+<a href="#7034" id="7034">7034</a>
+<a href="#7035" id="7035">7035</a>
+<a href="#7036" id="7036">7036</a>
+<a href="#7037" id="7037">7037</a>
+<a href="#7038" id="7038">7038</a>
+<a href="#7039" id="7039">7039</a>
+<a href="#7040" id="7040">7040</a>
+<a href="#7041" id="7041">7041</a>
+<a href="#7042" id="7042">7042</a>
+<a href="#7043" id="7043">7043</a>
+<a href="#7044" id="7044">7044</a>
+<a href="#7045" id="7045">7045</a>
+<a href="#7046" id="7046">7046</a>
+<a href="#7047" id="7047">7047</a>
+<a href="#7048" id="7048">7048</a>
+<a href="#7049" id="7049">7049</a>
+<a href="#7050" id="7050">7050</a>
+<a href="#7051" id="7051">7051</a>
+<a href="#7052" id="7052">7052</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -7015,7 +7070,11 @@
     arena::{Handle, HandleSet},
     back::{<span class="self">self</span>, Baked},
     common,
-    proc::{<span class="self">self</span>, index, NameKey, TypeResolution},
+    proc::{
+        <span class="self">self</span>,
+        index::{<span class="self">self</span>, BoundsCheck},
+        NameKey, TypeResolution,
+    },
     valid, FastHashMap, FastHashSet,
 };
 
@@ -7596,10 +7655,33 @@
     }
 }
 
-<span class="kw">enum </span>FunctionOrigin {
+<span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">enum </span>FunctionOrigin {
     Handle(Handle&lt;<span class="kw">crate</span>::Function&gt;),
     EntryPoint(proc::EntryPointIndex),
 }
+
+<span class="kw">trait </span>NameKeyExt {
+    <span class="kw">fn </span>local(origin: FunctionOrigin, local_handle: Handle&lt;<span class="kw">crate</span>::LocalVariable&gt;) -&gt; NameKey {
+        <span class="kw">match </span>origin {
+            FunctionOrigin::Handle(handle) =&gt; NameKey::FunctionLocal(handle, local_handle),
+            FunctionOrigin::EntryPoint(idx) =&gt; NameKey::EntryPointLocal(idx, local_handle),
+        }
+    }
+
+    <span class="doccomment">/// Return the name key for a local variable used by ReadZeroSkipWrite bounds-check
+    /// policy when it needs to produce a pointer-typed result for an OOB access. These
+    /// are unique per accessed type, so the second argument is a type handle. See docs
+    /// for [`crate::back::msl`].
+    </span><span class="kw">fn </span>oob_local_for_type(origin: FunctionOrigin, ty: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; NameKey {
+        <span class="kw">match </span>origin {
+            FunctionOrigin::Handle(handle) =&gt; NameKey::FunctionOobLocal(handle, ty),
+            FunctionOrigin::EntryPoint(idx) =&gt; NameKey::EntryPointOobLocal(idx, ty),
+        }
+    }
+}
+
+<span class="kw">impl </span>NameKeyExt <span class="kw">for </span>NameKey {}
 
 <span class="doccomment">/// A level of detail argument.
 ///
@@ -7678,7 +7760,8 @@
             .choose_policy(pointer, <span class="kw-2">&amp;</span><span class="self">self</span>.module.types, <span class="self">self</span>.info)
     }
 
-    <span class="kw">fn </span>access_needs_check(
+    <span class="doccomment">/// See docs for [`proc::index::access_needs_check`].
+    </span><span class="kw">fn </span>access_needs_check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         base: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         index: index::GuardedIndex,
@@ -7690,6 +7773,19 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.function.expressions,
             <span class="self">self</span>.info,
         )
+    }
+
+    <span class="doccomment">/// See docs for [`proc::index::bounds_check_iter`].
+    </span><span class="kw">fn </span>bounds_check_iter(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        chain: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+    ) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BoundsCheck&gt; + <span class="lifetime">'_ </span>{
+        index::bounds_check_iter(chain, <span class="self">self</span>.module, <span class="self">self</span>.function, <span class="self">self</span>.info)
+    }
+
+    <span class="doccomment">/// See docs for [`proc::index::oob_local_types`].
+    </span><span class="kw">fn </span>oob_local_types(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FastHashSet&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
+        index::oob_local_types(<span class="self">self</span>.module, <span class="self">self</span>.function, <span class="self">self</span>.info, <span class="self">self</span>.policies)
     }
 
     <span class="kw">fn </span>get_packed_vec_kind(<span class="kw-2">&amp;</span><span class="self">self</span>, expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Scalar&gt; {
@@ -7896,6 +7992,59 @@
             put_expression(<span class="self">self</span>, ctx, handle)<span class="question-mark">?</span>;
         }
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Writes the local variables of the given function, as well as any extra
+    /// out-of-bounds locals that are needed.
+    ///
+    /// The names of the OOB locals are also added to `self.names` at the same
+    /// time.
+    </span><span class="kw">fn </span>put_locals(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;</span>ExpressionContext) -&gt; BackendResult {
+        <span class="kw">let </span>oob_local_types = context.oob_local_types();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>ty <span class="kw">in </span>oob_local_types.iter() {
+            <span class="kw">let </span>name_key = NameKey::oob_local_for_type(context.origin, ty);
+            <span class="self">self</span>.names.insert(name_key, <span class="self">self</span>.namer.call(<span class="string">"oob"</span>));
+        }
+
+        <span class="kw">for </span>(name_key, ty, init) <span class="kw">in </span>context
+            .function
+            .local_variables
+            .iter()
+            .map(|(local_handle, local)| {
+                <span class="kw">let </span>name_key = NameKey::local(context.origin, local_handle);
+                (name_key, local.ty, local.init)
+            })
+            .chain(oob_local_types.iter().map(|<span class="kw-2">&amp;</span>ty| {
+                <span class="kw">let </span>name_key = NameKey::oob_local_for_type(context.origin, ty);
+                (name_key, ty, <span class="prelude-val">None</span>)
+            }))
+        {
+            <span class="kw">let </span>ty_name = TypeContext {
+                handle: ty,
+                gctx: context.module.to_ctx(),
+                names: <span class="kw-2">&amp;</span><span class="self">self</span>.names,
+                access: <span class="kw">crate</span>::StorageAccess::empty(),
+                first_time: <span class="bool-val">false</span>,
+            };
+            <span class="macro">write!</span>(
+                <span class="self">self</span>.out,
+                <span class="string">"{}{} {}"</span>,
+                back::INDENT,
+                ty_name,
+                <span class="self">self</span>.names[<span class="kw-2">&amp;</span>name_key]
+            )<span class="question-mark">?</span>;
+            <span class="kw">match </span>init {
+                <span class="prelude-val">Some</span>(value) =&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_expression(value, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                }
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = {{}}"</span>)<span class="question-mark">?</span>;
+                }
+            };
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -8657,7 +8806,6 @@
         }
 
         <span class="kw">let </span>expression = <span class="kw-2">&amp;</span>context.function.expressions[expr_handle];
-        <span class="macro">log::trace!</span>(<span class="string">"expression {:?} = {:?}"</span>, expr_handle, expression);
         <span class="kw">match </span><span class="kw-2">*</span>expression {
             <span class="kw">crate</span>::Expression::Literal(<span class="kw">_</span>)
             | <span class="kw">crate</span>::Expression::Constant(<span class="kw">_</span>)
@@ -8693,7 +8841,42 @@
                 </span>{
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" ? "</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_access_chain(expr_handle, policy, context)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : DefaultConstructible()"</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" : "</span>)<span class="question-mark">?</span>;
+
+                    <span class="kw">if </span>context.resolve_type(base).pointer_space().is_some() {
+                        <span class="comment">// We can't just use `DefaultConstructible` if this is a pointer.
+                        // Instead, we create a dummy local variable to serve as pointer
+                        // target if the access is out of bounds.
+                        </span><span class="kw">let </span>result_ty = context.info[expr_handle]
+                            .ty
+                            .inner_with(<span class="kw-2">&amp;</span>context.module.types)
+                            .pointer_base_type();
+                        <span class="kw">let </span>result_ty_handle = <span class="kw">match </span>result_ty {
+                            <span class="prelude-val">Some</span>(TypeResolution::Handle(handle)) =&gt; handle,
+                            <span class="prelude-val">Some</span>(TypeResolution::Value(<span class="kw">_</span>)) =&gt; {
+                                <span class="comment">// As long as the result of a pointer access expression is
+                                // passed to a function or stored in a let binding, the
+                                // type will be in the arena. If additional uses of
+                                // pointers become valid, this assumption might no longer
+                                // hold. Note that the LHS of a load or store doesn't
+                                // take this path -- there is dedicated code in `put_load`
+                                // and `put_store`.
+                                </span><span class="macro">unreachable!</span>(
+                                    <span class="string">"Expected type {result_ty:?} of access through pointer type {base:?} to be in the arena"</span>,
+                                );
+                            }
+                            <span class="prelude-val">None </span>=&gt; {
+                                <span class="macro">unreachable!</span>(
+                                    <span class="string">"Expected access through pointer type {base:?} to return a pointer, but got {result_ty:?}"</span>,
+                                )
+                            }
+                        };
+                        <span class="kw">let </span>name_key =
+                            NameKey::oob_local_for_type(context.origin, result_ty_handle);
+                        <span class="self">self</span>.out.write_str(<span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>name_key])<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"DefaultConstructible()"</span>)<span class="question-mark">?</span>;
+                    }
 
                     <span class="kw">if </span>!is_scoped {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -8733,14 +8916,7 @@
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Expression::LocalVariable(handle) =&gt; {
-                <span class="kw">let </span>name_key = <span class="kw">match </span>context.origin {
-                    FunctionOrigin::Handle(fun_handle) =&gt; {
-                        NameKey::FunctionLocal(fun_handle, handle)
-                    }
-                    FunctionOrigin::EntryPoint(ep_index) =&gt; {
-                        NameKey::EntryPointLocal(ep_index, handle)
-                    }
-                };
+                <span class="kw">let </span>name_key = NameKey::local(context.origin, handle);
                 <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>name_key];
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{name}"</span>)<span class="question-mark">?</span>;
             }
@@ -9644,68 +9820,44 @@
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>put_bounds_checks(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        <span class="kw-2">mut </span>chain: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        chain: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         context: <span class="kw-2">&amp;</span>ExpressionContext,
         level: back::Level,
         prefix: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Error&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>check_written = <span class="bool-val">false</span>;
 
-        <span class="comment">// Iterate over the access chain, handling each expression.
-        </span><span class="kw">loop </span>{
-            <span class="comment">// Produce a `GuardedIndex`, so we can shared code between the
-            // `Access` and `AccessIndex` cases.
-            </span><span class="kw">let </span>(base, guarded_index) = <span class="kw">match </span>context.function.expressions[chain] {
-                <span class="kw">crate</span>::Expression::Access { base, index } =&gt; {
-                    (base, <span class="prelude-val">Some</span>(index::GuardedIndex::Expression(index)))
-                }
-                <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; {
-                    <span class="comment">// Don't try to check indices into structs. Validation already took
-                    // care of them, and index::needs_guard doesn't handle that case.
-                    </span><span class="kw">let </span><span class="kw-2">mut </span>base_inner = context.resolve_type(base);
-                    <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Pointer { base, .. } = <span class="kw-2">*</span>base_inner {
-                        base_inner = <span class="kw-2">&amp;</span>context.module.types[base].inner;
-                    }
-                    <span class="kw">match </span><span class="kw-2">*</span>base_inner {
-                        <span class="kw">crate</span>::TypeInner::Struct { .. } =&gt; (base, <span class="prelude-val">None</span>),
-                        <span class="kw">_ </span>=&gt; (base, <span class="prelude-val">Some</span>(index::GuardedIndex::Known(index))),
-                    }
-                }
-                <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
-            };
+        <span class="comment">// Iterate over the access chain, handling each required bounds check.
+        </span><span class="kw">for </span>item <span class="kw">in </span>context.bounds_check_iter(chain) {
+            <span class="kw">let </span>BoundsCheck {
+                base,
+                index,
+                length,
+            } = item;
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = guarded_index {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(length) = context.access_needs_check(base, index) {
-                    <span class="kw">if </span>check_written {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &amp;&amp; "</span>)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}{prefix}"</span>)<span class="question-mark">?</span>;
-                        check_written = <span class="bool-val">true</span>;
-                    }
-
-                    <span class="comment">// Check that the index falls within bounds. Do this with a single
-                    // comparison, by casting the index to `uint` first, so that negative
-                    // indices become large positive values.
-                    </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.put_index(index, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.out.write_str(<span class="string">") &lt; "</span>)<span class="question-mark">?</span>;
-                    <span class="kw">match </span>length {
-                        index::IndexableLength::Known(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
-                        index::IndexableLength::Dynamic =&gt; {
-                            <span class="kw">let </span>global =
-                                context.function.originating_global(base).ok_or_else(|| {
-                                    Error::GenericValidation(
-                                        <span class="string">"Could not find originating global"</span>.into(),
-                                    )
-                                })<span class="question-mark">?</span>;
-                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"1 + "</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.put_dynamic_array_max_index(global, context)<span class="question-mark">?
-                        </span>}
-                    }
-                }
+            <span class="kw">if </span>check_written {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &amp;&amp; "</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}{prefix}"</span>)<span class="question-mark">?</span>;
+                check_written = <span class="bool-val">true</span>;
             }
 
-            chain = base
+            <span class="comment">// Check that the index falls within bounds. Do this with a single
+            // comparison, by casting the index to `uint` first, so that negative
+            // indices become large positive values.
+            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.put_index(index, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.out.write_str(<span class="string">") &lt; "</span>)<span class="question-mark">?</span>;
+            <span class="kw">match </span>length {
+                index::IndexableLength::Known(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
+                index::IndexableLength::Dynamic =&gt; {
+                    <span class="kw">let </span>global = context.function.originating_global(base).ok_or_else(|| {
+                        Error::GenericValidation(<span class="string">"Could not find originating global"</span>.into())
+                    })<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"1 + "</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.put_dynamic_array_max_index(global, context)<span class="question-mark">?
+                </span>}
+            }
         }
 
         <span class="prelude-val">Ok</span>(check_written)
@@ -12691,28 +12843,7 @@ template &lt;typename A&gt;
                 result_struct: <span class="prelude-val">None</span>,
             };
 
-            <span class="kw">for </span>(local_handle, local) <span class="kw">in </span>fun.local_variables.iter() {
-                <span class="kw">let </span>ty_name = TypeContext {
-                    handle: local.ty,
-                    gctx: module.to_ctx(),
-                    names: <span class="kw-2">&amp;</span><span class="self">self</span>.names,
-                    access: <span class="kw">crate</span>::StorageAccess::empty(),
-                    first_time: <span class="bool-val">false</span>,
-                };
-                <span class="kw">let </span>local_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::FunctionLocal(fun_handle, local_handle)];
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{} {}"</span>, back::INDENT, ty_name, local_name)<span class="question-mark">?</span>;
-                <span class="kw">match </span>local.init {
-                    <span class="prelude-val">Some</span>(value) =&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(value, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = {{}}"</span>)<span class="question-mark">?</span>;
-                    }
-                };
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
-            }
-
+            <span class="self">self</span>.put_locals(<span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;
             <span class="self">self</span>.update_expressions_to_bake(fun, fun_info, <span class="kw-2">&amp;</span>context.expression);
             <span class="self">self</span>.put_block(back::Level(<span class="number">1</span>), <span class="kw-2">&amp;</span>fun.body, <span class="kw-2">&amp;</span>context)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
@@ -13624,28 +13755,7 @@ template &lt;typename A&gt;
 
             <span class="comment">// Finally, declare all the local variables that we need
             //TODO: we can postpone this till the relevant expressions are emitted
-            </span><span class="kw">for </span>(local_handle, local) <span class="kw">in </span>fun.local_variables.iter() {
-                <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::EntryPointLocal(ep_index <span class="kw">as _</span>, local_handle)];
-                <span class="kw">let </span>ty_name = TypeContext {
-                    handle: local.ty,
-                    gctx: module.to_ctx(),
-                    names: <span class="kw-2">&amp;</span><span class="self">self</span>.names,
-                    access: <span class="kw">crate</span>::StorageAccess::empty(),
-                    first_time: <span class="bool-val">false</span>,
-                };
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}{} {}"</span>, back::INDENT, ty_name, name)<span class="question-mark">?</span>;
-                <span class="kw">match </span>local.init {
-                    <span class="prelude-val">Some</span>(value) =&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(value, <span class="kw-2">&amp;</span>context.expression, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    }
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = {{}}"</span>)<span class="question-mark">?</span>;
-                    }
-                };
-                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">";"</span>)<span class="question-mark">?</span>;
-            }
-
+            </span><span class="self">self</span>.put_locals(<span class="kw-2">&amp;</span>context.expression)<span class="question-mark">?</span>;
             <span class="self">self</span>.update_expressions_to_bake(fun, fun_info, <span class="kw-2">&amp;</span>context.expression);
             <span class="self">self</span>.put_block(back::Level(<span class="number">1</span>), <span class="kw-2">&amp;</span>fun.body, <span class="kw-2">&amp;</span>context)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"}}"</span>)<span class="question-mark">?</span>;

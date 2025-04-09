@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["BoundsCheckPolicy","GuardedIndex","IndexableLength","IndexableLengthError"],"fn":["access_needs_check","find_checked_indexes"],"struct":["BoundsCheckPolicies"]};
+window.SIDEBAR_ITEMS = {"enum":["BoundsCheckPolicy","GuardedIndex","IndexableLength","IndexableLengthError"],"fn":["access_needs_check","bounds_check_iter","find_checked_indexes","oob_local_types"],"struct":["BoundsCheck","BoundsCheckPolicies"]};
