@@ -2952,12 +2952,12 @@
                 <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::F64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}lf"</span>)<span class="question-mark">?</span>,
                 <span class="kw">crate</span>::Literal::I64(value) =&gt; {
-                    <span class="comment">// `-9223372036854775808li` is not valid WGSL. Nor can we use the AbstractInt
-                    // trick above, as AbstractInt also cannot represent `9223372036854775808`.
-                    // The most negative `i64` value can only be expressed in WGSL using
-                    // subtracting 1 from the second most negative value.
+                    <span class="comment">// `-9223372036854775808li` is not valid WGSL. Nor can we simply use the
+                    // AbstractInt trick above, as AbstractInt also cannot represent
+                    // `9223372036854775808`. Instead construct the second most negative
+                    // AbstractInt, subtract one from it, then cast to i64.
                     </span><span class="kw">if </span>value == i64::MIN {
-                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{}li - 1li"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"i64({} - 1)"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}li"</span>)<span class="question-mark">?</span>;
                     }

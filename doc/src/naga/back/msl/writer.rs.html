@@ -6977,7 +6977,25 @@
 <a href="#6976" id="6976">6976</a>
 <a href="#6977" id="6977">6977</a>
 <a href="#6978" id="6978">6978</a>
-<a href="#6979" id="6979">6979</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#6979" id="6979">6979</a>
+<a href="#6980" id="6980">6980</a>
+<a href="#6981" id="6981">6981</a>
+<a href="#6982" id="6982">6982</a>
+<a href="#6983" id="6983">6983</a>
+<a href="#6984" id="6984">6984</a>
+<a href="#6985" id="6985">6985</a>
+<a href="#6986" id="6986">6986</a>
+<a href="#6987" id="6987">6987</a>
+<a href="#6988" id="6988">6988</a>
+<a href="#6989" id="6989">6989</a>
+<a href="#6990" id="6990">6990</a>
+<a href="#6991" id="6991">6991</a>
+<a href="#6992" id="6992">6992</a>
+<a href="#6993" id="6993">6993</a>
+<a href="#6994" id="6994">6994</a>
+<a href="#6995" id="6995">6995</a>
+<a href="#6996" id="6996">6996</a>
+<a href="#6997" id="6997">6997</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -8473,13 +8491,31 @@
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}u"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Literal::I32(value) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>;
+                <span class="comment">// `-2147483648` is parsed as unary negation of positive 2147483648.
+                // 2147483648 is too large for int32_t meaning the expression gets
+                // promoted to a int64_t which is not our intention. Avoid this by instead
+                // using `-2147483647 - 1`.
+                </span><span class="kw">if </span>value == i32::MIN {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({} - 1)"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>;
+                }
             }
             <span class="kw">crate</span>::Literal::U64(value) =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}uL"</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">crate</span>::Literal::I64(value) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>;
+                <span class="comment">// `-9223372036854775808` is parsed as unary negation of positive
+                // 9223372036854775808. 9223372036854775808 is too large for int64_t
+                // causing Metal to emit a `-Wconstant-conversion` warning, and change the
+                // value to `-9223372036854775808`. Which would then be negated, possibly
+                // causing undefined behaviour. Avoid this by instead using
+                // `-9223372036854775808L - 1L`.
+                </span><span class="kw">if </span>value == i64::MIN {
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({}L - 1L)"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>;
+                }
             }
             <span class="kw">crate</span>::Literal::Bool(value) =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>;
