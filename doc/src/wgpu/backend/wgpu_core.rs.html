@@ -3625,7 +3625,55 @@
 <a href="#3624" id="3624">3624</a>
 <a href="#3625" id="3625">3625</a>
 <a href="#3626" id="3626">3626</a>
-<a href="#3627" id="3627">3627</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3627" id="3627">3627</a>
+<a href="#3628" id="3628">3628</a>
+<a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
+<a href="#3645" id="3645">3645</a>
+<a href="#3646" id="3646">3646</a>
+<a href="#3647" id="3647">3647</a>
+<a href="#3648" id="3648">3648</a>
+<a href="#3649" id="3649">3649</a>
+<a href="#3650" id="3650">3650</a>
+<a href="#3651" id="3651">3651</a>
+<a href="#3652" id="3652">3652</a>
+<a href="#3653" id="3653">3653</a>
+<a href="#3654" id="3654">3654</a>
+<a href="#3655" id="3655">3655</a>
+<a href="#3656" id="3656">3656</a>
+<a href="#3657" id="3657">3657</a>
+<a href="#3658" id="3658">3658</a>
+<a href="#3659" id="3659">3659</a>
+<a href="#3660" id="3660">3660</a>
+<a href="#3661" id="3661">3661</a>
+<a href="#3662" id="3662">3662</a>
+<a href="#3663" id="3663">3663</a>
+<a href="#3664" id="3664">3664</a>
+<a href="#3665" id="3665">3665</a>
+<a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
@@ -3645,9 +3693,9 @@
 <span class="kw">use crate</span>::{
     api,
     dispatch::{<span class="self">self</span>, BufferMappedRangeInterface},
-    BindingResource, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
+    BindingResource, Blas, BufferBinding, BufferDescriptor, CompilationInfo, CompilationMessage,
     CompilationMessageType, ErrorSource, Features, Label, LoadOp, MapMode, Operations,
-    ShaderSource, SurfaceTargetUnsafe, TextureDescriptor,
+    ShaderSource, SurfaceTargetUnsafe, TextureDescriptor, Tlas,
 };
 
 <span class="attr">#[derive(Clone)]
@@ -3892,6 +3940,30 @@
                 hal_command_encoder_callback,
             )
         }
+    }
+
+    <span class="kw">pub unsafe fn </span>blas_as_hal&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
+        R,
+    &gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        blas: <span class="kw-2">&amp;</span>CoreBlas,
+        hal_blas_callback: F,
+    ) -&gt; R {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.blas_as_hal::&lt;A, F, R&gt;(blas.id, hal_blas_callback) }
+    }
+
+    <span class="kw">pub unsafe fn </span>tlas_as_hal&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::AccelerationStructure&gt;) -&gt; R,
+        R,
+    &gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        tlas: <span class="kw-2">&amp;</span>CoreTlas,
+        hal_tlas_callback: F,
+    ) -&gt; R {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.tlas_as_hal::&lt;A, F, R&gt;(tlas.id, hal_tlas_callback) }
     }
 
     <span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgc::global::GlobalReport {
@@ -6103,6 +6175,30 @@
                 <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
                 cause,
                 <span class="string">"CommandEncoder::resolve_query_set"</span>,
+            );
+        }
+    }
+
+    <span class="kw">fn </span>mark_acceleration_structures_built&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        blas: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Blas&gt;,
+        tlas: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tlas&gt;,
+    ) {
+        <span class="kw">let </span>blas = blas
+            .map(|b| b.inner.as_core().id)
+            .collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
+        <span class="kw">let </span>tlas = tlas
+            .map(|t| t.shared.inner.as_core().id)
+            .collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(cause) = <span class="self">self
+            </span>.context
+            .<span class="number">0
+            </span>.command_encoder_mark_acceleration_structures_built(<span class="self">self</span>.id, <span class="kw-2">&amp;</span>blas, <span class="kw-2">&amp;</span>tlas)
+        {
+            <span class="self">self</span>.context.handle_error_nolabel(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
+                cause,
+                <span class="string">"CommandEncoder::build_acceleration_structures_unsafe_tlas"</span>,
             );
         }
     }
