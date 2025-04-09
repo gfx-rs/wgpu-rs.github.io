@@ -2278,7 +2278,20 @@
 <a href="#2277" id="2277">2277</a>
 <a href="#2278" id="2278">2278</a>
 <a href="#2279" id="2279">2279</a>
-<a href="#2280" id="2280">2280</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
+<a href="#2280" id="2280">2280</a>
+<a href="#2281" id="2281">2281</a>
+<a href="#2282" id="2282">2282</a>
+<a href="#2283" id="2283">2283</a>
+<a href="#2284" id="2284">2284</a>
+<a href="#2285" id="2285">2285</a>
+<a href="#2286" id="2286">2286</a>
+<a href="#2287" id="2287">2287</a>
+<a href="#2288" id="2288">2288</a>
+<a href="#2289" id="2289">2289</a>
+<a href="#2290" id="2290">2290</a>
+<a href="#2291" id="2291">2291</a>
+<a href="#2292" id="2292">2292</a>
+<a href="#2293" id="2293">2293</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, string::String, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{ptr::NonNull, sync::atomic::Ordering};
 
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
@@ -3218,23 +3231,21 @@
         (id, <span class="prelude-val">Some</span>(error))
     }
 
-    <span class="comment">// Unsafe-ness of internal calls has little to do with unsafe-ness of this.
-    </span><span class="attr">#[allow(unused_unsafe)]
+    <span class="attr">#[allow(unused_unsafe)]
     </span><span class="doccomment">/// # Safety
     ///
-    /// This function passes SPIR-V binary to the backend as-is and can potentially result in a
+    /// This function passes source code or binary to the backend as-is and can potentially result in a
     /// driver crash.
-    </span><span class="kw">pub unsafe fn </span>device_create_shader_module_spirv(
+    </span><span class="kw">pub unsafe fn </span>device_create_shader_module_passthrough(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device_id: DeviceId,
-        desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor,
-        source: Cow&lt;[u32]&gt;,
+        desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'_</span>&gt;,
         id_in: <span class="prelude-ty">Option</span>&lt;id::ShaderModuleId&gt;,
     ) -&gt; (
         id::ShaderModuleId,
         <span class="prelude-ty">Option</span>&lt;pipeline::CreateShaderModuleError&gt;,
     ) {
-        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module"</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">"Device::create_shader_module_passthrough"</span>);
 
         <span class="kw">let </span>hub = <span class="kw-2">&amp;</span><span class="self">self</span>.hub;
         <span class="kw">let </span>fid = hub.shader_modules.prepare(id_in);
@@ -3244,15 +3255,30 @@
 
             <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
-                <span class="kw">let </span>data = trace.make_binary(<span class="string">"spv"</span>, bytemuck::cast_slice(<span class="kw-2">&amp;</span>source));
+                <span class="kw">let </span>data = trace.make_binary(desc.trace_binary_ext(), desc.trace_data());
                 trace.add(trace::Action::CreateShaderModule {
                     id: fid.id(),
-                    desc: desc.clone(),
+                    desc: <span class="kw">match </span>desc {
+                        pipeline::ShaderModuleDescriptorPassthrough::SpirV(inner) =&gt; {
+                            pipeline::ShaderModuleDescriptor {
+                                label: inner.label.clone(),
+                                runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
+                            }
+                        }
+                        pipeline::ShaderModuleDescriptorPassthrough::Msl(inner) =&gt; {
+                            pipeline::ShaderModuleDescriptor {
+                                label: inner.label.clone(),
+                                runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
+                            }
+                        }
+                    },
                     data,
                 });
             };
 
-            <span class="kw">let </span>shader = <span class="kw">match unsafe </span>{ device.create_shader_module_spirv(desc, <span class="kw-2">&amp;</span>source) } {
+            <span class="kw">let </span>result = <span class="kw">unsafe </span>{ device.create_shader_module_passthrough(desc) };
+
+            <span class="kw">let </span>shader = <span class="kw">match </span>result {
                 <span class="prelude-val">Ok</span>(shader) =&gt; shader,
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span><span class="lifetime">'error </span>e,
             };
@@ -3261,7 +3287,7 @@
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(desc.label.to_string())));
+        <span class="kw">let </span>id = fid.assign(Fallible::Invalid(Arc::new(desc.label().to_string())));
         (id, <span class="prelude-val">Some</span>(error))
     }
 

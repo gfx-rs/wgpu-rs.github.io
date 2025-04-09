@@ -3625,14 +3625,8 @@
 <a href="#3624" id="3624">3624</a>
 <a href="#3625" id="3625">3625</a>
 <a href="#3626" id="3626">3626</a>
-<a href="#3627" id="3627">3627</a>
-<a href="#3628" id="3628">3628</a>
-<a href="#3629" id="3629">3629</a>
-<a href="#3630" id="3630">3630</a>
-<a href="#3631" id="3631">3631</a>
-<a href="#3632" id="3632">3632</a>
-<a href="#3633" id="3633">3633</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
-    borrow::Cow::Borrowed,
+<a href="#3627" id="3627">3627</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+    borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
     string::{String, ToString <span class="kw">as _</span>},
@@ -4676,36 +4670,30 @@
         .into()
     }
 
-    <span class="kw">unsafe fn </span>create_shader_module_spirv(
+    <span class="kw">unsafe fn </span>create_shader_module_passthrough(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'_</span>&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; dispatch::DispatchShaderModule {
-        <span class="kw">let </span>descriptor = wgc::pipeline::ShaderModuleDescriptor {
-            label: desc.label.map(Borrowed),
-            <span class="comment">// Doesn't matter the value since spirv shaders aren't mutated to include
-            // runtime checks
-            </span>runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
-        };
+        <span class="kw">let </span>desc = desc.map_label(|l| l.map(Cow::from));
         <span class="kw">let </span>(id, error) = <span class="kw">unsafe </span>{
-            <span class="self">self</span>.context.<span class="number">0</span>.device_create_shader_module_spirv(
-                <span class="self">self</span>.id,
-                <span class="kw-2">&amp;</span>descriptor,
-                Borrowed(<span class="kw-2">&amp;</span>desc.source),
-                <span class="prelude-val">None</span>,
-            )
+            <span class="self">self</span>.context
+                .<span class="number">0
+                </span>.device_create_shader_module_passthrough(<span class="self">self</span>.id, <span class="kw-2">&amp;</span>desc, <span class="prelude-val">None</span>)
         };
+
         <span class="kw">let </span>compilation_info = <span class="kw">match </span>error {
             <span class="prelude-val">Some</span>(cause) =&gt; {
                 <span class="self">self</span>.context.handle_error(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.error_sink,
                     cause.clone(),
-                    desc.label,
-                    <span class="string">"Device::create_shader_module_spirv"</span>,
+                    desc.label().as_deref(),
+                    <span class="string">"Device::create_shader_module_passthrough"</span>,
                 );
                 CompilationInfo::from(cause)
             }
             <span class="prelude-val">None </span>=&gt; CompilationInfo { messages: <span class="macro">vec!</span>[] },
         };
+
         CoreShaderModule {
             context: <span class="self">self</span>.context.clone(),
             id,

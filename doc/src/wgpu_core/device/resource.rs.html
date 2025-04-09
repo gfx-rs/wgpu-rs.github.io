@@ -3920,7 +3920,17 @@
 <a href="#3919" id="3919">3919</a>
 <a href="#3920" id="3920">3920</a>
 <a href="#3921" id="3921">3921</a>
-<a href="#3922" id="3922">3922</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3922" id="3922">3922</a>
+<a href="#3923" id="3923">3923</a>
+<a href="#3924" id="3924">3924</a>
+<a href="#3925" id="3925">3925</a>
+<a href="#3926" id="3926">3926</a>
+<a href="#3927" id="3927">3927</a>
+<a href="#3928" id="3928">3928</a>
+<a href="#3929" id="3929">3929</a>
+<a href="#3930" id="3930">3930</a>
+<a href="#3931" id="3931">3931</a>
+<a href="#3932" id="3932">3932</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -5672,19 +5682,31 @@
     }
 
     <span class="attr">#[allow(unused_unsafe)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>create_shader_module_spirv&lt;<span class="lifetime">'a</span>&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>create_shader_module_passthrough&lt;<span class="lifetime">'a</span>&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        desc: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptor&lt;<span class="lifetime">'a</span>&gt;,
-        source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u32],
+        descriptor: <span class="kw-2">&amp;</span>pipeline::ShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;pipeline::ShaderModule&gt;, pipeline::CreateShaderModuleError&gt; {
         <span class="self">self</span>.check_is_valid()<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.require_features(wgt::Features::SPIRV_SHADER_PASSTHROUGH)<span class="question-mark">?</span>;
-        <span class="kw">let </span>hal_desc = hal::ShaderModuleDescriptor {
-            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
-            runtime_checks: desc.runtime_checks,
+        <span class="kw">let </span>hal_shader = <span class="kw">match </span>descriptor {
+            pipeline::ShaderModuleDescriptorPassthrough::SpirV(inner) =&gt; {
+                <span class="self">self</span>.require_features(wgt::Features::SPIRV_SHADER_PASSTHROUGH)<span class="question-mark">?</span>;
+                hal::ShaderInput::SpirV(<span class="kw-2">&amp;</span>inner.source)
+            }
+            pipeline::ShaderModuleDescriptorPassthrough::Msl(inner) =&gt; {
+                <span class="self">self</span>.require_features(wgt::Features::MSL_SHADER_PASSTHROUGH)<span class="question-mark">?</span>;
+                hal::ShaderInput::Msl {
+                    shader: inner.source.to_string(),
+                    entry_point: inner.entry_point.to_string(),
+                    num_workgroups: inner.num_workgroups,
+                }
+            }
         };
-        <span class="kw">let </span>hal_shader = hal::ShaderInput::SpirV(source);
+
+        <span class="kw">let </span>hal_desc = hal::ShaderModuleDescriptor {
+            label: descriptor.label().to_hal(<span class="self">self</span>.instance_flags),
+            runtime_checks: wgt::ShaderRuntimeChecks::unchecked(),
+        };
+
         <span class="kw">let </span>raw = <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw().create_shader_module(<span class="kw-2">&amp;</span>hal_desc, hal_shader) } {
             <span class="prelude-val">Ok</span>(raw) =&gt; raw,
             <span class="prelude-val">Err</span>(error) =&gt; {
@@ -5704,12 +5726,10 @@
             raw: ManuallyDrop::new(raw),
             device: <span class="self">self</span>.clone(),
             interface: <span class="prelude-val">None</span>,
-            label: desc.label.to_string(),
+            label: descriptor.label().to_string(),
         };
 
-        <span class="kw">let </span>module = Arc::new(module);
-
-        <span class="prelude-val">Ok</span>(module)
+        <span class="prelude-val">Ok</span>(Arc::new(module))
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_command_encoder(

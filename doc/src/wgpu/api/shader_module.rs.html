@@ -236,8 +236,12 @@
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
-    borrow::Cow,
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     string::{String, ToString <span class="kw">as _</span>},
     vec,
     vec::Vec,
@@ -249,9 +253,9 @@
 <span class="doccomment">/// Handle to a compiled shader module.
 ///
 /// A `ShaderModule` represents a compiled shader module on the GPU. It can be created by passing
-/// source code to [`Device::create_shader_module`] or valid SPIR-V binary to
-/// [`Device::create_shader_module_spirv`]. Shader modules are used to define programmable stages
-/// of a pipeline.
+/// source code to [`Device::create_shader_module`]. MSL shader or SPIR-V binary can also be passed
+/// directly using [`Device::create_shader_module_passthrough`]. Shader modules are used to define
+/// programmable stages of a pipeline.
 ///
 /// Corresponds to [WebGPU `GPUShaderModule`](https://gpuweb.github.io/gpuweb/#shader-module).
 </span><span class="attr">#[derive(Debug, Clone)]
@@ -420,14 +424,14 @@
     ///
     /// See also: [`util::make_spirv`], [`include_spirv`]
     </span><span class="attr">#[cfg(feature = <span class="string">"spirv"</span>)]
-    </span>SpirV(Cow&lt;<span class="lifetime">'a</span>, [u32]&gt;),
+    </span>SpirV(alloc::borrow::Cow&lt;<span class="lifetime">'a</span>, [u32]&gt;),
     <span class="doccomment">/// GLSL module as a string slice.
     ///
     /// Note: GLSL is not yet fully supported and must be a specific ShaderStage.
     </span><span class="attr">#[cfg(feature = <span class="string">"glsl"</span>)]
     </span>Glsl {
         <span class="doccomment">/// The source code of the shader.
-        </span>shader: Cow&lt;<span class="lifetime">'a</span>, str&gt;,
+        </span>shader: alloc::borrow::Cow&lt;<span class="lifetime">'a</span>, str&gt;,
         <span class="doccomment">/// The shader stage that the shader targets. For example, `naga::ShaderStage::Vertex`
         </span>stage: naga::ShaderStage,
         <span class="doccomment">/// Key-value pairs to represent defines sent to the glsl preprocessor.
@@ -437,10 +441,10 @@
     },
     <span class="doccomment">/// WGSL module as a string slice.
     </span><span class="attr">#[cfg(feature = <span class="string">"wgsl"</span>)]
-    </span>Wgsl(Cow&lt;<span class="lifetime">'a</span>, str&gt;),
+    </span>Wgsl(alloc::borrow::Cow&lt;<span class="lifetime">'a</span>, str&gt;),
     <span class="doccomment">/// Naga module.
     </span><span class="attr">#[cfg(feature = <span class="string">"naga-ir"</span>)]
-    </span>Naga(Cow&lt;<span class="lifetime">'static</span>, naga::Module&gt;),
+    </span>Naga(alloc::borrow::Cow&lt;<span class="lifetime">'static</span>, naga::Module&gt;),
     <span class="doccomment">/// Dummy variant because `Naga` doesn't have a lifetime and without enough active features it
     /// could be the last one active.
     </span><span class="attr">#[doc(hidden)]
@@ -461,17 +465,23 @@
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(ShaderModuleDescriptor&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
-<span class="doccomment">/// Descriptor for a shader module given by SPIR-V binary, for use with
-/// [`Device::create_shader_module_spirv`].
+<span class="doccomment">/// Descriptor for a shader module that will bypass wgpu's shader tooling, for use with
+/// [`Device::create_shader_module_passthrough`].
 ///
 /// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
 /// only WGSL source code strings are accepted.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
-    </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">'a</span>&gt;,
-    <span class="doccomment">/// Binary SPIR-V data, in 4-byte words.
-    </span><span class="kw">pub </span>source: Cow&lt;<span class="lifetime">'a</span>, [u32]&gt;,
-}
-<span class="macro">static_assertions::assert_impl_all!</span>(ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
+</span><span class="kw">pub type </span>ShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>&gt; =
+    wgt::CreateShaderModuleDescriptorPassthrough&lt;<span class="lifetime">'a</span>, Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
+
+<span class="doccomment">/// Descriptor for a shader module given by Metal MSL source.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
+</span><span class="kw">pub type </span>ShaderModuleDescriptorMsl&lt;<span class="lifetime">'a</span>&gt; = wgt::ShaderModuleDescriptorMsl&lt;<span class="lifetime">'a</span>, Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
+
+<span class="doccomment">/// Descriptor for a shader module given by SPIR-V binary.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
+</span><span class="kw">pub type </span>ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'a</span>&gt; = wgt::ShaderModuleDescriptorSpirV&lt;<span class="lifetime">'a</span>, Label&lt;<span class="lifetime">'a</span>&gt;&gt;;
 </code></pre></div></section></main></body></html>
