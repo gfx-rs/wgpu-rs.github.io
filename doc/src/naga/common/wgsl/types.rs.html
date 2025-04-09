@@ -460,7 +460,17 @@
 <a href="#459" id="459">459</a>
 <a href="#460" id="460">460</a>
 <a href="#461" id="461">461</a>
-<a href="#462" id="462">462</a></pre></div><pre class="rust"><code><span class="doccomment">//! Code for formatting Naga IR types as WGSL source code.
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a></pre></div><pre class="rust"><code><span class="doccomment">//! Code for formatting Naga IR types as WGSL source code.
 
 </span><span class="kw">use super</span>::{address_space_str, ToWgsl, TryToWgsl};
 <span class="kw">use </span><span class="kw">crate</span>::common;
@@ -500,6 +510,14 @@
         r#override: Handle&lt;<span class="kw">crate</span>::Override&gt;,
         out: <span class="kw-2">&amp;mut </span>W,
     ) -&gt; core::fmt::Result;
+
+    <span class="doccomment">/// Write a [`TypeInner::Struct`] for which we are unable to find a name.
+    ///
+    /// The names of struct types are only available if we have `Handle&lt;Type&gt;`,
+    /// not from [`TypeInner`]. For logging and debugging, it's fine to just
+    /// write something helpful to the developer, but for generating WGSL,
+    /// this should be unreachable.
+    </span><span class="kw">fn </span>write_unnamed_struct&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result;
 
     <span class="doccomment">/// Write a [`TypeInner`] that has no representation as WGSL source,
     /// even including Naga extensions.
@@ -629,12 +647,6 @@
     <span class="kw">fn </span>type_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="self">self</span>.write_type(handle, <span class="kw-2">&amp;mut </span>buf).unwrap();
-        buf
-    }
-
-    <span class="kw">fn </span>type_inner_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner) -&gt; String {
-        <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
-        <span class="self">self</span>.write_type_inner(inner, <span class="kw-2">&amp;mut </span>buf).unwrap();
         buf
     }
 
@@ -831,7 +843,7 @@
             <span class="macro">write!</span>(out, <span class="string">"acceleration_structure{}"</span>, caps)<span class="question-mark">?
         </span>}
         TypeInner::Struct { .. } =&gt; {
-            <span class="macro">unreachable!</span>(<span class="string">"structs can only be referenced by name in WGSL"</span>);
+            ctx.write_unnamed_struct(inner, out)<span class="question-mark">?</span>;
         }
         TypeInner::RayQuery { vertex_return } =&gt; {
             <span class="kw">let </span>caps = <span class="kw">if </span>vertex_return { <span class="string">"&lt;vertex_return&gt;" </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
@@ -882,6 +894,10 @@
             .unwrap_or(<span class="string">"{anonymous type}"</span>)
     }
 
+    <span class="kw">fn </span>write_unnamed_struct&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="macro">write!</span>(out, <span class="string">"{{unnamed struct}}"</span>)
+    }
+
     <span class="kw">fn </span>write_override&lt;W: Write&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Override&gt;,
@@ -912,6 +928,10 @@
 
     <span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="self">self</span>[handle].name.as_deref().unwrap_or(<span class="string">"{anonymous type}"</span>)
+    }
+
+    <span class="kw">fn </span>write_unnamed_struct&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span>TypeInner, out: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="macro">write!</span>(out, <span class="string">"{{unnamed struct {inner:?}}}"</span>)
     }
 
     <span class="kw">fn </span>write_override&lt;W: Write&gt;(

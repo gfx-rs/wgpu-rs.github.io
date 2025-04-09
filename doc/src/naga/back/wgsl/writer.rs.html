@@ -2294,7 +2294,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write_type_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, inner: <span class="kw-2">&amp;</span>TypeInner) -&gt; BackendResult {
+    <span class="kw">fn </span>write_type_resolution(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        resolution: <span class="kw-2">&amp;</span>proc::TypeResolution,
+    ) -&gt; BackendResult {
         <span class="comment">// This actually can't be factored out into a nice constructor method,
         // because the borrow checker needs to be able to see that the borrows
         // of `self.names` and `self.out` are disjoint.
@@ -2302,7 +2306,7 @@
             module,
             names: <span class="kw-2">&amp;</span><span class="self">self</span>.names,
         };
-        type_context.write_type_inner(inner, <span class="kw-2">&amp;mut </span><span class="self">self</span>.out)<span class="question-mark">?</span>;
+        type_context.write_type_resolution(resolution, <span class="kw-2">&amp;mut </span><span class="self">self</span>.out)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2844,16 +2848,8 @@
         </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"let {name}"</span>)<span class="question-mark">?</span>;
         <span class="kw">if </span><span class="self">self</span>.flags.contains(WriterFlags::EXPLICIT_TYPES) {
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">": "</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>ty = <span class="kw-2">&amp;</span>func_ctx.info[handle].ty;
             <span class="comment">// Write variable type
-            </span><span class="kw">match </span><span class="kw-2">*</span>ty {
-                proc::TypeResolution::Handle(handle) =&gt; {
-                    <span class="self">self</span>.write_type(module, handle)<span class="question-mark">?</span>;
-                }
-                proc::TypeResolution::Value(<span class="kw-2">ref </span>inner) =&gt; {
-                    <span class="self">self</span>.write_type_inner(module, inner)<span class="question-mark">?</span>;
-                }
-            }
+            </span><span class="self">self</span>.write_type_resolution(module, <span class="kw-2">&amp;</span>func_ctx.info[handle].ty)<span class="question-mark">?</span>;
         }
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" = "</span>)<span class="question-mark">?</span>;
@@ -3579,6 +3575,10 @@
 
     <span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::Type(handle)].as_str()
+    }
+
+    <span class="kw">fn </span>write_unnamed_struct&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>TypeInner, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {
+        <span class="macro">unreachable!</span>(<span class="string">"the WGSL back end should always provide type handles"</span>);
     }
 
     <span class="kw">fn </span>write_override&lt;W: Write&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: Handle&lt;<span class="kw">crate</span>::Override&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>W) -&gt; core::fmt::Result {

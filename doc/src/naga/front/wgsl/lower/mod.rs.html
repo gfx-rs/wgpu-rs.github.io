@@ -3804,7 +3804,19 @@
 <a href="#3803" id="3803">3803</a>
 <a href="#3804" id="3804">3804</a>
 <a href="#3805" id="3805">3805</a>
-<a href="#3806" id="3806">3806</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3806" id="3806">3806</a>
+<a href="#3807" id="3807">3807</a>
+<a href="#3808" id="3808">3808</a>
+<a href="#3809" id="3809">3809</a>
+<a href="#3810" id="3810">3810</a>
+<a href="#3811" id="3811">3811</a>
+<a href="#3812" id="3812">3812</a>
+<a href="#3813" id="3813">3813</a>
+<a href="#3814" id="3814">3814</a>
+<a href="#3815" id="3815">3815</a>
+<a href="#3816" id="3816">3816</a>
+<a href="#3817" id="3817">3817</a>
+<a href="#3818" id="3818">3818</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -3813,6 +3825,7 @@
 <span class="kw">use </span>core::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::common::wgsl::{TryToWgsl, TypeContext};
+<span class="kw">use </span><span class="kw">crate</span>::common::ForDebugWithTypes;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::index::Index;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
@@ -4216,6 +4229,14 @@
             <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>name) =&gt; out.write_str(name),
             <span class="prelude-val">None </span>=&gt; <span class="macro">write!</span>(out, <span class="string">"{{anonymous override {handle:?}}}"</span>),
         }
+    }
+
+    <span class="kw">fn </span>write_unnamed_struct&lt;W: core::fmt::Write&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner,
+        <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>W,
+    ) -&gt; core::fmt::Result {
+        <span class="macro">unreachable!</span>(<span class="string">"the WGSL front end should always know the type name"</span>);
     }
 }
 
@@ -5113,8 +5134,8 @@
                 <span class="kw">if </span>!explicit_inner.equivalent(init_inner, <span class="kw-2">&amp;</span>ectx.module.types) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                         name: name.span,
-                        expected: ectx.type_inner_to_string(explicit_inner),
-                        got: ectx.type_inner_to_string(init_inner),
+                        expected: ectx.type_to_string(explicit_ty),
+                        got: ectx.type_to_string(init_ty),
                     }));
                 }
                 ty = explicit_ty;
@@ -6832,13 +6853,14 @@
         );
 
         <span class="kw">for </span>(arg_index, <span class="kw-2">&amp;</span>arg) <span class="kw">in </span>arguments.iter().enumerate() {
-            <span class="kw">let </span>ty = ctx.typifier()[arg].inner_with(<span class="kw-2">&amp;</span>ctx.module.types);
+            <span class="kw">let </span>arg_type_resolution = <span class="kw-2">&amp;</span>ctx.typifier()[arg];
+            <span class="kw">let </span>arg_inner = arg_type_resolution.inner_with(<span class="kw-2">&amp;</span>ctx.module.types);
             <span class="macro">log::debug!</span>(
-                <span class="string">"Supplying argument {arg_index} of type {}"</span>,
-                <span class="kw">crate</span>::common::DiagnosticDisplay((ty, ctx.module.to_ctx()))
+                <span class="string">"Supplying argument {arg_index} of type {:?}"</span>,
+                arg_type_resolution.for_debug(<span class="kw-2">&amp;</span>ctx.module.types)
             );
             <span class="kw">let </span>next_remaining_overloads =
-                remaining_overloads.arg(arg_index, ty, <span class="kw-2">&amp;</span>ctx.module.types);
+                remaining_overloads.arg(arg_index, arg_inner, <span class="kw-2">&amp;</span>ctx.module.types);
 
             <span class="comment">// If any argument is not a constant expression, then no overloads
             // that accept abstract values should be considered.
@@ -6858,11 +6880,11 @@
                 <span class="kw">let </span>function = fun.to_wgsl_for_diagnostics();
                 <span class="kw">let </span>call_span = span;
                 <span class="kw">let </span>arg_span = ctx.get_expression_span(arg);
-                <span class="kw">let </span>arg_ty = ctx.as_diagnostic_display(ty).to_string();
+                <span class="kw">let </span>arg_ty = ctx.as_diagnostic_display(arg_type_resolution).to_string();
 
                 <span class="comment">// Is this type *ever* permitted for the arg_index'th argument?
                 // For example, `bool` is never permitted for `max`.
-                </span><span class="kw">let </span>only_this_argument = overloads.arg(arg_index, ty, <span class="kw-2">&amp;</span>ctx.module.types);
+                </span><span class="kw">let </span>only_this_argument = overloads.arg(arg_index, arg_inner, <span class="kw-2">&amp;</span>ctx.module.types);
                 <span class="kw">if </span>only_this_argument.is_empty() {
                     <span class="comment">// No overload of `fun` accepts this type as the
                     // arg_index'th argument. Determine the set of types that
@@ -6911,16 +6933,18 @@
                 // made this one unacceptable.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>remaining_overloads = overloads;
                 <span class="kw">for </span>(prior_index, <span class="kw-2">&amp;</span>prior_expr) <span class="kw">in </span>arguments.iter().enumerate() {
-                    <span class="kw">let </span>prior_ty = ctx.typifier()[prior_expr].inner_with(<span class="kw-2">&amp;</span>ctx.module.types);
+                    <span class="kw">let </span>prior_type_resolution = <span class="kw-2">&amp;</span>ctx.typifier()[prior_expr];
+                    <span class="kw">let </span>prior_ty = prior_type_resolution.inner_with(<span class="kw-2">&amp;</span>ctx.module.types);
                     remaining_overloads =
                         remaining_overloads.arg(prior_index, prior_ty, <span class="kw-2">&amp;</span>ctx.module.types);
                     <span class="kw">if </span>remaining_overloads
-                        .arg(arg_index, ty, <span class="kw-2">&amp;</span>ctx.module.types)
+                        .arg(arg_index, arg_inner, <span class="kw-2">&amp;</span>ctx.module.types)
                         .is_empty()
                     {
                         <span class="comment">// This is the argument that killed our dreams.
                         </span><span class="kw">let </span>inconsistent_span = ctx.get_expression_span(arguments[prior_index]);
-                        <span class="kw">let </span>inconsistent_ty = ctx.as_diagnostic_display(prior_ty).to_string();
+                        <span class="kw">let </span>inconsistent_ty =
+                            ctx.as_diagnostic_display(prior_type_resolution).to_string();
 
                         <span class="kw">if </span>allowed.is_empty() {
                             <span class="comment">// Some overloads did accept `ty` at `arg_index`, but

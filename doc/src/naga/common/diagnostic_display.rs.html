@@ -115,10 +115,13 @@
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a></pre></div><pre class="rust"><code><span class="doccomment">//! Displaying Naga IR terms in diagnostic output.
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a></pre></div><pre class="rust"><code><span class="doccomment">//! Displaying Naga IR terms in diagnostic output.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::proc::{GlobalCtx, Rule};
-<span class="kw">use crate</span>::{Handle, Scalar, Type, TypeInner};
+</span><span class="kw">use </span><span class="kw">crate</span>::proc::{GlobalCtx, Rule, TypeResolution};
+<span class="kw">use crate</span>::{Handle, Scalar, Type};
 
 <span class="attr">#[cfg(any(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TypeContext;
@@ -140,13 +143,16 @@
 /// for a type like `DiagnosticDisplay&lt;(Handle&lt;Type&gt;, GlobalCtx)&gt;`, where
 /// the [`GlobalCtx`] type provides the necessary context.
 ///
+/// Do not implement this type for [`TypeInner`], as that does not
+/// have enough information to display struct types correctly.
+///
 /// If you only need debugging output, [`DiagnosticDebug`] uses
 /// easier-to-obtain context types but still does a good enough job
 /// for logging or debugging.
 ///
 /// [`Display`]: core::fmt::Display
-/// [`Scalar`]: crate::Scalar
 /// [`GlobalCtx`]: crate::proc::GlobalCtx
+/// [`TypeInner`]: crate::ir::TypeInner
 /// [`DiagnosticDebug`]: super::DiagnosticDebug
 ///
 /// ## Language-sensitive diagnostics
@@ -166,6 +172,23 @@
 /// indication will provoke a compile-time error.
 </span><span class="kw">pub struct </span>DiagnosticDisplay&lt;T&gt;(<span class="kw">pub </span>T);
 
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>DiagnosticDisplay&lt;(<span class="kw-2">&amp;</span>TypeResolution, GlobalCtx&lt;<span class="lifetime">'_</span>&gt;)&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">let </span>(resolution, ctx) = <span class="self">self</span>.<span class="number">0</span>;
+
+        <span class="attr">#[cfg(any(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>))]
+        </span>ctx.write_type_resolution(resolution, f)<span class="question-mark">?</span>;
+
+        <span class="attr">#[cfg(not(any(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>)))]
+        </span>{
+            <span class="kw">let _ </span>= ctx;
+            <span class="macro">write!</span>(f, <span class="string">"{resolution:?}"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>DiagnosticDisplay&lt;(Handle&lt;Type&gt;, GlobalCtx&lt;<span class="lifetime">'_</span>&gt;)&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>(handle, <span class="kw-2">ref </span>ctx) = <span class="self">self</span>.<span class="number">0</span>;
@@ -177,23 +200,6 @@
         </span>{
             <span class="kw">let _ </span>= ctx;
             <span class="macro">write!</span>(f, <span class="string">"{handle:?}"</span>)<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(())
-    }
-}
-
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>DiagnosticDisplay&lt;(<span class="kw-2">&amp;</span>TypeInner, GlobalCtx&lt;<span class="lifetime">'_</span>&gt;)&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">let </span>(inner, <span class="kw-2">ref </span>ctx) = <span class="self">self</span>.<span class="number">0</span>;
-
-        <span class="attr">#[cfg(any(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>))]
-        </span>ctx.write_type_inner(inner, f)<span class="question-mark">?</span>;
-
-        <span class="attr">#[cfg(not(any(feature = <span class="string">"wgsl-in"</span>, feature = <span class="string">"wgsl-out"</span>)))]
-        </span>{
-            <span class="kw">let _ </span>= ctx;
-            <span class="macro">write!</span>(f, <span class="string">"{inner:?}"</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
