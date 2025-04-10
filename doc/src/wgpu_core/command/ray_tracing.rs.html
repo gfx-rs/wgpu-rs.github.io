@@ -1267,52 +1267,18 @@
 <a href="#1266" id="1266">1266</a>
 <a href="#1267" id="1267">1267</a>
 <a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a>
-<a href="#1270" id="1270">1270</a>
-<a href="#1271" id="1271">1271</a>
-<a href="#1272" id="1272">1272</a>
-<a href="#1273" id="1273">1273</a>
-<a href="#1274" id="1274">1274</a>
-<a href="#1275" id="1275">1275</a>
-<a href="#1276" id="1276">1276</a>
-<a href="#1277" id="1277">1277</a>
-<a href="#1278" id="1278">1278</a>
-<a href="#1279" id="1279">1279</a>
-<a href="#1280" id="1280">1280</a>
-<a href="#1281" id="1281">1281</a>
-<a href="#1282" id="1282">1282</a>
-<a href="#1283" id="1283">1283</a>
-<a href="#1284" id="1284">1284</a>
-<a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
-<a href="#1287" id="1287">1287</a>
-<a href="#1288" id="1288">1288</a>
-<a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a>
-<a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a>
-<a href="#1301" id="1301">1301</a>
-<a href="#1302" id="1302">1302</a>
-<a href="#1303" id="1303">1303</a>
-<a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
+<a href="#1269" id="1269">1269</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{
     cmp::max,
     num::NonZeroU64,
     ops::{Deref, Range},
-    sync::atomic::Ordering,
 };
 
 <span class="kw">use </span>wgt::{math::align_to, BufferUsages, BufferUses, Features};
 
+<span class="kw">use </span><span class="kw">crate</span>::device::resource::CommandIndices;
+<span class="kw">use </span><span class="kw">crate</span>::lock::RwLockWriteGuard;
+<span class="kw">use </span><span class="kw">crate</span>::ray_tracing::{AsAction, AsBuild, TlasBuild, ValidateAsActionsError};
 <span class="kw">use crate</span>::{
     command::CommandBufferMutable,
     device::queue::TempResource,
@@ -1321,16 +1287,14 @@
     id::CommandEncoderId,
     init_tracker::MemoryInitKind,
     ray_tracing::{
-        BlasAction, BlasBuildEntry, BlasGeometries, BlasTriangleGeometry,
-        BuildAccelerationStructureError, TlasAction, TlasBuildEntry, TlasInstance, TlasPackage,
-        TraceBlasBuildEntry, TraceBlasGeometries, TraceBlasTriangleGeometry, TraceTlasInstance,
-        TraceTlasPackage, ValidateBlasActionsError, ValidateTlasActionsError,
+        BlasBuildEntry, BlasGeometries, BlasTriangleGeometry, BuildAccelerationStructureError,
+        TlasBuildEntry, TlasInstance, TlasPackage, TraceBlasBuildEntry, TraceBlasGeometries,
+        TraceBlasTriangleGeometry, TraceTlasInstance, TraceTlasPackage,
     },
-    resource::{AccelerationStructure, Blas, Buffer, Labeled, StagingBuffer, Tlas, Trackable},
+    resource::{AccelerationStructure, Blas, Buffer, Labeled, StagingBuffer, Tlas},
     scratch::ScratchBuffer,
     snatch::SnatchGuard,
     track::PendingTransition,
-    FastHashSet,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::id::{BlasId, TlasId};
@@ -1386,39 +1350,28 @@
 
         device.require_features(Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>build_command_index = NonZeroU64::new(
-            device
-                .last_acceleration_structure_build_command_index
-                .fetch_add(<span class="number">1</span>, Ordering::Relaxed),
-        )
-        .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>build_command = AsBuild::default();
+
+        <span class="kw">for </span>blas <span class="kw">in </span>blas_ids {
+            <span class="kw">let </span>blas = hub.blas_s.get(<span class="kw-2">*</span>blas).get()<span class="question-mark">?</span>;
+            build_command.blas_s_built.push(blas);
+        }
+
+        <span class="kw">for </span>tlas <span class="kw">in </span>tlas_ids {
+            <span class="kw">let </span>tlas = hub.tlas_s.get(<span class="kw-2">*</span>tlas).get()<span class="question-mark">?</span>;
+            build_command.tlas_s_built.push(TlasBuild {
+                tlas,
+                dependencies: Vec::new(),
+            });
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
         <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data_guard = cmd_buf_data.record()<span class="question-mark">?</span>;
         <span class="kw">let </span>cmd_buf_data = <span class="kw-2">&amp;mut *</span>cmd_buf_data_guard;
 
-        cmd_buf_data.blas_actions.reserve(blas_ids.len());
+        cmd_buf_data.as_actions.push(AsAction::Build(build_command));
 
-        cmd_buf_data.tlas_actions.reserve(tlas_ids.len());
-
-        <span class="kw">for </span>blas <span class="kw">in </span>blas_ids {
-            <span class="kw">let </span>blas = hub.blas_s.get(<span class="kw-2">*</span>blas).get()<span class="question-mark">?</span>;
-            cmd_buf_data.blas_actions.push(BlasAction {
-                blas,
-                kind: <span class="kw">crate</span>::ray_tracing::BlasActionKind::Build(build_command_index),
-            });
-        }
-
-        <span class="kw">for </span>tlas <span class="kw">in </span>tlas_ids {
-            <span class="kw">let </span>tlas = hub.tlas_s.get(<span class="kw-2">*</span>tlas).get()<span class="question-mark">?</span>;
-            cmd_buf_data.tlas_actions.push(TlasAction {
-                tlas,
-                kind: <span class="kw">crate</span>::ray_tracing::TlasActionKind::Build {
-                    build_index: build_command_index,
-                    dependencies: Vec::new(),
-                },
-            });
-        }
+        cmd_buf_data_guard.mark_successful();
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1444,12 +1397,7 @@
 
         device.require_features(Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>build_command_index = NonZeroU64::new(
-            device
-                .last_acceleration_structure_build_command_index
-                .fetch_add(<span class="number">1</span>, Ordering::Relaxed),
-        )
-        .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>build_command = AsBuild::default();
 
         <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">let </span>trace_blas: Vec&lt;TraceBlasBuildEntry&gt; = blas_iter
@@ -1532,7 +1480,7 @@
         iter_blas(
             blas_iter,
             cmd_buf_data,
-            build_command_index,
+            <span class="kw-2">&amp;mut </span>build_command,
             <span class="kw-2">&amp;mut </span>buf_storage,
             hub,
         )<span class="question-mark">?</span>;
@@ -1586,12 +1534,9 @@
             <span class="kw">let </span>tlas = hub.tlas_s.get(entry.tlas_id).get()<span class="question-mark">?</span>;
             cmd_buf_data.trackers.tlas_s.insert_single(tlas.clone());
 
-            cmd_buf_data.tlas_actions.push(TlasAction {
+            build_command.tlas_s_built.push(TlasBuild {
                 tlas: tlas.clone(),
-                kind: <span class="kw">crate</span>::ray_tracing::TlasActionKind::Build {
-                    build_index: build_command_index,
-                    dependencies: Vec::new(),
-                },
+                dependencies: Vec::new(),
             });
 
             <span class="kw">let </span>scratch_buffer_offset = scratch_buffer_tlas_size;
@@ -1693,6 +1638,8 @@
             .temp_resources
             .push(TempResource::ScratchBuffer(scratch_buffer));
 
+        cmd_buf_data.as_actions.push(AsAction::Build(build_command));
+
         cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
@@ -1715,12 +1662,7 @@
 
         device.require_features(Features::EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>build_command_index = NonZeroU64::new(
-            device
-                .last_acceleration_structure_build_command_index
-                .fetch_add(<span class="number">1</span>, Ordering::Relaxed),
-        )
-        .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>build_command = AsBuild::default();
 
         <span class="kw">let </span>trace_blas: Vec&lt;TraceBlasBuildEntry&gt; = blas_iter
             .map(|blas_entry| {
@@ -1828,7 +1770,7 @@
         iter_blas(
             blas_iter,
             cmd_buf_data,
-            build_command_index,
+            <span class="kw-2">&amp;mut </span>build_command,
             <span class="kw-2">&amp;mut </span>buf_storage,
             hub,
         )<span class="question-mark">?</span>;
@@ -1909,19 +1851,11 @@
                 instance_count += <span class="number">1</span>;
 
                 dependencies.push(blas.clone());
-
-                cmd_buf_data.blas_actions.push(BlasAction {
-                    blas,
-                    kind: <span class="kw">crate</span>::ray_tracing::BlasActionKind::Use,
-                });
             }
 
-            cmd_buf_data.tlas_actions.push(TlasAction {
+            build_command.tlas_s_built.push(TlasBuild {
                 tlas: tlas.clone(),
-                kind: <span class="kw">crate</span>::ray_tracing::TlasActionKind::Build {
-                    build_index: build_command_index,
-                    dependencies,
-                },
+                dependencies,
             });
 
             <span class="kw">if </span>instance_count &gt; tlas.max_instance_count {
@@ -2105,72 +2039,69 @@
             .temp_resources
             .push(TempResource::ScratchBuffer(scratch_buffer));
 
+        cmd_buf_data.as_actions.push(AsAction::Build(build_command));
+
         cmd_buf_data_guard.mark_successful();
         <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="kw">impl </span>CommandBufferMutable {
-    <span class="comment">// makes sure a blas is build before it is used
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_blas_actions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), ValidateBlasActionsError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::[submission]::validate_blas_actions"</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>built = FastHashSet::default();
-        <span class="kw">for </span>action <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.blas_actions {
-            <span class="kw">match </span><span class="kw-2">&amp;</span>action.kind {
-                <span class="kw">crate</span>::ray_tracing::BlasActionKind::Build(id) =&gt; {
-                    built.insert(action.blas.tracker_index());
-                    <span class="kw-2">*</span>action.blas.built_index.write() = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id);
-                }
-                <span class="kw">crate</span>::ray_tracing::BlasActionKind::Use =&gt; {
-                    <span class="kw">if </span>!built.contains(<span class="kw-2">&amp;</span>action.blas.tracker_index())
-                        &amp;&amp; (<span class="kw-2">*</span>action.blas.built_index.read()).is_none()
-                    {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateBlasActionsError::UsedUnbuilt(
-                            action.blas.error_ident(),
-                        ));
-                    }
-                }
-            }
-        }
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="comment">// makes sure a tlas is built before it is used
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_tlas_actions(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_acceleration_structure_actions(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ValidateTlasActionsError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::[submission]::validate_tlas_actions"</span>);
-        <span class="kw">for </span>action <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.tlas_actions {
-            <span class="kw">match </span><span class="kw-2">&amp;</span>action.kind {
-                <span class="kw">crate</span>::ray_tracing::TlasActionKind::Build {
-                    build_index,
-                    dependencies,
-                } =&gt; {
-                    <span class="kw-2">*</span>action.tlas.built_index.write() = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>build_index);
-                    action.tlas.dependencies.write().clone_from(dependencies);
+        command_index_guard: <span class="kw-2">&amp;mut </span>RwLockWriteGuard&lt;CommandIndices&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ValidateAsActionsError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">"CommandEncoder::[submission]::validate_as_actions"</span>);
+        <span class="kw">for </span>action <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.as_actions {
+            <span class="kw">match </span>action {
+                AsAction::Build(build) =&gt; {
+                    <span class="kw">let </span>build_command_index = NonZeroU64::new(
+                        command_index_guard.next_acceleration_structure_build_command_index,
+                    )
+                    .unwrap();
+
+                    command_index_guard.next_acceleration_structure_build_command_index += <span class="number">1</span>;
+                    <span class="kw">for </span>blas <span class="kw">in </span>build.blas_s_built.iter() {
+                        <span class="kw-2">*</span>blas.built_index.write() = <span class="prelude-val">Some</span>(build_command_index);
+                    }
+
+                    <span class="kw">for </span>tlas_build <span class="kw">in </span>build.tlas_s_built.iter() {
+                        <span class="kw">for </span>blas <span class="kw">in </span><span class="kw-2">&amp;</span>tlas_build.dependencies {
+                            <span class="kw">if </span>blas.built_index.read().is_none() {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateAsActionsError::UsedUnbuiltBlas(
+                                    blas.error_ident(),
+                                    tlas_build.tlas.error_ident(),
+                                ));
+                            }
+                        }
+                        <span class="kw-2">*</span>tlas_build.tlas.built_index.write() = <span class="prelude-val">Some</span>(build_command_index);
+                        tlas_build
+                            .tlas
+                            .dependencies
+                            .write()
+                            .clone_from(<span class="kw-2">&amp;</span>tlas_build.dependencies)
+                    }
                 }
-                <span class="kw">crate</span>::ray_tracing::TlasActionKind::Use =&gt; {
-                    <span class="kw">let </span>tlas_build_index = action.tlas.built_index.read();
-                    <span class="kw">let </span>dependencies = action.tlas.dependencies.read();
+                AsAction::UseTlas(tlas) =&gt; {
+                    <span class="kw">let </span>tlas_build_index = tlas.built_index.read();
+                    <span class="kw">let </span>dependencies = tlas.dependencies.read();
 
                     <span class="kw">if </span>(<span class="kw-2">*</span>tlas_build_index).is_none() {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateTlasActionsError::UsedUnbuilt(
-                            action.tlas.error_ident(),
-                        ));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateAsActionsError::UsedUnbuiltTlas(tlas.error_ident()));
                     }
                     <span class="kw">for </span>blas <span class="kw">in </span>dependencies.deref() {
                         <span class="kw">let </span>blas_build_index = <span class="kw-2">*</span>blas.built_index.read();
                         <span class="kw">if </span>blas_build_index.is_none() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateTlasActionsError::UsedUnbuiltBlas(
-                                action.tlas.error_ident(),
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateAsActionsError::UsedUnbuiltBlas(
+                                tlas.error_ident(),
                                 blas.error_ident(),
                             ));
                         }
                         <span class="kw">if </span>blas_build_index.unwrap() &gt; tlas_build_index.unwrap() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateTlasActionsError::BlasNewerThenTlas(
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(ValidateAsActionsError::BlasNewerThenTlas(
                                 blas.error_ident(),
-                                action.tlas.error_ident(),
+                                tlas.error_ident(),
                             ));
                         }
                         blas.try_raw(snatch_guard)<span class="question-mark">?</span>;
@@ -2186,7 +2117,7 @@
 </span><span class="kw">fn </span>iter_blas&lt;<span class="lifetime">'a</span>&gt;(
     blas_iter: <span class="kw">impl </span>Iterator&lt;Item = BlasBuildEntry&lt;<span class="lifetime">'a</span>&gt;&gt;,
     cmd_buf_data: <span class="kw-2">&amp;mut </span>CommandBufferMutable,
-    build_command_index: NonZeroU64,
+    build_command: <span class="kw-2">&amp;mut </span>AsBuild,
     buf_storage: <span class="kw-2">&amp;mut </span>Vec&lt;TriangleBufferStore&lt;<span class="lifetime">'a</span>&gt;&gt;,
     hub: <span class="kw-2">&amp;</span>Hub,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BuildAccelerationStructureError&gt; {
@@ -2195,10 +2126,7 @@
         <span class="kw">let </span>blas = hub.blas_s.get(entry.blas_id).get()<span class="question-mark">?</span>;
         cmd_buf_data.trackers.blas_s.insert_single(blas.clone());
 
-        cmd_buf_data.blas_actions.push(BlasAction {
-            blas: blas.clone(),
-            kind: <span class="kw">crate</span>::ray_tracing::BlasActionKind::Build(build_command_index),
-        });
+        build_command.blas_s_built.push(blas.clone());
 
         <span class="kw">match </span>entry.geometries {
             BlasGeometries::TriangleGeometries(triangle_geometries) =&gt; {

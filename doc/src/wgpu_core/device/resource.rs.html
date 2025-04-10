@@ -3930,7 +3930,16 @@
 <a href="#3929" id="3929">3929</a>
 <a href="#3930" id="3930">3930</a>
 <a href="#3931" id="3931">3931</a>
-<a href="#3932" id="3932">3932</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3932" id="3932">3932</a>
+<a href="#3933" id="3933">3933</a>
+<a href="#3934" id="3934">3934</a>
+<a href="#3935" id="3935">3935</a>
+<a href="#3936" id="3936">3936</a>
+<a href="#3937" id="3937">3937</a>
+<a href="#3938" id="3938">3938</a>
+<a href="#3939" id="3939">3939</a>
+<a href="#3940" id="3940">3940</a>
+<a href="#3941" id="3941">3941</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -3994,6 +4003,18 @@
 <span class="attr">#[cfg(not(supports_64bit_atomics))]
 </span><span class="kw">use </span>portable_atomic::AtomicU64;
 
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandIndices {
+    <span class="doccomment">/// The index of the last command submission that was attempted.
+    ///
+    /// Note that `fence` may never be signalled with this value, if the command
+    /// submission failed. If you need to wait for everything running on a
+    /// `Queue` to complete, wait for [`last_successful_submission_index`].
+    ///
+    /// [`last_successful_submission_index`]: Device::last_successful_submission_index
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: hal::FenceValue,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) next_acceleration_structure_build_command_index: u64,
+}
+
 <span class="doccomment">/// Structure describing a logical device. Some members are internally mutable,
 /// stored behind mutexes.
 </span><span class="kw">pub struct </span>Device {
@@ -4006,14 +4027,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) command_allocator: command::CommandAllocator,
 
-    <span class="doccomment">/// The index of the last command submission that was attempted.
-    ///
-    /// Note that `fence` may never be signalled with this value, if the command
-    /// submission failed. If you need to wait for everything running on a
-    /// `Queue` to complete, wait for [`last_successful_submission_index`].
-    ///
-    /// [`last_successful_submission_index`]: Device::last_successful_submission_index
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: hal::AtomicFenceValue,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) command_indices: RwLock&lt;CommandIndices&gt;,
 
     <span class="doccomment">/// The index of the last successful submission to this device's
     /// [`hal::Queue`].
@@ -4023,7 +4037,7 @@
     /// so waiting for this value won't hang waiting for work that was never
     /// submitted.
     ///
-    /// [`active_submission_index`]: Device::active_submission_index
+    /// [`active_submission_index`]: CommandIndices::active_submission_index
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) last_successful_submission_index: hal::AtomicFenceValue,
 
     <span class="comment">// NOTE: if both are needed, the `snatchable_lock` must be consistently acquired before the
@@ -4061,7 +4075,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) instance_flags: wgt::InstanceFlags,
     <span class="kw">pub</span>(<span class="kw">crate</span>) deferred_destroy: Mutex&lt;Vec&lt;DeferredDestroy&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) usage_scopes: UsageScopePool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) last_acceleration_structure_build_command_index: AtomicU64,
     <span class="kw">pub</span>(<span class="kw">crate</span>) indirect_validation: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::indirect_validation::IndirectValidation&gt;,
     <span class="comment">// Optional so that we can late-initialize this after the queue is created.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) timestamp_normalizer:
@@ -4208,7 +4221,14 @@
             zero_buffer: ManuallyDrop::new(zero_buffer),
             label: desc.label.to_string(),
             command_allocator,
-            active_submission_index: AtomicU64::new(<span class="number">0</span>),
+            command_indices: RwLock::new(
+                rank::DEVICE_COMMAND_INDICES,
+                CommandIndices {
+                    active_submission_index: <span class="number">0</span>,
+                    <span class="comment">// By starting at one, we can put the result in a NonZeroU64.
+                    </span>next_acceleration_structure_build_command_index: <span class="number">1</span>,
+                },
+            ),
             last_successful_submission_index: AtomicU64::new(<span class="number">0</span>),
             fence: RwLock::new(rank::DEVICE_FENCE, ManuallyDrop::new(fence)),
             snatchable_lock: <span class="kw">unsafe </span>{ SnatchLock::new(rank::DEVICE_SNATCHABLE_LOCK) },
@@ -4244,8 +4264,6 @@
             instance_flags,
             deferred_destroy: Mutex::new(rank::DEVICE_DEFERRED_DESTROY, Vec::new()),
             usage_scopes: Mutex::new(rank::DEVICE_USAGE_SCOPES, Default::default()),
-            <span class="comment">// By starting at one, we can put the result in a NonZeroU64.
-            </span>last_acceleration_structure_build_command_index: AtomicU64::new(<span class="number">1</span>),
             timestamp_normalizer: OnceCellOrLock::new(),
             indirect_validation,
         })

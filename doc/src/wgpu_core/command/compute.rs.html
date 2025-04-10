@@ -1332,15 +1332,13 @@
 <a href="#1331" id="1331">1331</a>
 <a href="#1332" id="1332">1332</a>
 <a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a>
-<a href="#1335" id="1335">1335</a>
-<a href="#1336" id="1336">1336</a>
-<a href="#1337" id="1337">1337</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+<a href="#1334" id="1334">1334</a></pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{BufferAddress, DynamicOffset};
 
 <span class="kw">use </span>alloc::{borrow::Cow, boxed::Box, sync::Arc, vec::Vec};
 <span class="kw">use </span>core::{fmt, str};
 
+<span class="kw">use </span><span class="kw">crate</span>::ray_tracing::AsAction;
 <span class="kw">use crate</span>::{
     binding_model::{
         BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
@@ -1361,7 +1359,6 @@
     hal_label, id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind},
     pipeline::ComputePipeline,
-    ray_tracing::TlasAction,
     resource::{
         <span class="self">self</span>, Buffer, DestroyedResourceError, InvalidResourceError, Labeled,
         MissingBufferUsageError, ParentDevice,
@@ -1545,7 +1542,7 @@
     tracker: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Tracker,
     buffer_memory_init_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;BufferInitTrackerAction&gt;,
     texture_memory_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>CommandBufferTextureMemoryActions,
-    tlas_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;TlasAction&gt;,
+    as_actions: <span class="kw-2">&amp;</span><span class="lifetime">'cmd_buf </span><span class="kw-2">mut </span>Vec&lt;AsAction&gt;,
 
     temp_offsets: Vec&lt;u32&gt;,
     dynamic_offset_count: usize,
@@ -1770,7 +1767,7 @@
             tracker: <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers,
             buffer_memory_init_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions,
             texture_memory_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions,
-            tlas_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.tlas_actions,
+            as_actions: <span class="kw-2">&amp;mut </span>cmd_buf_data.as_actions,
 
             temp_offsets: Vec::new(),
             dynamic_offset_count: <span class="number">0</span>,
@@ -2017,12 +2014,9 @@
         .used
         .acceleration_structures
         .into_iter()
-        .map(|tlas| TlasAction {
-            tlas: tlas.clone(),
-            kind: <span class="kw">crate</span>::ray_tracing::TlasActionKind::Use,
-        });
+        .map(|tlas| AsAction::UseTlas(tlas.clone()));
 
-    state.tlas_actions.extend(used_resource);
+    state.as_actions.extend(used_resource);
 
     <span class="kw">let </span>pipeline_layout = state.binder.pipeline_layout.clone();
     <span class="kw">let </span>entries = state

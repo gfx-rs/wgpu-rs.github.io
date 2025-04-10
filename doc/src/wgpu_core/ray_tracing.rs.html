@@ -253,23 +253,7 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
+<a href="#255" id="255">255</a></pre></div><pre class="rust"><code><span class="comment">// Ray tracing
 // Major missing optimizations (no api surface changes needed):
 // - use custom tracker to track build state
 // - no forced rebuilt (build mode deduction)
@@ -279,7 +263,6 @@
 // - ([non performance] extract function in build (rust function extraction with guards is a pain))
 
 </span><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec::Vec};
-<span class="kw">use </span>core::num::NonZeroU64;
 
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{AccelerationStructureGeometryFlags, BufferAddress, IndexFormat, VertexFormat};
@@ -408,18 +391,12 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
-</span><span class="kw">pub enum </span>ValidateBlasActionsError {
-    <span class="attr">#[error(<span class="string">"Blas {0:?} is used before it is built"</span>)]
-    </span>UsedUnbuilt(ResourceErrorIdent),
-}
-
-<span class="attr">#[derive(Clone, Debug, Error)]
-</span><span class="kw">pub enum </span>ValidateTlasActionsError {
+</span><span class="kw">pub enum </span>ValidateAsActionsError {
     <span class="attr">#[error(transparent)]
     </span>DestroyedResource(<span class="attr">#[from] </span>DestroyedResourceError),
 
     <span class="attr">#[error(<span class="string">"Tlas {0:?} is used before it is built"</span>)]
-    </span>UsedUnbuilt(ResourceErrorIdent),
+    </span>UsedUnbuiltTlas(ResourceErrorIdent),
 
     <span class="attr">#[error(<span class="string">"Blas {0:?} is used before it is built (in Tlas {1:?})"</span>)]
     </span>UsedUnbuiltBlas(ResourceErrorIdent, ResourceErrorIdent),
@@ -471,31 +448,22 @@
     <span class="kw">pub </span>lowest_unmodified: u32,
 }
 
-<span class="attr">#[derive(Debug, Copy, Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>BlasActionKind {
-    Build(NonZeroU64),
-    Use,
-}
-
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>TlasActionKind {
-    Build {
-        build_index: NonZeroU64,
-        dependencies: Vec&lt;Arc&lt;Blas&gt;&gt;,
-    },
-    Use,
-}
-
-<span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BlasAction {
-    <span class="kw">pub </span>blas: Arc&lt;Blas&gt;,
-    <span class="kw">pub </span>kind: BlasActionKind,
-}
-
-<span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TlasAction {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TlasBuild {
     <span class="kw">pub </span>tlas: Arc&lt;Tlas&gt;,
-    <span class="kw">pub </span>kind: TlasActionKind,
+    <span class="kw">pub </span>dependencies: Vec&lt;Arc&lt;Blas&gt;&gt;,
+}
+
+<span class="attr">#[derive(Debug, Clone, Default)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AsBuild {
+    <span class="kw">pub </span>blas_s_built: Vec&lt;Arc&lt;Blas&gt;&gt;,
+    <span class="kw">pub </span>tlas_s_built: Vec&lt;TlasBuild&gt;,
+}
+
+<span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AsAction {
+    Build(AsBuild),
+    UseTlas(Arc&lt;Tlas&gt;),
 }
 
 <span class="attr">#[derive(Debug, Clone)]

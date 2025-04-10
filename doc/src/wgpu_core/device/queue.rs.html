@@ -1565,7 +1565,8 @@
 <a href="#1564" id="1564">1564</a>
 <a href="#1565" id="1565">1565</a>
 <a href="#1566" id="1566">1566</a>
-<a href="#1567" id="1567">1567</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{
     iter,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -1577,6 +1578,7 @@
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use super</span>::{life::LifetimeTracker, Device};
+<span class="kw">use </span><span class="kw">crate</span>::device::resource::CommandIndices;
 <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use </span><span class="kw">crate</span>::scratch::ScratchBuffer;
@@ -2014,9 +2016,7 @@
     <span class="attr">#[error(transparent)]
     </span>CommandEncoder(<span class="attr">#[from] </span>CommandEncoderError),
     <span class="attr">#[error(transparent)]
-    </span>ValidateBlasActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateBlasActionsError),
-    <span class="attr">#[error(transparent)]
-    </span>ValidateTlasActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateTlasActionsError),
+    </span>ValidateAsActionsError(<span class="attr">#[from] </span><span class="kw">crate</span>::ray_tracing::ValidateAsActionsError),
 }
 
 <span class="comment">//TODO: move out common parts of write_xxx.
@@ -2635,11 +2635,10 @@
 
             <span class="comment">// Fence lock must be acquired after the snatch lock everywhere to avoid deadlocks.
             </span><span class="kw">let </span><span class="kw-2">mut </span>fence = <span class="self">self</span>.device.fence.write();
-            submit_index = <span class="self">self
-                </span>.device
-                .active_submission_index
-                .fetch_add(<span class="number">1</span>, Ordering::SeqCst)
-                + <span class="number">1</span>;
+
+            <span class="kw">let </span><span class="kw-2">mut </span>command_index_guard = <span class="self">self</span>.device.command_indices.write();
+            command_index_guard.active_submission_index += <span class="number">1</span>;
+            submit_index = command_index_guard.active_submission_index;
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
 
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::default();
@@ -2694,6 +2693,7 @@
                                     <span class="kw-2">&amp;</span>snatch_guard,
                                     <span class="kw-2">&amp;mut </span>submit_surface_textures_owned,
                                     <span class="kw-2">&amp;mut </span>used_surface_textures,
+                                    <span class="kw-2">&amp;mut </span>command_index_guard,
                                 );
                                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = res {
                                     first_error.get_or_insert(err);
@@ -2858,6 +2858,8 @@
                 {
                     <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
                 }
+
+                drop(command_index_guard);
 
                 <span class="comment">// Advance the successful submission index.
                 </span><span class="self">self</span>.device
@@ -3084,6 +3086,7 @@
     snatch_guard: <span class="kw-2">&amp;</span>SnatchGuard,
     submit_surface_textures_owned: <span class="kw-2">&amp;mut </span>FastHashMap&lt;<span class="kw-2">*const </span>Texture, Arc&lt;Texture&gt;&gt;,
     used_surface_textures: <span class="kw-2">&amp;mut </span>track::TextureUsageScope,
+    command_index_guard: <span class="kw-2">&amp;mut </span>RwLockWriteGuard&lt;CommandIndices&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueSubmitError&gt; {
     command_buffer.same_device_as(queue)<span class="question-mark">?</span>;
 
@@ -3123,10 +3126,9 @@
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.validate_blas_actions() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = cmd_buf_data.validate_tlas_actions(snatch_guard) {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) =
+            cmd_buf_data.validate_acceleration_structure_actions(snatch_guard, command_index_guard)
+        {
             <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
         }
     }
