@@ -7050,7 +7050,30 @@
 <a href="#7049" id="7049">7049</a>
 <a href="#7050" id="7050">7050</a>
 <a href="#7051" id="7051">7051</a>
-<a href="#7052" id="7052">7052</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7052" id="7052">7052</a>
+<a href="#7053" id="7053">7053</a>
+<a href="#7054" id="7054">7054</a>
+<a href="#7055" id="7055">7055</a>
+<a href="#7056" id="7056">7056</a>
+<a href="#7057" id="7057">7057</a>
+<a href="#7058" id="7058">7058</a>
+<a href="#7059" id="7059">7059</a>
+<a href="#7060" id="7060">7060</a>
+<a href="#7061" id="7061">7061</a>
+<a href="#7062" id="7062">7062</a>
+<a href="#7063" id="7063">7063</a>
+<a href="#7064" id="7064">7064</a>
+<a href="#7065" id="7065">7065</a>
+<a href="#7066" id="7066">7066</a>
+<a href="#7067" id="7067">7067</a>
+<a href="#7068" id="7068">7068</a>
+<a href="#7069" id="7069">7069</a>
+<a href="#7070" id="7070">7070</a>
+<a href="#7071" id="7071">7071</a>
+<a href="#7072" id="7072">7072</a>
+<a href="#7073" id="7073">7073</a>
+<a href="#7074" id="7074">7074</a>
+<a href="#7075" id="7075">7075</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -12398,8 +12421,21 @@ template &lt;typename A&gt;
                             <span class="kw">let </span>level = back::Level(<span class="number">1</span>);
                             <span class="kw">match </span>scalar.kind {
                                 <span class="kw">crate</span>::ScalarKind::Sint =&gt; {
-                                    <span class="kw">let </span>min = -<span class="number">1i64 </span>&lt;&lt; (scalar.width <span class="kw">as </span>u32 * <span class="number">8 </span>- <span class="number">1</span>);
-                                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs / metal::select(rhs, 1, (lhs == {min} &amp; rhs == -1) | (rhs == 0));"</span>)<span class="question-mark">?
+                                    <span class="kw">let </span>min_val = <span class="kw">match </span>scalar.width {
+                                        <span class="number">4 </span>=&gt; <span class="kw">crate</span>::Literal::I32(i32::MIN),
+                                        <span class="number">8 </span>=&gt; <span class="kw">crate</span>::Literal::I64(i64::MIN),
+                                        <span class="kw">_ </span>=&gt; {
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                                                <span class="string">"Unexpected width for scalar {scalar:?}"
+                                            </span>)));
+                                        }
+                                    };
+                                    <span class="macro">write!</span>(
+                                        <span class="self">self</span>.out,
+                                        <span class="string">"{level}return lhs / metal::select(rhs, 1, (lhs == "
+                                    </span>)<span class="question-mark">?</span>;
+                                    <span class="self">self</span>.put_literal(min_val)<span class="question-mark">?</span>;
+                                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" &amp; rhs == -1) | (rhs == 0));"</span>)<span class="question-mark">?
                                 </span>}
                                 <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="macro">writeln!</span>(
                                     <span class="self">self</span>.out,
@@ -12467,8 +12503,18 @@ template &lt;typename A&gt;
                             <span class="kw">let </span>level = back::Level(<span class="number">1</span>);
                             <span class="kw">match </span>scalar.kind {
                                 <span class="kw">crate</span>::ScalarKind::Sint =&gt; {
-                                    <span class="kw">let </span>min = -<span class="number">1i64 </span>&lt;&lt; (scalar.width <span class="kw">as </span>u32 * <span class="number">8 </span>- <span class="number">1</span>);
-                                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}{rhs_type_name} divisor = metal::select(rhs, 1, (lhs == {min} &amp; rhs == -1) | (rhs == 0));"</span>)<span class="question-mark">?</span>;
+                                    <span class="kw">let </span>min_val = <span class="kw">match </span>scalar.width {
+                                        <span class="number">4 </span>=&gt; <span class="kw">crate</span>::Literal::I32(i32::MIN),
+                                        <span class="number">8 </span>=&gt; <span class="kw">crate</span>::Literal::I64(i64::MIN),
+                                        <span class="kw">_ </span>=&gt; {
+                                            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::GenericValidation(<span class="macro">format!</span>(
+                                                <span class="string">"Unexpected width for scalar {scalar:?}"
+                                            </span>)));
+                                        }
+                                    };
+                                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}{rhs_type_name} divisor = metal::select(rhs, 1, (lhs == "</span>)<span class="question-mark">?</span>;
+                                    <span class="self">self</span>.put_literal(min_val)<span class="question-mark">?</span>;
+                                    <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" &amp; rhs == -1) | (rhs == 0));"</span>)<span class="question-mark">?</span>;
                                     <span class="macro">writeln!</span>(
                                         <span class="self">self</span>.out,
                                         <span class="string">"{level}return lhs - (lhs / divisor) * divisor;"

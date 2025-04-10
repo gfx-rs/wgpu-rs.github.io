@@ -1933,7 +1933,23 @@
 <a href="#1932" id="1932">1932</a>
 <a href="#1933" id="1933">1933</a>
 <a href="#1934" id="1934">1934</a>
-<a href="#1935" id="1935">1935</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Helpers for the hlsl backend
 
 Important note about `Expression::ImageQuery`/`Expression::ArrayLength` and hlsl backend:
@@ -3218,8 +3234,16 @@ int dim_1d = NagaDimensions1D(image_1d);
                         <span class="kw">let </span>level = <span class="kw">crate</span>::back::Level(<span class="number">1</span>);
                         <span class="kw">match </span>scalar.kind {
                             ScalarKind::Sint =&gt; {
-                                <span class="kw">let </span>min = -<span class="number">1i64 </span>&lt;&lt; (scalar.width <span class="kw">as </span>u32 * <span class="number">8 </span>- <span class="number">1</span>);
-                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs / (((lhs == {min} &amp; rhs == -1) | (rhs == 0)) ? 1 : rhs);"</span>)<span class="question-mark">?
+                                <span class="kw">let </span>min_val = <span class="kw">match </span>scalar.width {
+                                    <span class="number">4 </span>=&gt; <span class="kw">crate</span>::Literal::I32(i32::MIN),
+                                    <span class="number">8 </span>=&gt; <span class="kw">crate</span>::Literal::I64(i64::MIN),
+                                    <span class="kw">_ </span>=&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">super</span>::Error::UnsupportedScalar(scalar));
+                                    }
+                                };
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs / (((lhs == "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_literal(min_val)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" &amp; rhs == -1) | (rhs == 0)) ? 1 : rhs);"</span>)<span class="question-mark">?
                             </span>}
                             ScalarKind::Uint =&gt; {
                                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">"{level}return lhs / (rhs == 0u ? 1u : rhs);"</span>)<span class="question-mark">?
@@ -3274,10 +3298,18 @@ int dim_1d = NagaDimensions1D(image_1d);
                         <span class="kw">let </span>level = <span class="kw">crate</span>::back::Level(<span class="number">1</span>);
                         <span class="kw">match </span>scalar.kind {
                             ScalarKind::Sint =&gt; {
-                                <span class="kw">let </span>min = -<span class="number">1i64 </span>&lt;&lt; (scalar.width <span class="kw">as </span>u32 * <span class="number">8 </span>- <span class="number">1</span>);
+                                <span class="kw">let </span>min_val = <span class="kw">match </span>scalar.width {
+                                    <span class="number">4 </span>=&gt; <span class="kw">crate</span>::Literal::I32(i32::MIN),
+                                    <span class="number">8 </span>=&gt; <span class="kw">crate</span>::Literal::I64(i64::MIN),
+                                    <span class="kw">_ </span>=&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">super</span>::Error::UnsupportedScalar(scalar));
+                                    }
+                                };
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{level}"</span>)<span class="question-mark">?</span>;
                                 <span class="self">self</span>.write_value_type(module, right_ty)<span class="question-mark">?</span>;
-                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" divisor = ((lhs == {min} &amp; rhs == -1) | (rhs == 0)) ? 1 : rhs;"</span>)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" divisor = ((lhs == "</span>)<span class="question-mark">?</span>;
+                                <span class="self">self</span>.write_literal(min_val)<span class="question-mark">?</span>;
+                                <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">" &amp; rhs == -1) | (rhs == 0)) ? 1 : rhs;"</span>)<span class="question-mark">?</span>;
                                 <span class="macro">writeln!</span>(
                                     <span class="self">self</span>.out,
                                     <span class="string">"{level}return lhs - (lhs / divisor) * divisor;"

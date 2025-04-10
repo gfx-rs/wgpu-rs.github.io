@@ -4298,7 +4298,19 @@
 <a href="#4297" id="4297">4297</a>
 <a href="#4298" id="4298">4298</a>
 <a href="#4299" id="4299">4299</a>
-<a href="#4300" id="4300">4300</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4300" id="4300">4300</a>
+<a href="#4301" id="4301">4301</a>
+<a href="#4302" id="4302">4302</a>
+<a href="#4303" id="4303">4303</a>
+<a href="#4304" id="4304">4304</a>
+<a href="#4305" id="4305">4305</a>
+<a href="#4306" id="4306">4306</a>
+<a href="#4307" id="4307">4307</a>
+<a href="#4308" id="4308">4308</a>
+<a href="#4309" id="4309">4309</a>
+<a href="#4310" id="4310">4310</a>
+<a href="#4311" id="4311">4311</a>
+<a href="#4312" id="4312">4312</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -6920,11 +6932,23 @@
             <span class="kw">crate</span>::Literal::F32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}"</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Literal::F16(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value:?}h"</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Literal::U32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}u"</span>)<span class="question-mark">?</span>,
+            <span class="comment">// `-2147483648` is parsed by some compilers as unary negation of
+            // positive 2147483648, which is too large for an int, causing
+            // issues for some compilers. Neither DXC nor FXC appear to have
+            // this problem, but this is not specified and could change. We
+            // therefore use `-2147483647 - 1` as a precaution.
+            </span><span class="kw">crate</span>::Literal::I32(value) <span class="kw">if </span>value == i32::MIN =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int({} - 1)"</span>, value + <span class="number">1</span>)<span class="question-mark">?
+            </span>}
             <span class="comment">// HLSL has no suffix for explicit i32 literals, but not using any suffix
             // makes the type ambiguous which prevents overload resolution from
             // working. So we explicitly use the int() constructor syntax.
             </span><span class="kw">crate</span>::Literal::I32(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int({value})"</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Literal::U64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}uL"</span>)<span class="question-mark">?</span>,
+            <span class="comment">// I64 version of the minimum I32 value issue described above.
+            </span><span class="kw">crate</span>::Literal::I64(value) <span class="kw">if </span>value == i64::MIN =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"({}L - 1L)"</span>, value + <span class="number">1</span>)<span class="question-mark">?</span>;
+            }
             <span class="kw">crate</span>::Literal::I64(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}L"</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Literal::Bool(value) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{value}"</span>)<span class="question-mark">?</span>,
             <span class="kw">crate</span>::Literal::AbstractInt(<span class="kw">_</span>) | <span class="kw">crate</span>::Literal::AbstractFloat(<span class="kw">_</span>) =&gt; {
