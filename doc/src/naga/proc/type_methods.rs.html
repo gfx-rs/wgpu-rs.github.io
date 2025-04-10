@@ -574,13 +574,34 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a></pre></div><pre class="rust"><code><span class="doccomment">//! Methods on [`TypeInner`], [`Scalar`], and [`ScalarKind`].
 //!
 //! [`TypeInner`]: crate::TypeInner
 //! [`Scalar`]: crate::Scalar
 //! [`ScalarKind`]: crate::ScalarKind
 
-</span><span class="kw">use </span><span class="kw">super</span>::TypeResolution;
+</span><span class="kw">use </span><span class="kw">crate</span>::ir;
+
+<span class="kw">use </span><span class="kw">super</span>::TypeResolution;
 
 <span class="kw">impl </span><span class="kw">crate</span>::ScalarKind {
     <span class="kw">pub const fn </span>is_numeric(<span class="self">self</span>) -&gt; bool {
@@ -831,21 +852,38 @@
         }
     }
 
-    <span class="doccomment">/// Compare `self` and `rhs` as types.
+    <span class="doccomment">/// Compare value type `self` and `rhs` as types.
     ///
     /// This is mostly the same as `&lt;TypeInner as Eq&gt;::eq`, but it treats
-    /// `ValuePointer` and `Pointer` types as equivalent.
+    /// [`ValuePointer`] and [`Pointer`] types as equivalent. This method
+    /// cannot be used for structs, because it cannot distinguish two
+    /// structs with different names but the same members. For structs,
+    /// use [`compare_types`].
     ///
-    /// When you know that one side of the comparison is never a pointer, it's
-    /// fine to not bother with canonicalization, and just compare `TypeInner`
-    /// values with `==`.
-    </span><span class="kw">pub fn </span>equivalent(
+    /// When you know that one side of the comparison is never a pointer or
+    /// struct, it's fine to not bother with canonicalization, and just
+    /// compare `TypeInner` values with `==`.
+    ///
+    /// # Panics
+    ///
+    /// If both `self` and `rhs` are structs.
+    ///
+    /// [`compare_types`]: crate::proc::compare_types
+    /// [`ValuePointer`]: ir::TypeInner::ValuePointer
+    /// [`Pointer`]: ir::TypeInner::Pointer
+    </span><span class="kw">pub fn </span>non_struct_equivalent(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        rhs: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner,
+        rhs: <span class="kw-2">&amp;</span>ir::TypeInner,
         types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     ) -&gt; bool {
         <span class="kw">let </span>left = <span class="self">self</span>.canonical_form(types);
         <span class="kw">let </span>right = rhs.canonical_form(types);
+
+        <span class="kw">let </span>left_struct = <span class="macro">matches!</span>(<span class="kw-2">*</span><span class="self">self</span>, ir::TypeInner::Struct { .. });
+        <span class="kw">let </span>right_struct = <span class="macro">matches!</span>(<span class="kw-2">*</span>rhs, ir::TypeInner::Struct { .. });
+
+        <span class="macro">assert!</span>(!left_struct || !right_struct);
+
         left.as_ref().unwrap_or(<span class="self">self</span>) == right.as_ref().unwrap_or(rhs)
     }
 

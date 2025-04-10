@@ -2412,7 +2412,25 @@
 <a href="#2411" id="2411">2411</a>
 <a href="#2412" id="2412">2412</a>
 <a href="#2413" id="2413">2413</a>
-<a href="#2414" id="2414">2414</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 The Intermediate Representation shared by all frontends and backends.
 
 The central structure of the IR, and the crate, is [`Module`]. A `Module` contains:
@@ -3050,6 +3068,15 @@ An override expression can be evaluated at pipeline creation time.
 }
 
 <span class="doccomment">/// Enum with additional information, depending on the kind of type.
+///
+/// Comparison using `==` is not reliable in the case of [`Pointer`],
+/// [`ValuePointer`], or [`Struct`] variants. For these variants,
+/// use [`TypeInner::non_struct_equivalent`] or [`compare_types`].
+///
+/// [`compare_types`]: crate::proc::compare_types
+/// [`ValuePointer`]: TypeInner::ValuePointer
+/// [`Pointer`]: TypeInner::Pointer
+/// [`Struct`]: TypeInner::Struct
 </span><span class="attr">#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = <span class="string">"serialize"</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">"deserialize"</span>, derive(Deserialize))]
@@ -3070,8 +3097,9 @@ An override expression can be evaluated at pipeline creation time.
     <span class="doccomment">/// Pointer to another type.
     ///
     /// Pointers to scalars and vectors should be treated as equivalent to
-    /// [`ValuePointer`] types. Use the [`TypeInner::equivalent`] method to
-    /// compare types in a way that treats pointers correctly.
+    /// [`ValuePointer`] types. Use either [`TypeInner::non_struct_equivalent`]
+    /// or [`compare_types`] to compare types in a way that treats pointers
+    /// correctly.
     ///
     /// ## Pointers to non-`SIZED` types
     ///
@@ -3093,6 +3121,7 @@ An override expression can be evaluated at pipeline creation time.
     /// [`ValuePointer`]: TypeInner::ValuePointer
     /// [`GlobalVariable`]: Expression::GlobalVariable
     /// [`AccessIndex`]: Expression::AccessIndex
+    /// [`compare_types`]: crate::proc::compare_types
     </span>Pointer {
         base: Handle&lt;Type&gt;,
         space: AddressSpace,
@@ -3104,12 +3133,13 @@ An override expression can be evaluated at pipeline creation time.
     /// `Scalar` or `Vector` type. This is for use in [`TypeResolution::Value`]
     /// variants; see the documentation for [`TypeResolution`] for details.
     ///
-    /// Use the [`TypeInner::equivalent`] method to compare types that could be
-    /// pointers, to ensure that `Pointer` and `ValuePointer` types are
-    /// recognized as equivalent.
+    /// Use [`TypeInner::non_struct_equivalent`] or [`compare_types`] to compare
+    /// types that could be pointers, to ensure that `Pointer` and
+    /// `ValuePointer` types are recognized as equivalent.
     ///
     /// [`TypeResolution`]: crate::proc::TypeResolution
     /// [`TypeResolution::Value`]: crate::proc::TypeResolution::Value
+    /// [`compare_types`]: crate::proc::compare_types
     </span>ValuePointer {
         size: <span class="prelude-ty">Option</span>&lt;VectorSize&gt;,
         scalar: Scalar,
@@ -3158,9 +3188,15 @@ An override expression can be evaluated at pipeline creation time.
     /// struct, which may be a dynamically sized [`Array`]. The
     /// `Struct` type itself is `SIZED` when all its members are `SIZED`.
     ///
+    /// Two structure types with different names are not equivalent. Because
+    /// this variant does not contain the name, it is not possible to use it
+    /// to compare struct types. Use [`compare_types`] to compare two types
+    /// that may be structs.
+    ///
     /// [`DATA`]: crate::valid::TypeFlags::DATA
     /// [`SIZED`]: crate::∅TypeFlags::SIZED
     /// [`Array`]: TypeInner::Array
+    /// [`compare_types`]: crate::proc::compare_types
     </span>Struct {
         members: Vec&lt;StructMember&gt;,
         <span class="comment">//TODO: should this be unaligned?

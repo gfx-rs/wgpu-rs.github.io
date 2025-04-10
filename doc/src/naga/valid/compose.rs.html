@@ -117,15 +117,7 @@
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
+<a href="#119" id="119">119</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
 <span class="kw">use </span><span class="kw">crate</span>::proc::TypeResolution;
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
@@ -211,11 +203,7 @@
                 });
             }
             <span class="kw">for </span>(index, comp_res) <span class="kw">in </span>component_resolutions.enumerate() {
-                <span class="kw">let </span>base_inner = <span class="kw-2">&amp;</span>gctx.types[base].inner;
-                <span class="kw">let </span>comp_res_inner = comp_res.inner_with(gctx.types);
-                <span class="comment">// We don't support arrays of pointers, but it seems best not to
-                // embed that assumption here, so use `TypeInner::equivalent`.
-                </span><span class="kw">if </span>!base_inner.equivalent(comp_res_inner, gctx.types) {
+                <span class="kw">if </span>!gctx.compare_types(<span class="kw-2">&amp;</span>TypeResolution::Handle(base), <span class="kw-2">&amp;</span>comp_res) {
                     <span class="macro">log::error!</span>(<span class="string">"Array component[{}] type {:?}"</span>, index, comp_res);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ComposeError::ComponentType {
                         index: index <span class="kw">as </span>u32,
@@ -232,11 +220,7 @@
             }
             <span class="kw">for </span>(index, (member, comp_res)) <span class="kw">in </span>members.iter().zip(component_resolutions).enumerate()
             {
-                <span class="kw">let </span>member_inner = <span class="kw-2">&amp;</span>gctx.types[member.ty].inner;
-                <span class="kw">let </span>comp_res_inner = comp_res.inner_with(gctx.types);
-                <span class="comment">// We don't support pointers in structs, but it seems best not to embed
-                // that assumption here, so use `TypeInner::equivalent`.
-                </span><span class="kw">if </span>!comp_res_inner.equivalent(member_inner, gctx.types) {
+                <span class="kw">if </span>!gctx.compare_types(<span class="kw-2">&amp;</span>TypeResolution::Handle(member.ty), <span class="kw-2">&amp;</span>comp_res) {
                     <span class="macro">log::error!</span>(<span class="string">"Struct component[{}] type {:?}"</span>, index, comp_res);
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ComposeError::ComponentType {
                         index: index <span class="kw">as </span>u32,

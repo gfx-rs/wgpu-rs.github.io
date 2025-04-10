@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ResolveError","TypeResolution"],"struct":["ResolveContext"]};
+window.SIDEBAR_ITEMS = {"enum":["ResolveError","TypeResolution"],"fn":["compare_types"],"struct":["ResolveContext"]};

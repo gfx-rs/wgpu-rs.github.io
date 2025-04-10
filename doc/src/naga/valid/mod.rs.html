@@ -771,11 +771,7 @@
 <a href="#770" id="770">770</a>
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#773" id="773">773</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
 
@@ -1309,9 +1305,7 @@ Shader validator.
             <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantError::InitializerExprType);
         }
 
-        <span class="kw">let </span>decl_ty = <span class="kw-2">&amp;</span>gctx.types[con.ty].inner;
-        <span class="kw">let </span>init_ty = mod_info[con.init].inner_with(gctx.types);
-        <span class="kw">if </span>!decl_ty.equivalent(init_ty, gctx.types) {
+        <span class="kw">if </span>!gctx.compare_types(<span class="kw-2">&amp;</span>TypeResolution::Handle(con.ty), <span class="kw-2">&amp;</span>mod_info[con.init]) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantError::InvalidType);
         }
 
@@ -1337,9 +1331,8 @@ Shader validator.
             <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::NonConstructibleType);
         }
 
-        <span class="kw">let </span>decl_ty = <span class="kw-2">&amp;</span>gctx.types[o.ty].inner;
-        <span class="kw">match </span>decl_ty {
-            <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(
+        <span class="kw">match </span>gctx.types[o.ty].inner {
+            <span class="kw">crate</span>::TypeInner::Scalar(
                 <span class="kw">crate</span>::Scalar::BOOL
                 | <span class="kw">crate</span>::Scalar::I32
                 | <span class="kw">crate</span>::Scalar::U32
@@ -1351,8 +1344,7 @@ Shader validator.
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = o.init {
-            <span class="kw">let </span>init_ty = mod_info[init].inner_with(gctx.types);
-            <span class="kw">if </span>!decl_ty.equivalent(init_ty, gctx.types) {
+            <span class="kw">if </span>!gctx.compare_types(<span class="kw-2">&amp;</span>TypeResolution::Handle(o.ty), <span class="kw-2">&amp;</span>mod_info[init]) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(OverrideError::InvalidType);
             }
         } <span class="kw">else if </span><span class="self">self</span>.overrides_resolved {
