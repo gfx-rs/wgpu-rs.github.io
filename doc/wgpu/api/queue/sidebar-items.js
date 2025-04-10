@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MaintainBase"],"struct":["Queue","QueueWriteBufferView","SubmissionIndex"],"type":["PollType"]};
+window.SIDEBAR_ITEMS = {"struct":["Queue","QueueWriteBufferView","SubmissionIndex"],"type":["PollType"]};
