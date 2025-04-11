@@ -336,14 +336,18 @@
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
 <a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
+    boxed::Box,
     format,
     string::{String, ToString},
     vec::Vec,
 };
 <span class="kw">use </span>core::hash::{Hash, Hasher};
+
 <span class="kw">use </span>hashbrown::HashSet;
+<span class="kw">use </span>once_cell::race::OnceBox;
 
 <span class="kw">use crate</span>::{arena::Handle, FastHashMap, FastHashSet};
 
@@ -384,15 +388,13 @@
     reserved_prefixes: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
 }
 
-<span class="attr">#[cfg(any(wgsl_out, glsl_out, msl_out, hlsl_out, test))]
-</span><span class="kw">impl </span>Default <span class="kw">for </span>Namer {
+<span class="kw">impl </span>Default <span class="kw">for </span>Namer {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">use </span>std::sync::LazyLock;
-        <span class="kw">static </span>DEFAULT_KEYWORDS: LazyLock&lt;HashSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;&gt; = LazyLock::new(HashSet::default);
+        <span class="kw">static </span>DEFAULT_KEYWORDS: OnceBox&lt;HashSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;&gt; = OnceBox::new();
 
         <span class="self">Self </span>{
             unique: Default::default(),
-            keywords: <span class="kw-2">&amp;</span>DEFAULT_KEYWORDS,
+            keywords: DEFAULT_KEYWORDS.get_or_init(|| Box::new(HashSet::default())),
             keywords_case_insensitive: Default::default(),
             reserved_prefixes: Default::default(),
         }
