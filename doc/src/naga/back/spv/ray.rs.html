@@ -581,7 +581,15 @@
 <a href="#580" id="580">580</a>
 <a href="#581" id="581">581</a>
 <a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generating SPIR-V for ray query operations.
 */
 
@@ -599,9 +607,13 @@ Generating SPIR-V for ray query operations.
         is_committed: bool,
         ir_module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
     ) -&gt; spirv::Word {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(func_id) = <span class="self">self</span>.ray_get_intersection_function {
+        <span class="kw">if </span>is_committed {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(func_id) = <span class="self">self</span>.ray_get_committed_intersection_function {
+                <span class="kw">return </span>func_id;
+            }
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(func_id) = <span class="self">self</span>.ray_get_candidate_intersection_function {
             <span class="kw">return </span>func_id;
-        }
+        };
         <span class="kw">let </span>ray_intersection = ir_module.special_types.ray_intersection.unwrap();
         <span class="kw">let </span>intersection_type_id = <span class="self">self</span>.get_handle_type_id(ray_intersection);
         <span class="kw">let </span>intersection_pointer_type_id =
@@ -1020,7 +1032,11 @@ Generating SPIR-V for ray query operations.
         );
 
         function.to_words(<span class="kw-2">&amp;mut </span><span class="self">self</span>.logical_layout.function_definitions);
-        <span class="self">self</span>.ray_get_intersection_function = <span class="prelude-val">Some</span>(func_id);
+        <span class="kw">if </span>is_committed {
+            <span class="self">self</span>.ray_get_committed_intersection_function = <span class="prelude-val">Some</span>(func_id);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.ray_get_candidate_intersection_function = <span class="prelude-val">Some</span>(func_id);
+        }
         func_id
     }
 }
