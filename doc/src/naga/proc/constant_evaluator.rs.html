@@ -3405,7 +3405,47 @@
 <a href="#3404" id="3404">3404</a>
 <a href="#3405" id="3405">3405</a>
 <a href="#3406" id="3406">3406</a>
-<a href="#3407" id="3407">3407</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
+<a href="#3414" id="3414">3414</a>
+<a href="#3415" id="3415">3415</a>
+<a href="#3416" id="3416">3416</a>
+<a href="#3417" id="3417">3417</a>
+<a href="#3418" id="3418">3418</a>
+<a href="#3419" id="3419">3419</a>
+<a href="#3420" id="3420">3420</a>
+<a href="#3421" id="3421">3421</a>
+<a href="#3422" id="3422">3422</a>
+<a href="#3423" id="3423">3423</a>
+<a href="#3424" id="3424">3424</a>
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
+<a href="#3429" id="3429">3429</a>
+<a href="#3430" id="3430">3430</a>
+<a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a>
+<a href="#3434" id="3434">3434</a>
+<a href="#3435" id="3435">3435</a>
+<a href="#3436" id="3436">3436</a>
+<a href="#3437" id="3437">3437</a>
+<a href="#3438" id="3438">3438</a>
+<a href="#3439" id="3439">3439</a>
+<a href="#3440" id="3440">3440</a>
+<a href="#3441" id="3441">3441</a>
+<a href="#3442" id="3442">3442</a>
+<a href="#3443" id="3443">3443</a>
+<a href="#3444" id="3444">3444</a>
+<a href="#3445" id="3445">3445</a>
+<a href="#3446" id="3446">3446</a>
+<a href="#3447" id="3447">3447</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -4713,7 +4753,13 @@
             }
 
             <span class="comment">// vector
-            </span><span class="kw">crate</span>::MathFunction::Cross =&gt; <span class="self">self</span>.cross_product(arg, arg1.unwrap(), span),
+            </span><span class="kw">crate</span>::MathFunction::Dot4I8Packed =&gt; {
+                <span class="self">self</span>.packed_dot_product(arg, arg1.unwrap(), span, <span class="bool-val">true</span>)
+            }
+            <span class="kw">crate</span>::MathFunction::Dot4U8Packed =&gt; {
+                <span class="self">self</span>.packed_dot_product(arg, arg1.unwrap(), span, <span class="bool-val">false</span>)
+            }
+            <span class="kw">crate</span>::MathFunction::Cross =&gt; <span class="self">self</span>.cross_product(arg, arg1.unwrap(), span),
 
             <span class="comment">// unimplemented
             </span><span class="kw">crate</span>::MathFunction::Atan2
@@ -4753,6 +4799,40 @@
                 <span class="macro">format!</span>(<span class="string">"{fun:?} built-in function"</span>),
             )),
         }
+    }
+
+    <span class="doccomment">/// Dot product of two packed vectors (`dot4I8Packed` and `dot4U8Packed`)
+    </span><span class="kw">fn </span>packed_dot_product(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: Handle&lt;Expression&gt;,
+        b: Handle&lt;Expression&gt;,
+        span: Span,
+        signed: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
+        <span class="kw">let </span>Expression::Literal(Literal::U32(a)) = <span class="self">self</span>.expressions[a] <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidMathArg);
+        };
+        <span class="kw">let </span>Expression::Literal(Literal::U32(b)) = <span class="self">self</span>.expressions[b] <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidMathArg);
+        };
+
+        <span class="kw">let </span>result = <span class="kw">if </span>signed {
+            Literal::I32(
+                (a &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32 * (b &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32
+                    + ((a &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32 * ((b &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32
+                    + ((a &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32 * ((b &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32
+                    + ((a &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32 * ((b &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0xFF</span>) <span class="kw">as </span>i8 <span class="kw">as </span>i32,
+            )
+        } <span class="kw">else </span>{
+            Literal::U32(
+                (a &amp; <span class="number">0xFF</span>) * (b &amp; <span class="number">0xFF</span>)
+                    + ((a &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) * ((b &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>)
+                    + ((a &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) * ((b &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>)
+                    + ((a &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0xFF</span>) * ((b &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0xFF</span>),
+            )
+        };
+
+        <span class="self">self</span>.register_evaluated_expr(Expression::Literal(result), span)
     }
 
     <span class="doccomment">/// Vector cross product.

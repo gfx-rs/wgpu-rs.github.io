@@ -4310,7 +4310,46 @@
 <a href="#4309" id="4309">4309</a>
 <a href="#4310" id="4310">4310</a>
 <a href="#4311" id="4311">4311</a>
-<a href="#4312" id="4312">4312</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#4312" id="4312">4312</a>
+<a href="#4313" id="4313">4313</a>
+<a href="#4314" id="4314">4314</a>
+<a href="#4315" id="4315">4315</a>
+<a href="#4316" id="4316">4316</a>
+<a href="#4317" id="4317">4317</a>
+<a href="#4318" id="4318">4318</a>
+<a href="#4319" id="4319">4319</a>
+<a href="#4320" id="4320">4320</a>
+<a href="#4321" id="4321">4321</a>
+<a href="#4322" id="4322">4322</a>
+<a href="#4323" id="4323">4323</a>
+<a href="#4324" id="4324">4324</a>
+<a href="#4325" id="4325">4325</a>
+<a href="#4326" id="4326">4326</a>
+<a href="#4327" id="4327">4327</a>
+<a href="#4328" id="4328">4328</a>
+<a href="#4329" id="4329">4329</a>
+<a href="#4330" id="4330">4330</a>
+<a href="#4331" id="4331">4331</a>
+<a href="#4332" id="4332">4332</a>
+<a href="#4333" id="4333">4333</a>
+<a href="#4334" id="4334">4334</a>
+<a href="#4335" id="4335">4335</a>
+<a href="#4336" id="4336">4336</a>
+<a href="#4337" id="4337">4337</a>
+<a href="#4338" id="4338">4338</a>
+<a href="#4339" id="4339">4339</a>
+<a href="#4340" id="4340">4340</a>
+<a href="#4341" id="4341">4341</a>
+<a href="#4342" id="4342">4342</a>
+<a href="#4343" id="4343">4343</a>
+<a href="#4344" id="4344">4344</a>
+<a href="#4345" id="4345">4345</a>
+<a href="#4346" id="4346">4346</a>
+<a href="#4347" id="4347">4347</a>
+<a href="#4348" id="4348">4348</a>
+<a href="#4349" id="4349">4349</a>
+<a href="#4350" id="4350">4350</a>
+<a href="#4351" id="4351">4351</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
@@ -4518,7 +4557,7 @@
                 <span class="self">self</span>.need_bake_expressions.insert(exp_handle);
             }
 
-            <span class="kw">if let </span>Expression::Math { fun, arg, .. } = <span class="kw-2">*</span>expr {
+            <span class="kw">if let </span>Expression::Math { fun, arg, arg1, .. } = <span class="kw-2">*</span>expr {
                 <span class="kw">match </span>fun {
                     <span class="kw">crate</span>::MathFunction::Asinh
                     | <span class="kw">crate</span>::MathFunction::Acosh
@@ -4544,6 +4583,10 @@
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(ScalarKind::Sint) = inner.scalar_kind() {
                             <span class="self">self</span>.need_bake_expressions.insert(arg);
                         }
+                    }
+                    <span class="kw">crate</span>::MathFunction::Dot4U8Packed | <span class="kw">crate</span>::MathFunction::Dot4I8Packed =&gt; {
+                        <span class="self">self</span>.need_bake_expressions.insert(arg);
+                        <span class="self">self</span>.need_bake_expressions.insert(arg1.unwrap());
                     }
                     <span class="kw">_ </span>=&gt; {}
                 }
@@ -7745,6 +7788,8 @@
                     Unpack4x8unorm,
                     Unpack4xI8,
                     Unpack4xU8,
+                    Dot4I8Packed,
+                    Dot4U8Packed,
                     QuantizeToF16,
                     Regular(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
                     MissingIntOverload(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
@@ -7796,6 +7841,8 @@
                     Mf::Pow =&gt; Function::Regular(<span class="string">"pow"</span>),
                     <span class="comment">// geometry
                     </span>Mf::Dot =&gt; Function::Regular(<span class="string">"dot"</span>),
+                    Mf::Dot4I8Packed =&gt; Function::Dot4I8Packed,
+                    Mf::Dot4U8Packed =&gt; Function::Dot4U8Packed,
                     <span class="comment">//Mf::Outer =&gt; ,
                     </span>Mf::Cross =&gt; Function::Regular(<span class="string">"cross"</span>),
                     Mf::Distance =&gt; Function::Regular(<span class="string">"distance"</span>),
@@ -8016,6 +8063,37 @@
                         <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
+                    }
+                    fun @ (Function::Dot4I8Packed | Function::Dot4U8Packed) =&gt; {
+                        <span class="kw">let </span>arg1 = arg1.unwrap();
+
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"dot("</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24, "</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span><span class="macro">matches!</span>(fun, Function::Dot4U8Packed) {
+                            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"u"</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"int4("</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 8, "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 16, "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.write_expr(module, arg1, func_ctx)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" &gt;&gt; 24) &lt;&lt; 24 &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
                     }
                     Function::QuantizeToF16 =&gt; {

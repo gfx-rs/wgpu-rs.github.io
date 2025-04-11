@@ -7073,7 +7073,39 @@
 <a href="#7072" id="7072">7072</a>
 <a href="#7073" id="7073">7073</a>
 <a href="#7074" id="7074">7074</a>
-<a href="#7075" id="7075">7075</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7075" id="7075">7075</a>
+<a href="#7076" id="7076">7076</a>
+<a href="#7077" id="7077">7077</a>
+<a href="#7078" id="7078">7078</a>
+<a href="#7079" id="7079">7079</a>
+<a href="#7080" id="7080">7080</a>
+<a href="#7081" id="7081">7081</a>
+<a href="#7082" id="7082">7082</a>
+<a href="#7083" id="7083">7083</a>
+<a href="#7084" id="7084">7084</a>
+<a href="#7085" id="7085">7085</a>
+<a href="#7086" id="7086">7086</a>
+<a href="#7087" id="7087">7087</a>
+<a href="#7088" id="7088">7088</a>
+<a href="#7089" id="7089">7089</a>
+<a href="#7090" id="7090">7090</a>
+<a href="#7091" id="7091">7091</a>
+<a href="#7092" id="7092">7092</a>
+<a href="#7093" id="7093">7093</a>
+<a href="#7094" id="7094">7094</a>
+<a href="#7095" id="7095">7095</a>
+<a href="#7096" id="7096">7096</a>
+<a href="#7097" id="7097">7097</a>
+<a href="#7098" id="7098">7098</a>
+<a href="#7099" id="7099">7099</a>
+<a href="#7100" id="7100">7100</a>
+<a href="#7101" id="7101">7101</a>
+<a href="#7102" id="7102">7102</a>
+<a href="#7103" id="7103">7103</a>
+<a href="#7104" id="7104">7104</a>
+<a href="#7105" id="7105">7105</a>
+<a href="#7106" id="7106">7106</a>
+<a href="#7107" id="7107">7107</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -8545,12 +8577,14 @@
 
     <span class="doccomment">/// Emit code for the arithmetic expression of the dot product.
     ///
+    /// The argument `extractor` is a function that accepts a `Writer`, a handle to a vector,
+    /// and an index. writes out the expression for the component at that index.
     </span><span class="kw">fn </span>put_dot_product(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         arg: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         arg1: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
         size: usize,
-        context: <span class="kw-2">&amp;</span>ExpressionContext,
+        extractor: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span><span class="self">Self</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;, usize) -&gt; BackendResult,
     ) -&gt; BackendResult {
         <span class="comment">// Write parentheses around the dot product expression to prevent operators
         // with different precedences from applying earlier.
@@ -8558,22 +8592,12 @@
 
         <span class="comment">// Cycle through all the components of the vector
         </span><span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..size {
-            <span class="kw">let </span>component = back::COMPONENTS[index];
             <span class="comment">// Write the addition to the previous product
             // This will print an extra '+' at the beginning but that is fine in msl
             </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" + "</span>)<span class="question-mark">?</span>;
-            <span class="comment">// Write the first vector expression, this expression is marked to be
-            // cached so unless it can't be cached (for example, it's a Constant)
-            // it shouldn't produce large expressions.
-            </span><span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-            <span class="comment">// Access the current component on the first vector
-            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".{component} * "</span>)<span class="question-mark">?</span>;
-            <span class="comment">// Write the second vector expression, this expression is marked to be
-            // cached so unless it can't be cached (for example, it's a Constant)
-            // it shouldn't produce large expressions.
-            </span><span class="self">self</span>.put_expression(arg1, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-            <span class="comment">// Access the current component on the second vector
-            </span><span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">".{component}"</span>)<span class="question-mark">?</span>;
+            extractor(<span class="self">self</span>, arg, index)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">" * "</span>)<span class="question-mark">?</span>;
+            extractor(<span class="self">self</span>, arg1, index)<span class="question-mark">?</span>;
         }
 
         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -9269,12 +9293,48 @@
                             ..
                         } =&gt; <span class="string">"dot"</span>,
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
-                            <span class="kw">return </span><span class="self">self</span>.put_dot_product(arg, arg1.unwrap(), size <span class="kw">as </span>usize, context)
+                            <span class="kw">return </span><span class="self">self</span>.put_dot_product(
+                                arg,
+                                arg1.unwrap(),
+                                size <span class="kw">as </span>usize,
+                                |writer, arg, index| {
+                                    <span class="comment">// Write the vector expression; this expression is marked to be
+                                    // cached so unless it can't be cached (for example, it's a Constant)
+                                    // it shouldn't produce large expressions.
+                                    </span>writer.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                    <span class="comment">// Access the current component on the vector.
+                                    </span><span class="macro">write!</span>(writer.out, <span class="string">".{}"</span>, back::COMPONENTS[index])<span class="question-mark">?</span>;
+                                    <span class="prelude-val">Ok</span>(())
+                                },
+                            );
                         }
                         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(
                             <span class="string">"Correct TypeInner for dot product should be already validated"
                         </span>),
                     },
+                    fun @ (Mf::Dot4I8Packed | Mf::Dot4U8Packed) =&gt; {
+                        <span class="kw">let </span>conversion = <span class="kw">match </span>fun {
+                            Mf::Dot4I8Packed =&gt; <span class="string">"int"</span>,
+                            Mf::Dot4U8Packed =&gt; <span class="string">""</span>,
+                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                        };
+
+                        <span class="kw">return </span><span class="self">self</span>.put_dot_product(
+                            arg,
+                            arg1.unwrap(),
+                            <span class="number">4</span>,
+                            |writer, arg, index| {
+                                <span class="macro">write!</span>(writer.out, <span class="string">"({}("</span>, conversion)<span class="question-mark">?</span>;
+                                writer.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="kw">if </span>index == <span class="number">3 </span>{
+                                    <span class="macro">write!</span>(writer.out, <span class="string">") &gt;&gt; 24)"</span>)<span class="question-mark">?</span>;
+                                } <span class="kw">else </span>{
+                                    <span class="macro">write!</span>(writer.out, <span class="string">") &lt;&lt; {} &gt;&gt; 24)"</span>, (<span class="number">3 </span>- index) * <span class="number">8</span>)<span class="question-mark">?</span>;
+                                }
+                                <span class="prelude-val">Ok</span>(())
+                            },
+                        );
+                    }
                     Mf::Outer =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnsupportedCall(<span class="macro">format!</span>(<span class="string">"{fun:?}"</span>))),
                     Mf::Cross =&gt; <span class="string">"cross"</span>,
                     Mf::Distance =&gt; <span class="string">"distance"</span>,
@@ -10251,6 +10311,10 @@
                                 <span class="kw">_ </span>=&gt; {}
                             }
                         }
+                    }
+                    <span class="kw">crate</span>::MathFunction::Dot4U8Packed | <span class="kw">crate</span>::MathFunction::Dot4I8Packed =&gt; {
+                        <span class="self">self</span>.need_bake_expressions.insert(arg);
+                        <span class="self">self</span>.need_bake_expressions.insert(arg1.unwrap());
                     }
                     <span class="kw">crate</span>::MathFunction::FirstLeadingBit
                     | <span class="kw">crate</span>::MathFunction::Pack4xI8
