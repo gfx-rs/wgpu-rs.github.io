@@ -103,7 +103,8 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::DeviceError,
     pipeline::{CreateComputePipelineError, CreateShaderModuleError},
 };
@@ -138,6 +139,7 @@
         device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice,
         required_limits: <span class="kw-2">&amp;</span>wgt::Limits,
         required_features: <span class="kw-2">&amp;</span>wgt::Features,
+        backend: wgt::Backend,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DeviceError&gt; {
         <span class="kw">let </span>dispatch = <span class="kw">match </span>Dispatch::new(device, required_limits) {
             <span class="prelude-val">Ok</span>(dispatch) =&gt; dispatch,
@@ -146,7 +148,7 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost);
             }
         };
-        <span class="kw">let </span>draw = <span class="kw">match </span>Draw::new(device, required_features) {
+        <span class="kw">let </span>draw = <span class="kw">match </span>Draw::new(device, required_features, backend) {
             <span class="prelude-val">Ok</span>(draw) =&gt; draw,
             <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">"indirect-draw-validation error: {e:?}"</span>);

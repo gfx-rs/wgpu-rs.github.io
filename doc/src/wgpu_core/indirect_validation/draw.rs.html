@@ -959,7 +959,23 @@
 <a href="#958" id="958">958</a>
 <a href="#959" id="959">959</a>
 <a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     utils::{BufferBarrierScratch, BufferBarriers, UniqueIndexExt <span class="kw">as _</span>, UniqueIndexScratch},
     CreateIndirectValidationPipelineError,
 };
@@ -1023,6 +1039,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(
         device: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynDevice,
         required_features: <span class="kw-2">&amp;</span>wgt::Features,
+        backend: wgt::Backend,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CreateIndirectValidationPipelineError&gt; {
         <span class="kw">let </span>module = create_validation_module(device)<span class="question-mark">?</span>;
 
@@ -1053,11 +1070,13 @@
 
         <span class="kw">let </span>supports_indirect_first_instance =
             required_features.contains(wgt::Features::INDIRECT_FIRST_INSTANCE);
+        <span class="kw">let </span>write_d3d12_special_constants = backend == wgt::Backend::Dx12;
         <span class="kw">let </span>pipeline = create_validation_pipeline(
             device,
             module.as_ref(),
             pipeline_layout.as_ref(),
             supports_indirect_first_instance,
+            write_d3d12_special_constants,
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
@@ -1484,6 +1503,7 @@
     module: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynShaderModule,
     pipeline_layout: <span class="kw-2">&amp;</span><span class="kw">dyn </span>hal::DynPipelineLayout,
     supports_indirect_first_instance: bool,
+    write_d3d12_special_constants: bool,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>hal::DynComputePipeline&gt;, CreateIndirectValidationPipelineError&gt; {
     <span class="kw">let </span>pipeline_desc = hal::ComputePipelineDescriptor {
         label: <span class="prelude-val">None</span>,
@@ -1491,10 +1511,16 @@
         stage: hal::ProgrammableStage {
             module,
             entry_point: <span class="string">"main"</span>,
-            constants: <span class="kw-2">&amp;</span>hashbrown::HashMap::from([(
-                <span class="string">"supports_indirect_first_instance"</span>.to_string(),
-                f64::from(supports_indirect_first_instance),
-            )]),
+            constants: <span class="kw-2">&amp;</span>hashbrown::HashMap::from([
+                (
+                    <span class="string">"supports_indirect_first_instance"</span>.to_string(),
+                    f64::from(supports_indirect_first_instance),
+                ),
+                (
+                    <span class="string">"write_d3d12_special_constants"</span>.to_string(),
+                    f64::from(write_d3d12_special_constants),
+                ),
+            ]),
             zero_initialize_workgroup_memory: <span class="bool-val">false</span>,
         },
         cache: <span class="prelude-val">None</span>,
@@ -1874,7 +1900,13 @@
         vertex_or_index_limit: u64,
         instance_limit: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, u64), DeviceError&gt; {
-        <span class="kw">let </span>stride = <span class="kw">crate</span>::command::get_stride_of_indirect_args(indexed);
+        <span class="comment">// space for D3D12 special constants
+        </span><span class="kw">let </span>extra = <span class="kw">if </span>device.backend() == wgt::Backend::Dx12 {
+            <span class="number">3 </span>* size_of::&lt;u32&gt;() <span class="kw">as </span>u64
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="kw">let </span>stride = extra + <span class="kw">crate</span>::command::get_stride_of_indirect_args(indexed);
 
         <span class="kw">let </span>(dst_resource_index, dst_offset) = indirect_draw_validation_resources
             .get_dst_subrange(stride, <span class="kw-2">&amp;mut </span><span class="self">self</span>.current_dst_entry)<span class="question-mark">?</span>;

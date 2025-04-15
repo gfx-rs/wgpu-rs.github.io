@@ -564,7 +564,27 @@
 <a href="#563" id="563">563</a>
 <a href="#564" id="564">564</a>
 <a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
 
 </span><span class="kw">use </span>alloc::string::String;
 
@@ -666,6 +686,26 @@
         </span><span class="kw">const </span>GPU_BASED_VALIDATION = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
 
         <span class="doccomment">/// Validate indirect buffer content prior to issuing indirect draws/dispatches.
+        ///
+        /// This validation will transform indirect calls into no-ops if they are not valid:
+        ///
+        /// - When calling `dispatch_workgroups_indirect`, all 3 indirect arguments encoded in the buffer
+        /// must be less than the `max_compute_workgroups_per_dimension` device limit.
+        /// - When calling `draw_indirect`/`draw_indexed_indirect`/`multi_draw_indirect`/`multi_draw_indexed_indirect`:
+        ///   - If `Features::INDIRECT_FIRST_INSTANCE` is not enabled on the device, the `first_instance` indirect argument must be 0.
+        ///   - The `first_instance` &amp; `instance_count` indirect arguments must form a range that fits within all bound vertex buffers with `step_mode` set to `Instance`.
+        /// - When calling `draw_indirect`/`multi_draw_indirect`:
+        ///   - The `first_vertex` &amp; `vertex_count` indirect arguments must form a range that fits within all bound vertex buffers with `step_mode` set to `Vertex`.
+        /// - When calling `draw_indexed_indirect`/`multi_draw_indexed_indirect`:
+        ///   - The `first_index` &amp; `index_count` indirect arguments must form a range that fits within the bound index buffer.
+        ///
+        /// __Behavior is undefined if this validation is disabled and the rules above are not satisfied.__
+        ///
+        /// Disabling this will also cause the following built-ins to not report the right values on the D3D12 backend:
+        ///
+        /// - the 3 components of `@builtin(num_workgroups)` will be 0
+        /// - the value of `@builtin(vertex_index)` will not take into account the value of the `first_vertex`/`base_vertex` argument present in the indirect buffer
+        /// - the value of `@builtin(instance_index)` will not take into account the value of the `first_instance` argument present in the indirect buffer
         ///
         /// When `Self::from_env()` is used takes value from `WGPU_VALIDATION_INDIRECT_CALL` environment variable.
         </span><span class="kw">const </span>VALIDATION_INDIRECT_CALL = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
