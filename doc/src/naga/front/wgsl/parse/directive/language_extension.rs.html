@@ -96,9 +96,7 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a></pre></div><pre class="rust"><code><span class="doccomment">//! `requires …;` extensions in WGSL.
+<a href="#98" id="98">98</a></pre></div><pre class="rust"><code><span class="doccomment">//! `requires …;` extensions in WGSL.
 //!
 //! The focal point of this module is the [`LanguageExtension`] API.
 
@@ -124,11 +122,11 @@
     <span class="doccomment">/// Convert from a sentinel word in WGSL into its associated [`LanguageExtension`], if possible.
     </span><span class="kw">pub fn </span>from_ident(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">match </span>s {
-            <span class="self">Self</span>::READONLY_AND_READWRITE_STORAGE_TEXTURES =&gt; <span class="self">Self</span>::Unimplemented(
-                UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures,
-            ),
+            <span class="self">Self</span>::READONLY_AND_READWRITE_STORAGE_TEXTURES =&gt; {
+                <span class="self">Self</span>::Implemented(ImplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures)
+            }
             <span class="self">Self</span>::PACKED4X8_INTEGER_DOT_PRODUCT =&gt; {
-                <span class="self">Self</span>::Unimplemented(UnimplementedLanguageExtension::Packed4x8IntegerDotProduct)
+                <span class="self">Self</span>::Implemented(ImplementedLanguageExtension::Packed4x8IntegerDotProduct)
             }
             <span class="self">Self</span>::UNRESTRICTED_POINTER_PARAMETERS =&gt; {
                 <span class="self">Self</span>::Unimplemented(UnimplementedLanguageExtension::UnrestrictedPointerParameters)
@@ -145,12 +143,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Implemented(kind) =&gt; kind.to_ident(),
             <span class="self">Self</span>::Unimplemented(kind) =&gt; <span class="kw">match </span>kind {
-                UnimplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures =&gt; {
-                    <span class="self">Self</span>::READONLY_AND_READWRITE_STORAGE_TEXTURES
-                }
-                UnimplementedLanguageExtension::Packed4x8IntegerDotProduct =&gt; {
-                    <span class="self">Self</span>::PACKED4X8_INTEGER_DOT_PRODUCT
-                }
                 UnimplementedLanguageExtension::UnrestrictedPointerParameters =&gt; {
                     <span class="self">Self</span>::UNRESTRICTED_POINTER_PARAMETERS
                 }
@@ -162,6 +154,8 @@
 <span class="doccomment">/// A variant of [`LanguageExtension::Implemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, VariantArray)]
 </span><span class="kw">pub enum </span>ImplementedLanguageExtension {
+    ReadOnlyAndReadWriteStorageTextures,
+    Packed4x8IntegerDotProduct,
     PointerCompositeAccess,
 }
 
@@ -174,6 +168,12 @@
     <span class="doccomment">/// Maps this [`ImplementedLanguageExtension`] into the sentinel word associated with it in WGSL.
     </span><span class="kw">pub const fn </span>to_ident(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
+            ImplementedLanguageExtension::ReadOnlyAndReadWriteStorageTextures =&gt; {
+                LanguageExtension::READONLY_AND_READWRITE_STORAGE_TEXTURES
+            }
+            ImplementedLanguageExtension::Packed4x8IntegerDotProduct =&gt; {
+                LanguageExtension::PACKED4X8_INTEGER_DOT_PRODUCT
+            }
             ImplementedLanguageExtension::PointerCompositeAccess =&gt; {
                 LanguageExtension::POINTER_COMPOSITE_ACCESS
             }
@@ -184,16 +184,12 @@
 <span class="doccomment">/// A variant of [`LanguageExtension::Unimplemented`].
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 </span><span class="kw">pub enum </span>UnimplementedLanguageExtension {
-    ReadOnlyAndReadWriteStorageTextures,
-    Packed4x8IntegerDotProduct,
     UnrestrictedPointerParameters,
 }
 
 <span class="kw">impl </span>UnimplementedLanguageExtension {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>tracking_issue_num(<span class="self">self</span>) -&gt; u16 {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::ReadOnlyAndReadWriteStorageTextures =&gt; <span class="number">6204</span>,
-            <span class="self">Self</span>::Packed4x8IntegerDotProduct =&gt; <span class="number">6445</span>,
             <span class="self">Self</span>::UnrestrictedPointerParameters =&gt; <span class="number">5158</span>,
         }
     }
