@@ -3455,7 +3455,36 @@
 <a href="#3454" id="3454">3454</a>
 <a href="#3455" id="3455">3455</a>
 <a href="#3456" id="3456">3456</a>
-<a href="#3457" id="3457">3457</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#3457" id="3457">3457</a>
+<a href="#3458" id="3458">3458</a>
+<a href="#3459" id="3459">3459</a>
+<a href="#3460" id="3460">3460</a>
+<a href="#3461" id="3461">3461</a>
+<a href="#3462" id="3462">3462</a>
+<a href="#3463" id="3463">3463</a>
+<a href="#3464" id="3464">3464</a>
+<a href="#3465" id="3465">3465</a>
+<a href="#3466" id="3466">3466</a>
+<a href="#3467" id="3467">3467</a>
+<a href="#3468" id="3468">3468</a>
+<a href="#3469" id="3469">3469</a>
+<a href="#3470" id="3470">3470</a>
+<a href="#3471" id="3471">3471</a>
+<a href="#3472" id="3472">3472</a>
+<a href="#3473" id="3473">3473</a>
+<a href="#3474" id="3474">3474</a>
+<a href="#3475" id="3475">3475</a>
+<a href="#3476" id="3476">3476</a>
+<a href="#3477" id="3477">3477</a>
+<a href="#3478" id="3478">3478</a>
+<a href="#3479" id="3479">3479</a>
+<a href="#3480" id="3480">3480</a>
+<a href="#3481" id="3481">3481</a>
+<a href="#3482" id="3482">3482</a>
+<a href="#3483" id="3483">3483</a>
+<a href="#3484" id="3484">3484</a>
+<a href="#3485" id="3485">3485</a>
+<a href="#3486" id="3486">3486</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
 
@@ -4974,12 +5003,13 @@ Implementations for `BlockContext` methods.
                     Mf::Pack2x16float =&gt; MathOp::Ext(spirv::GLOp::PackHalf2x16),
                     Mf::Pack2x16unorm =&gt; MathOp::Ext(spirv::GLOp::PackUnorm2x16),
                     Mf::Pack2x16snorm =&gt; MathOp::Ext(spirv::GLOp::PackSnorm2x16),
-                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8) =&gt; {
+                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8 | Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp) =&gt; {
                         <span class="kw">let </span>(int_type, is_signed) = <span class="kw">match </span>fun {
-                            Mf::Pack4xI8 =&gt; (<span class="kw">crate</span>::ScalarKind::Sint, <span class="bool-val">true</span>),
-                            Mf::Pack4xU8 =&gt; (<span class="kw">crate</span>::ScalarKind::Uint, <span class="bool-val">false</span>),
+                            Mf::Pack4xI8 | Mf::Pack4xI8Clamp =&gt; (<span class="kw">crate</span>::ScalarKind::Sint, <span class="bool-val">true</span>),
+                            Mf::Pack4xU8 | Mf::Pack4xU8Clamp =&gt; (<span class="kw">crate</span>::ScalarKind::Uint, <span class="bool-val">false</span>),
                             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                         };
+                        <span class="kw">let </span>should_clamp = <span class="macro">matches!</span>(fun, Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp);
                         <span class="kw">let </span>uint_type_id =
                             <span class="self">self</span>.get_numeric_type_id(NumericType::Scalar(<span class="kw">crate</span>::Scalar::U32));
 
@@ -5019,6 +5049,34 @@ Implementations for `BlockContext` methods.
                                     extracted,
                                 ));
                                 extracted = casted;
+                            }
+                            <span class="kw">if </span>should_clamp {
+                                <span class="kw">let </span>(min, max, clamp_op) = <span class="kw">if </span>is_signed {
+                                    (
+                                        <span class="kw">crate</span>::Literal::I32(-<span class="number">128</span>),
+                                        <span class="kw">crate</span>::Literal::I32(<span class="number">127</span>),
+                                        spirv::GLOp::SClamp,
+                                    )
+                                } <span class="kw">else </span>{
+                                    (
+                                        <span class="kw">crate</span>::Literal::U32(<span class="number">0</span>),
+                                        <span class="kw">crate</span>::Literal::U32(<span class="number">255</span>),
+                                        spirv::GLOp::UClamp,
+                                    )
+                                };
+                                <span class="kw">let </span>[min, max] =
+                                    [min, max].map(|lit| <span class="self">self</span>.writer.get_constant_scalar(lit));
+
+                                <span class="kw">let </span>clamp_id = <span class="self">self</span>.gen_id();
+                                block.body.push(Instruction::ext_inst(
+                                    <span class="self">self</span>.writer.gl450_ext_inst_id,
+                                    clamp_op,
+                                    result_type_id,
+                                    clamp_id,
+                                    <span class="kw-2">&amp;</span>[extracted, min, max],
+                                ));
+
+                                extracted = clamp_id;
                             }
                             <span class="kw">let </span>is_last = i == u32::from(VEC_LENGTH - <span class="number">1</span>);
                             <span class="kw">if </span>is_last {

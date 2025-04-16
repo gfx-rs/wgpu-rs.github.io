@@ -5222,7 +5222,20 @@
 <a href="#5221" id="5221">5221</a>
 <a href="#5222" id="5222">5222</a>
 <a href="#5223" id="5223">5223</a>
-<a href="#5224" id="5224">5224</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#5224" id="5224">5224</a>
+<a href="#5225" id="5225">5225</a>
+<a href="#5226" id="5226">5226</a>
+<a href="#5227" id="5227">5227</a>
+<a href="#5228" id="5228">5228</a>
+<a href="#5229" id="5229">5229</a>
+<a href="#5230" id="5230">5230</a>
+<a href="#5231" id="5231">5231</a>
+<a href="#5232" id="5232">5232</a>
+<a href="#5233" id="5233">5233</a>
+<a href="#5234" id="5234">5234</a>
+<a href="#5235" id="5235">5235</a>
+<a href="#5236" id="5236">5236</a>
+<a href="#5237" id="5237">5237</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
 The main structure is [`Writer`], it maintains internal state that is used
@@ -6616,6 +6629,8 @@ to output a [`Module`](crate::Module) into glsl
                     }
                     <span class="kw">crate</span>::MathFunction::Pack4xI8
                     | <span class="kw">crate</span>::MathFunction::Pack4xU8
+                    | <span class="kw">crate</span>::MathFunction::Pack4xI8Clamp
+                    | <span class="kw">crate</span>::MathFunction::Pack4xU8Clamp
                     | <span class="kw">crate</span>::MathFunction::Unpack4xI8
                     | <span class="kw">crate</span>::MathFunction::Unpack4xU8
                     | <span class="kw">crate</span>::MathFunction::QuantizeToF16 =&gt; {
@@ -9103,24 +9118,35 @@ to output a [`Module`](crate::Module) into glsl
                         }
                     }
 
-                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8) =&gt; {
-                        <span class="kw">let </span>was_signed = <span class="kw">match </span>fun {
-                            Mf::Pack4xI8 =&gt; <span class="bool-val">true</span>,
-                            Mf::Pack4xU8 =&gt; <span class="bool-val">false</span>,
-                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8 | Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp) =&gt; {
+                        <span class="kw">let </span>was_signed = <span class="macro">matches!</span>(fun, Mf::Pack4xI8 | Mf::Pack4xI8Clamp);
+                        <span class="kw">let </span>clamp_bounds = <span class="kw">match </span>fun {
+                            Mf::Pack4xI8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"-128"</span>, <span class="string">"127"</span>)),
+                            Mf::Pack4xU8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"0"</span>, <span class="string">"255"</span>)),
+                            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                         };
                         <span class="kw">let </span>const_suffix = <span class="kw">if </span>was_signed { <span class="string">"" </span>} <span class="kw">else </span>{ <span class="string">"u" </span>};
                         <span class="kw">if </span>was_signed {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
                         }
+                        <span class="kw">let </span>write_arg = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>| -&gt; BackendResult {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>((min, max)) = clamp_bounds {
+                                <span class="macro">write!</span>(this.out, <span class="string">"clamp("</span>)<span class="question-mark">?</span>;
+                                this.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(this.out, <span class="string">", {min}{const_suffix}, {max}{const_suffix})"</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                this.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                            }
+                            <span class="prelude-val">Ok</span>(())
+                        };
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[0] &amp; 0xFF{const_suffix}) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[1] &amp; 0xFF{const_suffix}) &lt;&lt; 8) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[2] &amp; 0xFF{const_suffix}) &lt;&lt; 16) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.write_expr(arg, ctx)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[3] &amp; 0xFF{const_suffix}) &lt;&lt; 24)"</span>)<span class="question-mark">?</span>;
                         <span class="kw">if </span>was_signed {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;

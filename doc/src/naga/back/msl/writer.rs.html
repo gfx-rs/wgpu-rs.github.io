@@ -7105,7 +7105,26 @@
 <a href="#7104" id="7104">7104</a>
 <a href="#7105" id="7105">7105</a>
 <a href="#7106" id="7106">7106</a>
-<a href="#7107" id="7107">7107</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#7107" id="7107">7107</a>
+<a href="#7108" id="7108">7108</a>
+<a href="#7109" id="7109">7109</a>
+<a href="#7110" id="7110">7110</a>
+<a href="#7111" id="7111">7111</a>
+<a href="#7112" id="7112">7112</a>
+<a href="#7113" id="7113">7113</a>
+<a href="#7114" id="7114">7114</a>
+<a href="#7115" id="7115">7115</a>
+<a href="#7116" id="7116">7116</a>
+<a href="#7117" id="7117">7117</a>
+<a href="#7118" id="7118">7118</a>
+<a href="#7119" id="7119">7119</a>
+<a href="#7120" id="7120">7120</a>
+<a href="#7121" id="7121">7121</a>
+<a href="#7122" id="7122">7122</a>
+<a href="#7123" id="7123">7123</a>
+<a href="#7124" id="7124">7124</a>
+<a href="#7125" id="7125">7125</a>
+<a href="#7126" id="7126">7126</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
     vec,
@@ -9378,6 +9397,8 @@
                     Mf::Pack2x16float =&gt; <span class="string">""</span>,
                     Mf::Pack4xI8 =&gt; <span class="string">""</span>,
                     Mf::Pack4xU8 =&gt; <span class="string">""</span>,
+                    Mf::Pack4xI8Clamp =&gt; <span class="string">""</span>,
+                    Mf::Pack4xU8Clamp =&gt; <span class="string">""</span>,
                     <span class="comment">// data unpacking
                     </span>Mf::Unpack4x8snorm =&gt; <span class="string">"unpack_snorm4x8_to_float"</span>,
                     Mf::Unpack4x8unorm =&gt; <span class="string">"unpack_unorm4x8_to_float"</span>,
@@ -9542,19 +9563,34 @@
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"{fun_name}"</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.put_call_parameters(iter::once(arg), context)<span class="question-mark">?</span>;
                     }
-                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8) =&gt; {
-                        <span class="kw">let </span>was_signed = fun == Mf::Pack4xI8;
+                    fun @ (Mf::Pack4xI8 | Mf::Pack4xU8 | Mf::Pack4xI8Clamp | Mf::Pack4xU8Clamp) =&gt; {
+                        <span class="kw">let </span>was_signed = <span class="macro">matches!</span>(fun, Mf::Pack4xI8 | Mf::Pack4xI8Clamp);
+                        <span class="kw">let </span>clamp_bounds = <span class="kw">match </span>fun {
+                            Mf::Pack4xI8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"-128"</span>, <span class="string">"127"</span>)),
+                            Mf::Pack4xU8Clamp =&gt; <span class="prelude-val">Some</span>((<span class="string">"0"</span>, <span class="string">"255"</span>)),
+                            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                        };
                         <span class="kw">if </span>was_signed {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"uint("</span>)<span class="question-mark">?</span>;
                         }
+                        <span class="kw">let </span>write_arg = |this: <span class="kw-2">&amp;mut </span><span class="self">Self</span>| -&gt; BackendResult {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>((min, max)) = clamp_bounds {
+                                <span class="macro">write!</span>(this.out, <span class="string">"{NAMESPACE}::clamp("</span>)<span class="question-mark">?</span>;
+                                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                                <span class="macro">write!</span>(this.out, <span class="string">", {min}, {max})"</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                this.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="prelude-val">Ok</span>(())
+                        };
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[0] &amp; 0xFF) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[1] &amp; 0xFF) &lt;&lt; 8) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[2] &amp; 0xFF) &lt;&lt; 16) | (("</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.put_expression(arg, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        write_arg(<span class="self">self</span>)<span class="question-mark">?</span>;
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">"[3] &amp; 0xFF) &lt;&lt; 24)"</span>)<span class="question-mark">?</span>;
                         <span class="kw">if </span>was_signed {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">")"</span>)<span class="question-mark">?</span>;
@@ -10319,6 +10355,8 @@
                     <span class="kw">crate</span>::MathFunction::FirstLeadingBit
                     | <span class="kw">crate</span>::MathFunction::Pack4xI8
                     | <span class="kw">crate</span>::MathFunction::Pack4xU8
+                    | <span class="kw">crate</span>::MathFunction::Pack4xI8Clamp
+                    | <span class="kw">crate</span>::MathFunction::Pack4xU8Clamp
                     | <span class="kw">crate</span>::MathFunction::Unpack4xI8
                     | <span class="kw">crate</span>::MathFunction::Unpack4xU8 =&gt; {
                         <span class="self">self</span>.need_bake_expressions.insert(arg);
