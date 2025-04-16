@@ -568,8 +568,7 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<a href="#570" id="570">570</a></pre></div><pre class="rust"><code><span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>glam::{Mat4, Quat, Vec3};
 <span class="kw">use </span>std::f32::consts::PI;
 <span class="kw">use </span>std::ops::IndexMut;
@@ -892,8 +891,12 @@
     }
 
     <span class="kw">fn </span>required_downlevel_capabilities() -&gt; wgpu::DownlevelCapabilities {
-        wgpu::DownlevelCapabilities::default()
+        wgpu::DownlevelCapabilities {
+            flags: wgpu::DownlevelFlags::COMPUTE_SHADERS,
+            ..Default::default()
+        }
     }
+
     <span class="kw">fn </span>required_limits() -&gt; wgpu::Limits {
         wgpu::Limits::default()
     }
@@ -1128,15 +1131,10 @@
     width: <span class="number">1024</span>,
     height: <span class="number">768</span>,
     optional_features: wgpu::Features::default(),
-    base_test_parameters: wgpu_test::TestParameters {
-        required_features: &lt;Example <span class="kw">as </span><span class="kw">crate</span>::framework::Example&gt;::required_features(),
-        required_limits: &lt;Example <span class="kw">as </span><span class="kw">crate</span>::framework::Example&gt;::required_limits(),
-        skips: <span class="macro">vec!</span>[],
-        failures: Vec::new(),
-        required_downlevel_caps:
-            &lt;Example <span class="kw">as </span><span class="kw">crate</span>::framework::Example&gt;::required_downlevel_capabilities(),
-        ..Default::default()
-    },
+    base_test_parameters: wgpu_test::TestParameters::default().expect_fail(
+        wgpu_test::FailureCase::backend_adapter(wgpu::Backends::VULKAN, <span class="string">"llvmpipe"</span>)
+            .panic(<span class="string">"Image data mismatch"</span>),
+    ),
     comparisons: <span class="kw-2">&amp;</span>[wgpu_test::ComparisonType::Mean(<span class="number">0.02</span>)],
     _phantom: std::marker::PhantomData::&lt;Example&gt;,
 };
