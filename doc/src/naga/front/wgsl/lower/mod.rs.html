@@ -3801,26 +3801,7 @@
 <a href="#3800" id="3800">3800</a>
 <a href="#3801" id="3801">3801</a>
 <a href="#3802" id="3802">3802</a>
-<a href="#3803" id="3803">3803</a>
-<a href="#3804" id="3804">3804</a>
-<a href="#3805" id="3805">3805</a>
-<a href="#3806" id="3806">3806</a>
-<a href="#3807" id="3807">3807</a>
-<a href="#3808" id="3808">3808</a>
-<a href="#3809" id="3809">3809</a>
-<a href="#3810" id="3810">3810</a>
-<a href="#3811" id="3811">3811</a>
-<a href="#3812" id="3812">3812</a>
-<a href="#3813" id="3813">3813</a>
-<a href="#3814" id="3814">3814</a>
-<a href="#3815" id="3815">3815</a>
-<a href="#3816" id="3816">3816</a>
-<a href="#3817" id="3817">3817</a>
-<a href="#3818" id="3818">3818</a>
-<a href="#3819" id="3819">3819</a>
-<a href="#3820" id="3820">3820</a>
-<a href="#3821" id="3821">3821</a>
-<a href="#3822" id="3822">3822</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3803" id="3803">3803</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -3836,9 +3817,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{ast, conv};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Result;
 <span class="kw">use </span><span class="kw">crate</span>::front::Typifier;
-<span class="kw">use </span><span class="kw">crate</span>::proc::{
-    ensure_block_returns, Alignment, ConstantEvaluator, Emitter, Layouter, ResolveContext,
-};
+<span class="kw">use crate</span>::{ir, proc};
 <span class="kw">use crate</span>::{Arena, FastHashMap, FastIndexMap, Handle, Span};
 
 <span class="kw">mod </span>construction;
@@ -3848,7 +3827,7 @@
 ///
 /// Expects a &amp;mut [`ExpressionContext`] and a [`Handle&lt;Expression&gt;`].
 ///
-/// Returns a &amp;[`crate::TypeInner`].
+/// Returns a &amp;[`ir::TypeInner`].
 ///
 /// Ideally, we would simply have a function that takes a `&amp;mut ExpressionContext`
 /// and returns a `&amp;TypeResolution`. Unfortunately, this leads the borrow checker
@@ -3869,7 +3848,7 @@
 ///
 /// Expects a &amp;mut [`ExpressionContext`] and two [`Handle&lt;Expression&gt;`]s.
 ///
-/// Returns a tuple containing two &amp;[`crate::TypeInner`].
+/// Returns a tuple containing two &amp;[`ir::TypeInner`].
 ///
 /// See the documentation of [`resolve_inner!`] for why this macro is necessary.
 </span><span class="macro">macro_rules!</span> resolve_inner_binary {
@@ -3891,7 +3870,7 @@
 ///
 /// See the documentation of [`resolve_inner!`] for why this macro is necessary.
 ///
-/// [`TypeResolution`]: crate::proc::TypeResolution
+/// [`TypeResolution`]: proc::TypeResolution
 </span><span class="macro">macro_rules!</span> resolve {
     (<span class="macro-nonterminal">$ctx</span>:ident, <span class="macro-nonterminal">$expr</span>:expr) =&gt; {{
         <span class="macro-nonterminal">$ctx</span>.grow_types(<span class="macro-nonterminal">$expr</span>)<span class="question-mark">?</span>;
@@ -3900,7 +3879,7 @@
 }
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>resolve;
 
-<span class="doccomment">/// State for constructing a `crate::Module`.
+<span class="doccomment">/// State for constructing a `ir::Module`.
 </span><span class="kw">pub struct </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
     <span class="doccomment">/// The `TranslationUnit`'s expressions arena.
     </span>ast_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>Arena&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
@@ -3914,13 +3893,13 @@
     </span>globals: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>FastHashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">'source </span>str, LoweredGlobalDecl&gt;,
 
     <span class="doccomment">/// The module we're constructing.
-    </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+    </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>ir::Module,
 
     const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
 
-    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::Layouter,
 
-    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
+    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::ExpressionKindTracker,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'source</span>&gt; GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
@@ -3953,11 +3932,11 @@
     <span class="kw">fn </span>ensure_type_exists(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-        inner: <span class="kw">crate</span>::TypeInner,
-    ) -&gt; Handle&lt;<span class="kw">crate</span>::Type&gt; {
+        inner: ir::TypeInner,
+    ) -&gt; Handle&lt;ir::Type&gt; {
         <span class="self">self</span>.module
             .types
-            .insert(<span class="kw">crate</span>::Type { inner, name }, Span::UNDEFINED)
+            .insert(ir::Type { inner, name }, Span::UNDEFINED)
     }
 }
 
@@ -3993,19 +3972,19 @@
     /// This always borrows the `local_table` local variable in
     /// [`Lowerer::function`].
     ///
-    /// [`LocalVariable`]: crate::Expression::LocalVariable
-    /// [`FunctionArgument`]: crate::Expression::FunctionArgument
+    /// [`LocalVariable`]: ir::Expression::LocalVariable
+    /// [`FunctionArgument`]: ir::Expression::FunctionArgument
     </span>local_table:
-        <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>FastHashMap&lt;Handle&lt;ast::Local&gt;, Declared&lt;Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt;&gt;,
+        <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>FastHashMap&lt;Handle&lt;ast::Local&gt;, Declared&lt;Typed&lt;Handle&lt;ir::Expression&gt;&gt;&gt;&gt;,
 
     const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
     typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
-    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
-    function: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Function,
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::Layouter,
+    function: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>ir::Function,
     <span class="doccomment">/// Stores the names of expressions that are assigned in `let` statement
     /// Also stores the spans of the names, for use in errors.
-    </span>named_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>FastIndexMap&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;, (String, Span)&gt;,
-    module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+    </span>named_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>FastIndexMap&lt;Handle&lt;ir::Expression&gt;, (String, Span)&gt;,
+    module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>ir::Module,
 
     <span class="doccomment">/// Which `Expression`s in `self.naga_expressions` are const expressions, in
     /// the WGSL sense.
@@ -4016,15 +3995,15 @@
     /// with the form of the expressions; it is also tracking whether WGSL says
     /// we should consider them to be const. See the use of `force_non_const` in
     /// the code for lowering `let` bindings.
-    </span>local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
-    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
+    </span>local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::ExpressionKindTracker,
+    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::ExpressionKindTracker,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'temp</span>&gt; StatementContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>as_const&lt;<span class="lifetime">'t</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span><span class="self">self</span>,
-        block: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
-        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>Emitter,
+        block: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>ir::Block,
+        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>proc::Emitter,
     ) -&gt; ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'t</span>, <span class="lifetime">'t</span>&gt;
     <span class="kw">where
         </span><span class="lifetime">'temp</span>: <span class="lifetime">'t</span>,
@@ -4050,8 +4029,8 @@
 
     <span class="kw">fn </span>as_expression&lt;<span class="lifetime">'t</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span><span class="self">self</span>,
-        block: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
-        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>Emitter,
+        block: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>ir::Block,
+        emitter: <span class="kw-2">&amp;</span><span class="lifetime">'t </span><span class="kw-2">mut </span>proc::Emitter,
     ) -&gt; ExpressionContext&lt;<span class="lifetime">'a</span>, <span class="lifetime">'t</span>, <span class="lifetime">'t</span>&gt;
     <span class="kw">where
         </span><span class="lifetime">'temp</span>: <span class="lifetime">'t</span>,
@@ -4088,14 +4067,14 @@
         }
     }
 
-    <span class="kw">fn </span>invalid_assignment_type(<span class="kw-2">&amp;</span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; InvalidAssignmentType {
+    <span class="kw">fn </span>invalid_assignment_type(<span class="kw-2">&amp;</span><span class="self">self</span>, expr: Handle&lt;ir::Expression&gt;) -&gt; InvalidAssignmentType {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, span)) = <span class="self">self</span>.named_expressions.get(<span class="kw-2">&amp;</span>expr) {
             InvalidAssignmentType::ImmutableBinding(span)
         } <span class="kw">else </span>{
             <span class="kw">match </span><span class="self">self</span>.function.expressions[expr] {
-                <span class="kw">crate</span>::Expression::Swizzle { .. } =&gt; InvalidAssignmentType::Swizzle,
-                <span class="kw">crate</span>::Expression::Access { base, .. } =&gt; <span class="self">self</span>.invalid_assignment_type(base),
-                <span class="kw">crate</span>::Expression::AccessIndex { base, .. } =&gt; <span class="self">self</span>.invalid_assignment_type(base),
+                ir::Expression::Swizzle { .. } =&gt; InvalidAssignmentType::Swizzle,
+                ir::Expression::Access { base, .. } =&gt; <span class="self">self</span>.invalid_assignment_type(base),
+                ir::Expression::AccessIndex { base, .. } =&gt; <span class="self">self</span>.invalid_assignment_type(base),
                 <span class="kw">_ </span>=&gt; InvalidAssignmentType::Other,
             }
         }
@@ -4107,18 +4086,18 @@
     ///
     /// This is always [`StatementContext::local_table`] for the
     /// enclosing statement; see that documentation for details.
-    </span>local_table: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>FastHashMap&lt;Handle&lt;ast::Local&gt;, Declared&lt;Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt;&gt;,
+    </span>local_table: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>FastHashMap&lt;Handle&lt;ast::Local&gt;, Declared&lt;Typed&lt;Handle&lt;ir::Expression&gt;&gt;&gt;&gt;,
 
-    function: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Function,
-    block: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::Block,
-    emitter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Emitter,
+    function: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>ir::Function,
+    block: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>ir::Block,
+    emitter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::Emitter,
     typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
 
     <span class="doccomment">/// Which `Expression`s in `self.naga_expressions` are const expressions, in
     /// the WGSL sense.
     ///
     /// See [`StatementContext::local_expression_kind_tracker`] for details.
-    </span>local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
+    </span>local_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::ExpressionKindTracker,
 }
 
 <span class="doccomment">/// The type of Naga IR expression we are lowering an [`ast::Expression`] to.
@@ -4179,12 +4158,12 @@
 ///
 /// [`expr_type`]: ExpressionContext::expr_type
 /// [`Runtime`]: ExpressionContextType::Runtime
-/// [`naga::Expression`]: crate::Expression
-/// [`naga::Function`]: crate::Function
+/// [`naga::Expression`]: ir::Expression
+/// [`naga::Function`]: ir::Function
 /// [`Constant`]: ExpressionContextType::Constant
-/// [`naga::Module`]: crate::Module
+/// [`naga::Module`]: ir::Module
 /// [`as_const`]: ExpressionContext::as_const
-/// [`Expression::Constant`]: crate::Expression::Constant
+/// [`Expression::Constant`]: ir::Expression::Constant
 </span><span class="kw">pub struct </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'temp</span>, <span class="lifetime">'out</span>&gt; {
     <span class="comment">// WGSL AST values.
     </span>ast_expressions: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span>Arena&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
@@ -4197,15 +4176,15 @@
 
     <span class="doccomment">/// The IR [`Module`] we're constructing.
     ///
-    /// [`Module`]: crate::Module
-    </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span><span class="kw">crate</span>::Module,
+    /// [`Module`]: ir::Module
+    </span>module: <span class="kw-2">&amp;</span><span class="lifetime">'out </span><span class="kw-2">mut </span>ir::Module,
 
     <span class="doccomment">/// Type judgments for [`module::global_expressions`].
     ///
-    /// [`module::global_expressions`]: crate::Module::global_expressions
+    /// [`module::global_expressions`]: ir::Module::global_expressions
     </span>const_typifier: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Typifier,
-    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>Layouter,
-    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker,
+    layouter: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::Layouter,
+    global_expression_kind_tracker: <span class="kw-2">&amp;</span><span class="lifetime">'temp </span><span class="kw-2">mut </span>proc::ExpressionKindTracker,
 
     <span class="doccomment">/// Whether we are lowering a constant expression or a general
     /// runtime expression, and the data needed in each case.
@@ -4213,11 +4192,11 @@
 }
 
 <span class="kw">impl </span>TypeContext <span class="kw">for </span>ExpressionContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
-    <span class="kw">fn </span>lookup_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span><span class="kw">crate</span>::Type {
+    <span class="kw">fn </span>lookup_type(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;ir::Type&gt;) -&gt; <span class="kw-2">&amp;</span>ir::Type {
         <span class="kw-2">&amp;</span><span class="self">self</span>.module.types[handle]
     }
 
-    <span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str {
+    <span class="kw">fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;ir::Type&gt;) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="self">self</span>.module.types[handle]
             .name
             .as_deref()
@@ -4226,7 +4205,7 @@
 
     <span class="kw">fn </span>write_override&lt;W: core::fmt::Write&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Override&gt;,
+        handle: Handle&lt;ir::Override&gt;,
         out: <span class="kw-2">&amp;mut </span>W,
     ) -&gt; core::fmt::Result {
         <span class="kw">match </span><span class="self">self</span>.module.overrides[handle].name {
@@ -4237,7 +4216,7 @@
 
     <span class="kw">fn </span>write_unnamed_struct&lt;W: core::fmt::Write&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner,
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span>ir::TypeInner,
         <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>W,
     ) -&gt; core::fmt::Result {
         <span class="macro">unreachable!</span>(<span class="string">"the WGSL front end should always know the type name"</span>);
@@ -4285,19 +4264,21 @@
         }
     }
 
-    <span class="kw">fn </span>as_const_evaluator(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ConstantEvaluator {
+    <span class="kw">fn </span>as_const_evaluator(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; proc::ConstantEvaluator {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
-            ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>rctx) =&gt; ConstantEvaluator::for_wgsl_function(
-                <span class="self">self</span>.module,
-                <span class="kw-2">&amp;mut </span>rctx.function.expressions,
-                rctx.local_expression_kind_tracker,
-                <span class="self">self</span>.layouter,
-                rctx.emitter,
-                rctx.block,
-                <span class="bool-val">false</span>,
-            ),
+            ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>rctx) =&gt; {
+                proc::ConstantEvaluator::for_wgsl_function(
+                    <span class="self">self</span>.module,
+                    <span class="kw-2">&amp;mut </span>rctx.function.expressions,
+                    rctx.local_expression_kind_tracker,
+                    <span class="self">self</span>.layouter,
+                    rctx.emitter,
+                    rctx.block,
+                    <span class="bool-val">false</span>,
+                )
+            }
             ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>rctx)) =&gt; {
-                ConstantEvaluator::for_wgsl_function(
+                proc::ConstantEvaluator::for_wgsl_function(
                     <span class="self">self</span>.module,
                     <span class="kw-2">&amp;mut </span>rctx.function.expressions,
                     rctx.local_expression_kind_tracker,
@@ -4307,13 +4288,13 @@
                     <span class="bool-val">true</span>,
                 )
             }
-            ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; ConstantEvaluator::for_wgsl_module(
+            ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; proc::ConstantEvaluator::for_wgsl_module(
                 <span class="self">self</span>.module,
                 <span class="self">self</span>.global_expression_kind_tracker,
                 <span class="self">self</span>.layouter,
                 <span class="bool-val">false</span>,
             ),
-            ExpressionContextType::Override =&gt; ConstantEvaluator::for_wgsl_module(
+            ExpressionContextType::Override =&gt; proc::ConstantEvaluator::for_wgsl_module(
                 <span class="self">self</span>.module,
                 <span class="self">self</span>.global_expression_kind_tracker,
                 <span class="self">self</span>.layouter,
@@ -4330,16 +4311,16 @@
     </span><span class="kw">fn </span>as_diagnostic_display&lt;T&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         value: T,
-    ) -&gt; <span class="kw">crate</span>::common::DiagnosticDisplay&lt;(T, <span class="kw">crate</span>::proc::GlobalCtx)&gt; {
+    ) -&gt; <span class="kw">crate</span>::common::DiagnosticDisplay&lt;(T, proc::GlobalCtx)&gt; {
         <span class="kw">let </span>ctx = <span class="self">self</span>.module.to_ctx();
         <span class="kw">crate</span>::common::DiagnosticDisplay((value, ctx))
     }
 
     <span class="kw">fn </span>append_expression(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expr: <span class="kw">crate</span>::Expression,
+        expr: ir::Expression,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>eval = <span class="self">self</span>.as_const_evaluator();
         eval.try_eval_and_append(expr, span)
             .map_err(|e| Box::new(Error::ConstantEvaluatorError(e.into(), span)))
@@ -4347,12 +4328,12 @@
 
     <span class="kw">fn </span>const_eval_expr_to_u32(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; core::result::Result&lt;u32, <span class="kw">crate</span>::proc::U32EvalError&gt; {
+        handle: Handle&lt;ir::Expression&gt;,
+    ) -&gt; core::result::Result&lt;u32, proc::U32EvalError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx) =&gt; {
                 <span class="kw">if </span>!ctx.local_expression_kind_tracker.is_const(handle) {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(proc::U32EvalError::NonConst);
                 }
 
                 <span class="self">self</span>.module
@@ -4366,12 +4347,12 @@
                     .eval_expr_to_u32_from(handle, <span class="kw-2">&amp;</span>ctx.function.expressions)
             }
             ExpressionContextType::Constant(<span class="prelude-val">None</span>) =&gt; <span class="self">self</span>.module.to_ctx().eval_expr_to_u32(handle),
-            ExpressionContextType::Override =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::proc::U32EvalError::NonConst),
+            ExpressionContextType::Override =&gt; <span class="prelude-val">Err</span>(proc::U32EvalError::NonConst),
         }
     }
 
     <span class="doccomment">/// Return `true` if `handle` is a constant expression.
-    </span><span class="kw">fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; bool {
+    </span><span class="kw">fn </span>is_const(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;ir::Expression&gt;) -&gt; bool {
         <span class="kw">use </span>ExpressionContextType <span class="kw">as </span>Ect;
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             Ect::Runtime(<span class="kw-2">ref </span>ctx) | Ect::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ctx)) =&gt; {
@@ -4383,7 +4364,7 @@
         }
     }
 
-    <span class="kw">fn </span>get_expression_span(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; Span {
+    <span class="kw">fn </span>get_expression_span(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;ir::Expression&gt;) -&gt; Span {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx)
             | ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ctx)) =&gt; {
@@ -4409,7 +4390,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         local: <span class="kw-2">&amp;</span>Handle&lt;ast::Local&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;ir::Expression&gt;&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>ctx) =&gt; <span class="prelude-val">Ok</span>(ctx.local_table[local].runtime()),
             ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ctx)) =&gt; ctx.local_table[local]
@@ -4433,10 +4414,10 @@
 
     <span class="kw">fn </span>gather_component(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        expr: Handle&lt;ir::Expression&gt;,
         component_span: Span,
         gather_span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::SwizzleComponent&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::SwizzleComponent&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref </span>rctx) =&gt; {
                 <span class="kw">if </span>!rctx.local_expression_kind_tracker.is_const(expr) {
@@ -4450,14 +4431,12 @@
                     .to_ctx()
                     .eval_expr_to_u32_from(expr, <span class="kw-2">&amp;</span>rctx.function.expressions)
                     .map_err(|err| <span class="kw">match </span>err {
-                        <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
+                        proc::U32EvalError::NonConst =&gt; {
                             Error::ExpectedConstExprConcreteIntegerScalar(component_span)
                         }
-                        <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
-                            Error::ExpectedNonNegative(component_span)
-                        }
+                        proc::U32EvalError::Negative =&gt; Error::ExpectedNonNegative(component_span),
                     })<span class="question-mark">?</span>;
-                <span class="kw">crate</span>::SwizzleComponent::XYZW
+                ir::SwizzleComponent::XYZW
                     .get(index <span class="kw">as </span>usize)
                     .copied()
                     .ok_or(Box::new(Error::InvalidGatherComponent(component_span)))
@@ -4479,11 +4458,11 @@
     /// creating a [`LocalVariable`] whose type is inferred from its
     /// initializer.
     ///
-    /// [`LocalVariable`]: crate::LocalVariable
+    /// [`LocalVariable`]: ir::LocalVariable
     </span><span class="kw">fn </span>register_type(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
+        handle: Handle&lt;ir::Expression&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Type&gt;&gt; {
         <span class="self">self</span>.grow_types(handle)<span class="question-mark">?</span>;
         <span class="comment">// This is equivalent to calling ExpressionContext::typifier(),
         // except that this lets the borrow checker see that it's okay
@@ -4515,10 +4494,10 @@
     /// [`resolve_inner!`] or [`resolve_inner_binary!`].
     ///
     /// [`self.typifier`]: ExpressionContext::typifier
-    /// [`TypeResolution`]: crate::proc::TypeResolution
+    /// [`TypeResolution`]: proc::TypeResolution
     /// [`register_type`]: Self::register_type
     /// [`Typifier`]: Typifier
-    </span><span class="kw">fn </span>grow_types(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt; {
+    </span><span class="kw">fn </span>grow_types(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;ir::Expression&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt; {
         <span class="kw">let </span>empty_arena = Arena::new();
         <span class="kw">let </span>resolve_ctx;
         <span class="kw">let </span>typifier;
@@ -4526,7 +4505,7 @@
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>ctx)
             | ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>ctx)) =&gt; {
-                resolve_ctx = ResolveContext::with_locals(
+                resolve_ctx = proc::ResolveContext::with_locals(
                     <span class="self">self</span>.module,
                     <span class="kw-2">&amp;</span>ctx.function.local_variables,
                     <span class="kw-2">&amp;</span>ctx.function.arguments,
@@ -4535,7 +4514,7 @@
                 expressions = <span class="kw-2">&amp;</span>ctx.function.expressions;
             }
             ExpressionContextType::Constant(<span class="prelude-val">None</span>) | ExpressionContextType::Override =&gt; {
-                resolve_ctx = ResolveContext::with_locals(<span class="self">self</span>.module, <span class="kw-2">&amp;</span>empty_arena, <span class="kw-2">&amp;</span>[]);
+                resolve_ctx = proc::ResolveContext::with_locals(<span class="self">self</span>.module, <span class="kw-2">&amp;</span>empty_arena, <span class="kw-2">&amp;</span>[]);
                 typifier = <span class="self">self</span>.const_typifier;
                 expressions = <span class="kw-2">&amp;</span><span class="self">self</span>.module.global_expressions;
             }
@@ -4549,11 +4528,11 @@
 
     <span class="kw">fn </span>image_data(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        image: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        image: Handle&lt;ir::Expression&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (<span class="kw">crate</span>::ImageClass, bool)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (ir::ImageClass, bool)&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(<span class="self">self</span>, image) {
-            <span class="kw">crate</span>::TypeInner::Image { class, arrayed, .. } =&gt; <span class="prelude-val">Ok</span>((class, arrayed)),
+            ir::TypeInner::Image { class, arrayed, .. } =&gt; <span class="prelude-val">Ok</span>((class, arrayed)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::BadTexture(span))),
         }
     }
@@ -4582,30 +4561,30 @@
     /// operations, so inserting splats into the IR increases size needlessly.
     </span><span class="kw">fn </span>binary_op_splat(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        op: <span class="kw">crate</span>::BinaryOperator,
-        left: <span class="kw-2">&amp;mut </span>Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-        right: <span class="kw-2">&amp;mut </span>Handle&lt;<span class="kw">crate</span>::Expression&gt;,
+        op: ir::BinaryOperator,
+        left: <span class="kw-2">&amp;mut </span>Handle&lt;ir::Expression&gt;,
+        right: <span class="kw-2">&amp;mut </span>Handle&lt;ir::Expression&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(
             op,
-            <span class="kw">crate</span>::BinaryOperator::Add
-                | <span class="kw">crate</span>::BinaryOperator::Subtract
-                | <span class="kw">crate</span>::BinaryOperator::Divide
-                | <span class="kw">crate</span>::BinaryOperator::Modulo
+            ir::BinaryOperator::Add
+                | ir::BinaryOperator::Subtract
+                | ir::BinaryOperator::Divide
+                | ir::BinaryOperator::Modulo
         ) {
             <span class="kw">match </span><span class="macro">resolve_inner_binary!</span>(<span class="self">self</span>, <span class="kw-2">*</span>left, <span class="kw-2">*</span>right) {
-                (<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Vector { size, .. }, <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar { .. }) =&gt; {
+                (<span class="kw-2">&amp;</span>ir::TypeInner::Vector { size, .. }, <span class="kw-2">&amp;</span>ir::TypeInner::Scalar { .. }) =&gt; {
                     <span class="kw-2">*</span>right = <span class="self">self</span>.append_expression(
-                        <span class="kw">crate</span>::Expression::Splat {
+                        ir::Expression::Splat {
                             size,
                             value: <span class="kw-2">*</span>right,
                         },
                         <span class="self">self</span>.get_expression_span(<span class="kw-2">*</span>right),
                     )<span class="question-mark">?</span>;
                 }
-                (<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar { .. }, <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Vector { size, .. }) =&gt; {
+                (<span class="kw-2">&amp;</span>ir::TypeInner::Scalar { .. }, <span class="kw-2">&amp;</span>ir::TypeInner::Vector { size, .. }) =&gt; {
                     <span class="kw-2">*</span>left = <span class="self">self</span>.append_expression(
-                        <span class="kw">crate</span>::Expression::Splat { size, value: <span class="kw-2">*</span>left },
+                        ir::Expression::Splat { size, value: <span class="kw-2">*</span>left },
                         <span class="self">self</span>.get_expression_span(<span class="kw-2">*</span>left),
                     )<span class="question-mark">?</span>;
                 }
@@ -4622,9 +4601,9 @@
     /// `Emit` statements.
     </span><span class="kw">fn </span>interrupt_emitter(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expression: <span class="kw">crate</span>::Expression,
+        expression: ir::Expression,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.expr_type {
             ExpressionContextType::Runtime(<span class="kw-2">ref mut </span>rctx)
             | ExpressionContextType::Constant(<span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>rctx)) =&gt; {
@@ -4650,11 +4629,11 @@
     /// `T`. Otherwise, return `expr` unchanged.
     </span><span class="kw">fn </span>apply_load_rule(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        expr: Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+        expr: Typed&lt;Handle&lt;ir::Expression&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">match </span>expr {
             Typed::Reference(pointer) =&gt; {
-                <span class="kw">let </span>load = <span class="kw">crate</span>::Expression::Load { pointer };
+                <span class="kw">let </span>load = ir::Expression::Load { pointer };
                 <span class="kw">let </span>span = <span class="self">self</span>.get_expression_span(pointer);
                 <span class="self">self</span>.append_expression(load, span)
             }
@@ -4662,7 +4641,7 @@
         }
     }
 
-    <span class="kw">fn </span>ensure_type_exists(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw">crate</span>::TypeInner) -&gt; Handle&lt;<span class="kw">crate</span>::Type&gt; {
+    <span class="kw">fn </span>ensure_type_exists(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: ir::TypeInner) -&gt; Handle&lt;ir::Type&gt; {
         <span class="self">self</span>.as_global().ensure_type_exists(<span class="prelude-val">None</span>, inner)
     }
 }
@@ -4736,18 +4715,18 @@
 ///
 /// The `T` type parameter can be any expression-like thing:
 ///
-/// - `Typed&lt;Handle&lt;crate::Type&gt;&gt;` can represent a full WGSL type. For example,
+/// - `Typed&lt;Handle&lt;ir::Type&gt;&gt;` can represent a full WGSL type. For example,
 ///   given some Naga `Pointer` type `ptr`, a WGSL reference type is a
 ///   `Typed::Reference(ptr)` whereas a WGSL pointer type is a
 ///   `Typed::Plain(ptr)`.
 ///
-/// - `Typed&lt;crate::Expression&gt;` or `Typed&lt;Handle&lt;crate::Expression&gt;&gt;` can
+/// - `Typed&lt;ir::Expression&gt;` or `Typed&lt;Handle&lt;ir::Expression&gt;&gt;` can
 ///   represent references similarly.
 ///
 /// Use the `map` and `try_map` methods to convert from one expression
 /// representation to another.
 ///
-/// [`Expression`]: crate::Expression
+/// [`Expression`]: ir::Expression
 </span><span class="attr">#[derive(Debug, Copy, Clone)]
 </span><span class="kw">enum </span>Typed&lt;T&gt; {
     <span class="doccomment">/// A WGSL reference.
@@ -4784,14 +4763,14 @@
 </span><span class="kw">enum </span>Components {
     Single(u32),
     Swizzle {
-        size: <span class="kw">crate</span>::VectorSize,
-        pattern: [<span class="kw">crate</span>::SwizzleComponent; <span class="number">4</span>],
+        size: ir::VectorSize,
+        pattern: [ir::SwizzleComponent; <span class="number">4</span>],
     },
 }
 
 <span class="kw">impl </span>Components {
-    <span class="kw">const fn </span>letter_component(letter: char) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SwizzleComponent&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::SwizzleComponent <span class="kw">as </span>Sc;
+    <span class="kw">const fn </span>letter_component(letter: char) -&gt; <span class="prelude-ty">Option</span>&lt;ir::SwizzleComponent&gt; {
+        <span class="kw">use </span>ir::SwizzleComponent <span class="kw">as </span>Sc;
         <span class="kw">match </span>letter {
             <span class="string">'x' </span>| <span class="string">'r' </span>=&gt; <span class="prelude-val">Some</span>(Sc::X),
             <span class="string">'y' </span>| <span class="string">'g' </span>=&gt; <span class="prelude-val">Some</span>(Sc::Y),
@@ -4815,13 +4794,13 @@
     </span><span class="kw">fn </span>new(name: <span class="kw-2">&amp;</span>str, name_span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>size = <span class="kw">match </span>name.len() {
             <span class="number">1 </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(Components::Single(<span class="self">Self</span>::single_component(name, name_span)<span class="question-mark">?</span>)),
-            <span class="number">2 </span>=&gt; <span class="kw">crate</span>::VectorSize::Bi,
-            <span class="number">3 </span>=&gt; <span class="kw">crate</span>::VectorSize::Tri,
-            <span class="number">4 </span>=&gt; <span class="kw">crate</span>::VectorSize::Quad,
+            <span class="number">2 </span>=&gt; ir::VectorSize::Bi,
+            <span class="number">3 </span>=&gt; ir::VectorSize::Tri,
+            <span class="number">4 </span>=&gt; ir::VectorSize::Quad,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(name_span))),
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>pattern = [<span class="kw">crate</span>::SwizzleComponent::X; <span class="number">4</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>pattern = [ir::SwizzleComponent::X; <span class="number">4</span>];
         <span class="kw">for </span>(comp, ch) <span class="kw">in </span>pattern.iter_mut().zip(name.chars()) {
             <span class="kw-2">*</span>comp = <span class="self">Self</span>::letter_component(ch).ok_or(Error::BadAccessor(name_span))<span class="question-mark">?</span>;
         }
@@ -4839,13 +4818,13 @@
 <span class="doccomment">/// An `ast::GlobalDecl` for which we have built the Naga IR equivalent.
 </span><span class="kw">enum </span>LoweredGlobalDecl {
     Function {
-        handle: Handle&lt;<span class="kw">crate</span>::Function&gt;,
+        handle: Handle&lt;ir::Function&gt;,
         must_use: bool,
     },
-    Var(Handle&lt;<span class="kw">crate</span>::GlobalVariable&gt;),
-    Const(Handle&lt;<span class="kw">crate</span>::Constant&gt;),
-    Override(Handle&lt;<span class="kw">crate</span>::Override&gt;),
-    Type(Handle&lt;<span class="kw">crate</span>::Type&gt;),
+    Var(Handle&lt;ir::GlobalVariable&gt;),
+    Const(Handle&lt;ir::Constant&gt;),
+    Override(Handle&lt;ir::Override&gt;),
+    Type(Handle&lt;ir::Type&gt;),
     EntryPoint,
 }
 
@@ -4936,8 +4915,8 @@
         <span class="self">Self </span>{ index }
     }
 
-    <span class="kw">pub fn </span>lower(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tu: ast::TranslationUnit&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Module&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>module = <span class="kw">crate</span>::Module {
+    <span class="kw">pub fn </span>lower(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tu: ast::TranslationUnit&lt;<span class="lifetime">'source</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::Module&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>module = ir::Module {
             diagnostic_filters: tu.diagnostic_filters,
             diagnostic_filter_leaf: tu.diagnostic_filter_leaf,
             ..Default::default()
@@ -4949,8 +4928,8 @@
             types: <span class="kw-2">&amp;</span>tu.types,
             module: <span class="kw-2">&amp;mut </span>module,
             const_typifier: <span class="kw-2">&amp;mut </span>Typifier::new(),
-            layouter: <span class="kw-2">&amp;mut </span>Layouter::default(),
-            global_expression_kind_tracker: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::proc::ExpressionKindTracker::new(),
+            layouter: <span class="kw-2">&amp;mut </span>proc::Layouter::default(),
+            global_expression_kind_tracker: <span class="kw-2">&amp;mut </span>proc::ExpressionKindTracker::new(),
         };
 
         <span class="kw">for </span>decl_handle <span class="kw">in </span><span class="self">self</span>.index.visit_ordered() {
@@ -4976,7 +4955,7 @@
                     )<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>binding = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>binding) = v.binding {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ResourceBinding {
+                        <span class="prelude-val">Some</span>(ir::ResourceBinding {
                             group: <span class="self">self</span>.const_u32(binding.group, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>.<span class="number">0</span>,
                             binding: <span class="self">self</span>.const_u32(binding.binding, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>.<span class="number">0</span>,
                         })
@@ -4985,7 +4964,7 @@
                     </span>};
 
                     <span class="kw">let </span>handle = ctx.module.global_variables.append(
-                        <span class="kw">crate</span>::GlobalVariable {
+                        ir::GlobalVariable {
                             name: <span class="prelude-val">Some</span>(v.name.name.to_string()),
                             space: v.space,
                             binding,
@@ -5015,7 +4994,7 @@
                     <span class="kw">let </span>init = init.expect(<span class="string">"Global const must have init"</span>);
 
                     <span class="kw">let </span>handle = ctx.module.constants.append(
-                        <span class="kw">crate</span>::Constant {
+                        ir::Constant {
                             name: <span class="prelude-val">Some</span>(c.name.name.to_string()),
                             ty,
                             init,
@@ -5055,7 +5034,7 @@
                     </span>};
 
                     <span class="kw">let </span>handle = ctx.module.overrides.append(
-                        <span class="kw">crate</span>::Override {
+                        ir::Override {
                             name: <span class="prelude-val">Some</span>(o.name.name.to_string()),
                             id,
                             ty,
@@ -5111,16 +5090,16 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         name: ast::Ident&lt;<span class="lifetime">'source</span>&gt;,
         init: <span class="prelude-ty">Option</span>&lt;Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;&gt;,
-        explicit_ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;,
+        explicit_ty: <span class="prelude-ty">Option</span>&lt;Handle&lt;ir::Type&gt;&gt;,
         abstract_rule: AbstractRule,
         ectx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;<span class="kw">crate</span>::Type&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;ir::Type&gt;, <span class="prelude-ty">Option</span>&lt;Handle&lt;ir::Expression&gt;&gt;)&gt; {
         <span class="kw">let </span>ty;
         <span class="kw">let </span>initializer;
         <span class="kw">match </span>(init, explicit_ty) {
             (<span class="prelude-val">Some</span>(init), <span class="prelude-val">Some</span>(explicit_ty)) =&gt; {
                 <span class="kw">let </span>init = <span class="self">self</span>.expression_for_abstract(init, ectx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>ty_res = <span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty);
+                <span class="kw">let </span>ty_res = proc::TypeResolution::Handle(explicit_ty);
                 <span class="kw">let </span>init = ectx
                     .try_automatic_conversions(init, <span class="kw-2">&amp;</span>ty_res, name.span)
                     .map_err(|error| <span class="kw">match </span><span class="kw-2">*</span>error {
@@ -5134,8 +5113,8 @@
 
                 <span class="kw">let </span>init_ty = ectx.register_type(init)<span class="question-mark">?</span>;
                 <span class="kw">if </span>!ectx.module.compare_types(
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::TypeResolution::Handle(explicit_ty),
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::TypeResolution::Handle(init_ty),
+                    <span class="kw-2">&amp;</span>proc::TypeResolution::Handle(explicit_ty),
+                    <span class="kw-2">&amp;</span>proc::TypeResolution::Handle(init_ty),
                 ) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InitializationTypeMismatch {
                         name: name.span,
@@ -5172,7 +5151,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>local_table = FastHashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>expressions = Arena::new();
         <span class="kw">let </span><span class="kw-2">mut </span>named_expressions = FastIndexMap::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>local_expression_kind_tracker = <span class="kw">crate</span>::proc::ExpressionKindTracker::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>local_expression_kind_tracker = proc::ExpressionKindTracker::new();
 
         <span class="kw">let </span>arguments = f
             .arguments
@@ -5180,13 +5159,13 @@
             .enumerate()
             .map(|(i, arg)| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">_</span>&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(arg.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
-                <span class="kw">let </span>expr = expressions
-                    .append(<span class="kw">crate</span>::Expression::FunctionArgument(i <span class="kw">as </span>u32), arg.name.span);
+                <span class="kw">let </span>expr =
+                    expressions.append(ir::Expression::FunctionArgument(i <span class="kw">as </span>u32), arg.name.span);
                 local_table.insert(arg.handle, Declared::Runtime(Typed::Plain(expr)));
                 named_expressions.insert(expr, (arg.name.name.to_string(), arg.name.span));
-                local_expression_kind_tracker.insert(expr, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
+                local_expression_kind_tracker.insert(expr, proc::ExpressionKind::Runtime);
 
-                <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::FunctionArgument {
+                <span class="prelude-val">Ok</span>(ir::FunctionArgument {
                     name: <span class="prelude-val">Some</span>(arg.name.name.to_string()),
                     ty,
                     binding: <span class="self">self</span>.binding(<span class="kw-2">&amp;</span>arg.binding, ty, ctx)<span class="question-mark">?</span>,
@@ -5199,21 +5178,21 @@
             .as_ref()
             .map(|res| -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'_</span>, <span class="kw">_</span>&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(res.ty, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::FunctionResult {
+                <span class="prelude-val">Ok</span>(ir::FunctionResult {
                     ty,
                     binding: <span class="self">self</span>.binding(<span class="kw-2">&amp;</span>res.binding, ty, ctx)<span class="question-mark">?</span>,
                 })
             })
             .transpose()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>function = <span class="kw">crate</span>::Function {
+        <span class="kw">let </span><span class="kw-2">mut </span>function = ir::Function {
             name: <span class="prelude-val">Some</span>(f.name.name.to_string()),
             arguments,
             result,
             local_variables: Arena::new(),
             expressions,
             named_expressions: <span class="kw">crate</span>::NamedExpressions::default(),
-            body: <span class="kw">crate</span>::Block::default(),
+            body: ir::Block::default(),
             diagnostic_filter_leaf: f.diagnostic_filter_leaf,
         };
 
@@ -5233,7 +5212,7 @@
             global_expression_kind_tracker: ctx.global_expression_kind_tracker,
         };
         <span class="kw">let </span><span class="kw-2">mut </span>body = <span class="self">self</span>.block(<span class="kw-2">&amp;</span>f.body, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>stmt_ctx)<span class="question-mark">?</span>;
-        ensure_block_returns(<span class="kw-2">&amp;mut </span>body);
+        proc::ensure_block_returns(<span class="kw-2">&amp;mut </span>body);
 
         function.body = body;
         function.named_expressions = named_expressions
@@ -5255,7 +5234,7 @@
                             <span class="prelude-val">Err</span>(err) =&gt; {
                                 <span class="kw">if let </span>Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>) = <span class="kw-2">*</span>err {
                                     <span class="kw">match </span><span class="kw-2">**</span>ty {
-                                        <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
+                                        proc::ConstantEvaluatorError::OverrideExpr =&gt; {
                                             workgroup_size_overrides_out[i] =
                                                 <span class="prelude-val">Some</span>(<span class="self">self</span>.workgroup_size_override(
                                                     size_expr,
@@ -5283,7 +5262,7 @@
             };
 
             <span class="kw">let </span>(workgroup_size, workgroup_size_overrides) = workgroup_size_info;
-            ctx.module.entry_points.push(<span class="kw">crate</span>::EntryPoint {
+            ctx.module.entry_points.push(ir::EntryPoint {
                 name: f.name.name.to_string(),
                 stage: entry.stage,
                 early_depth_test: entry.early_depth_test,
@@ -5305,11 +5284,11 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(size_expr);
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>(expr),
+            <span class="prelude-val">Ok</span>(ir::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(ir::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>(expr),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::ExpectedConstExprConcreteIntegerScalar(
                 span,
             ))),
@@ -5321,8 +5300,8 @@
         b: <span class="kw-2">&amp;</span>ast::Block&lt;<span class="lifetime">'source</span>&gt;,
         is_inside_loop: bool,
         ctx: <span class="kw-2">&amp;mut </span>StatementContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Block&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>block = <span class="kw">crate</span>::Block::default();
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::Block&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>block = ir::Block::default();
 
         <span class="kw">for </span>stmt <span class="kw">in </span>b.stmts.iter() {
             <span class="self">self</span>.statement(stmt, <span class="kw-2">&amp;mut </span>block, is_inside_loop, ctx)<span class="question-mark">?</span>;
@@ -5334,18 +5313,18 @@
     <span class="kw">fn </span>statement(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         stmt: <span class="kw-2">&amp;</span>ast::Statement&lt;<span class="lifetime">'source</span>&gt;,
-        block: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Block,
+        block: <span class="kw-2">&amp;mut </span>ir::Block,
         is_inside_loop: bool,
         ctx: <span class="kw-2">&amp;mut </span>StatementContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">let </span>out = <span class="kw">match </span>stmt.kind {
             ast::StatementKind::Block(<span class="kw-2">ref </span>block) =&gt; {
                 <span class="kw">let </span>block = <span class="self">self</span>.block(block, is_inside_loop, ctx)<span class="question-mark">?</span>;
-                <span class="kw">crate</span>::Statement::Block(block)
+                ir::Statement::Block(block)
             }
             ast::StatementKind::LocalDecl(<span class="kw-2">ref </span>decl) =&gt; <span class="kw">match </span><span class="kw-2">*</span>decl {
                 ast::LocalDecl::Let(<span class="kw-2">ref </span>l) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                     <span class="kw">let </span>explicit_ty = l
@@ -5385,7 +5364,7 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
                 ast::LocalDecl::Var(<span class="kw-2">ref </span>v) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                     <span class="kw">let </span>explicit_ty =
@@ -5426,7 +5405,7 @@
                     };
 
                     <span class="kw">let </span>var = ctx.function.local_variables.append(
-                        <span class="kw">crate</span>::LocalVariable {
+                        ir::LocalVariable {
                             name: <span class="prelude-val">Some</span>(v.name.name.to_string()),
                             ty,
                             init: const_initializer,
@@ -5434,16 +5413,15 @@
                         stmt.span,
                     );
 
-                    <span class="kw">let </span>handle = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter).interrupt_emitter(
-                        <span class="kw">crate</span>::Expression::LocalVariable(var),
-                        Span::UNDEFINED,
-                    )<span class="question-mark">?</span>;
+                    <span class="kw">let </span>handle = ctx
+                        .as_expression(block, <span class="kw-2">&amp;mut </span>emitter)
+                        .interrupt_emitter(ir::Expression::LocalVariable(var), Span::UNDEFINED)<span class="question-mark">?</span>;
                     block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
                     ctx.local_table
                         .insert(v.handle, Declared::Runtime(Typed::Reference(handle)));
 
                     <span class="kw">match </span>initializer {
-                        <span class="prelude-val">Some</span>(initializer) =&gt; <span class="kw">crate</span>::Statement::Store {
+                        <span class="prelude-val">Some</span>(initializer) =&gt; ir::Statement::Store {
                             pointer: handle,
                             value: initializer,
                         },
@@ -5451,7 +5429,7 @@
                     }
                 }
                 ast::LocalDecl::Const(<span class="kw-2">ref </span>c) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                    <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                     emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                     <span class="kw">let </span>ectx = <span class="kw-2">&amp;mut </span>ctx.as_const(block, <span class="kw-2">&amp;mut </span>emitter);
@@ -5480,7 +5458,7 @@
                 <span class="kw-2">ref </span>accept,
                 <span class="kw-2">ref </span>reject,
             } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span>condition =
@@ -5490,7 +5468,7 @@
                 <span class="kw">let </span>accept = <span class="self">self</span>.block(accept, is_inside_loop, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>reject = <span class="self">self</span>.block(reject, is_inside_loop, ctx)<span class="question-mark">?</span>;
 
-                <span class="kw">crate</span>::Statement::If {
+                ir::Statement::If {
                     condition,
                     accept,
                     reject,
@@ -5500,7 +5478,7 @@
                 selector,
                 <span class="kw-2">ref </span>cases,
             } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
@@ -5518,10 +5496,8 @@
                         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, <span class="kw-2">&amp;mut </span>ectx)<span class="question-mark">?</span>;
                         <span class="kw">let </span>ty = <span class="macro">resolve_inner!</span>(ectx, expr);
                         <span class="kw">match </span><span class="kw-2">*</span>ty {
-                            <span class="kw">crate</span>::TypeInner::Scalar(
-                                <span class="kw">crate</span>::Scalar::I32
-                                | <span class="kw">crate</span>::Scalar::U32
-                                | <span class="kw">crate</span>::Scalar::ABSTRACT_INT,
+                            ir::TypeInner::Scalar(
+                                ir::Scalar::I32 | ir::Scalar::U32 | ir::Scalar::ABSTRACT_INT,
                             ) =&gt; <span class="prelude-val">Ok</span>((expr, span)),
                             <span class="kw">_ </span>=&gt; <span class="kw">match </span>i {
                                 <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(Box::new(Error::InvalidSwitchSelector { span })),
@@ -5537,8 +5513,8 @@
                             span: spans[span_idx],
                         })<span class="question-mark">?</span>;
                 <span class="comment">// Concretize to I32 if the selector and all cases were abstract
-                </span><span class="kw">if </span>consensus == <span class="kw">crate</span>::Scalar::ABSTRACT_INT {
-                    consensus = <span class="kw">crate</span>::Scalar::I32;
+                </span><span class="kw">if </span>consensus == ir::Scalar::ABSTRACT_INT {
+                    consensus = ir::Scalar::I32;
                 }
                 <span class="kw">for </span>expr <span class="kw">in </span><span class="kw-2">&amp;mut </span>exprs {
                     ectx.convert_to_leaf_scalar(expr, consensus)<span class="question-mark">?</span>;
@@ -5554,7 +5530,7 @@
                 <span class="kw">let </span>cases = cases
                     .iter()
                     .map(|case| {
-                        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::SwitchCase {
+                        <span class="prelude-val">Ok</span>(ir::SwitchCase {
                             value: <span class="kw">match </span>case.value {
                                 ast::SwitchValue::Expr(expr) =&gt; {
                                     <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
@@ -5566,11 +5542,11 @@
                                         .to_ctx()
                                         .eval_expr_to_literal_from(expr, <span class="kw-2">&amp;</span>ctx.function.expressions)
                                     {
-                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::I32(value)) =&gt; {
-                                            <span class="kw">crate</span>::SwitchValue::I32(value)
+                                        <span class="prelude-val">Some</span>(ir::Literal::I32(value)) =&gt; {
+                                            ir::SwitchValue::I32(value)
                                         }
-                                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Literal::U32(value)) =&gt; {
-                                            <span class="kw">crate</span>::SwitchValue::U32(value)
+                                        <span class="prelude-val">Some</span>(ir::Literal::U32(value)) =&gt; {
+                                            ir::SwitchValue::U32(value)
                                         }
                                         <span class="kw">_ </span>=&gt; {
                                             <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidSwitchCase {
@@ -5579,7 +5555,7 @@
                                         }
                                     }
                                 }
-                                ast::SwitchValue::Default =&gt; <span class="kw">crate</span>::SwitchValue::Default,
+                                ast::SwitchValue::Default =&gt; ir::SwitchValue::Default,
                             },
                             body: <span class="self">self</span>.block(<span class="kw-2">&amp;</span>case.body, is_inside_loop, ctx)<span class="question-mark">?</span>,
                             fall_through: case.fall_through,
@@ -5587,7 +5563,7 @@
                     })
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
-                <span class="kw">crate</span>::Statement::Switch { selector, cases }
+                ir::Statement::Switch { selector, cases }
             }
             ast::StatementKind::Loop {
                 <span class="kw-2">ref </span>body,
@@ -5597,7 +5573,7 @@
                 <span class="kw">let </span>body = <span class="self">self</span>.block(body, <span class="bool-val">true</span>, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>continuing = <span class="self">self</span>.block(continuing, <span class="bool-val">true</span>, ctx)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
                 <span class="kw">let </span>break_if = break_if
                     .map(|expr| {
@@ -5606,16 +5582,16 @@
                     .transpose()<span class="question-mark">?</span>;
                 continuing.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
 
-                <span class="kw">crate</span>::Statement::Loop {
+                ir::Statement::Loop {
                     body,
                     continuing,
                     break_if,
                 }
             }
-            ast::StatementKind::Break =&gt; <span class="kw">crate</span>::Statement::Break,
-            ast::StatementKind::Continue =&gt; <span class="kw">crate</span>::Statement::Continue,
+            ast::StatementKind::Break =&gt; ir::Statement::Break,
+            ast::StatementKind::Continue =&gt; ir::Statement::Continue,
             ast::StatementKind::Return { value: ast_value } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span>value;
@@ -5626,7 +5602,7 @@
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(result_ty) = result_ty {
                         <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
-                        <span class="kw">let </span>resolution = <span class="kw">crate</span>::proc::TypeResolution::Handle(result_ty);
+                        <span class="kw">let </span>resolution = proc::TypeResolution::Handle(result_ty);
                         <span class="kw">let </span>converted =
                             ectx.try_automatic_conversions(expr, <span class="kw-2">&amp;</span>resolution, Span::default())<span class="question-mark">?</span>;
                         value = <span class="prelude-val">Some</span>(converted);
@@ -5638,14 +5614,14 @@
                 }
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
 
-                <span class="kw">crate</span>::Statement::Return { value }
+                ir::Statement::Return { value }
             }
-            ast::StatementKind::Kill =&gt; <span class="kw">crate</span>::Statement::Kill,
+            ast::StatementKind::Kill =&gt; ir::Statement::Kill,
             ast::StatementKind::Call {
                 <span class="kw-2">ref </span>function,
                 <span class="kw-2">ref </span>arguments,
             } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let _ </span>= <span class="self">self</span>.call(
@@ -5663,7 +5639,7 @@
                 op,
                 value,
             } =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
                 <span class="kw">let </span>target_span = ctx.ast_expressions.get_span(ast_target);
 
@@ -5685,8 +5661,8 @@
                 // operators are exceptions, in that the right operand is always
                 // a `u32` or `vecN&lt;u32&gt;`.
                 </span><span class="kw">let </span>target_scalar = <span class="kw">match </span>op {
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BinaryOperator::ShiftLeft | <span class="kw">crate</span>::BinaryOperator::ShiftRight) =&gt; {
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Scalar::U32)
+                    <span class="prelude-val">Some</span>(ir::BinaryOperator::ShiftLeft | ir::BinaryOperator::ShiftRight) =&gt; {
+                        <span class="prelude-val">Some</span>(ir::Scalar::U32)
                     }
                     <span class="kw">_ </span>=&gt; <span class="macro">resolve_inner!</span>(ectx, target_handle)
                         .pointer_automatically_convertible_scalar(<span class="kw-2">&amp;</span>ectx.module.types),
@@ -5707,7 +5683,7 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>left = ectx.apply_load_rule(target)<span class="question-mark">?</span>;
                         ectx.binary_op_splat(op, <span class="kw-2">&amp;mut </span>left, <span class="kw-2">&amp;mut </span>value)<span class="question-mark">?</span>;
                         ectx.append_expression(
-                            <span class="kw">crate</span>::Expression::Binary {
+                            ir::Expression::Binary {
                                 op,
                                 left,
                                 right: value,
@@ -5719,18 +5695,18 @@
                 };
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
 
-                <span class="kw">crate</span>::Statement::Store {
+                ir::Statement::Store {
                     pointer: target_handle,
                     value,
                 }
             }
             ast::StatementKind::Increment(value) | ast::StatementKind::Decrement(value) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span>op = <span class="kw">match </span>stmt.kind {
-                    ast::StatementKind::Increment(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::BinaryOperator::Add,
-                    ast::StatementKind::Decrement(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::BinaryOperator::Subtract,
+                    ast::StatementKind::Increment(<span class="kw">_</span>) =&gt; ir::BinaryOperator::Add,
+                    ast::StatementKind::Decrement(<span class="kw">_</span>) =&gt; ir::BinaryOperator::Subtract,
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
 
@@ -5746,28 +5722,26 @@
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ectx = ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter);
                 <span class="kw">let </span>scalar = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ectx, target_handle) {
-                    <span class="kw">crate</span>::TypeInner::ValuePointer {
+                    ir::TypeInner::ValuePointer {
                         size: <span class="prelude-val">None</span>, scalar, ..
                     } =&gt; scalar,
-                    <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ectx.module.types[base].inner {
-                        <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
+                    ir::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ectx.module.types[base].inner {
+                        ir::TypeInner::Scalar(scalar) =&gt; scalar,
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                     },
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                 };
                 <span class="kw">let </span>literal = <span class="kw">match </span>scalar.kind {
-                    <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
-                        <span class="kw">crate</span>::Literal::one(scalar)
-                            .ok_or(Error::BadIncrDecrReferenceType(value_span))<span class="question-mark">?
-                    </span>}
+                    ir::ScalarKind::Sint | ir::ScalarKind::Uint =&gt; ir::Literal::one(scalar)
+                        .ok_or(Error::BadIncrDecrReferenceType(value_span))<span class="question-mark">?</span>,
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadIncrDecrReferenceType(value_span))),
                 };
 
                 <span class="kw">let </span>right =
-                    ectx.interrupt_emitter(<span class="kw">crate</span>::Expression::Literal(literal), Span::UNDEFINED)<span class="question-mark">?</span>;
+                    ectx.interrupt_emitter(ir::Expression::Literal(literal), Span::UNDEFINED)<span class="question-mark">?</span>;
                 <span class="kw">let </span>rctx = ectx.runtime_expression_ctx(stmt.span)<span class="question-mark">?</span>;
                 <span class="kw">let </span>left = rctx.function.expressions.append(
-                    <span class="kw">crate</span>::Expression::Load {
+                    ir::Expression::Load {
                         pointer: target_handle,
                     },
                     value_span,
@@ -5775,20 +5749,20 @@
                 <span class="kw">let </span>value = rctx
                     .function
                     .expressions
-                    .append(<span class="kw">crate</span>::Expression::Binary { op, left, right }, stmt.span);
+                    .append(ir::Expression::Binary { op, left, right }, stmt.span);
                 rctx.local_expression_kind_tracker
-                    .insert(left, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
+                    .insert(left, proc::ExpressionKind::Runtime);
                 rctx.local_expression_kind_tracker
-                    .insert(value, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
+                    .insert(value, proc::ExpressionKind::Runtime);
 
                 block.extend(emitter.finish(<span class="kw-2">&amp;</span>ctx.function.expressions));
-                <span class="kw">crate</span>::Statement::Store {
+                ir::Statement::Store {
                     pointer: target_handle,
                     value,
                 }
             }
             ast::StatementKind::ConstAssert(condition) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span>condition =
@@ -5813,7 +5787,7 @@
                 <span class="comment">// Remembered the RHS of the phony assignment as a named expression. This
                 // is important (1) to preserve the RHS for validation, (2) to track any
                 // referenced globals.
-                </span><span class="kw">let </span><span class="kw-2">mut </span>emitter = Emitter::default();
+                </span><span class="kw">let </span><span class="kw-2">mut </span>emitter = proc::Emitter::default();
                 emitter.start(<span class="kw-2">&amp;</span>ctx.function.expressions);
 
                 <span class="kw">let </span>value = <span class="self">self</span>.expression(expr, <span class="kw-2">&amp;mut </span>ctx.as_expression(block, <span class="kw-2">&amp;mut </span>emitter))<span class="question-mark">?</span>;
@@ -5840,7 +5814,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, ctx)<span class="question-mark">?</span>;
         ctx.concretize(expr)
     }
@@ -5849,7 +5823,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_reference(expr, ctx)<span class="question-mark">?</span>;
         ctx.apply_load_rule(expr)
     }
@@ -5858,27 +5832,25 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;Handle&lt;ir::Expression&gt;&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>expr = <span class="kw-2">&amp;</span>ctx.ast_expressions[expr];
 
-        <span class="kw">let </span>expr: Typed&lt;<span class="kw">crate</span>::Expression&gt; = <span class="kw">match </span><span class="kw-2">*</span>expr {
+        <span class="kw">let </span>expr: Typed&lt;ir::Expression&gt; = <span class="kw">match </span><span class="kw-2">*</span>expr {
             ast::Expression::Literal(literal) =&gt; {
                 <span class="kw">let </span>literal = <span class="kw">match </span>literal {
-                    ast::Literal::Number(Number::F16(f)) =&gt; <span class="kw">crate</span>::Literal::F16(f),
-                    ast::Literal::Number(Number::F32(f)) =&gt; <span class="kw">crate</span>::Literal::F32(f),
-                    ast::Literal::Number(Number::I32(i)) =&gt; <span class="kw">crate</span>::Literal::I32(i),
-                    ast::Literal::Number(Number::U32(u)) =&gt; <span class="kw">crate</span>::Literal::U32(u),
-                    ast::Literal::Number(Number::I64(i)) =&gt; <span class="kw">crate</span>::Literal::I64(i),
-                    ast::Literal::Number(Number::U64(u)) =&gt; <span class="kw">crate</span>::Literal::U64(u),
-                    ast::Literal::Number(Number::F64(f)) =&gt; <span class="kw">crate</span>::Literal::F64(f),
-                    ast::Literal::Number(Number::AbstractInt(i)) =&gt; <span class="kw">crate</span>::Literal::AbstractInt(i),
-                    ast::Literal::Number(Number::AbstractFloat(f)) =&gt; {
-                        <span class="kw">crate</span>::Literal::AbstractFloat(f)
-                    }
-                    ast::Literal::Bool(b) =&gt; <span class="kw">crate</span>::Literal::Bool(b),
+                    ast::Literal::Number(Number::F16(f)) =&gt; ir::Literal::F16(f),
+                    ast::Literal::Number(Number::F32(f)) =&gt; ir::Literal::F32(f),
+                    ast::Literal::Number(Number::I32(i)) =&gt; ir::Literal::I32(i),
+                    ast::Literal::Number(Number::U32(u)) =&gt; ir::Literal::U32(u),
+                    ast::Literal::Number(Number::I64(i)) =&gt; ir::Literal::I64(i),
+                    ast::Literal::Number(Number::U64(u)) =&gt; ir::Literal::U64(u),
+                    ast::Literal::Number(Number::F64(f)) =&gt; ir::Literal::F64(f),
+                    ast::Literal::Number(Number::AbstractInt(i)) =&gt; ir::Literal::AbstractInt(i),
+                    ast::Literal::Number(Number::AbstractFloat(f)) =&gt; ir::Literal::AbstractFloat(f),
+                    ast::Literal::Bool(b) =&gt; ir::Literal::Bool(b),
                 };
-                <span class="kw">let </span>handle = ctx.interrupt_emitter(<span class="kw">crate</span>::Expression::Literal(literal), span)<span class="question-mark">?</span>;
+                <span class="kw">let </span>handle = ctx.interrupt_emitter(ir::Expression::Literal(literal), span)<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(Typed::Plain(handle));
             }
             ast::Expression::Ident(ast::IdentExpr::Local(local)) =&gt; {
@@ -5891,17 +5863,17 @@
                     .ok_or(Error::UnknownIdent(span, name))<span class="question-mark">?</span>;
                 <span class="kw">let </span>expr = <span class="kw">match </span><span class="kw-2">*</span>global {
                     LoweredGlobalDecl::Var(handle) =&gt; {
-                        <span class="kw">let </span>expr = <span class="kw">crate</span>::Expression::GlobalVariable(handle);
+                        <span class="kw">let </span>expr = ir::Expression::GlobalVariable(handle);
                         <span class="kw">match </span>ctx.module.global_variables[handle].space {
-                            <span class="kw">crate</span>::AddressSpace::Handle =&gt; Typed::Plain(expr),
+                            ir::AddressSpace::Handle =&gt; Typed::Plain(expr),
                             <span class="kw">_ </span>=&gt; Typed::Reference(expr),
                         }
                     }
                     LoweredGlobalDecl::Const(handle) =&gt; {
-                        Typed::Plain(<span class="kw">crate</span>::Expression::Constant(handle))
+                        Typed::Plain(ir::Expression::Constant(handle))
                     }
                     LoweredGlobalDecl::Override(handle) =&gt; {
-                        Typed::Plain(<span class="kw">crate</span>::Expression::Override(handle))
+                        Typed::Plain(ir::Expression::Override(handle))
                     }
                     LoweredGlobalDecl::Function { .. }
                     | LoweredGlobalDecl::Type(<span class="kw">_</span>)
@@ -5922,7 +5894,7 @@
             }
             ast::Expression::Unary { op, expr } =&gt; {
                 <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(expr, ctx)<span class="question-mark">?</span>;
-                Typed::Plain(<span class="kw">crate</span>::Expression::Unary { op, expr })
+                Typed::Plain(ir::Expression::Unary { op, expr })
             }
             ast::Expression::AddrOf(expr) =&gt; {
                 <span class="comment">// The `&amp;` operator simply converts a reference to a pointer. And since a
@@ -5930,13 +5902,13 @@
                 </span><span class="kw">match </span><span class="self">self</span>.expression_for_reference(expr, ctx)<span class="question-mark">? </span>{
                     Typed::Reference(handle) =&gt; {
                         <span class="kw">let </span>expr = <span class="kw-2">&amp;</span>ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>.function.expressions[handle];
-                        <span class="kw">if let </span><span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::Access { base, .. }
-                        | <span class="kw-2">&amp;</span><span class="kw">crate</span>::Expression::AccessIndex { base, .. } = expr
+                        <span class="kw">if let </span><span class="kw-2">&amp;</span>ir::Expression::Access { base, .. }
+                        | <span class="kw-2">&amp;</span>ir::Expression::AccessIndex { base, .. } = expr
                         {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = <span class="macro">resolve_inner!</span>(ctx, base).pointer_base_type() {
                                 <span class="kw">if </span><span class="macro">matches!</span>(
                                     <span class="kw-2">*</span>ty.inner_with(<span class="kw-2">&amp;</span>ctx.module.types),
-                                    <span class="kw">crate</span>::TypeInner::Vector { .. },
+                                    ir::TypeInner::Vector { .. },
                                 ) {
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidAddrOfOperand(
                                         ctx.get_expression_span(handle),
@@ -5991,9 +5963,7 @@
                 }
 
                 lowered_base.try_map(|base| <span class="kw">match </span>ctx.const_eval_expr_to_u32(index).ok() {
-                    <span class="prelude-val">Some</span>(index) =&gt; {
-                        <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Box&lt;Error&gt;&gt;(<span class="kw">crate</span>::Expression::AccessIndex { base, index })
-                    }
+                    <span class="prelude-val">Some</span>(index) =&gt; <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Box&lt;Error&gt;&gt;(ir::Expression::AccessIndex { base, index }),
                     <span class="prelude-val">None </span>=&gt; {
                         <span class="comment">// When an abstract array value e is indexed by an expression
                         // that is not a const-expression, then the array is concretized
@@ -6001,7 +5971,7 @@
                         // https://www.w3.org/TR/WGSL/#array-access-expr
                         // Also applies to vectors and matrices.
                         </span><span class="kw">let </span>base = ctx.concretize(base)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Expression::Access { base, index })
+                        <span class="prelude-val">Ok</span>(ir::Expression::Access { base, index })
                     }
                 })<span class="question-mark">?
             </span>}
@@ -6017,7 +5987,7 @@
                 }
 
                 <span class="kw">let </span>temp_ty;
-                <span class="kw">let </span>composite_type: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner = <span class="kw">match </span>lowered_base {
+                <span class="kw">let </span>composite_type: <span class="kw-2">&amp;</span>ir::TypeInner = <span class="kw">match </span>lowered_base {
                     Typed::Reference(handle) =&gt; {
                         temp_ty = <span class="macro">resolve_inner!</span>(ctx, handle)
                             .pointer_base_type()
@@ -6031,26 +6001,27 @@
                 };
 
                 <span class="kw">let </span>access = <span class="kw">match </span><span class="kw-2">*</span>composite_type {
-                    <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
+                    ir::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                         <span class="kw">let </span>index = members
                             .iter()
                             .position(|m| m.name.as_deref() == <span class="prelude-val">Some</span>(field.name))
                             .ok_or(Error::BadAccessor(field.span))<span class="question-mark">?
                             </span><span class="kw">as </span>u32;
 
-                        lowered_base.map(|base| <span class="kw">crate</span>::Expression::AccessIndex { base, index })
+                        lowered_base.map(|base| ir::Expression::AccessIndex { base, index })
                     }
-                    <span class="kw">crate</span>::TypeInner::Vector { .. } =&gt; {
+                    ir::TypeInner::Vector { .. } =&gt; {
                         <span class="kw">match </span>Components::new(field.name, field.span)<span class="question-mark">? </span>{
                             Components::Swizzle { size, pattern } =&gt; {
-                                Typed::Plain(<span class="kw">crate</span>::Expression::Swizzle {
+                                Typed::Plain(ir::Expression::Swizzle {
                                     size,
                                     vector: ctx.apply_load_rule(lowered_base)<span class="question-mark">?</span>,
                                     pattern,
                                 })
                             }
-                            Components::Single(index) =&gt; lowered_base
-                                .map(|base| <span class="kw">crate</span>::Expression::AccessIndex { base, index }),
+                            Components::Single(index) =&gt; {
+                                lowered_base.map(|base| ir::Expression::AccessIndex { base, index })
+                            }
                         }
                     }
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadAccessor(field.span))),
@@ -6063,8 +6034,8 @@
                 <span class="kw">let </span>to_resolved = <span class="self">self</span>.resolve_ast_type(to, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>element_scalar = <span class="kw">match </span>ctx.module.types[to_resolved].inner {
-                    <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
-                    <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; scalar,
+                    ir::TypeInner::Scalar(scalar) =&gt; scalar,
+                    ir::TypeInner::Vector { scalar, .. } =&gt; scalar,
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">let </span>ty = <span class="macro">resolve!</span>(ctx, expr);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::BadTypeCast {
@@ -6075,7 +6046,7 @@
                     }
                 };
 
-                Typed::Plain(<span class="kw">crate</span>::Expression::As {
+                Typed::Plain(ir::Expression::As {
                     expr,
                     kind: element_scalar.kind,
                     convert: <span class="prelude-val">None</span>,
@@ -6088,12 +6059,12 @@
 
     <span class="kw">fn </span>binary(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        op: <span class="kw">crate</span>::BinaryOperator,
+        op: ir::BinaryOperator,
         left: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         right: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Typed&lt;ir::Expression&gt;&gt; {
         <span class="comment">// Load both operands.
         </span><span class="kw">let </span><span class="kw-2">mut </span>left = <span class="self">self</span>.expression_for_abstract(left, ctx)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>right = <span class="self">self</span>.expression_for_abstract(right, ctx)<span class="question-mark">?</span>;
@@ -6104,13 +6075,13 @@
 
         <span class="comment">// Apply automatic conversions.
         </span><span class="kw">match </span>op {
-            <span class="kw">crate</span>::BinaryOperator::ShiftLeft | <span class="kw">crate</span>::BinaryOperator::ShiftRight =&gt; {
+            ir::BinaryOperator::ShiftLeft | ir::BinaryOperator::ShiftRight =&gt; {
                 <span class="comment">// Shift operators require the right operand to be `u32` or
                 // `vecN&lt;u32&gt;`. We can let the validator sort out vector length
                 // issues, but the right operand must be, or convert to, a u32 leaf
                 // scalar.
                 </span>right =
-                    ctx.try_automatic_conversion_for_leaf_scalar(right, <span class="kw">crate</span>::Scalar::U32, span)<span class="question-mark">?</span>;
+                    ctx.try_automatic_conversion_for_leaf_scalar(right, ir::Scalar::U32, span)<span class="question-mark">?</span>;
 
                 <span class="comment">// Additionally, we must concretize the left operand if the right operand
                 // is not a const-expression.
@@ -6144,7 +6115,7 @@
             }
         }
 
-        <span class="prelude-val">Ok</span>(Typed::Plain(<span class="kw">crate</span>::Expression::Binary { op, left, right }))
+        <span class="prelude-val">Ok</span>(Typed::Plain(ir::Expression::Binary { op, left, right }))
     }
 
     <span class="doccomment">/// Generate Naga IR for call expressions and statements, and type
@@ -6164,7 +6135,7 @@
     ///   `Call` statement to the current block, and then resume generating
     ///   expressions.
     ///
-    /// [`Call`]: crate::Statement::Call
+    /// [`Call`]: ir::Statement::Call
     </span><span class="kw">fn </span>call(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
@@ -6172,7 +6143,7 @@
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         is_statement: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;ir::Expression&gt;&gt;&gt; {
         <span class="kw">let </span>function_span = function.span;
         <span class="kw">match </span>ctx.globals.get(function.name) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>LoweredGlobalDecl::Type(ty)) =&gt; {
@@ -6205,7 +6176,7 @@
                     .enumerate()
                     .map(|(i, <span class="kw-2">&amp;</span>arg)| {
                         <span class="comment">// Try to convert abstract values to the known argument types
-                        </span><span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw">crate</span>::FunctionArgument {
+                        </span><span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ir::FunctionArgument {
                             ty: parameter_ty, ..
                         }) = ctx.module.functions[function].arguments.get(i)
                         <span class="kw">else </span>{
@@ -6217,7 +6188,7 @@
                         <span class="kw">let </span>expr = <span class="self">self</span>.expression_for_abstract(arg, ctx)<span class="question-mark">?</span>;
                         ctx.try_automatic_conversions(
                             expr,
-                            <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::TypeResolution::Handle(parameter_ty),
+                            <span class="kw-2">&amp;</span>proc::TypeResolution::Handle(parameter_ty),
                             ctx.ast_expressions.get_span(arg),
                         )
                     })
@@ -6237,14 +6208,14 @@
                     <span class="kw">let </span>result = rctx
                         .function
                         .expressions
-                        .append(<span class="kw">crate</span>::Expression::CallResult(function), span);
+                        .append(ir::Expression::CallResult(function), span);
                     rctx.local_expression_kind_tracker
-                        .insert(result, <span class="kw">crate</span>::proc::ExpressionKind::Runtime);
+                        .insert(result, proc::ExpressionKind::Runtime);
                     result
                 });
                 rctx.emitter.start(<span class="kw-2">&amp;</span>rctx.function.expressions);
                 rctx.block.push(
-                    <span class="kw">crate</span>::Statement::Call {
+                    ir::Statement::Call {
                         function,
                         arguments,
                         result,
@@ -6264,12 +6235,12 @@
                     <span class="comment">// Check for no-op all(bool) and any(bool):
                     </span><span class="kw">let </span>argument_unmodified = <span class="macro">matches!</span>(
                         fun,
-                        <span class="kw">crate</span>::RelationalFunction::All | <span class="kw">crate</span>::RelationalFunction::Any
+                        ir::RelationalFunction::All | ir::RelationalFunction::Any
                     ) &amp;&amp; {
                         <span class="macro">matches!</span>(
                             <span class="macro">resolve_inner!</span>(ctx, argument),
-                            <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
-                                kind: <span class="kw">crate</span>::ScalarKind::Bool,
+                            <span class="kw-2">&amp;</span>ir::TypeInner::Scalar(ir::Scalar {
+                                kind: ir::ScalarKind::Bool,
                                 ..
                             })
                         )
@@ -6278,14 +6249,14 @@
                     <span class="kw">if </span>argument_unmodified {
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(argument));
                     } <span class="kw">else </span>{
-                        <span class="kw">crate</span>::Expression::Relational { fun, argument }
+                        ir::Expression::Relational { fun, argument }
                     }
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>((axis, ctrl)) = conv::map_derivative(function.name) {
                     <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
                     <span class="kw">let </span>expr = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                     args.finish()<span class="question-mark">?</span>;
 
-                    <span class="kw">crate</span>::Expression::Derivative { axis, ctrl, expr }
+                    ir::Expression::Derivative { axis, ctrl, expr }
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fun) = conv::map_standard_fun(function.name) {
                     <span class="self">self</span>.math_function_helper(span, fun, arguments, ctx)<span class="question-mark">?
                 </span>} <span class="kw">else if let </span><span class="prelude-val">Some</span>(fun) = Texture::map(function.name) {
@@ -6298,7 +6269,7 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(
                         <span class="self">self</span>.subgroup_gather_helper(span, mode, arguments, ctx)<span class="question-mark">?</span>,
                     ));
-                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fun) = <span class="kw">crate</span>::AtomicFunction::map(function.name) {
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(fun) = ir::AtomicFunction::map(function.name) {
                     <span class="kw">return </span><span class="self">self</span>.atomic_helper(span, fun, arguments, is_statement, ctx);
                 } <span class="kw">else </span>{
                     <span class="kw">match </span>function.name {
@@ -6311,7 +6282,7 @@
 
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::Select {
+                            ir::Expression::Select {
                                 reject,
                                 accept,
                                 condition,
@@ -6322,14 +6293,14 @@
                             <span class="kw">let </span>expr = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ArrayLength(expr)
+                            ir::Expression::ArrayLength(expr)
                         }
                         <span class="string">"atomicLoad" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
                             <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::Load { pointer }
+                            ir::Expression::Load { pointer }
                         }
                         <span class="string">"atomicStore" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">2</span>, span);
@@ -6342,7 +6313,7 @@
                                 .extend(rctx.emitter.finish(<span class="kw-2">&amp;</span>rctx.function.expressions));
                             rctx.emitter.start(<span class="kw-2">&amp;</span>rctx.function.expressions);
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::Store { pointer, value }, span);
+                                .push(ir::Statement::Store { pointer, value }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"atomicCompareExchangeWeak" </span>=&gt; {
@@ -6359,16 +6330,14 @@
                             args.finish()<span class="question-mark">?</span>;
 
                             <span class="kw">let </span>expression = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, value) {
-                                <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
-                                    <span class="kw">crate</span>::Expression::AtomicResult {
-                                        ty: ctx.module.generate_predeclared_type(
-                                            <span class="kw">crate</span>::PredeclaredType::AtomicCompareExchangeWeakResult(
-                                                scalar,
-                                            ),
+                                ir::TypeInner::Scalar(scalar) =&gt; ir::Expression::AtomicResult {
+                                    ty: ctx.module.generate_predeclared_type(
+                                        ir::PredeclaredType::AtomicCompareExchangeWeakResult(
+                                            scalar,
                                         ),
-                                        comparison: <span class="bool-val">true</span>,
-                                    }
-                                }
+                                    ),
+                                    comparison: <span class="bool-val">true</span>,
+                                },
                                 <span class="kw">_ </span>=&gt; {
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicOperandType(
                                         value_span,
@@ -6379,9 +6348,9 @@
                             <span class="kw">let </span>result = ctx.interrupt_emitter(expression, span)<span class="question-mark">?</span>;
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block.push(
-                                <span class="kw">crate</span>::Statement::Atomic {
+                                ir::Statement::Atomic {
                                     pointer,
-                                    fun: <span class="kw">crate</span>::AtomicFunction::Exchange {
+                                    fun: ir::AtomicFunction::Exchange {
                                         compare: <span class="prelude-val">Some</span>(compare),
                                     },
                                     value,
@@ -6417,17 +6386,17 @@
                             rctx.block
                                 .extend(rctx.emitter.finish(<span class="kw-2">&amp;</span>rctx.function.expressions));
                             rctx.emitter.start(<span class="kw-2">&amp;</span>rctx.function.expressions);
-                            <span class="kw">let </span>stmt = <span class="kw">crate</span>::Statement::ImageAtomic {
+                            <span class="kw">let </span>stmt = ir::Statement::ImageAtomic {
                                 image,
                                 coordinate,
                                 array_index,
                                 fun: <span class="kw">match </span>function.name {
-                                    <span class="string">"textureAtomicMin" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Min,
-                                    <span class="string">"textureAtomicMax" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Max,
-                                    <span class="string">"textureAtomicAdd" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Add,
-                                    <span class="string">"textureAtomicAnd" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::And,
-                                    <span class="string">"textureAtomicOr" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::InclusiveOr,
-                                    <span class="string">"textureAtomicXor" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::ExclusiveOr,
+                                    <span class="string">"textureAtomicMin" </span>=&gt; ir::AtomicFunction::Min,
+                                    <span class="string">"textureAtomicMax" </span>=&gt; ir::AtomicFunction::Max,
+                                    <span class="string">"textureAtomicAdd" </span>=&gt; ir::AtomicFunction::Add,
+                                    <span class="string">"textureAtomicAnd" </span>=&gt; ir::AtomicFunction::And,
+                                    <span class="string">"textureAtomicOr" </span>=&gt; ir::AtomicFunction::InclusiveOr,
+                                    <span class="string">"textureAtomicXor" </span>=&gt; ir::AtomicFunction::ExclusiveOr,
                                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                                 },
                                 value,
@@ -6440,7 +6409,7 @@
 
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::Barrier(<span class="kw">crate</span>::Barrier::STORAGE), span);
+                                .push(ir::Statement::Barrier(ir::Barrier::STORAGE), span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"workgroupBarrier" </span>=&gt; {
@@ -6448,7 +6417,7 @@
 
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::Barrier(<span class="kw">crate</span>::Barrier::WORK_GROUP), span);
+                                .push(ir::Statement::Barrier(ir::Barrier::WORK_GROUP), span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"subgroupBarrier" </span>=&gt; {
@@ -6456,7 +6425,7 @@
 
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::Barrier(<span class="kw">crate</span>::Barrier::SUB_GROUP), span);
+                                .push(ir::Statement::Barrier(ir::Barrier::SUB_GROUP), span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"textureBarrier" </span>=&gt; {
@@ -6464,7 +6433,7 @@
 
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::Barrier(<span class="kw">crate</span>::Barrier::TEXTURE), span);
+                                .push(ir::Statement::Barrier(ir::Barrier::TEXTURE), span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"workgroupUniformLoad" </span>=&gt; {
@@ -6474,9 +6443,9 @@
 
                             <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
                             <span class="kw">let </span>result_ty = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, pointer) {
-                                <span class="kw">crate</span>::TypeInner::Pointer {
+                                ir::TypeInner::Pointer {
                                     base,
-                                    space: <span class="kw">crate</span>::AddressSpace::WorkGroup,
+                                    space: ir::AddressSpace::WorkGroup,
                                 } =&gt; base,
                                 <span class="kw-2">ref </span>other =&gt; {
                                     <span class="macro">log::error!</span>(<span class="string">"Type {other:?} passed to workgroupUniformLoad"</span>);
@@ -6485,12 +6454,12 @@
                                 }
                             };
                             <span class="kw">let </span>result = ctx.interrupt_emitter(
-                                <span class="kw">crate</span>::Expression::WorkGroupUniformLoadResult { ty: result_ty },
+                                ir::Expression::WorkGroupUniformLoadResult { ty: result_ty },
                                 span,
                             )<span class="question-mark">?</span>;
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block.push(
-                                <span class="kw">crate</span>::Statement::WorkGroupUniformLoad { pointer, result },
+                                ir::Statement::WorkGroupUniformLoad { pointer, result },
                                 span,
                             );
 
@@ -6521,7 +6490,7 @@
                             rctx.block
                                 .extend(rctx.emitter.finish(<span class="kw-2">&amp;</span>rctx.function.expressions));
                             rctx.emitter.start(<span class="kw-2">&amp;</span>rctx.function.expressions);
-                            <span class="kw">let </span>stmt = <span class="kw">crate</span>::Statement::ImageStore {
+                            <span class="kw">let </span>stmt = ir::Statement::ImageStore {
                                 image,
                                 coordinate,
                                 array_index,
@@ -6562,7 +6531,7 @@
 
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ImageLoad {
+                            ir::Expression::ImageLoad {
                                 image,
                                 coordinate,
                                 array_index,
@@ -6580,9 +6549,9 @@
                                 .transpose()<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ImageQuery {
+                            ir::Expression::ImageQuery {
                                 image,
-                                query: <span class="kw">crate</span>::ImageQuery::Size { level },
+                                query: ir::ImageQuery::Size { level },
                             }
                         }
                         <span class="string">"textureNumLevels" </span>=&gt; {
@@ -6590,9 +6559,9 @@
                             <span class="kw">let </span>image = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ImageQuery {
+                            ir::Expression::ImageQuery {
                                 image,
-                                query: <span class="kw">crate</span>::ImageQuery::NumLevels,
+                                query: ir::ImageQuery::NumLevels,
                             }
                         }
                         <span class="string">"textureNumLayers" </span>=&gt; {
@@ -6600,9 +6569,9 @@
                             <span class="kw">let </span>image = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ImageQuery {
+                            ir::Expression::ImageQuery {
                                 image,
-                                query: <span class="kw">crate</span>::ImageQuery::NumLayers,
+                                query: ir::ImageQuery::NumLayers,
                             }
                         }
                         <span class="string">"textureNumSamples" </span>=&gt; {
@@ -6610,9 +6579,9 @@
                             <span class="kw">let </span>image = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">crate</span>::Expression::ImageQuery {
+                            ir::Expression::ImageQuery {
                                 image,
-                                query: <span class="kw">crate</span>::ImageQuery::NumSamples,
+                                query: ir::ImageQuery::NumSamples,
                             }
                         }
                         <span class="string">"rayQueryInitialize" </span>=&gt; {
@@ -6623,7 +6592,7 @@
                             args.finish()<span class="question-mark">?</span>;
 
                             <span class="kw">let _ </span>= ctx.module.generate_ray_desc_type();
-                            <span class="kw">let </span>fun = <span class="kw">crate</span>::RayQueryFunction::Initialize {
+                            <span class="kw">let </span>fun = ir::RayQueryFunction::Initialize {
                                 acceleration_structure,
                                 descriptor,
                             };
@@ -6633,7 +6602,7 @@
                                 .extend(rctx.emitter.finish(<span class="kw-2">&amp;</span>rctx.function.expressions));
                             rctx.emitter.start(<span class="kw-2">&amp;</span>rctx.function.expressions);
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
+                                .push(ir::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"getCommittedHitVertexPositions" </span>=&gt; {
@@ -6643,7 +6612,7 @@
 
                             <span class="kw">let _ </span>= ctx.module.generate_vertex_return_type();
 
-                            <span class="kw">crate</span>::Expression::RayQueryVertexPositions {
+                            ir::Expression::RayQueryVertexPositions {
                                 query,
                                 committed: <span class="bool-val">true</span>,
                             }
@@ -6655,7 +6624,7 @@
 
                             <span class="kw">let _ </span>= ctx.module.generate_vertex_return_type();
 
-                            <span class="kw">crate</span>::Expression::RayQueryVertexPositions {
+                            ir::Expression::RayQueryVertexPositions {
                                 query,
                                 committed: <span class="bool-val">false</span>,
                             }
@@ -6665,14 +6634,12 @@
                             <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>result = ctx.interrupt_emitter(
-                                <span class="kw">crate</span>::Expression::RayQueryProceedResult,
-                                span,
-                            )<span class="question-mark">?</span>;
-                            <span class="kw">let </span>fun = <span class="kw">crate</span>::RayQueryFunction::Proceed { result };
+                            <span class="kw">let </span>result =
+                                ctx.interrupt_emitter(ir::Expression::RayQueryProceedResult, span)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>fun = ir::RayQueryFunction::Proceed { result };
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
+                                .push(ir::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(result));
                         }
                         <span class="string">"rayQueryGenerateIntersection" </span>=&gt; {
@@ -6681,10 +6648,10 @@
                             <span class="kw">let </span>hit_t = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>fun = <span class="kw">crate</span>::RayQueryFunction::GenerateIntersection { hit_t };
+                            <span class="kw">let </span>fun = ir::RayQueryFunction::GenerateIntersection { hit_t };
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
+                                .push(ir::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"rayQueryConfirmIntersection" </span>=&gt; {
@@ -6692,10 +6659,10 @@
                             <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>fun = <span class="kw">crate</span>::RayQueryFunction::ConfirmIntersection;
+                            <span class="kw">let </span>fun = ir::RayQueryFunction::ConfirmIntersection;
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
+                                .push(ir::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"rayQueryTerminate" </span>=&gt; {
@@ -6703,10 +6670,10 @@
                             <span class="kw">let </span>query = <span class="self">self</span>.ray_query_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>fun = <span class="kw">crate</span>::RayQueryFunction::Terminate;
+                            <span class="kw">let </span>fun = ir::RayQueryFunction::Terminate;
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::RayQuery { query, fun }, span);
+                                .push(ir::Statement::RayQuery { query, fun }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                         }
                         <span class="string">"rayQueryGetCommittedIntersection" </span>=&gt; {
@@ -6715,7 +6682,7 @@
                             args.finish()<span class="question-mark">?</span>;
 
                             <span class="kw">let _ </span>= ctx.module.generate_ray_intersection_type();
-                            <span class="kw">crate</span>::Expression::RayQueryGetIntersection {
+                            ir::Expression::RayQueryGetIntersection {
                                 query,
                                 committed: <span class="bool-val">true</span>,
                             }
@@ -6726,7 +6693,7 @@
                             args.finish()<span class="question-mark">?</span>;
 
                             <span class="kw">let _ </span>= ctx.module.generate_ray_intersection_type();
-                            <span class="kw">crate</span>::Expression::RayQueryGetIntersection {
+                            ir::Expression::RayQueryGetIntersection {
                                 query,
                                 committed: <span class="bool-val">false</span>,
                             }
@@ -6751,11 +6718,11 @@
                             </span>};
                             args.finish()<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>result = ctx
-                                .interrupt_emitter(<span class="kw">crate</span>::Expression::SubgroupBallotResult, span)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>result =
+                                ctx.interrupt_emitter(ir::Expression::SubgroupBallotResult, span)<span class="question-mark">?</span>;
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
                             rctx.block
-                                .push(<span class="kw">crate</span>::Statement::SubgroupBallot { result, predicate }, span);
+                                .push(ir::Statement::SubgroupBallot { result, predicate }, span);
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(result));
                         }
                         <span class="kw">_ </span>=&gt; {
@@ -6778,15 +6745,15 @@
     /// The `span` argument should give the span of the function name in the
     /// call expression.
     ///
-    /// [`Math`]: crate::ir::Expression::Math
-    /// [`MathFunction`]: crate::ir::MathFunction
+    /// [`Math`]: ir::Expression::Math
+    /// [`MathFunction`]: ir::MathFunction
     </span><span class="kw">fn </span>math_function_helper(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
-        fun: <span class="kw">crate</span>::ir::MathFunction,
+        fun: ir::MathFunction,
         ast_arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::ir::Expression&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::Expression&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>lowered_arguments = Vec::with_capacity(ast_arguments.len());
         <span class="kw">for </span><span class="kw-2">&amp;</span>arg <span class="kw">in </span>ast_arguments {
             <span class="kw">let </span>lowered = <span class="self">self</span>.expression_for_abstract(arg, ctx)<span class="question-mark">?</span>;
@@ -6801,11 +6768,11 @@
         <span class="comment">// If this function returns a predeclared type, register it
         // in `Module::special_types`. The typifier will expect to
         // be able to find it there.
-        </span><span class="kw">if let </span><span class="kw">crate</span>::proc::Conclusion::Predeclared(predeclared) = rule.conclusion {
+        </span><span class="kw">if let </span>proc::Conclusion::Predeclared(predeclared) = rule.conclusion {
             ctx.module.generate_predeclared_type(predeclared);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Expression::Math {
+        <span class="prelude-val">Ok</span>(ir::Expression::Math {
             fun,
             arg: lowered_arguments[<span class="number">0</span>],
             arg1: lowered_arguments.get(<span class="number">1</span>).cloned(),
@@ -6823,17 +6790,17 @@
     /// Use `fun` to identify the function being called in error messages;
     /// `span` should be the span of the function name in the call expression.
     ///
-    /// [`Rule`]: crate::proc::Rule
+    /// [`Rule`]: proc::Rule
     </span><span class="kw">fn </span>resolve_overloads&lt;O, F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         span: Span,
         fun: F,
         overloads: O,
-        arguments: <span class="kw-2">&amp;</span>[Handle&lt;<span class="kw">crate</span>::ir::Expression&gt;],
+        arguments: <span class="kw-2">&amp;</span>[Handle&lt;ir::Expression&gt;],
         ctx: <span class="kw-2">&amp;</span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::proc::Rule&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, proc::Rule&gt;
     <span class="kw">where
-        </span>O: <span class="kw">crate</span>::proc::OverloadSet,
+        </span>O: proc::OverloadSet,
         F: TryToWgsl + core::fmt::Debug + Copy,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>remaining_overloads = overloads.clone();
@@ -6995,8 +6962,8 @@
     /// to the converted arguments.
     </span><span class="kw">fn </span>apply_automatic_conversions_for_call(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        rule: <span class="kw-2">&amp;</span><span class="kw">crate</span>::proc::Rule,
-        arguments: <span class="kw-2">&amp;mut </span>[Handle&lt;<span class="kw">crate</span>::ir::Expression&gt;],
+        rule: <span class="kw-2">&amp;</span>proc::Rule,
+        arguments: <span class="kw-2">&amp;mut </span>[Handle&lt;ir::Expression&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ()&gt; {
         <span class="kw">for </span>(i, argument) <span class="kw">in </span>arguments.iter_mut().enumerate() {
@@ -7020,13 +6987,13 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, pointer) {
-            <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
-                <span class="kw">crate</span>::TypeInner::Atomic { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
+            ir::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
+                ir::TypeInner::Atomic { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to atomic op"</span>, other);
                     <span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicPointer(span)))
@@ -7042,11 +7009,11 @@
     <span class="kw">fn </span>atomic_helper(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
-        fun: <span class="kw">crate</span>::AtomicFunction,
+        fun: ir::AtomicFunction,
         args: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         is_statement: bool,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;ir::Expression&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, <span class="number">2</span>, span);
 
         <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -7058,12 +7025,11 @@
         // operation, generate a no-result form of the `Atomic` statement, so
         // that we can pass validation with only `SHADER_INT64_ATOMIC_MIN_MAX`
         // whenever possible.
-        </span><span class="kw">let </span>is_64_bit_min_max =
-            <span class="macro">matches!</span>(fun, <span class="kw">crate</span>::AtomicFunction::Min | <span class="kw">crate</span>::AtomicFunction::Max)
-                &amp;&amp; <span class="macro">matches!</span>(
-                    <span class="kw-2">*</span>value_inner,
-                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar { width: <span class="number">8</span>, .. })
-                );
+        </span><span class="kw">let </span>is_64_bit_min_max = <span class="macro">matches!</span>(fun, ir::AtomicFunction::Min | ir::AtomicFunction::Max)
+            &amp;&amp; <span class="macro">matches!</span>(
+                <span class="kw-2">*</span>value_inner,
+                ir::TypeInner::Scalar(ir::Scalar { width: <span class="number">8</span>, .. })
+            );
         <span class="kw">let </span>result = <span class="kw">if </span>is_64_bit_min_max &amp;&amp; is_statement {
             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
             rctx.block
@@ -7073,7 +7039,7 @@
         </span>} <span class="kw">else </span>{
             <span class="kw">let </span>ty = ctx.register_type(value)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(ctx.interrupt_emitter(
-                <span class="kw">crate</span>::Expression::AtomicResult {
+                ir::Expression::AtomicResult {
                     ty,
                     comparison: <span class="bool-val">false</span>,
                 },
@@ -7082,7 +7048,7 @@
         };
         <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
         rctx.block.push(
-            <span class="kw">crate</span>::Statement::Atomic {
+            ir::Statement::Atomic {
                 pointer,
                 fun,
                 value,
@@ -7099,14 +7065,14 @@
         args: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::Expression&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::Expression&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, fun.min_argument_count(), span);
 
         <span class="kw">fn </span>get_image_and_span&lt;<span class="lifetime">'source</span>&gt;(
             lowerer: <span class="kw-2">&amp;mut </span>Lowerer&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>&gt;,
             args: <span class="kw-2">&amp;mut </span>ArgumentContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'source</span>&gt;,
             ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;<span class="kw">crate</span>::Expression&gt;, Span)&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;ir::Expression&gt;, Span)&gt; {
             <span class="kw">let </span>image = args.next()<span class="question-mark">?</span>;
             <span class="kw">let </span>image_span = ctx.ast_expressions.get_span(image);
             <span class="kw">let </span>image = lowerer.expression(image, ctx)<span class="question-mark">?</span>;
@@ -7121,13 +7087,13 @@
                 </span><span class="kw">let </span>lowered_image_or_component = <span class="self">self</span>.expression(image_or_component, ctx)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, lowered_image_or_component) {
-                    <span class="kw">crate</span>::TypeInner::Image {
-                        class: <span class="kw">crate</span>::ImageClass::Depth { .. },
+                    ir::TypeInner::Image {
+                        class: ir::ImageClass::Depth { .. },
                         ..
                     } =&gt; (
                         lowered_image_or_component,
                         image_or_component_span,
-                        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::SwizzleComponent::X),
+                        <span class="prelude-val">Some</span>(ir::SwizzleComponent::X),
                     ),
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">let </span>(image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
@@ -7145,7 +7111,7 @@
             }
             Texture::GatherCompare =&gt; {
                 <span class="kw">let </span>(image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
-                (image, image_span, <span class="prelude-val">Some</span>(<span class="kw">crate</span>::SwizzleComponent::X))
+                (image, image_span, <span class="prelude-val">Some</span>(ir::SwizzleComponent::X))
             }
 
             <span class="kw">_ </span>=&gt; {
@@ -7164,33 +7130,33 @@
             .transpose()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(level, depth_ref) = <span class="kw">match </span>fun {
-            Texture::Gather =&gt; (<span class="kw">crate</span>::SampleLevel::Zero, <span class="prelude-val">None</span>),
+            Texture::Gather =&gt; (ir::SampleLevel::Zero, <span class="prelude-val">None</span>),
             Texture::GatherCompare =&gt; {
                 <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
+                (ir::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
             }
 
-            Texture::Sample =&gt; (<span class="kw">crate</span>::SampleLevel::Auto, <span class="prelude-val">None</span>),
+            Texture::Sample =&gt; (ir::SampleLevel::Auto, <span class="prelude-val">None</span>),
             Texture::SampleBias =&gt; {
                 <span class="kw">let </span>bias = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Bias(bias), <span class="prelude-val">None</span>)
+                (ir::SampleLevel::Bias(bias), <span class="prelude-val">None</span>)
             }
             Texture::SampleCompare =&gt; {
                 <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Auto, <span class="prelude-val">Some</span>(reference))
+                (ir::SampleLevel::Auto, <span class="prelude-val">Some</span>(reference))
             }
             Texture::SampleCompareLevel =&gt; {
                 <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
+                (ir::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
             }
             Texture::SampleGrad =&gt; {
                 <span class="kw">let </span>x = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>y = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Gradient { x, y }, <span class="prelude-val">None</span>)
+                (ir::SampleLevel::Gradient { x, y }, <span class="prelude-val">None</span>)
             }
             Texture::SampleLevel =&gt; {
                 <span class="kw">let </span>level = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (<span class="kw">crate</span>::SampleLevel::Exact(level), <span class="prelude-val">None</span>)
+                (ir::SampleLevel::Exact(level), <span class="prelude-val">None</span>)
             }
         };
 
@@ -7202,7 +7168,7 @@
 
         args.finish()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::Expression::ImageSample {
+        <span class="prelude-val">Ok</span>(ir::Expression::ImageSample {
             image,
             sampler,
             gather,
@@ -7217,11 +7183,11 @@
     <span class="kw">fn </span>subgroup_operation_helper(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
-        op: <span class="kw">crate</span>::SubgroupOperation,
-        collective_op: <span class="kw">crate</span>::CollectiveOperation,
+        op: ir::SubgroupOperation,
+        collective_op: ir::CollectiveOperation,
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
 
         <span class="kw">let </span>argument = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
@@ -7229,11 +7195,10 @@
 
         <span class="kw">let </span>ty = ctx.register_type(argument)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>result =
-            ctx.interrupt_emitter(<span class="kw">crate</span>::Expression::SubgroupOperationResult { ty }, span)<span class="question-mark">?</span>;
+        <span class="kw">let </span>result = ctx.interrupt_emitter(ir::Expression::SubgroupOperationResult { ty }, span)<span class="question-mark">?</span>;
         <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
         rctx.block.push(
-            <span class="kw">crate</span>::Statement::SubgroupCollectiveOperation {
+            ir::Statement::SubgroupCollectiveOperation {
                 op,
                 collective_op,
                 argument,
@@ -7250,22 +7215,22 @@
         mode: SubgroupGather,
         arguments: <span class="kw-2">&amp;</span>[Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;],
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">2</span>, span);
 
         <span class="kw">let </span>argument = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
 
         <span class="kw">use </span>SubgroupGather <span class="kw">as </span>Sg;
         <span class="kw">let </span>mode = <span class="kw">if let </span>Sg::BroadcastFirst = mode {
-            <span class="kw">crate</span>::GatherMode::BroadcastFirst
+            ir::GatherMode::BroadcastFirst
         } <span class="kw">else </span>{
             <span class="kw">let </span>index = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
             <span class="kw">match </span>mode {
-                Sg::Broadcast =&gt; <span class="kw">crate</span>::GatherMode::Broadcast(index),
-                Sg::Shuffle =&gt; <span class="kw">crate</span>::GatherMode::Shuffle(index),
-                Sg::ShuffleDown =&gt; <span class="kw">crate</span>::GatherMode::ShuffleDown(index),
-                Sg::ShuffleUp =&gt; <span class="kw">crate</span>::GatherMode::ShuffleUp(index),
-                Sg::ShuffleXor =&gt; <span class="kw">crate</span>::GatherMode::ShuffleXor(index),
+                Sg::Broadcast =&gt; ir::GatherMode::Broadcast(index),
+                Sg::Shuffle =&gt; ir::GatherMode::Shuffle(index),
+                Sg::ShuffleDown =&gt; ir::GatherMode::ShuffleDown(index),
+                Sg::ShuffleUp =&gt; ir::GatherMode::ShuffleUp(index),
+                Sg::ShuffleXor =&gt; ir::GatherMode::ShuffleXor(index),
                 Sg::BroadcastFirst =&gt; <span class="macro">unreachable!</span>(),
             }
         };
@@ -7274,11 +7239,10 @@
 
         <span class="kw">let </span>ty = ctx.register_type(argument)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>result =
-            ctx.interrupt_emitter(<span class="kw">crate</span>::Expression::SubgroupOperationResult { ty }, span)<span class="question-mark">?</span>;
+        <span class="kw">let </span>result = ctx.interrupt_emitter(ir::Expression::SubgroupOperationResult { ty }, span)<span class="question-mark">?</span>;
         <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
         rctx.block.push(
-            <span class="kw">crate</span>::Statement::SubgroupGather {
+            ir::Statement::SubgroupGather {
                 mode,
                 argument,
                 result,
@@ -7293,9 +7257,9 @@
         s: <span class="kw-2">&amp;</span>ast::Struct&lt;<span class="lifetime">'source</span>&gt;,
         span: Span,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Type&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="number">0</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>struct_alignment = Alignment::ONE;
+        <span class="kw">let </span><span class="kw-2">mut </span>struct_alignment = proc::Alignment::ONE;
         <span class="kw">let </span><span class="kw-2">mut </span>members = Vec::with_capacity(s.members.len());
 
         <span class="kw">for </span>member <span class="kw">in </span>s.members.iter() {
@@ -7319,7 +7283,7 @@
 
             <span class="kw">let </span>member_alignment = <span class="kw">if let </span><span class="prelude-val">Some</span>(align_expr) = member.align {
                 <span class="kw">let </span>(align, span) = <span class="self">self</span>.const_u32(align_expr, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(alignment) = Alignment::new(align) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(alignment) = proc::Alignment::new(align) {
                     <span class="kw">if </span>alignment &lt; member_min_alignment {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::AlignAttributeTooLow(
                             span,
@@ -7340,7 +7304,7 @@
             offset = member_alignment.round_up(offset);
             struct_alignment = struct_alignment.max(member_alignment);
 
-            members.push(<span class="kw">crate</span>::StructMember {
+            members.push(ir::StructMember {
                 name: <span class="prelude-val">Some</span>(member.name.name.to_owned()),
                 ty,
                 binding,
@@ -7351,13 +7315,13 @@
         }
 
         <span class="kw">let </span>size = struct_alignment.round_up(offset);
-        <span class="kw">let </span>inner = <span class="kw">crate</span>::TypeInner::Struct {
+        <span class="kw">let </span>inner = ir::TypeInner::Struct {
             members,
             span: size,
         };
 
         <span class="kw">let </span>handle = ctx.module.types.insert(
-            <span class="kw">crate</span>::Type {
+            ir::Type {
                 name: <span class="prelude-val">Some</span>(s.name.name.to_string()),
                 inner,
             },
@@ -7378,10 +7342,8 @@
             .to_ctx()
             .eval_expr_to_u32(expr)
             .map_err(|err| <span class="kw">match </span>err {
-                <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
-                    Error::ExpectedConstExprConcreteIntegerScalar(span)
-                }
-                <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; Error::ExpectedNonNegative(span),
+                proc::U32EvalError::NonConst =&gt; Error::ExpectedConstExprConcreteIntegerScalar(span),
+                proc::U32EvalError::Negative =&gt; Error::ExpectedNonNegative(span),
             })<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((value, span))
     }
@@ -7390,7 +7352,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         size: ast::ArraySize&lt;<span class="lifetime">'source</span>&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="kw">crate</span>::ArraySize&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, ir::ArraySize&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>size {
             ast::ArraySize::Constant(expr) =&gt; {
                 <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
@@ -7399,23 +7361,23 @@
                     <span class="prelude-val">Ok</span>(value) =&gt; {
                         <span class="kw">let </span>len = ctx.const_eval_expr_to_u32(value).map_err(|err| {
                             Box::new(<span class="kw">match </span>err {
-                                <span class="kw">crate</span>::proc::U32EvalError::NonConst =&gt; {
+                                proc::U32EvalError::NonConst =&gt; {
                                     Error::ExpectedConstExprConcreteIntegerScalar(span)
                                 }
-                                <span class="kw">crate</span>::proc::U32EvalError::Negative =&gt; {
+                                proc::U32EvalError::Negative =&gt; {
                                     Error::ExpectedPositiveArrayLength(span)
                                 }
                             })
                         })<span class="question-mark">?</span>;
                         <span class="kw">let </span>size =
                             NonZeroU32::new(len).ok_or(Error::ExpectedPositiveArrayLength(span))<span class="question-mark">?</span>;
-                        <span class="kw">crate</span>::ArraySize::Constant(size)
+                        ir::ArraySize::Constant(size)
                     }
                     <span class="prelude-val">Err</span>(err) =&gt; {
                         <span class="kw">if let </span>Error::ConstantEvaluatorError(<span class="kw-2">ref </span>ty, <span class="kw">_</span>) = <span class="kw-2">*</span>err {
                             <span class="kw">match </span><span class="kw-2">**</span>ty {
-                                <span class="kw">crate</span>::proc::ConstantEvaluatorError::OverrideExpr =&gt; {
-                                    <span class="kw">crate</span>::ArraySize::Pending(<span class="self">self</span>.array_size_override(
+                                proc::ConstantEvaluatorError::OverrideExpr =&gt; {
+                                    ir::ArraySize::Pending(<span class="self">self</span>.array_size_override(
                                         expr,
                                         <span class="kw-2">&amp;mut </span>ctx.as_global().as_override(),
                                         span,
@@ -7431,7 +7393,7 @@
                     }
                 }
             }
-            ast::ArraySize::Dynamic =&gt; <span class="kw">crate</span>::ArraySize::Dynamic,
+            ast::ArraySize::Dynamic =&gt; ir::ArraySize::Dynamic,
         })
     }
 
@@ -7440,16 +7402,16 @@
         size_expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         span: Span,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Override&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Override&gt;&gt; {
         <span class="kw">let </span>expr = <span class="self">self</span>.expression(size_expr, ctx)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="macro">resolve_inner!</span>(ctx, expr).scalar_kind().ok_or(<span class="number">0</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>({
-                <span class="kw">if let </span><span class="kw">crate</span>::Expression::Override(handle) = ctx.module.global_expressions[expr] {
+            <span class="prelude-val">Ok</span>(ir::ScalarKind::Sint) | <span class="prelude-val">Ok</span>(ir::ScalarKind::Uint) =&gt; <span class="prelude-val">Ok</span>({
+                <span class="kw">if let </span>ir::Expression::Override(handle) = ctx.module.global_expressions[expr] {
                     handle
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>ty = ctx.register_type(expr)<span class="question-mark">?</span>;
                     ctx.module.overrides.append(
-                        <span class="kw">crate</span>::Override {
+                        ir::Override {
                             name: <span class="prelude-val">None</span>,
                             id: <span class="prelude-val">None</span>,
                             ty,
@@ -7473,22 +7435,22 @@
     /// If `handle` refers to a type cached in [`SpecialTypes`],
     /// `name` may be ignored.
     ///
-    /// [`SpecialTypes`]: crate::SpecialTypes
+    /// [`SpecialTypes`]: ir::SpecialTypes
     </span><span class="kw">fn </span>resolve_named_ast_type(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
         name: <span class="prelude-ty">Option</span>&lt;String&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Type&gt;&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span>ctx.types[handle] {
             ast::Type::Scalar(scalar) =&gt; scalar.to_inner_scalar(),
             ast::Type::Vector { size, ty, ty_span } =&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
-                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    ir::TypeInner::Scalar(sc) =&gt; sc,
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
-                <span class="kw">crate</span>::TypeInner::Vector { size, scalar }
+                ir::TypeInner::Vector { size, scalar }
             }
             ast::Type::Matrix {
                 rows,
@@ -7498,11 +7460,11 @@
             } =&gt; {
                 <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(ty, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>scalar = <span class="kw">match </span>ctx.module.types[ty].inner {
-                    <span class="kw">crate</span>::TypeInner::Scalar(sc) =&gt; sc,
+                    ir::TypeInner::Scalar(sc) =&gt; sc,
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Box::new(Error::UnknownScalarType(ty_span))),
                 };
                 <span class="kw">match </span>scalar.kind {
-                    <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="kw">crate</span>::TypeInner::Matrix {
+                    ir::ScalarKind::Float =&gt; ir::TypeInner::Matrix {
                         columns,
                         rows,
                         scalar,
@@ -7513,7 +7475,7 @@
             ast::Type::Atomic(scalar) =&gt; scalar.to_inner_atomic(),
             ast::Type::Pointer { base, space } =&gt; {
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
-                <span class="kw">crate</span>::TypeInner::Pointer { base, space }
+                ir::TypeInner::Pointer { base, space }
             }
             ast::Type::Array { base, size } =&gt; {
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>;
@@ -7522,26 +7484,26 @@
                 ctx.layouter.update(ctx.module.to_ctx()).unwrap();
                 <span class="kw">let </span>stride = ctx.layouter[base].to_stride();
 
-                <span class="kw">crate</span>::TypeInner::Array { base, size, stride }
+                ir::TypeInner::Array { base, size, stride }
             }
             ast::Type::Image {
                 dim,
                 arrayed,
                 class,
-            } =&gt; <span class="kw">crate</span>::TypeInner::Image {
+            } =&gt; ir::TypeInner::Image {
                 dim,
                 arrayed,
                 class,
             },
-            ast::Type::Sampler { comparison } =&gt; <span class="kw">crate</span>::TypeInner::Sampler { comparison },
+            ast::Type::Sampler { comparison } =&gt; ir::TypeInner::Sampler { comparison },
             ast::Type::AccelerationStructure { vertex_return } =&gt; {
-                <span class="kw">crate</span>::TypeInner::AccelerationStructure { vertex_return }
+                ir::TypeInner::AccelerationStructure { vertex_return }
             }
-            ast::Type::RayQuery { vertex_return } =&gt; <span class="kw">crate</span>::TypeInner::RayQuery { vertex_return },
+            ast::Type::RayQuery { vertex_return } =&gt; ir::TypeInner::RayQuery { vertex_return },
             ast::Type::BindingArray { base, size } =&gt; {
                 <span class="kw">let </span>base = <span class="self">self</span>.resolve_ast_type(base, ctx)<span class="question-mark">?</span>;
                 <span class="kw">let </span>size = <span class="self">self</span>.array_size(size, ctx)<span class="question-mark">?</span>;
-                <span class="kw">crate</span>::TypeInner::BindingArray { base, size }
+                ir::TypeInner::BindingArray { base, size }
             }
             ast::Type::RayDesc =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(ctx.module.generate_ray_desc_type());
@@ -7566,18 +7528,18 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Type&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Type&gt;&gt; {
         <span class="self">self</span>.resolve_named_ast_type(handle, <span class="prelude-val">None</span>, ctx)
     }
 
     <span class="kw">fn </span>binding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         binding: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;ast::Binding&lt;<span class="lifetime">'source</span>&gt;&gt;,
-        ty: Handle&lt;<span class="kw">crate</span>::Type&gt;,
+        ty: Handle&lt;ir::Type&gt;,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Binding&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;ir::Binding&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">*</span>binding {
-            <span class="prelude-val">Some</span>(ast::Binding::BuiltIn(b)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::BuiltIn(b)),
+            <span class="prelude-val">Some</span>(ast::Binding::BuiltIn(b)) =&gt; <span class="prelude-val">Some</span>(ir::Binding::BuiltIn(b)),
             <span class="prelude-val">Some</span>(ast::Binding::Location {
                 location,
                 interpolation,
@@ -7590,7 +7552,7 @@
                     <span class="prelude-val">None
                 </span>};
 
-                <span class="kw">let </span><span class="kw-2">mut </span>binding = <span class="kw">crate</span>::Binding::Location {
+                <span class="kw">let </span><span class="kw-2">mut </span>binding = ir::Binding::Location {
                     location: <span class="self">self</span>.const_u32(location, <span class="kw-2">&amp;mut </span>ctx.as_const())<span class="question-mark">?</span>.<span class="number">0</span>,
                     interpolation,
                     sampling,
@@ -7607,13 +7569,13 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;<span class="kw">crate</span>::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, pointer) {
-            <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
-                <span class="kw">crate</span>::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
+            ir::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
+                ir::TypeInner::RayQuery { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to ray query op"</span>, other);
                     <span class="prelude-val">Err</span>(Box::new(Error::InvalidRayQueryPointer(span)))
@@ -7627,17 +7589,17 @@
     }
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::AtomicFunction {
+<span class="kw">impl </span>ir::AtomicFunction {
     <span class="kw">pub fn </span>map(word: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">match </span>word {
-            <span class="string">"atomicAdd" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Add,
-            <span class="string">"atomicSub" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Subtract,
-            <span class="string">"atomicAnd" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::And,
-            <span class="string">"atomicOr" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::InclusiveOr,
-            <span class="string">"atomicXor" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::ExclusiveOr,
-            <span class="string">"atomicMin" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Min,
-            <span class="string">"atomicMax" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Max,
-            <span class="string">"atomicExchange" </span>=&gt; <span class="kw">crate</span>::AtomicFunction::Exchange { compare: <span class="prelude-val">None </span>},
+            <span class="string">"atomicAdd" </span>=&gt; ir::AtomicFunction::Add,
+            <span class="string">"atomicSub" </span>=&gt; ir::AtomicFunction::Subtract,
+            <span class="string">"atomicAnd" </span>=&gt; ir::AtomicFunction::And,
+            <span class="string">"atomicOr" </span>=&gt; ir::AtomicFunction::InclusiveOr,
+            <span class="string">"atomicXor" </span>=&gt; ir::AtomicFunction::ExclusiveOr,
+            <span class="string">"atomicMin" </span>=&gt; ir::AtomicFunction::Min,
+            <span class="string">"atomicMax" </span>=&gt; ir::AtomicFunction::Max,
+            <span class="string">"atomicExchange" </span>=&gt; ir::AtomicFunction::Exchange { compare: <span class="prelude-val">None </span>},
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         })
     }
