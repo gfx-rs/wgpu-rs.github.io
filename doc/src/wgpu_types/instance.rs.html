@@ -578,13 +578,7 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
+<a href="#580" id="580">580</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
 
 </span><span class="kw">use </span>alloc::string::String;
 
@@ -980,9 +974,6 @@
 }
 
 <span class="doccomment">/// Selects which DX12 shader compiler to use.
-///
-/// If the `DynamicDxc` option is selected, but `dxcompiler.dll` and `dxil.dll` files aren't found,
-/// then this will fall back to the Fxc compiler at runtime and log an error.
 </span><span class="attr">#[derive(Clone, Debug, Default)]
 </span><span class="kw">pub enum </span>Dx12Compiler {
     <span class="doccomment">/// The Fxc compiler (default) is old, slow and unmaintained.
@@ -992,17 +983,15 @@
     </span>Fxc,
     <span class="doccomment">/// The Dxc compiler is new, fast and maintained.
     ///
-    /// However, it requires both `dxcompiler.dll` and `dxil.dll` to be shipped with the application.
+    /// However, it requires `dxcompiler.dll` to be shipped with the application.
     /// These files can be downloaded from &lt;https://github.com/microsoft/DirectXShaderCompiler/releases&gt;.
     ///
-    /// Minimum supported version: [v1.5.2010](https://github.com/microsoft/DirectXShaderCompiler/releases/tag/v1.5.2010)
+    /// Minimum supported version: [v1.8.2502](https://github.com/microsoft/DirectXShaderCompiler/releases/tag/v1.8.2502)
     ///
     /// It also requires WDDM 2.1 (Windows 10 version 1607).
     </span>DynamicDxc {
         <span class="doccomment">/// Path to `dxcompiler.dll`.
         </span>dxc_path: String,
-        <span class="doccomment">/// Path to `dxil.dll`.
-        </span>dxil_path: String,
         <span class="doccomment">/// Maximum shader model the given dll supports.
         </span>max_shader_model: DxcShaderModel,
     },
@@ -1016,13 +1005,12 @@
 <span class="kw">impl </span>Dx12Compiler {
     <span class="doccomment">/// Helper function to construct a `DynamicDxc` variant with default paths.
     ///
-    /// The dll must support at least shader model 6.5.
+    /// The dll must support at least shader model 6.8.
     </span><span class="kw">pub fn </span>default_dynamic_dxc() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::DynamicDxc {
             dxc_path: String::from(<span class="string">"dxcompiler.dll"</span>),
-            dxil_path: String::from(<span class="string">"dxil.dll"</span>),
-            max_shader_model: DxcShaderModel::V6_5,
-        }
+            max_shader_model: DxcShaderModel::V6_7, <span class="comment">// should be 6.8 but the variant is missing
+        </span>}
     }
 
     <span class="doccomment">/// Choose which DX12 shader compiler to use from the environment variable `WGPU_DX12_COMPILER`.
