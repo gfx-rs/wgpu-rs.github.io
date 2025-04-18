@@ -511,7 +511,17 @@
 <a href="#510" id="510">510</a>
 <a href="#511" id="511">511</a>
 <a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     format,
     string::{String, ToString},
@@ -786,6 +796,7 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
+    </span><span class="attr">#[cfg(feature = <span class="string">"stderr"</span>)]
     </span><span class="kw">pub fn </span>emit_to_stderr(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str)
     <span class="kw">where
         </span>E: Error,
@@ -794,16 +805,24 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
+    </span><span class="attr">#[cfg(feature = <span class="string">"stderr"</span>)]
     </span><span class="kw">pub fn </span>emit_to_stderr_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str)
     <span class="kw">where
         </span>E: Error,
     {
-        <span class="kw">use </span>codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
         <span class="kw">use </span>codespan_reporting::{files, term};
 
         <span class="kw">let </span>files = files::SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
-        <span class="kw">let </span>writer = StandardStream::stderr(ColorChoice::Auto);
+
+        <span class="macro">cfg_if::cfg_if!</span> {
+            <span class="kw">if </span><span class="attr">#[cfg(feature = <span class="string">"termcolor"</span>)] </span>{
+                <span class="kw">let </span>writer = term::termcolor::StandardStream::stderr(term::termcolor::ColorChoice::Auto);
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>writer = std::io::stderr();
+            }
+        }
+
         term::emit(<span class="kw-2">&amp;mut </span>writer.lock(), <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic())
             .expect(<span class="string">"cannot write error"</span>);
     }
@@ -821,14 +840,15 @@
     <span class="kw">where
         </span>E: Error,
     {
-        <span class="kw">use </span>codespan_reporting::term::termcolor::NoColor;
         <span class="kw">use </span>codespan_reporting::{files, term};
 
         <span class="kw">let </span>files = files::SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
-        term::emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic()).expect(<span class="string">"cannot write error"</span>);
-        String::from_utf8(writer.into_inner()).unwrap()
+
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = <span class="kw">crate</span>::error::DiagnosticBuffer::new();
+        term::emit(writer.inner_mut(), <span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>files, <span class="kw-2">&amp;</span><span class="self">self</span>.diagnostic())
+            .expect(<span class="string">"cannot write error"</span>);
+        writer.into_string()
     }
 }
 

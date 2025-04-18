@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ShaderError"]};
+window.SIDEBAR_ITEMS = {"struct":["DiagnosticBuffer","ShaderError"],"trait":["ErrorWrite","_ErrorWrite"],"type":["DiagnosticBufferInner"]};

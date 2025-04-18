@@ -209,8 +209,7 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#211" id="211">211</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     string::{String, ToString},
     vec,
@@ -220,13 +219,12 @@
 <span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
 <span class="kw">use </span>codespan_reporting::files::SimpleFile;
 <span class="kw">use </span>codespan_reporting::term;
-<span class="kw">use </span>codespan_reporting::term::termcolor::{NoColor, WriteColor};
 <span class="kw">use </span>pp_rs::token::PreprocessorError;
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">super</span>::token::TokenValue;
 <span class="kw">use </span><span class="kw">crate</span>::SourceLocation;
-<span class="kw">use crate</span>::{proc::ConstantEvaluatorError, Span};
+<span class="kw">use crate</span>::{error::ErrorWrite, proc::ConstantEvaluatorError, Span};
 
 <span class="kw">fn </span>join_with_comma(list: <span class="kw-2">&amp;</span>[ExpectedToken]) -&gt; String {
     <span class="kw">let </span><span class="kw-2">mut </span>string = <span class="string">""</span>.to_string();
@@ -378,11 +376,11 @@
 }
 
 <span class="kw">impl </span>ParseErrors {
-    <span class="kw">pub fn </span>emit_to_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub fn </span>emit_to_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ErrorWrite, source: <span class="kw-2">&amp;</span>str) {
         <span class="self">self</span>.emit_to_writer_with_path(writer, source, <span class="string">"glsl"</span>);
     }
 
-    <span class="kw">pub fn </span>emit_to_writer_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub fn </span>emit_to_writer_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ErrorWrite, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span>path = path.to_string();
         <span class="kw">let </span>files = SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
@@ -399,9 +397,9 @@
     }
 
     <span class="kw">pub fn </span>emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; String {
-        <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
-        <span class="self">self</span>.emit_to_writer(<span class="kw-2">&amp;mut </span>writer, source);
-        String::from_utf8(writer.into_inner()).unwrap()
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = <span class="kw">crate</span>::error::DiagnosticBuffer::new();
+        <span class="self">self</span>.emit_to_writer(writer.inner_mut(), source);
+        writer.into_string()
     }
 }
 

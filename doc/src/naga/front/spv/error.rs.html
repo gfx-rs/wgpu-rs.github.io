@@ -176,21 +176,17 @@
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#178" id="178">178</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     format,
     string::{String, ToString},
-    vec::Vec,
 };
 
 <span class="kw">use </span>codespan_reporting::diagnostic::Diagnostic;
 <span class="kw">use </span>codespan_reporting::files::SimpleFile;
 <span class="kw">use </span>codespan_reporting::term;
-<span class="kw">use </span>codespan_reporting::term::termcolor::{NoColor, WriteColor};
 
 <span class="kw">use </span><span class="kw">super</span>::ModuleState;
-<span class="kw">use crate</span>::{arena::Handle, front::atomic_upgrade};
+<span class="kw">use crate</span>::{arena::Handle, error::ErrorWrite, front::atomic_upgrade};
 
 <span class="attr">#[derive(Clone, Debug, thiserror::Error)]
 </span><span class="kw">pub enum </span>Error {
@@ -333,11 +329,11 @@
 }
 
 <span class="kw">impl </span>Error {
-    <span class="kw">pub fn </span>emit_to_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub fn </span>emit_to_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ErrorWrite, source: <span class="kw-2">&amp;</span>str) {
         <span class="self">self</span>.emit_to_writer_with_path(writer, source, <span class="string">"glsl"</span>);
     }
 
-    <span class="kw">pub fn </span>emit_to_writer_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>WriteColor, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub fn </span>emit_to_writer_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, writer: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ErrorWrite, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span>path = path.to_string();
         <span class="kw">let </span>files = SimpleFile::new(path, source);
         <span class="kw">let </span>config = term::Config::default();
@@ -347,9 +343,9 @@
     }
 
     <span class="kw">pub fn </span>emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; String {
-        <span class="kw">let </span><span class="kw-2">mut </span>writer = NoColor::new(Vec::new());
-        <span class="self">self</span>.emit_to_writer(<span class="kw-2">&amp;mut </span>writer, source);
-        String::from_utf8(writer.into_inner()).unwrap()
+        <span class="kw">let </span><span class="kw-2">mut </span>writer = <span class="kw">crate</span>::error::DiagnosticBuffer::new();
+        <span class="self">self</span>.emit_to_writer(writer.inner_mut(), source);
+        writer.into_string()
     }
 }
 
