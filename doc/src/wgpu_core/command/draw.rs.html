@@ -99,7 +99,9 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -182,8 +184,10 @@
     </span>MissingTextureUsage(<span class="attr">#[from] </span>MissingTextureUsageError),
     <span class="attr">#[error(transparent)]
     </span>PushConstants(<span class="attr">#[from] </span>PushConstantUploadError),
-    <span class="attr">#[error(<span class="string">"Viewport has invalid rect {0:?}; origin and/or size is less than or equal to 0, and/or is not contained in the render target {1:?}"</span>)]
-    </span>InvalidViewportRect(Rect&lt;f32&gt;, wgt::Extent3d),
+    <span class="attr">#[error(<span class="string">"Viewport size {{ w: {w}, h: {h} }} greater than device's requested `max_texture_dimension_2d` limit {max}, or less than zero"</span>)]
+    </span>InvalidViewportRectSize { w: f32, h: f32, max: u32 },
+    <span class="attr">#[error(<span class="string">"Viewport has invalid rect {rect:?} for device's requested `max_texture_dimension_2d` limit; Origin less than -2 * `max_texture_dimension_2d` ({min}), or rect extends past 2 * `max_texture_dimension_2d` - 1 ({max})"</span>)]
+    </span>InvalidViewportRectPosition { rect: Rect&lt;f32&gt;, min: f32, max: f32 },
     <span class="attr">#[error(<span class="string">"Viewport minDepth {0} and/or maxDepth {1} are not in [0, 1]"</span>)]
     </span>InvalidViewportDepth(f32, f32),
     <span class="attr">#[error(<span class="string">"Scissor {0:?} is not contained in the render target {1:?}"</span>)]
