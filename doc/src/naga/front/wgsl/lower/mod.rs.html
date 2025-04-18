@@ -3801,7 +3801,47 @@
 <a href="#3800" id="3800">3800</a>
 <a href="#3801" id="3801">3801</a>
 <a href="#3802" id="3802">3802</a>
-<a href="#3803" id="3803">3803</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3803" id="3803">3803</a>
+<a href="#3804" id="3804">3804</a>
+<a href="#3805" id="3805">3805</a>
+<a href="#3806" id="3806">3806</a>
+<a href="#3807" id="3807">3807</a>
+<a href="#3808" id="3808">3808</a>
+<a href="#3809" id="3809">3809</a>
+<a href="#3810" id="3810">3810</a>
+<a href="#3811" id="3811">3811</a>
+<a href="#3812" id="3812">3812</a>
+<a href="#3813" id="3813">3813</a>
+<a href="#3814" id="3814">3814</a>
+<a href="#3815" id="3815">3815</a>
+<a href="#3816" id="3816">3816</a>
+<a href="#3817" id="3817">3817</a>
+<a href="#3818" id="3818">3818</a>
+<a href="#3819" id="3819">3819</a>
+<a href="#3820" id="3820">3820</a>
+<a href="#3821" id="3821">3821</a>
+<a href="#3822" id="3822">3822</a>
+<a href="#3823" id="3823">3823</a>
+<a href="#3824" id="3824">3824</a>
+<a href="#3825" id="3825">3825</a>
+<a href="#3826" id="3826">3826</a>
+<a href="#3827" id="3827">3827</a>
+<a href="#3828" id="3828">3828</a>
+<a href="#3829" id="3829">3829</a>
+<a href="#3830" id="3830">3830</a>
+<a href="#3831" id="3831">3831</a>
+<a href="#3832" id="3832">3832</a>
+<a href="#3833" id="3833">3833</a>
+<a href="#3834" id="3834">3834</a>
+<a href="#3835" id="3835">3835</a>
+<a href="#3836" id="3836">3836</a>
+<a href="#3837" id="3837">3837</a>
+<a href="#3838" id="3838">3838</a>
+<a href="#3839" id="3839">3839</a>
+<a href="#3840" id="3840">3840</a>
+<a href="#3841" id="3841">3841</a>
+<a href="#3842" id="3842">3842</a>
+<a href="#3843" id="3843">3843</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -5828,6 +5868,16 @@
         ctx.apply_load_rule(expr)
     }
 
+    <span class="kw">fn </span>expression_with_leaf_scalar(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
+        scalar: ir::Scalar,
+        ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
+        <span class="kw">let </span>unconverted = <span class="self">self</span>.expression_for_abstract(expr, ctx)<span class="question-mark">?</span>;
+        ctx.try_automatic_conversion_for_leaf_scalar(unconverted, scalar, Span::default())
+    }
+
     <span class="kw">fn </span>expression_for_reference(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
@@ -7075,11 +7125,14 @@
         ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;ir::Expression&gt;, Span)&gt; {
             <span class="kw">let </span>image = args.next()<span class="question-mark">?</span>;
             <span class="kw">let </span>image_span = ctx.ast_expressions.get_span(image);
-            <span class="kw">let </span>image = lowerer.expression(image, ctx)<span class="question-mark">?</span>;
+            <span class="kw">let </span>image = lowerer.expression_for_abstract(image, ctx)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>((image, image_span))
         }
 
-        <span class="kw">let </span>(image, image_span, gather) = <span class="kw">match </span>fun {
+        <span class="kw">let </span>image;
+        <span class="kw">let </span>image_span;
+        <span class="kw">let </span>gather;
+        <span class="kw">match </span>fun {
             Texture::Gather =&gt; {
                 <span class="kw">let </span>image_or_component = args.next()<span class="question-mark">?</span>;
                 <span class="kw">let </span>image_or_component_span = ctx.ast_expressions.get_span(image_or_component);
@@ -7090,79 +7143,106 @@
                     ir::TypeInner::Image {
                         class: ir::ImageClass::Depth { .. },
                         ..
-                    } =&gt; (
-                        lowered_image_or_component,
-                        image_or_component_span,
-                        <span class="prelude-val">Some</span>(ir::SwizzleComponent::X),
-                    ),
+                    } =&gt; {
+                        image = lowered_image_or_component;
+                        image_span = image_or_component_span;
+                        gather = <span class="prelude-val">Some</span>(ir::SwizzleComponent::X);
+                    }
                     <span class="kw">_ </span>=&gt; {
-                        <span class="kw">let </span>(image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
-                        (
-                            image,
-                            image_span,
-                            <span class="prelude-val">Some</span>(ctx.gather_component(
-                                lowered_image_or_component,
-                                image_or_component_span,
-                                span,
-                            )<span class="question-mark">?</span>),
-                        )
+                        (image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
+                        gather = <span class="prelude-val">Some</span>(ctx.gather_component(
+                            lowered_image_or_component,
+                            image_or_component_span,
+                            span,
+                        )<span class="question-mark">?</span>);
                     }
                 }
             }
             Texture::GatherCompare =&gt; {
-                <span class="kw">let </span>(image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
-                (image, image_span, <span class="prelude-val">Some</span>(ir::SwizzleComponent::X))
+                (image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
+                gather = <span class="prelude-val">Some</span>(ir::SwizzleComponent::X);
             }
 
             <span class="kw">_ </span>=&gt; {
-                <span class="kw">let </span>(image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
-                (image, image_span, <span class="prelude-val">None</span>)
+                (image, image_span) = get_image_and_span(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>args, ctx)<span class="question-mark">?</span>;
+                gather = <span class="prelude-val">None</span>;
             }
         };
 
-        <span class="kw">let </span>sampler = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>sampler = <span class="self">self</span>.expression_for_abstract(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>coordinate = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>coordinate = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(<span class="kw">_</span>, arrayed) = ctx.image_data(image, image_span)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(class, arrayed) = ctx.image_data(image, image_span)<span class="question-mark">?</span>;
         <span class="kw">let </span>array_index = arrayed
             .then(|| <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx))
             .transpose()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(level, depth_ref) = <span class="kw">match </span>fun {
-            Texture::Gather =&gt; (ir::SampleLevel::Zero, <span class="prelude-val">None</span>),
+        <span class="kw">let </span>level;
+        <span class="kw">let </span>depth_ref;
+        <span class="kw">match </span>fun {
+            Texture::Gather =&gt; {
+                level = ir::SampleLevel::Zero;
+                depth_ref = <span class="prelude-val">None</span>;
+            }
             Texture::GatherCompare =&gt; {
-                <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
+                <span class="kw">let </span>reference =
+                    <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                level = ir::SampleLevel::Zero;
+                depth_ref = <span class="prelude-val">Some</span>(reference);
             }
 
-            Texture::Sample =&gt; (ir::SampleLevel::Auto, <span class="prelude-val">None</span>),
+            Texture::Sample =&gt; {
+                level = ir::SampleLevel::Auto;
+                depth_ref = <span class="prelude-val">None</span>;
+            }
             Texture::SampleBias =&gt; {
-                <span class="kw">let </span>bias = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Bias(bias), <span class="prelude-val">None</span>)
+                <span class="kw">let </span>bias = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                level = ir::SampleLevel::Bias(bias);
+                depth_ref = <span class="prelude-val">None</span>;
             }
             Texture::SampleCompare =&gt; {
-                <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Auto, <span class="prelude-val">Some</span>(reference))
+                <span class="kw">let </span>reference =
+                    <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                level = ir::SampleLevel::Auto;
+                depth_ref = <span class="prelude-val">Some</span>(reference);
             }
             Texture::SampleCompareLevel =&gt; {
-                <span class="kw">let </span>reference = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Zero, <span class="prelude-val">Some</span>(reference))
+                <span class="kw">let </span>reference =
+                    <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                level = ir::SampleLevel::Zero;
+                depth_ref = <span class="prelude-val">Some</span>(reference);
             }
             Texture::SampleGrad =&gt; {
-                <span class="kw">let </span>x = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                <span class="kw">let </span>y = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Gradient { x, y }, <span class="prelude-val">None</span>)
+                <span class="kw">let </span>x = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                <span class="kw">let </span>y = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?</span>;
+                level = ir::SampleLevel::Gradient { x, y };
+                depth_ref = <span class="prelude-val">None</span>;
             }
             Texture::SampleLevel =&gt; {
-                <span class="kw">let </span>level = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                (ir::SampleLevel::Exact(level), <span class="prelude-val">None</span>)
+                <span class="kw">let </span>exact = <span class="kw">match </span>class {
+                    <span class="comment">// When applied to depth textures, `textureSampleLevel`'s
+                    // `level` argument is an `i32` or `u32`.
+                    </span>ir::ImageClass::Depth { .. } =&gt; <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>,
+
+                    <span class="comment">// When applied to other sampled types, its `level` argument
+                    // is an `f32`.
+                    </span>ir::ImageClass::Sampled { .. } =&gt; {
+                        <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, ir::Scalar::F32, ctx)<span class="question-mark">?
+                    </span>}
+
+                    <span class="comment">// Sampling `Storage` textures isn't allowed at all. Let the
+                    // validator report the error.
+                    </span>ir::ImageClass::Storage { .. } =&gt; <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>,
+                };
+                level = ir::SampleLevel::Exact(exact);
+                depth_ref = <span class="prelude-val">None</span>;
             }
         };
 
         <span class="kw">let </span>offset = args
             .next()
-            .map(|arg| <span class="self">self</span>.expression(arg, <span class="kw-2">&amp;mut </span>ctx.as_const()))
+            .map(|arg| <span class="self">self</span>.expression_with_leaf_scalar(arg, ir::Scalar::I32, <span class="kw-2">&amp;mut </span>ctx.as_const()))
             .ok()
             .transpose()<span class="question-mark">?</span>;
 
