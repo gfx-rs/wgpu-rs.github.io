@@ -286,7 +286,23 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>core::ops::{Deref, DerefMut};
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -306,6 +322,22 @@
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Queue: Send, Sync);
 
 <span class="macro">crate::cmp::impl_eq_ord_hash_proxy!</span>(Queue =&gt; .inner);
+
+<span class="kw">impl </span>Queue {
+    <span class="attr">#[cfg(custom)]
+    </span><span class="doccomment">/// Returns custom implementation of Queue (if custom backend and is internally T)
+    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::QueueInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.inner.as_custom()
+    }
+
+    <span class="attr">#[cfg(custom)]
+    </span><span class="doccomment">/// Creates Queue from custom implementation
+    </span><span class="kw">pub fn </span>from_custom&lt;T: custom::QueueInterface&gt;(queue: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: dispatch::DispatchQueue::custom(queue),
+        }
+    }
+}
 
 <span class="doccomment">/// Identifier for a particular call to [`Queue::submit`]. Can be used
 /// as part of an argument to [`Device::poll`] to block for a particular
@@ -339,6 +371,14 @@
 <span class="attr">#[cfg(send_sync)]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt;: Send, Sync);
 
+<span class="kw">impl </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="attr">#[cfg(custom)]
+    </span><span class="doccomment">/// Returns custom implementation of QueueWriteBufferView (if custom backend and is internally T)
+    </span><span class="kw">pub fn </span>as_custom&lt;T: custom::QueueWriteBufferInterface&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.inner.as_custom()
+    }
+}
+
 <span class="kw">impl </span>Deref <span class="kw">for </span>QueueWriteBufferView&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">type </span>Target = [u8];
 
@@ -369,14 +409,6 @@
 }
 
 <span class="kw">impl </span>Queue {
-    <span class="attr">#[cfg(custom)]
-    </span><span class="doccomment">/// Creates Queue from custom implementation
-    </span><span class="kw">pub fn </span>from_custom&lt;T: custom::QueueInterface&gt;(queue: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            inner: dispatch::DispatchQueue::custom(queue),
-        }
-    }
-
     <span class="doccomment">/// Copies the bytes of `data` into `buffer` starting at `offset`.
     ///
     /// The data must be written fully in-bounds, that is, `offset + data.len() &lt;= buffer.len()`.
