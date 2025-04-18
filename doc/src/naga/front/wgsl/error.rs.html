@@ -1326,7 +1326,13 @@
 <a href="#1325" id="1325">1325</a>
 <a href="#1326" id="1326">1326</a>
 <a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting WGSL front end error messages.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::common::wgsl::TryToWgsl;
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic_filter::ConflictingDiagnosticRuleError;
@@ -1504,6 +1510,7 @@
         from_type: String,
         to_type: String,
     },
+    NotStorageTexture(Span),
     BadTextureSampleType {
         span: Span,
         scalar: Scalar,
@@ -1863,6 +1870,11 @@
                 message: <span class="macro">format!</span>(<span class="string">"unknown scalar type: `{}`"</span>, <span class="kw-2">&amp;</span>source[bad_span]),
                 labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"unknown scalar type"</span>.into())],
                 notes: <span class="macro">vec!</span>[<span class="string">"Valid scalar types are f32, f64, i32, u32, bool"</span>.into()],
+            },
+            Error::NotStorageTexture(bad_span) =&gt; ParseError {
+                message: <span class="string">"textureStore can only be applied to storage textures"</span>.to_string(),
+                labels: <span class="macro">vec!</span>[(bad_span, <span class="string">"not a storage texture"</span>.into())],
+                notes: <span class="macro">vec!</span>[],
             },
             Error::BadTextureSampleType { span, scalar } =&gt; ParseError {
                 message: <span class="macro">format!</span>(

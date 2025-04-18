@@ -1323,15 +1323,7 @@
 <a href="#1322" id="1322">1322</a>
 <a href="#1323" id="1323">1323</a>
 <a href="#1324" id="1324">1324</a>
-<a href="#1325" id="1325">1325</a>
-<a href="#1326" id="1326">1326</a>
-<a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a>
-<a href="#1329" id="1329">1329</a>
-<a href="#1330" id="1330">1330</a>
-<a href="#1331" id="1331">1331</a>
-<a href="#1332" id="1332">1332</a>
-<a href="#1333" id="1333">1333</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1325" id="1325">1325</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -1964,64 +1956,56 @@
                 level,
             } =&gt; {
                 <span class="kw">let </span>ty = <span class="self">Self</span>::global_var_ty(module, function, image)<span class="question-mark">?</span>;
-                <span class="kw">match </span>module.types[ty].inner {
-                    Ti::Image {
-                        class,
-                        arrayed,
-                        dim,
-                    } =&gt; {
-                        <span class="kw">match </span>resolver[coordinate].image_storage_coordinates() {
-                            <span class="prelude-val">Some</span>(coord_dim) <span class="kw">if </span>coord_dim == dim =&gt; {}
-                            <span class="kw">_ </span>=&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageCoordinateType(
-                                    dim, coordinate,
-                                ))
-                            }
-                        };
-                        <span class="kw">if </span>arrayed != array_index.is_some() {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndex);
-                        }
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
-                            <span class="kw">match </span>resolver[expr] {
-                                Ti::Scalar(Sc {
-                                    kind: Sk::Sint | Sk::Uint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; {}
-                                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr)),
-                            }
-                        }
+                <span class="kw">let </span>Ti::Image {
+                    class,
+                    arrayed,
+                    dim,
+                } = module.types[ty].inner
+                <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::ExpectedImageType(ty));
+                };
 
-                        <span class="kw">match </span>(sample, class.is_multisampled()) {
-                            (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
-                            (<span class="prelude-val">Some</span>(sample), <span class="bool-val">true</span>) =&gt; {
-                                <span class="kw">if </span>resolver[sample].scalar_kind() != <span class="prelude-val">Some</span>(Sk::Sint) {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndexType(
-                                        sample,
-                                    ));
-                                }
-                            }
-                            <span class="kw">_ </span>=&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndex);
-                            }
-                        }
+                <span class="kw">match </span>resolver[coordinate].image_storage_coordinates() {
+                    <span class="prelude-val">Some</span>(coord_dim) <span class="kw">if </span>coord_dim == dim =&gt; {}
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageCoordinateType(dim, coordinate)),
+                };
+                <span class="kw">if </span>arrayed != array_index.is_some() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndex);
+                }
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
+                    <span class="kw">match </span>resolver[expr] {
+                        Ti::Scalar(Sc {
+                            kind: Sk::Sint | Sk::Uint,
+                            width: <span class="kw">_</span>,
+                        }) =&gt; {}
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr)),
+                    }
+                }
 
-                        <span class="kw">match </span>(level, class.is_mipmapped()) {
-                            (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
-                            (<span class="prelude-val">Some</span>(level), <span class="bool-val">true</span>) =&gt; <span class="kw">match </span>resolver[level] {
-                                Ti::Scalar(Sc {
-                                    kind: Sk::Sint | Sk::Uint,
-                                    width: <span class="kw">_</span>,
-                                }) =&gt; {}
-                                <span class="kw">_ </span>=&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(level))
-                                }
-                            },
-                            <span class="kw">_ </span>=&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndex);
-                            }
+                <span class="kw">match </span>(sample, class.is_multisampled()) {
+                    (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
+                    (<span class="prelude-val">Some</span>(sample), <span class="bool-val">true</span>) =&gt; {
+                        <span class="kw">if </span>resolver[sample].scalar_kind() != <span class="prelude-val">Some</span>(Sk::Sint) {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndexType(sample));
                         }
                     }
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::ExpectedImageType(ty)),
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndex);
+                    }
+                }
+
+                <span class="kw">match </span>(level, class.is_mipmapped()) {
+                    (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
+                    (<span class="prelude-val">Some</span>(level), <span class="bool-val">true</span>) =&gt; <span class="kw">match </span>resolver[level] {
+                        Ti::Scalar(Sc {
+                            kind: Sk::Sint | Sk::Uint,
+                            width: <span class="kw">_</span>,
+                        }) =&gt; {}
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(level)),
+                    },
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndex);
+                    }
                 }
                 ShaderStages::all()
             }
