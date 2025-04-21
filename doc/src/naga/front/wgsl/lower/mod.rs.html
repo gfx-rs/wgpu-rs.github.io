@@ -3847,7 +3847,9 @@
 <a href="#3846" id="3846">3846</a>
 <a href="#3847" id="3847">3847</a>
 <a href="#3848" id="3848">3848</a>
-<a href="#3849" id="3849">3849</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3849" id="3849">3849</a>
+<a href="#3850" id="3850">3850</a>
+<a href="#3851" id="3851">3851</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned,
     boxed::Box,
     string::{String, ToString},
@@ -6353,15 +6355,16 @@
                         }
                         <span class="string">"atomicLoad" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">1</span>, span);
-                            <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>(pointer, _scalar) = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
                             ir::Expression::Load { pointer }
                         }
                         <span class="string">"atomicStore" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">2</span>, span);
-                            <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-                            <span class="kw">let </span>value = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>(pointer, scalar) = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>value =
+                                <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, scalar, ctx)<span class="question-mark">?</span>;
                             args.finish()<span class="question-mark">?</span>;
 
                             <span class="kw">let </span>rctx = ctx.runtime_expression_ctx(span)<span class="question-mark">?</span>;
@@ -6375,13 +6378,14 @@
                         <span class="string">"atomicCompareExchangeWeak" </span>=&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(arguments, <span class="number">3</span>, span);
 
-                            <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>(pointer, scalar) = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
 
-                            <span class="kw">let </span>compare = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>compare =
+                                <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, scalar, ctx)<span class="question-mark">?</span>;
 
                             <span class="kw">let </span>value = args.next()<span class="question-mark">?</span>;
                             <span class="kw">let </span>value_span = ctx.ast_expressions.get_span(value);
-                            <span class="kw">let </span>value = <span class="self">self</span>.expression(value, ctx)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>value = <span class="self">self</span>.expression_with_leaf_scalar(value, scalar, ctx)<span class="question-mark">?</span>;
 
                             args.finish()<span class="question-mark">?</span>;
 
@@ -7049,13 +7053,13 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;ast::Expression&lt;<span class="lifetime">'source</span>&gt;&gt;,
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">'source</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, Handle&lt;ir::Expression&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, (Handle&lt;ir::Expression&gt;, ir::Scalar)&gt; {
         <span class="kw">let </span>span = ctx.ast_expressions.get_span(expr);
         <span class="kw">let </span>pointer = <span class="self">self</span>.expression(expr, ctx)<span class="question-mark">?</span>;
 
         <span class="kw">match </span><span class="kw-2">*</span><span class="macro">resolve_inner!</span>(ctx, pointer) {
             ir::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>ctx.module.types[base].inner {
-                ir::TypeInner::Atomic { .. } =&gt; <span class="prelude-val">Ok</span>(pointer),
+                ir::TypeInner::Atomic(scalar) =&gt; <span class="prelude-val">Ok</span>((pointer, scalar)),
                 <span class="kw-2">ref </span>other =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">"Pointer type to {:?} passed to atomic op"</span>, other);
                     <span class="prelude-val">Err</span>(Box::new(Error::InvalidAtomicPointer(span)))
@@ -7078,8 +7082,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="lifetime">'source</span>, <span class="prelude-ty">Option</span>&lt;Handle&lt;ir::Expression&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>args = ctx.prepare_args(args, <span class="number">2</span>, span);
 
-        <span class="kw">let </span>pointer = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
-        <span class="kw">let </span>value = <span class="self">self</span>.expression(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(pointer, scalar) = <span class="self">self</span>.atomic_pointer(args.next()<span class="question-mark">?</span>, ctx)<span class="question-mark">?</span>;
+        <span class="kw">let </span>value = <span class="self">self</span>.expression_with_leaf_scalar(args.next()<span class="question-mark">?</span>, scalar, ctx)<span class="question-mark">?</span>;
         <span class="kw">let </span>value_inner = <span class="macro">resolve_inner!</span>(ctx, value);
         args.finish()<span class="question-mark">?</span>;
 
