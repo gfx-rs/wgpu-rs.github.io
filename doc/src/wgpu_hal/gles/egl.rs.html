@@ -1536,29 +1536,9 @@
 <a href="#1535" id="1535">1535</a>
 <a href="#1536" id="1536">1536</a>
 <a href="#1537" id="1537">1537</a>
-<a href="#1538" id="1538">1538</a>
-<a href="#1539" id="1539">1539</a>
-<a href="#1540" id="1540">1540</a>
-<a href="#1541" id="1541">1541</a>
-<a href="#1542" id="1542">1542</a>
-<a href="#1543" id="1543">1543</a>
-<a href="#1544" id="1544">1544</a>
-<a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a></pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::std_instead_of_alloc, clippy::std_instead_of_core)]
-
-</span><span class="kw">use </span>std::{
-    ffi,
-    mem::ManuallyDrop,
-    os::raw,
-    ptr,
-    rc::Rc,
-    string::String,
-    sync::{Arc, LazyLock},
-    time::Duration,
-    vec::Vec,
-};
+<a href="#1538" id="1538">1538</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{rc::Rc, string::String, sync::Arc, vec::Vec};
+<span class="kw">use </span>core::{ffi, mem::ManuallyDrop, ptr, time::Duration};
+<span class="kw">use </span>std::{os::raw, sync::LazyLock};
 
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>hashbrown::HashMap;
@@ -1947,7 +1927,7 @@
     egl: <span class="prelude-ty">Option</span>&lt;EglContextLock&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; std::ops::Deref <span class="kw">for </span>AdapterContextLock&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; core::ops::Deref <span class="kw">for </span>AdapterContextLock&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Target = glow::Context;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -2470,7 +2450,7 @@
             <span class="macro">log::debug!</span>(<span class="string">"Enabling EGL debug output"</span>);
             <span class="kw">let </span>function: EglDebugMessageControlFun = {
                 <span class="kw">let </span>addr = egl.get_proc_address(<span class="string">"eglDebugMessageControlKHR"</span>).unwrap();
-                <span class="kw">unsafe </span>{ std::mem::transmute(addr) }
+                <span class="kw">unsafe </span>{ core::mem::transmute(addr) }
             };
             <span class="kw">let </span>attributes = [
                 EGL_DEBUG_MSG_CRITICAL_KHR <span class="kw">as </span>khronos_egl::Attrib,
@@ -2566,7 +2546,7 @@
                      */
                     </span><span class="macro">log::warn!</span>(<span class="string">"Re-initializing Gles context due to Wayland window"</span>);
 
-                    <span class="kw">use </span>std::ops::DerefMut;
+                    <span class="kw">use </span>core::ops::DerefMut;
                     <span class="kw">let </span>display_attributes = [khronos_egl::ATTRIB_NONE];
 
                     <span class="kw">let </span>display = <span class="kw">unsafe </span>{
@@ -2590,7 +2570,7 @@
                         inner.force_gles_minor_version,
                     )<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>old_inner = std::mem::replace(inner.deref_mut(), new_inner);
+                    <span class="kw">let </span>old_inner = core::mem::replace(inner.deref_mut(), new_inner);
                     inner.wl_display = <span class="prelude-val">Some</span>(display_handle.display.as_ptr());
 
                     drop(old_inner);

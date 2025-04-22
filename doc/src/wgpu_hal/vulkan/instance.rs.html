@@ -1142,17 +1142,23 @@
 <a href="#1141" id="1141">1141</a>
 <a href="#1142" id="1142">1142</a>
 <a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::ToOwned <span class="kw">as _</span>,
     boxed::Box,
-    ffi::{c_void, CStr, CString},
-    slice,
-    str::FromStr,
+    ffi::CString,
     string::{String, ToString <span class="kw">as _</span>},
     sync::Arc,
-    thread,
     vec::Vec,
 };
+<span class="kw">use </span>core::{
+    ffi::{c_void, CStr},
+    slice,
+    str::FromStr,
+};
+<span class="kw">use </span>std::thread;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{ext, khr, vk};
@@ -1164,7 +1170,7 @@
     callback_data_ptr: <span class="kw-2">*const </span>vk::DebugUtilsMessengerCallbackDataEXT,
     user_data: <span class="kw-2">*mut </span>c_void,
 ) -&gt; vk::Bool32 {
-    <span class="kw">use </span>std::borrow::Cow;
+    <span class="kw">use </span>alloc::borrow::Cow;
 
     <span class="kw">if </span>thread::panicking() {
         <span class="kw">return </span>vk::FALSE;
@@ -1683,7 +1689,7 @@
     <span class="attr">#[cfg(metal)]
     </span><span class="kw">fn </span>create_surface_from_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        view: std::ptr::NonNull&lt;c_void&gt;,
+        view: core::ptr::NonNull&lt;c_void&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::metal_surface::NAME) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
@@ -2160,7 +2166,7 @@
 
     <span class="kw">unsafe fn </span>acquire_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        timeout: <span class="prelude-ty">Option</span>&lt;std::time::Duration&gt;,
+        timeout: <span class="prelude-ty">Option</span>&lt;core::time::Duration&gt;,
         fence: <span class="kw-2">&amp;</span><span class="kw">super</span>::Fence,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::AcquiredSurfaceTexture&lt;<span class="kw">super</span>::Api&gt;&gt;, <span class="kw">crate</span>::SurfaceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>swapchain = <span class="self">self</span>.swapchain.write();
