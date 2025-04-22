@@ -578,7 +578,29 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a></pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with Instances
 
 </span><span class="kw">use </span>alloc::string::String;
 
@@ -594,6 +616,8 @@
     </span><span class="kw">pub </span>backends: Backends,
     <span class="doccomment">/// Flags to tune the behavior of the instance.
     </span><span class="kw">pub </span>flags: InstanceFlags,
+    <span class="doccomment">/// Memory budget thresholds used by some backends.
+    </span><span class="kw">pub </span>memory_budget_thresholds: MemoryBudgetThresholds,
     <span class="doccomment">/// Options the control the behavior of various backends.
     </span><span class="kw">pub </span>backend_options: BackendOptions,
 }
@@ -603,6 +627,7 @@
         <span class="self">Self </span>{
             backends: Backends::all(),
             flags: InstanceFlags::default(),
+            memory_budget_thresholds: MemoryBudgetThresholds::default(),
             backend_options: BackendOptions::default(),
         }
     }
@@ -628,6 +653,7 @@
         <span class="self">Self </span>{
             backends,
             flags,
+            memory_budget_thresholds: MemoryBudgetThresholds::default(),
             backend_options,
         }
     }
@@ -803,6 +829,24 @@
 
         <span class="self">self
     </span>}
+}
+
+<span class="doccomment">/// Memory budget thresholds used by backends to try to avoid high memory pressure situations.
+///
+/// Currently only the D3D12 and (optionally) Vulkan backends support these options.
+</span><span class="attr">#[derive(Default, Clone, Debug, Copy)]
+</span><span class="kw">pub struct </span>MemoryBudgetThresholds {
+    <span class="doccomment">/// Threshold at which texture, buffer, query set and acceleration structure creation will start to return OOM errors.
+    /// This is a percent of the memory budget reported by native APIs.
+    ///
+    /// If not specified, resource creation might still return OOM errors.
+    </span><span class="kw">pub </span>for_resource_creation: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+
+    <span class="doccomment">/// Threshold at which devices will become lost due to memory pressure.
+    /// This is a percent of the memory budget reported by native APIs.
+    ///
+    /// If not specified, devices might still become lost due to memory pressure.
+    </span><span class="kw">pub </span>for_device_loss: <span class="prelude-ty">Option</span>&lt;u8&gt;,
 }
 
 <span class="doccomment">/// Options that are passed to a given backend.

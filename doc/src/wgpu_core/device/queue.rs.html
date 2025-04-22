@@ -1571,7 +1571,28 @@
 <a href="#1570" id="1570">1570</a>
 <a href="#1571" id="1571">1571</a>
 <a href="#1572" id="1572">1572</a>
-<a href="#1573" id="1573">1573</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
 <span class="kw">use </span>core::{
     iter,
     mem::{<span class="self">self</span>, ManuallyDrop},
@@ -2036,6 +2057,8 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_buffer"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Queue::write_buffer"</span>);
 
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>buffer = buffer.get()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
@@ -2082,6 +2105,8 @@
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::create_staging_buffer"</span>);
         <span class="macro">resource_log!</span>(<span class="string">"Queue::create_staging_buffer"</span>);
 
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>staging_buffer = StagingBuffer::new(<span class="kw-2">&amp;</span><span class="self">self</span>.device, buffer_size)<span class="question-mark">?</span>;
         <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ staging_buffer.ptr() };
 
@@ -2095,6 +2120,8 @@
         staging_buffer: StagingBuffer,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_staging_buffer"</span>);
+
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>buffer = buffer.get()<span class="question-mark">?</span>;
 
@@ -2126,6 +2153,8 @@
         buffer_size: wgt::BufferSize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::validate_write_buffer"</span>);
+
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>buffer = buffer.get()<span class="question-mark">?</span>;
 
@@ -2167,6 +2196,8 @@
         buffer: Arc&lt;Buffer&gt;,
         buffer_offset: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">let </span>transition = {
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = <span class="self">self</span>.device.trackers.lock();
             trackers
@@ -2223,6 +2254,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::write_texture"</span>);
         <span class="macro">api_log!</span>(<span class="string">"Queue::write_texture"</span>);
+
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>size.width == <span class="number">0 </span>|| size.height == <span class="number">0 </span>|| size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring write_texture of size 0"</span>);
@@ -2446,6 +2479,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">"Queue::copy_external_image_to_texture"</span>);
 
+        <span class="self">self</span>.device.check_is_valid()<span class="question-mark">?</span>;
+
         <span class="kw">if </span>size.width == <span class="number">0 </span>|| size.height == <span class="number">0 </span>|| size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">"Ignoring write_texture of size 0"</span>);
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -2649,6 +2684,11 @@
             <span class="kw">let </span><span class="kw-2">mut </span>command_index_guard = <span class="self">self</span>.device.command_indices.write();
             command_index_guard.active_submission_index += <span class="number">1</span>;
             submit_index = command_index_guard.active_submission_index;
+
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.device.check_is_valid() {
+                <span class="kw">break </span><span class="lifetime">'error </span><span class="prelude-val">Err</span>(e.into());
+            }
+
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
 
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::default();
@@ -2914,6 +2954,8 @@
 
         <span class="comment">// the closures should execute with nothing locked!
         </span>callbacks.fire();
+
+        <span class="self">self</span>.device.lose_if_oom();
 
         <span class="macro">api_log!</span>(<span class="string">"Queue::submit returned submit index {submit_index}"</span>);
 

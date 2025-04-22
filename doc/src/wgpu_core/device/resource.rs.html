@@ -3940,7 +3940,24 @@
 <a href="#3939" id="3939">3939</a>
 <a href="#3940" id="3940">3940</a>
 <a href="#3941" id="3941">3941</a>
-<a href="#3942" id="3942">3942</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3942" id="3942">3942</a>
+<a href="#3943" id="3943">3943</a>
+<a href="#3944" id="3944">3944</a>
+<a href="#3945" id="3945">3945</a>
+<a href="#3946" id="3946">3946</a>
+<a href="#3947" id="3947">3947</a>
+<a href="#3948" id="3948">3948</a>
+<a href="#3949" id="3949">3949</a>
+<a href="#3950" id="3950">3950</a>
+<a href="#3951" id="3951">3951</a>
+<a href="#3952" id="3952">3952</a>
+<a href="#3953" id="3953">3953</a>
+<a href="#3954" id="3954">3954</a>
+<a href="#3955" id="3955">3955</a>
+<a href="#3956" id="3956">3956</a>
+<a href="#3957" id="3957">3957</a>
+<a href="#3958" id="3958">3958</a>
+<a href="#3959" id="3959">3959</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow,
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
@@ -4303,16 +4320,36 @@
         }
     }
 
+    <span class="doccomment">/// Checks that we are operating within the memory budget reported by the native APIs.
+    ///
+    /// If we are not, the device gets invalidated.
+    ///
+    /// The budget might fluctuate over the lifetime of the application, so it should be checked
+    /// somewhat frequently.
+    </span><span class="kw">pub fn </span>lose_if_oom(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let _ </span>= <span class="self">self
+            </span>.raw()
+            .check_if_oom()
+            .map_err(|e| <span class="self">self</span>.handle_hal_error(e));
+    }
+
     <span class="kw">pub fn </span>handle_hal_error(<span class="kw-2">&amp;</span><span class="self">self</span>, error: hal::DeviceError) -&gt; DeviceError {
         <span class="kw">match </span>error {
-            hal::DeviceError::OutOfMemory =&gt; {}
-            hal::DeviceError::Lost
+            hal::DeviceError::OutOfMemory
+            | hal::DeviceError::Lost
             | hal::DeviceError::ResourceCreationFailed
             | hal::DeviceError::Unexpected =&gt; {
                 <span class="self">self</span>.lose(<span class="kw-2">&amp;</span>error.to_string());
             }
         }
         DeviceError::from_hal(error)
+    }
+
+    <span class="kw">pub fn </span>handle_hal_error_with_nonfatal_oom(<span class="kw-2">&amp;</span><span class="self">self</span>, error: hal::DeviceError) -&gt; DeviceError {
+        <span class="kw">match </span>error {
+            hal::DeviceError::OutOfMemory =&gt; DeviceError::from_hal(error),
+            error =&gt; <span class="self">self</span>.handle_hal_error(error),
+        }
     }
 
     <span class="doccomment">/// Run some destroy operations that were deferred.
@@ -4621,8 +4658,8 @@
             usage,
             memory_flags: hal::MemoryFlags::empty(),
         };
-        <span class="kw">let </span>buffer =
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }.map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+        <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_buffer(<span class="kw-2">&amp;</span>hal_desc) }
+            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>timestamp_normalization_bind_group = Snatchable::new(
             <span class="self">self</span>.timestamp_normalizer
@@ -5042,7 +5079,7 @@
         };
 
         <span class="kw">let </span>raw_texture = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_texture(<span class="kw-2">&amp;</span>hal_desc) }
-            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>clear_mode = <span class="kw">if </span>hal_usage
             .intersects(wgt::TextureUses::DEPTH_STENCIL_WRITE | wgt::TextureUses::COLOR_TARGET)
@@ -5555,7 +5592,7 @@
         };
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_sampler(<span class="kw-2">&amp;</span>hal_desc) }
-            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>sampler = Sampler {
             raw: ManuallyDrop::new(raw),
@@ -7804,7 +7841,7 @@
         <span class="kw">let </span>hal_desc = desc.map_label(|label| label.to_hal(<span class="self">self</span>.instance_flags));
 
         <span class="kw">let </span>raw = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw().create_query_set(<span class="kw-2">&amp;</span>hal_desc) }
-            .map_err(|e| <span class="self">self</span>.handle_hal_error(e))<span class="question-mark">?</span>;
+            .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>query_set = QuerySet {
             raw: ManuallyDrop::new(raw),
@@ -7838,12 +7875,9 @@
         // since that will prevent any new work from being added to the queues.
         // Future calls to poll_devices will continue to check the work queues
         // until they are cleared, and then drop the device.
+    </span>}
 
-        // Eagerly release GPU resources.
-        </span><span class="self">self</span>.release_gpu_resources();
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="kw">fn </span>release_gpu_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="comment">// This is called when the device is lost, which makes every associated
         // resource invalid and unusable. This is an opportunity to release all of
         // the underlying gpu resources, even though the objects remain visible to

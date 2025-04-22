@@ -322,7 +322,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::resource::{Fallible, TrackingData};
 <span class="kw">use </span><span class="kw">crate</span>::snatch::Snatchable;
 <span class="kw">use crate</span>::{
-    device::{Device, DeviceError},
+    device::Device,
     global::Global,
     id::{<span class="self">self</span>, BlasId, TlasId},
     lock::RwLock,
@@ -423,7 +423,7 @@
                     </span>allow_compaction: <span class="bool-val">false</span>,
                 })
         }
-        .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
+        .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>handle = <span class="kw">unsafe </span>{
             <span class="self">self</span>.raw()
@@ -491,7 +491,7 @@
                     allow_compaction: <span class="bool-val">false</span>,
                 })
         }
-        .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
+        .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>instance_buffer_size =
             <span class="self">self</span>.alignments.raw_tlas_instance_size * desc.max_instances.max(<span class="number">1</span>) <span class="kw">as </span>usize;
@@ -504,7 +504,7 @@
                 memory_flags: hal::MemoryFlags::PREFER_COHERENT,
             })
         }
-        .map_err(DeviceError::from_hal)<span class="question-mark">?</span>;
+        .map_err(|e| <span class="self">self</span>.handle_hal_error_with_nonfatal_oom(e))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Arc::new(resource::Tlas {
             raw: Snatchable::new(raw),

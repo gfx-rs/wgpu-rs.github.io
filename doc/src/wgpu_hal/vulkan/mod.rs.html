@@ -1494,11 +1494,7 @@
 <a href="#1493" id="1493">1493</a>
 <a href="#1494" id="1494">1494</a>
 <a href="#1495" id="1495">1495</a>
-<a href="#1496" id="1496">1496</a>
-<a href="#1497" id="1497">1497</a>
-<a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
+<a href="#1496" id="1496">1496</a></pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
 ## Stack memory
@@ -1662,6 +1658,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>CStr&gt;,
     drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
     flags: wgt::InstanceFlags,
+    memory_budget_thresholds: wgt::MemoryBudgetThresholds,
     debug_utils: <span class="prelude-ty">Option</span>&lt;DebugUtils&gt;,
     get_physical_device_properties: <span class="prelude-ty">Option</span>&lt;khr::get_physical_device_properties2::Instance&gt;,
     entry: ash::Entry,
@@ -2970,14 +2967,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     </span><span class="kw">crate</span>::DeviceError::Unexpected
 }
 
-<span class="doccomment">/// Returns [`crate::DeviceError::OutOfMemory`] or panics if the `oom_panic`
-/// feature flag is enabled.
+<span class="doccomment">/// Returns [`crate::DeviceError::OutOfMemory`].
 </span><span class="kw">fn </span>get_oom_err(_err: vk::Result) -&gt; <span class="kw">crate</span>::DeviceError {
-    <span class="attr">#[cfg(feature = <span class="string">"oom_panic"</span>)]
-    </span><span class="macro">panic!</span>(<span class="string">"Out of memory ({_err:?})"</span>);
-
-    <span class="attr">#[allow(unreachable_code)]
-    </span><span class="kw">crate</span>::DeviceError::OutOfMemory
+    <span class="kw">crate</span>::DeviceError::OutOfMemory
 }
 
 <span class="doccomment">/// Returns [`crate::DeviceError::Lost`] or panics if the `device_lost_panic`

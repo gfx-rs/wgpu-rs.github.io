@@ -3678,7 +3678,36 @@
 <a href="#3677" id="3677">3677</a>
 <a href="#3678" id="3678">3678</a>
 <a href="#3679" id="3679">3679</a>
-<a href="#3680" id="3680">3680</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
+<a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
+<a href="#3705" id="3705">3705</a>
+<a href="#3706" id="3706">3706</a>
+<a href="#3707" id="3707">3707</a>
+<a href="#3708" id="3708">3708</a>
+<a href="#3709" id="3709">3709</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     borrow::Cow::{<span class="self">self</span>, Borrowed},
     boxed::Box,
     format,
@@ -3997,6 +4026,35 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) =
                     source.downcast_ref::&lt;wgc::device::DeviceError&gt;()
                 {
+                    <span class="kw">break </span><span class="kw">crate</span>::Error::OutOfMemory {
+                        source: source_error,
+                    };
+                }
+                <span class="kw">let </span>device_error =
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateTextureError::Device(device_error)) =
+                        source.downcast_ref::&lt;wgc::resource::CreateTextureError&gt;()
+                    {
+                        <span class="prelude-val">Some</span>(device_error)
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateBufferError::Device(device_error)) =
+                        source.downcast_ref::&lt;wgc::resource::CreateBufferError&gt;()
+                    {
+                        <span class="prelude-val">Some</span>(device_error)
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::resource::CreateQuerySetError::Device(device_error)) =
+                        source.downcast_ref::&lt;wgc::resource::CreateQuerySetError&gt;()
+                    {
+                        <span class="prelude-val">Some</span>(device_error)
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::ray_tracing::CreateBlasError::Device(device_error)) =
+                        source.downcast_ref::&lt;wgc::ray_tracing::CreateBlasError&gt;()
+                    {
+                        <span class="prelude-val">Some</span>(device_error)
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(wgc::ray_tracing::CreateTlasError::Device(device_error)) =
+                        source.downcast_ref::&lt;wgc::ray_tracing::CreateTlasError&gt;()
+                    {
+                        <span class="prelude-val">Some</span>(device_error)
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>};
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgc::device::DeviceError::OutOfMemory) = device_error {
                     <span class="kw">break </span><span class="kw">crate</span>::Error::OutOfMemory {
                         source: source_error,
                     };
