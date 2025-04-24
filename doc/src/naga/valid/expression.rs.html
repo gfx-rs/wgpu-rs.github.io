@@ -1319,11 +1319,7 @@
 <a href="#1318" id="1318">1318</a>
 <a href="#1319" id="1319">1319</a>
 <a href="#1320" id="1320">1320</a>
-<a href="#1321" id="1321">1321</a>
-<a href="#1322" id="1322">1322</a>
-<a href="#1323" id="1323">1323</a>
-<a href="#1324" id="1324">1324</a>
-<a href="#1325" id="1325">1325</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
+<a href="#1321" id="1321">1321</a></pre></div><pre class="rust"><code><span class="kw">use super</span>::{compose::validate_compose, FunctionInfo, ModuleInfo, ShaderStages, TypeFlags};
 <span class="kw">use </span><span class="kw">crate</span>::arena::UniqueArena;
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -1973,19 +1969,15 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndex);
                 }
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
-                    <span class="kw">match </span>resolver[expr] {
-                        Ti::Scalar(Sc {
-                            kind: Sk::Sint | Sk::Uint,
-                            width: <span class="kw">_</span>,
-                        }) =&gt; {}
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr)),
+                    <span class="kw">if </span>!<span class="macro">matches!</span>(resolver[expr], Ti::Scalar(Sc::I32 | Sc::U32)) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr));
                     }
                 }
 
                 <span class="kw">match </span>(sample, class.is_multisampled()) {
                     (<span class="prelude-val">None</span>, <span class="bool-val">false</span>) =&gt; {}
                     (<span class="prelude-val">Some</span>(sample), <span class="bool-val">true</span>) =&gt; {
-                        <span class="kw">if </span>resolver[sample].scalar_kind() != <span class="prelude-val">Some</span>(Sk::Sint) {
+                        <span class="kw">if </span>!<span class="macro">matches!</span>(resolver[sample], Ti::Scalar(Sc::I32 | Sc::U32)) {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageOtherIndexType(sample));
                         }
                     }
