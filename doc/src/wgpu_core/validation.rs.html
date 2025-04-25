@@ -1336,18 +1336,7 @@
 <a href="#1335" id="1335">1335</a>
 <a href="#1336" id="1336">1336</a>
 <a href="#1337" id="1337">1337</a>
-<a href="#1338" id="1338">1338</a>
-<a href="#1339" id="1339">1339</a>
-<a href="#1340" id="1340">1340</a>
-<a href="#1341" id="1341">1341</a>
-<a href="#1342" id="1342">1342</a>
-<a href="#1343" id="1343">1343</a>
-<a href="#1344" id="1344">1344</a>
-<a href="#1345" id="1345">1345</a>
-<a href="#1346" id="1346">1346</a>
-<a href="#1347" id="1347">1347</a>
-<a href="#1348" id="1348">1348</a>
-<a href="#1349" id="1349">1349</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
+<a href="#1338" id="1338">1338</a></pre></div><pre class="rust"><code><span class="kw">use </span>alloc::{
     boxed::Box,
     string::{String, ToString <span class="kw">as _</span>},
     vec::Vec,
@@ -2164,19 +2153,6 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         }
     }
-
-    <span class="kw">fn </span>is_compatible_with(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>NumericType) -&gt; bool {
-        <span class="kw">if </span><span class="self">self</span>.scalar.kind != other.scalar.kind {
-            <span class="kw">return </span><span class="bool-val">false</span>;
-        }
-        <span class="kw">match </span>(<span class="self">self</span>.dim, other.dim) {
-            (NumericDimension::Scalar, NumericDimension::Scalar) =&gt; <span class="bool-val">true</span>,
-            (NumericDimension::Scalar, NumericDimension::Vector(<span class="kw">_</span>)) =&gt; <span class="bool-val">true</span>,
-            (NumericDimension::Vector(<span class="kw">_</span>), NumericDimension::Vector(<span class="kw">_</span>)) =&gt; <span class="bool-val">true</span>,
-            (NumericDimension::Matrix(..), NumericDimension::Matrix(..)) =&gt; <span class="bool-val">true</span>,
-            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-        }
-    }
 }
 
 <span class="doccomment">/// Return true if the fragment `format` is covered by the provided `output`.
@@ -2570,8 +2546,10 @@
                                     <span class="comment">// For vertex attributes, there are defaults filled out
                                     // by the driver if data is not provided.
                                     </span>naga::ShaderStage::Vertex =&gt; {
+                                        <span class="kw">let </span>is_compatible =
+                                            iv.ty.scalar.kind == provided.ty.scalar.kind;
                                         <span class="comment">// vertex inputs don't count towards inter-stage
-                                        </span>(iv.ty.is_compatible_with(<span class="kw-2">&amp;</span>provided.ty), <span class="number">0</span>)
+                                        </span>(is_compatible, <span class="number">0</span>)
                                     }
                                     naga::ShaderStage::Fragment =&gt; {
                                         <span class="kw">if </span>iv.interpolation != provided.interpolation {
